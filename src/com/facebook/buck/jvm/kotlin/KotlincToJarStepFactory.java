@@ -27,6 +27,7 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -37,12 +38,21 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory {
 
   private final Tool kotlinc;
   private final ImmutableList<String> extraArguments;
+  private final Function<BuildContext, Iterable<Path>> extraClassPath;
 
   public KotlincToJarStepFactory(
       Tool kotlinc,
       ImmutableList<String> extraArguments) {
+    this(kotlinc, extraArguments, EMPTY_EXTRA_CLASSPATH);
+  }
+
+  public KotlincToJarStepFactory(
+      Tool kotlinc,
+      ImmutableList<String> extraArguments,
+      Function<BuildContext, Iterable<Path>> extraClassPath) {
     this.kotlinc = kotlinc;
     this.extraArguments = extraArguments;
+    this.extraClassPath = extraClassPath;
   }
 
   @Override
@@ -68,7 +78,11 @@ public class KotlincToJarStepFactory extends BaseCompileToJarStepFactory {
             resolver,
             outputDirectory,
             sourceFilePaths,
-            declaredClasspathEntries,
+            ImmutableSortedSet.<Path>naturalOrder()
+                .addAll(Optional.fromNullable(extraClassPath.apply(context))
+                    .or(ImmutableList.of()))
+                .addAll(declaredClasspathEntries)
+                .build(),
             filesystem));
   }
 

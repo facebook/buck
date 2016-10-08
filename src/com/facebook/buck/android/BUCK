@@ -83,6 +83,7 @@ RULES_SRCS = [
   'GenAidlDescription.java',
   'HasAndroidResourceDeps.java',
   'JavaAndroidLibraryCompiler.java',
+  'KotlinAndroidLibraryCompiler.java',
   'MergeAndroidResourcesStep.java',
   'NativeLibraryBuildRule.java',
   'NdkLibraryDescription.java',

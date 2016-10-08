@@ -23,8 +23,8 @@ import com.facebook.buck.util.HumanReadableException;
 
 import java.io.IOException;
 
-abstract class KotlinTestAssumptions {
-  public static void assumeCompilerAvailable() throws InterruptedException, IOException {
+public abstract class KotlinTestAssumptions {
+  public static void assumeCompilerAvailable() throws IOException {
     Throwable exception = null;
     try {
       new KotlinBuckConfig(FakeBuckConfig.builder().build()).getKotlinCompiler();

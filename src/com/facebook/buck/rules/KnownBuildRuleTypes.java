@@ -619,7 +619,7 @@ public class KnownBuildRuleTypes {
         defaultTestRuleTimeoutMs));
     builder.register(new AndroidLibraryDescription(
         defaultJavacOptions,
-        new DefaultAndroidLibraryCompilerFactory(scalaConfig)));
+        new DefaultAndroidLibraryCompilerFactory(scalaConfig, kotlinBuckConfig)));
     builder.register(new AndroidManifestDescription());
     builder.register(new AndroidPrebuiltAarDescription(defaultJavacOptions));
     builder.register(new AndroidReactNativeLibraryDescription(reactNativeBuckConfig));

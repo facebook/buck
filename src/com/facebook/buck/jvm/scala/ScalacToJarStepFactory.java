@@ -1,4 +1,4 @@
-/*
+<<<</*
  * Copyright 2015-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -37,9 +37,6 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 
 public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
-
-  public static final Function<BuildContext, Iterable<Path>> EMPTY_EXTRA_CLASSPATH =
-      input -> ImmutableList.of();
 
   public static ImmutableList<String> collectScalacArguments(
       ScalaBuckConfig config,
