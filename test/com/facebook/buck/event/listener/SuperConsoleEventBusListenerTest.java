@@ -608,7 +608,7 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(listener, 800L, ImmutableList.of(
         parsingLine,
         DOWNLOAD_STRING,
-        "[+] BUILDING...0.4s" + " [1%] (0/10 JOBS, 0 UPDATED, " +
+        "[+] BUILDING...0.4s" + " [0%] (0/10 JOBS, 0 UPDATED, " +
             "0 [0.0%] CACHE MISS)",
         " |=> //banana:stand...  0.2s (checking local cache)"));
 
@@ -627,7 +627,7 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(listener, 900L, ImmutableList.of(
         parsingLine,
         DOWNLOAD_STRING,
-        "[+] BUILDING...0.5s" + " [1%] (0/10 JOBS, 0 UPDATED, " +
+        "[+] BUILDING...0.5s" + " [0%] (0/10 JOBS, 0 UPDATED, " +
             "0 [0.0%] CACHE MISS)",
         " |=> //banana:stand...  0.3s (running doing_something[0.1s])"));
 
@@ -656,7 +656,7 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(listener, 1000L, ImmutableList.of(
         parsingLine,
         DOWNLOAD_STRING,
-        "[+] BUILDING...0.6s [1%] (1/10 JOBS, 1 UPDATED, 1 [10.0%] CACHE MISS)",
+        "[+] BUILDING...0.6s [10%] (1/10 JOBS, 1 UPDATED, 1 [10.0%] CACHE MISS)",
         " |=> IDLE"));
 
     eventBus.postWithoutConfiguring(
@@ -669,7 +669,7 @@ public class SuperConsoleEventBusListenerTest {
     validateConsole(listener, 1100L, ImmutableList.of(
         parsingLine,
         DOWNLOAD_STRING,
-        "[+] BUILDING...0.7s [2%] (1/10 JOBS, 1 UPDATED, 1 [10.0%] CACHE MISS)",
+        "[+] BUILDING...0.7s [10%] (1/10 JOBS, 1 UPDATED, 1 [10.0%] CACHE MISS)",
         " |=> IDLE",
         " |=> //chicken:dance...  0.1s (checking local cache)"));
 

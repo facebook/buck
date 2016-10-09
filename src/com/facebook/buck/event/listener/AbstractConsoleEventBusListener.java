@@ -560,6 +560,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Subscribe
   public void ruleCountUpdated(BuildEvent.UnskippedRuleCountUpdated updated) {
     ruleCount = Optional.of(updated.getNumRules());
+    if (progressEstimator.isPresent()) {
+      progressEstimator.get().setNumberOfRules(ruleCount.get());
+    }
     cacheRateStatsKeeper.ruleCountUpdated(updated);
   }
 

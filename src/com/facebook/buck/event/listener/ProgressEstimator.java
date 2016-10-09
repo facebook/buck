@@ -328,13 +328,8 @@ public class ProgressEstimator {
     if (ruleCount == 0.0) {
       newValue = -1.0;
     } else {
-      // TODO(beefon): t8529466 compute progress in better way
-      double cacheCheckProgress = numberOfStartedRules.get() / ruleCount;
       double buildProgress = numberOfFinishedRules.get() / ruleCount;
-      // cache check takes approximately 10% of time on clean builds. If there will be nothing
-      // to build after that, we will jump to 100%.
-      double totalProgress = cacheCheckProgress * 0.1 + Math.pow(buildProgress, 2.0) * 0.9;
-      newValue = Math.floor(totalProgress * 100.0) / 100.0;
+      newValue = Math.floor(buildProgress * 100.0) / 100.0;
     }
 
     double oldValue = buildProgress.getAndSet(newValue);
