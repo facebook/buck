@@ -200,7 +200,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   protected String formatElapsedTime(long elapsedTimeMs) {
-    return TIME_FORMATTER.format(locale, elapsedTimeMs / 1000.0);
+    long minutes = elapsedTimeMs / 60_000L;
+    String seconds = TIME_FORMATTER.format(locale, elapsedTimeMs / 1000.0 - (minutes * 60));
+    return String.format(minutes == 0 ? "%s" : "%2$dm%1$s", seconds, minutes);
   }
 
   protected Optional<Double> getApproximateBuildProgress() {
