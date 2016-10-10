@@ -16,18 +16,31 @@
 
 package com.facebook.buck.shell;
 
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcessExecutor;
+import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -36,6 +49,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class WorkerProcessTest {
+
+  @Rule
+  public TemporaryPaths temporaryPaths = new TemporaryPaths();
 
   private ProcessExecutorParams createDummyParams() {
     return ProcessExecutorParams.builder()
@@ -85,5 +101,37 @@ public class WorkerProcessTest {
     assertFalse(protocol.isClosed());
     process.close();
     assertTrue(protocol.isClosed());
+  }
+
+  @Test(timeout = 20 * 1000)
+  public void testDoesNotBlockOnLargeStderr() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "worker_process",
+        temporaryPaths);
+    workspace.setUp();
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(workspace.getDestPath());
+    Console console = new Console(Verbosity.ALL, System.out, System.err, Ansi.withoutTty());
+    String script;
+    if (Platform.detect() == Platform.WINDOWS) {
+      script = workspace.getDestPath().resolve("script.bat").toString();
+    } else {
+      script = "./script.py";
+    }
+    WorkerProcess workerProcess = new WorkerProcess(
+        new ProcessExecutor(console),
+        ProcessExecutorParams.builder()
+            .setCommand(ImmutableList.of(script))
+            .setDirectory(workspace.getDestPath())
+            .build(),
+        projectFilesystem,
+        temporaryPaths.newFolder());
+    try {
+      workerProcess.ensureLaunchAndHandshake();
+      fail("Handshake should have failed");
+    } catch (HumanReadableException e) {
+      // Check that all of the process's stderr was reported.
+      assertThat(e.getMessage().length(), is(greaterThan(1024 * 1024)));
+    }
   }
 }

@@ -33,6 +33,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -47,6 +48,7 @@ public class WorkerProcess {
   private final ProcessExecutorParams processParams;
   private final ProjectFilesystem filesystem;
   private final Path tmpPath;
+  private final Path stdErr;
   private final AtomicInteger currentMessageID = new AtomicInteger();
   private boolean handshakePerformed = false;
   @Nullable
@@ -60,7 +62,9 @@ public class WorkerProcess {
       ProjectFilesystem filesystem,
       Path tmpPath) throws IOException {
     this.executor = executor;
-    this.processParams = processParams;
+    this.stdErr = Files.createTempFile("buck-worker-", "-stderr.log");
+    this.processParams = processParams.withRedirectError(
+        ProcessBuilder.Redirect.to(stdErr.toFile()));
     this.filesystem = filesystem;
     this.tmpPath = tmpPath;
   }
@@ -81,7 +85,8 @@ public class WorkerProcess {
         executor,
         launchedProcess,
         processStdinWriter,
-        processStdoutReader);
+        processStdoutReader,
+        stdErr);
 
     int messageID = currentMessageID.getAndAdd(1);
     LOG.debug("Sending handshake to process %d", this.hashCode());
@@ -139,6 +144,7 @@ public class WorkerProcess {
       if (protocol != null) {
         protocol.close();
       }
+      Files.deleteIfExists(stdErr);
     } catch (IOException e) {
       LOG.debug(e, "Error closing worker process %s.", this.hashCode());
       throw new HumanReadableException(e,

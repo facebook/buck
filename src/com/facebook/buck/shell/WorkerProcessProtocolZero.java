@@ -22,7 +22,9 @@ import com.google.gson.stream.JsonWriter;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
@@ -37,16 +39,19 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
   private final ProcessExecutor.LaunchedProcess launchedProcess;
   private final JsonWriter processStdinWriter;
   private final JsonReader processStdoutReader;
+  private final Path stdErr;
 
   public WorkerProcessProtocolZero(
       ProcessExecutor executor,
       ProcessExecutor.LaunchedProcess launchedProcess,
       JsonWriter processStdinWriter,
-      JsonReader processStdoutReader) {
+      JsonReader processStdoutReader,
+      Path stdErr) {
     this.executor = executor;
     this.launchedProcess = launchedProcess;
     this.processStdinWriter = processStdinWriter;
     this.processStdoutReader = processStdoutReader;
+    this.stdErr = stdErr;
   }
 
   /*
@@ -241,10 +246,11 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
 
   private String getStdErrorOutput() throws IOException {
     StringBuilder sb = new StringBuilder();
-    BufferedReader errorReader = new BufferedReader(
-        new InputStreamReader(launchedProcess.getErrorStream()));
-    while (errorReader.ready()) {
-      sb.append("\t" + errorReader.readLine() + "\n");
+    try (InputStream inputStream = Files.newInputStream(stdErr)) {
+      BufferedReader errorReader = new BufferedReader(new InputStreamReader(inputStream));
+      while (errorReader.ready()) {
+        sb.append("\t").append(errorReader.readLine()).append("\n");
+      }
     }
     return sb.toString();
   }
