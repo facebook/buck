@@ -131,9 +131,9 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         AndroidNativeLibsGraphEnhancementResult.builder();
 
     ImmutableList<NativeLinkable> nativeLinkables =
-        packageableCollection.getNativeLinkables();
+        ImmutableList.copyOf(packageableCollection.getNativeLinkables().values());
     ImmutableList<NativeLinkable> nativeLinkablesAssets =
-        packageableCollection.getNativeLinkablesAssets();
+        ImmutableList.copyOf(packageableCollection.getNativeLinkablesAssets().values());
 
     if (nativeLibraryMergeMap.isPresent() && !nativeLibraryMergeMap.get().isEmpty()) {
       NativeLibraryMergeEnhancementResult enhancement = NativeLibraryMergeEnhancer.enhance(
@@ -255,7 +255,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     ImmutableSortedSet<BuildRule> nativeLibsRules = BuildRules.toBuildRulesFor(
         originalBuildTarget,
         ruleResolver,
-        packageableCollection.getNativeLibsTargets());
+        packageableCollection.getNativeLibsTargets().values());
     BuildRuleParams paramsForCopyNativeLibraries = buildRuleParams.copyWithChanges(
         targetForCopyNativeLibraries,
         Suppliers.ofInstance(
@@ -263,7 +263,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                 .addAll(nativeLibsRules)
                 .addAll(
                     pathResolver.filterBuildRuleInputs(
-                        packageableCollection.getNativeLibsDirectories()))
+                        packageableCollection.getNativeLibsDirectories().values()))
                 .addAll(strippedLibsMap.keySet())
                 .addAll(strippedLibsAssetsMap.keySet())
                 .build()),
@@ -274,7 +274,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                 new CopyNativeLibraries(
                     paramsForCopyNativeLibraries,
                     pathResolver,
-                    packageableCollection.getNativeLibsDirectories(),
+                    ImmutableSet.copyOf(packageableCollection.getNativeLibsDirectories().values()),
                     ImmutableSet.copyOf(strippedLibsMap.values()),
                     ImmutableSet.copyOf(strippedLibsAssetsMap.values()),
                     cpuFilters)))

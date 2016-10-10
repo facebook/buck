@@ -79,27 +79,27 @@ interface AbstractAndroidPackageableCollection {
   /**
    * A set of build targets that produce native libraries.
    */
-  Set<BuildTarget> getNativeLibsTargets();
+  ImmutableMultimap<APKModule, BuildTarget> getNativeLibsTargets();
 
   /**
-   * Native libraries.
+   * Native libraries mapped from modules.
    */
-  ImmutableList<NativeLinkable> getNativeLinkables();
+  ImmutableMultimap<APKModule, NativeLinkable> getNativeLinkables();
 
   /**
    * Native libraries to be packaged as assets.
    */
-  ImmutableList<NativeLinkable> getNativeLinkablesAssets();
+  ImmutableMultimap<APKModule, NativeLinkable> getNativeLinkablesAssets();
 
   /**
    * Directories containing native libraries.
    */
-  Set<SourcePath> getNativeLibsDirectories();
+  ImmutableMultimap<APKModule, SourcePath> getNativeLibsDirectories();
 
   /**
    * Directories containing native libraries to be used as assets.
    */
-  Set<SourcePath> getNativeLibAssetsDirectories();
+  ImmutableMultimap<APKModule, SourcePath> getNativeLibAssetsDirectories();
 
   /**
    * Directories containing assets to be included directly in the apk,

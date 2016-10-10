@@ -166,7 +166,7 @@ public class AndroidPackageableCollectorTest {
             new PathSourcePath(
                 new FakeProjectFilesystem(),
                 ((NativeLibraryBuildRule) ndkLibrary).getLibraryPath())),
-        packageableCollection.getNativeLibsDirectories());
+        ImmutableSet.copyOf(packageableCollection.getNativeLibsDirectories().values()));
     assertEquals(
         "Because a prebuilt native library  was declared as a dependency (and asset), it should " +
             "be added to the transitive dependecies.",
@@ -174,7 +174,7 @@ public class AndroidPackageableCollectorTest {
             new PathSourcePath(
                 new FakeProjectFilesystem(),
                 ((NativeLibraryBuildRule) prebuiltNativeLibraryBuild).getLibraryPath())),
-        packageableCollection.getNativeLibAssetsDirectories());
+        ImmutableSet.copyOf(packageableCollection.getNativeLibAssetsDirectories().values()));
     assertEquals(
         ImmutableSet.of(new FakeSourcePath("debug.pro")),
         packageableCollection.getProguardConfigs());

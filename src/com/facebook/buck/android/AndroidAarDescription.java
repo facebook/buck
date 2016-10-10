@@ -233,7 +233,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         assembleResourceDirectories.getPathToOutput(),
         assembleAssetsDirectories.getPathToOutput(),
         assembledNativeLibsDir,
-        packageableCollection.getNativeLibAssetsDirectories());
+        ImmutableSet.copyOf(packageableCollection.getNativeLibAssetsDirectories().values()));
   }
 
   @SuppressFieldNotInitialized

@@ -439,7 +439,8 @@ public class AndroidBinary
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), libSubdirectory));
 
       // Filter, rename and copy the ndk libraries marked as assets.
-      for (SourcePath nativeLibDir : packageableCollection.getNativeLibAssetsDirectories()) {
+      for (SourcePath nativeLibDir :
+          packageableCollection.getNativeLibAssetsDirectories().values()) {
         CopyNativeLibraries.copyNativeLibrary(
             getProjectFilesystem(),
             getResolver().getAbsolutePath(nativeLibDir),

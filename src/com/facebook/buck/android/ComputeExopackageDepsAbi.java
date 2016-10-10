@@ -174,7 +174,8 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
               // Same deal for native libs as assets.
               final ImmutableSortedMap.Builder<Path, Path> allNativeFiles =
                   ImmutableSortedMap.naturalOrder();
-              for (SourcePath libDir : packageableCollection.getNativeLibAssetsDirectories()) {
+              for (SourcePath libDir :
+                  packageableCollection.getNativeLibAssetsDirectories().values()) {
                 // A SourcePath may not come from the same ProjectFilesystem as the step. Yay. The
                 // `getFilesUnderPath` method returns files relative to the ProjectFilesystem's root
                 // and so they may not exist, but we could go and do some path manipulation to

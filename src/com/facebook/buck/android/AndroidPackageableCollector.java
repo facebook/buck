@@ -151,18 +151,21 @@ public class AndroidPackageableCollector {
   public AndroidPackageableCollector addNativeLibsDirectory(
       BuildTarget owner,
       SourcePath nativeLibDir) {
-    collectionBuilder.addNativeLibsTargets(owner);
-    collectionBuilder.addNativeLibsDirectories(nativeLibDir);
+    APKModule module = apkModuleGraph.findModuleForTarget(owner);
+    collectionBuilder.putNativeLibsTargets(module, owner);
+    collectionBuilder.putNativeLibsDirectories(module, nativeLibDir);
     return this;
   }
 
   public AndroidPackageableCollector addNativeLinkable(NativeLinkable nativeLinkable) {
-    collectionBuilder.addNativeLinkables(nativeLinkable);
+    APKModule module = apkModuleGraph.findModuleForTarget(nativeLinkable.getBuildTarget());
+    collectionBuilder.putNativeLinkables(module, nativeLinkable);
     return this;
   }
 
   public AndroidPackageableCollector addNativeLinkableAsset(NativeLinkable nativeLinkable) {
-    collectionBuilder.addNativeLinkablesAssets(nativeLinkable);
+    APKModule module = apkModuleGraph.findModuleForTarget(nativeLinkable.getBuildTarget());
+    collectionBuilder.putNativeLinkablesAssets(module, nativeLinkable);
     return this;
   }
 
@@ -170,8 +173,9 @@ public class AndroidPackageableCollector {
       BuildTarget owner,
       SourcePath assetsDir) {
     // We need to build the native target in order to have the assets available still.
-    collectionBuilder.addNativeLibsTargets(owner);
-    collectionBuilder.addNativeLibAssetsDirectories(assetsDir);
+    APKModule module = apkModuleGraph.findModuleForTarget(owner);
+    collectionBuilder.putNativeLibsTargets(module, owner);
+    collectionBuilder.putNativeLibAssetsDirectories(module, assetsDir);
     return this;
   }
 
