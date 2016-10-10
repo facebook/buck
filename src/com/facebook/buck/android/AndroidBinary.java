@@ -66,6 +66,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -415,27 +416,21 @@ public class AndroidBinary
 
     AndroidPackageableCollection packageableCollection =
         enhancementResult.getPackageableCollection();
-    ImmutableSet<Path> nativeLibraryDirectories = ImmutableSet.of();
-    Optional<CopyNativeLibraries> rootCopyNativeLibrariesOptional =
-        enhancementResult.getCopyNativeLibraries().transform(
-            new Function<ImmutableMap<APKModule, CopyNativeLibraries>, CopyNativeLibraries>() {
-              @Override
-              public CopyNativeLibraries apply(ImmutableMap<APKModule, CopyNativeLibraries> input) {
-                return input.get(enhancementResult.getAPKModuleGraph().getRootAPKModule());
-              }
-            });
 
-    if (!ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
-        rootCopyNativeLibrariesOptional.isPresent()) {
-      if (packageAssetLibraries.or(Boolean.FALSE)) {
-        nativeLibraryDirectories = ImmutableSet.of(
-            rootCopyNativeLibrariesOptional.get().getPathToNativeLibsDir());
-      } else {
-        nativeLibraryDirectories = ImmutableSet.of(
-            rootCopyNativeLibrariesOptional.get().getPathToNativeLibsDir(),
-            rootCopyNativeLibrariesOptional.get().getPathToNativeLibsAssetsDir());
+    ImmutableSet.Builder<Path> nativeLibraryDirectoriesBuilder = ImmutableSet.builder();
+    for (final APKModule module : enhancementResult.getAPKModuleGraph().getAPKModules()) {
+      if (!ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
+          enhancementResult.getCopyNativeLibraries().isPresent() &&
+          enhancementResult.getCopyNativeLibraries().get().containsKey(module)) {
+        CopyNativeLibraries copyNativeLibraries =
+            enhancementResult.getCopyNativeLibraries().get().get(module);
+        if (packageAssetLibraries.or(Boolean.FALSE)) {
+          nativeLibraryDirectoriesBuilder.add(copyNativeLibraries.getPathToNativeLibsDir());
+        } else {
+          nativeLibraryDirectoriesBuilder.add(copyNativeLibraries.getPathToNativeLibsDir());
+          nativeLibraryDirectoriesBuilder.add(copyNativeLibraries.getPathToNativeLibsAssetsDir());
+        }
       }
-
     }
 
     // Copy the transitive closure of native-libs-as-assets to a single directory, if any.
@@ -444,128 +439,21 @@ public class AndroidBinary
         (!packageableCollection.getNativeLinkablesAssets().isEmpty() &&
             packageAssetLibraries.or(Boolean.FALSE))) {
       Path pathForNativeLibsAsAssets = getPathForNativeLibsAsAssets();
-      final Path libSubdirectory = pathForNativeLibsAsAssets.resolve("assets").resolve("lib");
-      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), libSubdirectory));
 
-      // Filter, rename and copy the ndk libraries marked as assets.
-      for (SourcePath nativeLibDir :
-          packageableCollection.getNativeLibAssetsDirectories().values()) {
-        CopyNativeLibraries.copyNativeLibrary(
-            getProjectFilesystem(),
-            getResolver().getAbsolutePath(nativeLibDir),
+      for (final APKModule module : enhancementResult.getAPKModuleGraph().getAPKModules()) {
+        final Path libSubdirectory = pathForNativeLibsAsAssets
+            .resolve("assets")
+            .resolve(module.isRootModule() ? "lib" : module.getName());
+        ImmutableCollection<SourcePath> nativeLibDirs =
+            packageableCollection.getNativeLibAssetsDirectories().get(module);
+
+        getStepsForNativeAssets(
+            steps,
+            nativeLibDirs == null ?
+                Optional.<ImmutableCollection<SourcePath>>absent() : Optional.of(nativeLibDirs),
             libSubdirectory,
-            cpuFilters,
-            steps);
-      }
-
-      // Input asset libraries are sorted in descending filesize order.
-      final ImmutableSortedSet.Builder<Path> inputAssetLibrariesBuilder =
-        ImmutableSortedSet.orderedBy(new Comparator<Path>() {
-            @Override
-            public int compare(Path libPath1, Path libPath2) {
-              try {
-                ProjectFilesystem filesystem = getProjectFilesystem();
-                int filesizeResult = -Long.compare(
-                    filesystem.getFileSize(libPath1),
-                    filesystem.getFileSize(libPath2));
-                int pathnameResult = libPath1.compareTo(libPath2);
-                return filesizeResult != 0 ? filesizeResult : pathnameResult;
-              } catch (IOException e) {
-                return 0;
-              }
-            }
-        });
-
-      if (packageAssetLibraries.or(Boolean.FALSE) &&
-          rootCopyNativeLibrariesOptional.isPresent()) {
-        // Copy in cxx libraries marked as assets. Filtering and renaming was already done
-        // in CopyNativeLibraries.getBuildSteps().
-        Path cxxNativeLibsSrc = rootCopyNativeLibrariesOptional
-            .get()
-            .getPathToNativeLibsAssetsDir();
-        steps.add(
-            CopyStep.forDirectory(
-                getProjectFilesystem(),
-                cxxNativeLibsSrc,
-                libSubdirectory,
-                CopyStep.DirectoryMode.CONTENTS_ONLY));
-
-        steps.add(
-            // Step that populates a list of libraries and writes a metadata.txt to decompress.
-            new AbstractExecutionStep("write_metadata_for_asset_libraries") {
-              @Override
-              public StepExecutionResult execute(ExecutionContext context) {
-                ProjectFilesystem filesystem = getProjectFilesystem();
-                try {
-                  // Walk file tree to find libraries
-                  filesystem.walkRelativeFileTree(
-                      libSubdirectory, new SimpleFileVisitor<Path>() {
-                        @Override
-                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                            throws IOException {
-                          if (!file.toString().endsWith(".so")) {
-                            throw new IOException("unexpected file in lib directory");
-                          }
-                          inputAssetLibrariesBuilder.add(file);
-                          return FileVisitResult.CONTINUE;
-                        }
-                      });
-
-                  // Write a metadata
-                  ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
-                  Path metadataOutput = libSubdirectory.resolve("metadata.txt");
-                  for (Path libPath : inputAssetLibrariesBuilder.build()) {
-                    // Should return something like x86/libfoo.so
-                    Path relativeLibPath = libSubdirectory.relativize(libPath);
-                    long filesize = filesystem.getFileSize(libPath);
-                    String desiredOutput = relativeLibPath.toString();
-                    String checksum = filesystem.computeSha256(libPath);
-                    metadataLines.add(desiredOutput + ' ' + filesize + ' ' + checksum);
-                  }
-                  ImmutableList<String> metadata = metadataLines.build();
-                  if (!metadata.isEmpty()) {
-                    filesystem.writeLinesToPath(metadata, metadataOutput);
-                  }
-                } catch (IOException e) {
-                  context.logError(e, "Writing metadata for asset libraries failed.");
-                  return StepExecutionResult.ERROR;
-                }
-                return StepExecutionResult.SUCCESS;
-              }
-            });
-      }
-      if (compressAssetLibraries.or(Boolean.FALSE)) {
-        final ImmutableList.Builder<Path> outputAssetLibrariesBuilder = ImmutableList.builder();
-        steps.add(
-            new AbstractExecutionStep("rename_asset_libraries_as_temp_files") {
-              @Override
-              public StepExecutionResult execute(ExecutionContext context) {
-                try {
-                  ProjectFilesystem filesystem = getProjectFilesystem();
-                  for (Path libPath : inputAssetLibrariesBuilder.build()) {
-                    Path tempPath = libPath.resolveSibling(libPath.getFileName() + "~");
-                    filesystem.move(libPath, tempPath);
-                    outputAssetLibrariesBuilder.add(tempPath);
-                  }
-                  return StepExecutionResult.SUCCESS;
-                } catch (IOException e) {
-                  context.logError(e, "Renaming asset libraries failed");
-                  return StepExecutionResult.ERROR;
-                }
-              }
-            }
-        );
-        // Concat and xz compress.
-        Path libOutputBlob = libSubdirectory.resolve("libraries.blob");
-        steps.add(
-            new ConcatStep(getProjectFilesystem(), outputAssetLibrariesBuilder, libOutputBlob));
-        int compressionLevel = xzCompressionLevel.or(XzStep.DEFAULT_COMPRESSION_LEVEL).intValue();
-        steps.add(
-            new XzStep(
-                getProjectFilesystem(),
-                libOutputBlob,
-                libSubdirectory.resolve(SOLID_COMPRESSED_ASSET_LIBRARY_FILENAME),
-                compressionLevel));
+            module.isRootModule() ? "metadata.txt" : "libs.txt",
+            module);
       }
 
       nativeLibraryAsAssetDirectories = ImmutableSet.of(pathForNativeLibsAsAssets);
@@ -608,7 +496,7 @@ public class AndroidBinary
         getSignedApkPath(),
         dexFilesInfo.primaryDexPath,
         allAssetDirectories,
-        nativeLibraryDirectories,
+        nativeLibraryDirectoriesBuilder.build(),
         zipFiles.build(),
         FluentIterable.from(packageableCollection.getPathsToThirdPartyJars())
             .transform(getResolver().deprecatedPathFunction())
@@ -647,6 +535,143 @@ public class AndroidBinary
 
     buildableContext.recordArtifact(getApkPath());
     return steps.build();
+  }
+
+  private void getStepsForNativeAssets(
+      ImmutableList.Builder<Step> steps,
+      Optional<ImmutableCollection<SourcePath>> nativeLibDirs,
+      final Path libSubdirectory,
+      final String metadataFilename,
+      final APKModule module) {
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), libSubdirectory));
+
+    // Filter, rename and copy the ndk libraries marked as assets.
+    if (nativeLibDirs.isPresent()) {
+      for (SourcePath nativeLibDir : nativeLibDirs.get()) {
+        CopyNativeLibraries.copyNativeLibrary(
+            getProjectFilesystem(),
+            getResolver().getAbsolutePath(nativeLibDir),
+            libSubdirectory,
+            cpuFilters,
+            steps);
+      }
+    }
+
+    // Input asset libraries are sorted in descending filesize order.
+    final ImmutableSortedSet.Builder<Path> inputAssetLibrariesBuilder =
+        ImmutableSortedSet.orderedBy(new Comparator<Path>() {
+          @Override
+          public int compare(Path libPath1, Path libPath2) {
+            try {
+              ProjectFilesystem filesystem = getProjectFilesystem();
+              int filesizeResult = -Long.compare(
+                  filesystem.getFileSize(libPath1),
+                  filesystem.getFileSize(libPath2));
+              int pathnameResult = libPath1.compareTo(libPath2);
+              return filesizeResult != 0 ? filesizeResult : pathnameResult;
+            } catch (IOException e) {
+              return 0;
+            }
+          }
+        });
+
+    if (packageAssetLibraries.or(Boolean.FALSE)) {
+      if (enhancementResult.getCopyNativeLibraries().isPresent() &&
+          enhancementResult.getCopyNativeLibraries().get().containsKey(module)) {
+        // Copy in cxx libraries marked as assets. Filtering and renaming was already done
+        // in CopyNativeLibraries.getBuildSteps().
+        Path cxxNativeLibsSrc =
+            enhancementResult
+                .getCopyNativeLibraries()
+                .get()
+                .get(module)
+                .getPathToNativeLibsAssetsDir();
+        steps.add(
+            CopyStep.forDirectory(
+                getProjectFilesystem(),
+                cxxNativeLibsSrc,
+                libSubdirectory,
+                CopyStep.DirectoryMode.CONTENTS_ONLY));
+      }
+
+      steps.add(
+          // Step that populates a list of libraries and writes a metadata.txt to decompress.
+          new AbstractExecutionStep("write_metadata_for_asset_libraries_" + module.getName()) {
+            @Override
+            public StepExecutionResult execute(ExecutionContext context) {
+              ProjectFilesystem filesystem = getProjectFilesystem();
+              try {
+                // Walk file tree to find libraries
+                filesystem.walkRelativeFileTree(
+                    libSubdirectory, new SimpleFileVisitor<Path>() {
+                      @Override
+                      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                          throws IOException {
+                        if (!file.toString().endsWith(".so")) {
+                          throw new IOException("unexpected file in lib directory");
+                        }
+                        inputAssetLibrariesBuilder.add(file);
+                        return FileVisitResult.CONTINUE;
+                      }
+                    });
+
+
+                // Write a metadata
+                ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
+                Path metadataOutput = libSubdirectory.resolve(metadataFilename);
+                for (Path libPath : inputAssetLibrariesBuilder.build()) {
+                  // Should return something like x86/libfoo.so
+                  Path relativeLibPath = libSubdirectory.relativize(libPath);
+                  long filesize = filesystem.getFileSize(libPath);
+                  String desiredOutput = relativeLibPath.toString();
+                  String checksum = filesystem.computeSha256(libPath);
+                  metadataLines.add(desiredOutput + ' ' + filesize + ' ' + checksum);
+                }
+                ImmutableList<String> metadata = metadataLines.build();
+                if (!metadata.isEmpty()) {
+                  filesystem.writeLinesToPath(metadata, metadataOutput);
+                }
+              } catch (IOException e) {
+                context.logError(e, "Writing metadata for asset libraries failed.");
+                return StepExecutionResult.ERROR;
+              }
+              return StepExecutionResult.SUCCESS;
+            }
+          });
+    }
+    if (compressAssetLibraries.or(Boolean.FALSE)) {
+      final ImmutableList.Builder<Path> outputAssetLibrariesBuilder = ImmutableList.builder();
+      steps.add(
+          new AbstractExecutionStep("rename_asset_libraries_as_temp_files_" + module.getName()) {
+            @Override
+            public StepExecutionResult execute(ExecutionContext context) {
+              try {
+                ProjectFilesystem filesystem = getProjectFilesystem();
+                for (Path libPath : inputAssetLibrariesBuilder.build()) {
+                  Path tempPath = libPath.resolveSibling(libPath.getFileName() + "~");
+                  filesystem.move(libPath, tempPath);
+                  outputAssetLibrariesBuilder.add(tempPath);
+                }
+                return StepExecutionResult.SUCCESS;
+              } catch (IOException e) {
+                context.logError(e, "Renaming asset libraries failed");
+                return StepExecutionResult.ERROR;
+              }
+            }
+          }
+      );
+      // Concat and xz compress.
+      Path libOutputBlob = libSubdirectory.resolve("libraries.blob");
+      steps.add(
+          new ConcatStep(getProjectFilesystem(), outputAssetLibrariesBuilder, libOutputBlob));
+      int compressionLevel = xzCompressionLevel.or(XzStep.DEFAULT_COMPRESSION_LEVEL).intValue();
+      steps.add(
+          new XzStep(
+              getProjectFilesystem(),
+              libOutputBlob,
+              libSubdirectory.resolve(SOLID_COMPRESSED_ASSET_LIBRARY_FILENAME),
+              compressionLevel));
+    }
   }
 
   @Override
@@ -1260,12 +1285,9 @@ public class AndroidBinary
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
-    if (ExopackageMode.enabledForNativeLibraries(exopackageModes)) {
-      deps.add(
-          enhancementResult
-              .getCopyNativeLibraries()
-              .get()
-              .get(enhancementResult.getAPKModuleGraph().getRootAPKModule()));
+    if (ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
+        enhancementResult.getCopyNativeLibraries().isPresent()) {
+      deps.addAll(enhancementResult.getCopyNativeLibraries().get().values());
     }
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       deps.addAll(enhancementResult.getPreDexMerge().asSet());

@@ -177,10 +177,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
         target,
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<BuildTarget>of(),
-        new APKModuleGraph(
-            TargetGraph.EMPTY,
-            target,
-            Optional.<Set<BuildTarget>>absent()));
+        apkModuleGraph);
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(
             ImmutableSet.<BuildRule>of(cxxLibrary)));

@@ -679,6 +679,25 @@ public class AndroidBinaryIntegrationTest {
   }
 
   @Test
+  public void testCompressAssetLibsModular() throws IOException {
+    String target = "//apps/sample:app_compress_lib_asset_modular";
+    workspace.runBuckCommand("build", target).assertSuccess();
+    ZipInspector zipInspector = new ZipInspector(
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    zipInspector.assertFileExists("assets/lib/libs.xzs");
+    zipInspector.assertFileExists("assets/lib/metadata.txt");
+    zipInspector.assertFileExists("assets/native.cxx.libasset/libs.xzs");
+    zipInspector.assertFileExists("assets/native.cxx.libasset/libs.txt");
+    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_libasset.so");
+    zipInspector.assertFileExists("lib/x86/libnative_cxx_foo1.so");
+    zipInspector.assertFileExists("lib/x86/libnative_cxx_foo2.so");
+    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo1.so");
+    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo2.so");
+  }
+
+  @Test
   public void testLibraryMetadataChecksum() throws IOException {
     String target = "//apps/sample:app_cxx_lib_asset";
     workspace.runBuckCommand("build", target).assertSuccess();

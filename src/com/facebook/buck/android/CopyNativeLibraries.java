@@ -120,7 +120,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
     return BuildTargets.getScratchPath(
         getProjectFilesystem(),
         getBuildTarget(),
-        "__native_libs_" + moduleName + "_%s__");
+        "__native_" + moduleName + "_%s__");
   }
 
   @VisibleForTesting

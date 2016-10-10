@@ -277,6 +277,27 @@ android_binary(
 )
 
 android_binary(
+  name = 'app_compress_lib_asset_modular',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  application_module_targets = [
+    '//native/cxx:libasset',
+  ],
+  cpu_filters = [
+    'x86',
+  ],
+  deps = [
+    '//res/com/sample/base:base',
+    '//native/cxx:foo1',
+    '//native/cxx:foo2',
+    '//native/cxx:libasset',
+    '//native/cxx:libasset2',
+  ],
+  package_asset_libraries = True,
+  compress_asset_libraries = True
+)
+
+android_binary(
   name = 'app_header_only_cxx_lib_dep',
   manifest = 'AndroidManifest.xml',
   keystore = '//keystores:debug',
