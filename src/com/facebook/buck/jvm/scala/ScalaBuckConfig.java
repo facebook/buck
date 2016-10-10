@@ -53,19 +53,19 @@ public class ScalaBuckConfig {
     return scalac.build();
   }
 
-  BuildTarget getScalaLibraryTarget() {
+  public BuildTarget getScalaLibraryTarget() {
     return delegate.getRequiredBuildTarget(SECTION, "library");
   }
 
-  ImmutableList<BuildTarget> getCompilerPlugins() {
+  public ImmutableList<BuildTarget> getCompilerPlugins() {
     return delegate.getBuildTargetList(SECTION, "compiler_plugins");
   }
 
-  Optional<BuildTarget> getScalacTarget() {
+  public Optional<BuildTarget> getScalacTarget() {
     return delegate.getMaybeBuildTarget(SECTION, "compiler");
   }
 
-  ImmutableList<String> getCompilerFlags() {
+  public ImmutableList<String> getCompilerFlags() {
     return ImmutableList.copyOf(
         Splitter.on(" ").omitEmptyStrings().split(
             delegate.getValue(SECTION, "compiler_flags").or("")));

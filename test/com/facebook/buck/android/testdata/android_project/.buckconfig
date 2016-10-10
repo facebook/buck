@@ -1,2 +1,7 @@
 [ndk]
   #cpu_abis
+
+[scala]
+  library = //scala:scala-library
+  compiler = //scala:scala-compiler
+

@@ -19,9 +19,9 @@ package com.facebook.buck.android;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
+import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildRule;
@@ -62,6 +62,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       SourcePath abiJar,
       ImmutableSet<Path> additionalClasspathEntries,
       JavacOptions javacOptions,
+      boolean trackClassUsage,
+      CompileToJarStepFactory compileStepFactory,
       Optional<Path> resourcesRoot,
       Optional<String> mavenCoords,
       Optional<SourcePath> manifestFile,
@@ -77,9 +79,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         exportedDeps,
         providedDeps,
         abiJar,
-        javacOptions.trackClassUsage(),
+        trackClassUsage,
         additionalClasspathEntries,
-        new JavacToJarStepFactory(javacOptions, new BootClasspathAppender()),
+        compileStepFactory,
         resourcesRoot,
         Optional.<SourcePath>absent(),
         mavenCoords,

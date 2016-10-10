@@ -32,7 +32,9 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
@@ -48,17 +50,27 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 
 public class AndroidLibraryDescription
-    implements Description<AndroidLibraryDescription.Arg>, Flavored {
+    implements Description<AndroidLibraryDescription.Arg>, Flavored,
+    ImplicitDepsInferringDescription<AndroidLibraryDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("android_library");
 
   private static final Flavor DUMMY_R_DOT_JAVA_FLAVOR =
       AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR;
 
-  private final JavacOptions defaultOptions;
+  public enum JvmLanguage {
+    JAVA,
+    SCALA
+  }
 
-  public AndroidLibraryDescription(JavacOptions defaultOptions) {
+  private final JavacOptions defaultOptions;
+  private final AndroidLibraryCompilerFactory compilerFactory;
+
+  public AndroidLibraryDescription(
+      JavacOptions defaultOptions,
+      AndroidLibraryCompilerFactory compilerFactory) {
     this.defaultOptions = defaultOptions;
+    this.compilerFactory = compilerFactory;
   }
 
   @Override
@@ -123,19 +135,35 @@ public class AndroidLibraryDescription
 
       BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
+      AndroidLibraryCompiler compiler =
+          compilerFactory.getCompiler(args.language.or(JvmLanguage.JAVA));
+
       ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps.get());
+
+      ImmutableSortedSet<BuildRule> declaredDeps =
+          ImmutableSortedSet.<BuildRule>naturalOrder()
+              .addAll(params.getDeclaredDeps().get())
+              .addAll(compiler.getDeclaredDeps(args, resolver))
+              .build();
+
+      ImmutableSortedSet<BuildRule> extraDeps =
+          ImmutableSortedSet.<BuildRule>naturalOrder()
+              .addAll(params.getExtraDeps().get())
+              .addAll(BuildRules.getExportedRules(
+                  Iterables.concat(
+                      declaredDeps,
+                      exportedDeps,
+                      resolver.getAllRules(args.providedDeps.get()))))
+              .addAll(pathResolver.filterBuildRuleInputs(javacOptions.getInputs(pathResolver)))
+              .addAll(compiler.getExtraDeps(args, resolver))
+              .build();
+
       AndroidLibrary library =
           resolver.addToIndex(
               new AndroidLibrary(
-                  params.appendExtraDeps(
-                      Iterables.concat(
-                          BuildRules.getExportedRules(
-                              Iterables.concat(
-                                  params.getDeclaredDeps().get(),
-                                  exportedDeps,
-                                  resolver.getAllRules(args.providedDeps.get()))),
-                          pathResolver.filterBuildRuleInputs(
-                              javacOptions.getInputs(pathResolver)))),
+                  params.copyWithDeps(
+                      Suppliers.ofInstance(declaredDeps),
+                      Suppliers.ofInstance(extraDeps)),
                   pathResolver,
                   args.srcs.get(),
                   ResourceValidator.validateResources(
@@ -149,6 +177,8 @@ public class AndroidLibraryDescription
                   new BuildTargetSourcePath(abiJarTarget),
                   additionalClasspathEntries,
                   javacOptions,
+                  compiler.trackClassUsage(javacOptions),
+                  compiler.compileToJar(args, javacOptions, resolver),
                   args.resourcesRoot,
                   args.mavenCoords,
                   args.manifest,
@@ -172,10 +202,21 @@ public class AndroidLibraryDescription
         flavors.equals(ImmutableSet.of(DUMMY_R_DOT_JAVA_FLAVOR));
   }
 
+  @Override
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      Arg constructorArg) {
+    return compilerFactory.getCompiler(constructorArg.language.or(JvmLanguage.JAVA))
+        .findDepsForTargetFromConstructorArgs(buildTarget, cellRoots, constructorArg);
+  }
+
   @SuppressFieldNotInitialized
   public static class Arg extends JavaLibraryDescription.Arg {
     public Optional<SourcePath> manifest;
     public Optional<String> resourceUnionPackage;
     public Optional<String> finalRName;
+    public Optional<JvmLanguage> language;
   }
 }
+

@@ -22,6 +22,7 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.HumanReadableException;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -50,5 +51,28 @@ public class AndroidLibraryIntegrationTest {
         workspace.runBuckBuild("//java/com/sample/lib:lib_using_transitive_empty_res");
     result.assertFailure();
     assertTrue(result.getStderr().contains("package R does not exist"));
+  }
+
+  @Test(timeout = (3 * 60 * 1000))
+  public void testAndroidScalaLibraryDoesNotUseTransitiveResources() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    ProcessResult result =
+        workspace.runBuckBuild("//scala/com/sample/lib:lib_using_transitive_empty_res");
+    result.assertFailure();
+    assertTrue(result.getStderr().contains("not found: value R"));
+  }
+
+  @Test(timeout = (3 * 60 * 1000))
+  public void testAndroidScalaLibraryCompilation() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    ProcessResult result =
+        workspace.runBuckBuild("//scala/com/sample/lib:lib_depending_on_main_lib");
+    result.assertSuccess();
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void testAndroidLibraryBuildFailsWithInvalidLanguageParam() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    workspace.runBuckBuild("//scala/com/sample/invalid_lang:lib_with_invalid_language_param");
   }
 }
