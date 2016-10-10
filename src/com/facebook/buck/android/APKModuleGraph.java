@@ -368,9 +368,12 @@ public class APKModuleGraph {
   }
 
   private static String generateNameFromTarget(BuildTarget androidModuleTarget) {
-    String shortName = androidModuleTarget.getShortNameAndFlavorPostfix().replace("#", ".");
-    String name = androidModuleTarget.getBasePath().toString().replaceAll("[/\\\\]", ".");
-    if (androidModuleTarget.getBasePath().endsWith(shortName)) {
+    String replacementPattern = "[/\\\\#-]";
+    String shortName = androidModuleTarget
+        .getShortNameAndFlavorPostfix()
+        .replaceAll(replacementPattern, ".");
+    String name = androidModuleTarget.getBasePath().toString().replaceAll(replacementPattern, ".");
+    if (name.endsWith(shortName)) {
       // return just the base path, ignoring the target name that is the same as its parent
       return name;
     } else {

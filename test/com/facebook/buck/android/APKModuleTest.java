@@ -97,7 +97,7 @@ public class APKModuleTest {
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance(
         "//src/com/facebook/test-java-library:test-java-library")
-        .withFlavors(ImmutableFlavor.of("test"));
+        .withFlavors(ImmutableFlavor.of("flavor"));
     nodeBuilder.add(
         JavaLibraryBuilder
             .createBuilder(javaLibraryTarget)
@@ -152,8 +152,8 @@ public class APKModuleTest {
 
     for (APKModule apkModule : topLevelNodes) {
       assertThat(apkModule.getName(), oneOf(
-          "src.com.facebook.test-android-library",
-          "src.com.facebook.test-java-library.test-java-library.test"));
+          "src.com.facebook.test.android.library",
+          "src.com.facebook.test.java.library.test.java.library.flavor"));
       ImmutableSet<APKModule> dependencies = dag.getGraph().getOutgoingNodesFor(apkModule);
       assertThat(apkModule.isRootModule(), is(false));
 
@@ -177,8 +177,8 @@ public class APKModuleTest {
         }).toSet(),
         containsInAnyOrder(
             "dex",
-            "src.com.facebook.test-android-library",
-            "src.com.facebook.test-java-library.test-java-library.test"));
+            "src.com.facebook.test.android.library",
+            "src.com.facebook.test.java.library.test.java.library.flavor"));
   }
 
   /*
@@ -287,7 +287,7 @@ public class APKModuleTest {
     assertThat(topLevelNodes.size(), is(2));
 
     for (APKModule apkModule : topLevelNodes) {
-      assertThat(apkModule.getName(), oneOf("test-android-library", "test-java-library"));
+      assertThat(apkModule.getName(), oneOf("test.android.library", "test.java.library"));
       ImmutableSet<APKModule> dependencies = dag.getGraph().getOutgoingNodesFor(apkModule);
 
       assertThat(
@@ -295,7 +295,7 @@ public class APKModuleTest {
           is(2));
       assertThat(
           Iterables.getFirst(dependencies, null).getName(),
-          oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "test-shared-library"));
+          oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "test.shared.library"));
     }
   }
 
@@ -398,25 +398,25 @@ public class APKModuleTest {
     assertThat(topLevelNodes.size(), is(2));
 
     for (APKModule apkModule : topLevelNodes) {
-      assertThat(apkModule.getName(), oneOf("test-android-library", "test-java-library"));
+      assertThat(apkModule.getName(), oneOf("test.android.library", "test.java.library"));
       ImmutableSet<APKModule> dependencies = dag.getGraph().getOutgoingNodesFor(apkModule);
 
       for (APKModule depModule : dependencies) {
         assertThat(depModule.getName(), oneOf(
-            "test-java-library",
-            "test-shared-library",
+            "test.java.library",
+            "test.shared.library",
             APKModuleGraph.ROOT_APKMODULE_NAME));
         switch (depModule.getName()) {
           case APKModuleGraph.ROOT_APKMODULE_NAME:
             assertThat(dag.getGraph().getOutgoingNodesFor(depModule).size(), is(0));
             break;
-          case "test-java-library":
+          case "test.java.library":
             verifyDependencies(
                 dag,
                 depModule,
-                ImmutableSet.of("test-shared-library", APKModuleGraph.ROOT_APKMODULE_NAME));
+                ImmutableSet.of("test.shared.library", APKModuleGraph.ROOT_APKMODULE_NAME));
             break;
-          case "test-shared-library":
+          case "test.shared.library":
             verifyDependencies(dag, depModule, ImmutableSet.of(APKModuleGraph.ROOT_APKMODULE_NAME));
             break;
 
