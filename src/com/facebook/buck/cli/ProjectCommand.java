@@ -358,6 +358,10 @@ public class ProjectCommand extends BuildCommand {
     return buckConfig.getBooleanValue("project", "exclude_artifacts", false);
   }
 
+  private boolean isBuildWithBuckDisabledWithFocus(BuckConfig buckConfig) {
+    return buckConfig.getBooleanValue("project", "xcode_focus_disable_build_with_buck", false);
+  }
+
   private List<String> getInitialTargets(BuckConfig buckConfig) {
     Optional<String> initialTargets = buckConfig.getValue("project", "initial_targets");
     return initialTargets.isPresent()
@@ -878,6 +882,13 @@ public class ProjectCommand extends BuildCommand {
         getCombinedProject(),
         appleConfig.shouldUseHeaderMapsInXcodeProject());
 
+    boolean shouldBuildWithBuck = buildWithBuck ||
+        shouldForceBuildingWithBuck(params.getBuckConfig(), passedInTargetsSet);
+    if (modulesToFocusOn != null && buildWithBuck &&
+        isBuildWithBuckDisabledWithFocus(params.getBuckConfig())) {
+      shouldBuildWithBuck = false;
+    }
+
     ImmutableSet<BuildTarget> requiredBuildTargets = generateWorkspacesForTargets(
         params,
         targetGraphAndTargets,
@@ -887,7 +898,7 @@ public class ProjectCommand extends BuildCommand {
         getFocusModules(params),
         new HashMap<Path, ProjectGenerator>(),
         getCombinedProject(),
-        buildWithBuck || shouldForceBuildingWithBuck(params.getBuckConfig(), passedInTargetsSet),
+        shouldBuildWithBuck,
         getCombineTestBundles());
     if (!requiredBuildTargets.isEmpty()) {
       BuildCommand buildCommand = new BuildCommand(FluentIterable.from(requiredBuildTargets)
