@@ -100,6 +100,22 @@ public class APKModuleGraph {
         }
       });
 
+  private final Supplier<ImmutableSet<APKModule>> modulesSupplier =
+      Suppliers.memoize(new Supplier<ImmutableSet<APKModule>>() {
+        @Override
+        public ImmutableSet<APKModule> get() {
+          final ImmutableSet.Builder<APKModule> moduleBuilder = ImmutableSet.builder();
+          new AbstractBreadthFirstTraversal<APKModule>(getRootAPKModule()) {
+            @Override
+            public Iterable<APKModule> visit(APKModule apkModule) throws RuntimeException {
+              moduleBuilder.add(apkModule);
+              return getGraph().getIncomingNodesFor(apkModule);
+            }
+          }.start();
+          return moduleBuilder.build();
+        }
+      });
+
   /**
    * Constructor for the {@code APKModule} graph generator object
    *
@@ -132,6 +148,10 @@ public class APKModuleGraph {
    */
   public APKModule getRootAPKModule() {
     return rootAPKModuleSupplier.get();
+  }
+
+  public ImmutableSet<APKModule> getAPKModules() {
+    return modulesSupplier.get();
   }
 
   /**

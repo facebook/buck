@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.oneOf;
 import static org.hamcrest.Matchers.in;
@@ -30,7 +31,9 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -164,6 +167,18 @@ public class APKModuleTest {
           Iterables.getFirst(dependencies, null).isRootModule(),
           is(true));
     }
+
+    assertThat(
+        FluentIterable.from(dag.getAPKModules()).transform(new Function<APKModule, String>() {
+          @Override
+          public String apply(APKModule input) {
+            return input.getName();
+          }
+        }).toSet(),
+        containsInAnyOrder(
+            "dex",
+            "src.com.facebook.test-android-library",
+            "src.com.facebook.test-java-library.test-java-library.test"));
   }
 
   /*
