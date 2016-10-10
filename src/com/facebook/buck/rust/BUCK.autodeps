@@ -1,7 +1,8 @@
-#@# GENERATED FILE: DO NOT MODIFY 840b6aa5c2a113cb60d86ccb0aea0c142cd03cd2 #@#
+#@# GENERATED FILE: DO NOT MODIFY 071e85d701f1f9fe6fd07f955718e51ca5162b58 #@#
 {
   "rust" : {
     "deps" : [
+      "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/rules/args:args",

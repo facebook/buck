@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 895083adfb3a9c76915218de0972f044ce791f18 #@#
+#@# GENERATED FILE: DO NOT MODIFY 447c4cdf33ec2a4b284f810fb2a02dc38c938342 #@#
 {
   "action_graph_cache" : {
     "deps" : [
@@ -226,7 +226,6 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:interfaces",
-      "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:io",
       "//third-party/java/guava:guava"
     ]

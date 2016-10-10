@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 10a924e442aca13f99682c68f60fb6a52c2e27e1 #@#
+#@# GENERATED FILE: DO NOT MODIFY 2ad874e14d6ab6d85d7faa16c48daa88c6d6b337 #@#
 {
   "thrift" : {
     "deps" : [
@@ -31,7 +31,6 @@
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/thrift:thrift",
-      "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",

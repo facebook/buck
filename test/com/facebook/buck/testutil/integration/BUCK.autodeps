@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 93991900f2e0ba0c48ae56f73dd4c6a1a46a765d #@#
+#@# GENERATED FILE: DO NOT MODIFY 8a707221b750d15f2f6ec31712c93de81d84a4b0 #@#
 {
   "integration" : {
     "deps" : [
@@ -15,7 +15,6 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/rules:default_cell_path_resolver",
-      "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util:watchman",
