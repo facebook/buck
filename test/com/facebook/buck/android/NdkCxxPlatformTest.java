@@ -46,7 +46,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
@@ -224,12 +223,11 @@ public class NdkCxxPlatformTest {
         for (Platform platform :
             ImmutableList.of(Platform.LINUX, Platform.MACOS, Platform.WINDOWS)) {
           Path root = tmp.newFolder(dir);
-          FakeProjectFilesystem filesystem = new FakeProjectFilesystem(root);
           MoreFiles.writeLinesToFile(ImmutableList.of("r9c"), root.resolve("RELEASE.TXT"));
           ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> platforms =
               NdkCxxPlatforms.getPlatforms(
                   CxxPlatformUtils.DEFAULT_CONFIG,
-                  filesystem,
+                  root,
                   NdkCxxPlatformCompiler.builder()
                       .setType(config.getFirst())
                       .setVersion("gcc-version")

@@ -29,7 +29,6 @@ import com.facebook.buck.cxx.LinkerProvider;
 import com.facebook.buck.cxx.PosixNmSymbolNameTool;
 import com.facebook.buck.cxx.PreprocessorProvider;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.ConstantToolProvider;
@@ -128,7 +127,7 @@ public class NdkCxxPlatforms {
 
   public static ImmutableMap<TargetCpuType, NdkCxxPlatform> getPlatforms(
       CxxBuckConfig config,
-      ProjectFilesystem ndkRoot,
+      Path ndkRoot,
       NdkCxxPlatformCompiler compiler,
       CxxRuntime cxxRuntime,
       String androidPlatform,
@@ -151,7 +150,7 @@ public class NdkCxxPlatforms {
    */
   public static ImmutableMap<TargetCpuType, NdkCxxPlatform> getPlatforms(
       CxxBuckConfig config,
-      ProjectFilesystem ndkRoot,
+      Path ndkRoot,
       NdkCxxPlatformCompiler compiler,
       CxxRuntime cxxRuntime,
       String androidPlatform,
@@ -371,13 +370,11 @@ public class NdkCxxPlatforms {
       CxxBuckConfig config,
       Flavor flavor,
       Platform platform,
-      ProjectFilesystem ndk,
+      Path ndkRoot,
       NdkCxxPlatformTargetConfiguration targetConfiguration,
       CxxRuntime cxxRuntime,
       ExecutableFinder executableFinder,
       boolean strictToolchainPaths) {
-    Path ndkRoot = ndk.getRootPath();
-
     // Create a version string to use when generating rule keys via the NDK tools we'll generate
     // below.  This will be used in lieu of hashing the contents of the tools, so that builds from
     // different host platforms (which produce identical output) will share the cache with one
@@ -386,7 +383,7 @@ public class NdkCxxPlatforms {
     String version =
         Joiner.on('-').join(
             ImmutableList.of(
-                readVersion(ndk.getRootPath()),
+                readVersion(ndkRoot),
                 targetConfiguration.getToolchain(),
                 targetConfiguration.getTargetAppPlatform(),
                 compilerType,
