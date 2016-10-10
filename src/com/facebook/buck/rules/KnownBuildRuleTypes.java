@@ -28,6 +28,7 @@ import com.facebook.buck.android.AndroidManifestDescription;
 import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.ApkGenruleDescription;
+import com.facebook.buck.android.DefaultAndroidLibraryCompilerFactory;
 import com.facebook.buck.android.GenAidlDescription;
 import com.facebook.buck.android.NdkCxxPlatform;
 import com.facebook.buck.android.NdkCxxPlatformCompiler;
@@ -623,7 +624,9 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidInstrumentationTestDescription(
         defaultJavaOptions,
         defaultTestRuleTimeoutMs));
-    builder.register(new AndroidLibraryDescription(defaultJavacOptions));
+    builder.register(new AndroidLibraryDescription(
+        defaultJavacOptions,
+        new DefaultAndroidLibraryCompilerFactory(scalaConfig)));
     builder.register(new AndroidManifestDescription());
     builder.register(new AndroidPrebuiltAarDescription(defaultJavacOptions));
     builder.register(new AndroidReactNativeLibraryDescription(reactNativeBuckConfig));

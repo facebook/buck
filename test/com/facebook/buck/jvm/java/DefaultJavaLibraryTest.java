@@ -28,7 +28,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.android.AndroidLibrary;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
@@ -1348,7 +1347,6 @@ public class DefaultJavaLibraryTest {
       return options;
     }
 
-    // TODO(shs96c): Actually generate a java library rule, rather than an android one.
     private BuildRule createJavaLibraryRule(ProjectFilesystem projectFilesystem)
         throws IOException {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(ANNOTATION_SCENARIO_TARGET);
@@ -1360,8 +1358,9 @@ public class DefaultJavaLibraryTest {
       tmp.newFile(src);
 
       AnnotationProcessingParams params = annotationProcessingParamsBuilder.build();
-      JavacOptions.Builder options = JavacOptions.builder(DEFAULT_JAVAC_OPTIONS)
-          .setAnnotationProcessingParams(params);
+      JavacOptions options = JavacOptions.builder(DEFAULT_JAVAC_OPTIONS)
+          .setAnnotationProcessingParams(params)
+          .build();
 
       BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget)
           .setProjectFilesystem(projectFilesystem)
@@ -1370,26 +1369,29 @@ public class DefaultJavaLibraryTest {
       BuildRuleResolver ruleResolver = new BuildRuleResolver(
           TargetGraph.EMPTY,
           new DefaultTargetNodeToBuildRuleTransformer());
-      AndroidLibrary androidLibrary = new AndroidLibrary(
+      DefaultJavaLibrary javaLibrary = new DefaultJavaLibrary(
           buildRuleParams,
           new SourcePathResolver(
               ruleResolver),
           ImmutableSet.of(new FakeSourcePath(src)),
           /* resources */ ImmutableSet.<SourcePath>of(),
+          options.getGeneratedSourceFolderName(),
           /* proguardConfig */ Optional.<SourcePath>absent(),
           /* postprocessClassesCommands */ ImmutableList.<String>of(),
           /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
           /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
           /* abiJar */ new FakeSourcePath("abi.jar"),
+          options.trackClassUsage(),
           /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-          options.build(),
+          new JavacToJarStepFactory(options, JavacOptionsAmender.IDENTITY),
           /* resourcesRoot */ Optional.<Path>absent(),
-          /* mavenCoords */ Optional.<String>absent(),
           /* manifestFile */ Optional.<SourcePath>absent(),
-          /* tests */ ImmutableSortedSet.<BuildTarget>of());
+          /* mavenCoords */ Optional.<String>absent(),
+          /* tests */ ImmutableSortedSet.<BuildTarget>of(),
+          options.getClassesToRemoveFromJar());
 
-      ruleResolver.addToIndex(androidLibrary);
-      return androidLibrary;
+      ruleResolver.addToIndex(javaLibrary);
+      return javaLibrary;
     }
 
     private JavacStep lastJavacCommand(Iterable<Step> commands) {

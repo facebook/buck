@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.model.BuildTarget;
@@ -49,6 +50,7 @@ public class AndroidPrebuiltAar
       PrebuiltJar prebuiltJar,
       UnzipAar unzipAar,
       JavacOptions javacOptions,
+      CompileToJarStepFactory compileStepFactory,
       Iterable<PrebuiltJar> exportedDeps,
       SourcePath abiJar) {
     super(
@@ -66,6 +68,8 @@ public class AndroidPrebuiltAar
         abiJar,
         /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
         javacOptions,
+        /* trackClassUsage */ false,
+        compileStepFactory,
         /* resourcesRoot */ Optional.<Path>absent(),
         /* mavenCoords */ Optional.<String>absent(),
         Optional.<SourcePath>of(
