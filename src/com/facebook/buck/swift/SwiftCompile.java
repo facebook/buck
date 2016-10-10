@@ -149,7 +149,7 @@ class SwiftCompile
             cxxPlatform.getFlavor(),
             headerVisibility);
 
-        compilerCommand.add(LOCAL.getFlag(), headerPath.toString());
+        compilerCommand.add(INCLUDE_FLAG, headerPath.toString());
       }
     }
 
