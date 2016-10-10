@@ -1,8 +1,10 @@
-#@# GENERATED FILE: DO NOT MODIFY 705b26683b3227238b9388cae1d4433967113fd7 #@#
+#@# GENERATED FILE: DO NOT MODIFY 7c62e08369c2b8230060769e42870bc773a7865f #@#
 {
   "integration" : {
     "deps" : [
+      "//src/com/facebook/buck/util:constants",
       "//test/com/facebook/buck/testutil/integration:integration",
+      "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/junit:junit"
     ],

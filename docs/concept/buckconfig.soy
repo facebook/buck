@@ -1583,6 +1583,17 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'log' /}
+  {param name: 'machine_readable_logger_enabled' /}
+  {param example_value: 'true' /}
+  {param description}
+    <code>true</code> if Buck should output to a machine readable log file under name <code>
+    buck-machine-log</code>. Log entries are formatted one per line like <code>< Event type >
+    < space >< Json ></code>.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'lua' /}
   {param description}

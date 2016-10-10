@@ -18,9 +18,13 @@ package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
+import com.facebook.buck.log.views.JsonViews;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.base.Preconditions;
 
 public class VersionControlStatsEvent extends AbstractBuckEvent {
+
+  @JsonView(JsonViews.MachineReadableLog.class)
   private VersionControlStats versionControlStats;
 
   public VersionControlStatsEvent(VersionControlStats versionControlStats) {

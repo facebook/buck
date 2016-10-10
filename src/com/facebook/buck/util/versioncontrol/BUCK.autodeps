@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY c5e27367e08590e48991adb6c272879ab142588c #@#
+#@# GENERATED FILE: DO NOT MODIFY 0d5091b2ee92f20518dced6e4f080bf0d847ca04 #@#
 {
   "impl" : {
     "deps" : [
@@ -14,13 +14,15 @@
   "versioncontrol" : {
     "deps" : [
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/log/views:views",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/util/immutables:immutables",
-      "//third-party/java/guava:guava"
+      "//third-party/java/guava:guava",
+      "//third-party/java/jackson:jackson-annotations"
     ]
   }
 }

@@ -16,8 +16,10 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildId;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
@@ -72,6 +74,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   }
 
   @Override
+  @JsonView(JsonViews.MachineReadableLog.class)
   public long getTimestamp() {
     Preconditions.checkState(isConfigured, "Event was not configured yet.");
     return timestamp;

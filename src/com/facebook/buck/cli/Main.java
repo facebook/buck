@@ -44,6 +44,7 @@ import com.facebook.buck.event.listener.FileSerializationEventBusListener;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.event.listener.LoadBalancerEventsListener;
 import com.facebook.buck.event.listener.LoggingBuildListener;
+import com.facebook.buck.event.listener.MachineReadableLoggerListener;
 import com.facebook.buck.event.listener.ProgressEstimator;
 import com.facebook.buck.event.listener.PublicAnnouncementManager;
 import com.facebook.buck.event.listener.RuleKeyLoggerListener;
@@ -145,6 +146,7 @@ import com.sun.jna.ptr.IntByReference;
 import org.kohsuke.args4j.CmdLineException;
 
 import java.io.Closeable;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -1603,6 +1605,19 @@ public final class Main {
           invocationInfo,
           MostExecutors.newSingleThreadExecutor(
               new CommandThreadFactory(getClass().getName()))));
+    }
+
+    if (config.isMachineReadableLoggerEnabled()) {
+      try {
+        eventListenersBuilder.add(
+            new MachineReadableLoggerListener(
+                invocationInfo,
+                projectFilesystem,
+                MostExecutors.newSingleThreadExecutor(
+                    new CommandThreadFactory(getClass().getName()))));
+      } catch (FileNotFoundException e) {
+        LOG.warn("Unable to open stream for machine readable log file.");
+      }
     }
 
     JavaBuckConfig javaBuckConfig = new JavaBuckConfig(config);

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY b70c0f6928c5dbb2be729bb2d74ea32ce0c41dcd #@#
+#@# GENERATED FILE: DO NOT MODIFY 7667ba3d40e048c23e95a2de1ded807a0e6827da #@#
 {
   "log" : {
     "deps" : [
@@ -6,6 +6,7 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/log:appendablelogrecord",
+      "//src/com/facebook/buck/log/views:views",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/concurrent:concurrent",
@@ -18,7 +19,9 @@
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/immutables:immutables",
-      "//third-party/java/guava:guava"
+      "//third-party/java/guava:guava",
+      "//third-party/java/jackson:jackson-annotations",
+      "//third-party/java/jackson:jackson-databind"
     ]
   }
 }

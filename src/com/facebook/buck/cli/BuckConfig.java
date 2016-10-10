@@ -496,6 +496,10 @@ public class BuckConfig {
     return getBooleanValue(LOG_SECTION, "rule_key_logger_enabled", false);
   }
 
+  public boolean isMachineReadableLoggerEnabled() {
+    return getBooleanValue(LOG_SECTION, "machine_readable_logger_enabled", true);
+  }
+
   public boolean getCompressTraces() {
     return getBooleanValue("log", "compress_traces", false);
   }

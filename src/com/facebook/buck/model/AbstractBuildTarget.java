@@ -16,10 +16,12 @@
 
 package com.facebook.buck.model;
 
+import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -72,6 +74,7 @@ abstract class AbstractBuildTarget
   }
 
   @JsonProperty("baseName")
+  @JsonView(JsonViews.MachineReadableLog.class)
   public String getBaseName() {
     return getUnflavoredBuildTarget().getBaseName();
   }
@@ -86,6 +89,7 @@ abstract class AbstractBuildTarget
   }
 
   @JsonProperty("shortName")
+  @JsonView(JsonViews.MachineReadableLog.class)
   public String getShortName() {
     return getUnflavoredBuildTarget().getShortName();
   }
@@ -106,6 +110,7 @@ abstract class AbstractBuildTarget
   }
 
   @JsonProperty("flavor")
+  @JsonView(JsonViews.MachineReadableLog.class)
   private String getFlavorsAsString() {
     return Joiner.on(",").join(getFlavors());
   }

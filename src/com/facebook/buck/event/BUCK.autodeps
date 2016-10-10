@@ -1,8 +1,9 @@
-#@# GENERATED FILE: DO NOT MODIFY 8fcf1545ca684951eb458f7249006ee60a15704d #@#
+#@# GENERATED FILE: DO NOT MODIFY f0666fbda7df71390888400a31dbdf196a6031f1 #@#
 {
   "event" : {
     "deps" : [
       "//src/com/facebook/buck/log:log",
+      "//src/com/facebook/buck/log/views:views",
       "//src/com/facebook/buck/util/concurrent:concurrent",
       "//third-party/java/immutables:processor",
       "//third-party/java/jsr:jsr305"

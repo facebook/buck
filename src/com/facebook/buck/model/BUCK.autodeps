@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY fabcc4c5ba00d0780ea195c10244d4fe97e667af #@#
+#@# GENERATED FILE: DO NOT MODIFY 5205a5b3c52652e640d058bde3ee797049f135d0 #@#
 {
   "build_id" : {
     "deps" : [ ],
@@ -23,6 +23,7 @@
       "//src/com/facebook/buck/io:BuckPaths",
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/log/views:views",
       "//src/com/facebook/buck/util:constants",
       "//third-party/java/immutables:processor"
     ],
