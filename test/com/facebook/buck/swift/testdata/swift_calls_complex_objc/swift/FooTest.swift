@@ -5,6 +5,6 @@ import XCTest
 
 class StringTests: XCTestCase {
     func testIsPresent() {
-        XCTAssertEquals("Hello, World!", Foo().greeting())
+        XCTAssertEqual("Hello, World!", Foo().greeting())
     }
 }
