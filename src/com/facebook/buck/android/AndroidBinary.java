@@ -418,29 +418,31 @@ public class AndroidBinary
         enhancementResult.getPackageableCollection();
 
     ImmutableSet.Builder<Path> nativeLibraryDirectoriesBuilder = ImmutableSet.builder();
+    // Copy the transitive closure of native-libs-as-assets to a single directory, if any.
+    ImmutableSet.Builder<Path> nativeLibraryAsAssetDirectories = ImmutableSet.builder();
+
     for (final APKModule module : enhancementResult.getAPKModuleGraph().getAPKModules()) {
+      boolean shouldPackageAssetLibraries =
+          packageAssetLibraries.or(Boolean.FALSE) || !module.isRootModule();
+
       if (!ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
           enhancementResult.getCopyNativeLibraries().isPresent() &&
           enhancementResult.getCopyNativeLibraries().get().containsKey(module)) {
         CopyNativeLibraries copyNativeLibraries =
             enhancementResult.getCopyNativeLibraries().get().get(module);
-        if (packageAssetLibraries.or(Boolean.FALSE)) {
+        if (shouldPackageAssetLibraries) {
           nativeLibraryDirectoriesBuilder.add(copyNativeLibraries.getPathToNativeLibsDir());
         } else {
           nativeLibraryDirectoriesBuilder.add(copyNativeLibraries.getPathToNativeLibsDir());
           nativeLibraryDirectoriesBuilder.add(copyNativeLibraries.getPathToNativeLibsAssetsDir());
         }
       }
-    }
 
-    // Copy the transitive closure of native-libs-as-assets to a single directory, if any.
-    ImmutableSet<Path> nativeLibraryAsAssetDirectories;
-    if ((!packageableCollection.getNativeLibAssetsDirectories().isEmpty()) ||
-        (!packageableCollection.getNativeLinkablesAssets().isEmpty() &&
-            packageAssetLibraries.or(Boolean.FALSE))) {
-      Path pathForNativeLibsAsAssets = getPathForNativeLibsAsAssets();
+      if ((!packageableCollection.getNativeLibAssetsDirectories().isEmpty()) ||
+          (!packageableCollection.getNativeLinkablesAssets().isEmpty() &&
+              shouldPackageAssetLibraries)) {
+        Path pathForNativeLibsAsAssets = getPathForNativeLibsAsAssets();
 
-      for (final APKModule module : enhancementResult.getAPKModuleGraph().getAPKModules()) {
         final Path libSubdirectory = pathForNativeLibsAsAssets
             .resolve("assets")
             .resolve(module.isRootModule() ? "lib" : module.getName());
@@ -454,11 +456,9 @@ public class AndroidBinary
             libSubdirectory,
             module.isRootModule() ? "metadata.txt" : "libs.txt",
             module);
-      }
 
-      nativeLibraryAsAssetDirectories = ImmutableSet.of(pathForNativeLibsAsAssets);
-    } else {
-      nativeLibraryAsAssetDirectories = ImmutableSet.of();
+        nativeLibraryAsAssetDirectories.add(pathForNativeLibsAsAssets);
+      }
     }
 
 
@@ -486,7 +486,7 @@ public class AndroidBinary
     }
 
     ImmutableSet<Path> allAssetDirectories = ImmutableSet.<Path>builder()
-        .addAll(nativeLibraryAsAssetDirectories)
+        .addAll(nativeLibraryAsAssetDirectories.build())
         .addAll(dexFilesInfo.secondaryDexDirs)
         .build();
 
@@ -575,7 +575,7 @@ public class AndroidBinary
           }
         });
 
-    if (packageAssetLibraries.or(Boolean.FALSE)) {
+    if (packageAssetLibraries.or(Boolean.FALSE) || !module.isRootModule()) {
       if (enhancementResult.getCopyNativeLibraries().isPresent() &&
           enhancementResult.getCopyNativeLibraries().get().containsKey(module)) {
         // Copy in cxx libraries marked as assets. Filtering and renaming was already done
@@ -639,7 +639,7 @@ public class AndroidBinary
             }
           });
     }
-    if (compressAssetLibraries.or(Boolean.FALSE)) {
+    if (compressAssetLibraries.or(Boolean.FALSE) || !module.isRootModule()) {
       final ImmutableList.Builder<Path> outputAssetLibrariesBuilder = ImmutableList.builder();
       steps.add(
           new AbstractExecutionStep("rename_asset_libraries_as_temp_files_" + module.getName()) {
