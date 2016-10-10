@@ -265,6 +265,24 @@ public class AndroidBinaryIntegrationTest {
   }
 
   @Test
+  public void testCxxLibraryDepModular() throws IOException {
+    String target = "//apps/sample:app_cxx_lib_dep_modular";
+    workspace.runBuckCommand("build", target).assertSuccess();
+
+    ZipInspector zipInspector = new ZipInspector(
+        workspace.getPath(
+            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    zipInspector.assertFileDoesNotExist("lib/armeabi/libnative_cxx_lib.so");
+    zipInspector.assertFileExists("lib/armeabi/libgnustl_shared.so");
+    zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libnative_cxx_lib.so");
+    zipInspector.assertFileExists("lib/armeabi-v7a/libgnustl_shared.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_lib.so");
+    zipInspector.assertFileExists("lib/x86/libgnustl_shared.so");
+    zipInspector.assertFileExists("assets/native.cxx.lib/libs.txt");
+    zipInspector.assertFileExists("assets/native.cxx.lib/libs.xzs");
+  }
+
+  @Test
   public void testCxxLibraryDepClang() throws IOException {
     String target = "//apps/sample:app_cxx_lib_dep";
     ProjectWorkspace.ProcessResult result =
