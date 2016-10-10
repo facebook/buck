@@ -5,7 +5,7 @@
 # systems don't have this flag. *sigh*
 BUCK_PATH="$0"
 while [ -h "$BUCK_PATH" ]; do
-  BUCK_PATH=$(readlink "$BUCK_PATH")
+  BUCK_PATH=$(realpath "$BUCK_PATH")
 done
 BUCK_DIR=$(dirname "$BUCK_PATH")
 
