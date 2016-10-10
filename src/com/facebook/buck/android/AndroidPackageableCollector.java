@@ -153,13 +153,21 @@ public class AndroidPackageableCollector {
       SourcePath nativeLibDir) {
     APKModule module = apkModuleGraph.findModuleForTarget(owner);
     collectionBuilder.putNativeLibsTargets(module, owner);
-    collectionBuilder.putNativeLibsDirectories(module, nativeLibDir);
+    if (module.isRootModule()) {
+      collectionBuilder.putNativeLibsDirectories(module, nativeLibDir);
+    } else {
+      collectionBuilder.putNativeLibAssetsDirectories(module, nativeLibDir);
+    }
     return this;
   }
 
   public AndroidPackageableCollector addNativeLinkable(NativeLinkable nativeLinkable) {
     APKModule module = apkModuleGraph.findModuleForTarget(nativeLinkable.getBuildTarget());
-    collectionBuilder.putNativeLinkables(module, nativeLinkable);
+    if (module.isRootModule()) {
+      collectionBuilder.putNativeLinkables(module, nativeLinkable);
+    } else {
+      collectionBuilder.putNativeLinkablesAssets(module, nativeLinkable);
+    }
     return this;
   }
 
