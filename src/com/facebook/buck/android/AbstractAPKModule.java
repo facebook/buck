@@ -27,8 +27,13 @@ abstract class AbstractAPKModule {
   public abstract String getName();
 
   @Value.Derived
+  public boolean isRootModule() {
+    return getName().equals(APKModuleGraph.ROOT_APKMODULE_NAME);
+  }
+
+  @Value.Derived
   public String getCanaryClassName() {
-    if (getName().equals(APKModuleGraph.ROOT_APKMODULE_NAME)) {
+    if (isRootModule()) {
       return "secondary";
     } else {
       return String.format("store%04x", getName().hashCode() & 0xFFFF);

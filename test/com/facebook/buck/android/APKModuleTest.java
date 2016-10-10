@@ -152,6 +152,7 @@ public class APKModuleTest {
           "src.com.facebook.test-android-library",
           "src.com.facebook.test-java-library.test-java-library.test"));
       ImmutableSet<APKModule> dependencies = dag.getGraph().getOutgoingNodesFor(apkModule);
+      assertThat(apkModule.isRootModule(), is(false));
 
       assertThat(
           dependencies.size(),
@@ -159,6 +160,9 @@ public class APKModuleTest {
       assertThat(
           Iterables.getFirst(dependencies, null).getName(),
           is(APKModuleGraph.ROOT_APKMODULE_NAME));
+      assertThat(
+          Iterables.getFirst(dependencies, null).isRootModule(),
+          is(true));
     }
   }
 
