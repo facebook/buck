@@ -397,6 +397,26 @@ android_binary(
   native_library_merge_code_generator = '//native/merge:codegen',
 )
 
+android_binary(
+  name = 'app_with_merged_libs_modular',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//keystores:debug',
+  application_module_targets = [
+    '//native/merge:A',
+  ],
+  deps = [
+    '//java/com/sample/lib:lib',
+    '//res/com/sample/base:base',
+    '//native/merge:A',
+  ],
+  native_library_merge_map = {
+    'lib1.so': ['.*/merge:[AB]'],
+    'lib2.so': ['.*/merge:[EF]'],
+  },
+  native_library_merge_glue = '//native/merge:glue_1',
+  native_library_merge_code_generator = '//native/merge:codegen',
+)
+
 genrule(
   name = 'disassemble_app_with_merged_libs_gencode',
   bash = ' && '.join([

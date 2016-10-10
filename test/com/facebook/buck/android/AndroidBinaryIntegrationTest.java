@@ -369,7 +369,8 @@ public class AndroidBinaryIntegrationTest {
         "cpu_abis = x86");
     Map<String, Path> paths = workspace.buildMultipleAndReturnOutputs(
         "//apps/sample:app_with_merged_libs",
-        "//apps/sample:app_with_alternate_merge_glue"
+        "//apps/sample:app_with_alternate_merge_glue",
+        "//apps/sample:app_with_merged_libs_modular"
     );
     Path apkPath = paths.get("//apps/sample:app_with_merged_libs");
 
@@ -417,6 +418,17 @@ public class AndroidBinaryIntegrationTest {
     assertThat(info.symbols.global, not(Matchers.hasItem("glue_1")));
     assertThat(info.symbols.global, Matchers.hasItem("glue_2"));
     assertThat(info.dtNeeded, Matchers.hasItem("libprebuilt_for_F.so"));
+
+    Path modularPath = paths.get("//apps/sample:app_with_merged_libs_modular");
+    ZipInspector modularZipInspector = new ZipInspector(modularPath);
+    modularZipInspector.assertFileDoesNotExist("lib/x86/lib1a.so");
+    modularZipInspector.assertFileDoesNotExist("lib/x86/lib1b.so");
+    modularZipInspector.assertFileDoesNotExist("lib/x86/lib2e.so");
+    modularZipInspector.assertFileDoesNotExist("lib/x86/lib2f.so");
+    modularZipInspector.assertFileExists("assets/native.merge.A/libs.txt");
+    modularZipInspector.assertFileExists("assets/native.merge.A/libs.xzs");
+    modularZipInspector.assertFileDoesNotExist("lib/x86/lib1.so");
+    modularZipInspector.assertFileExists("lib/x86/lib2.so");
 
     Path disassembly = workspace.buildAndReturnOutput(
         "//apps/sample:disassemble_app_with_merged_libs_gencode");
