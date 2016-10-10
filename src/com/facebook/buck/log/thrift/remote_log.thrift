@@ -13,6 +13,7 @@
 
 namespace java com.facebook.buck.log.thrift
 namespace py buck.thrift.remote_log
+namespace cpp2 buck.thrift.remote_log
 
 struct VersionControlStatsRemoteLogEntry {
   1: optional string currentRevisionId;
