@@ -97,6 +97,7 @@ public class NdkCxxPlatforms {
         ndkVersion.startsWith("r10") ? 10 :
         ndkVersion.startsWith("11.") ? 11 :
         ndkVersion.startsWith("12.") ? 12 :
+        ndkVersion.startsWith("13.") ? 13 :
         -1;
   }
 
