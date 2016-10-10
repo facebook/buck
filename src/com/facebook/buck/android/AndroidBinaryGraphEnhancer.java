@@ -197,7 +197,8 @@ public class AndroidBinaryGraphEnhancer {
             cxxBuckConfig,
             nativeLibraryMergeMap,
             nativeLibraryMergeGlue,
-            relinkerMode);
+            relinkerMode,
+            apkModuleGraph);
     this.apkModuleGraph = apkModuleGraph;
   }
 
@@ -220,11 +221,11 @@ public class AndroidBinaryGraphEnhancer {
 
     AndroidNativeLibsGraphEnhancementResult nativeLibsEnhancementResult =
         nativeLibsEnhancer.enhance(packageableCollection);
-    Optional<CopyNativeLibraries> copyNativeLibraries =
+    Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibraries =
         nativeLibsEnhancementResult.getCopyNativeLibraries();
     if (copyNativeLibraries.isPresent()) {
-      ruleResolver.addToIndex(copyNativeLibraries.get());
-      enhancedDeps.add(copyNativeLibraries.get());
+      ruleResolver.addAllToIndex(copyNativeLibraries.get().values());
+      enhancedDeps.addAll(copyNativeLibraries.get().values());
     }
 
     Optional<ImmutableSortedMap<String, String>> sonameMergeMap =

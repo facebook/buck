@@ -121,7 +121,8 @@ public class CopyNativeLibrariesTest {
             ImmutableSet.<SourcePath>of(new FakeSourcePath("lib1"), new FakeSourcePath("lib2")),
             ImmutableSet.<StrippedObjectDescription>of(),
             ImmutableSet.<StrippedObjectDescription>of(),
-            ImmutableSet.<TargetCpuType>of());
+            ImmutableSet.<TargetCpuType>of(),
+            "dex");
 
     ImmutableList<Step> steps =
         copyNativeLibraries.getBuildSteps(

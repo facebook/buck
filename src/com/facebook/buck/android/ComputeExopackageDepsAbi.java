@@ -37,6 +37,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hasher;
@@ -68,7 +69,7 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
   private final EnumSet<ExopackageMode> exopackageModes;
   private final AndroidPackageableCollection packageableCollection;
   private final AaptPackageResources aaptPackageResources;
-  private final Optional<CopyNativeLibraries> copyNativeLibraries;
+  private final Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibraries;
   private final Optional<PackageStringAssets> packageStringAssets;
   private final Optional<PreDexMerge> preDexMerge;
   private final Keystore keystore;
@@ -80,7 +81,7 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
       EnumSet<ExopackageMode> exopackageModes,
       AndroidPackageableCollection packageableCollection,
       AaptPackageResources aaptPackageResources,
-      Optional<CopyNativeLibraries> copyNativeLibraries,
+      Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibraries,
       Optional<PackageStringAssets> packageStringAssets,
       Optional<PreDexMerge> preDexMerge,
       Keystore keystore) {
@@ -148,7 +149,13 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
               // small enough that we can just hash them all without too much of a perf hit.
               if (!ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
                   copyNativeLibraries.isPresent()) {
-                addToHash(hasher, "native_libs", copyNativeLibraries.get().getPathToMetadataTxt());
+                for (Map.Entry<APKModule, CopyNativeLibraries> entry :
+                    copyNativeLibraries.get().entrySet()) {
+                  addToHash(
+                      hasher,
+                      "native_libs_" + entry.getKey().getName(),
+                      entry.getValue().getPathToMetadataTxt());
+                }
               }
 
               // In native exopackage mode, we include a bundle of fake

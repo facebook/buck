@@ -63,6 +63,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   private final Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap;
   private final Optional<BuildTarget> nativeLibraryMergeGlue;
   private final RelinkerMode relinkerMode;
+  private final APKModuleGraph apkModuleGraph;
 
   /**
    * Maps a {@link NdkCxxPlatforms.TargetCpuType} to the {@link CxxPlatform} we need to use to build C/C++
@@ -78,7 +79,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       CxxBuckConfig cxxBuckConfig,
       Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap,
       Optional<BuildTarget> nativeLibraryMergeGlue,
-      RelinkerMode relinkerMode) {
+      RelinkerMode relinkerMode,
+      APKModuleGraph apkModuleGraph) {
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.pathResolver = new SourcePathResolver(ruleResolver);
     this.buildRuleParams = originalParams;
@@ -89,12 +91,13 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     this.nativeLibraryMergeMap = nativeLibraryMergeMap;
     this.nativeLibraryMergeGlue = nativeLibraryMergeGlue;
     this.relinkerMode = relinkerMode;
+    this.apkModuleGraph = apkModuleGraph;
   }
 
   @Value.Immutable
   @BuckStyleImmutable
   interface AbstractAndroidNativeLibsGraphEnhancementResult {
-    Optional<CopyNativeLibraries> getCopyNativeLibraries();
+    Optional<ImmutableMap<APKModule, CopyNativeLibraries>> getCopyNativeLibraries();
     Optional<ImmutableSortedMap<String, String>> getSonameMergeMap();
   }
 
@@ -271,13 +274,17 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     return resultBuilder
         .setCopyNativeLibraries(
             Optional.of(
-                new CopyNativeLibraries(
-                    paramsForCopyNativeLibraries,
-                    pathResolver,
-                    ImmutableSet.copyOf(packageableCollection.getNativeLibsDirectories().values()),
-                    ImmutableSet.copyOf(strippedLibsMap.values()),
-                    ImmutableSet.copyOf(strippedLibsAssetsMap.values()),
-                    cpuFilters)))
+                ImmutableMap.of(
+                    apkModuleGraph.getRootAPKModule(),
+                    new CopyNativeLibraries(
+                        paramsForCopyNativeLibraries,
+                        pathResolver,
+                        ImmutableSet.copyOf(
+                            packageableCollection.getNativeLibsDirectories().values()),
+                        ImmutableSet.copyOf(strippedLibsMap.values()),
+                        ImmutableSet.copyOf(strippedLibsAssetsMap.values()),
+                        cpuFilters,
+                        apkModuleGraph.getRootAPKModule().getName()))))
         .build();
   }
 

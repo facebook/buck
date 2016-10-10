@@ -33,6 +33,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -126,16 +127,18 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         androidManifestArgs);
     aarExtraDepsBuilder.add(resolver.addToIndex(manifest));
 
+    final APKModuleGraph apkModuleGraph = new APKModuleGraph(
+        targetGraph,
+        originalBuildRuleParams.getBuildTarget(),
+        Optional.<Set<BuildTarget>>absent());
+
     /* assemble dirs */
     AndroidPackageableCollector collector =
         new AndroidPackageableCollector(
             originalBuildRuleParams.getBuildTarget(),
             /* buildTargetsToExcludeFromDex */ ImmutableSet.<BuildTarget>of(),
             /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
-            new APKModuleGraph(
-                targetGraph,
-                originalBuildRuleParams.getBuildTarget(),
-                Optional.<Set<BuildTarget>>absent()));
+            apkModuleGraph);
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(
             originalBuildRuleParams.getDeps()));
@@ -209,18 +212,28 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
             cxxBuckConfig,
             /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
             /* nativeLibraryMergeGlue */ Optional.<BuildTarget>absent(),
-            AndroidBinary.RelinkerMode.DISABLED);
-    Optional<CopyNativeLibraries> nativeLibrariesOptional =
+            AndroidBinary.RelinkerMode.DISABLED,
+            apkModuleGraph);
+    Optional<ImmutableMap<APKModule, CopyNativeLibraries>> nativeLibrariesOptional =
         packageableGraphEnhancer.enhance(packageableCollection).getCopyNativeLibraries();
-    if (nativeLibrariesOptional.isPresent()) {
-      aarExtraDepsBuilder.add(resolver.addToIndex(nativeLibrariesOptional.get()));
+    if (nativeLibrariesOptional.isPresent() &&
+        nativeLibrariesOptional.get().containsKey(apkModuleGraph.getRootAPKModule())) {
+      aarExtraDepsBuilder.add(
+          resolver.addToIndex(
+              nativeLibrariesOptional.get().get(apkModuleGraph.getRootAPKModule())));
     }
 
     Optional<Path> assembledNativeLibsDir = nativeLibrariesOptional.transform(
-        new Function<CopyNativeLibraries, Path>() {
+        new Function<ImmutableMap<APKModule, CopyNativeLibraries>, Path>() {
           @Override
-          public Path apply(CopyNativeLibraries input) {
-            return input.getPathToNativeLibsDir();
+          public Path apply(ImmutableMap<APKModule, CopyNativeLibraries> input) {
+            // there will be only one value for the root module
+            CopyNativeLibraries copyNativeLibraries = input.get(apkModuleGraph.getRootAPKModule());
+            if (copyNativeLibraries == null) {
+              throw new HumanReadableException(
+                  "Native libraries are present but not in the root application module.");
+            }
+            return copyNativeLibraries.getPathToNativeLibsDir();
           }
         });
     BuildRuleParams androidAarParams = originalBuildRuleParams.copyWithExtraDeps(

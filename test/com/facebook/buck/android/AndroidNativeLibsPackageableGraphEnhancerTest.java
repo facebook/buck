@@ -72,6 +72,11 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(ndkLibrary))
             .build();
 
+    APKModuleGraph apkModuleGraph = new APKModuleGraph(
+        TargetGraph.EMPTY,
+        target,
+        Optional.<Set<BuildTarget>>absent());
+
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
             ruleResolver,
@@ -81,24 +86,25 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
             /* nativeLibraryMergeGlue */ Optional.<BuildTarget>absent(),
-            AndroidBinary.RelinkerMode.DISABLED
+            AndroidBinary.RelinkerMode.DISABLED,
+            apkModuleGraph
         );
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(
         target,
         ImmutableSet.<BuildTarget>of(),
         ImmutableSet.<BuildTarget>of(),
-        new APKModuleGraph(
-            TargetGraph.EMPTY,
-            target,
-            Optional.<Set<BuildTarget>>absent()));
+        apkModuleGraph);
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(
             ImmutableSet.<BuildRule>of(ndkLibrary)));
 
-    Optional<CopyNativeLibraries> copyNativeLibrariesOptional =
+    Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibrariesOptional =
         enhancer.enhance(collector.build()).getCopyNativeLibraries();
-    CopyNativeLibraries copyNativeLibraries = copyNativeLibrariesOptional.get();
+    CopyNativeLibraries copyNativeLibraries =
+        copyNativeLibrariesOptional
+            .get()
+            .get(apkModuleGraph.getRootAPKModule());
 
     assertThat(copyNativeLibraries.getStrippedObjectDescriptions(), Matchers.empty());
     assertThat(
@@ -149,6 +155,11 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(cxxLibrary))
             .build();
 
+    APKModuleGraph apkModuleGraph = new APKModuleGraph(
+        TargetGraph.EMPTY,
+        target,
+        Optional.<Set<BuildTarget>>absent());
+
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
             ruleResolver,
@@ -158,7 +169,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
             /* nativeLibraryMergeGlue */ Optional.<BuildTarget>absent(),
-            AndroidBinary.RelinkerMode.DISABLED
+            AndroidBinary.RelinkerMode.DISABLED,
+            apkModuleGraph
         );
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(
@@ -174,9 +186,12 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             ImmutableSet.<BuildRule>of(cxxLibrary)));
 
     AndroidPackageableCollection packageableCollection = collector.build();
-    Optional<CopyNativeLibraries> copyNativeLibrariesOptional =
+    Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibrariesOptional =
         enhancer.enhance(packageableCollection).getCopyNativeLibraries();
-    CopyNativeLibraries copyNativeLibraries = copyNativeLibrariesOptional.get();
+    CopyNativeLibraries copyNativeLibraries =
+        copyNativeLibrariesOptional
+            .get()
+            .get(apkModuleGraph.getRootAPKModule());
 
     assertThat(
         copyNativeLibraries.getStrippedObjectDescriptions(),

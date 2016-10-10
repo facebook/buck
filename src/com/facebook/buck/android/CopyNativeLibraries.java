@@ -73,18 +73,22 @@ public class CopyNativeLibraries extends AbstractBuildRule {
   @AddToRuleKey
   private final ImmutableSet<StrippedObjectDescription> stripLibAssetRules;
 
+  private final String moduleName;
+
   protected CopyNativeLibraries(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       ImmutableSet<SourcePath> nativeLibDirectories,
       ImmutableSet<StrippedObjectDescription> stripLibRules,
       ImmutableSet<StrippedObjectDescription> stripLibAssetRules,
-      ImmutableSet<TargetCpuType> cpuFilters) {
+      ImmutableSet<TargetCpuType> cpuFilters,
+      String moduleName) {
     super(buildRuleParams, resolver);
     this.nativeLibDirectories = nativeLibDirectories;
     this.stripLibRules = stripLibRules;
     this.stripLibAssetRules = stripLibAssetRules;
     this.cpuFilters = cpuFilters;
+    this.moduleName = moduleName;
     Preconditions.checkArgument(
         !nativeLibDirectories.isEmpty() ||
             !stripLibRules.isEmpty() ||
@@ -116,7 +120,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
     return BuildTargets.getScratchPath(
         getProjectFilesystem(),
         getBuildTarget(),
-        "__native_libs_%s__");
+        "__native_libs_" + moduleName + "_%s__");
   }
 
   @VisibleForTesting

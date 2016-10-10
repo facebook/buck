@@ -416,15 +416,24 @@ public class AndroidBinary
     AndroidPackageableCollection packageableCollection =
         enhancementResult.getPackageableCollection();
     ImmutableSet<Path> nativeLibraryDirectories = ImmutableSet.of();
-    if (!ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
-        enhancementResult.getCopyNativeLibraries().isPresent()) {
-      CopyNativeLibraries copyNativeLibraries = enhancementResult.getCopyNativeLibraries().get();
+    Optional<CopyNativeLibraries> rootCopyNativeLibrariesOptional =
+        enhancementResult.getCopyNativeLibraries().transform(
+            new Function<ImmutableMap<APKModule, CopyNativeLibraries>, CopyNativeLibraries>() {
+              @Override
+              public CopyNativeLibraries apply(ImmutableMap<APKModule, CopyNativeLibraries> input) {
+                return input.get(enhancementResult.getAPKModuleGraph().getRootAPKModule());
+              }
+            });
 
+    if (!ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
+        rootCopyNativeLibrariesOptional.isPresent()) {
       if (packageAssetLibraries.or(Boolean.FALSE)) {
-        nativeLibraryDirectories = ImmutableSet.of(copyNativeLibraries.getPathToNativeLibsDir());
+        nativeLibraryDirectories = ImmutableSet.of(
+            rootCopyNativeLibrariesOptional.get().getPathToNativeLibsDir());
       } else {
-        nativeLibraryDirectories = ImmutableSet.of(copyNativeLibraries.getPathToNativeLibsDir(),
-            copyNativeLibraries.getPathToNativeLibsAssetsDir());
+        nativeLibraryDirectories = ImmutableSet.of(
+            rootCopyNativeLibrariesOptional.get().getPathToNativeLibsDir(),
+            rootCopyNativeLibrariesOptional.get().getPathToNativeLibsAssetsDir());
       }
 
     }
@@ -467,11 +476,11 @@ public class AndroidBinary
             }
         });
 
-      if (packageAssetLibraries.or(Boolean.FALSE)) {
+      if (packageAssetLibraries.or(Boolean.FALSE) &&
+          rootCopyNativeLibrariesOptional.isPresent()) {
         // Copy in cxx libraries marked as assets. Filtering and renaming was already done
         // in CopyNativeLibraries.getBuildSteps().
-        Path cxxNativeLibsSrc = enhancementResult
-            .getCopyNativeLibraries()
+        Path cxxNativeLibsSrc = rootCopyNativeLibrariesOptional
             .get()
             .getPathToNativeLibsAssetsDir();
         steps.add(
@@ -1201,7 +1210,11 @@ public class AndroidBinary
 
     if (ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
         enhancementResult.getCopyNativeLibraries().isPresent()) {
-      CopyNativeLibraries copyNativeLibraries = enhancementResult.getCopyNativeLibraries().get();
+      CopyNativeLibraries copyNativeLibraries =
+          enhancementResult
+              .getCopyNativeLibraries()
+              .get()
+              .get(enhancementResult.getAPKModuleGraph().getRootAPKModule());
       builder.setNativeLibsInfo(
           ExopackageInfo.NativeLibsInfo.of(
               copyNativeLibraries.getPathToMetadataTxt(),
@@ -1248,7 +1261,11 @@ public class AndroidBinary
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
     if (ExopackageMode.enabledForNativeLibraries(exopackageModes)) {
-      deps.addAll(enhancementResult.getCopyNativeLibraries().asSet());
+      deps.add(
+          enhancementResult
+              .getCopyNativeLibraries()
+              .get()
+              .get(enhancementResult.getAPKModuleGraph().getRootAPKModule()));
     }
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       deps.addAll(enhancementResult.getPreDexMerge().asSet());
