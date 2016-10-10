@@ -32,14 +32,15 @@ import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -65,6 +66,7 @@ import java.util.regex.Pattern;
 
 public class SwiftLibraryDescription implements
     Description<SwiftLibraryDescription.Arg>,
+    ImplicitDepsInferringDescription<CxxLibraryDescription.Arg>,
     Flavored {
   public static final BuildRuleType TYPE = BuildRuleType.of("swift_library");
 
@@ -204,23 +206,6 @@ public class SwiftLibraryDescription implements
               })
               .toSortedSet(Ordering.natural()));
 
-      if (args.exportedHeaders.isPresent()) {
-        UnflavoredBuildTarget unflavoredBuildTarget =
-            params.getBuildTarget().getUnflavoredBuildTarget();
-
-        for (HeaderVisibility headerVisibility : HeaderVisibility.values()) {
-          // unflavoredBuildTarget because #headers can collide with any other flavor
-          // from the same domain.
-          CxxDescriptionEnhancer.requireHeaderSymlinkTree(
-              params.copyWithBuildTarget(BuildTarget.builder(unflavoredBuildTarget).build()),
-              resolver,
-              new SourcePathResolver(resolver),
-              cxxPlatform,
-              args.exportedHeaders.get(),
-              headerVisibility);
-        }
-      }
-
       return new SwiftCompile(
           cxxPlatform,
           swiftBuckConfig,
@@ -331,6 +316,30 @@ public class SwiftLibraryDescription implements
   public static boolean isSwiftTarget(BuildTarget buildTarget) {
     return buildTarget.getFlavors().contains(SWIFT_COMPANION_FLAVOR) ||
         buildTarget.getFlavors().contains(SWIFT_COMPILE_FLAVOR);
+  }
+
+  @Override
+  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+      final BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      CxxLibraryDescription.Arg constructorArg) {
+    final Optional<Map.Entry<Flavor, CxxPlatform>> platform =
+        cxxPlatformFlavorDomain.getFlavorAndValue(buildTarget);
+
+    if (constructorArg.exportedHeaders.isPresent() && platform.isPresent()) {
+      return FluentIterable.of(HeaderVisibility.values())
+          .transform(new Function<HeaderVisibility, BuildTarget>() {
+            @Override
+            public BuildTarget apply(HeaderVisibility input) {
+              return CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                  BuildTarget.builder(buildTarget.getUnflavoredBuildTarget()).build(),
+                  platform.get().getValue().getFlavor(),
+                  input
+              );
+            }
+          });
+    }
+    return ImmutableList.of();
   }
 
   @SuppressFieldNotInitialized

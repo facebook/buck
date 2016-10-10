@@ -66,23 +66,6 @@ class SwiftDescriptions {
             return filterSwiftSources(sourcePathResolver, args.srcs.get());
           }
         });
-    output.exportedHeaders = args.exportedHeaders.transform(
-        new Function<SourceList, ImmutableMap<Path, SourcePath>>() {
-          @Override
-          public ImmutableMap<Path, SourcePath> apply(SourceList input) {
-            return FluentIterable.from(input.getPaths())
-                .uniqueIndex(new Function<SourcePath, Path>() {
-                  @Override
-                  public Path apply(SourcePath input) {
-                    if (input instanceof PathSourcePath) {
-                      return ((PathSourcePath)input).getRelativePath();
-                    }
-                    return null;
-                  }
-                });
-          }
-        }
-    );
     output.compilerFlags = args.compilerFlags;
     output.frameworks = args.frameworks;
     output.libraries = args.libraries;
