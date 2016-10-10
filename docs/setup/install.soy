@@ -21,8 +21,8 @@ There are two ways to install Buck:
   make sure <a href="https://developer.apple.com/xcode/download/">Xcode<a> and
   the <a href="https://developer.apple.com/downloads/">Command Line Tools</a> are installed
   and up to date).  You have two choices when using Homebrew.  You can choose to get the latest
-  binary <a href="https://github.com/facebook/buck/releases/latest">release</a> (which happens
-  roughly every week):
+  binary <a href="https://github.com/facebook/buck/releases/latest">release</a>, for which you will
+  need a <a href="https://java.com/en/download/">Java Runtime Environment</a>:
 </p>
 
 {literal}<pre>
@@ -33,7 +33,9 @@ brew install buck
 {/literal}
 
 <p>
-  Or, you can get the latest and greatest code and build it locally:
+  Or, you can get the latest and greatest code and build it locally, for which you will need the
+  {sp}<a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Oracle Java
+  Development Kit</a>:
 </p>
 
 {literal}<pre>
@@ -48,16 +50,14 @@ brew install --HEAD buck
 To manually build Buck, download and install the following prerequisites:
 <ul>
   <li>
-    <a href="http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html"
-      >Oracle JDK 8</a> or{sp}
-    <a href="http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html"
-      >Oracle JDK 7</a>
+    <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Oracle Java
+    Development Kit</a>
   </li>
   <li>
-    <a href="http://ant.apache.org/">Apache Ant 1.8 (or newer)</a>
+    <a href="http://ant.apache.org/">Apache Ant 1.9 (or newer)</a>
   </li>
   <li>
-    <a href="https://www.python.org/downloads/">Python 2.6 or 2.7</a>
+    <a href="https://www.python.org/downloads/">Python 2.7</a>
   </li>
   <li>
     <a href="http://git-scm.com/download">Git</a>
