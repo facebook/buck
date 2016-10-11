@@ -527,7 +527,8 @@ public class PrebuiltCxxLibraryDescription implements
           }
           return false;
         },
-    args.supportedPlatformsRegex);
+    args.supportedPlatformsRegex,
+    args.canBeAsset.or(false));
   }
 
   @Override
@@ -602,6 +603,7 @@ public class PrebuiltCxxLibraryDescription implements
     public Optional<PatternMatchedCollection<ImmutableList<String>>> exportedPlatformLinkerFlags;
     public Optional<String> soname;
     public Optional<Boolean> linkWithoutSoname;
+    public Optional<Boolean> canBeAsset;
     public Optional<ImmutableSortedSet<FrameworkPath>> frameworks;
     public Optional<ImmutableSortedSet<FrameworkPath>> libraries;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;

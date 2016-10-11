@@ -75,6 +75,7 @@ public class PrebuiltCxxLibrary
   private final boolean linkWhole;
   private final boolean provided;
   private final Optional<Pattern> supportedPlatformsRegex;
+  private final boolean canBeAsset;
 
   private final Map<Pair<Flavor, Linker.LinkableDepType>, NativeLinkableInput> nativeLinkableCache =
       new HashMap<>();
@@ -105,8 +106,10 @@ public class PrebuiltCxxLibrary
       boolean linkWhole,
       boolean provided,
       Function<CxxPlatform, Boolean> hasHeaders,
-      Optional<Pattern> supportedPlatformsRegex) {
+      Optional<Pattern> supportedPlatformsRegex,
+      boolean canBeAsset) {
     super(params, pathResolver);
+    this.canBeAsset = canBeAsset;
     Preconditions.checkArgument(!forceStatic || !provided);
     this.params = params;
     this.ruleResolver = ruleResolver;
@@ -404,7 +407,11 @@ public class PrebuiltCxxLibrary
 
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
-    collector.addNativeLinkable(this);
+    if (canBeAsset) {
+      collector.addNativeLinkableAsset(this);
+    } else {
+      collector.addNativeLinkable(this);
+    }
   }
 
   @Override
