@@ -27,6 +27,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -730,6 +731,26 @@ public class ConstructorArgMarshallerTest {
             Paths.get("example/path/lib/__init__.py").toString(),
             Paths.get("example/path/lib/manifest.py").toString()),
         observedValues);
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void bogusVisibilityGivesFriendlyError()
+      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+
+    class Dto {
+    }
+
+    Dto dto = new Dto();
+    marshaller.populate(
+        createCellRoots(filesystem),
+        filesystem,
+        buildRuleFactoryParams(),
+        dto,
+        ImmutableSet.<BuildTarget>builder(),
+        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableMap.<String, Object>of(
+            "visibility", ImmutableList.of(":marmosets")
+        ));
   }
 
   public BuildRuleFactoryParams buildRuleFactoryParams() {

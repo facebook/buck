@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.cache.Cache;
@@ -96,7 +97,7 @@ public class ConstructorArgMarshaller {
         populateDeclaredDeps(info, declaredDeps, dto);
       }
     }
-    populateVisibilityPatterns(cellRoots, visibilityPatterns, instance);
+    populateVisibilityPatterns(cellRoots, visibilityPatterns, instance, params.target);
   }
 
   /**
@@ -143,7 +144,8 @@ public class ConstructorArgMarshaller {
   private void populateVisibilityPatterns(
       CellPathResolver cellNames,
       ImmutableSet.Builder<VisibilityPattern> visibilityPatterns,
-      Map<String, ?> instance) throws NoSuchBuildTargetException {
+      Map<String, ?> instance,
+      BuildTarget target) throws NoSuchBuildTargetException {
     Object value = instance.get("visibility");
     if (value != null) {
       if (!(value instanceof List)) {
@@ -153,7 +155,20 @@ public class ConstructorArgMarshaller {
 
       VisibilityPatternParser parser = new VisibilityPatternParser();
       for (String visibility : (List<String>) value) {
-        visibilityPatterns.add(parser.parse(cellNames, visibility));
+        try {
+          visibilityPatterns.add(parser.parse(cellNames, visibility));
+        } catch (IllegalArgumentException e) {
+          throw new HumanReadableException(
+              e,
+              "Bad visibility expression: %s listed %s in its visibility argument, but only %s, " +
+                  "%s, or fully qualified target patterns are allowed (i.e. those starting with " +
+                  "// or a cell).",
+              target.getFullyQualifiedName(),
+              visibility,
+              VisibilityPatternParser.VISIBILITY_PUBLIC,
+              VisibilityPatternParser.VISIBILITY_GROUP
+          );
+        }
       }
     }
   }

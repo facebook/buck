@@ -123,7 +123,9 @@ public abstract class AbstractNodeBuilder<A> {
           arg,
           factoryParams,
           getDepsFromArg(),
-          ImmutableSet.of(VISIBILITY_PATTERN_PARSER.parse(null, "PUBLIC")),
+          ImmutableSet.of(
+              VISIBILITY_PATTERN_PARSER.parse(null, VisibilityPatternParser.VISIBILITY_PUBLIC)
+          ),
           cellRoots);
     } catch (NoSuchBuildTargetException e) {
       throw Throwables.propagate(e);

@@ -21,8 +21,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 
 public class VisibilityPatternParser {
-  private static final String VISIBILITY_PUBLIC = "PUBLIC";
-  private static final String VISIBILITY_GROUP = "GROUP";
+  public static final String VISIBILITY_PUBLIC = "PUBLIC";
+  public static final String VISIBILITY_GROUP = "GROUP";
 
   private static final BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
       BuildTargetPatternParser.forVisibilityArgument();
