@@ -1,10 +1,11 @@
-#@# GENERATED FILE: DO NOT MODIFY bf5943e6a7c5a0b4a17a6cf4c21dbd562667d68f #@#
+#@# GENERATED FILE: DO NOT MODIFY 2104168cd5a8c53eb055778420bf8e07d1f6d667 #@#
 {
   "cxx" : {
     "deps" : [
       "//src/com/facebook/buck/apple/clang:headermap",
       "//src/com/facebook/buck/apple/xcode:xcode",
       "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/cxx:framework_path_arg",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
@@ -14,6 +15,7 @@
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:command_tool",
+      "//src/com/facebook/buck/rules:default_cell_path_resolver",
       "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules:rules",

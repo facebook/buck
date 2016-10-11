@@ -608,8 +608,22 @@ abstract class AbstractCxxSourceRuleFactory {
         PCH_FLAVOR_PREFIX,
         source.getType().getLanguage(),
         preprocessorDelegateCacheValue.getCommandHash(compilerFlags));
+
+    // Detect the rule for which we are building this PCH:
+    SourcePath sourcePath = Preconditions.checkNotNull(this.getPrefixHeader().orNull());
+    BuildTarget targetToBuildFor;
+    if (sourcePath instanceof BuildTargetSourcePath) {
+      // e.g. a library "//foo:foo" has "prefix_header='//bar:header'"; then clone "//bar:header",
+      // flavor it (done below), and then that will become one of "//foo:foo"'s dependencies.
+      targetToBuildFor = ((BuildTargetSourcePath) sourcePath).getTarget();
+    } else {
+      // e.g. a library "//baz:baz" has "prefix_header='bazstuff.h'"; then we clone "//baz:baz",
+      // flavor it (done below), and then that will become one of "//baz:baz"'s dependencies.
+      targetToBuildFor = getParams().getBuildTarget();
+    }
+
     BuildTarget target = BuildTarget
-        .builder(getParams().getBuildTarget())
+        .builder(targetToBuildFor)
         .addFlavors(getCxxPlatform().getFlavor())
         .addFlavors(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(pchIdentifier)))
         .build();
