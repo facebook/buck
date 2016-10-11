@@ -16,11 +16,21 @@
 
 package com.facebook.buck.log;
 
-import java.io.OutputStreamWriter;
+import java.io.IOException;
 import java.util.logging.Level;
 
+/**
+ * How the ConsoleHandler is supposed to behave for a particular thread. Maintained globally by
+ * {@link GlobalStateManager}.
+ */
 public interface ConsoleHandlerState extends ThreadIdToCommandIdMapper {
   Level getLogLevel(String commandId);
-  OutputStreamWriter getWriter(String commandId);
-  Iterable<OutputStreamWriter> getAllAvailableWriters();
+  Writer getWriter(String commandId);
+  Iterable<Writer> getAllAvailableWriters();
+
+  interface Writer {
+    void write(String line) throws IOException;
+    void flush() throws IOException;
+    void close() throws IOException;
+  }
 }

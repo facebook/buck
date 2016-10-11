@@ -26,7 +26,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
@@ -39,7 +38,7 @@ import java.util.logging.LogRecord;
 public class ConsoleHandlerTest {
   private FakeOutputStream outputStream;
   private ConcurrentHashMap<Long, String> threadIdToCommandId;
-  private ConcurrentHashMap<String, OutputStreamWriter> commandIdToConsoleWriter;
+  private ConcurrentHashMap<String, ConsoleHandlerState.Writer> commandIdToConsoleWriter;
   private ConcurrentHashMap<String, Level> commandIdToLevel;
   private ConsoleHandlerState state;
 
@@ -57,12 +56,12 @@ public class ConsoleHandlerTest {
       }
 
       @Override
-      public OutputStreamWriter getWriter(String commandId) {
+      public ConsoleHandlerState.Writer getWriter(String commandId) {
         return commandIdToConsoleWriter.get(commandId);
       }
 
       @Override
-      public Iterable<OutputStreamWriter> getAllAvailableWriters() {
+      public Iterable<ConsoleHandlerState.Writer> getAllAvailableWriters() {
         return commandIdToConsoleWriter.values();
       }
 

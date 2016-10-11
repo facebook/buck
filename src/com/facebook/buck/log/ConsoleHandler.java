@@ -39,7 +39,7 @@ import javax.annotation.concurrent.GuardedBy;
 public class ConsoleHandler extends Handler {
   private static final Level DEFAULT_LEVEL = Level.SEVERE;
 
-  private final OutputStreamWriter defaultOutputStreamWriter;
+  private final ConsoleHandlerState.Writer defaultOutputStreamWriter;
   private final ConsoleHandlerState state;
 
   @GuardedBy("this")
@@ -55,7 +55,7 @@ public class ConsoleHandler extends Handler {
 
   @VisibleForTesting
   ConsoleHandler(
-      OutputStreamWriter defaultOutputStreamWriter,
+      ConsoleHandlerState.Writer defaultOutputStreamWriter,
       Formatter formatter,
       Level level,
       ConsoleHandlerState state) {
@@ -75,12 +75,13 @@ public class ConsoleHandler extends Handler {
       }
     }
 
-    Iterable<OutputStreamWriter> outputStreamWriters = getOutputStreamWritersForRecord(record);
+    Iterable<ConsoleHandlerState.Writer> outputStreamWriters =
+        getOutputStreamWritersForRecord(record);
 
     try {
       String formatted = getFormatter().format(record);
 
-      for (OutputStreamWriter outputStreamWriter : outputStreamWriters) {
+      for (ConsoleHandlerState.Writer outputStreamWriter : outputStreamWriters) {
         synchronized (outputStreamWriter) {
           outputStreamWriter.write(formatted);
           if (record.getLevel().intValue() >= Level.SEVERE.intValue()) {
@@ -114,7 +115,8 @@ public class ConsoleHandler extends Handler {
     }
 
     try {
-      for (OutputStreamWriter outputStreamWriter : state.getAllAvailableWriters()) {
+      for (ConsoleHandlerState.Writer outputStreamWriter :
+          state.getAllAvailableWriters()) {
         synchronized (outputStreamWriter) {
           outputStreamWriter.flush();
         }
@@ -136,9 +138,26 @@ public class ConsoleHandler extends Handler {
     }
   }
 
-  public static OutputStreamWriter utf8OutputStreamWriter(OutputStream outputStream) {
+  public static ConsoleHandlerState.Writer utf8OutputStreamWriter(
+      OutputStream outputStream) {
     try {
-      return new OutputStreamWriter(outputStream, "UTF-8");
+      final OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream, "UTF-8");
+      return new ConsoleHandlerState.Writer() {
+        @Override
+        public void write(String line) throws IOException {
+          outputStreamWriter.write(line);
+        }
+
+        @Override
+        public void flush() throws IOException {
+          outputStreamWriter.flush();
+        }
+
+        @Override
+        public void close() throws IOException {
+          outputStreamWriter.close();
+        }
+      };
     } catch (UnsupportedEncodingException e) {
       throw new IOError(e);
     }
@@ -169,22 +188,22 @@ public class ConsoleHandler extends Handler {
         record.getLoggerName().startsWith("com.google.common.util.concurrent");
   }
 
-  private Iterable<OutputStreamWriter> getOutputStreamWritersForRecord(LogRecord record) {
+  private Iterable<ConsoleHandlerState.Writer> getOutputStreamWritersForRecord(LogRecord record) {
     long recordThreadId = record.getThreadID();
     String logRecordCommandId = state.threadIdToCommandId(recordThreadId);
     if (logRecordCommandId != null) {
-      OutputStreamWriter consoleWriter = state.getWriter(logRecordCommandId);
+      ConsoleHandlerState.Writer consoleWriter = state.getWriter(logRecordCommandId);
       if (consoleWriter != null) {
         return ImmutableSet.of(consoleWriter);
       } else {
         return ImmutableSet.of(defaultOutputStreamWriter);
       }
     } else {
-      Iterable<OutputStreamWriter> allConsoleWriters = state.getAllAvailableWriters();
+      Iterable<ConsoleHandlerState.Writer> allConsoleWriters = state.getAllAvailableWriters();
       if (Iterables.isEmpty(allConsoleWriters)) {
         return ImmutableSet.of(defaultOutputStreamWriter);
       } else {
-        ImmutableSet.Builder<OutputStreamWriter> builder = ImmutableSet.builder();
+        ImmutableSet.Builder<ConsoleHandlerState.Writer> builder = ImmutableSet.builder();
         builder.addAll(allConsoleWriters);
         return builder.build();
       }

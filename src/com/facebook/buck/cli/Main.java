@@ -62,6 +62,7 @@ import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.log.CommandThreadFactory;
+import com.facebook.buck.log.ConsoleHandlerState;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.LogConfig;
@@ -983,11 +984,12 @@ public final class Main {
             command.getSubCommandNameForLogging(),
             filesystem.getBuckPaths().getLogDir());
         try (
-            Closeable loggersSetup = GlobalStateManager.singleton().setupLoggers(
-                invocationInfo,
-                console.getStdErr(),
-                stdErr,
-                verbosity);
+            GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
+                GlobalStateManager.singleton().setupLoggers(
+                    invocationInfo,
+                    console.getStdErr(),
+                    stdErr,
+                    verbosity);
             AbstractConsoleEventBusListener consoleListener =
                 createConsoleEventListener(
                     clock,
@@ -1002,6 +1004,11 @@ public final class Main {
             BuckEventBus buildEventBus = new BuckEventBus(clock, buildId);
             BroadcastEventListener.BroadcastEventBusClosable broadcastEventBusClosable =
                 broadcastEventListener.addEventBus(buildEventBus);
+
+            // This makes calls to LOG.error(...) post to the EventBus, instead of writing to
+            // stderr.
+            Closeable logErrorToEventBus = loggerThreadMappingScope.setWriter(
+                createWriterForEventBus(buildEventBus));
 
             // NOTE: This will only run during the lifetime of the process and will flush on close.
             CounterRegistry counterRegistry = new CounterRegistryImpl(
@@ -1437,6 +1444,27 @@ public final class Main {
               androidPlatformTargetId);
           throw exception;
         }
+      }
+    };
+  }
+
+
+  private static ConsoleHandlerState.Writer createWriterForEventBus(
+      final BuckEventBus buckEventBus) {
+    return new ConsoleHandlerState.Writer() {
+      @Override
+      public void write(String line) throws IOException {
+        buckEventBus.post(ConsoleEvent.severe(line.trim()));
+      }
+
+      @Override
+      public void flush() throws IOException {
+        // Intentional no-op.
+      }
+
+      @Override
+      public void close() throws IOException {
+        // Intentional no-op.
       }
     };
   }
