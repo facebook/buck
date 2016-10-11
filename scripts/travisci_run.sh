@@ -17,12 +17,7 @@ export BUCK_NUM_THREADS=3
 # Make sure that everything builds in case a library is not covered by a test.
 ./bin/buck build --num-threads=$BUCK_NUM_THREADS src/... test/...
 
-# Validate existence of all test rules.
-./bin/buck test --dry-run --all
-
-# Until we get https://github.com/facebook/buck/pull/479, we cannot run the
-# Go tests in Travis
-./bin/buck test --num-threads=$BUCK_NUM_THREADS
+./bin/buck test --num-threads=$BUCK_NUM_THREADS //...
 
 # Run all the other checks with ant.
 ant travis
