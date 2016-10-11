@@ -41,6 +41,9 @@ import javax.annotation.Nonnull;
 
 public class DefaultFileHashCache implements ProjectFileHashCache {
 
+  private static final boolean SHOULD_CHECK_IGNORED_PATHS =
+      Boolean.getBoolean("buck.DefaultFileHashCache.check_ignored_paths");
+
   private final ProjectFilesystem projectFilesystem;
   private final Optional<Path> buckOutPath;
 
@@ -121,7 +124,9 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   public Path resolvePath(Path path) {
     Preconditions.checkState(path.isAbsolute());
     Optional<Path> relativePath = projectFilesystem.getPathRelativeToProjectRoot(path);
-    Preconditions.checkState(!isIgnored(relativePath.get()));
+    if (SHOULD_CHECK_IGNORED_PATHS) {
+      Preconditions.checkState(!isIgnored(relativePath.get()));
+    }
     return relativePath.get();
   }
 
