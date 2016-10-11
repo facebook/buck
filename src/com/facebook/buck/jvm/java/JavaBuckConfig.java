@@ -113,7 +113,7 @@ public class JavaBuckConfig {
   }
 
   public boolean getSkipCheckingMissingDeps() {
-    return delegate.getBooleanValue("java", "skip_checking_missing_deps", false);
+    return delegate.getBooleanValue("java", "skip_checking_missing_deps", true);
   }
 
   public Optional<Integer> getDxThreadCount() {
