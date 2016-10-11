@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY dccbef175a83bf50f03d588c8e458894cbcb4470 #@#
+#@# GENERATED FILE: DO NOT MODIFY cda67b7989e64c1f8741b1f9f77d33b48e75b715 #@#
 {
   "intellij" : {
     "deps" : [
@@ -21,6 +21,7 @@
       "//test/com/facebook/buck/android:testutil",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/cxx:testutil",
+      "//test/com/facebook/buck/jvm/groovy:testutil",
       "//test/com/facebook/buck/jvm/java:fakepackagefinder",
       "//test/com/facebook/buck/jvm/java:javac-env",
       "//test/com/facebook/buck/jvm/java:testutil",

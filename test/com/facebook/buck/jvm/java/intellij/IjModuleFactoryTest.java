@@ -30,6 +30,7 @@ import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
+import com.facebook.buck.jvm.groovy.GroovyLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
@@ -306,6 +307,31 @@ public class IjModuleFactoryTest {
     assertEquals(Paths.get("java/com/example/base"), folder.getPath());
     assertFalse(folder instanceof TestFolder);
     assertTrue(folder.getWantsPackagePrefix());
+  }
+
+  @Test
+  public void testGroovyLibrary() {
+    IjModuleFactory factory = createIjModuleFactory();
+
+    TargetNode<?> groovyLib = GroovyLibraryBuilder
+        .createBuilder(BuildTargetFactory.newInstance("//groovy/com/example/base:base"))
+        .addSrc(Paths.get("groovy/com/example/base/File.groovy"))
+        .build();
+
+    Path moduleBasePath = Paths.get("groovy/com/example/base");
+    IjModule module = factory.createModule(
+        moduleBasePath,
+        ImmutableSet.<TargetNode<?>>of(groovyLib));
+
+    assertEquals(moduleBasePath, module.getModuleBasePath());
+    assertFalse(module.getAndroidFacet().isPresent());
+    assertEquals(1, module.getFolders().size());
+    assertEquals(ImmutableSet.of(groovyLib), module.getTargets());
+
+    IjFolder folder = module.getFolders().iterator().next();
+    assertEquals(Paths.get("groovy/com/example/base"), folder.getPath());
+    assertFalse(folder instanceof TestFolder);
+    assertFalse(folder.getWantsPackagePrefix());
   }
 
   @Test

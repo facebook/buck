@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 07b5f5fcd5484cc6e529833ce9813fe7650287e1 #@#
+#@# GENERATED FILE: DO NOT MODIFY a20a662ae564beb315696015671bf1f535419590 #@#
 {
   "intellij" : {
     "deps" : [
@@ -6,6 +6,7 @@
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/io:MorePaths.java",
+      "//src/com/facebook/buck/jvm/groovy:groovy",
       "//src/com/facebook/buck/jvm/java:packagefinder",
       "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/jvm/java:support",
