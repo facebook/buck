@@ -45,15 +45,15 @@ public class ReactNativeDepsWorkerStep extends WorkerShellStep {
                     "--platform %s%s",
                     platform.toString(),
                     additionalPackagerFlags.isPresent() ? " " + additionalPackagerFlags.get() : ""),
-                ImmutableMap.<String, String>of(),
+                ImmutableMap.of(),
                 String.format(
                     "--command dependencies --platform %s --entry-file %s --output %s",
                     platform.toString(),
                     entryFile.toString(),
                     outputFile.toString()),
                 Optional.of(1))),
-        Optional.<WorkerJobParams>absent(),
-        Optional.<WorkerJobParams>absent());
+        Optional.absent(),
+        Optional.absent());
   }
 
   @Override

@@ -48,7 +48,7 @@ public class ApplePackageDescriptionTest {
         AppleBinaryBuilder.createBuilder(binaryBuildTarget).build(),
         AppleBundleBuilder.createBuilder(bundleBuildTarget)
             .setBinary(binaryBuildTarget)
-            .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP))
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
             .build());
 
     ApplePackageDescription.Arg arg = description.createUnpopulatedConstructorArg();
@@ -90,7 +90,7 @@ public class ApplePackageDescriptionTest {
         AppleBinaryBuilder.createBuilder(binaryBuildTarget).build(),
         AppleBundleBuilder.createBuilder(bundleBuildTarget)
             .setBinary(binaryBuildTarget)
-            .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP))
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
             .build());
 
     ApplePackageDescription.Arg arg = description.createUnpopulatedConstructorArg();

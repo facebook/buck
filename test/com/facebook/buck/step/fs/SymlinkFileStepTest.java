@@ -87,7 +87,7 @@ public class SymlinkFileStepTest {
 
     // Run `ln -s /path/that/does/not/exist dummy` in /tmp.
     ProcessExecutorParams params = ProcessExecutorParams.builder()
-        .setCommand(ImmutableList.<String>of("ln", "-s", "/path/that/does/not/exist", "my_symlink"))
+        .setCommand(ImmutableList.of("ln", "-s", "/path/that/does/not/exist", "my_symlink"))
         .setDirectory(tmpDir.getRoot().toPath())
         .build();
     ProcessExecutor executor = new ProcessExecutor(Console.createNullConsole());

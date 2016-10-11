@@ -33,7 +33,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
@@ -48,7 +47,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
-import java.util.regex.Pattern;
 
 public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
 
@@ -130,7 +128,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
               params.copyWithChanges(
                   sourceZipTarget,
                   Suppliers.ofInstance(ImmutableSortedSet.of(compilerRule)),
-                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                  Suppliers.ofInstance(ImmutableSortedSet.of())),
               pathResolver,
               sourceZip,
               sourceDirectory));
@@ -150,7 +148,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
                 .addAll(BuildRules.getExportedRules(deps))
                 .addAll(pathResolver.filterBuildRuleInputs(templateOptions.getInputs(pathResolver)))
                 .build()),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+        Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
@@ -162,21 +160,21 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
                 FluentIterable.from(sourceZips)
                     .transform(SourcePaths.getToBuildTargetSourcePath())
                     .toSortedSet(Ordering.natural()),
-                /* resources */ ImmutableSet.<SourcePath>of(),
+                /* resources */ ImmutableSet.of(),
                 templateOptions.getGeneratedSourceFolderName(),
-                /* proguardConfig */ Optional.<SourcePath>absent(),
-                /* postprocessClassesCommands */ ImmutableList.<String>of(),
-                /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
-                /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
+                /* proguardConfig */ Optional.absent(),
+                /* postprocessClassesCommands */ ImmutableList.of(),
+                /* exportedDeps */ ImmutableSortedSet.of(),
+                /* providedDeps */ ImmutableSortedSet.of(),
                 /* abiJar */ new BuildTargetSourcePath(abiJarTarget),
                 templateOptions.trackClassUsage(),
-                /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+                /* additionalClasspathEntries */ ImmutableSet.of(),
                 new JavacToJarStepFactory(templateOptions, JavacOptionsAmender.IDENTITY),
-                /* resourcesRoot */ Optional.<Path>absent(),
-                /* manifest file */ Optional.<SourcePath>absent(),
-                /* mavenCoords */ Optional.<String>absent(),
-                /* tests */ ImmutableSortedSet.<BuildTarget>of(),
-                /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()));
+                /* resourcesRoot */ Optional.absent(),
+                /* manifest file */ Optional.absent(),
+                /* mavenCoords */ Optional.absent(),
+                /* tests */ ImmutableSortedSet.of(),
+                /* classesToRemoveFromJar */ ImmutableSet.of()));
 
     resolver.addToIndex(
         CalculateAbi.of(
@@ -201,7 +199,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
 
   @Override
   public ImmutableSet<String> getOptions(BuildTarget target, ThriftConstructorArg arg) {
-    return arg.javaOptions.or(ImmutableSet.<String>of());
+    return arg.javaOptions.or(ImmutableSet.of());
   }
 
   @Override

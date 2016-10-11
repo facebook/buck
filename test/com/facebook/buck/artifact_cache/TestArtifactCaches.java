@@ -34,6 +34,6 @@ public class TestArtifactCaches {
         new ProjectFilesystem(filesystemRoot),
         cacheDir,
         true,
-        Optional.<Long>absent());
+        Optional.absent());
   }
 }

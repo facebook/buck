@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 
 public class ManifestTest {
 
@@ -58,7 +57,7 @@ public class ManifestTest {
   public void emptyManifest() {
     assertThat(
         new Manifest().toMap().entrySet(),
-        Matchers.<Map.Entry<RuleKey, ImmutableMap<String, HashCode>>>empty());
+        Matchers.empty());
   }
 
   @Test
@@ -269,7 +268,7 @@ public class ManifestTest {
             ImmutableMap.of(
                 key,
                 ImmutableMap.of(RESOLVER.getRelativePath(input).toString(), HashCode.fromInt(1))));
-    FileHashCache fileHashCache = new FakeFileHashCache(ImmutableMap.<Path, HashCode>of());
+    FileHashCache fileHashCache = new FakeFileHashCache(ImmutableMap.of());
     assertThat(
         manifest.lookup(fileHashCache, RESOLVER, ImmutableSet.of(input)),
         Matchers.equalTo(Optional.<RuleKey>absent()));

@@ -170,13 +170,13 @@ public class CxxLinkableEnhancerTest {
         new SourcePathResolver(resolver),
         target,
         Linker.LinkType.EXECUTABLE,
-        Optional.<String>absent(),
+        Optional.absent(),
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of(),
+        Optional.absent(),
+        Optional.absent(),
+        ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(SourcePathArg.from(
                 new SourcePathResolver(resolver),
@@ -218,13 +218,13 @@ public class CxxLinkableEnhancerTest {
         pathResolver,
         target,
         Linker.LinkType.EXECUTABLE,
-        Optional.<String>absent(),
+        Optional.absent(),
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of(),
+        Optional.absent(),
+        Optional.absent(),
+        ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
             .build());
@@ -250,12 +250,12 @@ public class CxxLinkableEnhancerTest {
     // Create a native linkable dep and have it list the fake build rule above as a link
     // time dependency.
     NativeLinkableInput nativeLinkableInput = NativeLinkableInput.of(
-        ImmutableList.<Arg>of(
+        ImmutableList.of(
             new SourcePathArg(
                 pathResolver,
                 new BuildTargetSourcePath(fakeBuildRule.getBuildTarget()))),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
+        ImmutableSet.of(),
+        ImmutableSet.of());
     FakeNativeLinkable nativeLinkable = createNativeLinkable(
         "//:dep",
         pathResolver,
@@ -271,13 +271,13 @@ public class CxxLinkableEnhancerTest {
         pathResolver,
         target,
         Linker.LinkType.EXECUTABLE,
-        Optional.<String>absent(),
+        Optional.absent(),
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.STATIC,
         ImmutableList.<NativeLinkable>of(nativeLinkable),
-        Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of(),
+        Optional.absent(),
+        Optional.absent(),
+        ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
             .build());
@@ -307,13 +307,13 @@ public class CxxLinkableEnhancerTest {
         pathResolver,
         target,
         Linker.LinkType.EXECUTABLE,
-        Optional.<String>absent(),
+        Optional.absent(),
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of(),
+        Optional.absent(),
+        Optional.absent(),
+        ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
             .build());
@@ -329,13 +329,13 @@ public class CxxLinkableEnhancerTest {
         pathResolver,
         target,
         Linker.LinkType.SHARED,
-        Optional.<String>absent(),
+        Optional.absent(),
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of(),
+        Optional.absent(),
+        Optional.absent(),
+        ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
             .build());
@@ -355,9 +355,9 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of(),
+        Optional.absent(),
+        Optional.absent(),
+        ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
             .build());
@@ -381,13 +381,13 @@ public class CxxLinkableEnhancerTest {
     String staticArg = "static";
     NativeLinkableInput staticInput = NativeLinkableInput.of(
         ImmutableList.of(new StringArg(staticArg)),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
+        ImmutableSet.of(),
+        ImmutableSet.of());
     String sharedArg = "shared";
     NativeLinkableInput sharedInput = NativeLinkableInput.of(
         ImmutableList.of(new StringArg(sharedArg)),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
+        ImmutableSet.of(),
+        ImmutableSet.of());
     FakeNativeLinkable nativeLinkable = createNativeLinkable("//:dep",
         pathResolver,
         staticInput, sharedInput);
@@ -401,13 +401,13 @@ public class CxxLinkableEnhancerTest {
         pathResolver,
         target,
         Linker.LinkType.EXECUTABLE,
-        Optional.<String>absent(),
+        Optional.absent(),
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.STATIC,
         ImmutableList.<NativeLinkable>of(nativeLinkable),
-        Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of(),
+        Optional.absent(),
+        Optional.absent(),
+        ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
             .build());
@@ -426,13 +426,13 @@ public class CxxLinkableEnhancerTest {
         pathResolver,
         target,
         Linker.LinkType.EXECUTABLE,
-        Optional.<String>absent(),
+        Optional.absent(),
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.SHARED,
         ImmutableList.<NativeLinkable>of(nativeLinkable),
-        Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of(),
+        Optional.absent(),
+        Optional.absent(),
+        ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
             .build());
@@ -471,13 +471,13 @@ public class CxxLinkableEnhancerTest {
               pathResolver,
               target,
               Linker.LinkType.SHARED,
-              Optional.<String>absent(),
+              Optional.absent(),
               DEFAULT_OUTPUT,
               ent.getKey(),
               EMPTY_DEPS,
-              Optional.<Linker.CxxRuntimeType>absent(),
-              Optional.<SourcePath>absent(),
-              ImmutableSet.<BuildTarget>of(),
+              Optional.absent(),
+              Optional.absent(),
+              ImmutableSet.of(),
               NativeLinkableInput.builder()
                   .setArgs(DEFAULT_INPUTS)
                   .build());
@@ -498,8 +498,8 @@ public class CxxLinkableEnhancerTest {
     String sentinel = "bottom";
     NativeLinkableInput bottomInput = NativeLinkableInput.of(
         ImmutableList.of(new StringArg(sentinel)),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
+        ImmutableSet.of(),
+        ImmutableSet.of());
     BuildRule bottom = createNativeLinkable("//:bottom", pathResolver, bottomInput, bottomInput);
 
     // Create a non-native linkable that sits in the middle of the dep chain, preventing
@@ -508,9 +508,9 @@ public class CxxLinkableEnhancerTest {
 
     // Create a native linkable that sits at the top of the dep chain.
     NativeLinkableInput topInput = NativeLinkableInput.of(
-        ImmutableList.<Arg>of(),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
+        ImmutableList.of(),
+        ImmutableSet.of(),
+        ImmutableSet.of());
     BuildRule top = createNativeLinkable("//:top", pathResolver, topInput, topInput, middle);
 
     // Now grab all input via traversing deps and verify that the middle rule prevents pulling
@@ -544,13 +544,13 @@ public class CxxLinkableEnhancerTest {
         new SourcePathResolver(resolver),
         target,
         Linker.LinkType.MACH_O_BUNDLE,
-        Optional.<String>absent(),
+        Optional.absent(),
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>of(new FakeSourcePath(filesystem, "path/to/MyBundleLoader")),
-        ImmutableSet.<BuildTarget>of(),
+        Optional.absent(),
+        Optional.of(new FakeSourcePath(filesystem, "path/to/MyBundleLoader")),
+        ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(SourcePathArg.from(
                 new SourcePathResolver(resolver),
@@ -581,13 +581,13 @@ public class CxxLinkableEnhancerTest {
         new SourcePathResolver(resolver),
         bundleLoaderTarget,
         Linker.LinkType.EXECUTABLE,
-        Optional.<String>absent(),
+        Optional.absent(),
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of(),
+        Optional.absent(),
+        Optional.absent(),
+        ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(SourcePathArg.from(
                 new SourcePathResolver(resolver),
@@ -605,14 +605,14 @@ public class CxxLinkableEnhancerTest {
         new SourcePathResolver(resolver),
         bundleTarget,
         Linker.LinkType.MACH_O_BUNDLE,
-        Optional.<String>absent(),
+        Optional.absent(),
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>of(
+        Optional.absent(),
+        Optional.of(
             new BuildTargetSourcePath(bundleLoaderRule.getBuildTarget())),
-        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(SourcePathArg.from(
                 new SourcePathResolver(resolver),
@@ -639,7 +639,7 @@ public class CxxLinkableEnhancerTest {
                 new SourceTreePath(
                     PBXReference.SourceTree.DEVELOPER_DIR,
                     Paths.get("Library/Frameworks/XCTest.framework"),
-                    Optional.<String>absent())),
+                    Optional.absent())),
             FrameworkPath.ofSourcePath(
                 new PathSourcePath(projectFilesystem, Paths.get("Vendor/Bar/Bar.framework")))));
 

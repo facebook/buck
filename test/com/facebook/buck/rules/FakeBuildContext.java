@@ -37,7 +37,7 @@ public class FakeBuildContext {
 
   /** A BuildContext which doesn't touch the host filesystem or actually execute steps. */
   public static final BuildContext NOOP_CONTEXT = newBuilder()
-      .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
+      .setActionGraph(new ActionGraph(ImmutableList.of()))
       .setJavaPackageFinder(new FakeJavaPackageFinder())
       .setArtifactCache(new NoopArtifactCache())
       .setObjectMapper(ObjectMappers.newDefaultInstance())

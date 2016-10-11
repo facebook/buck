@@ -35,7 +35,7 @@ public class DefaultJavaPackageFinderTest {
   @Test
   public void testNoPathsSpecified() {
     DefaultJavaPackageFinder javaPackageFinder = DefaultJavaPackageFinder
-        .createDefaultJavaPackageFinder(ImmutableList.<String>of());
+        .createDefaultJavaPackageFinder(ImmutableList.of());
     assertEquals(
         Paths.get(""),
         javaPackageFinder.findJavaPackageFolder(Paths.get("Base.java")));

@@ -558,8 +558,8 @@ public class AndroidBinaryIntegrationTest {
     AndroidDirectoryResolver androidResolver = new DefaultAndroidDirectoryResolver(
         workspace.asCell().getRoot().getFileSystem(),
         ImmutableMap.copyOf(System.getenv()),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
 
     Optional<Path> ndkPath = androidResolver.getNdkOrAbsent();
     assertTrue(ndkPath.isPresent());

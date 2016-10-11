@@ -60,7 +60,7 @@ public class TargetGraphHashingTest {
             eventBus,
             targetGraph,
             new NullFileHashCache(),
-            ImmutableList.<TargetNode<?>>of())
+            ImmutableList.of())
             .hashTargetGraph()
             .entrySet(),
         empty());
@@ -90,14 +90,14 @@ public class TargetGraphHashingTest {
         eventBus,
         targetGraph,
         baseCache,
-        ImmutableList.<TargetNode<?>>of(node))
+        ImmutableList.of(node))
         .hashTargetGraph();
 
     Map<BuildTarget, HashCode> modifiedResult = new TargetGraphHashing(
         eventBus,
         targetGraph,
         modifiedCache,
-        ImmutableList.<TargetNode<?>>of(node))
+        ImmutableList.of(node))
         .hashTargetGraph();
 
     assertThat(baseResult, aMapWithSize(1));
@@ -136,14 +136,14 @@ public class TargetGraphHashingTest {
         eventBus,
         targetGraphA,
         fileHashCache,
-        ImmutableList.<TargetNode<?>>of(nodeA))
+        ImmutableList.of(nodeA))
         .hashTargetGraph();
 
     Map<BuildTarget, HashCode> resultsB = new TargetGraphHashing(
         eventBus,
         targetGraphB,
         fileHashCache,
-        ImmutableList.<TargetNode<?>>of(nodeB))
+        ImmutableList.of(nodeB))
         .hashTargetGraph();
 
     Map<BuildTarget, HashCode> commonResults = new TargetGraphHashing(
@@ -215,14 +215,14 @@ public class TargetGraphHashingTest {
         eventBus,
         targetGraphA,
         fileHashCache,
-        ImmutableList.<TargetNode<?>>of(targetGraphA.get(nodeTarget)))
+        ImmutableList.of(targetGraphA.get(nodeTarget)))
         .hashTargetGraph();
 
     Map<BuildTarget, HashCode> resultB = new TargetGraphHashing(
         eventBus,
         targetGraphB,
         fileHashCache,
-        ImmutableList.<TargetNode<?>>of(targetGraphB.get(nodeTarget)))
+        ImmutableList.of(targetGraphB.get(nodeTarget)))
         .hashTargetGraph();
 
     assertThat(resultA, aMapWithSize(2));

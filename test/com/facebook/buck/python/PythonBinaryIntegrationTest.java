@@ -47,7 +47,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.martiansoftware.nailgun.NGContext;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -216,8 +215,8 @@ public class PythonBinaryIntegrationTest {
     String nativeLibsEnvVar =
         workspace.runBuckCommandWithEnvironmentOverridesAndContext(
             workspace.getPath(""),
-            Optional.<NGContext>absent(),
-            ImmutableMap.<String, String>of(nativeLibsEnvVarName, originalNativeLibsEnvVar),
+            Optional.absent(),
+            ImmutableMap.of(nativeLibsEnvVarName, originalNativeLibsEnvVar),
             "run",
             ":bin-with-native-libs")
             .assertSuccess()
@@ -231,8 +230,8 @@ public class PythonBinaryIntegrationTest {
     nativeLibsEnvVar =
         workspace.runBuckCommandWithEnvironmentOverridesAndContext(
             workspace.getPath(""),
-            Optional.<NGContext>absent(),
-            ImmutableMap.<String, String>of(),
+            Optional.absent(),
+            ImmutableMap.of(),
             "run",
             ":bin-with-native-libs")
             .assertSuccess()

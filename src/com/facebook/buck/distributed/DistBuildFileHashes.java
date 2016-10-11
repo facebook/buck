@@ -99,7 +99,7 @@ public class DistBuildFileHashes {
     this.ruleKeyFactories = createRuleKeyFactories(sourcePathResolver, fileHashLoaders, keySeed);
     this.ruleKeys = ruleKeyComputation(actionGraph, this.ruleKeyFactories, executorService);
     this.fileHashes = fileHashesComputation(
-        Futures.transform(this.ruleKeys, Functions.<Void>constant(null)),
+        Futures.transform(this.ruleKeys, Functions.constant(null)),
         this.remoteFileHashes,
         executorService);
   }

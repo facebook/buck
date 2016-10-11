@@ -28,7 +28,6 @@ import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
@@ -138,7 +137,7 @@ public class PublicAnnouncementManagerIntegrationTest {
           clock,
         /* verbosity */ TestResultSummaryVerbosity.of(false, false),
           executionEnvironment,
-          Optional.<WebServer>absent(),
+          Optional.absent(),
           Locale.US,
           logPath,
           TimeZone.getTimeZone("UTC"));

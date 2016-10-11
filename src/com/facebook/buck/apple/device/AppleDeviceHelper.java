@@ -20,7 +20,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -74,9 +73,9 @@ public class AppleDeviceHelper {
       result = processExecutor.launchAndExecute(
           processExecutorParams,
           options,
-              /* stdin */ Optional.<String>absent(),
-              /* timeOutMs */ Optional.<Long>of((long) 5000),
-              /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
+              /* stdin */ Optional.absent(),
+              /* timeOutMs */ Optional.of((long) 5000),
+              /* timeOutHandler */ Optional.absent());
     } catch (InterruptedException | IOException e) {
       LOG.warn("Could not execute device helper.");
       return ImmutableMap.of();
@@ -123,9 +122,9 @@ public class AppleDeviceHelper {
       result = processExecutor.launchAndExecute(
           processExecutorParams,
           options,
-              /* stdin */ Optional.<String>absent(),
-              /* timeOutMs */ Optional.<Long>of((long) 60000),
-              /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
+              /* stdin */ Optional.absent(),
+              /* timeOutMs */ Optional.of((long) 60000),
+              /* timeOutHandler */ Optional.absent());
     } catch (InterruptedException | IOException e) {
       LOG.warn("Could not execute device helper.");
       return false;
@@ -160,9 +159,9 @@ public class AppleDeviceHelper {
       result = processExecutor.launchAndExecute(
           processExecutorParams,
           options,
-              /* stdin */ Optional.<String>absent(),
-              /* timeOutMs */ Optional.<Long>of((long) 60000),
-              /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
+              /* stdin */ Optional.absent(),
+              /* timeOutMs */ Optional.of((long) 60000),
+              /* timeOutHandler */ Optional.absent());
     } catch (InterruptedException | IOException e) {
       LOG.warn("Could not execute device helper.");
       return false;

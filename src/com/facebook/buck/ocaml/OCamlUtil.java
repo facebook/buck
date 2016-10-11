@@ -88,7 +88,7 @@ public class OCamlUtil {
 
     final ImmutableList<BuildRule> sorted = TopologicalSort.sort(
         graph,
-        Predicates.<BuildRule>alwaysTrue());
+        Predicates.alwaysTrue());
 
     return FluentIterable
             .from(sorted)

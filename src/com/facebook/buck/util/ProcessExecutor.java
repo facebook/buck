@@ -125,10 +125,10 @@ public class ProcessExecutor {
       throws InterruptedException, IOException {
     return launchAndExecute(
         params,
-        ImmutableSet.<Option>of(),
-        /* stdin */ Optional.<String>absent(),
-        /* timeOutMs */ Optional.<Long>absent(),
-        /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
+        ImmutableSet.of(),
+        /* stdin */ Optional.absent(),
+        /* timeOutMs */ Optional.absent(),
+        /* timeOutHandler */ Optional.absent());
   }
 
   /**
@@ -212,8 +212,8 @@ public class ProcessExecutor {
     return new Result(
         exitCode,
         false,
-        Optional.<String>absent(),
-        Optional.<String>absent()
+        Optional.absent(),
+        Optional.absent()
     );
   }
 
@@ -230,8 +230,8 @@ public class ProcessExecutor {
     return new Result(
         exitCode,
         timedOut,
-        Optional.<String>absent(),
-        Optional.<String>absent()
+        Optional.absent(),
+        Optional.absent()
     );
   }
 
@@ -425,7 +425,7 @@ public class ProcessExecutor {
     }
 
     public Result(int exitCode) {
-      this(exitCode, /* timedOut */ false, Optional.<String>absent(), Optional.<String>absent());
+      this(exitCode, /* timedOut */ false, Optional.absent(), Optional.absent());
     }
 
     public int getExitCode() {

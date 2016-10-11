@@ -274,7 +274,7 @@ public class AppleSimulatorControllerTest {
         "70200ED8-EEF1-4BDB-BCCF-3595B137D67D",
         "com.facebook.MyNeatApp",
         AppleSimulatorController.LaunchBehavior.DO_NOT_WAIT_FOR_DEBUGGER,
-        ImmutableList.<String>of());
+        ImmutableList.of());
     assertThat(launchedPID, is(equalTo(Optional.of(42L))));
   }
 
@@ -302,7 +302,7 @@ public class AppleSimulatorControllerTest {
           "70200ED8-EEF1-4BDB-BCCF-3595B137D67D",
           "com.facebook.MyNeatApp",
           AppleSimulatorController.LaunchBehavior.WAIT_FOR_DEBUGGER,
-        ImmutableList.<String>of());
+        ImmutableList.of());
 
     assertThat(launchedPID, is(equalTo(Optional.of(42L))));
   }
@@ -332,7 +332,7 @@ public class AppleSimulatorControllerTest {
         "70200ED8-EEF1-4BDB-BCCF-3595B137D67D",
         "com.facebook.MyNeatApp",
         AppleSimulatorController.LaunchBehavior.DO_NOT_WAIT_FOR_DEBUGGER,
-        ImmutableList.<String>of("arg1", "arg2"));
+        ImmutableList.of("arg1", "arg2"));
     assertThat(launchedPID, is(equalTo(Optional.of(42L))));
   }
 }

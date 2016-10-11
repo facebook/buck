@@ -69,7 +69,7 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
       SourcePath path,
       Optional<Function<Path, Path>> pathShortener) {
     return Preconditions.checkNotNull(
-        pathShortener.or(Functions.<Path>identity())
+        pathShortener.or(Functions.identity())
             .apply(resolver.getAbsolutePath(path))).toString();
   }
 

@@ -73,7 +73,7 @@ public class DefaultSuggestBuildRulesTest {
     SuggestBuildRules suggestFn =
         DefaultSuggestBuildRules.createSuggestBuildFunction(
             jarResolver,
-            ImmutableSet.<JavaLibrary>of(),
+            ImmutableSet.of(),
             transitiveClasspathEntries.keySet(),
             ImmutableList.of(libraryTwo, parent, grandparent));
 
@@ -101,7 +101,7 @@ public class DefaultSuggestBuildRulesTest {
     SuggestBuildRules suggestFn =
         DefaultSuggestBuildRules.createSuggestBuildFunction(
             jarResolver,
-            ImmutableSet.<JavaLibrary>of(),
+            ImmutableSet.of(),
             transitiveClasspathEntries.keySet(),
             ImmutableList.of(libraryTwo, parent, grandparent));
 

@@ -59,7 +59,7 @@ public class InferHelper {
         temporaryFolder.getRoot(),
         rawBlacklistRegex,
         "infertest",
-        Optional.<Path>absent());
+        Optional.absent());
   }
 
   public static ProjectWorkspace setupCxxInferWorkspace(

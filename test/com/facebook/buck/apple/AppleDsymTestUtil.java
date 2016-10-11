@@ -45,7 +45,7 @@ public class AppleDsymTestUtil {
         symbolName,
         workspace,
         dwarfPath,
-        Optional.<ImmutableList<String>>absent());
+        Optional.absent());
   }
 
   public static void checkDsymFileHasDebugSymbolsForMainForConcreteArchitectures(

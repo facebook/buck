@@ -17,7 +17,6 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -37,7 +36,7 @@ public class OmnibusRootsTest {
     NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(excludedDep));
 
     OmnibusRoots.Builder builder =
-        OmnibusRoots.builder(CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableSet.<BuildTarget>of());
+        OmnibusRoots.builder(CxxPlatformUtils.DEFAULT_PLATFORM, ImmutableSet.of());
     builder.addIncludedRoot(root);
     builder.addIncludedRoot(transitiveRoot);
     OmnibusRoots roots = builder.build();

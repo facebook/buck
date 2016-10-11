@@ -25,7 +25,6 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
@@ -121,7 +120,7 @@ public class ThriftBuckConfigTest {
     // Verify that the returned Tool wraps the compiler rule correctly.
     assertThat(
         compiler.getDeps(new SourcePathResolver(resolver)),
-        Matchers.<BuildRule>contains(thriftRule));
+        Matchers.contains(thriftRule));
   }
 
   @Test

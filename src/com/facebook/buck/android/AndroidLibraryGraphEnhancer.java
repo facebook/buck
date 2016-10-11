@@ -100,7 +100,7 @@ public class AndroidLibraryGraphEnhancer {
       case TRANSITIVE:
         androidResourceDeps = UnsortedAndroidResourceDeps.createFrom(
             originalDeps,
-            Optional.<UnsortedAndroidResourceDeps.Callback>absent())
+            Optional.absent())
             .getResourceDeps();
         break;
       default:
@@ -126,7 +126,7 @@ public class AndroidLibraryGraphEnhancer {
     BuildRuleParams dummyRDotJavaParams = originalBuildRuleParams.copyWithChanges(
         dummyRDotJavaBuildTarget,
         Suppliers.ofInstance(actualDeps.build()),
-        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     BuildTarget abiJarTarget =
         dummyRDotJavaParams.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);

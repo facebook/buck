@@ -49,10 +49,10 @@ public class AnnotationProcessingParams implements RuleKeyAppendable {
   public static final AnnotationProcessingParams EMPTY = new AnnotationProcessingParams(
       /* owner target */ null,
       /* project filesystem */ null,
-      ImmutableSet.<Path>of(),
-      ImmutableSet.<String>of(),
-      ImmutableSet.<String>of(),
-      ImmutableSortedSet.<SourcePath>of(),
+      ImmutableSet.of(),
+      ImmutableSet.of(),
+      ImmutableSet.of(),
+      ImmutableSortedSet.of(),
       false);
 
   @Nullable

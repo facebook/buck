@@ -145,7 +145,7 @@ public class Config {
 
     Optional<String> val = rawConfig.getValue(section, field);
     if (!val.isPresent()) {
-      cache.put(cacheKey, Optional.<String>absent());
+      cache.put(cacheKey, Optional.absent());
       return Optional.absent();
     }
 
@@ -184,13 +184,13 @@ public class Config {
    *     empty list if the property is not defined or there are no values.
    */
   public ImmutableList<String> getListWithoutComments(String sectionName, String propertyName) {
-    return getOptionalListWithoutComments(sectionName, propertyName).or(ImmutableList.<String>of());
+    return getOptionalListWithoutComments(sectionName, propertyName).or(ImmutableList.of());
   }
 
   public ImmutableList<String> getListWithoutComments(
       String sectionName, String propertyName, char splitChar) {
     return getOptionalListWithoutComments(sectionName, propertyName, splitChar)
-        .or(ImmutableList.<String>of());
+        .or(ImmutableList.of());
   }
 
   /**
@@ -237,7 +237,7 @@ public class Config {
         return Optional.absent();
       } else {
         return Optional.of(decodeQuotedParts(
-                value, Optional.<Character>absent(),
+                value, Optional.absent(),
                 sectionName, propertyName).get(0));
       }
     } else {
@@ -249,14 +249,14 @@ public class Config {
     Optional<String> value = getValue(sectionName, propertyName);
     return value.isPresent() ?
         Optional.of(Long.valueOf(value.get())) :
-        Optional.<Long>absent();
+        Optional.absent();
   }
 
   public Optional<Integer> getInteger(String sectionName, String propertyName) {
     Optional<String> value = getValue(sectionName, propertyName);
     return value.isPresent() ?
         Optional.of(Integer.valueOf(value.get())) :
-        Optional.<Integer>absent();
+        Optional.absent();
   }
 
   public Optional<Float> getFloat(String sectionName, String propertyName) {
@@ -366,7 +366,7 @@ public class Config {
       }
       Sets.SetView<String> fields = Sets.difference(
           Sets.union(leftFields.keySet(), rightFields.keySet()),
-          Optional.fromNullable(ignoredFields.get(section)).or(ImmutableSet.<String>of()));
+          Optional.fromNullable(ignoredFields.get(section)).or(ImmutableSet.of()));
       for (String field : fields) {
         String leftValue = leftFields.get(field);
         String rightValue = rightFields.get(field);

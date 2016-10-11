@@ -28,7 +28,6 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleScheduleInfo;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
@@ -92,7 +91,7 @@ public class CxxLinkTest {
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
             DEFAULT_ARGS,
-            Optional.<RuleScheduleInfo>absent(),
+            Optional.absent(),
             /* cacheable */ true));
 
     // Verify that changing the archiver causes a rulekey change.
@@ -104,7 +103,7 @@ public class CxxLinkTest {
             new GnuLinker(new HashedFileTool(Paths.get("different"))),
             DEFAULT_OUTPUT,
             DEFAULT_ARGS,
-            Optional.<RuleScheduleInfo>absent(),
+            Optional.absent(),
             /* cacheable */ true));
     assertNotEquals(defaultRuleKey, linkerChange);
 
@@ -117,7 +116,7 @@ public class CxxLinkTest {
             DEFAULT_LINKER,
             Paths.get("different"),
             DEFAULT_ARGS,
-            Optional.<RuleScheduleInfo>absent(),
+            Optional.absent(),
             /* cacheable */ true));
     assertNotEquals(defaultRuleKey, outputChange);
 
@@ -129,14 +128,14 @@ public class CxxLinkTest {
             pathResolver,
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
-            ImmutableList.<Arg>of(
+            ImmutableList.of(
                 new SourcePathArg(
                     new SourcePathResolver(
                         new BuildRuleResolver(
                             TargetGraph.EMPTY,
                             new DefaultTargetNodeToBuildRuleTransformer())),
                     new FakeSourcePath("different"))),
-            Optional.<RuleScheduleInfo>absent(),
+            Optional.absent(),
             /* cacheable */ true));
     assertNotEquals(defaultRuleKey, flagsChange);
   }
@@ -177,9 +176,9 @@ public class CxxLinkTest {
 
     // Generate a rule with a path we need to sanitize to a consistent value.
     ImmutableList<Arg> args1 =
-        ImmutableList.<Arg>of(
+        ImmutableList.of(
             new SanitizedArg(
-                sanitizer1.sanitize(Optional.<Path>absent()),
+                sanitizer1.sanitize(Optional.absent()),
                 "-Lsomething/foo"));
 
     RuleKey ruleKey1 = ruleKeyBuilderFactory.build(
@@ -189,15 +188,15 @@ public class CxxLinkTest {
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
             args1,
-            Optional.<RuleScheduleInfo>absent(),
+            Optional.absent(),
             /* cacheable */ true));
 
     // Generate another rule with a different path we need to sanitize to the
     // same consistent value as above.
     ImmutableList<Arg> args2 =
-        ImmutableList.<Arg>of(
+        ImmutableList.of(
             new SanitizedArg(
-                sanitizer2.sanitize(Optional.<Path>absent()),
+                sanitizer2.sanitize(Optional.absent()),
                 "-Ldifferent/foo"));
 
     RuleKey ruleKey2 = ruleKeyBuilderFactory.build(
@@ -207,7 +206,7 @@ public class CxxLinkTest {
             DEFAULT_LINKER,
             DEFAULT_OUTPUT,
             args2,
-            Optional.<RuleScheduleInfo>absent(),
+            Optional.absent(),
             /* cacheable */ true));
 
     assertEquals(ruleKey1, ruleKey2);

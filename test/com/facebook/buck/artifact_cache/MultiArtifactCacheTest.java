@@ -90,7 +90,7 @@ public class MultiArtifactCacheTest {
   public void testCacheStore() throws InterruptedException, IOException {
     DummyArtifactCache dummyArtifactCache1 = new DummyArtifactCache();
     DummyArtifactCache dummyArtifactCache2 = new DummyArtifactCache();
-    MultiArtifactCache multiArtifactCache = new MultiArtifactCache(ImmutableList.<ArtifactCache>of(
+    MultiArtifactCache multiArtifactCache = new MultiArtifactCache(ImmutableList.of(
         dummyArtifactCache1,
         dummyArtifactCache2));
 
@@ -112,7 +112,7 @@ public class MultiArtifactCacheTest {
   @Test
   public void preserveErrorsFromInnerCache() throws InterruptedException, IOException {
     ErroringArtifactCache inner = new ErroringArtifactCache();
-    MultiArtifactCache cache = new MultiArtifactCache(ImmutableList.<ArtifactCache>of(inner));
+    MultiArtifactCache cache = new MultiArtifactCache(ImmutableList.of(inner));
     CacheResult result = cache.fetch(dummyRuleKey, dummyFile);
     assertSame(result.getType(), CacheResultType.ERROR);
     cache.close();
@@ -123,7 +123,7 @@ public class MultiArtifactCacheTest {
     InMemoryArtifactCache cache1 = new InMemoryArtifactCache();
     InMemoryArtifactCache cache2 = new InMemoryArtifactCache();
     MultiArtifactCache multiArtifactCache =
-        new MultiArtifactCache(ImmutableList.<ArtifactCache>of(
+        new MultiArtifactCache(ImmutableList.of(
             cache1,
             cache2));
 

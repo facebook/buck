@@ -85,8 +85,8 @@ public class MergeAndroidResourcesStepTest {
     SortedSetMultimap<String, RDotTxtEntry> packageNameToResources =
         MergeAndroidResourcesStep.sortSymbols(
             entriesBuilder.buildFilePathToPackageNameSet(),
-            Optional.<ImmutableMap<RDotTxtEntry, String>>absent(),
-            ImmutableMap.<Path, HasAndroidResourceDeps>of(),
+            Optional.absent(),
+            ImmutableMap.of(),
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             entriesBuilder.getProjectFilesystem());
 
@@ -143,7 +143,7 @@ public class MergeAndroidResourcesStepTest {
     );
     MergeAndroidResourcesStep.sortSymbols(
         entriesBuilder.buildFilePathToPackageNameSet(),
-        Optional.<ImmutableMap<RDotTxtEntry, String>>absent(),
+        Optional.absent(),
         ImmutableMap.of(
             Paths.get("a-R.txt"),
             (HasAndroidResourceDeps) AndroidResourceRuleBuilder.newBuilder()
@@ -202,8 +202,8 @@ public class MergeAndroidResourcesStepTest {
         ImmutableList.of(res),
         Paths.get("output"),
         /* forceFinalResourceIds */ false,
-        /* unionPackage */ Optional.<String>absent(),
-        /* rName */ Optional.<String>absent());
+        /* unionPackage */ Optional.absent(),
+        /* rName */ Optional.absent());
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
@@ -264,8 +264,8 @@ public class MergeAndroidResourcesStepTest {
         Paths.get("output"),
         /* forceFinalResourceIds */ true,
         /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-        /* unionPackage */ Optional.<String>absent(),
-        /* rName */ Optional.<String>absent());
+        /* unionPackage */ Optional.absent(),
+        /* rName */ Optional.absent());
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
@@ -340,8 +340,8 @@ public class MergeAndroidResourcesStepTest {
         Paths.get("output"),
         /* forceFinalResourceIds */ true,
         /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-        /* unionPackage */ Optional.<String>absent(),
-        /* rName */ Optional.<String>absent());
+        /* unionPackage */ Optional.absent(),
+        /* rName */ Optional.absent());
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
@@ -413,7 +413,7 @@ public class MergeAndroidResourcesStepTest {
         Paths.get("output"),
         /* forceFinalResourceIds */ false,
         Optional.of("res1"),
-        /* rName */ Optional.<String>absent());
+        /* rName */ Optional.absent());
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 

@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -125,7 +124,7 @@ public class AndroidBuildConfigTest {
         ),
         /* javaPackage */ "com.example",
         /* values */ BuildConfigFields.empty(),
-        /* valuesFile */ Optional.<SourcePath>absent(),
+        /* valuesFile */ Optional.absent(),
         /* useConstantExpressions */ false);
   }
 

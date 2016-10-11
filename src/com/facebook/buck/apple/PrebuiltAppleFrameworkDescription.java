@@ -68,7 +68,7 @@ public class PrebuiltAppleFrameworkDescription implements
         resolver,
         new SourcePathResolver(resolver),
         args.framework,
-        args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
+        args.frameworks.or(ImmutableSortedSet.of()),
         args.supportedPlatformsRegex,
         new Function<CxxPlatform, ImmutableList<String>>() {
           @Override

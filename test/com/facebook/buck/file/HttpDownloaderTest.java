@@ -35,7 +35,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.PasswordAuthentication;
-import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
@@ -51,7 +50,7 @@ public class HttpDownloaderTest {
   private BuckEventBus eventBus = BuckEventBusFactory.newInstance();
 
   private HttpDownloader getDownloader(final HttpURLConnection connection) {
-    return new HttpDownloader(Optional.<Proxy> absent()) {
+    return new HttpDownloader(Optional.absent()) {
       @Override
       protected HttpURLConnection createConnection(URI uri) throws IOException {
         return connection;
@@ -115,7 +114,7 @@ public class HttpDownloaderTest {
 
   @Test
   public void shouldReturnFalseIfUrlIsNotHttp() throws URISyntaxException, IOException {
-    Downloader downloader = new HttpDownloader(Optional.<Proxy>absent());
+    Downloader downloader = new HttpDownloader(Optional.absent());
 
     boolean result = downloader.fetch(eventBus, new URI("mvn:foo/bar/baz"), neverUsed);
 

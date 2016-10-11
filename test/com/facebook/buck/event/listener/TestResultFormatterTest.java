@@ -236,8 +236,8 @@ public class TestResultFormatterTest {
 
     formatter.runComplete(
         builder,
-        ImmutableList.<TestResults>of(),
-        ImmutableList.<TestStatusMessage>of());
+        ImmutableList.of(),
+        ImmutableList.of());
 
 
     assertThat(toString(builder), containsString("NO TESTS RAN"));
@@ -247,14 +247,14 @@ public class TestResultFormatterTest {
   public void shouldIndicateThatNoTestRanIfNoneRanAndUsingFilter() {
     TestResultFormatter formatter = createSilentFormatter();
     TestCaseSummary summary = new TestCaseSummary(
-        "com.example.FooTest", ImmutableList.<TestResultSummary>of());
+        "com.example.FooTest", ImmutableList.of());
     TestResults results = FakeTestResults.of(ImmutableList.of(summary));
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.runComplete(
         builder,
         ImmutableList.of(results),
-        ImmutableList.<TestStatusMessage>of());
+        ImmutableList.of());
 
     assertThat(toString(builder), containsString("NO TESTS RAN"));
   }
@@ -270,7 +270,7 @@ public class TestResultFormatterTest {
     formatter.runComplete(
         builder,
         ImmutableList.of(results),
-        ImmutableList.<TestStatusMessage>of());
+        ImmutableList.of());
 
     assertEquals("TESTS PASSED", toString(builder));
   }
@@ -290,7 +290,7 @@ public class TestResultFormatterTest {
     formatter.runComplete(
         builder,
         ImmutableList.of(results),
-        ImmutableList.<TestStatusMessage>of());
+        ImmutableList.of());
 
     assertEquals("Updated test logs: log.txt\nTESTS PASSED", toString(builder));
   }
@@ -310,7 +310,7 @@ public class TestResultFormatterTest {
     formatter.runComplete(
         builder,
         ImmutableList.of(results),
-        ImmutableList.<TestStatusMessage>of());
+        ImmutableList.of());
 
     assertEquals("TESTS PASSED", toString(builder));
   }
@@ -339,14 +339,14 @@ public class TestResultFormatterTest {
     TestResults results = TestResults.of(
         BuildTargetFactory.newInstance("//foo:bar"),
         ImmutableList.of(summary),
-        /* contacts */ ImmutableSet.<String>of(),
-        /* labels */ ImmutableSet.<String>of());
+        /* contacts */ ImmutableSet.of(),
+        /* labels */ ImmutableSet.of());
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.runComplete(
         builder,
         ImmutableList.of(results),
-        ImmutableList.<TestStatusMessage>of());
+        ImmutableList.of());
 
     String expectedOutput = Joiner.on('\n').join(
         "TESTS FAILED: 1 FAILURE",
@@ -363,8 +363,8 @@ public class TestResultFormatterTest {
     TestResults results = TestResults.of(
         BuildTargetFactory.newInstance("//foo:bar"),
         ImmutableList.of(summary),
-        /* contacts */ ImmutableSet.<String>of(),
-        /* labels */ ImmutableSet.<String>of());
+        /* contacts */ ImmutableSet.of(),
+        /* labels */ ImmutableSet.of());
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.runComplete(
@@ -401,14 +401,14 @@ public class TestResultFormatterTest {
     TestResults results = TestResults.of(
         BuildTargetFactory.newInstance("//foo:bar"),
         ImmutableList.of(summary),
-        /* contacts */ ImmutableSet.<String>of(),
-        /* labels */ ImmutableSet.<String>of());
+        /* contacts */ ImmutableSet.of(),
+        /* labels */ ImmutableSet.of());
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     formatter.runComplete(
         builder,
         ImmutableList.of(results),
-        ImmutableList.<TestStatusMessage>of());
+        ImmutableList.of());
 
     String expectedOutput = Joiner.on('\n').join(
         "TESTS FAILED: 2 FAILURES",

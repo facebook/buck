@@ -20,7 +20,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -294,19 +293,19 @@ public class AppleSimulatorController {
     ProcessExecutor.Result result = processExecutor.launchAndExecute(
         processExecutorParams,
         options,
-        /* stdin */ Optional.<String>absent(),
-        /* timeOutMs */ Optional.<Long>absent(),
-        /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
+        /* stdin */ Optional.absent(),
+        /* timeOutMs */ Optional.absent(),
+        /* timeOutHandler */ Optional.absent());
     if (result.getExitCode() != 0) {
       LOG.error(result.getMessageForResult(message));
-      return Optional.<Long>absent();
+      return Optional.absent();
     }
     Preconditions.checkState(result.getStdout().isPresent());
     String trimmedStdout = result.getStdout().get().trim();
     Matcher stdoutMatcher = SIMCTL_LAUNCH_OUTPUT_PATTERN.matcher(trimmedStdout);
     if (!stdoutMatcher.find()) {
       LOG.error("Could not parse output from %s: %s", command, trimmedStdout);
-      return Optional.<Long>absent();
+      return Optional.absent();
     }
 
     return Optional.of(Long.parseLong(stdoutMatcher.group(1), 10));

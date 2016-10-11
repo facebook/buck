@@ -55,7 +55,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.martiansoftware.nailgun.NGContext;
 
 import org.ini4j.Ini;
 import org.junit.Ignore;
@@ -369,8 +368,8 @@ public class InterCellIntegrationTest {
     ProjectWorkspace.ProcessResult result =
         mainRepo.runBuckCommandWithEnvironmentOverridesAndContext(
             primary,
-            Optional.<NGContext>absent(),
-            ImmutableMap.<String, String>of(),
+            Optional.absent(),
+            ImmutableMap.of(),
             "build",
             "//:bin");
 

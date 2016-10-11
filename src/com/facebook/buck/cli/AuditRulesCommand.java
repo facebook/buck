@@ -86,7 +86,7 @@ public class AuditRulesCommand extends AbstractCommand {
   }
 
   public ImmutableSet<String> getTypes() {
-    return types == null ? ImmutableSet.<String>of() : ImmutableSet.copyOf(types);
+    return types == null ? ImmutableSet.of() : ImmutableSet.copyOf(types);
   }
 
   @Override

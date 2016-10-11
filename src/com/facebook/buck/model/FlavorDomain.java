@@ -88,7 +88,7 @@ public class FlavorDomain<T> {
       return Optional.absent();
     }
 
-    return Optional.<Map.Entry<Flavor, T>>of(
+    return Optional.of(
         new AbstractMap.SimpleImmutableEntry<>(
             flavor.get(),
             translation.get(flavor.get())));

@@ -38,12 +38,12 @@ public class JavacPhaseEventTest {
         JavacPhaseEvent.started(
             target,
             phase,
-            ImmutableMap.<String, String>of()));
+            ImmutableMap.of()));
     JavacPhaseEvent startedEventTwo = configureTestEvent(
         JavacPhaseEvent.started(
             target,
             phase,
-            ImmutableMap.<String, String>of()));
+            ImmutableMap.of()));
 
     assertEquals(startedEventOne, startedEventOne);
     assertNotEquals(startedEventOne, startedEventTwo);
@@ -58,16 +58,16 @@ public class JavacPhaseEventTest {
         JavacPhaseEvent.started(
             target,
             phase,
-            ImmutableMap.<String, String>of()));
+            ImmutableMap.of()));
     JavacPhaseEvent.Started startedEventTwo = configureTestEvent(
         JavacPhaseEvent.started(
             target,
             phase,
-            ImmutableMap.<String, String>of()));
+            ImmutableMap.of()));
     JavacPhaseEvent finishedEventOne = configureTestEvent(
         JavacPhaseEvent.finished(
             startedEventOne,
-            ImmutableMap.<String, String>of()));
+            ImmutableMap.of()));
 
     assertTrue(startedEventOne.isRelatedTo(finishedEventOne));
     assertTrue(finishedEventOne.isRelatedTo(startedEventOne));

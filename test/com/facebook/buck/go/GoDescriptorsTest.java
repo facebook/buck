@@ -37,7 +37,7 @@ public class GoDescriptorsTest {
       String basePackage, Iterable<String> packages) {
     return ImmutableMap.copyOf(FluentIterable.from(
         GoDescriptors.getPackageImportMap(
-            ImmutableList.<Path>copyOf(
+            ImmutableList.copyOf(
               FluentIterable.from(globalVendorPath).transform(MorePaths.TO_PATH)),
             Paths.get(basePackage),
             FluentIterable.from(packages).transform(MorePaths.TO_PATH)).entrySet())

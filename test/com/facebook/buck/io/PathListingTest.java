@@ -67,8 +67,8 @@ public class PathListingTest {
             "*",
             PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.INCLUDE,
-            Optional.<Integer>absent(), // maxPathsFilter
-            Optional.<Long>absent()), // maxSizeFilter
+            Optional.absent(), // maxPathsFilter
+            Optional.absent()), // maxSizeFilter
         empty());
   }
 
@@ -80,8 +80,8 @@ public class PathListingTest {
             "*",
             PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.EXCLUDE,
-            Optional.<Integer>absent(), // maxPathsFilter
-            Optional.<Long>absent()), // maxSizeFilter
+            Optional.absent(), // maxPathsFilter
+            Optional.absent()), // maxSizeFilter
         empty());
   }
 
@@ -95,7 +95,7 @@ public class PathListingTest {
             PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.INCLUDE,
             Optional.of(0), // maxPathsFilter
-            Optional.<Long>absent()), // maxSizeFilter
+            Optional.absent()), // maxSizeFilter
         empty());
   }
 
@@ -109,7 +109,7 @@ public class PathListingTest {
             PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.EXCLUDE,
             Optional.of(0), // maxPathsFilter
-            Optional.<Long>absent()), // maxSizeFilter
+            Optional.absent()), // maxSizeFilter
         ImmutableSet.of(newest, middle, oldest));
   }
 
@@ -123,7 +123,7 @@ public class PathListingTest {
             PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.INCLUDE,
             Optional.of(1), // maxPathsFilter
-            Optional.<Long>absent()), // maxSizeFilter
+            Optional.absent()), // maxSizeFilter
         ImmutableSet.of(newest));
   }
 
@@ -137,7 +137,7 @@ public class PathListingTest {
             PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.EXCLUDE,
             Optional.of(1), // maxPathsFilter
-            Optional.<Long>absent()), // maxSizeFilter
+            Optional.absent()), // maxSizeFilter
         ImmutableSet.of(middle, oldest));
   }
 
@@ -151,7 +151,7 @@ public class PathListingTest {
             PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.INCLUDE,
             Optional.of(Integer.MAX_VALUE), // maxPathsFilter
-            Optional.<Long>absent()), // maxSizeFilter
+            Optional.absent()), // maxSizeFilter
         ImmutableSet.of(newest, middle, oldest));
   }
 
@@ -165,7 +165,7 @@ public class PathListingTest {
             PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.EXCLUDE,
             Optional.of(Integer.MAX_VALUE), // maxPathsFilter
-            Optional.<Long>absent()), // maxSizeFilter
+            Optional.absent()), // maxSizeFilter
         empty());
   }
 
@@ -178,7 +178,7 @@ public class PathListingTest {
             "*",
             PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.INCLUDE,
-            Optional.<Integer>absent(), // maxPathsFilter
+            Optional.absent(), // maxPathsFilter
             Optional.of(0L)), // maxSizeFilter
         empty());
   }
@@ -192,7 +192,7 @@ public class PathListingTest {
             "*",
             PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.EXCLUDE,
-            Optional.<Integer>absent(), // maxPathsFilter
+            Optional.absent(), // maxPathsFilter
             Optional.of(0L)), // maxSizeFilter
         ImmutableSet.of(newest, middle, oldest));
   }
@@ -206,7 +206,7 @@ public class PathListingTest {
             "*",
             PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.INCLUDE,
-            Optional.<Integer>absent(), // maxPathsFilter
+            Optional.absent(), // maxPathsFilter
             Optional.of(10L)), // maxSizeFilter
         ImmutableSet.of(newest));
   }
@@ -220,7 +220,7 @@ public class PathListingTest {
             "*",
             PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.EXCLUDE,
-            Optional.<Integer>absent(), // maxPathsFilter
+            Optional.absent(), // maxPathsFilter
             Optional.of(10L)), // maxSizeFilter
         ImmutableSet.of(middle, oldest));
   }
@@ -234,7 +234,7 @@ public class PathListingTest {
             "*",
             PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.INCLUDE,
-            Optional.<Integer>absent(), // maxPathsFilter
+            Optional.absent(), // maxPathsFilter
             Optional.of(Long.MAX_VALUE)), // maxSizeFilter
         ImmutableSet.of(newest, middle, oldest));
   }
@@ -248,7 +248,7 @@ public class PathListingTest {
             "*",
             PathListing.GET_PATH_MODIFIED_TIME,
             PathListing.FilterMode.EXCLUDE,
-            Optional.<Integer>absent(), // maxPathsFilter
+            Optional.absent(), // maxPathsFilter
             Optional.of(Long.MAX_VALUE)), // maxSizeFilter
         empty());
   }

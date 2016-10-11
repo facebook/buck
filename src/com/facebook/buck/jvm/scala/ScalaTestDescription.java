@@ -38,7 +38,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
@@ -52,9 +51,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
-import java.nio.file.Path;
 import java.util.logging.Level;
-import java.util.regex.Pattern;
 
 public class ScalaTestDescription implements Description<ScalaTestDescription.Arg>,
     ImplicitDepsInferringDescription<ScalaTestDescription.Arg> {
@@ -140,14 +137,14 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                     pathResolver,
                     params.getProjectFilesystem(),
                     args.resources.get()),
-                /* generatedSourceFolderName */ Optional.<Path>absent(),
-                /* proguardConfig */ Optional.<SourcePath>absent(),
-                /* postprocessClassesCommands */ ImmutableList.<String>of(),
-                /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),
-                /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
+                /* generatedSourceFolderName */ Optional.absent(),
+                /* proguardConfig */ Optional.absent(),
+                /* postprocessClassesCommands */ ImmutableList.of(),
+                /* exportDeps */ ImmutableSortedSet.of(),
+                /* providedDeps */ ImmutableSortedSet.of(),
                 new BuildTargetSourcePath(abiJarTarget),
                 /* trackClassUsage */ false,
-                /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+                /* additionalClasspathEntries */ ImmutableSet.of(),
                 new ScalacToJarStepFactory(
                     scalac,
                     ImmutableList.<String>builder()
@@ -158,18 +155,18 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                 args.resourcesRoot,
                 args.manifestFile,
                 args.mavenCoords,
-                /* tests */ ImmutableSortedSet.<BuildTarget>of(),
-                /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()));
+                /* tests */ ImmutableSortedSet.of(),
+                /* classesToRemoveFromJar */ ImmutableSet.of()));
 
     JavaTest scalaTest =
         resolver.addToIndex(
             new JavaTest(
                 params.copyWithDeps(
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(testsLibrary)),
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                    Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
+                    Suppliers.ofInstance(ImmutableSortedSet.of())),
                 pathResolver,
                 testsLibrary,
-                /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+                /* additionalClasspathEntries */ ImmutableSet.of(),
                 args.labels.get(),
                 args.contacts.get(),
                 args.testType.or(TestType.JUNIT),

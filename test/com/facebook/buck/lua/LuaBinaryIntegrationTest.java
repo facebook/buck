@@ -56,7 +56,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -200,7 +199,7 @@ public class LuaBinaryIntegrationTest {
         Splitter.on(System.lineSeparator())
             .splitToList(result.getStdout().trim()),
         Matchers.contains(
-            ImmutableList.<Matcher<? super String>>of(
+            ImmutableList.of(
                 Matchers.anyOf(Matchers.equalTo(lua.toString()), Matchers.equalTo("nil")),
                 Matchers.endsWith(arg0.toString()))));
 
@@ -211,7 +210,7 @@ public class LuaBinaryIntegrationTest {
         Splitter.on(System.lineSeparator())
             .splitToList(result.getStdout().trim()),
         Matchers.contains(
-            ImmutableList.<Matcher<? super String>>of(
+            ImmutableList.of(
                 Matchers.anyOf(Matchers.equalTo(lua.toString()), Matchers.equalTo("nil")),
                 Matchers.endsWith(arg0.toString()),
                 Matchers.equalTo("hello"),
@@ -305,11 +304,11 @@ public class LuaBinaryIntegrationTest {
             new ProjectFilesystem(tmp.getRoot()),
             Architecture.detect(),
             Platform.detect(),
-            ImmutableMap.<String, String>of(),
+            ImmutableMap.of(),
             new DefaultCellPathResolver(tmp.getRoot(), rawConfig));
     return new LuaBuckConfig(
         buckConfig,
-        new FakeExecutableFinder(ImmutableList.<Path>of()));
+        new FakeExecutableFinder(ImmutableList.of()));
   }
 
 }

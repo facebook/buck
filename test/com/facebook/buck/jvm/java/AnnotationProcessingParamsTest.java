@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -45,7 +44,7 @@ public class AnnotationProcessingParamsTest {
             new FakeJavaLibrary(
                 BuildTargetFactory.newInstance("//:processor"),
                 pathResolver,
-                ImmutableSortedSet.<BuildRule>of(dep)));
+                ImmutableSortedSet.of(dep)));
 
     AnnotationProcessingParams params = new AnnotationProcessingParams.Builder()
         .addProcessorBuildTarget(processor)
@@ -53,7 +52,7 @@ public class AnnotationProcessingParamsTest {
 
     assertThat(
         pathResolver.filterBuildRuleInputs(params.getInputs()),
-        Matchers.<BuildRule>containsInAnyOrder(processor, dep));
+        Matchers.containsInAnyOrder(processor, dep));
   }
 
 }

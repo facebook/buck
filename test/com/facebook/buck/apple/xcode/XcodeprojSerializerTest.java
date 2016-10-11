@@ -32,7 +32,7 @@ public class XcodeprojSerializerTest {
   public void testEmptyProject() {
     PBXProject project = new PBXProject("TestProject");
     XcodeprojSerializer xcodeprojSerializer = new XcodeprojSerializer(
-        new GidGenerator(ImmutableSet.<String>of()), project);
+        new GidGenerator(ImmutableSet.of()), project);
     NSDictionary rootObject = xcodeprojSerializer.toPlist();
 
     assertEquals(project.getGlobalID(), ((NSString) rootObject.get("rootObject")).getContent());

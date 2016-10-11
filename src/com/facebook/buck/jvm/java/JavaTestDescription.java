@@ -50,9 +50,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
-import java.nio.file.Path;
 import java.util.logging.Level;
-import java.util.regex.Pattern;
 
 
 public class JavaTestDescription implements
@@ -144,29 +142,29 @@ public class JavaTestDescription implements
                 javacOptions.getGeneratedSourceFolderName(),
                 args.proguardConfig.transform(
                     SourcePaths.toSourcePath(params.getProjectFilesystem())),
-                /* postprocessClassesCommands */ ImmutableList.<String>of(),
-                /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),
-                /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
+                /* postprocessClassesCommands */ ImmutableList.of(),
+                /* exportDeps */ ImmutableSortedSet.of(),
+                /* providedDeps */ ImmutableSortedSet.of(),
                 new BuildTargetSourcePath(abiJarTarget),
                 javacOptions.trackClassUsage(),
-                /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+                /* additionalClasspathEntries */ ImmutableSet.of(),
                 new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
                 args.resourcesRoot,
                 args.manifestFile,
                 args.mavenCoords,
-                /* tests */ ImmutableSortedSet.<BuildTarget>of(),
-                /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()
+                /* tests */ ImmutableSortedSet.of(),
+                /* classesToRemoveFromJar */ ImmutableSet.of()
             ));
 
   JavaTest javaTest =
       resolver.addToIndex(
           new JavaTest(
               params.copyWithDeps(
-                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(testsLibrary)),
-                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                  Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
+                  Suppliers.ofInstance(ImmutableSortedSet.of())),
               pathResolver,
               testsLibrary,
-              /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+              /* additionalClasspathEntries */ ImmutableSet.of(),
               args.labels.get(),
               args.contacts.get(),
               args.testType.or(TestType.JUNIT),

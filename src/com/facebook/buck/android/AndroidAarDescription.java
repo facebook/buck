@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.MergeAndroidResourceSources;
 import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -45,10 +44,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
 
 /**
  * Description for a {@link BuildRule} that generates an {@code .aar} file.
@@ -130,14 +125,14 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     final APKModuleGraph apkModuleGraph = new APKModuleGraph(
         targetGraph,
         originalBuildRuleParams.getBuildTarget(),
-        Optional.<Set<BuildTarget>>absent());
+        Optional.absent());
 
     /* assemble dirs */
     AndroidPackageableCollector collector =
         new AndroidPackageableCollector(
             originalBuildRuleParams.getBuildTarget(),
-            /* buildTargetsToExcludeFromDex */ ImmutableSet.<BuildTarget>of(),
-            /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
+            /* buildTargetsToExcludeFromDex */ ImmutableSet.of(),
+            /* resourcesToExclude */ ImmutableSet.of(),
             apkModuleGraph);
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(
@@ -177,11 +172,11 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     BuildRuleParams androidResourceParams = originalBuildRuleParams.copyWithChanges(
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_ANDROID_RESOURCE_FLAVOR),
         Suppliers.ofInstance(
-            ImmutableSortedSet.<BuildRule>of(
+            ImmutableSortedSet.of(
                 manifest,
                 assembleAssetsDirectories,
                 assembleResourceDirectories)),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+        Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     AndroidResource androidResource = new AndroidResource(
         androidResourceParams,
@@ -192,12 +187,12 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         .addAll(originalBuildRuleParams.getDeclaredDeps().get())
         .build(),
         new BuildTargetSourcePath(assembleResourceDirectories.getBuildTarget()),
-        /* resSrcs */ ImmutableSortedSet.<SourcePath>of(),
-        Optional.<SourcePath>absent(),
+        /* resSrcs */ ImmutableSortedSet.of(),
+        Optional.absent(),
         /* rDotJavaPackage */ null,
         new BuildTargetSourcePath(assembleAssetsDirectories.getBuildTarget()),
-        /* assetsSrcs */ ImmutableSortedSet.<SourcePath>of(),
-        Optional.<SourcePath>absent(),
+        /* assetsSrcs */ ImmutableSortedSet.of(),
+        Optional.absent(),
         new BuildTargetSourcePath(manifest.getBuildTarget()),
         /* hasWhitelistedStrings */ false);
     aarExtraDepsBuilder.add(resolver.addToIndex(androidResource));
@@ -208,10 +203,10 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
             resolver,
             originalBuildRuleParams,
             nativePlatforms,
-            ImmutableSet.<NdkCxxPlatforms.TargetCpuType>of(),
+            ImmutableSet.of(),
             cxxBuckConfig,
-            /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
-            /* nativeLibraryMergeGlue */ Optional.<BuildTarget>absent(),
+            /* nativeLibraryMergeMap */ Optional.absent(),
+            /* nativeLibraryMergeGlue */ Optional.absent(),
             AndroidBinary.RelinkerMode.DISABLED,
             apkModuleGraph);
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> nativeLibrariesOptional =

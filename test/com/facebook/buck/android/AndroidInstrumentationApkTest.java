@@ -114,13 +114,13 @@ public class AndroidInstrumentationApkTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(
         BuildTargetFactory.newInstance("//apps:instrumentation"))
         .setDeclaredDeps(ruleResolver.getAllRules(apkOriginalDepsTargets))
-        .setExtraDeps(ImmutableSortedSet.<BuildRule>of(androidBinary))
+        .setExtraDeps(ImmutableSortedSet.of(androidBinary))
         .build();
     AndroidInstrumentationApk androidInstrumentationApk = (AndroidInstrumentationApk)
         new AndroidInstrumentationApkDescription(
             new ProGuardConfig(FakeBuckConfig.builder().build()),
             DEFAULT_JAVAC_OPTIONS,
-            ImmutableMap.<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform>of(),
+            ImmutableMap.of(),
             MoreExecutors.newDirectExecutorService(),
             CxxPlatformUtils.DEFAULT_CONFIG)
             .createBuildRule(TargetGraph.EMPTY, params, ruleResolver, arg);

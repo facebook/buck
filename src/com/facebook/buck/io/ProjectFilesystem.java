@@ -148,7 +148,7 @@ public class ProjectFilesystem {
   protected boolean ignoreValidityOfPaths;
 
   public ProjectFilesystem(Path root) {
-    this(root, ImmutableSet.<PathOrGlobMatcher>of());
+    this(root, ImmutableSet.of());
   }
 
   /**
@@ -160,7 +160,7 @@ public class ProjectFilesystem {
     this(
         root.getFileSystem(),
         root,
-        ImmutableSet.<PathOrGlobMatcher>of(),
+        ImmutableSet.of(),
         getDefaultBuckPaths(root),
         delegate);
   }
@@ -354,7 +354,7 @@ public class ProjectFilesystem {
           }
         })
         // And now remove any null patterns
-        .filter(Predicates.<PathOrGlobMatcher>notNull())
+        .filter(Predicates.notNull())
         .toList());
 
     return builder.build();
@@ -583,7 +583,7 @@ public class ProjectFilesystem {
   }
 
   public ImmutableSet<Path> getFilesUnderPath(Path pathRelativeToProjectRoot) throws IOException {
-    return getFilesUnderPath(pathRelativeToProjectRoot, Predicates.<Path>alwaysTrue());
+    return getFilesUnderPath(pathRelativeToProjectRoot, Predicates.alwaysTrue());
   }
 
   public ImmutableSet<Path> getFilesUnderPath(
@@ -1062,7 +1062,7 @@ public class ProjectFilesystem {
    * with the contents and structure that matches that of the specified paths.
    */
   public void createZip(Collection<Path> pathsToIncludeInZip, Path out) throws IOException {
-    createZip(pathsToIncludeInZip, out, ImmutableMap.<Path, String>of());
+    createZip(pathsToIncludeInZip, out, ImmutableMap.of());
   }
 
   /**

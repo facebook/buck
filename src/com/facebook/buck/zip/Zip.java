@@ -72,7 +72,7 @@ public class Zip extends AbstractBuildRule {
         new ZipStep(
             getProjectFilesystem(),
             output,
-            ImmutableSortedSet.<Path>of(),
+            ImmutableSortedSet.of(),
             /* junk paths */ false,
             ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
             scratchDir));

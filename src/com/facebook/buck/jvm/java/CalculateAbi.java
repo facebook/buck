@@ -23,7 +23,6 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
@@ -65,7 +64,7 @@ public class CalculateAbi extends AbstractBuildRule implements SupportsInputBase
             target,
             Suppliers.ofInstance(
                 ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(library))),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,
         library);
   }

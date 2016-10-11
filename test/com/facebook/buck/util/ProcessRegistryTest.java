@@ -55,7 +55,7 @@ public class ProcessRegistryTest {
     assertEquals(info2.process, registeredProcesses.get(1).process);
 
     ProcessRegistry.setsProcessRegisterCallback(
-        Optional.<ProcessRegistry.ProcessRegisterCallback>absent());
+        Optional.absent());
     assertEquals(2, registeredProcesses.size());
 
     ProcessInfo info3 = new ProcessInfo(new Object(), "Proc3");

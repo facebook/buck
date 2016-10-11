@@ -157,7 +157,7 @@ abstract class AbstractCxxSourceRuleFactory {
       BuildRuleParams params = getParams().copyWithChanges(
           target,
           Suppliers.ofInstance(getPreprocessDeps()),
-          Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+          Suppliers.ofInstance(ImmutableSortedSet.of()));
       DependencyAggregation rule = new DependencyAggregation(params, getPathResolver());
       getResolver().addToIndex(rule);
       return rule;
@@ -258,7 +258,7 @@ abstract class AbstractCxxSourceRuleFactory {
                       .add(compiler)
                       .add(source)
                       .build()),
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
             getPathResolver(),
             preprocessorDelegateValue.getPreprocessorDelegate(),
             new CompilerDelegate(
@@ -405,7 +405,7 @@ abstract class AbstractCxxSourceRuleFactory {
                     .add(compiler)
                     .add(source)
                     .build()),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         getPathResolver(),
         new CompilerDelegate(
             getPathResolver(),
@@ -505,7 +505,7 @@ abstract class AbstractCxxSourceRuleFactory {
                     .add(preprocessorDelegateValue.getPreprocessorDelegate().getPreprocessor())
                     .add(source)
                     .build()),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         getPathResolver(),
         CxxToolFlags.copyOf(
             CxxSourceTypes.getPlatformPreprocessFlags(getCxxPlatform(), source.getType()),
@@ -564,7 +564,7 @@ abstract class AbstractCxxSourceRuleFactory {
         getParams().copyWithChanges(
             target,
             Suppliers.ofInstance(depsBuilder.build()),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         getPathResolver(),
         preprocessorDelegate,
         new CompilerDelegate(
@@ -649,7 +649,7 @@ abstract class AbstractCxxSourceRuleFactory {
                   .add(preprocessorDelegate.getPreprocessor())
                   .add(path)
                   .build()),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         getPathResolver(),
         output,
         preprocessorDelegate,

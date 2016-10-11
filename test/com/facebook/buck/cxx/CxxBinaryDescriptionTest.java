@@ -33,7 +33,6 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.DependencyAggregationTestUtil;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
@@ -86,7 +85,7 @@ public class CxxBinaryDescriptionTest {
     CxxLibraryBuilder depBuilder = new CxxLibraryBuilder(depTarget)
         .setExportedHeaders(
             SourceList.ofUnnamedSources(
-                ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("blah.h"))))
+                ImmutableSortedSet.of(new FakeSourcePath("blah.h"))))
         .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test.cpp"))));
     BuildTarget archiveTarget = BuildTarget.builder(depTarget)
         .addFlavors(CxxDescriptionEnhancer.STATIC_FLAVOR)
@@ -106,7 +105,7 @@ public class CxxBinaryDescriptionTest {
                       SourceWithFlags.of(new FakeSourcePath("test/bar.cpp")),
                       SourceWithFlags.of(new BuildTargetSourcePath(genSourceTarget))))
               .setHeaders(
-                  ImmutableSortedSet.<SourcePath>of(
+                  ImmutableSortedSet.of(
                       new FakeSourcePath("test/bar.h"),
                       new BuildTargetSourcePath(genHeaderTarget)))
               .setDeps(ImmutableSortedSet.of(depTarget));

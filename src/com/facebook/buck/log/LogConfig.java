@@ -167,7 +167,7 @@ public class LogConfig {
              logConfigSetup.getLogFilePrefix() + "*.log*",
              PathListing.GET_PATH_MODIFIED_TIME,
              PathListing.FilterMode.EXCLUDE,
-             Optional.<Integer>absent(),
+             Optional.absent(),
              Optional.of(logConfigSetup.getMaxLogSizeBytes()))) {
       Files.deleteIfExists(path);
     }

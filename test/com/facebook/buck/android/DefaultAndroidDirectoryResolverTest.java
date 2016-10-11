@@ -50,9 +50,9 @@ public class DefaultAndroidDirectoryResolverTest {
   public void getAbsentSdkNdk() {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
-        ImmutableMap.<String, String>of(),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        ImmutableMap.of(),
+        Optional.absent(),
+        Optional.absent());
 
     assertEquals(Optional.<Path>absent(), resolver.getSdkOrAbsent());
     assertEquals(Optional.<Path>absent(), resolver.getNdkOrAbsent());
@@ -62,9 +62,9 @@ public class DefaultAndroidDirectoryResolverTest {
   public void throwAtAbsentSdk() {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
-        ImmutableMap.<String, String>of(),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        ImmutableMap.of(),
+        Optional.absent(),
+        Optional.absent());
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(DefaultAndroidDirectoryResolver.SDK_NOT_FOUND_MESSAGE);
@@ -75,9 +75,9 @@ public class DefaultAndroidDirectoryResolverTest {
   public void throwAtAbsentBuildTools() {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
-        ImmutableMap.<String, String>of(),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        ImmutableMap.of(),
+        Optional.absent(),
+        Optional.absent());
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(DefaultAndroidDirectoryResolver.TOOLS_NEED_SDK_MESSAGE);
@@ -88,9 +88,9 @@ public class DefaultAndroidDirectoryResolverTest {
   public void throwAtAbsentNdk() {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
-        ImmutableMap.<String, String>of(),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        ImmutableMap.of(),
+        Optional.absent(),
+        Optional.absent());
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(DefaultAndroidDirectoryResolver.NDK_NOT_FOUND_MESSAGE);
@@ -103,8 +103,8 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_SDK", file.toString()),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
@@ -120,8 +120,8 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_NDK", file.toString()),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
@@ -137,8 +137,8 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(ndkDir.toAbsolutePath() + " does not contain a valid " +
@@ -152,7 +152,7 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-        Optional.<String>absent(),
+        Optional.absent(),
         Optional.of("r9e"));
 
     expectedException.expect(HumanReadableException.class);
@@ -167,7 +167,7 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
-        Optional.<String>absent(),
+        Optional.absent(),
         Optional.of(""));
 
     expectedException.expect(HumanReadableException.class);
@@ -181,7 +181,7 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_NDK", tmpDir.getRoot().toString()),
-        Optional.<String>absent(),
+        Optional.absent(),
         Optional.of(""));
 
     expectedException.expect(HumanReadableException.class);
@@ -196,7 +196,7 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-        Optional.<String>absent(),
+        Optional.absent(),
         Optional.of("r9d"));
 
     assertEquals(ndkDir, resolver.getNdkOrThrow());
@@ -209,7 +209,7 @@ public class DefaultAndroidDirectoryResolverTest {
     resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-        Optional.<String>absent(),
+        Optional.absent(),
         Optional.of("11.2"));
 
     assertEquals(ndkDir, resolver.getNdkOrThrow());
@@ -221,7 +221,7 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-        Optional.<String>absent(),
+        Optional.absent(),
         Optional.of("r9"));
 
     assertEquals(ndkDir, resolver.getNdkOrThrow());
@@ -233,7 +233,7 @@ public class DefaultAndroidDirectoryResolverTest {
     resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-        Optional.<String>absent(),
+        Optional.absent(),
         Optional.of("11"));
 
     assertEquals(ndkDir, resolver.getNdkOrThrow());
@@ -245,8 +245,8 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
 
     assertEquals(ndkDir, resolver.getNdkOrThrow());
 
@@ -257,8 +257,8 @@ public class DefaultAndroidDirectoryResolverTest {
     resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
 
     assertEquals(ndkDir, resolver.getNdkOrThrow());
   }
@@ -269,16 +269,16 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
 
     assertEquals(ndkDir, resolver.getNdkOrAbsent().get());
 
     resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
-        ImmutableMap.<String, String>of(),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        ImmutableMap.of(),
+        Optional.absent(),
+        Optional.absent());
 
     assertEquals(Optional.absent(), resolver.getNdkOrAbsent());
   }
@@ -294,7 +294,7 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
-        Optional.<String>absent(),
+        Optional.absent(),
         Optional.of("r9b"));
 
     assertEquals(expectedPath, resolver.getNdkOrThrow());
@@ -310,7 +310,7 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
-        Optional.<String>absent(),
+        Optional.absent(),
         Optional.of("13"));
 
     assertEquals(expectedPath, resolver.getNdkOrThrow());
@@ -326,8 +326,8 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
 
     assertEquals(expectedPath, resolver.getNdkOrThrow());
   }
@@ -338,7 +338,7 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
-        Optional.<String>absent(),
+        Optional.absent(),
         Optional.of("r9e"));
 
     expectedException.expect(HumanReadableException.class);
@@ -356,12 +356,12 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver1 = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_NDK", tmpDir.getRoot().toString()),
-        Optional.<String>absent(),
+        Optional.absent(),
         Optional.of("r9a"));
     DefaultAndroidDirectoryResolver resolver2 = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_NDK", tmpDir.getRoot().toString()),
-        Optional.<String>absent(),
+        Optional.absent(),
         Optional.of("r9b"));
 
     assertNotEquals(resolver1, resolver2);
@@ -373,7 +373,7 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
-        Optional.<String>absent(),
+        Optional.absent(),
         Optional.of(""));
 
     expectedException.expect(HumanReadableException.class);
@@ -388,8 +388,8 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_SDK", sdkDir.toString()),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
     assertThat(
         resolver.getBuildToolsOrThrow().getFileName().toString(),
         equalTo("platform-tools"));
@@ -402,8 +402,8 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_SDK", sdkDir.toString()),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
 
     assertThat(
         resolver.getBuildToolsOrThrow().getFileName().toString(),
@@ -417,8 +417,8 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_SDK", sdkDir.toString()),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
 
     assertThat(
         resolver.getBuildToolsOrThrow().getFileName().toString(),
@@ -432,8 +432,8 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_SDK", sdkDir.toString()),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("foobar-17.2.2");
@@ -450,8 +450,8 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_SDK", sdkDir.toString()),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("null was empty, but should have contained a subdirectory " +
@@ -469,8 +469,8 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_SDK", sdkDir.toString()),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
 
     assertThat(
         resolver.getBuildToolsOrThrow().getFileName().toString(),
@@ -487,8 +487,8 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_SDK", sdkDir.toString()),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
 
     assertThat(
         resolver.getBuildToolsOrThrow().getFileName().toString(),
@@ -509,8 +509,8 @@ public class DefaultAndroidDirectoryResolverTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_SDK", sdkDir.toString()),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
 
     assertThat(
         resolver.getBuildToolsOrThrow().getFileName().toString(),
@@ -529,7 +529,7 @@ public class DefaultAndroidDirectoryResolverTest {
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_SDK", sdkDir.toString()),
         Optional.of("17.0.0"),
-        Optional.<String>absent());
+        Optional.absent());
 
     assertThat(
         resolver.getBuildToolsOrThrow().getFileName().toString(),
@@ -546,7 +546,7 @@ public class DefaultAndroidDirectoryResolverTest {
         tmpDir.getRoot().getFileSystem(),
         ImmutableMap.of("ANDROID_SDK", sdkDir.toString()),
         Optional.of("2.0.0"),
-        Optional.<String>absent());
+        Optional.absent());
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("2.0.0");

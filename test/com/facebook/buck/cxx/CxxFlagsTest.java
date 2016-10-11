@@ -42,9 +42,9 @@ public class CxxFlagsTest {
   public void getLanguageFlagsMultimapIsEmpty() {
     assertThat(
         CxxFlags.getLanguageFlags(
-            Optional.<ImmutableList<String>>absent(),
-            Optional.<PatternMatchedCollection<ImmutableList<String>>>absent(),
-            Optional.<ImmutableMap<CxxSource.Type, ImmutableList<String>>>absent(),
+            Optional.absent(),
+            Optional.absent(),
+            Optional.absent(),
             CxxPlatformUtils.DEFAULT_PLATFORM).entries(),
         empty());
   }
@@ -54,8 +54,8 @@ public class CxxFlagsTest {
     ImmutableMultimap<CxxSource.Type, String> flags =
         CxxFlags.getLanguageFlags(
             Optional.of(ImmutableList.of("flag")),
-            Optional.<PatternMatchedCollection<ImmutableList<String>>>absent(),
-            Optional.<ImmutableMap<CxxSource.Type, ImmutableList<String>>>absent(),
+            Optional.absent(),
+            Optional.absent(),
             CxxPlatformUtils.DEFAULT_PLATFORM);
     assertThat(
         ImmutableSet.copyOf(CxxSource.Type.values()),
@@ -67,8 +67,8 @@ public class CxxFlagsTest {
   public void getLanguageFlagsMultimapContainsSomeSourceTypes() {
     ImmutableMultimap<CxxSource.Type, String> flags =
         CxxFlags.getLanguageFlags(
-            Optional.<ImmutableList<String>>absent(),
-            Optional.<PatternMatchedCollection<ImmutableList<String>>>absent(),
+            Optional.absent(),
+            Optional.absent(),
             Optional.of(
                 ImmutableMap.of(
                     CxxSource.Type.C, ImmutableList.of("foo", "bar"),
@@ -89,7 +89,7 @@ public class CxxFlagsTest {
     ImmutableMultimap<CxxSource.Type, String> flags =
         CxxFlags.getLanguageFlags(
             Optional.of(ImmutableList.of("common")),
-            Optional.<PatternMatchedCollection<ImmutableList<String>>>absent(),
+            Optional.absent(),
             Optional.of(
                 ImmutableMap.of(
                     CxxSource.Type.C, ImmutableList.of("foo", "bar"),

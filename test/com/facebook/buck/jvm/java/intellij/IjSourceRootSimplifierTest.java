@@ -54,7 +54,7 @@ public class IjSourceRootSimplifierTest {
   }
 
   private static JavaPackageFinder fakePackageFinder() {
-    return fakePackageFinder(ImmutableMap.<Path, Path>of());
+    return fakePackageFinder(ImmutableMap.of());
   }
 
   private static JavaPackageFinder fakePackageFinder(final ImmutableMap<Path, Path> packageMap) {

@@ -22,7 +22,6 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableSet;
 
@@ -54,7 +53,7 @@ public class ShBinaryDescriptionTest {
     ShBinary shBinary =
         (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setMain(main)
-            .setResources(ImmutableSet.<SourcePath>of(resource))
+            .setResources(ImmutableSet.of(resource))
             .build(resolver);
     assertThat(
         shBinary.getExecutableCommand().getInputs(),

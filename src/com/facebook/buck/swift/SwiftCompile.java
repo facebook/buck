@@ -203,7 +203,7 @@ class SwiftCompile
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return new SwiftCompileStep(
         projectFilesystem.getRootPath(),
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         compilerCommand.build());
   }
 

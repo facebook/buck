@@ -82,7 +82,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     ImmutableList.Builder<String> lines = ImmutableList.builder();
     this.parseTime.set(logEventPair(
         "PARSING BUCK FILES",
-        /* suffix */ Optional.<String>absent(),
+        /* suffix */ Optional.absent(),
         clock.currentTimeMillis(),
         0L,
         buckFilesProcessing.values(),
@@ -113,7 +113,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     long offsetMs = getTotalCompletedTimeFromEventPairs(processingEvents);
     logEventPair(
         "BUILDING",
-        /* suffix */ Optional.<String>absent(),
+        /* suffix */ Optional.absent(),
         currentMillis,
         offsetMs,
         buildStarted,
@@ -139,12 +139,12 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     ImmutableList.Builder<String> lines = ImmutableList.builder();
     logEventPair(
         "INSTALLING",
-        /* suffix */ Optional.<String>absent(),
+        /* suffix */ Optional.absent(),
         clock.currentTimeMillis(),
         0L,
         installStarted,
         installFinished,
-        Optional.<Double>absent(),
+        Optional.absent(),
         lines);
     printLines(lines);
   }

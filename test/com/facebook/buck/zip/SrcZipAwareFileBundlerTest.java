@@ -57,7 +57,7 @@ public class SrcZipAwareFileBundlerTest {
   Path basePath = Paths.get("base");
 
   public void bundleFiles(ImmutableSortedSet<SourcePath> immutableSortedSet) throws IOException {
-    ImmutableList.Builder<Step> immutableStepList = ImmutableList.<Step>builder();
+    ImmutableList.Builder<Step> immutableStepList = ImmutableList.builder();
 
     new File(subDirectoryFile1.toString()).getParentFile().mkdirs();
     new File(subDirectoryFile2.toString()).getParentFile().mkdirs();
@@ -117,7 +117,7 @@ public class SrcZipAwareFileBundlerTest {
     subDirectoryFile2 = filesystem.getRootPath().resolve("src/subDir/file2");
     subDirectoryFile3 = filesystem.getRootPath().resolve("src/file3");
 
-    bundleFiles(ImmutableSortedSet.<SourcePath>of(new PathSourcePath(filesystem, src)));
+    bundleFiles(ImmutableSortedSet.of(new PathSourcePath(filesystem, src)));
 
     List<Path> bundledFilesCollection = getBundledFilesCollection();
 
@@ -141,7 +141,7 @@ public class SrcZipAwareFileBundlerTest {
     subDirectoryFile2 = filesystem.getRootPath().resolve("src/file1");
     subDirectoryFile3 = filesystem.getRootPath().resolve("src/subDires/file1");
 
-    bundleFiles(ImmutableSortedSet.<SourcePath>of(new PathSourcePath(filesystem, src)));
+    bundleFiles(ImmutableSortedSet.of(new PathSourcePath(filesystem, src)));
 
     List<Path> bundledFilesCollection = getBundledFilesCollection();
 
@@ -166,7 +166,7 @@ public class SrcZipAwareFileBundlerTest {
     subDirectoryFile3 = filesystem.getRootPath().resolve("src1/subDir/file3");
 
     bundleFiles(
-        ImmutableSortedSet.<SourcePath>of(
+        ImmutableSortedSet.of(
             new PathSourcePath(filesystem, filesystem.getRootPath().relativize(subDirectoryFile1)),
             new PathSourcePath(filesystem, filesystem.getRootPath().relativize(subDirectoryFile2)),
             new PathSourcePath(filesystem, filesystem.getRootPath().relativize(subDirectoryFile3))
@@ -183,7 +183,7 @@ public class SrcZipAwareFileBundlerTest {
     subDirectoryFile3 = filesystem.getRootPath().resolve("src1/subDir/file3");
 
     bundleFiles(
-        ImmutableSortedSet.<SourcePath>of(
+        ImmutableSortedSet.of(
             new PathSourcePath(filesystem, filesystem.getRootPath().relativize(subDirectoryFile1)),
             new PathSourcePath(filesystem, filesystem.getRootPath().relativize(subDirectoryFile2)),
             new PathSourcePath(filesystem, filesystem.getRootPath().relativize(subDirectoryFile3))

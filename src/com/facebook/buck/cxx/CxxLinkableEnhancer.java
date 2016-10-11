@@ -88,7 +88,7 @@ public class CxxLinkableEnhancer {
     // Pass any platform specific or extra linker flags.
     argsBuilder.addAll(
         SanitizedArg.from(
-            cxxPlatform.getDebugPathSanitizer().sanitize(Optional.<Path>absent()),
+            cxxPlatform.getDebugPathSanitizer().sanitize(Optional.absent()),
             cxxPlatform.getLdflags()));
 
     argsBuilder.addAll(args);
@@ -118,7 +118,7 @@ public class CxxLinkableEnhancer {
                     .toSortedSet(Ordering.natural());
               }
             },
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         resolver,
         linker,
         output,
@@ -353,7 +353,7 @@ public class CxxLinkableEnhancer {
         output,
         linkArgs,
         Linker.LinkableDepType.SHARED,
-        Optional.<Linker.CxxRuntimeType>absent());
+        Optional.absent());
   }
 
 }

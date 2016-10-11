@@ -60,7 +60,7 @@ public class ReactNativeLibraryGraphEnhancer {
                     .addAll(pathResolver.filterBuildRuleInputs(args.srcs.get()))
                     .addAll(jsPackager.getDeps(pathResolver))
                     .build()),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,
         args.entryPath,
         args.srcs.get(),
@@ -100,7 +100,7 @@ public class ReactNativeLibraryGraphEnhancer {
                   .addFlavors(REACT_NATIVE_ANDROID_RES_FLAVOR)
                   .build())
               .copyWithExtraDeps(Suppliers.ofInstance(
-                      ImmutableSortedSet.<BuildRule>of(bundle)));
+                      ImmutableSortedSet.of(bundle)));
 
       SourcePath resources = new BuildTargetSourcePath(
           bundle.getBuildTarget(),
@@ -108,14 +108,14 @@ public class ReactNativeLibraryGraphEnhancer {
       BuildRule resource = new AndroidResource(
           paramsForResource,
           sourcePathResolver,
-          /* deps */ ImmutableSortedSet.<BuildRule>of(),
+          /* deps */ ImmutableSortedSet.of(),
           resources,
-          /* resSrcs */ ImmutableSortedSet.<SourcePath>of(),
+          /* resSrcs */ ImmutableSortedSet.of(),
           Optional.of(resources),
           args.rDotJavaPackage.get(),
           /* assets */ null,
-          /* assetsSrcs */ ImmutableSortedSet.<SourcePath>of(),
-          Optional.<SourcePath>absent(),
+          /* assetsSrcs */ ImmutableSortedSet.of(),
+          Optional.absent(),
           /* manifest */ null,
           /* hasWhitelistedStrings */ false);
       resolver.addToIndex(resource);

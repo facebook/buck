@@ -93,7 +93,7 @@ public class ServedCacheIntegrationTest {
         createMockLocalDirCacheConfig(),
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent(),
+        Optional.absent(),
         DIRECT_EXECUTOR_SERVICE);
     dirCache.store(
         ArtifactInfo.builder().addRuleKeys(A_FILE_RULE_KEY).setMetadata(A_FILE_METADATA).build(),
@@ -114,7 +114,7 @@ public class ServedCacheIntegrationTest {
         projectFilesystem,
         Architecture.detect(),
         Platform.detect(),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     return new ArtifactCacheBuckConfig(config);
   }
 
@@ -145,7 +145,7 @@ public class ServedCacheIntegrationTest {
         createMockLocalHttpCacheConfig(webServer.getPort().get()),
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent(),
+        Optional.absent(),
         DIRECT_EXECUTOR_SERVICE);
 
     Path fetchedContents = tmpDir.newFile();
@@ -219,7 +219,7 @@ public class ServedCacheIntegrationTest {
         createMockLocalHttpCacheConfig(webServer.getPort().get()),
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent(),
+        Optional.absent(),
         DIRECT_EXECUTOR_SERVICE);
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
@@ -255,7 +255,7 @@ public class ServedCacheIntegrationTest {
         createMockLocalHttpCacheConfig(webServer.getPort().get()),
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent(),
+        Optional.absent(),
         DIRECT_EXECUTOR_SERVICE);
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
@@ -270,13 +270,13 @@ public class ServedCacheIntegrationTest {
         projectFilesystem,
         "/static/",
         MAPPER);
-    webServer.updateAndStartIfNeeded(Optional.<ArtifactCache>absent());
+    webServer.updateAndStartIfNeeded(Optional.absent());
 
     ArtifactCache serverBackedCache = ArtifactCaches.newInstance(
         createMockLocalHttpCacheConfig(webServer.getPort().get()),
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent(),
+        Optional.absent(),
         DIRECT_EXECUTOR_SERVICE);
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
@@ -291,13 +291,13 @@ public class ServedCacheIntegrationTest {
         projectFilesystem,
         "/static/",
         MAPPER);
-    webServer.updateAndStartIfNeeded(Optional.<ArtifactCache>absent());
+    webServer.updateAndStartIfNeeded(Optional.absent());
 
     ArtifactCache serverBackedCache = ArtifactCaches.newInstance(
         createMockLocalHttpCacheConfig(webServer.getPort().get()),
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent(),
+        Optional.absent(),
         DIRECT_EXECUTOR_SERVICE);
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
@@ -310,7 +310,7 @@ public class ServedCacheIntegrationTest {
         serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents).getType(),
         Matchers.equalTo(CacheResultType.HIT));
 
-    webServer.updateAndStartIfNeeded(Optional.<ArtifactCache>absent());
+    webServer.updateAndStartIfNeeded(Optional.absent());
     assertThat(
         serverBackedCache.fetch(A_FILE_RULE_KEY, fetchedContents).getType(),
         Matchers.equalTo(CacheResultType.ERROR));
@@ -387,7 +387,7 @@ public class ServedCacheIntegrationTest {
           mutltiCacheConfig,
           buckEventBus,
           projectFilesystem,
-          Optional.<String>absent(),
+          Optional.absent(),
           DIRECT_EXECUTOR_SERVICE);
 
       assertThat(
@@ -420,7 +420,7 @@ public class ServedCacheIntegrationTest {
         createMockLocalHttpCacheConfig(webServer.getPort().get()),
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent(),
+        Optional.absent(),
         DIRECT_EXECUTOR_SERVICE);
 
     RuleKey ruleKey = new RuleKey("00111222333444");
@@ -466,7 +466,7 @@ public class ServedCacheIntegrationTest {
         createMockLocalHttpCacheConfig(webServer.getPort().get()),
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent(),
+        Optional.absent(),
         DIRECT_EXECUTOR_SERVICE);
 
     RuleKey ruleKey = new RuleKey("00111222333444");
@@ -512,7 +512,7 @@ public class ServedCacheIntegrationTest {
         createMockLocalHttpCacheConfig(webServer.getPort().get()),
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent(),
+        Optional.absent(),
         DIRECT_EXECUTOR_SERVICE);
 
     RuleKey ruleKey = new RuleKey("00111222333444");
@@ -560,7 +560,7 @@ public class ServedCacheIntegrationTest {
             String.format("http_url = http://127.0.0.1:%d/", webServer.getPort().get())),
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent(),
+        Optional.absent(),
         DIRECT_EXECUTOR_SERVICE);
 
     ArtifactCache serverBackedDirCache = ArtifactCaches.newInstance(
@@ -570,7 +570,7 @@ public class ServedCacheIntegrationTest {
             "dir = server-backed-dir-cache"),
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent(),
+        Optional.absent(),
         DIRECT_EXECUTOR_SERVICE);
 
     assertFalse(containsKey(serverBackedDirCache, A_FILE_RULE_KEY));

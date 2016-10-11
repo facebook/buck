@@ -34,7 +34,7 @@ public class FakeTestResults {
         BuildTarget.builder(Paths.get("/does/not/exist"), "//foo/bar", "baz").build();
 
   public static TestResults of(Iterable<? extends TestCaseSummary> testCases) {
-    return withTestLogs(testCases, ImmutableList.<Path>of());
+    return withTestLogs(testCases, ImmutableList.of());
   }
 
   public static TestResults withTestLogs(

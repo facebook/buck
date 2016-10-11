@@ -40,8 +40,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
-import java.nio.file.Path;
-import java.util.regex.Pattern;
 
 
 public class KotlinLibraryDescription implements Description<KotlinLibraryDescription.Arg> {
@@ -90,22 +88,22 @@ public class KotlinLibraryDescription implements Description<KotlinLibraryDescri
                     pathResolver,
                     params.getProjectFilesystem(),
                     args.resources.get()),
-                Optional.<Path>absent(),
-                Optional.<SourcePath>absent(),
-                ImmutableList.<String>of(),
+                Optional.absent(),
+                Optional.absent(),
+                ImmutableList.of(),
                 exportedDeps,
                 resolver.getAllRules(args.providedDeps.get()),
                 new BuildTargetSourcePath(abiJarTarget),
                 /* trackClassUsage */ false,
-                /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+                /* additionalClasspathEntries */ ImmutableSet.of(),
                 new KotlincToJarStepFactory(
                     kotlinBuckConfig.getKotlinCompiler().get(),
                     args.extraKotlincArguments.get()),
-                Optional.<Path>absent(),
-                /* manifest file */ Optional.<SourcePath>absent(),
-                Optional.<String>absent(),
-                ImmutableSortedSet.<BuildTarget>of(),
-                /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()));
+                Optional.absent(),
+                /* manifest file */ Optional.absent(),
+                Optional.absent(),
+                ImmutableSortedSet.of(),
+                /* classesToRemoveFromJar */ ImmutableSet.of()));
 
     resolver.addToIndex(
         CalculateAbi.of(

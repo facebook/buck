@@ -55,7 +55,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
              BuckEventBusFactory.newInstance(),
              /* performTwoLevelStores */ true,
              /* minimumTwoLevelStoredArtifactSize */ 0L,
-             /* maximumTwoLevelStoredArtifactSize */ Optional.<Long>absent())) {
+             /* maximumTwoLevelStoredArtifactSize */ Optional.absent())) {
       LazyPath dummyFile = LazyPath.ofInstance(tmp.newFile());
 
       assertThat(
@@ -136,7 +136,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
              BuckEventBusFactory.newInstance(),
              /* performTwoLevelStores */ true,
              /* minimumTwoLevelStoredArtifactSize */ 0L,
-             /* maximumTwoLevelStoredArtifactSize */ Optional.<Long>absent())) {
+             /* maximumTwoLevelStoredArtifactSize */ Optional.absent())) {
       LazyPath dummyFile = LazyPath.ofInstance(tmp.newFile());
 
       final String testMetadataKey = "testMetaKey";
@@ -176,14 +176,14 @@ public class TwoLevelArtifactCacheDecoratorTest {
              BuckEventBusFactory.newInstance(),
              /* performTwoLevelStores */ true,
              /* minimumTwoLevelStoredArtifactSize */ 0L,
-             /* maximumTwoLevelStoredArtifactSize */ Optional.<Long>absent());
-      TwoLevelArtifactCacheDecorator twoLevelCacheNoStore = new TwoLevelArtifactCacheDecorator(
+             /* maximumTwoLevelStoredArtifactSize */ Optional.absent());
+         TwoLevelArtifactCacheDecorator twoLevelCacheNoStore = new TwoLevelArtifactCacheDecorator(
           inMemoryArtifactCache,
           new ProjectFilesystem(tmp.getRoot()),
           BuckEventBusFactory.newInstance(),
              /* performTwoLevelStores */ false,
              /* minimumTwoLevelStoredArtifactSize */ 0L,
-             /* maximumTwoLevelStoredArtifactSize */ Optional.<Long>absent())) {
+             /* maximumTwoLevelStoredArtifactSize */ Optional.absent())) {
       LazyPath dummyFile = LazyPath.ofInstance(tmp.newFile());
 
       twoLevelCache.store(

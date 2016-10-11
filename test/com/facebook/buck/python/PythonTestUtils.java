@@ -16,7 +16,6 @@
 
 package com.facebook.buck.python;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.google.common.base.Optional;
@@ -33,7 +32,7 @@ public class PythonTestUtils {
           new PythonEnvironment(
               Paths.get("python"),
               PythonVersion.of("CPython", "2.6")),
-          Optional.<BuildTarget>absent());
+          Optional.absent());
 
   public static final FlavorDomain<PythonPlatform> PYTHON_PLATFORMS =
       FlavorDomain.of("python", PYTHON_PLATFORM);

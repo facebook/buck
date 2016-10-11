@@ -37,7 +37,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.net.URL;
 import java.nio.file.Paths;
 
 public class PublisherTest {
@@ -56,7 +55,7 @@ public class PublisherTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     publisher = new Publisher(
         filesystem,
-        /* remoteRepoUrl */ Optional.<URL>absent(),
+        /* remoteRepoUrl */ Optional.absent(),
         /* dryRun */ true);
 
     ruleResolver = new BuildRuleResolver(

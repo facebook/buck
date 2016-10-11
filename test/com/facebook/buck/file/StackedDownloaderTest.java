@@ -57,7 +57,7 @@ public class StackedDownloaderTest {
   public void shouldCreateADownloaderEvenWithAnEmptyStack() {
     Downloader downloader = StackedDownloader.createFromConfig(
         FakeBuckConfig.builder().build(),
-        Optional.<Path>absent());
+        Optional.absent());
 
     assertNotNull(downloader);
 
@@ -69,7 +69,7 @@ public class StackedDownloaderTest {
   public void shouldAddOnDiskAndroidReposIfPresentInSdk() throws IOException {
     Downloader downloader = StackedDownloader.createFromConfig(
         FakeBuckConfig.builder().build(),
-        Optional.<Path>absent());
+        Optional.absent());
 
     List<Downloader> downloaders = unpackDownloaders(downloader);
     for (Downloader seen : downloaders) {
@@ -117,7 +117,7 @@ public class StackedDownloaderTest {
             "central = https://repo1.maven.org/maven2")
         .build();
 
-    Downloader downloader = StackedDownloader.createFromConfig(config, Optional.<Path>absent());
+    Downloader downloader = StackedDownloader.createFromConfig(config, Optional.absent());
 
     List<Downloader> downloaders = unpackDownloaders(downloader);
     boolean seenRemote = false;
@@ -152,7 +152,7 @@ public class StackedDownloaderTest {
             "maven_repo = https://repo1.maven.org/maven2")
         .build();
 
-    Downloader downloader = StackedDownloader.createFromConfig(config, Optional.<Path>absent());
+    Downloader downloader = StackedDownloader.createFromConfig(config, Optional.absent());
 
     List<Downloader> downloaders = unpackDownloaders(downloader);
     boolean seenRemote = false;
@@ -225,7 +225,7 @@ public class StackedDownloaderTest {
             "Error occurred when attempting to use %s " +
                 "as a local Maven repository as configured", pathNotExist));
 
-    StackedDownloader.createFromConfig(config, Optional.<Path>absent());
+    StackedDownloader.createFromConfig(config, Optional.absent());
   }
 
   @Test
@@ -244,7 +244,7 @@ public class StackedDownloaderTest {
             "Error occurred when attempting to use %s " +
                 "as a local Maven repository as configured", pathNotExist));
 
-    StackedDownloader.createFromConfig(config, Optional.<Path>absent());
+    StackedDownloader.createFromConfig(config, Optional.absent());
   }
 
 }

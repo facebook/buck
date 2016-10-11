@@ -43,13 +43,13 @@ public class CompilerPluginDurationEventTest {
             target,
             pluginName,
             durationName,
-            ImmutableMap.<String, String>of()));
+            ImmutableMap.of()));
     CompilerPluginDurationEvent startedEventTwo = configureTestEvent(
         CompilerPluginDurationEvent.started(
             target,
             pluginName,
             durationName,
-            ImmutableMap.<String, String>of()));
+            ImmutableMap.of()));
 
     assertEquals(startedEventOne, startedEventOne);
     assertNotEquals(startedEventOne, startedEventTwo);
@@ -66,17 +66,17 @@ public class CompilerPluginDurationEventTest {
             target,
             pluginName,
             durationName,
-            ImmutableMap.<String, String>of()));
+            ImmutableMap.of()));
     CompilerPluginDurationEvent.Started startedEventTwo = configureTestEvent(
         CompilerPluginDurationEvent.started(
             target,
             pluginName,
             durationName,
-            ImmutableMap.<String, String>of()));
+            ImmutableMap.of()));
     CompilerPluginDurationEvent finishedEventOne = configureTestEvent(
         CompilerPluginDurationEvent.finished(
             startedEventOne,
-            ImmutableMap.<String, String>of()));
+            ImmutableMap.of()));
 
     assertTrue(startedEventOne.isRelatedTo(finishedEventOne));
     assertTrue(finishedEventOne.isRelatedTo(startedEventOne));

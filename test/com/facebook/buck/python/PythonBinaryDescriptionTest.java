@@ -72,7 +72,6 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 
 public class PythonBinaryDescriptionTest {
 
@@ -96,7 +95,7 @@ public class PythonBinaryDescriptionTest {
         (PythonLibrary) new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
             .setSrcs(
                 SourceList.ofUnnamedSources(
-                    ImmutableSortedSet.<SourcePath>of(
+                    ImmutableSortedSet.of(
                         new BuildTargetSourcePath(genrule.getBuildTarget()))))
             .build(resolver);
     PythonBinary binary =
@@ -240,12 +239,12 @@ public class PythonBinaryDescriptionTest {
         PythonPlatform.of(
             ImmutableFlavor.of("pyPlat1"),
             new PythonEnvironment(Paths.get("python2.6"), PythonVersion.of("CPython", "2.6.9")),
-            Optional.<BuildTarget>absent());
+            Optional.absent());
     PythonPlatform platform2 =
         PythonPlatform.of(
             ImmutableFlavor.of("pyPlat2"),
             new PythonEnvironment(Paths.get("python2.7"), PythonVersion.of("CPython", "2.7.11")),
-            Optional.<BuildTarget>absent());
+            Optional.absent());
     PythonBinaryBuilder builder =
         PythonBinaryBuilder.create(
             BuildTargetFactory.newInstance("//:bin"),
@@ -308,7 +307,7 @@ public class PythonBinaryDescriptionTest {
         new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
           @Override
           public Optional<Tool> getPexExecutor(BuildRuleResolver resolver) {
-            return Optional.<Tool>of(new HashedFileTool(executor));
+            return Optional.of(new HashedFileTool(executor));
           }
         };
     PythonBinaryBuilder builder =
@@ -535,7 +534,7 @@ public class PythonBinaryDescriptionTest {
     PythonBinary binary = (PythonBinary) binaryBuilder.build(resolver);
     assertThat(
         binary.getComponents().getNativeLibraries().entrySet(),
-        Matchers.<Map.Entry<Path, SourcePath>>empty());
+        Matchers.empty());
     assertThat(
         Iterables.transform(
             binary.getComponents().getModules().keySet(),
@@ -558,7 +557,7 @@ public class PythonBinaryDescriptionTest {
         new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
             .setSrcs(
                 SourceList.ofUnnamedSources(
-                    ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("prebuilt.so"))))
+                    ImmutableSortedSet.of(new FakeSourcePath("prebuilt.so"))))
             .setDeps(ImmutableSortedSet.of(cxxLibraryBuilder.getTarget()));
     PythonBuckConfig config =
         new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {

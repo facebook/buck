@@ -68,8 +68,8 @@ public class AuditClasspathCommandTest {
     // Test that no output is created.
     auditClasspathCommand.printClasspath(
         params,
-        TargetGraphFactory.newInstance(ImmutableSet.<TargetNode<?>>of()),
-        ImmutableSet.<BuildTarget>of());
+        TargetGraphFactory.newInstance(ImmutableSet.of()),
+        ImmutableSet.of());
     assertEquals("", console.getTextWrittenToStdOut());
     assertEquals("", console.getTextWrittenToStdErr());
 
@@ -117,7 +117,7 @@ public class AuditClasspathCommandTest {
     auditClasspathCommand.printClasspath(
         params,
         targetGraph,
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.of());
 
     // Still empty.
     assertEquals("", console.getTextWrittenToStdOut());

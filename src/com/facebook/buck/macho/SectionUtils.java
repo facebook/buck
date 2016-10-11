@@ -67,6 +67,6 @@ public class SectionUtils {
         UnsignedInteger.fromIntBits(buffer.getInt()),
         is64Bit ?
             Optional.of(UnsignedInteger.fromIntBits(buffer.getInt())) :
-            Optional.<UnsignedInteger>absent());
+            Optional.absent());
   }
 }

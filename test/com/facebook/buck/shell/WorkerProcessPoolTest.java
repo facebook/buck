@@ -85,7 +85,7 @@ public class WorkerProcessPoolTest {
   @Test
   public void testUnlimitedPool() throws InterruptedException {
     int numThreads = 20;
-    final WorkerProcessPool pool = createPool(Optional.<Integer>absent());
+    final WorkerProcessPool pool = createPool(Optional.absent());
     final Set<WorkerProcess> createdWorkers = concurrentSet();
 
     Thread[] threads = new Thread[numThreads];
@@ -104,7 +104,7 @@ public class WorkerProcessPoolTest {
   @Test
   public void testReusesWorkerProcessesInUnlimitedPools() throws InterruptedException {
     int numThreads = 3;
-    final WorkerProcessPool pool = createPool(Optional.<Integer>absent());
+    final WorkerProcessPool pool = createPool(Optional.absent());
     final ConcurrentHashMap<Runnable, WorkerProcess> usedWorkers = new ConcurrentHashMap<>();
 
     Thread[] threads = new Thread[numThreads];
@@ -136,7 +136,7 @@ public class WorkerProcessPoolTest {
     return new WorkerProcessPool(maxWorkers) {
       @Override
       protected WorkerProcess startWorkerProcess() throws IOException {
-        return new FakeWorkerProcess(ImmutableMap.<String, WorkerJobResult>of());
+        return new FakeWorkerProcess(ImmutableMap.of());
       }
     };
   }

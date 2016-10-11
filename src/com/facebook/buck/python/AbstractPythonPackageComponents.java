@@ -43,11 +43,11 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
 
   private static final PythonPackageComponents EMPTY =
       PythonPackageComponents.of(
-        /* modules */ ImmutableMap.<Path, SourcePath>of(),
-        /* resources */ ImmutableMap.<Path, SourcePath>of(),
-        /* nativeLibraries */ ImmutableMap.<Path, SourcePath>of(),
-        /* prebuiltLibraries */ ImmutableSet.<SourcePath>of(),
-        /* zipSafe */ Optional.<Boolean>absent());
+        /* modules */ ImmutableMap.of(),
+        /* resources */ ImmutableMap.of(),
+        /* nativeLibraries */ ImmutableMap.of(),
+        /* prebuiltLibraries */ ImmutableSet.of(),
+        /* zipSafe */ Optional.absent());
 
   // Python modules as map of their module name to location of the source.
   @Value.Parameter

@@ -32,10 +32,10 @@ public class ThriftUtilTest {
 
   @Test
   public void testSerializations() throws IOException {
-    ImmutableList<Serializer> serializers = ImmutableList.<Serializer>of(
+    ImmutableList<Serializer> serializers = ImmutableList.of(
         new ByteSerializer(),
         new StreamSerializer());
-    ImmutableList<Deserializer> deserializers = ImmutableList.<Deserializer>of(
+    ImmutableList<Deserializer> deserializers = ImmutableList.of(
         new ByteSerializer(),
         new StreamSerializer());
 

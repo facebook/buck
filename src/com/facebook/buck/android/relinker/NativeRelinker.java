@@ -123,7 +123,7 @@ public class NativeRelinker {
     // non-linkable rules).
     final DirectedAcyclicGraph<BuildRule> graph = getBuildGraph(linkableRules);
     ImmutableList<BuildRule> sortedRules =
-        TopologicalSort.sort(graph, Predicates.<BuildRule>alwaysTrue());
+        TopologicalSort.sort(graph, Predicates.alwaysTrue());
     // This maps a build rule to every rule in linkableRules that depends on it. This (added to the
     // copied libraries) is the set of linkables that could use a symbol from this build rule.
     ImmutableMap<BuildRule, ImmutableSet<BuildRule>> allDependentsMap =
@@ -139,7 +139,7 @@ public class NativeRelinker {
       // the list of needed symbols.
       TargetCpuType cpuType = p.getFirst();
       SourcePath source = p.getSecond();
-      RelinkerRule relink = makeRelinkerRule(cpuType, source, ImmutableList.<RelinkerRule>of());
+      RelinkerRule relink = makeRelinkerRule(cpuType, source, ImmutableList.of());
       relinkRules.add(relink);
       pathMap.put(source, relink.getLibFileSourcePath());
     }

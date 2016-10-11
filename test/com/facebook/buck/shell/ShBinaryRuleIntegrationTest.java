@@ -33,7 +33,6 @@ import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.martiansoftware.nailgun.NGContext;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -150,7 +149,7 @@ public class ShBinaryRuleIntegrationTest {
     ProcessResult buildResult =
         workspace.runBuckCommandWithEnvironmentOverridesAndContext(
             workspace.getDestPath(),
-            Optional.<NGContext>absent(),
+            Optional.absent(),
             ImmutableMap.of("PWD", alteredPwd),
             "run",
             "//:pwd");

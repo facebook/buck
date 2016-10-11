@@ -27,7 +27,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -88,8 +87,8 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
     }
     return NativeLinkableInput.of(
         argsBuilder.build(),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
+        ImmutableSet.of(),
+        ImmutableSet.of());
   }
 
   @Override
@@ -98,9 +97,9 @@ class PrebuiltOCamlLibrary extends AbstractBuildRule implements OCamlLibrary {
       return getLinkableInput(staticNativeLibraryPath.get());
     } else {
       return NativeLinkableInput.of(
-          ImmutableList.<Arg>of(),
-          ImmutableSet.<FrameworkPath>of(),
-          ImmutableSet.<FrameworkPath>of());
+          ImmutableList.of(),
+          ImmutableSet.of(),
+          ImmutableSet.of());
     }
   }
 

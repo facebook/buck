@@ -69,7 +69,7 @@ final class SwiftRuntimeNativeLinkable implements NativeLinkable {
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
 
     ImmutableSet<Path> swiftRuntimePaths = type == Linker.LinkableDepType.SHARED ?
-        ImmutableSet.<Path>of() :
+        ImmutableSet.of() :
         swiftPlatform.getSwiftStaticRuntimePaths();
 
     // Fall back to shared if static isn't supported on this platform.

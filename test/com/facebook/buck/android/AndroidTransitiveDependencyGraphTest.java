@@ -23,7 +23,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -51,7 +50,7 @@ public class AndroidTransitiveDependencyGraphTest {
             .build(resolver);
     assertThat(
         new AndroidTransitiveDependencyGraph(ImmutableSortedSet.of(dep1)).findManifestFiles(),
-        Matchers.<SourcePath>containsInAnyOrder(
+        Matchers.containsInAnyOrder(
             new FakeSourcePath("manifest1.xml"),
             new FakeSourcePath("manifest3.xml")));
   }

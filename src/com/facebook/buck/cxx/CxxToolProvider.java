@@ -28,7 +28,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
@@ -121,9 +120,9 @@ public abstract class CxxToolProvider<T> {
       result = processExecutor.launchAndExecute(
           params,
           EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
-          Optional.<String>absent(),
-          Optional.<Long>absent(),
-          Optional.<Function<Process, Void>>absent());
+          Optional.absent(),
+          Optional.absent(),
+          Optional.absent());
     } catch (InterruptedException | IOException e) {
       throw new RuntimeException(e);
     }

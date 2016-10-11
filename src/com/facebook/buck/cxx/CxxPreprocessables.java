@@ -126,7 +126,7 @@ public class CxxPreprocessables {
                   HeaderVisibility.PUBLIC));
           return ImmutableSet.of();
         }
-        return traverse.apply(rule) ? rule.getDeps() : ImmutableSet.<BuildRule>of();
+        return traverse.apply(rule) ? rule.getDeps() : ImmutableSet.of();
       }
     }.start();
 
@@ -159,8 +159,8 @@ public class CxxPreprocessables {
     BuildRuleParams paramsWithoutDeps =
         params.copyWithChanges(
             target,
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+            Suppliers.ofInstance(ImmutableSortedSet.of()),
+            Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     if (useHeaderMap) {
       return new HeaderSymlinkTreeWithHeaderMap(

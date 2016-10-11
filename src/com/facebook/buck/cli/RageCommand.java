@@ -93,7 +93,7 @@ public class RageCommand extends AbstractCommand {
           filesystem,
           stdOut,
           params.getBuildEnvironmentDescription(),
-          gatherVcsInfo ? vcsInfoCollector : Optional.<VcsInfoCollector>absent(),
+          gatherVcsInfo ? vcsInfoCollector : Optional.absent(),
           rageConfig,
           extraInfoCollector);
     }

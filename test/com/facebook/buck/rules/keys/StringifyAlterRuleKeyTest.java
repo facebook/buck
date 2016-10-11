@@ -108,7 +108,7 @@ public class StringifyAlterRuleKeyTest {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     Path path1 = MorePathsForTests.rootRelativePath("some/thing");
     Path path2 = Paths.get("some/thing");
-    List<SourcePath> input = ImmutableList.<SourcePath>of(
+    List<SourcePath> input = ImmutableList.of(
         new PathSourcePath(projectFilesystem, path2),
         new PathSourcePath(projectFilesystem, path1));
     Assert.assertEquals(

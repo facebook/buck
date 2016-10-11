@@ -256,7 +256,7 @@ public class InstallCommand extends BuildCommand {
                 started,
                 installResult.getExitCode() == 0,
                 installResult.getLaunchedPid(),
-                Optional.<String>absent()));
+                Optional.absent()));
         exitCode = installResult.getExitCode();
         if (exitCode != 0) {
           return exitCode;
@@ -302,7 +302,7 @@ public class InstallCommand extends BuildCommand {
                         ImmutableList.of(spec),
                         SpeculativeParsing.of(false),
                         parserConfig.getDefaultFlavorsMode()))
-                .transformAndConcat(Functions.<ImmutableSet<BuildTarget>>identity())
+                .transformAndConcat(Functions.identity())
                 .first()
                 .get();
 
@@ -327,7 +327,7 @@ public class InstallCommand extends BuildCommand {
                         public Optional<String> apply(BuildTarget input) {
                           return !input.toString().isEmpty()
                               ? Optional.of(input.toString())
-                              : Optional.<String>absent();
+                              : Optional.absent();
                         }}),
                   installHelperTargets);
               }
@@ -780,7 +780,7 @@ public class InstallCommand extends BuildCommand {
         LOG.warn(
             "Asked to find simulator with UDID %s, but couldn't find one.",
             deviceOptions.getSerialNumber());
-        return Optional.<AppleSimulator>absent();
+        return Optional.absent();
       }
     } else if (wantName) {
       if (simulatorByName.isPresent()) {
@@ -789,7 +789,7 @@ public class InstallCommand extends BuildCommand {
         LOG.warn(
             "Asked to find simulator with name %s, but couldn't find one.",
             deviceOptions.getSimulatorName().get());
-        return Optional.<AppleSimulator>absent();
+        return Optional.absent();
       }
     } else {
       return defaultSimulator;

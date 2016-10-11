@@ -35,7 +35,6 @@ import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.model.MacroException;
-import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -61,7 +60,7 @@ public class ShTestDescription implements
 
   private static final MacroHandler MACRO_HANDLER =
       new MacroHandler(
-          ImmutableMap.<String, MacroExpander>of(
+          ImmutableMap.of(
               "location", new LocationMacroExpander(),
               "classpath", new ClasspathMacroExpander(),
               "exe", new ExecutableMacroExpander()));
@@ -97,13 +96,13 @@ public class ShTestDescription implements
             params.getCellRoots(),
             resolver);
     final ImmutableList<com.facebook.buck.rules.args.Arg> testArgs =
-        FluentIterable.from(args.args.or(ImmutableList.<String>of()))
+        FluentIterable.from(args.args.or(ImmutableList.of()))
             .transform(toArg)
             .toList();
     final ImmutableMap<String, com.facebook.buck.rules.args.Arg> testEnv =
         ImmutableMap.copyOf(
             Maps.transformValues(
-                args.env.or(ImmutableMap.<String, String>of()),
+                args.env.or(ImmutableMap.of()),
                 toArg));
     return new ShTest(
         params.appendExtraDeps(
@@ -120,12 +119,12 @@ public class ShTestDescription implements
         args.test,
         testArgs,
         testEnv,
-        FluentIterable.from(args.resources.or(ImmutableSortedSet.<Path>of()))
+        FluentIterable.from(args.resources.or(ImmutableSortedSet.of()))
             .transform(SourcePaths.toSourcePath(params.getProjectFilesystem()))
             .toSortedSet(Ordering.natural()),
         args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
         args.labels.get(),
-        args.contacts.or(ImmutableSet.<String>of()));
+        args.contacts.or(ImmutableSet.of()));
   }
 
   @Override
@@ -138,8 +137,8 @@ public class ShTestDescription implements
     // Add parse time deps for any macros.
     for (String blob :
          Iterables.concat(
-             constructorArg.args.or(ImmutableList.<String>of()),
-             constructorArg.env.or(ImmutableMap.<String, String>of()).values())) {
+             constructorArg.args.or(ImmutableList.of()),
+             constructorArg.env.or(ImmutableMap.of()).values())) {
       try {
         deps.addAll(MACRO_HANDLER.extractParseTimeDeps(buildTarget, cellRoots, blob));
       } catch (MacroException e) {

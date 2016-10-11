@@ -573,7 +573,7 @@ public class AdbHelper {
       getBuckEventBus().post(InstallEvent.finished(
               started,
               success,
-              Optional.<Long>absent(),
+              Optional.absent(),
               Optional.of(AdbHelper.tryToExtractPackageNameFromManifest(installableApk))));
     }
 

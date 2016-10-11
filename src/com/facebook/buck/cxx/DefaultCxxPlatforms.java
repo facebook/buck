@@ -113,28 +113,28 @@ public class DefaultCxxPlatforms {
     PreprocessorProvider aspp =
         new PreprocessorProvider(
             defaultCFrontend,
-            Optional.<CxxToolProvider.Type>absent());
+            Optional.absent());
     CompilerProvider as =
         new CompilerProvider(
             defaultCFrontend,
-            Optional.<CxxToolProvider.Type>absent());
+            Optional.absent());
 
     PreprocessorProvider cpp =
         new PreprocessorProvider(
             defaultCFrontend,
-            Optional.<CxxToolProvider.Type>absent());
+            Optional.absent());
     CompilerProvider cc =
         new CompilerProvider(
             defaultCFrontend,
-            Optional.<CxxToolProvider.Type>absent());
+            Optional.absent());
     PreprocessorProvider cxxpp =
         new PreprocessorProvider(
             defaultCxxFrontend,
-            Optional.<CxxToolProvider.Type>absent());
+            Optional.absent());
     CompilerProvider cxx =
         new CompilerProvider(
             defaultCxxFrontend,
-            Optional.<CxxToolProvider.Type>absent());
+            Optional.absent());
 
     return CxxPlatforms.build(
         FLAVOR,
@@ -148,21 +148,21 @@ public class DefaultCxxPlatforms {
         new DefaultLinkerProvider(
             linkerType,
             new ConstantToolProvider(new HashedFileTool(defaultCxxFrontend))),
-        ImmutableList.<String>of(),
+        ImmutableList.of(),
         new HashedFileTool(DEFAULT_STRIP),
         archiver,
         new HashedFileTool(DEFAULT_RANLIB),
         new PosixNmSymbolNameTool(new HashedFileTool(DEFAULT_NM)),
-        ImmutableList.<String>of(),
-        ImmutableList.<String>of(),
-        ImmutableList.<String>of(),
-        ImmutableList.<String>of(),
+        ImmutableList.of(),
+        ImmutableList.of(),
+        ImmutableList.of(),
+        ImmutableList.of(),
         sharedLibraryExtension,
         sharedLibraryVersionedExtensionFormat,
         staticLibraryExtension,
         objectFileExtension,
-        Optional.<DebugPathSanitizer>absent(),
-        ImmutableMap.<String, String>of());
+        Optional.absent(),
+        ImmutableMap.of());
   }
 
 }

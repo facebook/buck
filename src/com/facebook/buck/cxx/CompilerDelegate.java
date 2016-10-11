@@ -80,7 +80,7 @@ class CompilerDelegate implements RuleKeyAppendable {
         .addAll(CxxToolFlags.concat(prependedFlags, compilerFlags).getAllFlags())
         .addAll(
             compiler.debugCompilationDirFlags(sanitizer.getCompilationDirectory())
-                .or(ImmutableList.<String>of()))
+                .or(ImmutableList.of()))
         .build();
   }
 

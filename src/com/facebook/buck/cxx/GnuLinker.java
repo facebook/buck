@@ -149,10 +149,10 @@ public class GnuLinker implements Linker {
                 target,
                 Suppliers.ofInstance(
                     ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(symbolFiles))),
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
             pathResolver,
             symbolFiles));
-    return ImmutableList.<Arg>of(
+    return ImmutableList.of(
         new SourcePathArg(pathResolver, new BuildTargetSourcePath(target)));
   }
 
@@ -172,7 +172,7 @@ public class GnuLinker implements Linker {
 
   @Override
   public Iterable<Arg> getSharedLibFlag() {
-    return ImmutableList.<Arg>of(new StringArg("-shared"));
+    return ImmutableList.of(new StringArg("-shared"));
   }
 
   @Override

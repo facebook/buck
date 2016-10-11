@@ -62,7 +62,7 @@ public class BuildTargetsTest {
     BuildTarget child = BuildTargetFactory.newInstance("//:child");
     ImmutableSortedSet<BuildTarget> result = BuildTargets.propagateFlavorDomains(
         parent,
-        ImmutableList.<FlavorDomain<?>>of(domain),
+        ImmutableList.of(domain),
         ImmutableList.of(child));
     assertEquals(
         ImmutableSortedSet.of(BuildTarget.builder(child).addFlavors(flavor).build()),
@@ -80,7 +80,7 @@ public class BuildTargetsTest {
     BuildTarget child = BuildTargetFactory.newInstance("//:child");
     ImmutableSortedSet<BuildTarget> result = BuildTargets.propagateFlavorDomains(
         parent,
-        ImmutableList.<FlavorDomain<?>>of(domain),
+        ImmutableList.of(domain),
         ImmutableList.of(child));
     assertEquals(
         ImmutableSortedSet.of(BuildTarget.builder(child)
@@ -101,7 +101,7 @@ public class BuildTargetsTest {
     try {
       BuildTargets.propagateFlavorDomains(
           parent,
-          ImmutableList.<FlavorDomain<?>>of(domain),
+          ImmutableList.of(domain),
           ImmutableList.of(child));
       fail("should have thrown");
     } catch (HumanReadableException e) {
@@ -120,7 +120,7 @@ public class BuildTargetsTest {
     try {
       BuildTargets.propagateFlavorDomains(
           parent,
-          ImmutableList.<FlavorDomain<?>>of(domain),
+          ImmutableList.of(domain),
           ImmutableList.of(child));
       fail("should have thrown");
     } catch (HumanReadableException e) {

@@ -63,8 +63,8 @@ public class TargetNodeVisibilityTest {
           "nonPublic").build();
   private static final TargetGraph GRAPH = new TargetGraph(
       new MutableDirectedGraph<TargetNode<?>>(),
-      ImmutableMap.<BuildTarget, TargetNode<?>>of(),
-      ImmutableSet.<TargetGroup>of());
+      ImmutableMap.of(),
+      ImmutableSet.of());
 
   private static final String VISIBLETO_PUBLIC = "PUBLIC";
   private static final String VISIBLETO_ORCA = orcaTarget.getFullyQualifiedName();
@@ -241,7 +241,7 @@ public class TargetNodeVisibilityTest {
             description,
             arg,
             params,
-            ImmutableSet.<BuildTarget>of(),
+            ImmutableSet.of(),
             builder.build(),
             createCellRoots(filesystem));
   }

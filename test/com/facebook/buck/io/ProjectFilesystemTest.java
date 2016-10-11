@@ -391,7 +391,7 @@ public class ProjectFilesystemTest {
     assertThat(
         filesystem.getFilesUnderPath(
             Paths.get("dir1"),
-            Predicates.<Path>alwaysTrue(),
+            Predicates.alwaysTrue(),
             EnumSet.noneOf(FileVisitOption.class)),
         containsInAnyOrder(Paths.get("dir1/file2"), Paths.get("dir1/dir2/file3")));
 
@@ -610,7 +610,7 @@ public class ProjectFilesystemTest {
         .transform(PathOrGlobMatcher.toPath())
         .toSet();
     assertThat(
-        FluentIterable.from(ignorePaths).toSortedSet(Ordering.<Path>natural()),
+        FluentIterable.from(ignorePaths).toSortedSet(Ordering.natural()),
         equalTo(
             ImmutableSortedSet.of(
                 filesystem.getBuckPaths().getBuckOut(),

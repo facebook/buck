@@ -73,7 +73,7 @@ public class AssembleDirectoriesTest {
         new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(filesystem)
             .build();
-    ImmutableList<SourcePath> directories = ImmutableList.<SourcePath>of(
+    ImmutableList<SourcePath> directories = ImmutableList.of(
         new FakeSourcePath(filesystem, "folder_a"), new FakeSourcePath(filesystem, "folder_b"));
     AssembleDirectories assembleDirectories = new AssembleDirectories(
         buildRuleParams,

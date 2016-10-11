@@ -74,7 +74,7 @@ public class DarwinLinker implements Linker, HasLinkerMap {
 
   @Override
   public ImmutableList<FileScrubber> getScrubbers(ImmutableCollection<Path> cellRoots) {
-    return ImmutableList.<FileScrubber>of(
+    return ImmutableList.of(
         new OsoSymbolsContentsScrubber(cellRoots),
         new LcUuidContentsScrubber());
   }
@@ -107,7 +107,7 @@ public class DarwinLinker implements Linker, HasLinkerMap {
 
   @Override
   public Iterable<Arg> fileList(Path fileListPath) {
-    return ImmutableList.<Arg>of(
+    return ImmutableList.of(
         new StringArg("-Xlinker"),
         new StringArg("-filelist"),
         new StringArg("-Xlinker"),
@@ -141,7 +141,7 @@ public class DarwinLinker implements Linker, HasLinkerMap {
       SourcePathResolver pathResolver,
       BuildTarget target,
       Iterable<? extends SourcePath> symbolFiles) {
-    return ImmutableList.<Arg>of(new UndefinedSymbolsArg(pathResolver, symbolFiles));
+    return ImmutableList.of(new UndefinedSymbolsArg(pathResolver, symbolFiles));
   }
 
   @Override
@@ -156,7 +156,7 @@ public class DarwinLinker implements Linker, HasLinkerMap {
 
   @Override
   public Iterable<Arg> getSharedLibFlag() {
-    return ImmutableList.<Arg>of(new StringArg("-shared"));
+    return ImmutableList.of(new StringArg("-shared"));
   }
 
   @Override

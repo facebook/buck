@@ -89,7 +89,7 @@ public class BuiltinApplePackage extends AbstractBuildRule {
         new ZipStep(
             getProjectFilesystem(),
             pathToOutputFile,
-            ImmutableSet.<Path>of(),
+            ImmutableSet.of(),
             false,
             ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
             temp));
@@ -157,7 +157,7 @@ public class BuiltinApplePackage extends AbstractBuildRule {
         if (legacyWatchApp.getBinary().isPresent()) {
           BuildRule legacyWatchStub = legacyWatchApp.getBinary().get();
           if (legacyWatchStub instanceof WriteFile) {
-            return Optional.<WriteFile>of((WriteFile) legacyWatchStub);
+            return Optional.of((WriteFile) legacyWatchStub);
           }
         }
       }

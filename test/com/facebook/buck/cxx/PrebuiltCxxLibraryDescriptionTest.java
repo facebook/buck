@@ -42,7 +42,6 @@ import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -65,7 +64,6 @@ import org.junit.Test;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 public class PrebuiltCxxLibraryDescriptionTest {
@@ -161,20 +159,20 @@ public class PrebuiltCxxLibraryDescriptionTest {
                 new SourcePathArg(
                     pathResolver,
                     new PathSourcePath(filesystem, getStaticLibraryPath(arg))))),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
+        ImmutableSet.of(),
+        ImmutableSet.of());
     assertEquals(
         expectedStaticLinkableInput,
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
-        ImmutableList.<Arg>of(
+        ImmutableList.of(
             new SourcePathArg(
                 pathResolver,
                 new PathSourcePath(filesystem, getSharedLibraryPath(arg)))),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
+        ImmutableSet.of(),
+        ImmutableSet.of());
     assertEquals(
         expectedSharedLinkableInput,
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
@@ -203,18 +201,18 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     // Verify static native linkable input.
     NativeLinkableInput expectedStaticLinkableInput = NativeLinkableInput.of(
-        ImmutableList.<Arg>of(),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
+        ImmutableList.of(),
+        ImmutableSet.of(),
+        ImmutableSet.of());
     assertEquals(
         expectedStaticLinkableInput,
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.STATIC));
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
-        ImmutableList.<Arg>of(),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
+        ImmutableList.of(),
+        ImmutableSet.of(),
+        ImmutableSet.of());
     assertEquals(
         expectedSharedLinkableInput,
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
@@ -243,12 +241,12 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
     // Verify shared native linkable input.
     NativeLinkableInput expectedSharedLinkableInput = NativeLinkableInput.of(
-        ImmutableList.<Arg>of(
+        ImmutableList.of(
             new SourcePathArg(
                 pathResolver,
                 new PathSourcePath(filesystem, getSharedLibraryPath(arg)))),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
+        ImmutableSet.of(),
+        ImmutableSet.of());
     assertEquals(
         expectedSharedLinkableInput,
         lib.getNativeLinkableInput(CXX_PLATFORM, Linker.LinkableDepType.SHARED));
@@ -371,7 +369,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         resolver,
         platform,
         Optional.of("lib"),
-        Optional.<String>absent());
+        Optional.absent());
 
     assertThat(
         MorePaths.pathWithUnixSeparators(pathResolver.getAbsolutePath(staticLibraryPath)),
@@ -509,7 +507,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET)
         .setExportedHeaders(
             SourceList.ofNamedSources(
-                ImmutableSortedMap.<String, SourcePath>of(
+                ImmutableSortedMap.of(
                     "foo.h",
                     new FakeSourcePath("foo.h"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
@@ -538,13 +536,13 @@ public class PrebuiltCxxLibraryDescriptionTest {
                 .add(
                     Pattern.compile(CXX_PLATFORM.getFlavor().toString()),
                     SourceList.ofNamedSources(
-                        ImmutableSortedMap.<String, SourcePath>of(
+                        ImmutableSortedMap.of(
                             "foo.h",
                             new FakeSourcePath("foo.h"))))
                 .add(
                     Pattern.compile("DO NOT MATCH ANYTNING"),
                     SourceList.ofNamedSources(
-                        ImmutableSortedMap.<String, SourcePath>of(
+                        ImmutableSortedMap.of(
                             "bar.h",
                             new FakeSourcePath("bar.h"))))
                 .build());
@@ -602,7 +600,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         .setHeaderNamespace("hello")
         .setExportedHeaders(
             SourceList.ofUnnamedSources(
-                ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("foo.h"))));
+                ImmutableSortedSet.of(new FakeSourcePath("foo.h"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
@@ -702,11 +700,11 @@ public class PrebuiltCxxLibraryDescriptionTest {
             .build(resolver);
     assertThat(
         rule.getNativeLinkableDeps(CxxLibraryBuilder.createDefaultPlatform()),
-        Matchers.<NativeLinkable>contains(dep));
+        Matchers.contains(dep));
     assertThat(
         ImmutableList.copyOf(
             rule.getNativeLinkableExportedDeps(CxxLibraryBuilder.createDefaultPlatform())),
-        Matchers.<NativeLinkable>empty());
+        empty());
   }
 
   @Test
@@ -722,10 +720,10 @@ public class PrebuiltCxxLibraryDescriptionTest {
             .build(resolver);
     assertThat(
         ImmutableList.copyOf(rule.getNativeLinkableDeps(CxxLibraryBuilder.createDefaultPlatform())),
-        Matchers.<NativeLinkable>empty());
+        empty());
     assertThat(
         rule.getNativeLinkableExportedDeps(CxxLibraryBuilder.createDefaultPlatform()),
-        Matchers.<NativeLinkable>contains(dep));
+        Matchers.contains(dep));
   }
 
   @Test
@@ -743,7 +741,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertThat(
         rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, HeaderVisibility.PUBLIC)
             .getIncludes(),
-        Matchers.<CxxHeaders>contains(
+        Matchers.contains(
             CxxHeadersDir.of(
                 CxxPreprocessables.IncludeType.SYSTEM,
                 new PathSourcePath(
@@ -756,7 +754,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
-            .setIncludeDirs(ImmutableList.<String>of());
+            .setIncludeDirs(ImmutableList.of());
     BuildRuleResolver resolver =
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(prebuiltCxxLibraryBuilder.build()),
@@ -768,13 +766,13 @@ public class PrebuiltCxxLibraryDescriptionTest {
         rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, HeaderVisibility.PUBLIC);
     assertThat(
         getHeaderNames(input.getIncludes()),
-        Matchers.<Path>empty());
+        empty());
     assertThat(
         input.getSystemIncludeRoots(),
-        Matchers.<Path>empty());
+        empty());
     assertThat(
         ImmutableList.copyOf(input.getDeps(resolver, pathResolver)),
-        Matchers.<BuildRule>empty());
+        empty());
   }
 
   @Test
@@ -881,7 +879,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         ImmutableList.copyOf(
             rule.getNativeLinkTarget(CXX_PLATFORM).get()
                 .getNativeLinkTargetDeps(CXX_PLATFORM)),
-        Matchers.<NativeLinkable>hasItems(dep, exportedDep));
+        Matchers.hasItems(dep, exportedDep));
   }
 
   @Test
@@ -933,7 +931,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(resolver, filesystem);
     assertThat(
         rule.getSharedLibraries(CXX_PLATFORM).entrySet(),
-        Matchers.<Map.Entry<String, SourcePath>>empty());
+        empty());
   }
 
   @Test

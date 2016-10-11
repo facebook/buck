@@ -48,7 +48,7 @@ public class HttpArtifactCacheEventTest {
   public void jsonRepresentationContainsAllRuleKeysWithTransform() throws IOException {
     Iterable<RuleKey> ruleKeysInATransform = Iterables.transform(
         TEST_RULE_KEYS,
-        Functions.<RuleKey>identity());
+        Functions.identity());
 
     HttpArtifactCacheEvent.Finished finishedEvent = createBuilder()
         .setRuleKeys(ruleKeysInATransform)
@@ -72,7 +72,7 @@ public class HttpArtifactCacheEventTest {
 
     HttpArtifactCacheEvent.Scheduled scheduledEvent =
         HttpArtifactCacheEvent.newStoreScheduledEvent(
-            Optional.of("target"), ImmutableSet.<RuleKey>of());
+            Optional.of("target"), ImmutableSet.of());
     HttpArtifactCacheEvent.Started startedEvent = HttpArtifactCacheEvent.newStoreStartedEvent(
         scheduledEvent);
     configureEvent(startedEvent);

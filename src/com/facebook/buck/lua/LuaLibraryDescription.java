@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -65,7 +64,7 @@ public class LuaLibraryDescription implements Description<LuaLibraryDescription.
                     LuaUtil.getBaseModule(params.getBuildTarget(), args.baseModule),
                     ImmutableList.of(
                         args.srcs.or(
-                            SourceList.ofUnnamedSources(ImmutableSortedSet.<SourcePath>of())))))
+                            SourceList.ofUnnamedSources(ImmutableSortedSet.of())))))
             .build();
       }
     };

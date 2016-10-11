@@ -111,6 +111,6 @@ public class MavenUrlDecoderTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void shouldRefuseToParseNonMavenUri() throws URISyntaxException {
-    MavenUrlDecoder.toHttpUrl(Optional.<String>absent(), new URI("http://www.example.com/"));
+    MavenUrlDecoder.toHttpUrl(Optional.absent(), new URI("http://www.example.com/"));
   }
 }

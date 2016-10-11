@@ -184,7 +184,7 @@ public class WorkspaceAndProjectGeneratorTest {
     BuildTarget fooBinTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "bin").build();
     TargetNode<?> fooBinNode = AppleBundleBuilder
         .createBuilder(fooBinTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP))
+        .setExtension(Either.ofLeft(AppleBundleExtension.APP))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setBinary(fooBinBinaryTarget)
         .setTests(Optional.of(ImmutableSortedSet.of(fooBinTestTarget)))
@@ -258,11 +258,11 @@ public class WorkspaceAndProjectGeneratorTest {
             ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
         false /* combinedProject */,
         false /* buildWithBuck */,
-        ImmutableList.<String>of(),
-        ImmutableList.<BuildTarget>of(),
+        ImmutableList.of(),
+        ImmutableList.of(),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -334,11 +334,11 @@ public class WorkspaceAndProjectGeneratorTest {
             ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
         true /* combinedProject */,
         false /* buildWithBuck */,
-        ImmutableList.<String>of(),
-        ImmutableList.<BuildTarget>of(),
+        ImmutableList.of(),
+        ImmutableList.of(),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -391,14 +391,14 @@ public class WorkspaceAndProjectGeneratorTest {
         targetGraph,
         workspaceNode.getConstructorArg(),
         workspaceNode.getBuildTarget(),
-        ImmutableSet.<ProjectGenerator.Option>of(),
+        ImmutableSet.of(),
         false /* combinedProject */,
         false /* buildWithBuck */,
-        ImmutableList.<String>of(),
-        ImmutableList.<BuildTarget>of(),
+        ImmutableList.of(),
+        ImmutableList.of(),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -457,14 +457,14 @@ public class WorkspaceAndProjectGeneratorTest {
         targetGraph,
         workspaceNode.getConstructorArg(),
         workspaceNode.getBuildTarget(),
-        ImmutableSet.<ProjectGenerator.Option>of(ProjectGenerator.Option.INCLUDE_TESTS),
+        ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS),
         false /* combinedProject */,
         false /* buildWithBuck */,
-        ImmutableList.<String>of(),
-        ImmutableList.<BuildTarget>of(),
+        ImmutableList.of(),
+        ImmutableList.of(),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -533,14 +533,14 @@ public class WorkspaceAndProjectGeneratorTest {
         targetGraph,
         workspaceNode.getConstructorArg(),
         workspaceNode.getBuildTarget(),
-        ImmutableSet.<ProjectGenerator.Option>of(),
+        ImmutableSet.of(),
         false /* combinedProject */,
         false /* buildWithBuck */,
-        ImmutableList.<String>of(),
-        ImmutableList.<BuildTarget>of(),
+        ImmutableList.of(),
+        ImmutableList.of(),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -591,14 +591,14 @@ public class WorkspaceAndProjectGeneratorTest {
         targetGraph,
         workspaceNode.getConstructorArg(),
         workspaceNode.getBuildTarget(),
-        ImmutableSet.<ProjectGenerator.Option>of(),
+        ImmutableSet.of(),
         true /* combinedProject */,
         false /* buildWithBuck */,
-        ImmutableList.<String>of(),
-        ImmutableList.<BuildTarget>of(),
+        ImmutableList.of(),
+        ImmutableList.of(),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -622,7 +622,7 @@ public class WorkspaceAndProjectGeneratorTest {
   public void buildWithBuck() throws IOException, InterruptedException {
     Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
         Paths.get("buck"),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     assumeThat(buck.isPresent(), is(true));
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         rootCell,
@@ -633,11 +633,11 @@ public class WorkspaceAndProjectGeneratorTest {
             ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
         false /* combinedProject */,
         true /* buildWithBuck */,
-        ImmutableList.<String>of(),
-        ImmutableList.<BuildTarget>of(),
+        ImmutableList.of(),
+        ImmutableList.of(),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -691,7 +691,7 @@ public class WorkspaceAndProjectGeneratorTest {
     final String fooLib = "//foo:lib";
     Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
         Paths.get("buck"),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     assumeThat(buck.isPresent(), is(true));
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         rootCell,
@@ -702,11 +702,11 @@ public class WorkspaceAndProjectGeneratorTest {
             ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
         false /* combinedProject */,
         true /* buildWithBuck */,
-        ImmutableList.<String>of(),
+        ImmutableList.of(),
         ImmutableList.of(BuildTargetFactory.newInstance(fooLib)),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -741,7 +741,7 @@ public class WorkspaceAndProjectGeneratorTest {
     final String fooLib = "//NOT:EXISTING_TARGET";
     Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
         Paths.get("buck"),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     assumeThat(buck.isPresent(), is(true));
     WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
         rootCell,
@@ -752,11 +752,11 @@ public class WorkspaceAndProjectGeneratorTest {
             ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
         false /* combinedProject */,
         true /* buildWithBuck */,
-        ImmutableList.<String>of(),
+        ImmutableList.of(),
         ImmutableList.of(BuildTargetFactory.newInstance(fooLib)),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -838,11 +838,11 @@ public class WorkspaceAndProjectGeneratorTest {
             ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
         false /* combinedProject */,
         false /* buildWithBuck */,
-        ImmutableList.<String>of(),
-        ImmutableList.<BuildTarget>of(),
+        ImmutableList.of(),
+        ImmutableList.of(),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -1121,7 +1121,7 @@ public class WorkspaceAndProjectGeneratorTest {
     BuildTarget fooBinTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "FooBin").build();
     TargetNode<?> fooBinNode = AppleBundleBuilder
         .createBuilder(fooBinTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP))
+        .setExtension(Either.ofLeft(AppleBundleExtension.APP))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setBinary(fooBinBinaryTarget)
         .setTests(Optional.of(ImmutableSortedSet.of(fooBinTestTarget)))
@@ -1203,11 +1203,11 @@ public class WorkspaceAndProjectGeneratorTest {
             ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
         false /* combinedProject */,
         false /* buildWithBuck */,
-        ImmutableList.<String>of(),
-        ImmutableList.<BuildTarget>of(),
+        ImmutableList.of(),
+        ImmutableList.of(),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -1362,11 +1362,11 @@ public class WorkspaceAndProjectGeneratorTest {
             ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
         false /* combinedProject */,
         false /* buildWithBuck */,
-        ImmutableList.<String>of(),
-        ImmutableList.<BuildTarget>of(),
+        ImmutableList.of(),
+        ImmutableList.of(),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -1459,11 +1459,11 @@ public class WorkspaceAndProjectGeneratorTest {
             ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
         false /* combinedProject */,
         false /* buildWithBuck */,
-        ImmutableList.<String>of(),
-        ImmutableList.<BuildTarget>of(),
+        ImmutableList.of(),
+        ImmutableList.of(),
         true /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",
@@ -1522,11 +1522,11 @@ public class WorkspaceAndProjectGeneratorTest {
             ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
         false /* combinedProject */,
         false /* buildWithBuck */,
-        ImmutableList.<String>of(),
-        ImmutableList.<BuildTarget>of(),
+        ImmutableList.of(),
+        ImmutableList.of(),
         true /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         PLATFORMS,
         DEFAULT_PLATFORM,
         "BUCK",

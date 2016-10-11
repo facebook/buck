@@ -84,7 +84,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
                         .addAll(nm.getDeps(pathResolver))
                         .addAll(pathResolver.filterBuildRuleInputs(linkerInputs))
                         .build()),
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
             pathResolver,
             nm,
             linkerInputs));

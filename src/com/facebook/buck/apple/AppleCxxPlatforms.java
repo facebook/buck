@@ -391,9 +391,9 @@ public class AppleCxxPlatforms {
         ranlib,
         new PosixNmSymbolNameTool(nm),
         cflagsBuilder.build(),
-        ImmutableList.<String>of(),
+        ImmutableList.of(),
         cflags,
-        ImmutableList.<String>of(),
+        ImmutableList.of(),
         "dylib",
         "%s.dylib",
         "a",
@@ -496,7 +496,7 @@ public class AppleCxxPlatforms {
         toolSearchPaths,
         executableFinder,
         version,
-        ImmutableList.<String>of());
+        ImmutableList.of());
   }
 
   private static Optional<Tool> getOptionalToolWithParams(

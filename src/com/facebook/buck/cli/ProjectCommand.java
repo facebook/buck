@@ -373,7 +373,7 @@ public class ProjectCommand extends BuildCommand {
     Optional<String> initialTargets = buckConfig.getValue("project", "initial_targets");
     return initialTargets.isPresent()
         ? Lists.newArrayList(Splitter.on(' ').trimResults().split(initialTargets.get()))
-        : ImmutableList.<String>of();
+        : ImmutableList.of();
   }
 
   public boolean hasInitialTargets(BuckConfig buckConfig) {
@@ -956,7 +956,7 @@ public class ProjectCommand extends BuildCommand {
     ImmutableSet<TargetNode<?>> testTargetNodes = targetGraphAndTargets.getAssociatedTests();
     ImmutableSet<TargetNode<AppleTestDescription.Arg>> groupableTests = combineTestBundles
         ? AppleBuildRules.filterGroupableTests(testTargetNodes)
-        : ImmutableSet.<TargetNode<AppleTestDescription.Arg>>of();
+        : ImmutableSet.of();
     ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
     for (final BuildTarget inputTarget : targets) {
       TargetNode<?> inputNode = targetGraphAndTargets.getTargetGraph().get(inputTarget);
@@ -1180,7 +1180,7 @@ public class ProjectCommand extends BuildCommand {
               executor,
               ImmutableList.of(
                   TargetNodePredicateSpec.of(
-                      Predicates.<TargetNode<?>>alwaysTrue(),
+                      Predicates.alwaysTrue(),
                       BuildFileSpec.fromRecursivePath(
                           Paths.get(""),
                           params.getCell().getRoot()))),

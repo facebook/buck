@@ -161,7 +161,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
                 resolver.getAllRules(args.providedDeps.get()),
                 new BuildTargetSourcePath(abiJarTarget),
                 javacOptions.trackClassUsage(),
-                /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+                /* additionalClasspathEntries */ ImmutableSet.of(),
                 new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
                 args.resourcesRoot,
                 args.manifestFile,

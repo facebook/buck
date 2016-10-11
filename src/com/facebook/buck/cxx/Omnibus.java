@@ -389,7 +389,7 @@ public class Omnibus {
                         .resolve(rootTarget.getShortName())),
                 argsBuilder.build(),
                 Linker.LinkableDepType.SHARED,
-                Optional.<Linker.CxxRuntimeType>absent());
+                Optional.absent());
         break;
       }
 
@@ -455,7 +455,7 @@ public class Omnibus {
         omnibus,
         root,
         getDummyRootTarget(root.getBuildTarget()),
-        Optional.<Path>absent());
+        Optional.absent());
   }
 
   private static ImmutableList<Arg> createUndefinedSymbolsArgs(
@@ -523,7 +523,7 @@ public class Omnibus {
 
     // Walk the graph in topological order, appending each nodes contributions to the link.
     ImmutableList<BuildTarget> targets =
-        TopologicalSort.sort(spec.getGraph(), Predicates.<BuildTarget>alwaysTrue()).reverse();
+        TopologicalSort.sort(spec.getGraph(), Predicates.alwaysTrue()).reverse();
     for (BuildTarget target : targets) {
 
       // If this is a root, just place the shared library we've linked above onto the link line.

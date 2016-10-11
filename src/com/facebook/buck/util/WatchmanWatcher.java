@@ -144,7 +144,7 @@ public class WatchmanWatcher {
       Set<Capability> watchmanCapabilities) {
 
     // Exclude any expressions added to this list.
-    List<Object> excludeAnyOf = Lists.<Object>newArrayList("anyof");
+    List<Object> excludeAnyOf = Lists.newArrayList("anyof");
 
     // Exclude all directories.
     excludeAnyOf.add(Lists.newArrayList("type", "d"));

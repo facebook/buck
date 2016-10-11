@@ -217,7 +217,7 @@ public class IjModuleFactory {
     public void addDeps(
         ImmutableSet<BuildTarget> buildTargets,
         IjModuleGraph.DependencyType dependencyType) {
-      addDeps(ImmutableSet.<Path>of(), buildTargets, dependencyType);
+      addDeps(ImmutableSet.of(), buildTargets, dependencyType);
     }
 
     public void addCompileShadowDep(BuildTarget buildTarget) {
@@ -592,7 +592,7 @@ public class IjModuleFactory {
         folderFactory.create(
             annotationOutputPath,
             false,
-            ImmutableSortedSet.<Path>of(annotationOutputPath))
+            ImmutableSortedSet.of(annotationOutputPath))
     );
   }
 
@@ -679,7 +679,7 @@ public class IjModuleFactory {
           );
         }
       } else {
-        resourceFolders = ImmutableSet.<Path>of();
+        resourceFolders = ImmutableSet.of();
       }
 
       androidFacetBuilder.setPackageName(target.getConstructorArg().rDotJavaPackage);

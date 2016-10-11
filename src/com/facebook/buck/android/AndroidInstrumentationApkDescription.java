@@ -53,10 +53,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.nio.file.Path;
 import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
 
 public class AndroidInstrumentationApkDescription
     implements Description<AndroidInstrumentationApkDescription.Arg> {
@@ -132,8 +128,8 @@ public class AndroidInstrumentationApkDescription
         ResourceCompressionMode.DISABLED,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
         /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-        /* resourceUnionPackage */ Optional.<String>absent(),
-        /* locales */ ImmutableSet.<String>of(),
+        /* resourceUnionPackage */ Optional.absent(),
+        /* locales */ ImmutableSet.of(),
         args.manifest,
         PackageType.INSTRUMENTED,
         apkUnderTest.getCpuFilters(),
@@ -149,14 +145,14 @@ public class AndroidInstrumentationApkDescription
         EnumSet.noneOf(ExopackageMode.class),
         apkUnderTest.getKeystore(),
         /* buildConfigValues */ BuildConfigFields.empty(),
-        /* buildConfigValuesFile */ Optional.<SourcePath>absent(),
-        /* xzCompressionLevel */ Optional.<Integer>absent(),
+        /* buildConfigValuesFile */ Optional.absent(),
+        /* xzCompressionLevel */ Optional.absent(),
         /* trimResourceIds */ false,
-        /* keepResourcePattern */ Optional.<String>absent(),
+        /* keepResourcePattern */ Optional.absent(),
         nativePlatforms,
-        /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
-        /* nativeLibraryMergeGlue */ Optional.<BuildTarget>absent(),
-        /* nativeLibraryMergeCodeGenerator */ Optional.<BuildTarget>absent(),
+        /* nativeLibraryMergeMap */ Optional.absent(),
+        /* nativeLibraryMergeGlue */ Optional.absent(),
+        /* nativeLibraryMergeCodeGenerator */ Optional.absent(),
         AndroidBinary.RelinkerMode.DISABLED,
         dxExecutorService,
         apkUnderTest.getManifestEntries(),
@@ -164,7 +160,7 @@ public class AndroidInstrumentationApkDescription
         new APKModuleGraph(
             targetGraph,
             params.getBuildTarget(),
-            Optional.<Set<BuildTarget>>absent()));
+            Optional.absent()));
 
     AndroidGraphEnhancementResult enhancementResult =
         graphEnhancer.createAdditionalBuildables();

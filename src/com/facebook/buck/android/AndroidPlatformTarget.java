@@ -389,7 +389,7 @@ public class AndroidPlatformTarget {
           "android-" + apiLevel,
           androidDirectoryResolver,
           "platforms/android-" + apiLevel,
-          /* additionalJarPaths */ ImmutableSet.<Path>of(),
+          /* additionalJarPaths */ ImmutableSet.of(),
           aaptOverride);
     }
   }

@@ -316,7 +316,7 @@ public class ProjectWorkspace {
 
   public ProcessExecutor.Result runJar(Path jar, String... args)
       throws IOException, InterruptedException {
-    return runJar(jar, ImmutableList.<String>of(), args);
+    return runJar(jar, ImmutableList.of(), args);
   }
 
   public ProcessExecutor.Result runCommand(String exe, String... args)
@@ -353,8 +353,8 @@ public class ProjectWorkspace {
       throws IOException {
     return runBuckCommandWithEnvironmentOverridesAndContext(
         destPath,
-        Optional.<NGContext>absent(),
-        ImmutableMap.<String, String>of(),
+        Optional.absent(),
+        ImmutableMap.of(),
         args);
   }
 
@@ -362,7 +362,7 @@ public class ProjectWorkspace {
       throws IOException {
     return runBuckCommandWithEnvironmentOverridesAndContext(
         destPath,
-        Optional.<NGContext>absent(),
+        Optional.absent(),
         environment,
         args);
   }
@@ -371,8 +371,8 @@ public class ProjectWorkspace {
       throws IOException {
     return runBuckCommandWithEnvironmentOverridesAndContext(
         repoRoot,
-        Optional.<NGContext>absent(),
-        ImmutableMap.<String, String>of(),
+        Optional.absent(),
+        ImmutableMap.of(),
         args);
   }
 
@@ -406,7 +406,7 @@ public class ProjectWorkspace {
     return runBuckCommandWithEnvironmentOverridesAndContext(
         destPath,
         Optional.of(context),
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         stderr,
         args);
   }
@@ -608,8 +608,8 @@ public class ProjectWorkspace {
     DefaultAndroidDirectoryResolver directoryResolver = new DefaultAndroidDirectoryResolver(
         filesystem.getRootPath().getFileSystem(),
         env,
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
     return Cell.createRootCell(
         filesystem,
         Watchman.NULL_WATCHMAN,

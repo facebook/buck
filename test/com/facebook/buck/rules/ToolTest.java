@@ -96,7 +96,7 @@ public class ToolTest {
         new DefaultRuleKeyBuilderFactory(
             0,
             FakeFileHashCache.createFromStrings(
-                ImmutableMap.<String, String>of()),
+                ImmutableMap.of()),
             pathResolver);
 
     String tool = "tool";

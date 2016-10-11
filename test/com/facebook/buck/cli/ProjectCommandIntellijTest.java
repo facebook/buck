@@ -143,7 +143,7 @@ public class ProjectCommandIntellijTest {
     TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
         targetGraph,
         ProjectCommand.Ide.INTELLIJ,
-        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.of(),
         /* withTests = */ false,
         /* withDependenciesTests = */ false);
 
@@ -166,7 +166,7 @@ public class ProjectCommandIntellijTest {
     TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
         targetGraph,
         ProjectCommand.Ide.INTELLIJ,
-        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.of(),
         /* withTests = */ true,
         /* withDependenciesTests = */ true);
 

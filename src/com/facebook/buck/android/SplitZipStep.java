@@ -254,7 +254,7 @@ public class SplitZipStep implements Step {
             writeMetaList(
                 secondaryMetaInfoWriter,
                 SECONDARY_DEX_ID,
-                ImmutableSet.<APKModule>of(),
+                ImmutableSet.of(),
                 outputFiles.get(dexStore).asList(),
                 dexSplitMode.getDexStore());
           }

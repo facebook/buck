@@ -94,7 +94,7 @@ public class BuildCommandTest {
     BuildRule rule4 = new FakeBuildRule(
         BuildTargetFactory.newInstance("//fake:rule4"),
         resolver);
-    ruleToResult.put(rule4, Optional.<BuildResult>absent());
+    ruleToResult.put(rule4, Optional.absent());
 
     buildExecutionResult = BuildExecutionResult.builder()
         .setResults(ruleToResult)

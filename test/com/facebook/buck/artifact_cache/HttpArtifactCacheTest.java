@@ -105,7 +105,7 @@ public class HttpArtifactCacheTest {
 
   private static HttpArtifactCacheEvent.Finished.Builder createFinishedEventBuilder() {
     HttpArtifactCacheEvent.Started started = HttpArtifactCacheEvent.newFetchStartedEvent(
-        ImmutableSet.<RuleKey>of()
+        ImmutableSet.of()
     );
     started.configure(-1, -1, -1, -1, new BuildId());
     return HttpArtifactCacheEvent.newFinishedEventBuilder(started);
@@ -182,7 +182,7 @@ public class HttpArtifactCacheTest {
                     .body(
                         createResponseBody(
                             ImmutableSet.of(ruleKey),
-                            ImmutableMap.<String, String>of(),
+                            ImmutableMap.of(),
                             ByteSource.wrap(data.getBytes(Charsets.UTF_8)),
                             data))
                     .build();
@@ -220,7 +220,7 @@ public class HttpArtifactCacheTest {
                 .body(
                     createResponseBody(
                         ImmutableSet.of(ruleKey),
-                        ImmutableMap.<String, String>of(),
+                        ImmutableMap.of(),
                         ByteSource.wrap(new byte[0]),
                         "data"))
                 .build());
@@ -249,7 +249,7 @@ public class HttpArtifactCacheTest {
                     .body(
                         createResponseBody(
                             ImmutableSet.of(ruleKey),
-                            ImmutableMap.<String, String>of(),
+                            ImmutableMap.of(),
                             ByteSource.wrap(new byte[0]),
                             "data"))
                     .build();
@@ -286,7 +286,7 @@ public class HttpArtifactCacheTest {
                     .body(
                         createResponseBody(
                             ImmutableSet.of(ruleKey),
-                            ImmutableMap.<String, String>of(),
+                            ImmutableMap.of(),
                             ByteSource.wrap("more data than length".getBytes(Charsets.UTF_8)),
                             "small"))
                     .build();
@@ -353,7 +353,7 @@ public class HttpArtifactCacheTest {
               byte[] metadata =
                   HttpArtifactCacheBinaryProtocol.createMetadataHeader(
                       ImmutableSet.of(ruleKey),
-                      ImmutableMap.<String, String>of(),
+                      ImmutableMap.of(),
                       ByteSource.wrap(data.getBytes(Charsets.UTF_8)));
               dataOut.writeInt(metadata.length);
               dataOut.write(metadata);
@@ -461,7 +461,7 @@ public class HttpArtifactCacheTest {
                 .body(
                     createResponseBody(
                         ImmutableSet.of(otherRuleKey),
-                        ImmutableMap.<String, String>of(),
+                        ImmutableMap.of(),
                         ByteSource.wrap(data.getBytes(Charsets.UTF_8)),
                         data))
                 .build();
@@ -548,7 +548,7 @@ public class HttpArtifactCacheTest {
                 .body(
                     createResponseBody(
                         ImmutableSet.of(otherRuleKey),
-                        ImmutableMap.<String, String>of(),
+                        ImmutableMap.of(),
                         ByteSource.wrap(data.getBytes(Charsets.UTF_8)),
                         data))
                 .build();

@@ -319,6 +319,6 @@ public class BuildInfoRecorderTest {
         new DefaultClock(),
         new BuildId(),
         new ObjectMapper(),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
   }
 }

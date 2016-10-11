@@ -34,7 +34,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.File;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class CxxPlatforms {
@@ -123,7 +122,7 @@ public class CxxPlatforms {
                     config.getDebugPathSanitizerLimit(),
                     File.separatorChar,
                     Paths.get("."),
-                    ImmutableBiMap.<Path, Path>of())))
+                    ImmutableBiMap.of())))
         .setFlagMacros(flagMacros);
 
 
@@ -241,10 +240,10 @@ public class CxxPlatforms {
         .addAllCxxflags(compilerOnlyFlags)
         .addAllCppflags(config.getFlags("cppflags").or(DEFAULT_CPPFLAGS))
         .addAllCxxppflags(config.getFlags("cxxppflags").or(DEFAULT_CXXPPFLAGS))
-        .addAllCudaflags(config.getFlags("cudaflags").or(ImmutableList.<String>of()))
-        .addAllCudappflags(config.getFlags("cudappflags").or(ImmutableList.<String>of()))
-        .addAllAsmflags(config.getFlags("asmflags").or(ImmutableList.<String>of()))
-        .addAllAsmppflags(config.getFlags("asmppflags").or(ImmutableList.<String>of()))
+        .addAllCudaflags(config.getFlags("cudaflags").or(ImmutableList.of()))
+        .addAllCudappflags(config.getFlags("cudappflags").or(ImmutableList.of()))
+        .addAllAsmflags(config.getFlags("asmflags").or(ImmutableList.of()))
+        .addAllAsmppflags(config.getFlags("asmppflags").or(ImmutableList.of()))
         .addAllLdflags(config.getFlags("ldflags").or(DEFAULT_LDFLAGS))
         .addAllArflags(config.getFlags("arflags").or(DEFAULT_ARFLAGS))
         .addAllRanlibflags(config.getFlags("ranlibflags").or(DEFAULT_RANLIBFLAGS));

@@ -29,7 +29,6 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.environment.Platform;
@@ -189,7 +188,7 @@ public class JavacOptionsTest {
     Files.write(tempPath, "echo \"cover-version\" 1>&2".getBytes(UTF_8));
 
     JavacOptions options = createStandardBuilder()
-        .setJavacPath(Either.<Path, SourcePath>ofLeft(tempPath))
+        .setJavacPath(Either.ofLeft(tempPath))
         .build();
 
     Javac javac = options.getJavac();
@@ -205,7 +204,7 @@ public class JavacOptionsTest {
     FakeSourcePath javacJarPath = new FakeSourcePath("javac_jar");
 
     JavacOptions options = createStandardBuilder()
-        .setJavacPath(Either.<Path, SourcePath>ofLeft(javacPath))
+        .setJavacPath(Either.ofLeft(javacPath))
         .setJavacJarPath(javacJarPath)
         .build();
 
@@ -214,7 +213,7 @@ public class JavacOptionsTest {
      );
     assertThat(
         options.getInputs(resolver),
-        Matchers.<SourcePath>containsInAnyOrder(javacJarPath));
+        Matchers.containsInAnyOrder(javacJarPath));
   }
 
   private JavacOptions.Builder createStandardBuilder() {
@@ -229,7 +228,7 @@ public class JavacOptionsTest {
 
   private OptionAccumulator visitOptions(JavacOptions options) {
     OptionAccumulator optionsConsumer = new OptionAccumulator();
-    options.appendOptionsTo(optionsConsumer, Functions.<Path>identity());
+    options.appendOptionsTo(optionsConsumer, Functions.identity());
     return optionsConsumer;
   }
 

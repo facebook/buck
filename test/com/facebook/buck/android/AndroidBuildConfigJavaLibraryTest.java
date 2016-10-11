@@ -25,7 +25,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.base.Optional;
@@ -50,7 +49,7 @@ public class AndroidBuildConfigJavaLibraryTest {
             "com.example.buck",
             /* values */ BuildConfigFields.fromFieldDeclarations(
                 Collections.singleton("String foo = \"bar\"")),
-            /* valuesFile */ Optional.<SourcePath>absent(),
+            /* valuesFile */ Optional.absent(),
             /* useConstantExpressions */ false,
             DEFAULT_JAVAC_OPTIONS,
             buildRuleResolver);
@@ -62,7 +61,7 @@ public class AndroidBuildConfigJavaLibraryTest {
         ImmutableMap.of(
             "com.example.buck",
             BuildConfigFields.fromFields(
-                ImmutableList.<BuildConfigFields.Field>of(
+                ImmutableList.of(
                     BuildConfigFields.Field.of("String", "foo", "\"bar\"")))),
         collection.getBuildConfigs());
   }
@@ -79,7 +78,7 @@ public class AndroidBuildConfigJavaLibraryTest {
             params,
             "com.example.buck",
             /* values */ fields,
-            /* valuesFile */ Optional.<SourcePath>absent(),
+            /* valuesFile */ Optional.absent(),
             /* useConstantExpressions */ false,
             DEFAULT_JAVAC_OPTIONS,
             buildRuleResolver);

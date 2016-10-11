@@ -40,7 +40,7 @@ public final class FakeCellPathResolver implements CellPathResolver {
   }
 
   public FakeCellPathResolver(ProjectFilesystem projectFilesystem) {
-    this(projectFilesystem, ImmutableMap.<String, Path>of());
+    this(projectFilesystem, ImmutableMap.of());
   }
 
   @Override

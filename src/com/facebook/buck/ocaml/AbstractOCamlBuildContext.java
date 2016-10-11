@@ -344,7 +344,7 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
             CxxHeaders.getArgs(
                 cxxPreprocessorInput.getIncludes(),
                 getSourcePathResolver(),
-                Optional.<Function<Path, Path>>absent(),
+                Optional.absent(),
                 getCPreprocessor())));
 
     for (Path includes : cxxPreprocessorInput.getSystemIncludeRoots()) {

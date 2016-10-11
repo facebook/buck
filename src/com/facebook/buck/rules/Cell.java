@@ -172,7 +172,7 @@ public class Cell {
             allPossibleRoots);
 
         RawConfig configOverrides = Optional.fromNullable(pathToConfigOverrides.get(cellPath))
-            .or(RawConfig.of(ImmutableMap.<String, ImmutableMap<String, String>>of()));
+            .or(RawConfig.of(ImmutableMap.of()));
         Config config = Configs.createDefaultConfig(
             cellPath,
             configOverrides);

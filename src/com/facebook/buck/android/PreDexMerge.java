@@ -412,7 +412,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
 
     buildableContext.addMetadata(
         SECONDARY_DEX_DIRECTORIES_KEY,
-        ImmutableList.<String>of());
+        ImmutableList.of());
   }
 
   public Path getMetadataTxtPath() {

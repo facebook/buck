@@ -151,7 +151,7 @@ public class TestThreadStateRenderer implements ThreadStateRenderer {
         threadInformation.getStartEvent(),
         runningStep,
         stepCategory,
-        Optional.<String>absent(),
+        Optional.absent(),
         threadInformation.getElapsedTimeMs(),
         lineBuilder);
   }

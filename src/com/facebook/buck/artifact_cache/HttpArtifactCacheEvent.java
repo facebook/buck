@@ -112,7 +112,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
           EventKey.unique(),
           CACHE_MODE,
           operation,
-          Optional.<String>absent(),
+          Optional.absent(),
           ruleKeys,
           ArtifactCacheEvent.InvocationType.SYNCHRONOUS);
     }

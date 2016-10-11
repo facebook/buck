@@ -81,8 +81,8 @@ abstract class AbstractEventPair {
    */
   public static EventPair proxy(long start, long end) {
     return EventPair.of(
-        Optional.<BuckEventExternalInterface>of(ProxyBuckEvent.of(start)),
-        Optional.<BuckEventExternalInterface>of(ProxyBuckEvent.of(end))
+        Optional.of(ProxyBuckEvent.of(start)),
+        Optional.of(ProxyBuckEvent.of(end))
     );
   }
 }

@@ -72,7 +72,7 @@ public class GoTestMain extends AbstractBuildRule {
             testMainGen.getEnvironment(getResolver()),
             testMainGen.getCommandPrefix(getResolver()),
             /* coverageMode */ "",
-            /* coverageVariables */ ImmutableMap.<Path, ImmutableMap<String, Path>>of(),
+            /* coverageVariables */ ImmutableMap.of(),
             testPackage,
             FluentIterable.from(testSources)
                 .transform(getResolver().getAbsolutePathFunction())

@@ -21,9 +21,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -59,13 +57,13 @@ class RegisterDebugSymbolsStep implements Step {
         .build();
     return StepExecutionResult.of(context.getProcessExecutor().launchAndExecute(
         params,
-        ImmutableSet.<ProcessExecutor.Option>of(),
+        ImmutableSet.of(),
         Optional.of(
             String.format("target create %s\ntarget symbols add %s",
                 binaryBuildRule.getPathToOutput(),
                 location)),
-        Optional.<Long>absent(),
-        Optional.<Function<Process, Void>>absent()));
+        Optional.absent(),
+        Optional.absent()));
   }
 
   @Override

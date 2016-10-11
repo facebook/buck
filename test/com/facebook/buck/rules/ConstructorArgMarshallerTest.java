@@ -81,9 +81,9 @@ public class ConstructorArgMarshallerTest {
           filesystem,
           buildRuleFactoryParams(),
           dto,
-          ImmutableSet.<BuildTarget>builder(),
-          ImmutableSet.<VisibilityPattern>builder(),
-          ImmutableMap.<String, Object>of());
+          ImmutableSet.builder(),
+          ImmutableSet.builder(),
+          ImmutableMap.of());
     } catch (RuntimeException | ConstructorArgMarshalException e) {
       fail("Did not expect an exception to be thrown:\n" + Throwables.getStackTraceAsString(e));
     }
@@ -102,8 +102,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("name", "cheese"));
 
     assertEquals("cheese", dto.name);
@@ -122,8 +122,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("value", true));
 
     assertTrue(dto.value);
@@ -143,8 +143,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of(
             "target", "//cake:walk",
             "local", ":fish"
@@ -167,8 +167,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("number", 42L));
 
     assertEquals(42, dto.number);
@@ -188,8 +188,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("somePath", "Fish.java"));
 
     assertEquals(Paths.get("example/path", "Fish.java"), dto.somePath);
@@ -216,8 +216,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of(
             "filePath", "cheese.txt",
             "targetPath", ":peas"
@@ -248,8 +248,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("deps", ImmutableList.of("//please/go:here", ":there")));
 
     assertEquals(ImmutableSortedSet.of(t2, t1), dto.deps);
@@ -268,8 +268,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("paths", ImmutableList.of("one", "two")));
 
     assertEquals(
@@ -290,8 +290,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("list", ImmutableList.of("alpha", "beta")));
 
     assertEquals(ImmutableList.of("alpha", "beta"), dto.list);
@@ -314,8 +314,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         args);
 
     assertEquals(Optional.of((Set<BuildTarget>) Sets.<BuildTarget>newHashSet()), dto.targets);
@@ -348,7 +348,7 @@ public class ConstructorArgMarshallerTest {
         buildRuleFactoryParams(),
         dto,
         declaredDeps,
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
         args);
 
     assertEquals(ImmutableSet.of(declaredDep), declaredDeps.build());
@@ -377,7 +377,7 @@ public class ConstructorArgMarshallerTest {
         buildRuleFactoryParams(),
         dto,
         declaredDeps,
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
         args);
 
     assertEquals(ImmutableSet.of(), declaredDeps.build());
@@ -400,8 +400,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         args);
 
     assertEquals(Optional.of((Set<String>) Sets.<String>newHashSet()), dto.strings);
@@ -421,8 +421,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("file", ImmutableList.of("a", "b")));
   }
 
@@ -440,8 +440,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("strings", "isn't going to happen"));
   }
 
@@ -459,8 +459,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("strings", ImmutableSet.of(true, false)));
   }
 
@@ -478,8 +478,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("path", "./bar/././fish.txt"));
 
     assertEquals(basePath.resolve("bar/fish.txt").normalize(), dto.path);
@@ -498,8 +498,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         new Dto(),
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("nope", ImmutableList.of("//will/not:happen")));
   }
 
@@ -517,8 +517,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of(
             "single", "//com/example:cheese",
             "sameBuildFileTarget", ":cake",
@@ -553,8 +553,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of(
             "yup",
             ImmutableList.of(rule.getBuildTarget().getFullyQualifiedName())));
@@ -576,8 +576,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("number", 0));
 
     assertTrue(dto.number.isPresent());
@@ -632,8 +632,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         args);
 
     assertEquals("cheese", dto.required);
@@ -677,8 +677,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         args);
 
     assertEquals(Optional.<String>absent(), dto.noString);
@@ -708,8 +708,8 @@ public class ConstructorArgMarshallerTest {
         filesystem,
         buildRuleFactoryParams(),
         dto,
-        ImmutableSet.<BuildTarget>builder(),
-        ImmutableSet.<VisibilityPattern>builder(),
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of(
             "srcs",
             ImmutableList.of("main.py", "lib/__init__.py", "lib/manifest.py")));

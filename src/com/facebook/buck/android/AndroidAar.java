@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
 import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
 
-import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.jvm.java.HasClasspathEntries;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -148,7 +147,7 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
           getProjectFilesystem(),
           getResolver().getAbsolutePath(dir),
           temp.resolve("assets").resolve("lib"),
-          ImmutableSet.<TargetCpuType>of(),
+          ImmutableSet.of(),
           commands);
     }
 
@@ -158,7 +157,7 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
         new ZipStep(
             getProjectFilesystem(),
             pathToOutputFile,
-            ImmutableSet.<Path>of(),
+            ImmutableSet.of(),
             false,
             ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
             temp));

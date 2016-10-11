@@ -33,11 +33,11 @@ public class SourceTreePathTest {
     SourceTreePath path1 = new SourceTreePath(
         PBXReference.SourceTree.SOURCE_ROOT,
         Paths.get("foo/bar.c"),
-        Optional.<String>absent());
+        Optional.absent());
     SourceTreePath path2 = new SourceTreePath(
         PBXReference.SourceTree.SOURCE_ROOT,
         Paths.get("foo/baz.c"),
-        Optional.<String>absent());
+        Optional.absent());
     assertNotEquals(path1, path2);
   }
 }

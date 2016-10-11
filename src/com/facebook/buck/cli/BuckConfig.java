@@ -245,7 +245,7 @@ public class BuckConfig {
         return Optional.of(paths);
     }
 
-    return Optional.<ImmutableList<Path>>absent();
+    return Optional.absent();
   }
 
   @Nullable
@@ -281,7 +281,7 @@ public class BuckConfig {
   public ImmutableList<BuildTarget> getBuildTargetList(String section, String key) {
     ImmutableList<String> targetsToForce = getListWithoutComments(section, key);
     if (targetsToForce.size() == 0) {
-      return ImmutableList.<BuildTarget>of();
+      return ImmutableList.of();
     }
     ImmutableList<BuildTarget> targets = ImmutableList.copyOf(FluentIterable
         .from(targetsToForce)
@@ -306,7 +306,7 @@ public class BuckConfig {
     Optional<String> target = getValue(section, field);
     return target.isPresent() ?
         Optional.of(getBuildTargetForFullyQualifiedTarget(target.get())) :
-        Optional.<BuildTarget>absent();
+        Optional.absent();
   }
 
   /**
@@ -354,12 +354,12 @@ public class BuckConfig {
     }
     try {
       BuildTarget target = getBuildTargetForFullyQualifiedTarget(value.get());
-      return Optional.<SourcePath>of(new BuildTargetSourcePath(target));
+      return Optional.of(new BuildTargetSourcePath(target));
     } catch (BuildTargetParseException e) {
       checkPathExists(
           value.get(),
           String.format("Overridden %s:%s path not found: ", section, field));
-      return Optional.<SourcePath>of(
+      return Optional.of(
           new PathSourcePath(projectFilesystem, getPathFromVfs(value.get())));
     }
   }
@@ -384,7 +384,7 @@ public class BuckConfig {
     }
     Optional<BuildTarget> target = getMaybeBuildTarget(section, field);
     if (target.isPresent()) {
-      return Optional.<ToolProvider>of(
+      return Optional.of(
           new BinaryBuildRuleToolProvider(
               target.get(),
               String.format("[%s] %s", section, field)));
@@ -392,7 +392,7 @@ public class BuckConfig {
       checkPathExists(
           value.get(),
           String.format("Overridden %s:%s path not found: ", section, field));
-      return Optional.<ToolProvider>of(
+      return Optional.of(
           new ConstantToolProvider(new HashedFileTool(getPathFromVfs(value.get()))));
     }
   }
@@ -607,7 +607,7 @@ public class BuckConfig {
         patternAndMessages.add(
             PatternAndMessage.of(Pattern.compile(entry.getKey()), entry.getValue()));
       }
-      return Optional.of(ImmutableSet.<PatternAndMessage>copyOf(patternAndMessages));
+      return Optional.of(ImmutableSet.copyOf(patternAndMessages));
     }
 
     return Optional.absent();
@@ -890,7 +890,7 @@ public class BuckConfig {
             pathString.get(),
             isCellRootRelative,
             String.format("Overridden %s:%s path not found: ", sectionName, name))) :
-        Optional.<Path>absent();
+        Optional.absent();
   }
 
   /**

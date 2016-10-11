@@ -81,7 +81,7 @@ public class CxxCompileStepIntegrationTest {
         200,
         File.separatorChar,
         compDir,
-        ImmutableBiMap.<Path, Path>of());
+        ImmutableBiMap.of());
 
     // Build an archive step.
     CxxPreprocessAndCompileStep step =
@@ -96,14 +96,14 @@ public class CxxCompileStepIntegrationTest {
                 new CxxPreprocessAndCompileStep.ToolCommand(
                     compilerCommandPrefix,
                     preprocessorArguments.build(),
-                    ImmutableMap.<String, String>of(),
-                    Optional.<ImmutableList<String>>absent())),
+                    ImmutableMap.of(),
+                    Optional.absent())),
             Optional.of(
                 new CxxPreprocessAndCompileStep.ToolCommand(
                     compilerCommandPrefix,
                     compilerArguments.build(),
-                    ImmutableMap.<String, String>of(),
-                    Optional.<ImmutableList<String>>absent())),
+                    ImmutableMap.of(),
+                    Optional.absent())),
             HeaderPathNormalizer.empty(pathResolver),
             sanitizer,
             CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
@@ -137,8 +137,8 @@ public class CxxCompileStepIntegrationTest {
 
   @Test
   public void updateCompilationDir() throws Exception {
-    assertCompDir(Paths.get("."), Optional.<String>absent());
-    assertCompDir(Paths.get("blah"), Optional.<String>absent());
+    assertCompDir(Paths.get("."), Optional.absent());
+    assertCompDir(Paths.get("blah"), Optional.absent());
   }
 
   @Test
@@ -179,14 +179,14 @@ public class CxxCompileStepIntegrationTest {
                 new CxxPreprocessAndCompileStep.ToolCommand(
                     compilerCommandPrefix,
                     preprocessorArguments.build(),
-                    ImmutableMap.<String, String>of(),
-                    Optional.<ImmutableList<String>>absent())),
+                    ImmutableMap.of(),
+                    Optional.absent())),
             Optional.of(
                 new CxxPreprocessAndCompileStep.ToolCommand(
                     compilerCommandPrefix,
                     compilerArguments.build(),
-                    ImmutableMap.<String, String>of(),
-                    Optional.<ImmutableList<String>>absent())),
+                    ImmutableMap.of(),
+                    Optional.absent())),
             HeaderPathNormalizer.empty(pathResolver),
             CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER,
             CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),

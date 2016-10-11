@@ -233,12 +233,12 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
             .addAll(deps)
             .addAll(
                 resolver.getAllRules(
-                    (cpp2 ? args.cpp2Deps : args.cppDeps).or(ImmutableSortedSet.<BuildTarget>of())))
+                    (cpp2 ? args.cpp2Deps : args.cppDeps).or(ImmutableSortedSet.of())))
             .build();
 
     // Create language specific build params by using the deps we formed above.
     BuildRuleParams langParams = params.copyWithDeps(
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+        Suppliers.ofInstance(ImmutableSortedSet.of()),
         Suppliers.ofInstance(allDeps));
 
     // Merge the thrift generated headers with the ones passed in via the description.
@@ -290,7 +290,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
         Optional.of(
             FluentIterable.from(allDeps)
                 .transform(HasBuildTarget.TO_TARGET)
-                .toSortedSet(Ordering.<BuildTarget>natural()));
+                .toSortedSet(Ordering.natural()));
 
     return cxxLibraryDescription.createBuildRule(targetGraph, langParams, resolver, langArgs);
   }
@@ -342,7 +342,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     Optional<ImmutableSet<String>> options = cpp2 ? arg.cpp2Options : arg.cppOptions;
     return getImplicitDepsFromOptions(
         target.getUnflavoredBuildTarget(),
-        options.or(ImmutableSet.<String>of()));
+        options.or(ImmutableSet.of()));
   }
 
   @Override
@@ -351,7 +351,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
       ThriftConstructorArg args) {
     return ImmutableSet.<String>builder()
         .add(String.format("include_prefix=%s", target.getBasePath()))
-        .addAll((cpp2 ? args.cpp2Options : args.cppOptions).or(ImmutableSet.<String>of()))
+        .addAll((cpp2 ? args.cpp2Options : args.cppOptions).or(ImmutableSet.of()))
         .build();
   }
 

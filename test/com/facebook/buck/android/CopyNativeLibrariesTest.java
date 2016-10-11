@@ -28,7 +28,6 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
@@ -55,7 +54,7 @@ public class CopyNativeLibrariesTest {
     final Path source = Paths.get("/path/to/source").toAbsolutePath();
     final Path destination = Paths.get("/path/to/destination/").toAbsolutePath();
     createAndroidBinaryRuleAndTestCopyNativeLibraryCommand(
-        ImmutableSet.<TargetCpuType>of() /* cpuFilters */,
+        ImmutableSet.of() /* cpuFilters */,
         source,
         destination,
         ImmutableList.of(
@@ -118,10 +117,10 @@ public class CopyNativeLibrariesTest {
                 new BuildRuleResolver(
                     TargetGraph.EMPTY,
                     new DefaultTargetNodeToBuildRuleTransformer())),
-            ImmutableSet.<SourcePath>of(new FakeSourcePath("lib1"), new FakeSourcePath("lib2")),
-            ImmutableSet.<StrippedObjectDescription>of(),
-            ImmutableSet.<StrippedObjectDescription>of(),
-            ImmutableSet.<TargetCpuType>of(),
+            ImmutableSet.of(new FakeSourcePath("lib1"), new FakeSourcePath("lib2")),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
             "dex");
 
     ImmutableList<Step> steps =

@@ -136,7 +136,7 @@ public class PerBuildState implements AutoCloseable {
         projectBuildFileParserPool,
         executorService);
     this.targetNodeParsePipeline = new TargetNodeParsePipeline(
-        parser.getPermState().<TargetNode<?>>getOrCreateNodeCache(TargetNode.class),
+        parser.getPermState().getOrCreateNodeCache(TargetNode.class),
         DefaultParserTargetNodeFactory.createForParser(
             parser.getMarshaller(),
             parser.getPermState().getBuildFileTrees(),
@@ -149,7 +149,7 @@ public class PerBuildState implements AutoCloseable {
         parserConfig.getEnableParallelParsing() && speculativeParsing.value(),
         rawNodeParsePipeline);
     this.targetGroupParsePipeline = new TargetGroupParsePipeline(
-        parser.getPermState().<TargetGroup>getOrCreateNodeCache(TargetGroup.class),
+        parser.getPermState().getOrCreateNodeCache(TargetGroup.class),
         new DefaultParserTargetGroupFactory(parser.getMarshaller()),
         parserConfig.getEnableParallelParsing() ?
             executorService :
@@ -330,7 +330,7 @@ public class PerBuildState implements AutoCloseable {
             newSymlinksEncountered.put(subpath, relativeSymlinkTarget);
             symlinkExistenceCache.put(subpath, Optional.of(relativeSymlinkTarget));
           } else {
-            symlinkExistenceCache.put(subpath, Optional.<Path>absent());
+            symlinkExistenceCache.put(subpath, Optional.absent());
           }
         }
       }

@@ -31,7 +31,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -328,7 +327,7 @@ public class ExportFileTest {
                 return null;
               }
             })
-        .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
+        .setActionGraph(new ActionGraph(ImmutableList.of()))
         .setStepRunner(
             new StepRunner() {
 

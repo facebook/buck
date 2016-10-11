@@ -213,7 +213,7 @@ public class BuildTargets {
           .append(
               BuildTargets.propagateFlavorDomains(
                   buildTarget,
-                  ImmutableSet.<FlavorDomain<?>>of(domain),
+                  ImmutableSet.of(domain),
                   targetsWithoutFlavors));
     }
 

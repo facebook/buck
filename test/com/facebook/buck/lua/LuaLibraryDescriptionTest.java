@@ -38,7 +38,7 @@ public class LuaLibraryDescriptionTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     LuaLibrary library =
         (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
-            .setSrcs(ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("some/foo.lua")))
+            .setSrcs(ImmutableSortedSet.of(new FakeSourcePath("some/foo.lua")))
             .build(resolver);
     assertThat(
         library.getLuaPackageComponents().getModules(),
@@ -55,7 +55,7 @@ public class LuaLibraryDescriptionTest {
     LuaLibrary library =
         (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
             .setSrcs(
-                ImmutableSortedMap.<String, SourcePath>of("bar.lua", new FakeSourcePath("foo.lua")))
+                ImmutableSortedMap.of("bar.lua", new FakeSourcePath("foo.lua")))
             .build(resolver);
     assertThat(
         library.getLuaPackageComponents().getModules(),
@@ -71,7 +71,7 @@ public class LuaLibraryDescriptionTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     LuaLibrary library =
         (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
-            .setSrcs(ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("some/foo.lua")))
+            .setSrcs(ImmutableSortedSet.of(new FakeSourcePath("some/foo.lua")))
             .setBaseModule("blah")
             .build(resolver);
     assertThat(

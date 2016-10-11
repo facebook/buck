@@ -40,7 +40,7 @@ public enum StripStyle implements FlavorConvertible {
    * Completely strips the binary, removing the symbol table and relocation information.
    * This is preferred for executable files.
    */
-  ALL_SYMBOLS(ImmutableFlavor.of("strip-all"), ImmutableList.<String>of()),
+  ALL_SYMBOLS(ImmutableFlavor.of("strip-all"), ImmutableList.of()),
   ;
 
   private final Flavor flavor;

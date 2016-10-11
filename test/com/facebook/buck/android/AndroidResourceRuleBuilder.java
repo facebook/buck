@@ -55,11 +55,11 @@ public class AndroidResourceRuleBuilder {
           deps,
           res,
           resSrcs,
-          Optional.<SourcePath>absent(),
+          Optional.absent(),
           rDotJavaPackage,
           assets,
           assetsSrcs,
-          Optional.<SourcePath>absent(),
+          Optional.absent(),
           manifest,
           hasWhitelistedStrings);
     }

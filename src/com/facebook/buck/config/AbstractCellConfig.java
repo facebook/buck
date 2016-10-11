@@ -59,10 +59,10 @@ abstract class AbstractCellConfig {
   public RawConfig getForCell(RelativeCellName cellName) {
     ImmutableMap<String, ImmutableMap<String, String>> config = Optional
       .fromNullable(getValues().get(cellName))
-      .or(ImmutableMap.<String, ImmutableMap<String, String>>of());
+      .or(ImmutableMap.of());
     ImmutableMap<String, ImmutableMap<String, String>> starConfig = Optional
       .fromNullable(getValues().get(ALL_CELLS_OVERRIDE))
-      .or(ImmutableMap.<String, ImmutableMap<String, String>>of());
+      .or(ImmutableMap.of());
     return RawConfig.builder()
       .putAll(starConfig)
       .putAll(config)
@@ -134,7 +134,7 @@ abstract class AbstractCellConfig {
    */
   public static CellConfig of() {
     return CellConfig.of(
-        ImmutableMap.<RelativeCellName, ImmutableMap<String, ImmutableMap<String, String>>>of());
+        ImmutableMap.of());
   }
 
   public static Builder builder() {

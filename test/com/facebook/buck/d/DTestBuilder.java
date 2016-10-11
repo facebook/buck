@@ -36,7 +36,7 @@ public class DTestBuilder extends AbstractNodeBuilder<DTestDescription.Arg> {
             dBuckConfig,
             CxxPlatformUtils.DEFAULT_CONFIG,
             defaultCxxPlatform,
-            Optional.<Long>absent()),
+            Optional.absent()),
         target);
   }
 

@@ -103,7 +103,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
    * @return an object that should be used to create the corresponding update and finished event.
    */
   public static Started started(PerfEventId perfEventId) {
-    return started(perfEventId, ImmutableMap.<String, Object>of());
+    return started(perfEventId, ImmutableMap.of());
   }
 
   /**
@@ -179,7 +179,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
   public static Scope scope(
       BuckEventBus bus,
       PerfEventId perfEventId) {
-    return scope(bus, perfEventId, ImmutableMap.<String, Object>of());
+    return scope(bus, perfEventId, ImmutableMap.of());
   }
 
   /**
@@ -226,7 +226,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
   public static Scope scope(
       Optional<BuckEventBus> bus,
       PerfEventId perfEventId) {
-    return scope(bus, perfEventId, ImmutableMap.<String, Object>of());
+    return scope(bus, perfEventId, ImmutableMap.of());
   }
 
   /**
@@ -296,7 +296,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
     return scopeIgnoringShortEvents(
         bus,
         perfEventId,
-        ImmutableMap.<String, Object>of(),
+        ImmutableMap.of(),
         parentScope,
         minimumTime,
         timeUnit);
@@ -694,7 +694,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
     @Override
     public BuckEvent createFinishedEvent() {
       Preconditions.checkState(!isChainFinished());
-      return createFinishedEvent(ImmutableMap.<String, Object>of());
+      return createFinishedEvent(ImmutableMap.of());
     }
 
     @Override

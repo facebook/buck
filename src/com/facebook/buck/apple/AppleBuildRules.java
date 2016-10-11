@@ -59,7 +59,7 @@ public final class AppleBuildRules {
           HalideLibraryDescription.TYPE);
 
   private static final ImmutableSet<Class<? extends BuildRule>> XCODE_TARGET_BUILD_RULE_TEST_TYPES =
-      ImmutableSet.<Class<? extends BuildRule>>of(AppleTest.class);
+      ImmutableSet.of(AppleTest.class);
 
   private static final ImmutableSet<BuildRuleType> RECURSIVE_DEPENDENCIES_STOP_AT_TYPES =
       ImmutableSet.of(AppleBundleDescription.TYPE, AppleResourceDescription.TYPE);
@@ -266,7 +266,7 @@ public final class AppleBuildRules {
             targetGraph,
             RecursiveDependenciesMode.BUILDING,
             targetNode,
-            Optional.<ImmutableSet<BuildRuleType>>absent()),
+            Optional.absent()),
         ImmutableSet.of(targetNode));
 
     return ImmutableSet.copyOf(

@@ -66,9 +66,9 @@ public class AndroidPackageableCollector {
   @VisibleForTesting
   AndroidPackageableCollector(BuildTarget collectionRoot) {
     this(collectionRoot,
-        ImmutableSet.<BuildTarget>of(),
-        ImmutableSet.<BuildTarget>of(),
-        new APKModuleGraph(TargetGraph.EMPTY, collectionRoot, Optional.<Set<BuildTarget>>absent()));
+        ImmutableSet.of(),
+        ImmutableSet.of(),
+        new APKModuleGraph(TargetGraph.EMPTY, collectionRoot, Optional.absent()));
   }
 
   /**

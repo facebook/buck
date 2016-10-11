@@ -78,7 +78,7 @@ public class HalideLibraryBuilder extends
   public static CxxPlatform createDefaultPlatform() {
     return CxxPlatform.builder()
         .from(CxxPlatformUtils.DEFAULT_PLATFORM)
-        .setFlagMacros(ImmutableMap.<String, String>of("TEST_MACRO", "test_macro_expansion"))
+        .setFlagMacros(ImmutableMap.of("TEST_MACRO", "test_macro_expansion"))
         .build();
   }
 

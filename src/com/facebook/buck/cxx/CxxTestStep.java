@@ -42,7 +42,7 @@ public class CxxTestStep extends AbstractTestStep {
     super(
         NAME,
         filesystem,
-        Optional.<Path>absent(),
+        Optional.absent(),
         command,
         Optional.of(env),
         exitCode,

@@ -123,7 +123,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
                   params.copyWithChanges(
                       gwtModuleTarget,
                       Suppliers.ofInstance(deps),
-                      Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                      Suppliers.ofInstance(ImmutableSortedSet.of())),
                   new SourcePathResolver(resolver),
                   filesForGwtModule));
           gwtModule = Optional.of(module);

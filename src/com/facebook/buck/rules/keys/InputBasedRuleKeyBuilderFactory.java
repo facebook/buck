@@ -260,9 +260,9 @@ public class InputBasedRuleKeyBuilderFactory
     protected Result buildResult() {
       if (inputSizeLimitExceeded) {
         return new Result(
-            Optional.<RuleKey>absent(),
-            Collections.<BuildRule>emptyList(),
-            Collections.<SourcePath>emptyList());
+            Optional.absent(),
+            Collections.emptyList(),
+            Collections.emptyList());
       } else {
         return new Result(
             Optional.of(buildRuleKey()),

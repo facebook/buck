@@ -219,7 +219,7 @@ public class RobolectricTest extends JavaTest {
         .addAll(optionalDummyRDotJava.asSet())
         .addAll(optionalDummyRDotJava
                 .transform(resourceRulesFunction)
-                .or(ImmutableSet.<BuildRule>of()))
+                .or(ImmutableSet.of()))
         // It's possible that the user added some tool as a dependency, so make sure we promote
         // this rules first-order deps to runtime deps, so that these potential tools are available
         // when this test runs.

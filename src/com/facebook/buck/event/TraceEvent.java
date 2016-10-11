@@ -29,7 +29,7 @@ public class TraceEvent extends AbstractBuckEvent {
   public TraceEvent(
     String name,
     ChromeTraceEvent.Phase phase) {
-    this(name, phase, ImmutableMap.<String, String>of());
+    this(name, phase, ImmutableMap.of());
   }
 
   public TraceEvent(

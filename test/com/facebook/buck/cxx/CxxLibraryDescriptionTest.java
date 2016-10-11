@@ -95,7 +95,7 @@ public class CxxLibraryDescriptionTest {
               target,
               cxxPlatform.getFlavor(),
               headerVisibility);
-      return Optional.<SourcePath>of(
+      return Optional.of(
           new BuildTargetSourcePath(
               headerMapBuildTarget,
               HeaderSymlinkTreeWithHeaderMap.getPath(filesystem, headerMapBuildTarget)));
@@ -138,7 +138,7 @@ public class CxxLibraryDescriptionTest {
     CxxLibraryBuilder depBuilder = new CxxLibraryBuilder(depTarget)
         .setExportedHeaders(
             SourceList.ofUnnamedSources(
-                ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("blah.h"))))
+                ImmutableSortedSet.of(new FakeSourcePath("blah.h"))))
         .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test.cpp"))));
     BuildTarget headerSymlinkTreeTarget = BuildTarget.builder(depTarget)
         .addFlavors(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
@@ -155,11 +155,11 @@ public class CxxLibraryDescriptionTest {
     String privateHeaderName = "test/bar_private.h";
     CxxLibraryBuilder cxxLibraryBuilder = new CxxLibraryBuilder(target)
         .setExportedHeaders(
-            ImmutableSortedSet.<SourcePath>of(
+            ImmutableSortedSet.of(
                 new FakeSourcePath(headerName),
                 new BuildTargetSourcePath(genHeaderTarget)))
         .setHeaders(
-            ImmutableSortedSet.<SourcePath>of(new FakeSourcePath(privateHeaderName)))
+            ImmutableSortedSet.of(new FakeSourcePath(privateHeaderName)))
         .setSrcs(
             ImmutableSortedSet.of(
                 SourceWithFlags.of(new FakeSourcePath("test/bar.cpp")),
@@ -458,7 +458,7 @@ public class CxxLibraryDescriptionTest {
     CxxLibraryBuilder depBuilder = new CxxLibraryBuilder(depTarget)
         .setExportedHeaders(
             SourceList.ofUnnamedSources(
-                ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("blah.h"))))
+                ImmutableSortedSet.of(new FakeSourcePath("blah.h"))))
         .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test.cpp"))));
     BuildTarget sharedLibraryDepTarget = BuildTarget.builder(depTarget)
         .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
@@ -478,7 +478,7 @@ public class CxxLibraryDescriptionTest {
         CxxSourceRuleFactory.PicType.PDC);
     CxxLibraryBuilder cxxLibraryBuilder = new CxxLibraryBuilder(target)
         .setExportedHeaders(
-            ImmutableSortedMap.<String, SourcePath>of(
+            ImmutableSortedMap.of(
                 genHeaderName, new BuildTargetSourcePath(genHeaderTarget)))
         .setSrcs(
             ImmutableSortedSet.of(
@@ -794,7 +794,7 @@ public class CxxLibraryDescriptionTest {
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule#shared,platform"))
             .setLinkerFlags(ImmutableList.of("--linker-script=$(location //:dep)"))
             .setSrcs(
-                ImmutableSortedSet.<SourceWithFlags>of(
+                ImmutableSortedSet.of(
                     SourceWithFlags.of(new FakeSourcePath("foo.c"))));
     assertThat(
         builder.findImplicitDeps(),
@@ -1150,7 +1150,7 @@ public class CxxLibraryDescriptionTest {
             .build(resolver);
     assertThat(
         rule.getNativeLinkableDeps(CxxLibraryBuilder.createDefaultPlatform()),
-        Matchers.<NativeLinkable>contains(dep));
+        Matchers.contains(dep));
     assertThat(
         ImmutableList.copyOf(
             rule.getNativeLinkableExportedDeps(CxxLibraryBuilder.createDefaultPlatform())),
@@ -1170,10 +1170,10 @@ public class CxxLibraryDescriptionTest {
             .build(resolver);
     assertThat(
         ImmutableList.copyOf(rule.getNativeLinkableDeps(CxxLibraryBuilder.createDefaultPlatform())),
-        Matchers.<NativeLinkable>empty());
+        empty());
     assertThat(
         rule.getNativeLinkableExportedDeps(CxxLibraryBuilder.createDefaultPlatform()),
-        Matchers.<NativeLinkable>contains(dep));
+        Matchers.contains(dep));
   }
 
   @Test
@@ -1207,7 +1207,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         ImmutableList.copyOf(
             rule.getNativeLinkTargetDeps(CxxLibraryBuilder.createDefaultPlatform())),
-        Matchers.<NativeLinkable>hasItems(dep, exportedDep));
+        hasItems(dep, exportedDep));
   }
 
   @Test
@@ -1266,7 +1266,7 @@ public class CxxLibraryDescriptionTest {
                     new SourceTreePath(
                         PBXReference.SourceTree.SDKROOT,
                         Paths.get("/usr/lib/libz.dylib"),
-                        Optional.<String>absent())),
+                        Optional.absent())),
                 FrameworkPath.ofSourcePath(new FakeSourcePath("/another/path/liba.dylib"))))
         .setSrcs(
             ImmutableSortedSet.of(
@@ -1302,7 +1302,7 @@ public class CxxLibraryDescriptionTest {
     CxxLibrary library = (CxxLibrary) libraryBuilder.build(resolver, filesystem, targetGraph);
     assertThat(
         library.getNativeLinkTargetInput(platform).getLibraries(),
-        Matchers.<ImmutableSet<FrameworkPath>>equalTo(libraries));
+        Matchers.equalTo(libraries));
   }
 
   @Test
@@ -1320,13 +1320,13 @@ public class CxxLibraryDescriptionTest {
         rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, HeaderVisibility.PUBLIC);
     assertThat(
         getHeaderNames(input.getIncludes()),
-        Matchers.<Path>empty());
+        empty());
     assertThat(
         input.getSystemIncludeRoots(),
-        Matchers.<Path>empty());
+        empty());
     assertThat(
         ImmutableSortedSet.copyOf(input.getDeps(resolver, pathResolver)),
-        Matchers.<BuildRule>empty());
+        empty());
   }
 
   @Test

@@ -54,7 +54,7 @@ abstract class AbstractFakeLuaConfig implements LuaConfig {
   public AbstractCxxLibrary getLuaCxxLibrary() {
     return new SystemLuaCxxLibrary(
         BuildTarget.of(
-            UnflavoredBuildTarget.of(Paths.get(""), Optional.<String>absent(), "//system", "lua")));
+            UnflavoredBuildTarget.of(Paths.get(""), Optional.absent(), "//system", "lua")));
   }
 
   @Override

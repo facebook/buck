@@ -240,7 +240,7 @@ public class BuckEventOrdererTest {
     return configureTestEventAtTime(
         (AbstractBuckEvent) SimplePerfEvent.started(
             PerfEventId.of("BuckEventOrdererTest"),
-            ImmutableMap.<String, Object>of(
+            ImmutableMap.of(
             "seqNo", seqNo++,
             "time", timeInMs,
             "thread", threadId)),

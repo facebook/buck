@@ -227,7 +227,7 @@ public class ArtifactCacheBuckConfig {
     boolean implicitLegacyCache = httpCacheNames.isEmpty() &&
         getArtifactCacheModes().contains(ArtifactCacheMode.http);
     if (implicitLegacyCache || legacyCacheConfigurationFieldsPresent()) {
-      result.add(obtainEntryForName(Optional.<String>absent()));
+      result.add(obtainEntryForName(Optional.absent()));
     }
 
     for (String cacheName : httpCacheNames) {

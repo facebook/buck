@@ -165,9 +165,9 @@ public class AppleConfig {
           result = processExecutor.launchAndExecute(
               processExecutorParams,
               options,
-              /* stdin */ Optional.<String>absent(),
-              /* timeOutMs */ Optional.<Long>absent(),
-              /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
+              /* stdin */ Optional.absent(),
+              /* timeOutMs */ Optional.absent(),
+              /* timeOutHandler */ Optional.absent());
         } catch (InterruptedException | IOException e) {
           LOG.warn("Could not execute xcode-select, continuing without developer dir.");
           return Optional.absent();
@@ -216,9 +216,9 @@ public class AppleConfig {
               result = processExecutor.launchAndExecute(
                   processExecutorParams,
                   options,
-                  /* stdin */ Optional.<String>absent(),
-                  /* timeOutMs */ Optional.<Long>absent(),
-                  /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
+                  /* stdin */ Optional.absent(),
+                  /* timeOutMs */ Optional.absent(),
+                  /* timeOutHandler */ Optional.absent());
             } catch (InterruptedException | IOException e) {
               LOG.warn("Could not execute xcodebuild to find Xcode build number.");
               return Optional.absent();
@@ -232,7 +232,7 @@ public class AppleConfig {
             Matcher matcher = XCODE_BUILD_NUMBER_PATTERN.matcher(result.getStdout().get());
             if (matcher.find()) {
               String xcodeBuildNumber = matcher.group(1);
-              return Optional.<String>of(xcodeBuildNumber);
+              return Optional.of(xcodeBuildNumber);
             } else {
               LOG.warn("Xcode build number not found.");
               return Optional.absent();

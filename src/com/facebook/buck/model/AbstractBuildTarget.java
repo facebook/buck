@@ -138,7 +138,7 @@ abstract class AbstractBuildTarget
   public static BuildTarget of(UnflavoredBuildTarget unflavoredBuildTarget) {
     return BuildTarget.of(
         unflavoredBuildTarget,
-        ImmutableSortedSet.<Flavor>of());
+        ImmutableSortedSet.of());
   }
 
   public static BuildTarget.Builder builder(BuildTarget buildTarget) {
@@ -158,7 +158,7 @@ abstract class AbstractBuildTarget
     return BuildTarget
         .builder()
         .setUnflavoredBuildTarget(
-            UnflavoredBuildTarget.of(cellPath, Optional.<String>absent(), baseName, shortName));
+            UnflavoredBuildTarget.of(cellPath, Optional.absent(), baseName, shortName));
   }
 
   /** @return {@link #getFullyQualifiedName()} */

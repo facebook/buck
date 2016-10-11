@@ -118,7 +118,7 @@ public class MavenCoordinatesMacroExpanderTest {
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     MacroHandler macroHandler = new MacroHandler(
-        ImmutableMap.<String, MacroExpander>of("maven_coords", expander));
+        ImmutableMap.of("maven_coords", expander));
     try {
       String expansion = macroHandler.expand(
                                         target,
@@ -139,7 +139,7 @@ public class MavenCoordinatesMacroExpanderTest {
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     MacroHandler macroHandler = new MacroHandler(
-        ImmutableMap.<String, MacroExpander>of("maven_coords", expander));
+        ImmutableMap.of("maven_coords", expander));
     try {
       macroHandler.expand(
                     target,

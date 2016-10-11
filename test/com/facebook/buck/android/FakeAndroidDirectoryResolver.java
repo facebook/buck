@@ -29,10 +29,10 @@ public class FakeAndroidDirectoryResolver implements AndroidDirectoryResolver {
 
   public FakeAndroidDirectoryResolver() {
     this(
-        /* androidSdkDir */ Optional.<Path>absent(),
-        /* androidBuildToolsDir */ Optional.<Path>absent(),
-        /* androidNdkDir */ Optional.<Path>absent(),
-        /* ndkVersion */ Optional.<String>absent());
+        /* androidSdkDir */ Optional.absent(),
+        /* androidBuildToolsDir */ Optional.absent(),
+        /* androidNdkDir */ Optional.absent(),
+        /* ndkVersion */ Optional.absent());
   }
 
   public FakeAndroidDirectoryResolver(

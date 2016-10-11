@@ -69,8 +69,8 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
     return params.copyWithDeps(
         Suppliers.ofInstance(
             FluentIterable.from(traversedDeps.packagedDeps)
-                .toSortedSet(Ordering.<BuildRule>natural())),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+                .toSortedSet(Ordering.natural())),
+        Suppliers.ofInstance(ImmutableSortedSet.of()));
   }
 
   /**
@@ -125,7 +125,7 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
                 }
               })
           .filter(Predicates.notNull())
-          .toSortedSet(Ordering.<Path>natural());
+          .toSortedSet(Ordering.natural());
   }
 
   @Override

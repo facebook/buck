@@ -145,7 +145,7 @@ public class APKModuleTest {
     APKModuleGraph dag = new APKModuleGraph(
         graph,
         androidBinaryTarget,
-        Optional.<Set<BuildTarget>>of(seedTargets));
+        Optional.of(seedTargets));
 
     ImmutableSet<APKModule> topLevelNodes = dag.getGraph().getNodesWithNoIncomingEdges();
     assertThat(topLevelNodes.size(), is(2));
@@ -281,7 +281,7 @@ public class APKModuleTest {
     APKModuleGraph dag = new APKModuleGraph(
         graph,
         androidBinaryTarget,
-        Optional.<Set<BuildTarget>>of(seedTargets));
+        Optional.of(seedTargets));
 
     ImmutableSet<APKModule> topLevelNodes = dag.getGraph().getNodesWithNoIncomingEdges();
     assertThat(topLevelNodes.size(), is(2));
@@ -392,7 +392,7 @@ public class APKModuleTest {
     APKModuleGraph dag = new APKModuleGraph(
         graph,
         androidBinaryTarget,
-        Optional.<Set<BuildTarget>>of(seedTargets));
+        Optional.of(seedTargets));
 
     ImmutableSet<APKModule> topLevelNodes = dag.getGraph().getNodesWithNoIncomingEdges();
     assertThat(topLevelNodes.size(), is(2));

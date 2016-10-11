@@ -29,11 +29,9 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
@@ -53,11 +51,11 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
     assertThat(
         lib.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, HeaderVisibility.PUBLIC)
             .getPreprocessorFlags(),
-        Matchers.<ImmutableMultimap<CxxSource.Type, String>>equalTo(
+        Matchers.equalTo(
             CxxFlags.getLanguageFlags(
                 Optional.of(ImmutableList.of("-flag")),
-                Optional.<PatternMatchedCollection<ImmutableList<String>>>absent(),
-                Optional.<ImmutableMap<AbstractCxxSource.Type, ImmutableList<String>>>absent(),
+                Optional.absent(),
+                Optional.absent(),
                 CxxPlatformUtils.DEFAULT_PLATFORM)));
   }
 
@@ -176,7 +174,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
             .build(resolver);
     assertThat(
         lib.getNativeLinkableExportedDeps(CxxPlatformUtils.DEFAULT_PLATFORM),
-        Matchers.<NativeLinkable>contains(dep));
+        Matchers.contains(dep));
   }
 
 }

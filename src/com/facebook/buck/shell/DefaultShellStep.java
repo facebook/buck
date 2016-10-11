@@ -39,7 +39,7 @@ public class DefaultShellStep extends ShellStep {
   }
 
   public DefaultShellStep(Path workingDirectory, List<String> args) {
-    this(workingDirectory, args, ImmutableMap.<String, String>of());
+    this(workingDirectory, args, ImmutableMap.of());
   }
 
   @Override

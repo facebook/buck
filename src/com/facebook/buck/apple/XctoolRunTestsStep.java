@@ -30,7 +30,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -535,7 +534,7 @@ class XctoolRunTestsStep implements Step {
       ProcessExecutor.Result processResult = processExecutor.waitForLaunchedProcessWithTimeout(
           launchedProcess,
           timeoutInMs.get(),
-          Optional.<Function<Process, Void>>absent()
+          Optional.absent()
       );
       if (processResult.isTimedOut()) {
        throw new HumanReadableException(

@@ -43,7 +43,7 @@ public class SettableFakeClock implements Clock {
   }
 
   public SettableFakeClock(long currentTimeMillis, long nanoTime) {
-    this(currentTimeMillis, nanoTime, ImmutableMap.<Long, Long>of());
+    this(currentTimeMillis, nanoTime, ImmutableMap.of());
   }
 
   public void setCurrentTimeMillis(long millis) {

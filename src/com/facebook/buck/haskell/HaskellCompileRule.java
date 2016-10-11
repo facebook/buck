@@ -172,7 +172,7 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
                         .build();
                   }
                 }),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         resolver,
         compiler,
         flags,
@@ -268,7 +268,7 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
     CxxToolFlags cxxToolFlags =
         ppFlags.toToolFlags(
             getResolver(),
-            Functions.<Path>identity(),
+            Functions.identity(),
             CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, getResolver()),
             preprocessor);
     return MoreIterables.zipAndConcat(
@@ -306,7 +306,7 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
                 .addAll(
                     picType == CxxSourceRuleFactory.PicType.PIC ?
                         ImmutableList.of("-dynamic", "-fPIC", "-hisuf", "dyn_hi") :
-                        ImmutableList.<String>of())
+                        ImmutableList.of())
                 .addAll(
                     MoreIterables.zipAndConcat(
                         Iterables.cycle("-main-is"),

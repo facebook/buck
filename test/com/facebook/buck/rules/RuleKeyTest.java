@@ -747,7 +747,7 @@ public class RuleKeyTest {
     SourcePathResolver pathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
-    FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.<Path, HashCode>of());
+    FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.of());
     RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
         0,
         hashCache,
@@ -769,7 +769,7 @@ public class RuleKeyTest {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
-    FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.<Path, HashCode>of());
+    FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.of());
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
         0,
         hashCache,
@@ -782,20 +782,20 @@ public class RuleKeyTest {
     NoopBuildRule dep = new NoopBuildRule(depParams, sourcePathResolver);
 
     BuildRuleParams paramsWithDeclaredDep = new FakeBuildRuleParamsBuilder(target)
-        .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(dep))
+        .setDeclaredDeps(ImmutableSortedSet.of(dep))
         .build();
     NoopBuildRule ruleWithDeclaredDep =
         new NoopBuildRule(paramsWithDeclaredDep, sourcePathResolver);
 
     BuildRuleParams paramsWithExtraDep = new FakeBuildRuleParamsBuilder(target)
-        .setExtraDeps(ImmutableSortedSet.<BuildRule>of(dep))
+        .setExtraDeps(ImmutableSortedSet.of(dep))
         .build();
     NoopBuildRule ruleWithExtraDep =
         new NoopBuildRule(paramsWithExtraDep, sourcePathResolver);
 
     BuildRuleParams paramsWithBothDeps = new FakeBuildRuleParamsBuilder(target)
-        .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(dep))
-        .setExtraDeps(ImmutableSortedSet.<BuildRule>of(dep))
+        .setDeclaredDeps(ImmutableSortedSet.of(dep))
+        .setExtraDeps(ImmutableSortedSet.of(dep))
         .build();
     NoopBuildRule ruleWithBothDeps =
         new NoopBuildRule(paramsWithBothDeps, sourcePathResolver);

@@ -67,8 +67,8 @@ public class  GenerateCodeCoverageReportStepTest {
         Paths.get(OUTPUT_DIRECTORY),
         CoverageReportFormat.HTML,
         "TitleFoo",
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
 
     context = TestExecutionContext.newInstance();
   }

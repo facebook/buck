@@ -23,7 +23,6 @@ import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.listener.BroadcastEventListener;
-import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.jvm.java.intellij.Project;
@@ -36,7 +35,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
@@ -126,8 +124,8 @@ public class CleanCommandTest extends EasyMockSupport {
         new FakeJavaPackageFinder(),
         ObjectMappers.newDefaultInstance(),
         new DefaultClock(),
-        Optional.<ProcessManager>absent(),
-        Optional.<WebServer>absent(),
+        Optional.absent(),
+        Optional.absent(),
         FakeBuckConfig.builder().build(),
         new NullFileHashCache(),
         new HashMap<ExecutorPool, ListeningExecutorService>(),

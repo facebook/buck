@@ -41,7 +41,6 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
@@ -124,7 +123,7 @@ public class GenruleTest {
         .setCmdExe("python convert_to_katana.py AndroidManifest.xml > %OUT%")
         .setOut("AndroidManifest.xml")
         .setSrcs(
-            ImmutableList.<SourcePath>of(
+            ImmutableList.of(
                 new PathSourcePath(
                     filesystem,
                     filesystem.getRootPath().getFileSystem().getPath(
@@ -406,7 +405,7 @@ public class GenruleTest {
         .setCmdExe("echo %DEPS% > %OUT%")
         .setOut("deps.txt")
         .setSrcs(
-            ImmutableList.<SourcePath>of(new BuildTargetSourcePath(dep.getBuildTarget())))
+            ImmutableList.of(new BuildTargetSourcePath(dep.getBuildTarget())))
         .build(resolver, filesystem);
 
     AbstractGenruleStep genruleStep = ((Genrule) genrule).createGenruleStep();
@@ -451,7 +450,7 @@ public class GenruleTest {
         .newGenruleBuilder(target)
         .setBash("ignored")
         .setSrcs(
-            ImmutableList.<SourcePath>of(
+            ImmutableList.of(
                 new PathSourcePath(projectFilesystem, Paths.get("in-dir.txt")),
                 new PathSourcePath(projectFilesystem, Paths.get("foo/bar.html")),
                 new PathSourcePath(projectFilesystem, Paths.get("other/place.txt"))))
@@ -575,7 +574,7 @@ public class GenruleTest {
     assertGenruleCommandAndScript(
         genrule.createGenruleStep(),
         windowsExecutionContext,
-        ImmutableList.<String>of(),
+        ImmutableList.of(),
         cmdExe);
 
     // Test fallback
@@ -593,7 +592,7 @@ public class GenruleTest {
     assertGenruleCommandAndScript(
         genrule.createGenruleStep(),
         windowsExecutionContext,
-        ImmutableList.<String>of(),
+        ImmutableList.of(),
         cmd);
 
     // Test command absent

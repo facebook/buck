@@ -68,7 +68,7 @@ public class SourceWithFlagsListTypeCoercer implements TypeCoercer<SourceWithFla
   public Optional<SourceWithFlagsList> getOptionalValue() {
     return Optional.of(
         SourceWithFlagsList.ofUnnamedSources(
-            ImmutableSortedSet.<SourceWithFlags>of()));
+            ImmutableSortedSet.of()));
   }
 
   @Override

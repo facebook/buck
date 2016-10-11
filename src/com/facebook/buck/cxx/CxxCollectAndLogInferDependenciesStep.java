@@ -52,7 +52,7 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
       Path outputFile) {
     return new CxxCollectAndLogInferDependenciesStep(
         Optional.of(analyzeRule),
-        Optional.<CxxInferCaptureTransitive>absent(),
+        Optional.absent(),
         projectFilesystem,
         outputFile);
   }
@@ -62,7 +62,7 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
       ProjectFilesystem projectFilesystem,
       Path outputFile) {
     return new CxxCollectAndLogInferDependenciesStep(
-        Optional.<CxxInferAnalyze>absent(),
+        Optional.absent(),
         Optional.of(captureOnlyRule),
         projectFilesystem,
         outputFile);

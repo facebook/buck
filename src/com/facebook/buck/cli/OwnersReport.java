@@ -60,10 +60,10 @@ final class OwnersReport {
 
   static OwnersReport emptyReport() {
     return new OwnersReport(
-        ImmutableSetMultimap.<TargetNode<?>, Path>of(),
-        Sets.<Path>newHashSet(),
-        Sets.<String>newHashSet(),
-        Sets.<String>newHashSet());
+        ImmutableSetMultimap.of(),
+        Sets.newHashSet(),
+        Sets.newHashSet(),
+        Sets.newHashSet());
   }
 
   OwnersReport updatedWith(OwnersReport other) {
@@ -104,10 +104,10 @@ final class OwnersReport {
       if (!basePath.isPresent()) {
         report = report.updatedWith(
             new OwnersReport(
-                ImmutableSetMultimap.<TargetNode<?>, Path>of(),
+                ImmutableSetMultimap.of(),
                 /* inputWithNoOwners */ ImmutableSet.of(filePath),
-                Sets.<String>newHashSet(),
-                Sets.<String>newHashSet()));
+                Sets.newHashSet(),
+                Sets.newHashSet()));
         continue;
       }
 

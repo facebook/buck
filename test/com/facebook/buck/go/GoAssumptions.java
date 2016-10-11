@@ -19,7 +19,6 @@ package com.facebook.buck.go;
 import static org.junit.Assume.assumeNoException;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.HumanReadableException;
@@ -36,7 +35,7 @@ abstract class GoAssumptions {
       new GoBuckConfig(
           FakeBuckConfig.builder().build(),
           executor,
-          FlavorDomain.from("Cxx", ImmutableSet.<CxxPlatform>of())).getCompiler();
+          FlavorDomain.from("Cxx", ImmutableSet.of())).getCompiler();
     } catch (HumanReadableException e) {
       exception = e;
     }

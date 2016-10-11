@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.ManifestEntries;
@@ -68,9 +67,9 @@ public class AaptPackageResourcesTest {
             pathResolver,
             /* manifest */ new FakeSourcePath("facebook/base/AndroidManifest.xml"),
             resourcesProvider,
-            ImmutableList.<HasAndroidResourceDeps>of(),
-            ImmutableSet.<SourcePath>of(),
-            /* resourceUnionPackage */ Optional.<String>absent(),
+            ImmutableList.of(),
+            ImmutableSet.of(),
+            /* resourceUnionPackage */ Optional.absent(),
             PackageType.DEBUG,
             /* shouldBuildStringSourceMap */ false,
             /* skipCrunchPngs */ false,
@@ -85,7 +84,7 @@ public class AaptPackageResourcesTest {
                 "0123456789012345678901234567890123456789")
             .putMetadata(
                 AaptPackageResources.FILTERED_RESOURCE_DIRS_KEY,
-                ImmutableList.<String>of());
+                ImmutableList.of());
     aaptPackageResources.initializeFromDisk(onDiskBuildInfo);
   }
 

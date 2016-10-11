@@ -233,7 +233,7 @@ public class AppleTestDescription implements
         args,
         testHostInfo.transform(TestHostInfo.GET_TEST_HOST_APP_BINARY_SOURCE_PATH_FUNCTION),
         testHostInfo.transform(TestHostInfo.GET_BLACKLIST_FUNCTION)
-            .or(ImmutableSet.<BuildTarget>of()),
+            .or(ImmutableSet.of()),
         libraryTarget);
     if (!createBundle || SwiftLibraryDescription.isSwiftTarget(libraryTarget)) {
       return library;
@@ -266,7 +266,7 @@ public class AppleTestDescription implements
         provisioningProfileStore,
         library.getBuildTarget(),
         args.getExtension(),
-        Optional.<String>absent(),
+        Optional.absent(),
         args.infoPlist,
         args.infoPlistSubstitutions,
         args.deps.get(),
@@ -284,8 +284,8 @@ public class AppleTestDescription implements
         appleConfig.getXctoolDefaultDestinationSpecifier(),
         args.destinationSpecifier,
         params.copyWithDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(bundle)),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            Suppliers.ofInstance(ImmutableSortedSet.of(bundle)),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         sourcePathResolver,
         bundle,
         testHostInfo.transform(TestHostInfo.GET_TEST_HOST_APP_FUNCTION),
@@ -320,7 +320,7 @@ public class AppleTestDescription implements
             params.copyWithChanges(
                 unzipXctoolTarget,
                 Suppliers.ofInstance(ImmutableSortedSet.of(xctoolZipBuildRule)),
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+                Suppliers.ofInstance(ImmutableSortedSet.of()));
         resolver.addToIndex(
             new AbstractBuildRule(unzipXctoolParams, sourcePathResolver) {
               @Override
@@ -341,10 +341,10 @@ public class AppleTestDescription implements
               }
             });
       }
-      return Optional.<SourcePath>of(
+      return Optional.of(
           new BuildTargetSourcePath(unzipXctoolTarget, outputDirectory.resolve("bin/xctool")));
     } else if (appleConfig.getXctoolPath().isPresent()) {
-      return Optional.<SourcePath>of(
+      return Optional.of(
           new PathSourcePath(params.getProjectFilesystem(), appleConfig.getXctoolPath().get()));
     } else {
       return Optional.absent();

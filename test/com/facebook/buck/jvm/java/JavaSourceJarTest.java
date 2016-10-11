@@ -28,7 +28,6 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildContext;
@@ -63,8 +62,8 @@ public class JavaSourceJarTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSortedSet.<SourcePath>of(),
-        Optional.<String>absent());
+        ImmutableSortedSet.of(),
+        Optional.absent());
 
     Path output = rule.getPathToOutput();
 
@@ -93,10 +92,10 @@ public class JavaSourceJarTest {
         new FakeBuildRuleParamsBuilder("//example:target").build(),
         pathResolver,
         ImmutableSortedSet.of(fileBased, ruleBased),
-        Optional.<String>absent());
+        Optional.absent());
 
     BuildContext buildContext = FakeBuildContext.newBuilder()
-        .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
+        .setActionGraph(new ActionGraph(ImmutableList.of()))
         .setJavaPackageFinder(finderStub)
         .build();
     ImmutableList<Step> steps = rule.getBuildSteps(

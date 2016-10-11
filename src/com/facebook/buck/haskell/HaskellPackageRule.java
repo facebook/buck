@@ -116,7 +116,7 @@ public class HaskellPackageRule extends AbstractBuildRule {
                         .build();
                   }
                 }),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         resolver,
         ghcPkg,
         packageInfo,
@@ -208,7 +208,7 @@ public class HaskellPackageRule extends AbstractBuildRule {
     steps.add(
         new GhcPkgStep(
             ImmutableList.of("init", packageDb.toString()),
-            ImmutableMap.<String, String>of()));
+            ImmutableMap.of()));
     steps.add(
         new GhcPkgStep(
             ImmutableList.of(

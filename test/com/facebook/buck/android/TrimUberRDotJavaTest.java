@@ -22,7 +22,6 @@ import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -144,7 +143,7 @@ public class TrimUberRDotJavaTest {
         keepResourcePattern);
 
     BuildContext buildContext = FakeBuildContext.newBuilder()
-        .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
+        .setActionGraph(new ActionGraph(ImmutableList.of()))
         .setJavaPackageFinder(new FakeJavaPackageFinder())
         .build();
     BuildableContext buildableContext = new FakeBuildableContext();

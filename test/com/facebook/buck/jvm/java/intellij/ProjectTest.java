@@ -287,8 +287,8 @@ public class ProjectTest {
             SerializableDependentModule.newSourceFolder(),
             guavaAsProvidedDep,
             SerializableDependentModule.newStandardJdk(
-                Optional.<String>absent(),
-                Optional.<String>absent())),
+                Optional.absent(),
+                Optional.absent())),
         javaLibraryModule.getDependencies());
 
     // Check the values of the module that corresponds to the android_library.
@@ -552,8 +552,8 @@ public class ProjectTest {
                 guava.getBuildTarget(),
                 "buck_out_gen_third_party_java_guava___guava___guava_jar"),
             SerializableDependentModule.newStandardJdk(
-                Optional.<String>absent(),
-                Optional.<String>absent())),
+                Optional.absent(),
+                Optional.absent())),
         comExampleBaseModule.getDependencies());
   }
 
@@ -623,8 +623,8 @@ public class ProjectTest {
             SerializableDependentModule.newModule(
                 supportV4.getBuildTarget(), "module_java_com_android_support_v4"),
             SerializableDependentModule.newStandardJdk(
-                Optional.<String>absent(),
-                Optional.<String>absent())),
+                Optional.absent(),
+                Optional.absent())),
         robolectricModule.getDependencies());
   }
 
@@ -687,7 +687,7 @@ public class ProjectTest {
         .createBuilder(
             BuildTargetFactory.newInstance("//java/com/example/base:project_config"))
         .setSrcRule(baseBuildRule.getBuildTarget())
-        .setSrcRoots(ImmutableList.<String>of())
+        .setSrcRoots(ImmutableList.of())
         .build(ruleResolver2);
 
     // Verify that the correct source folders are created.
@@ -759,7 +759,7 @@ public class ProjectTest {
         .createBuilder(
             BuildTargetFactory.newInstance("//java/com/example/base:project_config"))
         .setSrcRule(baseBuildRule.getBuildTarget())
-        .setSrcRoots(ImmutableList.<String>of())
+        .setSrcRoots(ImmutableList.of())
         .build(ruleResolver);
 
     ProjectWithModules projectWithJdkOverride = getModulesForActionGraph(
@@ -834,9 +834,9 @@ public class ProjectTest {
                 ruleResolver.getBuildRules(),
                 BuildTarget.TO_TARGET)),
         projectFilesystem,
-        /* pathToDefaultAndroidManifest */ Optional.<String>absent(),
+        /* pathToDefaultAndroidManifest */ Optional.absent(),
         intellijConfig,
-        /* pathToPostProcessScript */ Optional.<String>absent(),
+        /* pathToPostProcessScript */ Optional.absent(),
         BuckTestConstant.PYTHON_INTERPRETER,
         ObjectMappers.newDefaultInstance(),
         true);

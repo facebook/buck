@@ -77,7 +77,7 @@ public class JavaLibraryClasspathProviderTest {
     //           d    e
     d = makeRule("//foo:d",
         ImmutableSet.of("foo", "d.java"),
-        ImmutableSet.<BuildRule>of(),
+        ImmutableSet.of(),
         ruleResolver,
         filesystem);
 
@@ -91,7 +91,7 @@ public class JavaLibraryClasspathProviderTest {
 
     e = makeRule("//foo:e",
         ImmutableSet.of("foo", "e.java"),
-        ImmutableSet.<BuildRule>of(),
+        ImmutableSet.of(),
         ruleResolver,
         filesystem);
 
@@ -188,7 +188,7 @@ public class JavaLibraryClasspathProviderTest {
   public void getTransitiveClasspathDeps() throws Exception {
     JavaLibrary noOutput = makeRule(
         "//no:output",
-        ImmutableSet.<String>of(),
+        ImmutableSet.of(),
         ImmutableSet.of(z),
         ruleResolver,
         filesystem);

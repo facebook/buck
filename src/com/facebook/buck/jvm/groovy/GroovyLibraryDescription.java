@@ -41,8 +41,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
-import java.nio.file.Path;
-import java.util.regex.Pattern;
 
 public class GroovyLibraryDescription implements Description<GroovyLibraryDescription.Arg> {
 
@@ -95,14 +93,14 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
                     pathResolver,
                     params.getProjectFilesystem(),
                     args.resources.get()),
-                Optional.<Path>absent(),
-                Optional.<SourcePath>absent(),
-                ImmutableList.<String>of(),
+                Optional.absent(),
+                Optional.absent(),
+                ImmutableList.of(),
                 exportedDeps,
                 resolver.getAllRules(args.providedDeps.get()),
                 new BuildTargetSourcePath(abiJarTarget),
                 /* trackClassUsage */ false,
-                /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+                /* additionalClasspathEntries */ ImmutableSet.of(),
                 new GroovycToJarStepFactory(
                     groovyBuckConfig.getGroovyCompiler().get(),
                     args.extraGroovycArguments,
@@ -112,11 +110,11 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
                         resolver,
                         pathResolver,
                         args)),
-                Optional.<Path>absent(),
-                /* manifest file */ Optional.<SourcePath>absent(),
-                Optional.<String>absent(),
-                ImmutableSortedSet.<BuildTarget>of(),
-                /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()));
+                Optional.absent(),
+                /* manifest file */ Optional.absent(),
+                Optional.absent(),
+                ImmutableSortedSet.of(),
+                /* classesToRemoveFromJar */ ImmutableSet.of()));
 
     resolver.addToIndex(
         CalculateAbi.of(

@@ -32,7 +32,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -55,7 +54,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.hash.HashCode;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 
@@ -97,7 +95,7 @@ public class SimpleConsoleEventBusListenerTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.of());
 
     SimpleConsoleEventBusListener listener = new SimpleConsoleEventBusListener(
         console,
@@ -132,7 +130,7 @@ public class SimpleConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, Optional.<TargetGraph>absent()),
+            ParseEvent.finished(parseStarted, Optional.absent()),
             400L,
             TimeUnit.MILLISECONDS,
             threadId));
@@ -164,10 +162,10 @@ public class SimpleConsoleEventBusListenerTest {
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                Optional.<HashCode>absent(),
-                Optional.<Long>absent(),
-                Optional.<Integer>absent(),
-                Optional.<Long>absent()),
+                Optional.absent(),
+                Optional.absent(),
+                Optional.absent(),
+                Optional.absent()),
             1000L,
             TimeUnit.MILLISECONDS,
             threadId));
@@ -201,8 +199,8 @@ public class SimpleConsoleEventBusListenerTest {
             InstallEvent.finished(
                 installEventStarted,
                 true,
-                Optional.<Long>absent(),
-                Optional.<String>absent()),
+                Optional.absent(),
+                Optional.absent()),
             4000L,
             TimeUnit.MILLISECONDS,
             threadId));
@@ -264,7 +262,7 @@ public class SimpleConsoleEventBusListenerTest {
             /* threadId */ 0L));
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, Optional.<TargetGraph>absent()),
+            ParseEvent.finished(parseStarted, Optional.absent()),
             300L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));

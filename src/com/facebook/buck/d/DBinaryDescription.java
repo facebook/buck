@@ -102,9 +102,9 @@ public class DBinaryDescription implements
             cxxPlatform,
             dBuckConfig,
             cxxBuckConfig,
-            /* compilerFlags */ ImmutableList.<String>of(),
+            /* compilerFlags */ ImmutableList.of(),
             args.srcs,
-            args.linkerFlags.or(ImmutableList.<String>of()),
+            args.linkerFlags.or(ImmutableList.of()),
             DIncludes.builder()
                 .setLinkTree(new BuildTargetSourcePath(sourceTree.getBuildTarget()))
                 .addAllSources(args.srcs.getPaths())
@@ -123,7 +123,7 @@ public class DBinaryDescription implements
     // with buck run etc.
     return new DBinary(
         params.copyWithExtraDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(nativeLinkable))),
+            Suppliers.ofInstance(ImmutableSortedSet.of(nativeLinkable))),
         new SourcePathResolver(buildRuleResolver),
         executableBuilder.build(),
         nativeLinkable.getPathToOutput());

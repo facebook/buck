@@ -59,7 +59,7 @@ public class GenruleDescriptionTest {
   @Test
   public void testImplicitDepsAreAddedCorrectly() throws NoSuchBuildTargetException {
     Description<GenruleDescription.Arg> genruleDescription = new GenruleDescription();
-    Map<String, Object> instance = ImmutableMap.<String, Object>of(
+    Map<String, Object> instance = ImmutableMap.of(
         "srcs", ImmutableList.of(":baz", "//biz:baz"),
         "out", "AndroidManifest.xml",
         "cmd", "$(exe //bin:executable) $(location :arg)");

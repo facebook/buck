@@ -83,7 +83,7 @@ class CxxErrorTransformerFactory {
 
   private static final ImmutableList<Pattern> PATH_PATTERNS =
       Platform.detect() == Platform.WINDOWS ?
-          ImmutableList.<Pattern>of() :
+          ImmutableList.of() :
           ImmutableList.of(
               Pattern.compile(
                   "(?<prefix>^(?:In file included |\\s+)from )" +

@@ -74,11 +74,11 @@ public class Watchman implements AutoCloseable {
 
   private static final Path WATCHMAN = Paths.get("watchman");
   public static final Watchman NULL_WATCHMAN = new Watchman(
-      Optional.<String>absent(),
-      Optional.<String>absent(),
-      ImmutableSet.<Capability>of(),
-      Optional.<Path>absent(),
-      Optional.<WatchmanClient>absent(),
+      Optional.absent(),
+      Optional.absent(),
+      ImmutableSet.of(),
+      Optional.absent(),
+      Optional.absent(),
       0);
 
   private final Optional<String> projectName;
@@ -357,7 +357,7 @@ public class Watchman implements AutoCloseable {
       @Override
       public Optional<WatchmanClient> apply(Path socketPath) {
         try {
-          return Optional.<WatchmanClient>of(
+          return Optional.of(
               new WatchmanSocketClient(
                   console,
                   clock,

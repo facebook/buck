@@ -110,14 +110,14 @@ public class TargetGraphTest {
   @Test
   public void testPartialSubgraph1() {
     ImmutableSet<TargetNode<?>> roots = ImmutableSet.of(nodeB, nodeD, nodeH);
-    ImmutableSet<TargetNode<?>> expectedNodes = ImmutableSet.<TargetNode<?>>of(
+    ImmutableSet<TargetNode<?>> expectedNodes = ImmutableSet.of(
         nodeB, nodeD, nodeE, nodeF, nodeG, nodeH, nodeI);
     checkSubgraph(roots, expectedNodes);
   }
 
   @Test
   public void testPartialSubgraph2() {
-    ImmutableSet<TargetNode<?>> roots = ImmutableSet.<TargetNode<?>>of(nodeD);
+    ImmutableSet<TargetNode<?>> roots = ImmutableSet.of(nodeD);
     ImmutableSet<TargetNode<?>> expectedNodes = ImmutableSet.of(nodeD, nodeF, nodeG, nodeI);
     checkSubgraph(roots, expectedNodes);
   }

@@ -161,10 +161,10 @@ class ProvisioningProfileCopyStep implements Step {
       return (new PlistProcessStep(
           filesystem,
           entitlementsPlist.get(),
-          Optional.<Path>absent(),
+          Optional.absent(),
           signingEntitlementsTempPath,
           bestProfile.get().getMergeableEntitlements(),
-          ImmutableMap.<String, NSObject>of(),
+          ImmutableMap.of(),
           PlistProcessStep.OutputFormat.XML)).execute(context);
     } else {
       // No entitlements.plist explicitly specified; write out the minimal entitlements needed.

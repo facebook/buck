@@ -26,7 +26,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableBiMap;
 
 import java.io.File;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class CxxPlatformUtils {
@@ -54,7 +53,7 @@ public class CxxPlatformUtils {
           250,
           File.separatorChar,
           Paths.get("."),
-          ImmutableBiMap.<Path, Path>of());
+          ImmutableBiMap.of());
 
   public static final CxxPlatform DEFAULT_PLATFORM =
       CxxPlatform.builder()

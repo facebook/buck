@@ -289,7 +289,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     if (parseStarted.isEmpty() && parseFinished.isEmpty()) {
       logEventPair(
           "PARSING BUCK FILES",
-          /* suffix */ Optional.<String>absent(),
+          /* suffix */ Optional.absent(),
           currentTimeMillis,
           /* offsetMs */ 0L,
           projectBuildFileParseStarted,
@@ -308,7 +308,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     logEventPair(
         "GENERATING PROJECT",
-        Optional.<String>absent(),
+        Optional.absent(),
         currentTimeMillis,
         /* offsetMs */ 0L,
         projectGenerationStarted,
@@ -374,7 +374,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           .join(FluentIterable.of(new String[] {jobSummary, buildTrace})
               .filter(Predicates.notNull()));
       Optional<String> suffixOptional =
-          suffix.isEmpty() ? Optional.<String>absent() : Optional.of(suffix);
+          suffix.isEmpty() ? Optional.absent() : Optional.of(suffix);
       // Check to see if the build encompasses the time spent parsing. This is true for runs of
       // buck build but not so for runs of e.g. buck project. If so, subtract parse times
       // from the build time.
@@ -421,7 +421,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           0, /* offsetMs */
           testRunStarted.get(),
           testRunFinished.get(),
-          Optional.<Double>absent(),
+          Optional.absent(),
           lines);
 
       if (testRunTime == UNFINISHED_EVENT_PAIR) {
@@ -437,12 +437,12 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       }
 
       logEventPair("INSTALLING",
-          /* suffix */ Optional.<String>absent(),
+          /* suffix */ Optional.absent(),
           currentTimeMillis,
           0L,
           installStarted,
           installFinished,
-          Optional.<Double>absent(),
+          Optional.absent(),
           lines);
 
       logHttpCacheUploads(lines);
@@ -745,7 +745,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   public void testStatusMessageFinished(TestStatusMessageEvent.Finished finished) {
     threadsToRunningTestStatusMessageEvent.put(
         finished.getThreadId(),
-        Optional.<TestStatusMessageEvent>absent());
+        Optional.absent());
     synchronized (testStatusMessageBuilder) {
       testStatusMessageBuilder.add(finished.getTestStatusMessage());
     }
@@ -760,7 +760,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   public void testSummaryFinished(TestSummaryEvent.Finished finished) {
     threadsToRunningTestSummaryEvent.put(
         finished.getThreadId(),
-        Optional.<TestSummaryEvent>absent());
+        Optional.absent());
     TestResultSummary testResult = finished.getTestResultSummary();
     ResultType resultType = testResult.getType();
     switch (resultType) {

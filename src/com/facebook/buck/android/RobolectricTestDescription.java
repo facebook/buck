@@ -52,7 +52,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
-import java.util.regex.Pattern;
 
 public class RobolectricTestDescription implements Description<RobolectricTestDescription.Arg> {
 
@@ -109,8 +108,8 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         javacOptions,
         DependencyMode.TRANSITIVE,
         /* forceFinalResourceIds */ true,
-        /* resourceUnionPackage */ Optional.<String>absent(),
-        /* rName */ Optional.<String>absent());
+        /* resourceUnionPackage */ Optional.absent(),
+        /* rName */ Optional.absent());
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
         resolver,
         /* createBuildableIfEmpty */ true);
@@ -167,9 +166,9 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                 javacOptions.getGeneratedSourceFolderName(),
                 args.proguardConfig.transform(
                     SourcePaths.toSourcePath(params.getProjectFilesystem())),
-                /* postprocessClassesCommands */ ImmutableList.<String>of(),
-                /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),
-                /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
+                /* postprocessClassesCommands */ ImmutableList.of(),
+                /* exportDeps */ ImmutableSortedSet.of(),
+                /* providedDeps */ ImmutableSortedSet.of(),
                 new BuildTargetSourcePath(abiJarTarget),
                 javacOptions.trackClassUsage(),
                 additionalClasspathEntries,
@@ -177,16 +176,16 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                 args.resourcesRoot,
                 args.manifestFile,
                 args.mavenCoords,
-                /* tests */ ImmutableSortedSet.<BuildTarget>of(),
-                /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()));
+                /* tests */ ImmutableSortedSet.of(),
+                /* classesToRemoveFromJar */ ImmutableSet.of()));
 
 
     RobolectricTest robolectricTest =
         resolver.addToIndex(
             new RobolectricTest(
                 params.copyWithDeps(
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(testsLibrary)),
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                    Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
+                    Suppliers.ofInstance(ImmutableSortedSet.of())),
                 pathResolver,
                 testsLibrary,
                 additionalClasspathEntries,

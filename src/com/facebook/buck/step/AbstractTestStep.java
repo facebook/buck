@@ -20,7 +20,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
@@ -99,9 +98,9 @@ public abstract class AbstractTestStep implements Step {
       result = executor.launchAndExecute(
           params,
           options,
-          /* stdin */ Optional.<String>absent(),
+          /* stdin */ Optional.absent(),
           testRuleTimeoutMs,
-          /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
+          /* timeOutHandler */ Optional.absent());
     } catch (IOException e) {
       context.logError(e, "Error starting command %s", command);
       return StepExecutionResult.ERROR;

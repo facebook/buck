@@ -137,7 +137,7 @@ public class ThriftLibraryDescription
       public ImmutableSet<BuildRule> visit(BuildRule rule) {
         ThriftLibrary thriftRule = (ThriftLibrary) rule;
         depsBuilder.add(thriftRule);
-        return ImmutableSet.<BuildRule>copyOf(thriftRule.getThriftDeps());
+        return ImmutableSet.copyOf(thriftRule.getThriftDeps());
       }
     }.start();
 
@@ -208,7 +208,7 @@ public class ThriftLibraryDescription
                                       .build()))
                           .addAll(includeTreeRules)
                           .build()),
-                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                  Suppliers.ofInstance(ImmutableSortedSet.of())),
               pathResolver,
               compiler,
               flags,
@@ -268,7 +268,7 @@ public class ThriftLibraryDescription
     ImmutableSortedSet<ThriftLibrary> thriftDeps =
         resolveThriftDeps(
             target,
-            resolver.getAllRules(args.deps.or(ImmutableSortedSet.<BuildTarget>of())));
+            resolver.getAllRules(args.deps.or(ImmutableSortedSet.of())));
 
     // The unflavored version of this rule is responsible for setting up the the various
     // build rules to facilitate dependents including it's thrift sources.
@@ -292,8 +292,8 @@ public class ThriftLibraryDescription
         new HeaderSymlinkTree(
             params.copyWithChanges(
                 symlinkTreeTarget,
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                Suppliers.ofInstance(ImmutableSortedSet.of()),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
             pathResolver,
             includeRoot,
             includes);
@@ -331,7 +331,7 @@ public class ThriftLibraryDescription
         Iterables.concat(
             BuildTargets.propagateFlavorDomains(
                 target,
-                ImmutableList.<FlavorDomain<?>>of(enhancers),
+                ImmutableList.of(enhancers),
                 FluentIterable.from(thriftDeps)
                     .transform(HasBuildTarget.TO_TARGET)),
             implicitDeps));
@@ -357,7 +357,7 @@ public class ThriftLibraryDescription
             params,
             resolver,
             enhancer.getCompilerType(),
-            args.flags.or(ImmutableList.<String>of()),
+            args.flags.or(ImmutableList.of()),
             language,
             options,
             namedSources,
@@ -436,7 +436,7 @@ public class ThriftLibraryDescription
     deps.addAll(
         BuildTargets.propagateFlavorDomains(
             buildTarget,
-            ImmutableList.<FlavorDomain<?>>of(enhancers),
+            ImmutableList.of(enhancers),
             arg.deps.get()));
 
     // Add the compiler target, if there is one.

@@ -19,7 +19,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -94,12 +93,12 @@ public class AbstractConsoleEventBusListenerTest {
   public void testGetWorkingTimeFromLastStartUntilNowIsUntilNowForOpenPairs() throws Exception {
     // Test overlapping ongoing events do not get measured twice
     final EventPair ongoing1 = EventPair.of(
-        Optional.<BuckEventExternalInterface>of(ProxyBuckEvent.of(100)),
-        Optional.<BuckEventExternalInterface>absent()
+        Optional.of(ProxyBuckEvent.of(100)),
+        Optional.absent()
     );
     final EventPair ongoing2 = EventPair.of(
-        Optional.<BuckEventExternalInterface>of(ProxyBuckEvent.of(200)),
-        Optional.<BuckEventExternalInterface>absent()
+        Optional.of(ProxyBuckEvent.of(200)),
+        Optional.absent()
     );
     long timeUntilNow = AbstractConsoleEventBusListener
         .getWorkingTimeFromLastStartUntilNow(ImmutableList.of(ongoing1, ongoing2), 300);
@@ -115,8 +114,8 @@ public class AbstractConsoleEventBusListenerTest {
 
     // Test that finished-only events do not count as ongoing
     final EventPair finishOnly = EventPair.of(
-        Optional.<BuckEventExternalInterface>absent(),
-        Optional.<BuckEventExternalInterface>of(ProxyBuckEvent.of(100))
+        Optional.absent(),
+        Optional.of(ProxyBuckEvent.of(100))
     );
     timeUntilNow = AbstractConsoleEventBusListener
         .getWorkingTimeFromLastStartUntilNow(ImmutableList.of(finishOnly), 600);

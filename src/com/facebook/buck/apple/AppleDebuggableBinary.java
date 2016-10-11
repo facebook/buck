@@ -118,7 +118,7 @@ public class AppleDebuggableBinary
     if (debugFormat == AppleDebugFormat.NONE) {
       return ImmutableSortedSet.of(strippedBinaryRule);
     }
-    ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.<BuildRule>naturalOrder();
+    ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
     if (debugFormat == AppleDebugFormat.DWARF) {
       builder.add(unstrippedBinaryRule);
       builder.addAll(unstrippedBinaryRule.getCompileDeps());

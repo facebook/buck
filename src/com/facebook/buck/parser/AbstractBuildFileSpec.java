@@ -150,7 +150,7 @@ abstract class AbstractBuildFileSpec {
       Function<Path, Void> function)
     throws IOException, InterruptedException {
 
-    List<Object> query = Lists.<Object>newArrayList("query", watchRoot);
+    List<Object> query = Lists.newArrayList("query", watchRoot);
     Map<String, Object> params = new LinkedHashMap<>();
     if (projectPrefix.isPresent()) {
       params.put("relative_root", projectPrefix.get());

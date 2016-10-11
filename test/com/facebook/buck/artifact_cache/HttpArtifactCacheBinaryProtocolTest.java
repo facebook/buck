@@ -119,7 +119,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
       byte[] metadata =
           HttpArtifactCacheBinaryProtocol.createMetadataHeader(
               ImmutableSet.of(ruleKey),
-              ImmutableMap.<String, String>of(),
+              ImmutableMap.of(),
               ByteSource.wrap(data.getBytes(Charsets.UTF_8)));
       dataOut.writeInt(metadata.length);
       dataOut.write(metadata);

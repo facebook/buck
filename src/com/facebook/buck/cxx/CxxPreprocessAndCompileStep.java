@@ -30,7 +30,6 @@ import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -207,7 +206,7 @@ public class CxxPreprocessAndCompileStep implements Step {
         .addAll(
             preprocessable ?
                 getDepFileArgs(getDepTemp()) :
-                ImmutableList.<String>of())
+                ImmutableList.of())
         .add(inputFileName)
         .addAll(compiler.outputArgs(output.toString()))
         .build();
@@ -373,7 +372,7 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   private int executeOther(ExecutionContext context) throws Exception {
     ProcessExecutorParams.Builder builder =
-        makeSubprocessBuilder(context, ImmutableMap.<String, String>of());
+        makeSubprocessBuilder(context, ImmutableMap.of());
 
     if (useArgfile) {
       filesystem.writeLinesToPath(
@@ -485,10 +484,10 @@ public class CxxPreprocessAndCompileStep implements Step {
         // error output.
         operation == Operation.COMPILE ?
             Optional.of(filesystem.getRootPath()) :
-            Optional.<Path>absent(),
+            Optional.absent(),
         context.shouldReportAbsolutePaths() ?
             Optional.of(filesystem.getAbsolutifier()) :
-            Optional.<Function<Path, Path>>absent(),
+            Optional.absent(),
         headerPathNormalizer,
         sanitizer);
   }

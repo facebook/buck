@@ -42,7 +42,7 @@ public class MachoHeaderUtils {
         UnsignedInteger.fromIntBits(buffer.getInt()),
         UnsignedInteger.fromIntBits(buffer.getInt()),
         UnsignedInteger.fromIntBits(buffer.getInt()),
-        Optional.<UnsignedInteger>absent());
+        Optional.absent());
   }
 
   public static MachoHeader create64BitFromBuffer(ByteBuffer buffer) {

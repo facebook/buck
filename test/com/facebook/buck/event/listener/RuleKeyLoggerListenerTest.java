@@ -100,7 +100,7 @@ public class RuleKeyLoggerListenerTest {
         .setUnflavoredBuildTarget(
             UnflavoredBuildTarget.of(
                 projectFilesystem.getRootPath(),
-                Optional.<String>absent(),
+                Optional.absent(),
                 "//topspin",
                 "//downtheline"))
         .build(), null);

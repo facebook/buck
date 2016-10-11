@@ -78,7 +78,7 @@ public class HaskellBuckConfig implements HaskellConfig {
 
   @Override
   public ImmutableList<String> getCompilerFlags() {
-    return getFlags("compiler_flags").or(ImmutableList.<String>of());
+    return getFlags("compiler_flags").or(ImmutableList.of());
   }
 
   @Override
@@ -100,7 +100,7 @@ public class HaskellBuckConfig implements HaskellConfig {
 
   @Override
   public ImmutableList<String> getLinkerFlags() {
-    return getFlags("linker_flags").or(ImmutableList.<String>of());
+    return getFlags("linker_flags").or(ImmutableList.of());
   }
 
   @VisibleForTesting

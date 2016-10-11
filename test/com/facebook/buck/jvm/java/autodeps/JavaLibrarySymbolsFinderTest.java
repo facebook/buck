@@ -144,7 +144,7 @@ public class JavaLibrarySymbolsFinderTest {
           public Optional<BuildRule> answer() throws Throwable {
             SourcePath input = (SourcePath) EasyMock.getCurrentArguments()[0];
             if (input instanceof BuildTargetSourcePath) {
-              return Optional.<BuildRule>of(new FakeBuildRule(fakeBuildTarget, pathResolver));
+              return Optional.of(new FakeBuildRule(fakeBuildTarget, pathResolver));
             } else {
               return Optional.absent();
             }
@@ -188,7 +188,7 @@ public class JavaLibrarySymbolsFinderTest {
             JavaSymbolsRule javaSymbolsRule = new JavaSymbolsRule(
                 BuildTargetFactory.newInstance("//foo:rule"),
                 finder,
-                /* generatedSymbols */ ImmutableSortedSet.<String>of(),
+                /* generatedSymbols */ ImmutableSortedSet.of(),
                 ObjectMappers.newDefaultInstance(),
                 projectFilesystem
             );

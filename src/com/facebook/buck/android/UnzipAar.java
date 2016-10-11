@@ -50,7 +50,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -170,10 +169,10 @@ public class UnzipAar extends AbstractBuildRule
                 getProjectFilesystem(),
                 uberClassesJar,
                 entriesToJar,
-                /* mainClass */ Optional.<String>absent(),
-                /* manifestFile */ Optional.<Path>absent(),
+                /* mainClass */ Optional.absent(),
+                /* manifestFile */ Optional.absent(),
                 /* mergeManifests */ true,
-                /* blacklist */ ImmutableSet.<Pattern>of(),
+                /* blacklist */ ImmutableSet.of(),
                 context);
           } catch (IOException e) {
             context.logError(e, "Failed to jar %s into %s", entriesToJar, uberClassesJar);

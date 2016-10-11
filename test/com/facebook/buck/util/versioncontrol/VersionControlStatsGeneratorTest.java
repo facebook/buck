@@ -80,7 +80,7 @@ public class VersionControlStatsGeneratorTest {
         MASTER_REVISION_ID,
         CURRENT_REVISION_ID,
         TRACKED_BOOKMARKS))
-        .andReturn(ImmutableSet.<String>of());
+        .andReturn(ImmutableSet.of());
 
     expect(factoryMock.createCmdLineInterface()).andReturn(cmdLineInterfaceMock);
     Capture<VersionControlStatsEvent> eventCapture = Capture.newInstance();

@@ -28,7 +28,6 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
@@ -48,7 +47,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.TestCellBuilder;
-import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
@@ -117,8 +115,8 @@ public class OwnersReportTest {
                   description,
                   arg,
                   params,
-                  ImmutableSet.<BuildTarget>of(),
-                  ImmutableSet.<VisibilityPattern>of(),
+                  ImmutableSet.of(),
+                  ImmutableSet.of(),
                   createCellRoots(params.getProjectFilesystem()));
     } catch (NoSuchBuildTargetException e) {
       throw new RuntimeException(e);
@@ -216,7 +214,7 @@ public class OwnersReportTest {
         ImmutableMap.copyOf(System.getenv()),
         new FakeJavaPackageFinder(),
         ObjectMappers.newDefaultInstance(),
-        Optional.<WebServer>absent());
+        Optional.absent());
   }
 
   @Test
@@ -236,7 +234,7 @@ public class OwnersReportTest {
         "com/test/subtest");
 
     BuildTarget target = BuildTargetFactory.newInstance("//base:name");
-    TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
+    TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.of());
 
     CommandRunnerParams params = createOwnersReportRunnerParams(filesystem);
     OwnersReport report = OwnersReport.generateOwnersReport(
@@ -267,7 +265,7 @@ public class OwnersReportTest {
         "com/test/subtest/random.java");
 
     BuildTarget target = BuildTargetFactory.newInstance("//base:name");
-    TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
+    TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.of());
 
     CommandRunnerParams params = createOwnersReportRunnerParams(filesystem);
     OwnersReport report = OwnersReport.generateOwnersReport(
@@ -298,7 +296,7 @@ public class OwnersReportTest {
     ImmutableSet<Path> inputPaths = asPaths(inputs);
 
     BuildTarget target = BuildTargetFactory.newInstance("//base:name");
-    TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.<Path>of());
+    TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.of());
 
     CommandRunnerParams params = createOwnersReportRunnerParams(filesystem);
     OwnersReport report = OwnersReport.generateOwnersReport(

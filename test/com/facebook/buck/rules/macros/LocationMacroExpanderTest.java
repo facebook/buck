@@ -78,7 +78,7 @@ public class LocationMacroExpanderTest {
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     MacroHandler macroHandler = new MacroHandler(
-        ImmutableMap.<String, MacroExpander>of(
+        ImmutableMap.of(
             "location",
             new LocationMacroExpander()));
     try {
@@ -112,7 +112,7 @@ public class LocationMacroExpanderTest {
 
     // Interpolate the build target in the genrule cmd string.
     MacroHandler macroHandler = new MacroHandler(
-        ImmutableMap.<String, MacroExpander>of(
+        ImmutableMap.of(
             "location",
             new LocationMacroExpander()));
     String transformedString = macroHandler.expand(
@@ -144,7 +144,7 @@ public class LocationMacroExpanderTest {
             createCellRoots(new FakeProjectFilesystem()),
             resolver,
             ImmutableList.of(input)),
-        Matchers.<Object>equalTo(
+        Matchers.equalTo(
             new BuildTargetSourcePath(BuildTargetFactory.newInstance(input))));
   }
 

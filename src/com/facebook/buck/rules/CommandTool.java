@@ -132,7 +132,7 @@ public class CommandTool implements Tool {
     }
 
     public Builder() {
-      this(Optional.<Tool>absent());
+      this(Optional.absent());
     }
 
     /**

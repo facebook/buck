@@ -31,7 +31,7 @@ public class TraceEventLogger implements AutoCloseable {
   }
 
   public static TraceEventLogger start(BuckEventBus eventBus, String name) {
-    return start(eventBus, name, ImmutableMap.<String, String>of());
+    return start(eventBus, name, ImmutableMap.of());
   }
 
   public static TraceEventLogger start(
@@ -43,7 +43,7 @@ public class TraceEventLogger implements AutoCloseable {
   }
 
   public void end() {
-    end(ImmutableMap.<String, String>of());
+    end(ImmutableMap.of());
   }
 
   public void end(ImmutableMap<String, String> endProperties) {

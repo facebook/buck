@@ -20,7 +20,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.test.FakeTestResults;
-import com.facebook.buck.test.TestCaseSummary;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
@@ -32,7 +31,7 @@ public class IndividualTestEventTest {
 
     IndividualTestEvent.Started started = IndividualTestEvent.started(tests);
     IndividualTestEvent.Finished finished = IndividualTestEvent.finished(
-        tests, FakeTestResults.of(ImmutableList.<TestCaseSummary>of()));
+        tests, FakeTestResults.of(ImmutableList.of()));
 
     assertTrue(started.isRelatedTo(finished));
     assertTrue(finished.isRelatedTo(started));
@@ -45,7 +44,7 @@ public class IndividualTestEventTest {
 
     IndividualTestEvent.Started started = IndividualTestEvent.started(tests);
     IndividualTestEvent.Finished finished = IndividualTestEvent.finished(
-        otherTests, FakeTestResults.of(ImmutableList.<TestCaseSummary>of()));
+        otherTests, FakeTestResults.of(ImmutableList.of()));
 
     assertFalse(started.isRelatedTo(finished));
     assertFalse(finished.isRelatedTo(started));

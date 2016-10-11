@@ -53,8 +53,8 @@ public class TargetNodeTest {
 
   private static final TargetGraph GRAPH = new TargetGraph(
       new MutableDirectedGraph<TargetNode<?>>(),
-      ImmutableMap.<BuildTarget, TargetNode<?>>of(),
-      ImmutableSet.<TargetGroup>of());
+      ImmutableMap.of(),
+      ImmutableSet.of());
 
   @Test
   public void testIgnoreNonBuildTargetOrPathOrSourcePathArgument()
@@ -81,7 +81,7 @@ public class TargetNodeTest {
                }
             })
         .toSet();
-    ImmutableMap<String, Object> rawNode = ImmutableMap.<String, Object>of(
+    ImmutableMap<String, Object> rawNode = ImmutableMap.of(
         "deps", depsStrings,
         "sourcePaths", ImmutableList.of("//example/path:four", "MyClass.java"),
         "appleSource", "//example/path:five",
@@ -160,13 +160,13 @@ public class TargetNodeTest {
   private static TargetNode<Arg> createTargetNode(
       BuildTarget buildTarget)
       throws NoSuchBuildTargetException {
-    ImmutableMap<String, Object> rawNode = ImmutableMap.<String, Object>of(
+    ImmutableMap<String, Object> rawNode = ImmutableMap.of(
         "deps", ImmutableList.of(),
         "string", "//example/path:one",
         "target", "//example/path:two",
         "sourcePaths", ImmutableSortedSet.of());
 
-    return createTargetNode(buildTarget, ImmutableSet.<BuildTarget>of(), rawNode);
+    return createTargetNode(buildTarget, ImmutableSet.of(), rawNode);
   }
 
   private static TargetNode<Arg> createTargetNode(
@@ -189,7 +189,7 @@ public class TargetNodeTest {
                 rawNode),
             buildRuleFactoryParams,
             declaredDeps,
-            ImmutableSet.<VisibilityPattern>of(),
+            ImmutableSet.of(),
             createCellRoots(buildRuleFactoryParams.getProjectFilesystem()));
   }
 
@@ -209,8 +209,8 @@ public class TargetNodeTest {
           projectFilesystem,
           buildRuleFactoryParams,
           constructorArg,
-          ImmutableSet.<BuildTarget>builder(),
-          ImmutableSet.<VisibilityPattern>builder(),
+          ImmutableSet.builder(),
+          ImmutableSet.builder(),
           instance);
     } catch (ConstructorArgMarshalException e) {
       throw new RuntimeException(e);

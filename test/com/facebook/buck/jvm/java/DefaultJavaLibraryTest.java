@@ -108,7 +108,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.zip.ZipOutputStream;
 
 import javax.annotation.Nullable;
@@ -596,10 +595,10 @@ public class DefaultJavaLibraryTest {
       createDefaultJavaLibraryRuleWithAbiKey(
           buildTarget,
           /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
-          /* deps */ ImmutableSortedSet.<BuildRule>of(),
+          /* deps */ ImmutableSortedSet.of(),
           /* exportedDeps */ ImmutableSortedSet.of(genrule),
-          /* spoolMode */ Optional.<AbstractJavacOptions.SpoolMode>absent(),
-          /* postprocessClassesCommands */ ImmutableList.<String>of());
+          /* spoolMode */ Optional.absent(),
+          /* postprocessClassesCommands */ ImmutableList.of());
       fail("A non-java library listed as exported dep should have thrown.");
     } catch (HumanReadableException e) {
       String expected =
@@ -618,21 +617,21 @@ public class DefaultJavaLibraryTest {
     BuildRule javaLibraryBuildRule = createDefaultJavaLibraryRuleWithAbiKey(
         buildTarget,
         /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
+        /* deps */ ImmutableSortedSet.of(),
+        /* exportedDeps */ ImmutableSortedSet.of(),
         Optional.of(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR),
-        /* postprocessClassesCommands */ ImmutableList.<String>of());
+        /* postprocessClassesCommands */ ImmutableList.of());
 
     BuildContext buildContext = createBuildContext(javaLibraryBuildRule, /* bootclasspath */ null);
 
     ImmutableList<Step> steps =
         javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
 
-    assertThat(steps, Matchers.<Step>hasItem(Matchers.instanceOf(JavacDirectToJarStep.class)));
-    assertThat(steps, Matchers.not(Matchers.<Step>hasItem(Matchers.instanceOf(JavacStep.class))));
+    assertThat(steps, Matchers.hasItem(Matchers.instanceOf(JavacDirectToJarStep.class)));
+    assertThat(steps, Matchers.not(Matchers.hasItem(Matchers.instanceOf(JavacStep.class))));
     assertThat(
         steps,
-        Matchers.not(Matchers.<Step>hasItem(Matchers.instanceOf(JarDirectoryStep.class))));
+        Matchers.not(Matchers.hasItem(Matchers.instanceOf(JarDirectoryStep.class))));
   }
 
   @Test
@@ -642,8 +641,8 @@ public class DefaultJavaLibraryTest {
     BuildRule javaLibraryBuildRule = createDefaultJavaLibraryRuleWithAbiKey(
         buildTarget,
         /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
+        /* deps */ ImmutableSortedSet.of(),
+        /* exportedDeps */ ImmutableSortedSet.of(),
         Optional.of(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR),
         /* postprocessClassesCommands */ ImmutableList.of("process_class_files.py"));
 
@@ -654,9 +653,9 @@ public class DefaultJavaLibraryTest {
 
     assertThat(
         steps,
-        Matchers.not(Matchers.<Step>hasItem(Matchers.instanceOf(JavacDirectToJarStep.class))));
-    assertThat(steps, Matchers.<Step>hasItem(Matchers.instanceOf(JavacStep.class)));
-    assertThat(steps, Matchers.<Step>hasItem(Matchers.instanceOf(JarDirectoryStep.class)));
+        Matchers.not(Matchers.hasItem(Matchers.instanceOf(JavacDirectToJarStep.class))));
+    assertThat(steps, Matchers.hasItem(Matchers.instanceOf(JavacStep.class)));
+    assertThat(steps, Matchers.hasItem(Matchers.instanceOf(JarDirectoryStep.class)));
   }
 
   @Test
@@ -666,10 +665,10 @@ public class DefaultJavaLibraryTest {
     BuildRule javaLibraryBuildRule = createDefaultJavaLibraryRuleWithAbiKey(
         buildTarget,
         /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
-        /* deps */ ImmutableSortedSet.<BuildRule>of(),
-        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
+        /* deps */ ImmutableSortedSet.of(),
+        /* exportedDeps */ ImmutableSortedSet.of(),
         Optional.of(AbstractJavacOptions.SpoolMode.INTERMEDIATE_TO_DISK),
-        /* postprocessClassesCommands */ ImmutableList.<String>of());
+        /* postprocessClassesCommands */ ImmutableList.of());
 
     BuildContext buildContext = createBuildContext(javaLibraryBuildRule, /* bootclasspath */ null);
 
@@ -678,9 +677,9 @@ public class DefaultJavaLibraryTest {
 
     assertThat(
         steps,
-        Matchers.not(Matchers.<Step>hasItem(Matchers.instanceOf(JavacDirectToJarStep.class))));
-    assertThat(steps, Matchers.<Step>hasItem(Matchers.instanceOf(JavacStep.class)));
-    assertThat(steps, Matchers.<Step>hasItem(Matchers.instanceOf(JarDirectoryStep.class)));
+        Matchers.not(Matchers.hasItem(Matchers.instanceOf(JavacDirectToJarStep.class))));
+    assertThat(steps, Matchers.hasItem(Matchers.instanceOf(JavacStep.class)));
+    assertThat(steps, Matchers.hasItem(Matchers.instanceOf(JarDirectoryStep.class)));
   }
 
   /**
@@ -1080,21 +1079,21 @@ public class DefaultJavaLibraryTest {
         buildRuleParams,
         new SourcePathResolver(ruleResolver),
         srcsAsPaths,
-        /* resources */ ImmutableSet.<SourcePath>of(),
+        /* resources */ ImmutableSet.of(),
         javacOptions.getGeneratedSourceFolderName(),
-        /* proguardConfig */ Optional.<SourcePath>absent(),
+        /* proguardConfig */ Optional.absent(),
         postprocessClassesCommands,
         exportedDeps,
-        /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
+        /* providedDeps */ ImmutableSortedSet.of(),
         /* abiJar */ new FakeSourcePath("abi.jar"),
         javacOptions.trackClassUsage(),
-        /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+        /* additionalClasspathEntries */ ImmutableSet.of(),
         new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
-        /* resourcesRoot */ Optional.<Path>absent(),
-        /* manifest file */ Optional.<SourcePath>absent(),
-        /* mavenCoords */ Optional.<String>absent(),
-        /* tests */ ImmutableSortedSet.<BuildTarget>of(),
-        /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()) {
+        /* resourcesRoot */ Optional.absent(),
+        /* manifest file */ Optional.absent(),
+        /* mavenCoords */ Optional.absent(),
+        /* tests */ ImmutableSortedSet.of(),
+        /* classesToRemoveFromJar */ ImmutableSet.of()) {
     };
 
     ruleResolver.addToIndex(defaultJavaLibrary);
@@ -1342,7 +1341,7 @@ public class DefaultJavaLibraryTest {
 
       ImmutableList<String> options = javacCommand.getOptions(
           executionContext,
-          /* buildClasspathEntries */ ImmutableSortedSet.<Path>of());
+          /* buildClasspathEntries */ ImmutableSortedSet.of());
 
       return options;
     }
@@ -1375,20 +1374,20 @@ public class DefaultJavaLibraryTest {
           new SourcePathResolver(
               ruleResolver),
           ImmutableSet.of(new FakeSourcePath(src)),
-          /* resources */ ImmutableSet.<SourcePath>of(),
+          /* resources */ ImmutableSet.of(),
           options.getGeneratedSourceFolderName(),
-          /* proguardConfig */ Optional.<SourcePath>absent(),
-          /* postprocessClassesCommands */ ImmutableList.<String>of(),
-          /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
-          /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
+          /* proguardConfig */ Optional.absent(),
+          /* postprocessClassesCommands */ ImmutableList.of(),
+          /* exportedDeps */ ImmutableSortedSet.of(),
+          /* providedDeps */ ImmutableSortedSet.of(),
           /* abiJar */ new FakeSourcePath("abi.jar"),
           options.trackClassUsage(),
-          /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+          /* additionalClasspathEntries */ ImmutableSet.of(),
           new JavacToJarStepFactory(options, JavacOptionsAmender.IDENTITY),
-          /* resourcesRoot */ Optional.<Path>absent(),
-          /* manifestFile */ Optional.<SourcePath>absent(),
-          /* mavenCoords */ Optional.<String>absent(),
-          /* tests */ ImmutableSortedSet.<BuildTarget>of(),
+          /* resourcesRoot */ Optional.absent(),
+          /* manifestFile */ Optional.absent(),
+          /* mavenCoords */ Optional.absent(),
+          /* tests */ ImmutableSortedSet.of(),
           options.getClassesToRemoveFromJar());
 
       ruleResolver.addToIndex(javaLibrary);

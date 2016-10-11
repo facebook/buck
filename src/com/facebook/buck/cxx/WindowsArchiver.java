@@ -36,7 +36,7 @@ public class WindowsArchiver implements Archiver {
 
   @Override
   public ImmutableList<FileScrubber> getScrubbers() {
-    return ImmutableList.<FileScrubber>of();
+    return ImmutableList.of();
   }
 
   @Override
@@ -46,7 +46,7 @@ public class WindowsArchiver implements Archiver {
 
   @Override
   public ImmutableList<String> getArchiveOptions(boolean isThinArchive) {
-    return ImmutableList.<String>of();
+    return ImmutableList.of();
   }
 
   @Override

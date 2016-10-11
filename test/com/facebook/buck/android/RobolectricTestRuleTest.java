@@ -156,7 +156,7 @@ public class RobolectricTestRuleTest {
         .build(resolver, filesystem);
 
     String result = robolectricTest.getRobolectricResourceDirectories(
-        ImmutableList.<HasAndroidResourceDeps>of(
+        ImmutableList.of(
             new ResourceRule(new PathSourcePath(filesystem, resDep1)),
             new ResourceRule(new PathSourcePath(filesystem, resDep2)),
             new ResourceRule(new PathSourcePath(filesystem, resDep3)),
@@ -179,7 +179,7 @@ public class RobolectricTestRuleTest {
 
     try {
       robolectricTest.getRobolectricResourceDirectories(
-          ImmutableList.<HasAndroidResourceDeps>of(
+          ImmutableList.of(
               new ResourceRule(new PathSourcePath(filesystem, Paths.get("not_there")))));
       fail("Expected FileNotFoundException");
     } catch (RuntimeException e) {

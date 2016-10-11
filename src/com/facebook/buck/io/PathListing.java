@@ -77,8 +77,8 @@ public class PathListing {
         globPattern,
         pathModifiedTimeFetcher,
         FilterMode.INCLUDE,
-        Optional.<Integer>absent(),
-        Optional.<Long>absent());
+        Optional.absent(),
+        Optional.absent());
   }
 
   /**

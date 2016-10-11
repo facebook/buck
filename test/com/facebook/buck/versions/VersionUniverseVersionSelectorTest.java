@@ -98,9 +98,9 @@ public class VersionUniverseVersionSelectorTest {
             TargetGraphFactory.newInstance(root),
             ImmutableMap.of(
                 "universe1",
-                VersionUniverse.of(ImmutableMap.<BuildTarget, Version>of()),
+                VersionUniverse.of(ImmutableMap.of()),
                 "universe2",
-                VersionUniverse.of(ImmutableMap.<BuildTarget, Version>of())));
+                VersionUniverse.of(ImmutableMap.of())));
     assertThat(
         selector.getVersionUniverse(root).get().getKey(),
         Matchers.equalTo("universe1"));

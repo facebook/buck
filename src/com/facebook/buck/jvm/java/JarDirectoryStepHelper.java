@@ -156,7 +156,7 @@ public class JarDirectoryStepHelper {
           pathToOutputFile,
           outputFile,
           entriesToJar,
-          /* alreadyAddedEntriesToOutputFile */ ImmutableSet.<String>of(),
+          /* alreadyAddedEntriesToOutputFile */ ImmutableSet.of(),
           mainClass,
           manifestFile,
           mergeManifests,
@@ -172,11 +172,11 @@ public class JarDirectoryStepHelper {
     return JarDirectoryStepHelper.createJarFile(
         filesystem,
         pathToOutputFile,
-        ImmutableSortedSet.<Path>of(),
-        Optional.<String>absent(),
-        Optional.<Path>absent(),
+        ImmutableSortedSet.of(),
+        Optional.absent(),
+        Optional.absent(),
         true,
-        ImmutableList.<Pattern>of(),
+        ImmutableList.of(),
         context);
   }
 
@@ -398,7 +398,7 @@ public class JarDirectoryStepHelper {
             JarEntry entry = new JarEntry(entryName);
             // We want deterministic JARs, so avoid mtimes.
             entry.setTime(ZipConstants.getFakeTime());
-            entries.put(entry.getName(), new Pair<>(entry, Optional.<Path>absent()));
+            entries.put(entry.getName(), new Pair<>(entry, Optional.absent()));
             return FileVisitResult.CONTINUE;
           }
         });

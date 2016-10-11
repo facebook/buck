@@ -29,7 +29,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import java.nio.file.Path;
 
 public class PrebuiltPythonLibrary extends NoopBuildRule implements PythonPackagable {
 
@@ -53,11 +52,11 @@ public class PrebuiltPythonLibrary extends NoopBuildRule implements PythonPackag
     // TODO(mikekap): Allow varying sources by cxx platform (in cases of prebuilt
     // extension modules).
     return PythonPackageComponents.of(
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(),
+        ImmutableMap.of(),
+        ImmutableMap.of(),
+        ImmutableMap.of(),
         ImmutableSet.of(binarySrc),
-        Optional.<Boolean>absent());
+        Optional.absent());
   }
 
   @Override

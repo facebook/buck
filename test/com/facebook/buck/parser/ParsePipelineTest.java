@@ -209,7 +209,7 @@ public class ParsePipelineTest {
       fixture.getRawNodeParsePipelineCache().putComputedNodeIfNotPresent(
           cell,
           rootBuildFilePath,
-          ImmutableSet.<Map<String, Object>>of(
+          ImmutableSet.of(
               ImmutableMap.of("name", (Object) "bar")));
       expectedException.expect(IllegalStateException.class);
       expectedException.expectMessage("malformed raw data");

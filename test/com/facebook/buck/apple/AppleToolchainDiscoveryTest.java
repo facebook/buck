@@ -54,7 +54,7 @@ public class AppleToolchainDiscoveryTest {
     ImmutableMap<String, AppleToolchain> toolchains =
         AppleToolchainDiscovery.discoverAppleToolchains(
             Optional.of(path),
-            ImmutableList.<Path>of());
+            ImmutableList.of());
     assertThat(toolchains.entrySet(), empty());
   }
 
@@ -78,7 +78,7 @@ public class AppleToolchainDiscoveryTest {
     assertThat(
         AppleToolchainDiscovery.discoverAppleToolchains(
             Optional.of(root),
-            ImmutableList.<Path>of()),
+            ImmutableList.of()),
         equalTo(expected));
   }
 
@@ -128,7 +128,7 @@ public class AppleToolchainDiscoveryTest {
     assertThat(
         AppleToolchainDiscovery.discoverAppleToolchains(
             Optional.of(root),
-            ImmutableList.<Path>of(Paths.get("invalid"))),
+            ImmutableList.of(Paths.get("invalid"))),
         equalTo(expected));
   }
 
@@ -147,8 +147,8 @@ public class AppleToolchainDiscoveryTest {
     assertThat(
         AppleToolchainDiscovery.discoverAppleToolchains(
             Optional.of(tempRoot),
-            ImmutableList.<Path>of()),
-        Matchers.<String, AppleToolchain>anEmptyMap());
+            ImmutableList.of()),
+        Matchers.anEmptyMap());
     assertThat(
         logSink.getRecords(),
         hasItems(

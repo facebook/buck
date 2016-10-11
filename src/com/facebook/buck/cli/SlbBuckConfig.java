@@ -81,7 +81,7 @@ public class SlbBuckConfig {
     ClientSideSlbConfig config = createConfig(clock, eventBus, threadFactory);
     return ClientSideSlb.isSafeToCreate(config)
         ? Optional.of(new ClientSideSlb(config))
-        : Optional.<ClientSideSlb>absent();
+        : Optional.absent();
   }
 
   private ClientSideSlbConfig createConfig(

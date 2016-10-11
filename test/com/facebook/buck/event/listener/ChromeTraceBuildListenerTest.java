@@ -42,7 +42,6 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildEvent;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -72,7 +71,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.hash.HashCode;
 import com.google.gson.Gson;
 
 import org.junit.Before;
@@ -196,7 +194,7 @@ public class ChromeTraceBuildListenerTest {
                 TargetGraph.EMPTY,
                 new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.of());
     RuleKey ruleKey = new RuleKey("abc123");
     String stepShortName = "fakeStep";
     String stepDescription = "I'm a Fake Step!";
@@ -246,7 +244,7 @@ public class ChromeTraceBuildListenerTest {
     JavacPhaseEvent.Started runProcessorsStartedEvent = JavacPhaseEvent.started(
         target,
         JavacPhaseEvent.Phase.RUN_ANNOTATION_PROCESSORS,
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     eventBus.post(runProcessorsStartedEvent);
 
     String annotationProcessorName = "com.facebook.FakeProcessor";
@@ -279,17 +277,17 @@ public class ChromeTraceBuildListenerTest {
             target,
             annotationProcessorName,
             "processingPartOne",
-            ImmutableMap.<String, String>of());
+            ImmutableMap.of());
     eventBus.post(processingPartOneStarted);
     eventBus.post(
         CompilerPluginDurationEvent.finished(
             processingPartOneStarted,
-            ImmutableMap.<String, String>of()));
+            ImmutableMap.of()));
 
     eventBus.post(AnnotationProcessingEvent.finished(annotationProcessingEventStarted));
 
     eventBus.post(
-        JavacPhaseEvent.finished(runProcessorsStartedEvent, ImmutableMap.<String, String>of()));
+        JavacPhaseEvent.finished(runProcessorsStartedEvent, ImmutableMap.of()));
 
     eventBus.post(StepEvent.finished(
         StepEvent.started(stepShortName, stepDescription, stepUuid),
@@ -301,10 +299,10 @@ public class ChromeTraceBuildListenerTest {
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-            Optional.<HashCode>absent(),
-            Optional.<Long>absent(),
-            Optional.<Integer>absent(),
-            Optional.<Long>absent()));
+            Optional.absent(),
+            Optional.absent(),
+            Optional.absent(),
+            Optional.absent()));
 
     try (TraceEventLogger ignored = TraceEventLogger.start(
         eventBus, "planning", ImmutableMap.of("nefarious", "true")
@@ -399,7 +397,7 @@ public class ChromeTraceBuildListenerTest {
         resultListCopy,
         "//fake:rule",
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
 
     assertNextResult(
         resultListCopy,

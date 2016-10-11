@@ -51,7 +51,6 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.martiansoftware.nailgun.NGClientListener;
-import com.martiansoftware.nailgun.NGContext;
 
 import org.junit.After;
 import org.junit.Before;
@@ -101,7 +100,7 @@ public class DaemonIntegrationTest {
         getWatchmanEnv(),
         new TestConsole(),
         new FakeClock(0),
-        Optional.<Long>absent());
+        Optional.absent());
 
     // We assume watchman has been installed and configured properly on the system, and that setting
     // up the watch is successful.
@@ -247,7 +246,7 @@ public class DaemonIntegrationTest {
           int exitCode = main.runMainWithExitCode(
               new BuildId(),
               tmp.getRoot(),
-              Optional.<NGContext>of(new TestContext()),
+              Optional.of(new TestContext()),
               ImmutableMap.copyOf(System.getenv()),
               CommandMode.TEST,
               WatchmanWatcher.FreshInstanceAction.NONE,
@@ -547,9 +546,9 @@ public class DaemonIntegrationTest {
         new TestCellBuilder()
             .setAndroidDirectoryResolver(
                 new FakeAndroidDirectoryResolver(
-                    Optional.<Path>absent(),
-                    Optional.<Path>absent(),
-                    Optional.<Path>absent(),
+                    Optional.absent(),
+                    Optional.absent(),
+                    Optional.absent(),
                     Optional.of("something")))
             .setFilesystem(filesystem)
             .build(),
@@ -561,9 +560,9 @@ public class DaemonIntegrationTest {
             new TestCellBuilder()
                 .setAndroidDirectoryResolver(
                     new FakeAndroidDirectoryResolver(
-                        Optional.<Path>absent(),
-                        Optional.<Path>absent(),
-                        Optional.<Path>absent(),
+                        Optional.absent(),
+                        Optional.absent(),
+                        Optional.absent(),
                         Optional.of("different")))
                 .setFilesystem(filesystem)
                 .build(),

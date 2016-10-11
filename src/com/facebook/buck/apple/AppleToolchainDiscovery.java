@@ -148,7 +148,7 @@ public class AppleToolchainDiscovery {
     NSObject versionObject = parsedToolchainInfoPlist.objectForKey("DTSDKBuild");
     Optional<String> version =
         versionObject == null ?
-            Optional.<String>absent() :
+            Optional.absent() :
             Optional.of(versionObject.toString());
     LOG.debug("Mapped SDK identifier %s to path %s", identifier, toolchainDir);
 

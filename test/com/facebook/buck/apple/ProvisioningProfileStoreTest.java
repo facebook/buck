@@ -38,7 +38,7 @@ import java.util.Date;
 public class ProvisioningProfileStoreTest {
   private static ProvisioningProfileMetadata makeTestMetadata(
       String appID, Date expirationDate, String uuid) throws Exception {
-    return makeTestMetadata(appID, expirationDate, uuid, ImmutableMap.<String, NSObject>of());
+    return makeTestMetadata(appID, expirationDate, uuid, ImmutableMap.of());
   }
 
   private static ProvisioningProfileMetadata makeTestMetadata(
@@ -47,7 +47,7 @@ public class ProvisioningProfileStoreTest {
       String uuid,
       ImmutableMap<String, NSObject> entitlements
   ) throws Exception {
-    return makeTestMetadata(appID, expirationDate, uuid, entitlements, ImmutableSet.<HashCode>of());
+    return makeTestMetadata(appID, expirationDate, uuid, entitlements, ImmutableSet.of());
   }
 
   private static ProvisioningProfileMetadata makeTestMetadata(
@@ -99,7 +99,7 @@ public class ProvisioningProfileStoreTest {
 
     NSString[] fakeKeychainAccessGroups = { new NSString("AAAAAAAAAA.*") };
     ImmutableMap<String, NSObject> fakeEntitlements =
-        ImmutableMap.<String, NSObject>of(
+        ImmutableMap.of(
             "keychain-access-groups",
             new NSArray(fakeKeychainAccessGroups));
 
@@ -200,8 +200,8 @@ public class ProvisioningProfileStoreTest {
         makeTestMetadata("AAAAAAAAAA.com.facebook.test",
             new Date(Long.MAX_VALUE),
             "11111111-1111-1111-1111-111111111111",
-            ImmutableMap.<String, NSObject>of(),
-            ImmutableSet.<HashCode>of(
+            ImmutableMap.of(),
+            ImmutableSet.of(
                 validIdentity.getFingerprint().get(),
                 otherIdentity.getFingerprint().get()));
 
@@ -210,15 +210,15 @@ public class ProvisioningProfileStoreTest {
             makeTestMetadata("AAAAAAAAAA.com.facebook.test",
                 new Date(Long.MAX_VALUE),
                 "00000000-0000-0000-0000-000000000000",
-                ImmutableMap.<String, NSObject>of(),
-                ImmutableSet.<HashCode>of(otherIdentity.getFingerprint().get())),
+                ImmutableMap.of(),
+                ImmutableSet.of(otherIdentity.getFingerprint().get())),
             expected));
 
     Optional<ProvisioningProfileMetadata> actual =
         profiles.getBestProvisioningProfile(
             "com.facebook.test",
             ProvisioningProfileStore.MATCH_ANY_ENTITLEMENT,
-            Optional.of(ImmutableList.<CodeSignIdentity>of(validIdentity)));
+            Optional.of(ImmutableList.of(validIdentity)));
 
     assertThat(actual.get(), is(equalTo(expected)));
   }

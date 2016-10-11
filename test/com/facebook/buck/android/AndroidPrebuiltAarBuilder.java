@@ -20,7 +20,6 @@ import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 
 import java.nio.file.Path;
@@ -42,7 +41,7 @@ public class AndroidPrebuiltAarBuilder
  }
 
  public AndroidPrebuiltAarBuilder setSourcesJar(Path sourcesJar) {
-  arg.sourceJar = Optional.<SourcePath>of(new FakeSourcePath(sourcesJar.toString()));
+  arg.sourceJar = Optional.of(new FakeSourcePath(sourcesJar.toString()));
   return this;
  }
 

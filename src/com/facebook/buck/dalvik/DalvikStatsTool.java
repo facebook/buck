@@ -174,8 +174,8 @@ public class DalvikStatsTool {
 
     public static final Stats ZERO = new Stats(
         0,
-        ImmutableSet.<MethodReference>of(),
-        ImmutableSet.<FieldReference>of());
+        ImmutableSet.of(),
+        ImmutableSet.of());
 
     /** Estimated bytes the class will contribute to Dalvik linear alloc. */
     public final int estimatedLinearAllocSize;

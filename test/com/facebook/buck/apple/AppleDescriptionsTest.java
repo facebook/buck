@@ -63,7 +63,7 @@ public class AppleDescriptionsTest {
             resolver.deprecatedPathFunction(),
             Paths.get("prefix"),
             SourceList.ofUnnamedSources(
-                ImmutableSortedSet.<SourcePath>of(
+                ImmutableSortedSet.of(
                     new FakeSourcePath("path/to/some_file.h"),
                     new FakeSourcePath("path/to/another_file.h"),
                     new FakeSourcePath("different/path/to/a_file.h"),
@@ -84,7 +84,7 @@ public class AppleDescriptionsTest {
         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
             resolver.deprecatedPathFunction(),
             SourceList.ofUnnamedSources(
-                ImmutableSortedSet.<SourcePath>of(
+                ImmutableSortedSet.of(
                     new FakeSourcePath("path/to/some_file.h"),
                     new FakeSourcePath("path/to/another_file.h"),
                     new FakeSourcePath("different/path/to/a_file.h"),
@@ -93,7 +93,7 @@ public class AppleDescriptionsTest {
 
   @Test
   public void parseAppleHeadersForUseFromOtherTargetsFromMap() {
-    ImmutableSortedMap<String, SourcePath> headerMap = ImmutableSortedMap.<String, SourcePath>of(
+    ImmutableSortedMap<String, SourcePath> headerMap = ImmutableSortedMap.of(
         "virtual/path.h", new FakeSourcePath("path/to/some_file.h"),
         "another/path.h", new FakeSourcePath("path/to/another_file.h"),
         "another/file.h", new FakeSourcePath("different/path/to/a_file.h"),
@@ -111,7 +111,7 @@ public class AppleDescriptionsTest {
 
   @Test
   public void parseAppleHeadersForUseFromTheSameTargetFromMap() {
-    ImmutableSortedMap<String, SourcePath> headerMap = ImmutableSortedMap.<String, SourcePath>of(
+    ImmutableSortedMap<String, SourcePath> headerMap = ImmutableSortedMap.of(
         "virtual/path.h", new FakeSourcePath("path/to/some_file.h"),
         "another/path.h", new FakeSourcePath("path/to/another_file.h"),
         "another/file.h", new FakeSourcePath("different/path/to/a_file.h"),
@@ -140,7 +140,7 @@ public class AppleDescriptionsTest {
         AppleDescriptions.convertToFlatCxxHeaders(
             Paths.get("prefix"),
             resolver.deprecatedPathFunction(),
-            ImmutableSet.<SourcePath>of(
+            ImmutableSet.of(
                 new FakeSourcePath("path/to/some_file.h"),
                 new FakeSourcePath("path/to/another_file.h"),
                 new FakeSourcePath("different/path/to/a_file.h"),
@@ -161,7 +161,7 @@ public class AppleDescriptionsTest {
         AppleDescriptions.convertToFlatCxxHeaders(
             Paths.get(""),
             resolver.deprecatedPathFunction(),
-            ImmutableSet.<SourcePath>of(
+            ImmutableSet.of(
                 new FakeSourcePath("path/to/some_file.h"),
                 new FakeSourcePath("path/to/another_file.h"),
                 new FakeSourcePath("different/path/to/a_file.h"),

@@ -37,7 +37,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
-import com.martiansoftware.nailgun.NGContext;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -130,8 +129,8 @@ public class CxxPreprocessAndCompileIntegrationTest {
     workspace
         .runBuckCommandWithEnvironmentOverridesAndContext(
             tmp.getRoot(),
-            Optional.<NGContext>absent(),
-            ImmutableMap.<String, String>of("PWD", symlinkedRoot.toString()),
+            Optional.absent(),
+            ImmutableMap.of("PWD", symlinkedRoot.toString()),
             "build",
             target.getFullyQualifiedName())
         .assertSuccess();

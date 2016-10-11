@@ -60,7 +60,7 @@ public class EdenProjectFilesystemDelegateTest {
 
     EdenMount mount = createMock(EdenMount.class);
     Path path = fs.getPath("foo/bar");
-    expect(mount.getBindMounts()).andReturn(ImmutableList.<Path>of());
+    expect(mount.getBindMounts()).andReturn(ImmutableList.of());
     expect(mount.getPathRelativeToProjectRoot(root.resolve(path))).andReturn(Optional.of(path));
     expect(mount.getSha1(path)).andReturn(DUMMY_SHA1);
     replay(mount);
@@ -115,7 +115,7 @@ public class EdenProjectFilesystemDelegateTest {
     // Eden will throw when the SHA-1 for the link is requested, but return a SHA-1 when the target
     // is requested.
     EdenMount mount = createMock(EdenMount.class);
-    expect(mount.getBindMounts()).andReturn(ImmutableList.<Path>of());
+    expect(mount.getBindMounts()).andReturn(ImmutableList.of());
     expect(mount.getPathRelativeToProjectRoot(link)).andReturn(Optional.of(fs.getPath("link")));
     expect(mount.getPathRelativeToProjectRoot(target)).andReturn(Optional.of(fs.getPath("target")));
     expect(mount.getSha1(fs.getPath("link"))).andThrow(new EdenError());
@@ -146,9 +146,9 @@ public class EdenProjectFilesystemDelegateTest {
     // Eden will throw when the SHA-1 for the link is requested, but return a SHA-1 when the target
     // is requested.
     EdenMount mount = createMock(EdenMount.class);
-    expect(mount.getBindMounts()).andReturn(ImmutableList.<Path>of());
+    expect(mount.getBindMounts()).andReturn(ImmutableList.of());
     expect(mount.getPathRelativeToProjectRoot(link)).andReturn(Optional.of(fs.getPath("link")));
-    expect(mount.getPathRelativeToProjectRoot(target)).andReturn(Optional.<Path>absent());
+    expect(mount.getPathRelativeToProjectRoot(target)).andReturn(Optional.absent());
     expect(mount.getSha1(fs.getPath("link"))).andThrow(new EdenError());
     replay(mount);
 
@@ -173,8 +173,8 @@ public class EdenProjectFilesystemDelegateTest {
     Files.write(target, bytes);
 
     EdenMount mount = createMock(EdenMount.class);
-    expect(mount.getBindMounts()).andReturn(ImmutableList.<Path>of());
-    expect(mount.getPathRelativeToProjectRoot(target)).andReturn(Optional.<Path>absent());
+    expect(mount.getBindMounts()).andReturn(ImmutableList.of());
+    expect(mount.getPathRelativeToProjectRoot(target)).andReturn(Optional.absent());
     replay(mount);
 
     EdenProjectFilesystemDelegate edenDelegate = new EdenProjectFilesystemDelegate(mount, delegate);

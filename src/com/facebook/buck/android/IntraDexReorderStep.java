@@ -136,7 +136,7 @@ public class IntraDexReorderStep implements Step {
           new ZipStep(
               filesystem,
               outputPath,
-              /* paths */ ImmutableSet.<Path>of(),
+              /* paths */ ImmutableSet.of(),
               /* junkPaths */ false,
               ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
               temp

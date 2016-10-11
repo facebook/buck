@@ -258,7 +258,7 @@ public class PrebuiltCxxLibrary
                     ruleResolver,
                     cxxPlatform,
                     input,
-                    Optional.<String>absent()
+                    Optional.absent()
                 );
               }
             });
@@ -433,7 +433,7 @@ public class PrebuiltCxxLibrary
     if (getPreferredLinkage(cxxPlatform) == Linkage.SHARED) {
       return Optional.absent();
     }
-    return Optional.<NativeLinkTarget>of(
+    return Optional.of(
         new NativeLinkTarget() {
           @Override
           public BuildTarget getBuildTarget() {

@@ -23,7 +23,6 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
-import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -51,9 +50,9 @@ public class DefaultStepRunnerTest {
         .setBuckEventBus(eventBus)
         .build();
     DefaultStepRunner runner = new DefaultStepRunner(context);
-    runner.runStepForBuildTarget(passingStep, Optional.<BuildTarget>absent());
+    runner.runStepForBuildTarget(passingStep, Optional.absent());
     try {
-      runner.runStepForBuildTarget(failingStep, Optional.<BuildTarget>absent());
+      runner.runStepForBuildTarget(failingStep, Optional.absent());
       fail("Failing step should have thrown an exception");
     } catch (StepFailedException e) {
       assertEquals(e.getStep(), failingStep);
@@ -105,7 +104,7 @@ public class DefaultStepRunnerTest {
     DefaultStepRunner runner = new DefaultStepRunner(TestExecutionContext.newInstance());
     runner.runStepsInParallelAndWait(
         steps.build(),
-        Optional.<BuildTarget>absent(),
+        Optional.absent(),
         service,
         StepRunner.NOOP_CALLBACK);
 
@@ -118,7 +117,7 @@ public class DefaultStepRunnerTest {
 
     DefaultStepRunner runner = new DefaultStepRunner(context);
     try {
-      runner.runStepForBuildTarget(new ExplosionStep(), Optional.<BuildTarget>absent());
+      runner.runStepForBuildTarget(new ExplosionStep(), Optional.absent());
       fail("Should have thrown a StepFailedException!");
     } catch (StepFailedException e) {
       assertTrue(e.getMessage().startsWith("Failed on step explode with an exception:\n#yolo"));

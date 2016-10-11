@@ -110,7 +110,7 @@ public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
           sourceFilePaths,
           ImmutableSortedSet.<Path>naturalOrder()
             .addAll(Optional.fromNullable(extraClassPath.apply(context))
-                .or(ImmutableList.<Path>of()))
+                .or(ImmutableList.of()))
             .addAll(classpathEntries)
             .build(),
           filesystem));

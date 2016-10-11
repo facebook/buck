@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.slb;
 
-import com.facebook.buck.counters.Counter;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.event.BuckEventBus;
@@ -54,19 +53,19 @@ public class RetryingHttpService implements HttpService {
     failAfterAllRetriesCountCounter = new IntegerCounter(
         COUNTER_CATEGORY,
         "fail_after_all_retries_count",
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
 
     successAfterRetryCountCounter = new IntegerCounter(
         COUNTER_CATEGORY,
         "success_after_retry_count",
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
 
     retryCountCounter = new IntegerCounter(
         COUNTER_CATEGORY,
         "retry_count",
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
 
-    eventBus.post(new CounterRegistry.AsyncCounterRegistrationEvent(ImmutableList.<Counter>of(
+    eventBus.post(new CounterRegistry.AsyncCounterRegistrationEvent(ImmutableList.of(
         failAfterAllRetriesCountCounter,
         successAfterRetryCountCounter,
         retryCountCounter)));

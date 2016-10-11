@@ -261,7 +261,7 @@ public class NdkCxxPlatforms {
                           .build())
                   .putLinkerFlags(
                       NdkCxxPlatformCompiler.Type.GCC,
-                      ImmutableList.<String>of())
+                      ImmutableList.of())
                   .putLinkerFlags(
                       NdkCxxPlatformCompiler.Type.CLANG,
                       ImmutableList.of("-target", "armv7-none-linux-androideabi"))
@@ -287,7 +287,7 @@ public class NdkCxxPlatforms {
                   .setTargetAppPlatform(androidPlatform)
                   .setCompiler(compiler)
                   .setToolchainTarget(ToolchainTarget.I686_LINUX_ANDROID)
-                  .putAssemblerFlags(NdkCxxPlatformCompiler.Type.GCC, ImmutableList.<String>of())
+                  .putAssemblerFlags(NdkCxxPlatformCompiler.Type.GCC, ImmutableList.of())
                   .putAssemblerFlags(
                       NdkCxxPlatformCompiler.Type.CLANG,
                       ImmutableList.<String>builder()
@@ -306,7 +306,7 @@ public class NdkCxxPlatforms {
                           "-O2"))
                   .putLinkerFlags(
                       NdkCxxPlatformCompiler.Type.GCC,
-                      ImmutableList.<String>of())
+                      ImmutableList.of())
                   .putLinkerFlags(
                       NdkCxxPlatformCompiler.Type.CLANG,
                       ImmutableList.of(
@@ -335,8 +335,8 @@ public class NdkCxxPlatforms {
                   .setTargetAppPlatform(androidPlatform)
                   .setCompiler(compiler)
                   .setToolchainTarget(ToolchainTarget.X86_64_LINUX_ANDROID)
-                  .putAssemblerFlags(NdkCxxPlatformCompiler.Type.GCC, ImmutableList.<String>of())
-                  .putAssemblerFlags(NdkCxxPlatformCompiler.Type.CLANG, ImmutableList.<String>of())
+                  .putAssemblerFlags(NdkCxxPlatformCompiler.Type.GCC, ImmutableList.of())
+                  .putAssemblerFlags(NdkCxxPlatformCompiler.Type.CLANG, ImmutableList.of())
                   .putCompilerFlags(
                       NdkCxxPlatformCompiler.Type.GCC,
                       ImmutableList.of(
@@ -350,7 +350,7 @@ public class NdkCxxPlatforms {
                           "-O2"))
                   .putLinkerFlags(
                       NdkCxxPlatformCompiler.Type.GCC,
-                      ImmutableList.<String>of())
+                      ImmutableList.of())
                   .putLinkerFlags(
                       NdkCxxPlatformCompiler.Type.CLANG,
                       ImmutableList.of(
@@ -533,7 +533,7 @@ public class NdkCxxPlatforms {
       ExecutableFinder executableFinder) {
     Path expected = toolchainPaths.getToolPath(tool);
     Optional<Path> path =
-        executableFinder.getOptionalExecutable(expected, ImmutableMap.<String, String>of());
+        executableFinder.getOptionalExecutable(expected, ImmutableMap.of());
     Preconditions.checkState(path.isPresent(), expected.toString());
     return path.get();
   }
@@ -544,7 +544,7 @@ public class NdkCxxPlatforms {
       ExecutableFinder executableFinder) {
     Path expected = toolchainPaths.getGccToolchainBinPath().resolve(tool);
     Optional<Path> path =
-        executableFinder.getOptionalExecutable(expected, ImmutableMap.<String, String>of());
+        executableFinder.getOptionalExecutable(expected, ImmutableMap.of());
     Preconditions.checkState(path.isPresent(), expected.toString());
     return path.get();
   }

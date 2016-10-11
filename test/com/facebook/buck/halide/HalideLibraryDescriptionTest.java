@@ -102,7 +102,7 @@ public class HalideLibraryDescriptionTest {
     Path headerPath = HalideCompile.headerOutputPath(
         flavoredLibTarget,
         lib.getProjectFilesystem(),
-        Optional.<String>absent());
+        Optional.absent());
     CxxSymlinkTreeHeaders publicHeaders =
         (CxxSymlinkTreeHeaders) lib.getCxxPreprocessorInput(
             cxxPlatform,

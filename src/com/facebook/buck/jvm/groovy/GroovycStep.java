@@ -117,7 +117,7 @@ class GroovycStep implements Step {
         .add(outputDirectory.toString());
     addCrossCompilationOptions(command);
 
-    command.addAll(extraArguments.or(ImmutableList.<String>of()));
+    command.addAll(extraArguments.or(ImmutableList.of()));
 
     command.add("@" + pathToSrcsList);
 

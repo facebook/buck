@@ -45,7 +45,7 @@ abstract class AbstractCodeSignIdentity implements RuleKeyAppendable {
    * intended for Buck unit tests.
    */
   public static final CodeSignIdentity AD_HOC = CodeSignIdentity.builder()
-      .setFingerprint(Optional.<HashCode>absent()).setSubjectCommonName("Ad Hoc").build();
+      .setFingerprint(Optional.absent()).setSubjectCommonName("Ad Hoc").build();
 
   /**
    * Returns the identity's certificate hash, defined to be unique for each identity.

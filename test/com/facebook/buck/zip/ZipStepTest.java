@@ -79,7 +79,7 @@ public class ZipStepTest {
     ZipStep step = new ZipStep(
         filesystem,
         Paths.get("zipstep/output.zip"),
-        ImmutableSet.<Path>of(),
+        ImmutableSet.of(),
         false,
         ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
@@ -128,7 +128,7 @@ public class ZipStepTest {
     ZipStep step = new ZipStep(
         filesystem,
         Paths.get("zipstep/output.zip"),
-        ImmutableSet.<Path>of(),
+        ImmutableSet.of(),
         false,
         ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
@@ -162,7 +162,7 @@ public class ZipStepTest {
     ZipStep step = new ZipStep(
         filesystem,
         Paths.get("zipstep/output.zip"),
-        ImmutableSet.<Path>of(),
+        ImmutableSet.of(),
         false,
         ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
@@ -189,7 +189,7 @@ public class ZipStepTest {
     ZipStep step = new ZipStep(
         filesystem,
         Paths.get("zipstep"),
-        ImmutableSet.<Path>of(),
+        ImmutableSet.of(),
         false,
         ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
@@ -208,7 +208,7 @@ public class ZipStepTest {
     ZipStep step = new ZipStep(
         filesystem,
         Paths.get("zipstep/output.zip"),
-        ImmutableSet.<Path>of(),
+        ImmutableSet.of(),
         true,
         ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
@@ -231,7 +231,7 @@ public class ZipStepTest {
     ZipStep step = new ZipStep(
         filesystem,
         Paths.get("zipstep/output.zip"),
-        ImmutableSet.<Path>of(),
+        ImmutableSet.of(),
         true,
         ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
@@ -270,7 +270,7 @@ public class ZipStepTest {
     ZipStep step = new ZipStep(
         filesystem,
         Paths.get("zipstep/output.zip"),
-        ImmutableSet.<Path>of(),
+        ImmutableSet.of(),
         false,
         ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
@@ -301,7 +301,7 @@ public class ZipStepTest {
     ZipStep step = new ZipStep(
         filesystem,
         outputZip,
-        ImmutableSet.<Path>of(),
+        ImmutableSet.of(),
         false,
         ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
@@ -338,7 +338,7 @@ public class ZipStepTest {
     ZipStep step = new ZipStep(
         filesystem,
         outputZip,
-        ImmutableSet.<Path>of(),
+        ImmutableSet.of(),
         false,
         ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
         Paths.get("zipdir"));
@@ -364,7 +364,7 @@ public class ZipStepTest {
         new ZipStep(
             filesystem,
             output,
-            ImmutableSet.<Path>of(),
+            ImmutableSet.of(),
             false,
             ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
             zipdir);
@@ -381,7 +381,7 @@ public class ZipStepTest {
         new ZipStep(
             filesystem,
             output,
-            ImmutableSet.<Path>of(),
+            ImmutableSet.of(),
             false,
             ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
             zipdir);

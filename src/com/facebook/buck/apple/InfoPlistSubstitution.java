@@ -110,7 +110,7 @@ class InfoPlistSubstitution {
   public static String replaceVariablesInString(
       String input,
       Map<String, String> variablesToExpand) {
-    return replaceVariablesInString(input, variablesToExpand, ImmutableList.<String>of());
+    return replaceVariablesInString(input, variablesToExpand, ImmutableList.of());
   }
 
   private static String replaceVariablesInString(

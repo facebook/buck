@@ -33,7 +33,7 @@ public class BuildTargetSourcePath extends AbstractSourcePath<BuildTargetSourceP
   private final Optional<Path> resolvedPath;
 
   public BuildTargetSourcePath(BuildTarget target) {
-    this(target, Optional.<Path>absent());
+    this(target, Optional.absent());
   }
 
   public BuildTargetSourcePath(BuildTarget target, Path path) {

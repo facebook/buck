@@ -115,8 +115,8 @@ public class PythonBinaryDescription implements
         new WriteFile(
             params.copyWithChanges(
                 emptyInitTarget,
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                Suppliers.ofInstance(ImmutableSortedSet.of()),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
             pathResolver,
             "",
             emptyInitPath,
@@ -181,8 +181,8 @@ public class PythonBinaryDescription implements
             new SymlinkTree(
                 params.copyWithChanges(
                     linkTreeTarget,
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                    Suppliers.ofInstance(ImmutableSortedSet.of()),
+                    Suppliers.ofInstance(ImmutableSortedSet.of())),
                 pathResolver,
                 linkTreeRoot,
                 ImmutableMap.<Path, SourcePath>builder()
@@ -243,7 +243,7 @@ public class PythonBinaryDescription implements
                         .addAll(componentDeps)
                         .addAll(pexTool.getDeps(pathResolver))
                         .build()),
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
             pathResolver,
             pythonPlatform,
             pexTool,
@@ -301,9 +301,9 @@ public class PythonBinaryDescription implements
     // Build up the list of all components going into the python binary.
     PythonPackageComponents binaryPackageComponents = PythonPackageComponents.of(
         modules.build(),
-        /* resources */ ImmutableMap.<Path, SourcePath>of(),
-        /* nativeLibraries */ ImmutableMap.<Path, SourcePath>of(),
-        /* prebuiltLibraries */ ImmutableSet.<SourcePath>of(),
+        /* resources */ ImmutableMap.of(),
+        /* nativeLibraries */ ImmutableMap.of(),
+        /* prebuiltLibraries */ ImmutableSet.of(),
         /* zipSafe */ args.zipSafe);
     // Extract the platforms from the flavor, falling back to the default platforms if none are
     // found.
@@ -342,12 +342,12 @@ public class PythonBinaryDescription implements
         mainModule,
         args.extension,
         allPackageComponents,
-        args.buildArgs.or(ImmutableList.<String>of()),
+        args.buildArgs.or(ImmutableList.of()),
         args.packageStyle.or(pythonBuckConfig.getPackageStyle()),
         PythonUtil.getPreloadNames(
             resolver,
             cxxPlatform,
-            args.preloadDeps.or(ImmutableSortedSet.<BuildTarget>of())));
+            args.preloadDeps.or(ImmutableSortedSet.of())));
   }
 
   @Override

@@ -77,7 +77,7 @@ public class VersionUniverseVersionSelector implements VersionSelector {
               root.getBuildTarget(),
               universeName.get()));
     }
-    return Optional.<Map.Entry<String, VersionUniverse>>of(
+    return Optional.of(
         new AbstractMap.SimpleEntry<>(universeName.get(), universe));
   }
 

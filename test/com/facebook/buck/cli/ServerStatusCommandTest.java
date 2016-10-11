@@ -58,7 +58,7 @@ public class ServerStatusCommandTest extends EasyMockSupport {
 
   @Test
   public void testWhenHttpserverNotRunning() throws IOException, InterruptedException {
-    expect(webServer.getPort()).andStubReturn(Optional.<Integer>absent());
+    expect(webServer.getPort()).andStubReturn(Optional.absent());
     replayAll();
 
     ServerStatusCommand command = new ServerStatusCommand();

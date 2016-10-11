@@ -110,7 +110,7 @@ public class ExecutableFinder {
     return getOptionalExecutable(
         suggestedExecutable,
         ImmutableSet.of(basePath),
-        getExecutableSuffixes(ImmutableMap.<String, String>of()));
+        getExecutableSuffixes(ImmutableMap.of()));
   }
 
   public Optional<Path> getOptionalExecutable(
@@ -211,6 +211,6 @@ public class ExecutableFinder {
     return getOptionalExecutable(
         Paths.get(tool),
         toolSearchPaths,
-        ImmutableSet.<String>of());
+        ImmutableSet.of());
   }
 }

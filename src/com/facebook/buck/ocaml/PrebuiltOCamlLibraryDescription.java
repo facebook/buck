@@ -76,8 +76,8 @@ public class PrebuiltOCamlLibraryDescription
     final Path includeDir = libPath.resolve(args.includeDir.or(""));
 
     final Optional<SourcePath> staticNativeLibraryPath = bytecodeOnly
-        ? Optional.<SourcePath>absent()
-        : Optional.<SourcePath>of(new PathSourcePath(
+        ? Optional.absent()
+        : Optional.of(new PathSourcePath(
           params.getProjectFilesystem(),
           libPath.resolve(nativeLib)));
     final SourcePath staticBytecodeLibraryPath = new PathSourcePath(

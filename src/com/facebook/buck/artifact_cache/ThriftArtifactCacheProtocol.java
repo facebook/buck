@@ -95,7 +95,7 @@ public class ThriftArtifactCacheProtocol {
         throws IOException {
       this.payloads = thriftData.isSetPayloads() ?
           ImmutableList.copyOf(thriftData.getPayloads()) :
-          ImmutableList.<PayloadInfo>of();
+          ImmutableList.of();
 
       Preconditions.checkArgument(
           payloadByteSources.length == this.payloads.size(),

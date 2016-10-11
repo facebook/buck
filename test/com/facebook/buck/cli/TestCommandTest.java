@@ -22,9 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeTestRule;
@@ -64,25 +62,25 @@ public class TestCommandTest {
         ImmutableSet.of(Label.of("windows"), Label.of("linux")),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.of());
 
     TestRule rule2 = new FakeTestRule(
         ImmutableSet.of(Label.of("android")),
         BuildTargetFactory.newInstance("//:teh"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.of());
 
     TestRule rule3 = new FakeTestRule(
         ImmutableSet.of(Label.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.of());
 
     List<TestRule> testRules = ImmutableList.of(rule1, rule2, rule3);
 
     Iterable<TestRule> result = command.filterTestRules(
         FakeBuckConfig.builder().build(),
-        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.of(),
         testRules);
     assertThat(result, contains(rule2));
   }
@@ -98,19 +96,19 @@ public class TestCommandTest {
         ImmutableSet.of(Label.of("windows"), Label.of("linux")),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.of());
 
     TestRule rule2 = new FakeTestRule(
         ImmutableSet.of(Label.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.of());
 
     List<TestRule> testRules = ImmutableList.of(rule1, rule2);
 
     Iterable<TestRule> result = command.filterTestRules(
         FakeBuckConfig.builder().build(),
-        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.of(),
         testRules);
     assertEquals(ImmutableSet.of(rule1), result);
   }
@@ -126,19 +124,19 @@ public class TestCommandTest {
         ImmutableSet.of(Label.of("windows"), Label.of("linux")),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.of());
 
     TestRule rule2 = new FakeTestRule(
         ImmutableSet.of(Label.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.of());
 
     List<TestRule> testRules = ImmutableList.of(rule1, rule2);
 
     Iterable<TestRule> result = command.filterTestRules(
         FakeBuckConfig.builder().build(),
-        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.of(),
         testRules);
     assertEquals(ImmutableSet.of(rule2), result);
   }
@@ -148,7 +146,7 @@ public class TestCommandTest {
     TestCommand command = getCommand("--exclude", "c", "--include", "a+b");
 
     TestRule rule = new FakeTestRule(
-        ImmutableSet.<Label>of(
+        ImmutableSet.of(
             Label.of("a"),
             Label.of("b"),
             Label.of("c")),
@@ -158,13 +156,13 @@ public class TestCommandTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.of());
 
     List<TestRule> testRules = ImmutableList.of(rule);
 
     Iterable<TestRule> result = command.filterTestRules(
         FakeBuckConfig.builder().build(),
-        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.of(),
         testRules);
     assertEquals(ImmutableSet.of(), result);
   }
@@ -174,7 +172,7 @@ public class TestCommandTest {
     TestCommand command = getCommand("--labels", "!c", "a+b");
 
     TestRule rule = new FakeTestRule(
-        ImmutableSet.<Label>of(
+        ImmutableSet.of(
             Label.of("a"),
             Label.of("b"),
             Label.of("c")),
@@ -184,13 +182,13 @@ public class TestCommandTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.of());
 
     List<TestRule> testRules = ImmutableList.of(rule);
 
     Iterable<TestRule> result = command.filterTestRules(
         FakeBuckConfig.builder().build(),
-        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.of(),
         testRules);
     assertEquals(ImmutableSet.of(), result);
   }
@@ -206,21 +204,21 @@ public class TestCommandTest {
         ImmutableSet.of(Label.of("windows"), Label.of("linux")),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.of());
 
     FakeTestRule rule2 = new FakeTestRule(
         ImmutableSet.of(Label.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of(rule1));
+        ImmutableSortedSet.of(rule1));
 
     FakeTestRule rule3 = new FakeTestRule(
         ImmutableSet.of(Label.of("linux")),
         BuildTargetFactory.newInstance("//:wow"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of(rule2));
+        ImmutableSortedSet.of(rule2));
 
-    List<TestRule> testRules = ImmutableList.<TestRule>of(rule1, rule2, rule3);
+    List<TestRule> testRules = ImmutableList.of(rule1, rule2, rule3);
     Iterable<TestRule> filtered = command.filterTestRules(
         FakeBuckConfig.builder().build(),
         ImmutableSet.of(BuildTargetFactory.newInstance("//:wow")),
@@ -242,15 +240,15 @@ public class TestCommandTest {
         ImmutableSet.of(Label.of("windows"), Label.of("linux")),
         BuildTargetFactory.newInstance("//:for"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.of());
 
     FakeTestRule rule2 = new FakeTestRule(
         ImmutableSet.of(Label.of("windows")),
         BuildTargetFactory.newInstance("//:lulz"),
         pathResolver,
-        ImmutableSortedSet.<BuildRule>of(rule1));
+        ImmutableSortedSet.of(rule1));
 
-    List<TestRule> testRules = ImmutableList.<TestRule>of(rule1, rule2);
+    List<TestRule> testRules = ImmutableList.of(rule1, rule2);
     Iterable<TestRule> filtered = command.filterTestRules(
         FakeBuckConfig.builder().build(),
         ImmutableSet.of(
@@ -310,12 +308,12 @@ public class TestCommandTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        /* deps */ ImmutableSortedSet.<BuildRule>of()
+        /* deps */ ImmutableSortedSet.of()
         /* visibility */);
     Iterable<TestRule> filtered = command.filterTestRules(
         config,
         ImmutableSet.of(BuildTargetFactory.newInstance("//example:test")),
-        ImmutableSet.<TestRule>of(rule));
+        ImmutableSet.of(rule));
 
     assertEquals(rule, Iterables.getOnlyElement(filtered));
   }

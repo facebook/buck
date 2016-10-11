@@ -178,7 +178,7 @@ public class PomIntegrationTest {
 
   private static void removeDependencies(Model model, Path pomFile)
       throws IOException, SAXException, TransformerException {
-    model.setDependencies(Collections.<Dependency>emptyList());
+    model.setDependencies(Collections.emptyList());
     serializePom(model, pomFile);
   }
 

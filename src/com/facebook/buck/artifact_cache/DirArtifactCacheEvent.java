@@ -31,7 +31,7 @@ public class DirArtifactCacheEvent {
   public static class DirArtifactCacheEventFactory implements ArtifactCacheEventFactory {
     @Override
     public ArtifactCacheEvent.Started newFetchStartedEvent(ImmutableSet<RuleKey> ruleKeys) {
-      return new Started(ArtifactCacheEvent.Operation.FETCH, ruleKeys, Optional.<String>absent());
+      return new Started(ArtifactCacheEvent.Operation.FETCH, ruleKeys, Optional.absent());
     }
 
     @Override
@@ -45,7 +45,7 @@ public class DirArtifactCacheEvent {
 
     @Override
     public ArtifactCacheEvent.Finished newStoreFinishedEvent(ArtifactCacheEvent.Started started) {
-      return newFinishedEvent(started, Optional.<CacheResult>absent());
+      return newFinishedEvent(started, Optional.absent());
     }
 
     @Override

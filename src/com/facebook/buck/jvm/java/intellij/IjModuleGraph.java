@@ -297,7 +297,7 @@ public class IjModuleGraph {
           TargetNode<?> targetNode = targetGraph.get(depBuildTarget);
           Optional<IjLibrary> library = libraryFactory.getLibrary(targetNode);
           if (library.isPresent()) {
-            depElements = ImmutableSet.<IjProjectElement>of(library.get());
+            depElements = ImmutableSet.of(library.get());
           } else {
             depElements = ImmutableSet.of();
           }
@@ -341,7 +341,7 @@ public class IjModuleGraph {
       if (!module.getExtraClassPathDependencies().isEmpty()) {
         IjLibrary extraClassPathLibrary = IjLibrary.builder()
             .setClassPaths(module.getExtraClassPathDependencies())
-            .setTargets(ImmutableSet.<TargetNode<?>>of())
+            .setTargets(ImmutableSet.of())
             .setName("library_" + module.getName() + "_extra_classpath")
             .build();
         moduleDeps.put(extraClassPathLibrary, DependencyType.PROD);
@@ -356,7 +356,7 @@ public class IjModuleGraph {
     }
 
     for (IjLibrary library : referencedLibraries) {
-      depsBuilder.put(library, ImmutableMap.<IjProjectElement, DependencyType>of());
+      depsBuilder.put(library, ImmutableMap.of());
     }
 
     return new IjModuleGraph(depsBuilder.build());
@@ -372,7 +372,7 @@ public class IjModuleGraph {
 
   public ImmutableMap<IjProjectElement, DependencyType> getDepsFor(IjProjectElement source) {
     return Optional.fromNullable(deps.get(source))
-        .or(ImmutableMap.<IjProjectElement, DependencyType>of());
+        .or(ImmutableMap.of());
   }
 
   public ImmutableMap<IjModule, DependencyType> getDependentModulesFor(IjModule source) {

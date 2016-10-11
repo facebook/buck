@@ -113,9 +113,9 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
       TestReportingCallback testReportingCallback) {
     Optional<Long> processTimeoutMs = testRuleTimeoutMs.isPresent() ?
         Optional.of(testRuleTimeoutMs.get() + PROCESS_TIMEOUT_EXTRA_MS) :
-        Optional.<Long>absent();
+        Optional.absent();
 
-    ImmutableList.Builder<String> args = ImmutableList.<String>builder();
+    ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(testMain.getExecutableCommand().getCommandPrefix(getResolver()));
     args.add("-test.v");
     if (testRuleTimeoutMs.isPresent()) {

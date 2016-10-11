@@ -49,7 +49,7 @@ public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription
             pythonPlatforms,
             CxxPlatformUtils.DEFAULT_CONFIG,
             defaultCxxPlatform,
-            Optional.<Long>absent(),
+            Optional.absent(),
             cxxPlatforms),
         target);
   }

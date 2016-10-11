@@ -27,7 +27,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.WatchmanDiagnostic;
 import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.json.BuildFileParseException;
@@ -341,8 +340,8 @@ public class ProjectBuildFileParserTest {
                   return fakeProcessWithBserOutput(
                       1,
                       ImmutableList.of(),
-                      Optional.<List<Object>>absent(),
-                      Optional.<String>absent());
+                      Optional.absent(),
+                      Optional.absent());
                 }
               },
               new TestConsole()),
@@ -360,8 +359,8 @@ public class ProjectBuildFileParserTest {
                   return fakeProcessWithBserOutput(
                       0,
                       ImmutableList.of(),
-                      Optional.<List<Object>>absent(),
-                      Optional.<String>absent());
+                      Optional.absent(),
+                      Optional.absent());
                 }
               },
               new TestConsole()),
@@ -380,7 +379,7 @@ public class ProjectBuildFileParserTest {
                   return fakeProcessWithBserOutput(
                       0,
                       ImmutableList.of(),
-                      Optional.<List<Object>>absent(),
+                      Optional.absent(),
                       Optional.of("Don't Panic!"));
                 }
               },
@@ -402,8 +401,8 @@ public class ProjectBuildFileParserTest {
                   return fakeProcessWithBserOutput(
                       0,
                       ImmutableList.of(),
-                      Optional.<List<Object>>of(
-                          ImmutableList.<Object>of(
+                      Optional.of(
+                          ImmutableList.of(
                               ImmutableMap.of(
                                   "level",
                                   "warning",
@@ -411,7 +410,7 @@ public class ProjectBuildFileParserTest {
                                   warning,
                                   "source",
                                   source))),
-                      Optional.<String>absent());
+                      Optional.absent());
                 }
               },
               new TestConsole()),
@@ -432,8 +431,8 @@ public class ProjectBuildFileParserTest {
                   return fakeProcessWithBserOutput(
                       0,
                       ImmutableList.of(),
-                      Optional.<List<Object>>of(
-                          ImmutableList.<Object>of(
+                      Optional.of(
+                          ImmutableList.of(
                               ImmutableMap.of(
                                   "level",
                                   "error",
@@ -441,7 +440,7 @@ public class ProjectBuildFileParserTest {
                                   error,
                                   "source",
                                   source))),
-                      Optional.<String>absent());
+                      Optional.absent());
                 }
               },
               new TestConsole()),
@@ -460,16 +459,16 @@ public class ProjectBuildFileParserTest {
                 .setProjectRoot(projectRoot)
                 .setPythonInterpreter(pythonInterpreter)
                 .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
-                .setIgnorePaths(ImmutableSet.<PathOrGlobMatcher>of())
+                .setIgnorePaths(ImmutableSet.of())
                 .setBuildFileName(DEFAULT_BUILD_FILE_NAME)
                 .setDefaultIncludes(ImmutableSet.of("//java/com/facebook/defaultIncludeFile"))
                 .setDescriptions(buildRuleTypes.getAllDescriptions())
                 .setEnableBuildFileSandboxing(false)
-                .setBuildFileImportWhitelist(ImmutableList.<String>of())
+                .setBuildFileImportWhitelist(ImmutableList.of())
                 .build(),
             new ConstructorArgMarshaller(new DefaultTypeCoercerFactory(
                 ObjectMappers.newDefaultInstance())),
-            ImmutableMap.<String, String>of(),
+            ImmutableMap.of(),
             buckEventBus,
             processExecutor,
             /* ignoreBuckAutodepsFiles */ false,

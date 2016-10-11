@@ -79,7 +79,7 @@ public class Jsr199JavacTest extends EasyMockSupport {
   public void testAnnotationProcessorClassloadersNotReusedByDefault() throws MalformedURLException {
     assertFalse(isAnnotationProcessorClassLoaderReused(
         ImmutableList.of("some.Processor"),  // processors
-        Collections.<String>emptySet()));    // safe processors
+        Collections.emptySet()));    // safe processors
   }
 
   @Test

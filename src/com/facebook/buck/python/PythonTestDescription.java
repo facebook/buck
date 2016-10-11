@@ -41,7 +41,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -69,7 +68,7 @@ public class PythonTestDescription implements
 
   private static final MacroHandler MACRO_HANDLER =
       new MacroHandler(
-          ImmutableMap.<String, MacroExpander>of(
+          ImmutableMap.of(
               "location", new LocationMacroExpander()));
 
   private final PythonBinaryDescription binaryDescription;
@@ -159,8 +158,8 @@ public class PythonTestDescription implements
         BuildTargets.createFlavoredBuildTarget(
             params.getBuildTarget().checkUnflavored(),
             ImmutableFlavor.of("test_module")),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+        Suppliers.ofInstance(ImmutableSortedSet.of()),
+        Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     String contents = getTestModulesListContents(testModules);
 
@@ -264,8 +263,8 @@ public class PythonTestDescription implements
             .putAll(srcs)
             .build(),
         resources,
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableSet.<SourcePath>of(),
+        ImmutableMap.of(),
+        ImmutableSet.of(),
         args.zipSafe);
     PythonPackageComponents allComponents =
         PythonUtil.getAllComponents(
@@ -291,7 +290,7 @@ public class PythonTestDescription implements
     BuildRuleParams binaryParams = params.copyWithChanges(
         getBinaryBuildTarget(params.getBuildTarget()),
         Suppliers.ofInstance(PythonUtil.getDepsFromComponents(pathResolver, allComponents)),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+        Suppliers.ofInstance(ImmutableSortedSet.of()));
     PythonBinary binary =
         binaryDescription.createPackageRule(
             binaryParams,
@@ -302,7 +301,7 @@ public class PythonTestDescription implements
             mainModule,
             args.extension,
             allComponents,
-            args.buildArgs.or(ImmutableList.<String>of()),
+            args.buildArgs.or(ImmutableList.of()),
             args.packageStyle.or(pythonBuckConfig.getPackageStyle()),
             PythonUtil.getPreloadNames(
                 resolver,
@@ -350,7 +349,7 @@ public class PythonTestDescription implements
           public ImmutableMap<String, String> get() {
             return ImmutableMap.copyOf(
                 Maps.transformValues(
-                    args.env.or(ImmutableMap.<String, String>of()),
+                    args.env.or(ImmutableMap.of()),
                     MACRO_HANDLER.getExpander(
                         params.getBuildTarget(),
                         params.getCellRoots(),
@@ -370,10 +369,10 @@ public class PythonTestDescription implements
         pathResolver,
         testEnv,
         binary,
-        args.labels.or(ImmutableSet.<Label>of()),
+        args.labels.or(ImmutableSet.of()),
         neededCoverageBuilder.build(),
         args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
-        args.contacts.or(ImmutableSet.<String>of()));
+        args.contacts.or(ImmutableSet.of()));
   }
 
   @Override

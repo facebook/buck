@@ -60,7 +60,7 @@ public class MacroHandlerTest {
 
   @Test
   public void noSuchMacro() {
-    MacroHandler handler = new MacroHandler(ImmutableMap.<String, MacroExpander>of());
+    MacroHandler handler = new MacroHandler(ImmutableMap.of());
     try {
       handler.expand(
           target,
@@ -79,7 +79,7 @@ public class MacroHandlerTest {
 
   @Test
   public void escapeMacro() throws MacroException {
-    MacroHandler handler = new MacroHandler(ImmutableMap.<String, MacroExpander>of());
+    MacroHandler handler = new MacroHandler(ImmutableMap.of());
     String raw = "hello \\$(notamacro hello)";
     String expanded = handler.expand(
         target,
@@ -92,7 +92,7 @@ public class MacroHandlerTest {
   @Test
   public void automaticallyAddsOutputToFileVariant() throws MacroException {
     MacroHandler handler =
-        new MacroHandler(ImmutableMap.<String, MacroExpander>of("foo", new StringExpander("cake")));
+        new MacroHandler(ImmutableMap.of("foo", new StringExpander("cake")));
     String expanded = handler.expand(
         target,
         createCellRoots(filesystem),
@@ -105,14 +105,14 @@ public class MacroHandlerTest {
   @Test
   public void testContainsWorkerMacroReturnsTrue() throws MacroException {
     MacroHandler handler = new MacroHandler(
-        ImmutableMap.<String, MacroExpander>of("worker", new WorkerMacroExpander()));
+        ImmutableMap.of("worker", new WorkerMacroExpander()));
     assertTrue(MacroArg.containsWorkerMacro(handler, "$(worker :rule)"));
   }
 
   @Test
   public void testContainsWorkerMacroReturnsFalse() throws MacroException {
     MacroHandler handler =
-        new MacroHandler(ImmutableMap.<String, MacroExpander>of(
+        new MacroHandler(ImmutableMap.of(
             "worker", new WorkerMacroExpander(),
             "exe", new ExecutableMacroExpander()));
     assertFalse(

@@ -289,7 +289,7 @@ public class MacroFinder {
           switch (c) {
             case ')':
               parenthesesDepth -= 1;
-              currentResultBuilder.setMacroInput(ImmutableList.<String>of())
+              currentResultBuilder.setMacroInput(ImmutableList.of())
                   .setMacroType(takeBuffer())
                   .setEndIndex(index + 1);
               return State.FOUND_MACRO;

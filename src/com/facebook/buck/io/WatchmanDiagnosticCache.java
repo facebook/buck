@@ -34,7 +34,7 @@ public class WatchmanDiagnosticCache {
   private final Set<WatchmanDiagnostic> diagnosticCache;
 
   public WatchmanDiagnosticCache() {
-    this(Sets.<WatchmanDiagnostic>newConcurrentHashSet());
+    this(Sets.newConcurrentHashSet());
   }
 
   @VisibleForTesting

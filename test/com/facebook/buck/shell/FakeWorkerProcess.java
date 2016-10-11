@@ -33,7 +33,7 @@ public class FakeWorkerProcess extends WorkerProcess {
     super(
         new FakeProcessExecutor(),
         ProcessExecutorParams.builder()
-            .setCommand(ImmutableList.<String>of())
+            .setCommand(ImmutableList.of())
             .build(),
         new FakeProjectFilesystem(),
         Paths.get("tmp").toAbsolutePath().normalize());

@@ -64,7 +64,7 @@ public class SourceListTypeCoercer implements TypeCoercer<SourceList> {
 
   @Override
   public Optional<SourceList> getOptionalValue() {
-    return Optional.of(SourceList.ofUnnamedSources(ImmutableSortedSet.<SourcePath>of()));
+    return Optional.of(SourceList.ofUnnamedSources(ImmutableSortedSet.of()));
   }
 
   @Override

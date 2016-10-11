@@ -108,7 +108,7 @@ public class CachingBuildEngineFactory {
       Function<? super ProjectFilesystem, CachingBuildEngine.RuleKeyFactories>
           ruleKeyFactoriesFunction) {
     this.ruleKeyFactoriesFunction =
-        Optional.<Function<? super ProjectFilesystem, CachingBuildEngine.RuleKeyFactories>>of(
+        Optional.of(
             ruleKeyFactoriesFunction);
     return this;
   }

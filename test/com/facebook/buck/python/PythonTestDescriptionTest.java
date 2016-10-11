@@ -63,7 +63,7 @@ public class PythonTestDescriptionTest {
         (PythonTest) PythonTestBuilder.create(BuildTargetFactory.newInstance("//:bin"))
             .setSrcs(
                 SourceList.ofUnnamedSources(
-                    ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("blah.py"))))
+                    ImmutableSortedSet.of(new FakeSourcePath("blah.py"))))
             .build(resolver);
     PythonBinary binRule = testRule.getBinary();
     PythonPackageComponents components = binRule.getComponents();
@@ -196,12 +196,12 @@ public class PythonTestDescriptionTest {
         PythonPlatform.of(
             ImmutableFlavor.of("pyPlat1"),
             new PythonEnvironment(Paths.get("python2.6"), PythonVersion.of("CPython", "2.6")),
-            Optional.<BuildTarget>absent());
+            Optional.absent());
     PythonPlatform platform2 =
         PythonPlatform.of(
             ImmutableFlavor.of("pyPlat2"),
             new PythonEnvironment(Paths.get("python2.7"), PythonVersion.of("CPython", "2.7")),
-            Optional.<BuildTarget>absent());
+            Optional.absent());
     PythonTestBuilder builder =
         PythonTestBuilder.create(
             BuildTargetFactory.newInstance("//:bin"),

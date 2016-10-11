@@ -184,12 +184,12 @@ public class IjProject {
                     buildRuleResolver
                 );
             if (annotationProcessingParams == null || annotationProcessingParams.isEmpty()) {
-              return Optional.<Path>absent();
+              return Optional.absent();
             }
 
             return Optional
                   .fromNullable(annotationProcessingParams.getGeneratedSourceFolderName())
-                  .or(Optional.<Path>absent());
+                  .or(Optional.absent());
           }
 
           private Path getRelativePathAndRecordRule(SourcePath sourcePath) {

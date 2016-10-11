@@ -28,7 +28,7 @@ import org.junit.Test;
 public class GidGeneratorTest {
   @Test
   public void testTrivialGidGeneration() {
-    GidGenerator generator = new GidGenerator(ImmutableSet.<String>of());
+    GidGenerator generator = new GidGenerator(ImmutableSet.of());
     String gid = generator.generateGid("foo", 0);
     assertFalse("GID should be non-empty", gid.isEmpty());
     assertTrue("GID should be hexadecimal", gid.matches("^[0-9A-F]+$"));
@@ -40,7 +40,7 @@ public class GidGeneratorTest {
 
   @Test
   public void testTwoGidsWithSameClassNameAndHashDiffer() {
-    GidGenerator generator = new GidGenerator(ImmutableSet.<String>of());
+    GidGenerator generator = new GidGenerator(ImmutableSet.of());
     String gid = generator.generateGid("foo", 0);
     String gid1 = generator.generateGid("foo", 0);
     assertNotEquals("The GID generator should avoid collisions", gid, gid1);

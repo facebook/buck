@@ -312,32 +312,32 @@ class DaemonicParserState {
     this.cacheInvalidatedByEnvironmentVariableChangeCounter = new TagSetCounter(
         COUNTER_CATEGORY,
         INVALIDATED_BY_ENV_VARS_COUNTER_NAME,
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     this.cacheInvalidatedByDefaultIncludesChangeCounter = new IntegerCounter(
         COUNTER_CATEGORY,
         INVALIDATED_BY_DEFAULT_INCLUDES_COUNTER_NAME,
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     this.cacheInvalidatedByWatchOverflowCounter = new IntegerCounter(
         COUNTER_CATEGORY,
         INVALIDATED_BY_WATCH_OVERFLOW_COUNTER_NAME,
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     this.buildFilesInvalidatedByFileAddOrRemoveCounter = new IntegerCounter(
         COUNTER_CATEGORY,
         BUILD_FILES_INVALIDATED_BY_FILE_ADD_OR_REMOVE_COUNTER_NAME,
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     this.filesChangedCounter = new IntegerCounter(
         COUNTER_CATEGORY,
         FILES_CHANGED_COUNTER_NAME,
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     this.rulesInvalidatedByWatchEventsCounter = new IntegerCounter(
         COUNTER_CATEGORY,
         RULES_INVALIDATED_BY_WATCH_EVENTS_COUNTER_NAME,
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     this.pathsAddedOrRemovedInvalidatingBuildFiles =
         new TagSetCounter(
             COUNTER_CATEGORY,
             PATHS_ADDED_OR_REMOVED_INVALIDATING_BUILD_FILES,
-            ImmutableMap.<String, String>of());
+            ImmutableMap.of());
     this.buildFileTrees = CacheBuilder.newBuilder().build(
         new CacheLoader<Cell, BuildFileTree>() {
           @Override

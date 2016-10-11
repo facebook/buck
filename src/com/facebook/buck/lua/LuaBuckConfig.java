@@ -41,7 +41,7 @@ public class LuaBuckConfig implements LuaConfig {
           BuildTarget.of(
               UnflavoredBuildTarget.of(
                   Paths.get(""),
-                  Optional.<String>absent(),
+                  Optional.absent(),
                   "//system",
                   "lua")));
 

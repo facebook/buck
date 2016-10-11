@@ -219,7 +219,7 @@ public class SwiftLibraryDescription implements
               params.getProjectFilesystem(),
               buildTarget, "%s"),
           args.srcs.get(),
-          Optional.<Boolean>absent(),
+          Optional.absent(),
           args.bridgingHeader);
     }
 
@@ -228,7 +228,7 @@ public class SwiftLibraryDescription implements
         params,
         resolver,
         new SourcePathResolver(resolver),
-        ImmutableSet.<BuildRule>of(),
+        ImmutableSet.of(),
         swiftPlatformFlavorDomain,
         args.frameworks.get(),
         args.libraries.get(),
@@ -278,9 +278,9 @@ public class SwiftLibraryDescription implements
         FluentIterable.from(params.getDeps())
             .filter(NativeLinkable.class)
             .append(swiftRuntimeLinkable),
-        Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of(),
+        Optional.absent(),
+        Optional.absent(),
+        ImmutableSet.of(),
         inputBuilder.build()));
   }
 
@@ -296,7 +296,7 @@ public class SwiftLibraryDescription implements
           args.srcs.get()).isEmpty();
       return hasSwiftSource ?
           Optional.of(resolver.requireRule(buildTarget.withAppendedFlavors(SWIFT_COMPANION_FLAVOR)))
-          : Optional.<BuildRule>absent();
+          : Optional.absent();
     }
 
     final SwiftLibraryDescription.Arg delegateArgs = createUnpopulatedConstructorArg();

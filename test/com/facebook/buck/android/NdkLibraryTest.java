@@ -44,7 +44,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -61,12 +60,12 @@ public class NdkLibraryTest {
     AndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         projectFilesystem.getRootPath().getFileSystem(),
         ImmutableMap.copyOf(System.getenv()),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
 
     AndroidPlatformTarget androidPlatformTarget = AndroidPlatformTarget.getDefaultPlatformTarget(
         resolver,
-        Optional.<Path>absent());
+        Optional.absent());
     executionContext = TestExecutionContext.newBuilder()
         .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
         .build();

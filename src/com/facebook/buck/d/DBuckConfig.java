@@ -58,7 +58,7 @@ public class DBuckConfig {
     // If flags are configured in buckconfig, return those.
     // Else, return an empty list (no flags), as that should normally work.
     return delegate.getOptionalListWithoutComments(
-        "d", "base_compiler_flags", ' ').or(ImmutableList.<String>of());
+        "d", "base_compiler_flags", ' ').or(ImmutableList.of());
   }
 
   /**

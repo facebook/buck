@@ -198,7 +198,7 @@ public class PrebuiltAppleFramework
 
   @Override
   public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
-    return ImmutableList.<NativeLinkable>of();
+    return ImmutableList.of();
   }
 
   private NativeLinkableInput getNativeLinkableInputUncached(
@@ -229,7 +229,7 @@ public class PrebuiltAppleFramework
     return NativeLinkableInput.of(
         linkerArgs,
         frameworkPaths.build(),
-        Collections.<FrameworkPath>emptySet());
+        Collections.emptySet());
   }
 
   @Override
@@ -254,7 +254,7 @@ public class PrebuiltAppleFramework
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
       throws NoSuchBuildTargetException {
-    return ImmutableMap.<String, SourcePath>of();
+    return ImmutableMap.of();
   }
 
 }

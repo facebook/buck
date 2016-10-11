@@ -34,9 +34,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
-import com.facebook.buck.step.AdbOptions;
-import com.facebook.buck.step.TargetDevice;
-import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -50,7 +47,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -95,7 +91,7 @@ public class DistBuildSlaveExecutor {
         Preconditions.checkNotNull(actionGraphAndResolver).getActionGraph(),
         Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
         args.getRootCell(),
-        Optional.<TargetDevice>absent(),
+        Optional.absent(),
         getExplodingAndroidSupplier(),
         buildEngine,
         args.getArtifactCache(),
@@ -107,7 +103,7 @@ public class DistBuildSlaveExecutor {
         /* shouldReportAbsolutePaths */ false,
         args.getBuckEventBus(),
         args.getPlatform(),
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         args.getObjectMapper(),
         args.getClock(),
         new ConcurrencyLimit(
@@ -117,8 +113,8 @@ public class DistBuildSlaveExecutor {
             4,
             config.getDefaultResourceAmounts(),
             config.getMaximumResourceAmounts().withCpu(4)),
-        Optional.<AdbOptions>absent(),
-        Optional.<TargetDeviceOptions>absent(),
+        Optional.absent(),
+        Optional.absent(),
         args.getExecutors())) {
 
       // TODO(ruibm): We need to pass to the distbuild target via de distributed build
@@ -137,7 +133,7 @@ public class DistBuildSlaveExecutor {
           /* isKeepGoing */ true,
           args.getBuckEventBus(),
           args.getConsole(),
-          Optional.<Path>absent());
+          Optional.absent());
     }
   }
 

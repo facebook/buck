@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 import javax.tools.JavaCompiler;
@@ -127,11 +126,11 @@ public class JavacDirectToJarStep implements Step {
           ImmutableSortedSet.copyOf(entriesToJar),
           inMemoryFileManager != null
               ? inMemoryFileManager.getEntries()
-              : ImmutableSet.<String>of(),
+              : ImmutableSet.of(),
           mainClass,
           manifestFile,
           /* mergeManifests */ true,
-          /* blacklist */ ImmutableSet.<Pattern>of(),
+          /* blacklist */ ImmutableSet.of(),
           context));
 
     } finally {

@@ -48,7 +48,7 @@ public class WatchmanTest {
   private String exe = Paths.get("/opt/bin/watchman").toAbsolutePath().toString();
   private FakeExecutableFinder finder = new FakeExecutableFinder(Paths.get(exe));
   private ImmutableMap<String, String> env = ImmutableMap.of();
-  private static final ImmutableList<Object> VERSION_QUERY = ImmutableList.<Object>of(
+  private static final ImmutableList<Object> VERSION_QUERY = ImmutableList.of(
       "version",
       ImmutableMap.of(
           "required", ImmutableSet.of("cmd-watch-project"),
@@ -78,7 +78,7 @@ public class WatchmanTest {
           System.err.format("bad path (%s != %s", path, socketName);
           return Optional.absent();
         }
-        return Optional.<WatchmanClient>of(
+        return Optional.of(
             new FakeWatchmanClient(queryElapsedTimeNanos, queryResults));
       }
     };
@@ -112,7 +112,7 @@ public class WatchmanTest {
         finder,
         new TestConsole(),
         clock,
-        Optional.<Long>absent());
+        Optional.absent());
 
     assertEquals(Watchman.NULL_WATCHMAN, watchman);
   }
@@ -151,7 +151,7 @@ public class WatchmanTest {
         finder,
         new TestConsole(),
         clock,
-        Optional.<Long>absent());
+        Optional.absent());
 
     assertEquals(Watchman.NULL_WATCHMAN, watchman);
   }
@@ -198,7 +198,7 @@ public class WatchmanTest {
         finder,
         new TestConsole(),
         clock,
-        Optional.<Long>absent());
+        Optional.absent());
 
     assertEquals(Watchman.NULL_WATCHMAN, watchman);
   }
@@ -333,7 +333,7 @@ public class WatchmanTest {
         finder,
         new TestConsole(),
         clock,
-        Optional.<Long>absent());
+        Optional.absent());
 
     assertEquals(
         ImmutableSet.of(

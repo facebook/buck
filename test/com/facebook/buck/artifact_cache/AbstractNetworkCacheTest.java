@@ -53,7 +53,7 @@ public class AbstractNetworkCacheTest {
   @Test
   public void testBigArtifactIsStoredWhenMaxIsNotDefined()
       throws InterruptedException, IOException, ExecutionException {
-    testStoreCall(4, Optional.<Long>absent(), 5, 10, 100, 1000);
+    testStoreCall(4, Optional.absent(), 5, 10, 100, 1000);
   }
 
   private void testStoreCall(

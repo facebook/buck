@@ -26,7 +26,6 @@ import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Cell;
@@ -34,7 +33,6 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
@@ -118,7 +116,7 @@ final class JavaBuildGraphProcessor {
                 executorService,
                 ImmutableList.of(
                     TargetNodePredicateSpec.of(
-                        Predicates.<TargetNode<?>>alwaysTrue(),
+                        Predicates.alwaysTrue(),
                         BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))),
                 /* ignoreBuckAutodepsFiles */ true).getTargetGraph();
       } catch (BuildTargetException | BuildFileParseException e) {
@@ -149,7 +147,7 @@ final class JavaBuildGraphProcessor {
           .setConsole(params.getConsole())
           .setConcurrencyLimit(concurrencyLimit)
           .setBuckEventBus(eventBus)
-          .setEnvironment(/* environment */ ImmutableMap.<String, String>of())
+          .setEnvironment(/* environment */ ImmutableMap.of())
           .setExecutors(
               ImmutableMap.<ExecutorPool, ListeningExecutorService>of(
                   ExecutorPool.CPU,
@@ -162,7 +160,7 @@ final class JavaBuildGraphProcessor {
 
       BuildContext buildContext = ImmutableBuildContext.builder()
           // Note we do not create a real action graph because we do not need one.
-          .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
+          .setActionGraph(new ActionGraph(ImmutableList.of()))
           .setStepRunner(stepRunner)
           .setClock(params.getClock())
           .setArtifactCache(params.getArtifactCache())

@@ -552,7 +552,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           Optional.of(suggestBuildRule),
           postprocessClassesCommands,
           ImmutableSortedSet.of(outputDirectory),
-          /* mainClass */ Optional.<String>absent(),
+          /* mainClass */ Optional.absent(),
           manifestFile.transform(getResolver().getAbsolutePathFunction()),
           outputJar.get(),
           usedClassesFileWriter,
@@ -617,7 +617,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public Optional<SourcePath> getAbiJar() {
-    return outputJar.isPresent() ? Optional.of(abiJar) : Optional.<SourcePath>absent();
+    return outputJar.isPresent() ? Optional.of(abiJar) : Optional.absent();
   }
 
   @Override
@@ -663,7 +663,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() throws IOException {
-    return Optional.<ImmutableSet<SourcePath>>of(abiClasspath.getArchiveMembers(getResolver()));
+    return Optional.of(abiClasspath.getArchiveMembers(getResolver()));
   }
 
   @Override

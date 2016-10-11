@@ -154,9 +154,9 @@ public class IjProjectDataPreparerTest {
             baseGenruleTarget,
             baseInlineTestsTargetNode,
             baseTestsTargetNode),
-        ImmutableMap.<TargetNode<?>, Path>of(
+        ImmutableMap.of(
             baseInlineTestsTargetNode, Paths.get("buck-out/baseInlineTests.jar")),
-        Functions.constant(Optional.<Path>absent()));
+        Functions.constant(Optional.absent()));
     IjLibrary hamcrestLibrary =
         IjModuleGraphTest.getLibraryForTarget(moduleGraph, hamcrestTargetNode);
     IjLibrary guavaLibrary = IjModuleGraphTest.getLibraryForTarget(moduleGraph, guavaTargetNode);
@@ -241,7 +241,7 @@ public class IjProjectDataPreparerTest {
         .build();
 
     IjModuleGraph moduleGraph = IjModuleGraphTest.createModuleGraph(
-        ImmutableSet.<TargetNode<?>>of(baseTargetNode));
+        ImmutableSet.of(baseTargetNode));
     IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(javaPackageFinder, moduleGraph, filesystem);
 
@@ -250,17 +250,17 @@ public class IjProjectDataPreparerTest {
         containsInAnyOrder(
             IjModule.builder()
                 .setModuleBasePath(Paths.get("java/com/example/base"))
-                .setTargets(ImmutableSet.<TargetNode<?>>of(baseTargetNode))
+                .setTargets(ImmutableSet.of(baseTargetNode))
                 .addFolders(
                     new SourceFolder(
                         Paths.get("java/com/example/base"),
                         true,
-                        ImmutableSortedSet.<Path>of(baseTargetSrcFilePath)))
+                        ImmutableSortedSet.of(baseTargetSrcFilePath)))
                 .setSdkType("JavaSDK")
                 .build(),
             IjModule.builder()
                 .setModuleBasePath(Paths.get(""))
-                .setTargets(ImmutableSet.<TargetNode<?>>of())
+                .setTargets(ImmutableSet.of())
                 .build()
         )
     );

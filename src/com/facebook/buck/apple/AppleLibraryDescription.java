@@ -179,8 +179,8 @@ public class AppleLibraryDescription implements
           resolver,
           args,
           args.linkStyle,
-          Optional.<SourcePath>absent(),
-          ImmutableSet.<BuildTarget>of());
+          Optional.absent(),
+          ImmutableSet.of());
     }
   }
 
@@ -218,8 +218,8 @@ public class AppleLibraryDescription implements
         codeSignIdentityStore,
         provisioningProfileStore,
         params.getBuildTarget(),
-        Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK),
-        Optional.<String>absent(),
+        Either.ofLeft(AppleBundleExtension.FRAMEWORK),
+        Optional.absent(),
         args.infoPlist.get(),
         args.infoPlistSubstitutions,
         args.deps.get(),

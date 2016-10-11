@@ -45,7 +45,7 @@ public class InferLogLineTest {
         .setUnflavoredBuildTarget(
             UnflavoredBuildTarget.of(
                 Paths.get("/User/user/src"),
-                Optional.<String>absent(),
+                Optional.absent(),
                 "//target",
                 "short"))
         .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
@@ -84,7 +84,7 @@ public class InferLogLineTest {
         .setUnflavoredBuildTarget(
             UnflavoredBuildTarget.of(
                 Paths.get("/User/user/src"),
-                Optional.<String>absent(),
+                Optional.absent(),
                 "//target",
                 "short"))
         .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())

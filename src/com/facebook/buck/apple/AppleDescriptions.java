@@ -93,7 +93,7 @@ public class AppleDescriptions {
       NO_INCLUDE_FRAMEWORKS_FLAVOR);
 
   private static final SourceList EMPTY_HEADERS = SourceList.ofUnnamedSources(
-      ImmutableSortedSet.<SourcePath>of());
+      ImmutableSortedSet.of());
   private static final String MERGED_ASSET_CATALOG_NAME = "Merged";
 
   /** Utility class: do not instantiate. */
@@ -382,8 +382,8 @@ public class AppleDescriptions {
 
     BuildRuleParams assetCatalogParams = params.copyWithChanges(
         params.getBuildTarget().withAppendedFlavors(AppleAssetCatalog.FLAVOR),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+        Suppliers.ofInstance(ImmutableSortedSet.of()),
+        Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     return Optional.of(
         new AppleAssetCatalog(
@@ -430,7 +430,7 @@ public class AppleDescriptions {
                     strippedBinaryRule,
                     unstrippedBinaryRule,
                     appleDsym)),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         new SourcePathResolver(resolver),
         buildRuleForDebugFormat);
     return rule;
@@ -452,7 +452,7 @@ public class AppleDescriptions {
           .withAppendedFlavors(AppleDsym.RULE_FLAVOR);
       Optional<BuildRule> dsymRule = resolver.getRuleOptional(dsymBuildTarget);
       if (!dsymRule.isPresent()) {
-        dsymRule = Optional.<BuildRule>of(
+        dsymRule = Optional.of(
             createAppleDsym(
                 params.copyWithBuildTarget(dsymBuildTarget),
                 resolver,
@@ -490,7 +490,7 @@ public class AppleDescriptions {
                     .addAll(unstrippedBinaryBuildRule.getCompileDeps())
                     .addAll(unstrippedBinaryBuildRule.getStaticLibraryDeps())
                     .build()),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         new SourcePathResolver(resolver),
         appleCxxPlatform.getDsymutil(),
         appleCxxPlatform.getLldb(),

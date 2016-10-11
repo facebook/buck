@@ -37,7 +37,7 @@ abstract class AbstractRelativeCellName {
   public static final String ALL_CELLS_SPECIAL_NAME = "*";
 
   public static final RelativeCellName ROOT_CELL_NAME =
-      RelativeCellName.of(ImmutableList.<String>of());
+      RelativeCellName.of(ImmutableList.of());
 
   public abstract ImmutableList<String> getComponents();
 

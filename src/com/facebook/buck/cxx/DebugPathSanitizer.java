@@ -141,7 +141,7 @@ public class DebugPathSanitizer {
 
   public ImmutableList<String> sanitizeFlags(Iterable<String> flags) {
     return FluentIterable.from(flags)
-        .transform(sanitize(Optional.<Path>absent()))
+        .transform(sanitize(Optional.absent()))
         .toList();
   }
 

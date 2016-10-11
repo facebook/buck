@@ -47,7 +47,7 @@ public class FakeProcess extends Process {
       int exitValue,
       String stdout,
       String stderr) {
-    this(exitValue, stdout, stderr, Optional.<InterruptedException>absent());
+    this(exitValue, stdout, stderr, Optional.absent());
   }
 
   public FakeProcess(
@@ -73,7 +73,7 @@ public class FakeProcess extends Process {
         outputStream,
         inputStream,
         errorStream,
-        Optional.<InterruptedException>absent());
+        Optional.absent());
   }
 
   public FakeProcess(

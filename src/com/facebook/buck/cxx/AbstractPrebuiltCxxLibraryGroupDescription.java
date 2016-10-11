@@ -37,7 +37,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -216,10 +215,10 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
             builder.putAllPreprocessorFlags(
                 CxxFlags.getLanguageFlags(
                     args.exportedPreprocessorFlags,
-                    Optional.<PatternMatchedCollection<ImmutableList<String>>>absent(),
-                    Optional.<ImmutableMap<CxxSource.Type, ImmutableList<String>>>absent(),
+                    Optional.absent(),
+                    Optional.absent(),
                     cxxPlatform));
-            for (SourcePath includeDir : args.includeDirs.or(ImmutableList.<SourcePath>of())) {
+            for (SourcePath includeDir : args.includeDirs.or(ImmutableList.of())) {
               builder.addIncludes(
                   CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, includeDir));
             }
@@ -251,7 +250,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
           CxxPlatform cxxPlatform) {
-        return FluentIterable.from(args.exportedDeps.or(ImmutableSortedSet.<BuildTarget>of()))
+        return FluentIterable.from(args.exportedDeps.or(ImmutableSortedSet.of()))
             .transform(resolver.getRuleFunction())
             .filter(NativeLinkable.class);
       }
@@ -268,24 +267,24 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
                 getStaticLinkArgs(
                     getBuildTarget(),
                     pathResolver,
-                    args.staticLibs.or(ImmutableList.<SourcePath>of()),
-                    args.staticLink.or(ImmutableList.<String>of())));
+                    args.staticLibs.or(ImmutableList.of()),
+                    args.staticLink.or(ImmutableList.of())));
             break;
           case STATIC_PIC:
             builder.addAllArgs(
                 getStaticLinkArgs(
                     getBuildTarget(),
                     pathResolver,
-                    args.staticPicLibs.or(ImmutableList.<SourcePath>of()),
-                    args.staticPicLink.or(ImmutableList.<String>of())));
+                    args.staticPicLibs.or(ImmutableList.of()),
+                    args.staticPicLink.or(ImmutableList.of())));
             break;
           case SHARED:
             builder.addAllArgs(
                 getSharedLinkArgs(
                     getBuildTarget(),
                     pathResolver,
-                    args.sharedLibs.or(ImmutableMap.<String, SourcePath>of()),
-                    args.sharedLink.or(ImmutableList.<String>of())));
+                    args.sharedLibs.or(ImmutableMap.of()),
+                    args.sharedLink.or(ImmutableList.of())));
             break;
         }
         return builder.build();
@@ -299,7 +298,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
       @Override
       public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
           throws NoSuchBuildTargetException {
-        return args.sharedLibs.or(ImmutableMap.<String, SourcePath>of());
+        return args.sharedLibs.or(ImmutableMap.of());
       }
 
     };

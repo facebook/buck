@@ -105,7 +105,7 @@ public class CxxPreprocessAndCompileTest {
   private static final SourcePath DEFAULT_INPUT = new FakeSourcePath("test.cpp");
   private static final CxxSource.Type DEFAULT_INPUT_TYPE = CxxSource.Type.CXX;
   private static final ImmutableList<CxxHeaders> DEFAULT_INCLUDES =
-      ImmutableList.<CxxHeaders>of(
+      ImmutableList.of(
           CxxSymlinkTreeHeaders.builder()
               .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
               .setRoot(new BuildTargetSourcePath(BuildTargetFactory.newInstance("//:include")))
@@ -396,7 +396,7 @@ public class CxxPreprocessAndCompileTest {
                     .setPrefixHeader(new FakeSourcePath(filesystem, prefixHeader.toString()))
                     .build(),
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
-                ImmutableList.<CxxHeaders>of()),
+                ImmutableList.of()),
             new CompilerDelegate(
                 pathResolver,
                 DEFAULT_SANITIZER,
@@ -461,7 +461,7 @@ public class CxxPreprocessAndCompileTest {
                 new DefaultPreprocessor(preprocessorTool),
                 PreprocessorFlags.builder().build(),
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
-                ImmutableList.<CxxHeaders>of()),
+                ImmutableList.of()),
             new CompilerDelegate(
                 pathResolver,
                 DEFAULT_SANITIZER,
@@ -562,7 +562,7 @@ public class CxxPreprocessAndCompileTest {
                 PREPROCESSOR_WITH_COLOR_SUPPORT,
                 PreprocessorFlags.builder().build(),
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
-                ImmutableList.<CxxHeaders>of()),
+                ImmutableList.of()),
             new CompilerDelegate(
                 pathResolver,
                 DEFAULT_SANITIZER,

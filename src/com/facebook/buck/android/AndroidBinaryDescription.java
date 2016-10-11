@@ -52,7 +52,6 @@ import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -88,7 +87,7 @@ public class AndroidBinaryDescription
 
   private static final MacroHandler MACRO_HANDLER =
       new MacroHandler(
-          ImmutableMap.<String, MacroExpander>of(
+          ImmutableMap.of(
               "exe", new ExecutableMacroExpander(),
               "location", new LocationMacroExpander()));
 
@@ -193,7 +192,7 @@ public class AndroidBinaryDescription
         !args.preprocessJavaClassesBash.isPresent();
 
     ResourceFilter resourceFilter =
-        new ResourceFilter(args.resourceFilter.or(ImmutableList.<String>of()));
+        new ResourceFilter(args.resourceFilter.or(ImmutableList.of()));
 
     Optional<Set<RType>> bannedDuplicateTypesArgs = args.bannedDuplicateResourceTypes;
     EnumSet<RType> bannedDuplicateResourceTypes;
@@ -210,7 +209,7 @@ public class AndroidBinaryDescription
         resourceFilter,
         bannedDuplicateResourceTypes,
         args.resourceUnionPackage,
-        addFallbackLocales(args.locales.or(ImmutableSet.<String>of())),
+        addFallbackLocales(args.locales.or(ImmutableSet.of())),
         args.manifest,
         packageType,
         ImmutableSet.copyOf(args.cpuFilters.get()),
@@ -218,8 +217,8 @@ public class AndroidBinaryDescription
         shouldPreDex,
         AndroidBinary.getPrimaryDexPath(params.getBuildTarget(), params.getProjectFilesystem()),
         dexSplitMode,
-        ImmutableSet.copyOf(args.noDx.or(ImmutableSet.<BuildTarget>of())),
-        /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.copyOf(args.noDx.or(ImmutableSet.of())),
+        /* resourcesToExclude */ ImmutableSet.of(),
         args.skipCrunchPngs.or(false),
         args.includesVectorDrawables.or(false),
         javacOptions,
@@ -227,7 +226,7 @@ public class AndroidBinaryDescription
         (Keystore) keystore,
         args.buildConfigValues.get(),
         args.buildConfigValuesFile,
-        Optional.<Integer>absent(),
+        Optional.absent(),
         args.trimResourceIds.or(false),
         args.keepResourcePattern,
         nativePlatforms,
@@ -250,7 +249,7 @@ public class AndroidBinaryDescription
     // Build rules added to "no_dx" are only hints, not hard dependencies. Therefore, although a
     // target may be mentioned in that parameter, it may not be present as a build rule.
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
-    for (BuildTarget noDxTarget : args.noDx.or(ImmutableSet.<BuildTarget>of())) {
+    for (BuildTarget noDxTarget : args.noDx.or(ImmutableSet.of())) {
       Optional<BuildRule> ruleOptional = resolver.getRuleOptional(noDxTarget);
       if (ruleOptional.isPresent()) {
         builder.add(ruleOptional.get());
@@ -281,7 +280,7 @@ public class AndroidBinaryDescription
         (Keystore) keystore,
         packageType,
         dexSplitMode,
-        args.noDx.or(ImmutableSet.<BuildTarget>of()),
+        args.noDx.or(ImmutableSet.of()),
         androidSdkProguardConfig,
         args.optimizationPasses,
         args.proguardConfig,
@@ -321,7 +320,7 @@ public class AndroidBinaryDescription
         args.dexCompression.or(defaultDexStore),
         args.useLinearAllocSplitDex.or(false),
         args.linearAllocHardLimit.or(DEFAULT_LINEAR_ALLOC_HARD_LIMIT),
-        args.primaryDexPatterns.or(ImmutableList.<String>of()),
+        args.primaryDexPatterns.or(ImmutableList.of()),
         args.primaryDexClassesFile,
         args.primaryDexScenarioFile,
         args.primaryDexScenarioOverflowAllowed.or(false),

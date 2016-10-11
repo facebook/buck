@@ -44,7 +44,7 @@ abstract class AbstractNativeLinkTargetMode {
   }
 
   public static NativeLinkTargetMode executable() {
-    return NativeLinkTargetMode.of(Linker.LinkType.EXECUTABLE, Optional.<String>absent());
+    return NativeLinkTargetMode.of(Linker.LinkType.EXECUTABLE, Optional.absent());
   }
 
   public static NativeLinkTargetMode library(Optional<String> soname) {
@@ -56,7 +56,7 @@ abstract class AbstractNativeLinkTargetMode {
   }
 
   public static NativeLinkTargetMode library() {
-    return library(Optional.<String>absent());
+    return library(Optional.absent());
   }
 
 }

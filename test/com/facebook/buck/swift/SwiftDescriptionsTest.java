@@ -51,7 +51,7 @@ public class SwiftDescriptionsTest {
 
     FakeSourcePath swiftSrc = new FakeSourcePath("foo/bar.swift");
 
-    args.srcs = Optional.of(ImmutableSortedSet.<SourceWithFlags>of(
+    args.srcs = Optional.of(ImmutableSortedSet.of(
         SourceWithFlags.of(new FakeSourcePath("foo/foo.cpp")),
         SourceWithFlags.of(swiftSrc)));
     args.compilerFlags = Optional.absent();

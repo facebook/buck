@@ -67,14 +67,14 @@ abstract class AbstractSourceWithFlagsList {
     return SourceWithFlagsList.of(
         Type.UNNAMED,
         Optional.of(unnamedSources),
-        Optional.<ImmutableSortedMap<String, SourceWithFlags>>absent());
+        Optional.absent());
   }
 
   public static SourceWithFlagsList ofNamedSources(
       ImmutableSortedMap<String, SourceWithFlags> namedSources) {
     return SourceWithFlagsList.of(
         Type.NAMED,
-        Optional.<ImmutableSortedSet<SourceWithFlags>>absent(),
+        Optional.absent(),
         Optional.of(namedSources));
   }
 

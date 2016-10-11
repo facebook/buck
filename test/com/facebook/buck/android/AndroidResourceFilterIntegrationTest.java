@@ -71,11 +71,11 @@ public class AndroidResourceFilterIntegrationTest {
     AndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         filesystem.getRootPath().getFileSystem(),
         ImmutableMap.copyOf(System.getenv()),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
     pathToAapt = AndroidPlatformTarget.getDefaultPlatformTarget(
         resolver,
-        Optional.<Path>absent()).getAaptExecutable();
+        Optional.absent()).getAaptExecutable();
     String buildToolsVersion = pathToAapt.getParent().getFileName().toString();
     isBuildToolsNew = new VersionStringComparator().compare(buildToolsVersion, "21") >= 0;
   }
@@ -208,7 +208,7 @@ public class AndroidResourceFilterIntegrationTest {
     Path cachedFile = DirArtifactCacheTestUtil.getPathForRuleKey(
         cache,
         new RuleKey(androidBinaryRuleKey.getHash()),
-        Optional.<String>absent());
+        Optional.absent());
     Files.delete(workspace.resolve(cachedFile));
 
     workspace.runBuckCommand("clean").assertSuccess();

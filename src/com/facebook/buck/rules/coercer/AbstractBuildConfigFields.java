@@ -100,7 +100,7 @@ abstract class AbstractBuildConfigFields implements Iterable<Field> {
   };
 
   private static final BuildConfigFields EMPTY = BuildConfigFields.of(
-      ImmutableMap.<String, Field>of());
+      ImmutableMap.of());
 
   @Value.Parameter
   protected abstract Map<String, Field> getNameToField();

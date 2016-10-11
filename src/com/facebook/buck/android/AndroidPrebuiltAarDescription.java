@@ -118,12 +118,12 @@ public class AndroidPrebuiltAarDescription
             params,
             pathResolver,
             abiJar,
-            ImmutableSortedSet.<BuildRule>copyOf(javaDeps)));
+            ImmutableSortedSet.copyOf(javaDeps)));
 
     return buildRuleResolver.addToIndex(new AndroidPrebuiltAar(
         /* androidLibraryParams */ params.copyWithDeps(
-            /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(prebuiltJar)),
-            /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(unzipAar))),
+            /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(prebuiltJar)),
+            /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(unzipAar))),
         /* resolver */ pathResolver,
         /* proguardConfig */ new BuildTargetSourcePath(
             unzipAar.getBuildTarget(),
@@ -154,7 +154,7 @@ public class AndroidPrebuiltAarDescription
 
     BuildRuleParams unzipAarParams = originalBuildRuleParams.copyWithChanges(
         BuildTargets.createFlavoredBuildTarget(originalBuildTarget, AAR_UNZIP_FLAVOR),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+        Suppliers.ofInstance(ImmutableSortedSet.of()),
         Suppliers.ofInstance(ImmutableSortedSet.copyOf(
             resolver.filterBuildRuleInputs(aarFile))));
     UnzipAar unzipAar = new UnzipAar(unzipAarParams, resolver, aarFile);
@@ -173,7 +173,7 @@ public class AndroidPrebuiltAarDescription
             params.getBuildTarget().checkUnflavored(),
             AAR_PREBUILT_JAR_FLAVOR),
         /* declaredDeps */ Suppliers.ofInstance(deps),
-        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(unzipAar)));
+        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(unzipAar)));
     return new PrebuiltJar(
         /* params */ buildRuleParams,
         /* resolver */ resolver,
@@ -181,10 +181,10 @@ public class AndroidPrebuiltAarDescription
             unzipAar.getBuildTarget(),
             unzipAar.getPathToClassesJar()),
         abiJar,
-        /* sourceJar */ Optional.<SourcePath>absent(),
-        /* gwtJar */ Optional.<SourcePath>absent(),
-        /* javadocUrl */ Optional.<String>absent(),
-        /* mavenCoords */ Optional.<String>absent(),
+        /* sourceJar */ Optional.absent(),
+        /* gwtJar */ Optional.absent(),
+        /* javadocUrl */ Optional.absent(),
+        /* mavenCoords */ Optional.absent(),
         /* provided */ false);
 
   }

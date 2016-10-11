@@ -92,7 +92,7 @@ public abstract class BuildTargetPatternParser<T> {
       cellPath = cellNames.getCellPath(Optional.of(buildTargetPattern.substring(0, index)));
       buildTargetPattern = buildTargetPattern.substring(index);
     } else {
-      cellPath = cellNames.getCellPath(Optional.<String>absent());
+      cellPath = cellNames.getCellPath(Optional.absent());
     }
 
     if (buildTargetPattern.contains(BUILD_RULE_SEPARATOR)) {

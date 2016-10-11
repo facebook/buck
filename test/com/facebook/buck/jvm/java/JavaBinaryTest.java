@@ -37,7 +37,6 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.regex.Pattern;
 
 public class JavaBinaryTest {
 
@@ -84,9 +83,9 @@ public class JavaBinaryTest {
                 null,
                 /* merge manifests */ true,
                 null,
-                /* blacklist */ ImmutableSet.<Pattern>of(),
-                ImmutableSet.<JavaLibrary>of(),
-                ImmutableSet.<Path>of()));
+                /* blacklist */ ImmutableSet.of(),
+                ImmutableSet.of(),
+                ImmutableSet.of()));
 
     // Strip the trailing "." from the absolute path to the current directory.
     final String basePath = new File(".").getAbsolutePath().replaceFirst("\\.$", "");

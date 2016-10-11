@@ -25,7 +25,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
@@ -36,7 +35,6 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
@@ -126,7 +124,7 @@ public class CxxCompilationDatabaseTest {
                         throw new UnsupportedOperationException("should not be called");
                       }
                     },
-                    ImmutableList.<CxxHeaders>of()),
+                    ImmutableList.of()),
                 new CompilerDelegate(
                     testSourcePathResolver,
                     CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER,
@@ -140,7 +138,7 @@ public class CxxCompilationDatabaseTest {
         rules.add(preprocessRule);
         compileBuildRuleParams = new FakeBuildRuleParamsBuilder(compileTarget)
             .setProjectFilesystem(filesystem)
-            .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(preprocessRule))
+            .setDeclaredDeps(ImmutableSortedSet.of(preprocessRule))
             .build();
         rules.add(
             CxxPreprocessAndCompile.compile(
@@ -184,7 +182,7 @@ public class CxxCompilationDatabaseTest {
                         throw new UnsupportedOperationException("should not be called");
                       }
                     },
-                    ImmutableList.<CxxHeaders>of()),
+                    ImmutableList.of()),
                 new CompilerDelegate(
                     testSourcePathResolver,
                     CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER,
@@ -193,7 +191,7 @@ public class CxxCompilationDatabaseTest {
                 Paths.get("test.o"),
                 new FakeSourcePath(filesystem, "test.cpp"),
                 CxxSource.Type.CXX,
-                Optional.<PrecompiledHeaderReference>absent(),
+                Optional.absent(),
                 CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER,
                 strategy
             ));
@@ -207,7 +205,7 @@ public class CxxCompilationDatabaseTest {
         testBuildRuleResolver,
         testSourcePathResolver,
         CxxPlatformUtils.DEFAULT_PLATFORM,
-        ImmutableMap.<Path, SourcePath>of(),
+        ImmutableMap.of(),
         HeaderVisibility.PRIVATE
     );
     HeaderSymlinkTree exportedSymlinkTree = CxxDescriptionEnhancer.createHeaderSymlinkTree(
@@ -215,7 +213,7 @@ public class CxxCompilationDatabaseTest {
         testBuildRuleResolver,
         testSourcePathResolver,
         CxxPlatformUtils.DEFAULT_PLATFORM,
-        ImmutableMap.<Path, SourcePath>of(),
+        ImmutableMap.of(),
         HeaderVisibility.PUBLIC
     );
     CxxCompilationDatabase compilationDatabase = CxxCompilationDatabase.createCompilationDatabase(
@@ -227,7 +225,7 @@ public class CxxCompilationDatabaseTest {
 
     assertThat(
         compilationDatabase.getRuntimeDeps(),
-        Matchers.<BuildRule>contains(exportedSymlinkTree, privateSymlinkTree));
+        Matchers.contains(exportedSymlinkTree, privateSymlinkTree));
 
     assertEquals(
         "getPathToOutput() should be a function of the build target.",

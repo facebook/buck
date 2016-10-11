@@ -52,7 +52,7 @@ public class LoadBalancerEventsListener implements BuckEventListener {
     noHealthyServersCounter = registry.newIntegerCounter(
         COUNTER_CATEGORY,
         "no_healthy_servers_count",
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
   }
 
   @Subscribe

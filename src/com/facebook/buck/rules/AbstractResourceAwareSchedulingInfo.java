@@ -31,7 +31,7 @@ abstract class AbstractResourceAwareSchedulingInfo {
       ResourceAwareSchedulingInfo.of(
           false,
           ResourceAmountsEstimator.DEFAULT_AMOUNTS,
-          ImmutableMap.<String, ResourceAmounts>of());
+          ImmutableMap.of());
 
   public abstract boolean isResourceAwareSchedulingEnabled();
 

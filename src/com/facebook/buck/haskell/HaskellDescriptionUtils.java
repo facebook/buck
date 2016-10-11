@@ -242,7 +242,7 @@ public class HaskellDescriptionUtils {
     if (linkType.equals(Linker.LinkType.SHARED)) {
       name =
           CxxDescriptionEnhancer.getSharedLibrarySoname(
-              Optional.<String>absent(),
+              Optional.absent(),
               target.withFlavors(),
               cxxPlatform);
       argsBuilder.addAll(StringArg.from("-shared", "-dynamic"));
@@ -290,9 +290,9 @@ public class HaskellDescriptionUtils {
                 cxxPlatform,
                 haskellConfig,
                 depType,
-                Optional.<String>absent(),
-                Optional.<HaskellPackageInfo>absent(),
-                ImmutableList.<String>of(),
+                Optional.absent(),
+                Optional.absent(),
+                ImmutableList.of(),
                 HaskellSources.builder()
                     .putModuleMap("Unused", new BuildTargetSourcePath(emptyModule.getBuildTarget()))
                     .build()));
@@ -331,7 +331,7 @@ public class HaskellDescriptionUtils {
                             FluentIterable.from(linkerArgs)
                                 .transformAndConcat(Arg.getDepsFunction(pathResolver)))
                         .build()),
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
             pathResolver,
             linker,
             name,

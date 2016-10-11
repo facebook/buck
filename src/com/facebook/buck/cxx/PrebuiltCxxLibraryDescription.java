@@ -421,9 +421,9 @@ public class PrebuiltCxxLibraryDescription implements
         Linker.LinkableDepType.SHARED,
         FluentIterable.from(params.getDeps())
             .filter(NativeLinkable.class),
-        Optional.<Linker.CxxRuntimeType>absent(),
-        Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of(),
+        Optional.absent(),
+        Optional.absent(),
+        ImmutableSet.of(),
         NativeLinkableInput.builder()
             .addAllArgs(
                 StringArg.from(
@@ -523,8 +523,8 @@ public class PrebuiltCxxLibraryDescription implements
         },
         args.soname,
         args.linkWithoutSoname.or(false),
-        args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
-        args.libraries.or(ImmutableSortedSet.<FrameworkPath>of()),
+        args.frameworks.or(ImmutableSortedSet.of()),
+        args.libraries.or(ImmutableSortedSet.of()),
         args.forceStatic.or(false),
         args.headerOnly.or(false),
         args.linkWhole.or(false),
@@ -574,7 +574,7 @@ public class PrebuiltCxxLibraryDescription implements
       BuildRuleResolver ruleResolver,
       Iterable<String> paramValues) {
     ImmutableList.Builder<BuildRule> builder = ImmutableList.builder();
-    MacroHandler macroHandler = getMacroHandler(Optional.<CxxPlatform>absent());
+    MacroHandler macroHandler = getMacroHandler(Optional.absent());
     for (String p : paramValues) {
       try {
 
@@ -593,7 +593,7 @@ public class PrebuiltCxxLibraryDescription implements
       ImmutableSet.Builder<BuildTarget> targets) {
     try {
       // doesn't matter that the platform expander doesn't do anything.
-      MacroHandler macroHandler = getMacroHandler(Optional.<CxxPlatform>absent());
+      MacroHandler macroHandler = getMacroHandler(Optional.absent());
       // Then get the parse time deps.
       targets.addAll(macroHandler.extractParseTimeDeps(target, cellNames, paramValue));
     } catch (MacroException e) {

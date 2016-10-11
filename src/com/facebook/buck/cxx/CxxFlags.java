@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.SortedMap;
 
@@ -48,7 +47,7 @@ public class CxxFlags {
       public void appendToRuleKey(RuleKeyObjectSink sink) {
         SortedMap<String, String> sanitizedMap = Maps.transformValues(
             flagMacros,
-            cxxPlatform.getDebugPathSanitizer().sanitize(Optional.<Path>absent()));
+            cxxPlatform.getDebugPathSanitizer().sanitize(Optional.absent()));
         sink.setReflectively("flagMacros", sanitizedMap);
       }
 
@@ -70,11 +69,11 @@ public class CxxFlags {
       Optional<PatternMatchedCollection<ImmutableList<String>>> platformFlags,
       CxxPlatform platform) {
     return FluentIterable
-        .from(flags.or(ImmutableList.<String>of()))
+        .from(flags.or(ImmutableList.of()))
         .append(
             Iterables.concat(
                 platformFlags
-                    .or(PatternMatchedCollection.<ImmutableList<String>>of())
+                    .or(PatternMatchedCollection.of())
                     .getMatchingValues(platform.getFlavor().toString())))
         .transform(getTranslateMacrosFn(platform))
         .toList();
@@ -104,7 +103,7 @@ public class CxxFlags {
     langFlags.putAll(toLanguageFlags(getFlags(flags, platformFlags, platform)));
 
     for (ImmutableMap.Entry<CxxSource.Type, ImmutableList<String>> entry :
-         languageFlags.or(ImmutableMap.<CxxSource.Type, ImmutableList<String>>of()).entrySet()) {
+         languageFlags.or(ImmutableMap.of()).entrySet()) {
       langFlags.putAll(
           entry.getKey(),
           Iterables.transform(entry.getValue(), getTranslateMacrosFn(platform)));

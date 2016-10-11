@@ -86,7 +86,7 @@ public class SymlinkTreeTest {
     Files.write(file2, "hello world".getBytes(Charsets.UTF_8));
 
     // Setup the map representing the link tree.
-    links = ImmutableMap.<Path, SourcePath>of(
+    links = ImmutableMap.of(
         link1,
         new PathSourcePath(
             projectFilesystem,
@@ -155,7 +155,7 @@ public class SymlinkTreeTest {
                 TargetGraph.EMPTY,
                 new DefaultTargetNodeToBuildRuleTransformer())),
         outputPath,
-        ImmutableMap.<Path, SourcePath>of(
+        ImmutableMap.of(
             Paths.get("different/link"),
             new PathSourcePath(
                 projectFilesystem,
@@ -166,7 +166,7 @@ public class SymlinkTreeTest {
 
     // Calculate their rule keys and verify they're different.
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     RuleKey key1 = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
         symlinkTreeBuildRule);
     RuleKey key2 = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
@@ -185,7 +185,7 @@ public class SymlinkTreeTest {
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
         0,
         FakeFileHashCache.createFromStrings(
-            ImmutableMap.<String, String>of()),
+            ImmutableMap.of()),
         resolver);
 
     // Calculate the rule key
@@ -210,7 +210,7 @@ public class SymlinkTreeTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     InputBasedRuleKeyBuilderFactory inputBasedRuleKeyBuilderFactory =
         new InputBasedRuleKeyBuilderFactory(
             0,
@@ -221,7 +221,7 @@ public class SymlinkTreeTest {
     symlinkTreeBuildRule =
         new SymlinkTree(
             new FakeBuildRuleParamsBuilder(buildTarget)
-                .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(dep))
+                .setDeclaredDeps(ImmutableSortedSet.of(dep))
                 .build(),
             new SourcePathResolver(
                 new BuildRuleResolver(
@@ -258,11 +258,11 @@ public class SymlinkTreeTest {
     symlinkTreeBuildRule =
         new SymlinkTree(
             new FakeBuildRuleParamsBuilder(buildTarget)
-                .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(dep))
+                .setDeclaredDeps(ImmutableSortedSet.of(dep))
                 .build(),
             pathResolver,
             outputPath,
-            ImmutableMap.<Path, SourcePath>of(
+            ImmutableMap.of(
                 Paths.get("link"),
                 new BuildTargetSourcePath(dep.getBuildTarget())));
 
@@ -304,7 +304,7 @@ public class SymlinkTreeTest {
             new FakeBuildRuleParamsBuilder(buildTarget).build(),
             pathResolver,
             outputPath,
-            ImmutableMap.<Path, SourcePath>of(
+            ImmutableMap.of(
                 Paths.get("../something"),
                 new PathSourcePath(
                     projectFilesystem,
@@ -320,7 +320,7 @@ public class SymlinkTreeTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
 
-    ImmutableSortedSet<SourcePath> sourcePaths = ImmutableSortedSet.<SourcePath>of(
+    ImmutableSortedSet<SourcePath> sourcePaths = ImmutableSortedSet.of(
         new FakeSourcePath("one"),
         new FakeSourcePath("two/two"),
         new FakeSourcePath("three")
@@ -350,7 +350,7 @@ public class SymlinkTreeTest {
     ProjectFilesystem fsOne = new ProjectFilesystem(tmp.getRoot().resolve("one"));
     ProjectFilesystem fsTwo = new ProjectFilesystem(tmp.getRoot().resolve("two"));
 
-    ImmutableBiMap<SourcePath, Path> expected = ImmutableBiMap.<SourcePath, Path>of(
+    ImmutableBiMap<SourcePath, Path> expected = ImmutableBiMap.of(
         new FakeSourcePath(fsOne, "a/one.a"), Paths.get("a/one.a"),
         new FakeSourcePath(fsOne, "a/two"), Paths.get("a/two"),
         new FakeSourcePath(fsTwo, "a/one.a"), Paths.get("a/one-1.a"),

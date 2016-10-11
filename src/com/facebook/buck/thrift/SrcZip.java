@@ -69,7 +69,7 @@ public class SrcZip extends AbstractBuildRule {
         new ZipStep(
             getProjectFilesystem(),
             sourceZip,
-            /* paths */ ImmutableSet.<Path>of(),
+            /* paths */ ImmutableSet.of(),
             /* junkPaths */ false,
             ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
             sourceDirectory));

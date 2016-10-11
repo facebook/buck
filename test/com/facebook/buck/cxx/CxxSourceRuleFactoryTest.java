@@ -44,7 +44,6 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.shell.ShBinary;
 import com.facebook.buck.shell.ShBinaryBuilder;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
@@ -128,7 +127,7 @@ public class CxxSourceRuleFactoryTest {
       CxxSource cxxSource = CxxSource.of(
           CxxSource.Type.CXX,
           input,
-          ImmutableList.<String>of());
+          ImmutableList.of());
 
       BuildRule cxxPreprocess =
           cxxSourceRuleFactory.requirePreprocessBuildRule(
@@ -179,7 +178,7 @@ public class CxxSourceRuleFactoryTest {
       CxxSource cxxSource = CxxSource.of(
           CxxSource.Type.CXX,
           new FakeSourcePath(name),
-          ImmutableList.<String>of());
+          ImmutableList.of());
 
       // Verify that platform flags make it to the compile rule.
       CxxPreprocessAndCompile cxxPreprocess =
@@ -226,7 +225,7 @@ public class CxxSourceRuleFactoryTest {
       CxxSource cxxSourceCompile = CxxSource.of(
           CxxSource.Type.CXX_CPP_OUTPUT,
           input,
-          ImmutableList.<String>of());
+          ImmutableList.of());
       CxxPreprocessAndCompile cxxCompile =
           cxxSourceRuleFactory.requireCompileBuildRule(
               nameCompile,
@@ -237,7 +236,7 @@ public class CxxSourceRuleFactoryTest {
       CxxSource cxxSourcePreprocessAndCompile = CxxSource.of(
           CxxSource.Type.CXX,
           input,
-          ImmutableList.<String>of());
+          ImmutableList.of());
       CxxPreprocessAndCompile cxxPreprocessAndCompile =
           cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
               namePreprocessAndCompile,
@@ -274,7 +273,7 @@ public class CxxSourceRuleFactoryTest {
       CxxSource cxxSource = CxxSource.of(
           CxxSource.Type.CXX_CPP_OUTPUT,
           new FakeSourcePath(name),
-          ImmutableList.<String>of());
+          ImmutableList.of());
 
       // Verify building a non-PIC compile rule does *not* have the "-fPIC" flag and has the
       // expected compile target.
@@ -298,7 +297,7 @@ public class CxxSourceRuleFactoryTest {
       cxxSource = CxxSource.of(
           CxxSource.Type.CXX,
           new FakeSourcePath(name),
-          ImmutableList.<String>of());
+          ImmutableList.of());
 
       // Verify building a non-PIC compile rule does *not* have the "-fPIC" flag and has the
       // expected compile target.
@@ -359,7 +358,7 @@ public class CxxSourceRuleFactoryTest {
       CxxSource objcSource = CxxSource.of(
           CxxSource.Type.OBJC,
           new FakeSourcePath(objcSourceName),
-          ImmutableList.<String>of());
+          ImmutableList.of());
       CxxPreprocessAndCompile objcPreprocessAndCompile =
           cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
               objcSourceName,
@@ -397,7 +396,7 @@ public class CxxSourceRuleFactoryTest {
       CxxSource objcSource = CxxSource.of(
           CxxSource.Type.OBJC,
           new FakeSourcePath(objcSourceName),
-          ImmutableList.<String>of());
+          ImmutableList.of());
       CxxPreprocessAndCompile objcCompile =
           cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
               objcSourceName,
@@ -458,7 +457,7 @@ public class CxxSourceRuleFactoryTest {
       CxxSource cxxSource = CxxSource.of(
           CxxSource.Type.CXX,
           input,
-          ImmutableList.<String>of());
+          ImmutableList.of());
 
       BuildRule cxxPreprocess =
           cxxSourceRuleFactory.requirePreprocessBuildRule(
@@ -466,7 +465,7 @@ public class CxxSourceRuleFactoryTest {
               cxxSource);
       assertThat(
           cxxPreprocess.getDeps(),
-          Matchers.<BuildRule>hasItems(cxx, cxxpp));
+          hasItems(cxx, cxxpp));
       cxxPreprocess =
           cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
               name,
@@ -474,7 +473,7 @@ public class CxxSourceRuleFactoryTest {
               CxxPreprocessMode.SEPARATE);
       assertThat(
           cxxPreprocess.getDeps(),
-          Matchers.<BuildRule>hasItems(cxx, cxxpp));
+          hasItems(cxx, cxxpp));
     }
 
   }
@@ -557,7 +556,7 @@ public class CxxSourceRuleFactoryTest {
             CxxSource.of(
                 CxxSource.Type.OBJC,
                 new FakeSourcePath(sourceName),
-                ImmutableList.<String>of())
+                ImmutableList.of())
         );
       }
 
@@ -711,8 +710,8 @@ public class CxxSourceRuleFactoryTest {
           .setCompilerFlags(
               CxxFlags.getLanguageFlags(
                   Optional.of(expectedCompilerFlags),
-                  Optional.<PatternMatchedCollection<ImmutableList<String>>>absent(),
-                  Optional.<ImmutableMap<AbstractCxxSource.Type, ImmutableList<String>>>absent(),
+                  Optional.absent(),
+                  Optional.absent(),
                   platform))
           .setPicType(CxxSourceRuleFactory.PicType.PDC)
           .build();
@@ -776,7 +775,7 @@ public class CxxSourceRuleFactoryTest {
       CxxSource cxxSource = CxxSource.of(
           CxxSource.Type.fromExtension(MorePaths.getFileExtension(Paths.get(name))).get(),
           input,
-          ImmutableList.<String>of());
+          ImmutableList.of());
       CxxPreprocessAndCompile cxxCompile =
           cxxSourceRuleFactory.createCompileBuildRule(name, cxxSource);
       assertThat(

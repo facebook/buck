@@ -44,7 +44,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -699,8 +698,8 @@ class NativeLibraryMergeEnhancer {
 
       return NativeLinkableInput.of(
           argsBuilder.build(),
-          ImmutableList.<FrameworkPath>of(),
-          ImmutableList.<FrameworkPath>of());
+          ImmutableList.of(),
+          ImmutableList.of());
     }
 
     private NativeLinkableInput getImmediateNativeLinkableInput(CxxPlatform cxxPlatform)
@@ -786,9 +785,9 @@ class NativeLibraryMergeEnhancer {
             Iterables.concat(
                 getNativeLinkableDeps(cxxPlatform),
                 getNativeLinkableExportedDeps(cxxPlatform)),
-            Optional.<Linker.CxxRuntimeType>absent(),
-            Optional.<SourcePath>absent(),
-            ImmutableSet.<BuildTarget>of(),
+            Optional.absent(),
+            Optional.absent(),
+            ImmutableSet.of(),
             getImmediateNativeLinkableInput(cxxPlatform));
         ruleResolver.addToIndex(rule);
       }

@@ -92,7 +92,7 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
             @Override
             public StepExecutionResult execute(ExecutionContext context) throws IOException {
               MoreFiles.makeExecutable(getProjectFilesystem().resolve(output));
-              return StepExecutionResult.of(0, Optional.<String>absent());
+              return StepExecutionResult.of(0, Optional.absent());
             }
           });
     }
@@ -117,7 +117,7 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
             target,
             Suppliers.ofInstance(
                 ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(template))),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,
         output,
         template,

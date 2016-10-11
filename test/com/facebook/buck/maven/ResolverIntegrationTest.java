@@ -111,7 +111,7 @@ public class ResolverIntegrationTest {
         buckConfig,
         new ExecutableFinder());
 
-    ImmutableSet<Description<?>> descriptions = ImmutableSet.<Description<?>>of(
+    ImmutableSet<Description<?>> descriptions = ImmutableSet.of(
         new RemoteFileDescription(new ExplodingDownloader()),
         new PrebuiltJarDescription());
 
@@ -131,7 +131,7 @@ public class ResolverIntegrationTest {
         new ConstructorArgMarshaller(new DefaultTypeCoercerFactory(
             ObjectMappers.newDefaultInstance())),
         new TestConsole(),
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         BuckEventBusFactory.newInstance(),
         /* ignoreBuckAutodepsFiles */ false,
         new WatchmanDiagnosticCache());

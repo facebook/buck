@@ -48,7 +48,7 @@ public class JavaBinaryDescriptionTest {
             new FakeJavaLibrary(
                 BuildTargetFactory.newInstance("//:first_order_lib"),
                 pathResolver,
-                ImmutableSortedSet.<BuildRule>of(transitiveLibrary)));
+                ImmutableSortedSet.of(transitiveLibrary)));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRule javaBinary = new JavaBinaryRuleBuilder(target)
@@ -57,7 +57,7 @@ public class JavaBinaryDescriptionTest {
 
     assertThat(
         javaBinary.getDeps(),
-        Matchers.<BuildRule>containsInAnyOrder(firstOrderLibrary, transitiveLibrary));
+        Matchers.containsInAnyOrder(firstOrderLibrary, transitiveLibrary));
   }
 
 }

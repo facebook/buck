@@ -45,7 +45,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
-import java.util.regex.Pattern;
 
 public class ScalaLibraryDescription implements Description<ScalaLibraryDescription.Arg>,
     ImplicitDepsInferringDescription<ScalaLibraryDescription.Arg> {
@@ -111,14 +110,14 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
                     pathResolver,
                     params.getProjectFilesystem(),
                     args.resources.get()),
-                /* generatedSourceFolder */ Optional.<Path>absent(),
-                /* proguardConfig */ Optional.<SourcePath>absent(),
-                /* postprocessClassesCommands */ ImmutableList.<String>of(),
+                /* generatedSourceFolder */ Optional.absent(),
+                /* proguardConfig */ Optional.absent(),
+                /* postprocessClassesCommands */ ImmutableList.of(),
                 params.getDeclaredDeps().get(),
                 resolver.getAllRules(args.providedDeps.get()),
                 new BuildTargetSourcePath(abiJarTarget),
                 /* trackClassUsage */ false,
-                /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+                /* additionalClasspathEntries */ ImmutableSet.of(),
                 new ScalacToJarStepFactory(
                     scalac,
                     ScalacToJarStepFactory.collectScalacArguments(
@@ -129,7 +128,7 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
                 args.manifestFile,
                 args.mavenCoords,
                 args.tests.get(),
-                /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()));
+                /* classesToRemoveFromJar */ ImmutableSet.of()));
 
     resolver.addToIndex(
         CalculateAbi.of(

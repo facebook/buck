@@ -102,7 +102,7 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
           pathResolver,
           cxxPlatform,
           dBuckConfig,
-          /* compilerFlags */ ImmutableList.<String>of(),
+          /* compilerFlags */ ImmutableList.of(),
           args.srcs,
           dIncludes,
           CxxSourceRuleFactory.PicType.PDC);

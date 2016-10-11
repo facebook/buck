@@ -27,7 +27,6 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilder;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.UncachedRuleKeyBuilder;
@@ -125,7 +124,7 @@ public class ExternalJavacTest extends EasyMockSupport {
         ImmutableMap.of(javacExe, javacProc));
 
     builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
-    ExternalJavac compiler = new ExternalJavac(Either.<Path, SourcePath>ofLeft(javac)) {
+    ExternalJavac compiler = new ExternalJavac(Either.ofLeft(javac)) {
       @Override
       ProcessExecutor createProcessExecutor() {
         return executor;
@@ -174,7 +173,7 @@ public class ExternalJavacTest extends EasyMockSupport {
         ImmutableMap.of(javacExe, javacProc));
 
     builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
-    ExternalJavac compiler = new ExternalJavac(Either.<Path, SourcePath>ofLeft(javac)) {
+    ExternalJavac compiler = new ExternalJavac(Either.ofLeft(javac)) {
       @Override
       ProcessExecutor createProcessExecutor() {
         return executor;
@@ -197,6 +196,6 @@ public class ExternalJavacTest extends EasyMockSupport {
 
   private ExternalJavac createTestStep() {
     Path fakeJavac = Paths.get("fakeJavac");
-    return new ExternalJavac(Either.<Path, SourcePath>ofLeft(fakeJavac));
+    return new ExternalJavac(Either.ofLeft(fakeJavac));
   }
 }

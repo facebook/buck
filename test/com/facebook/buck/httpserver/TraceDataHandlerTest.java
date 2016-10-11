@@ -74,7 +74,7 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     response.flushBuffer();
 
     TracesHelper tracesHelper = createMock(TracesHelper.class);
-    Iterable<InputStream> traces = Arrays.<InputStream>asList(
+    Iterable<InputStream> traces = Arrays.asList(
         new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8))
     );
     expect(tracesHelper.getInputsForTraces("abcdef")).andReturn(traces);
@@ -108,7 +108,7 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     response.flushBuffer();
 
     TracesHelper tracesHelper = createMock(TracesHelper.class);
-    Iterable<InputStream> traces = Arrays.<InputStream>asList(
+    Iterable<InputStream> traces = Arrays.asList(
         new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8)),
         new ByteArrayInputStream("{\"baz\":\"blech\"}".getBytes(Charsets.UTF_8)));
     expect(tracesHelper.getInputsForTraces("abcdef")).andReturn(traces);
@@ -145,7 +145,7 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     response.flushBuffer();
 
     TracesHelper tracesHelper = createMock(TracesHelper.class);
-    Iterable<InputStream> traces = Arrays.<InputStream>asList(
+    Iterable<InputStream> traces = Arrays.asList(
         new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8))
     );
     expect(tracesHelper.getInputsForTraces("abcdef")).andReturn(traces);
@@ -179,7 +179,7 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     response.flushBuffer();
 
     TracesHelper tracesHelper = createMock(TracesHelper.class);
-    Iterable<InputStream> traces = Arrays.<InputStream>asList(
+    Iterable<InputStream> traces = Arrays.asList(
         new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8)),
         new ByteArrayInputStream("{\"baz\":\"blech\"}".getBytes(Charsets.UTF_8)));
     expect(tracesHelper.getInputsForTraces("abcdef")).andReturn(traces);

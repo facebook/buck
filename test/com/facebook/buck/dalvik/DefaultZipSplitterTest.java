@@ -20,7 +20,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.APKModuleGraph;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -66,7 +65,7 @@ public class DefaultZipSplitterTest {
       new APKModuleGraph(
           TargetGraph.EMPTY,
           BuildTargetFactory.newInstance("//test:test"),
-          Optional.<Set<BuildTarget>>absent());
+          Optional.absent());
 
   @Before
   public void setUp() throws Exception {

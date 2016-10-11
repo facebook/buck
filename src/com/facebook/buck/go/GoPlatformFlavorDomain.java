@@ -101,7 +101,7 @@ public class GoPlatformFlavorDomain {
       FlavorDomain<CxxPlatform> cxxPlatforms) {
     this(
         currentPlatform, currentArchitecture, cxxPlatforms,
-        ImmutableMap.<String, Platform>of(), ImmutableMap.<String, Architecture>of());
+        ImmutableMap.of(), ImmutableMap.of());
   }
 
   public Optional<GoPlatform> getValue(Flavor flavor) {

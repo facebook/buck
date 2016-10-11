@@ -43,7 +43,7 @@ import java.nio.file.Paths;
 public class RustCompileTest {
   @Test(expected = HumanReadableException.class)
   public void noCrateRootInSrcs() {
-    RustCompile linkable = new FakeRustCompile("//:donotcare", ImmutableSortedSet.<SourcePath>of());
+    RustCompile linkable = new FakeRustCompile("//:donotcare", ImmutableSortedSet.of());
     linkable.getCrateRoot();
   }
 
@@ -51,7 +51,7 @@ public class RustCompileTest {
   public void crateRootMainInSrcs() {
     RustCompile linkable = new FakeRustCompile(
         "//:donotcare",
-        ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("main.rs")));
+        ImmutableSortedSet.of(new FakeSourcePath("main.rs")));
     assertThat(linkable.getCrateRoot().toString(), Matchers.endsWith("main.rs"));
   }
 
@@ -59,7 +59,7 @@ public class RustCompileTest {
   public void crateRootTargetNameInSrcs() {
     RustCompile linkable = new FakeRustCompile(
         "//:myname",
-        ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("myname.rs")));
+        ImmutableSortedSet.of(new FakeSourcePath("myname.rs")));
     assertThat(linkable.getCrateRoot().toString(), Matchers.endsWith("myname.rs"));
   }
 
@@ -67,7 +67,7 @@ public class RustCompileTest {
   public void crateRootMainAndTargetNameInSrcs() {
     RustCompile linkable = new FakeRustCompile(
         "//:myname",
-        ImmutableSortedSet.<SourcePath>of(
+        ImmutableSortedSet.of(
             new FakeSourcePath("main.rs"),
             new FakeSourcePath("myname.rs")));
     linkable.getCrateRoot();
@@ -84,8 +84,8 @@ public class RustCompileTest {
                   TargetGraph.EMPTY,
                   new DefaultTargetNodeToBuildRuleTransformer())),
           srcs,
-          /* flags */ ImmutableList.<String>of(),
-          /* features */ ImmutableSortedSet.<String>of(),
+          /* flags */ ImmutableList.of(),
+          /* features */ ImmutableSortedSet.of(),
           Paths.get("somewhere"),
           new Tool() {
             @Override

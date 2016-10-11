@@ -121,14 +121,14 @@ public class FileClassPathRunnerTest {
   @Test
   public void nullClassPathWithNoEntriesRemainsEmpty() {
     StringBuilder builder = new StringBuilder();
-    FileClassPathRunner.constructNewClassPath(builder, null, ImmutableList.<String>of());
+    FileClassPathRunner.constructNewClassPath(builder, null, ImmutableList.of());
     assertEquals("", builder.toString());
   }
 
   @Test
   public void emptyClassPathWithNoEntriesRemainsEmpty() {
     StringBuilder builder = new StringBuilder();
-    FileClassPathRunner.constructNewClassPath(builder, "", ImmutableList.<String>of());
+    FileClassPathRunner.constructNewClassPath(builder, "", ImmutableList.of());
     assertEquals("", builder.toString());
   }
 

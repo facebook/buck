@@ -40,7 +40,7 @@ public abstract class IjFolderTest {
         folderFactory.create(
             srcPath,
             false,
-            ImmutableSortedSet.<Path>of(Paths.get("Source.java")));
+            ImmutableSortedSet.of(Paths.get("Source.java")));
 
     assertEquals(
         "Merging " + folder + " with itself didn't result in the same folder being returned.",
@@ -55,11 +55,11 @@ public abstract class IjFolderTest {
         folderFactory.create(
             srcPath,
             false,
-            ImmutableSortedSet.<Path>of(Paths.get("Source.java"))),
+            ImmutableSortedSet.of(Paths.get("Source.java"))),
         folderFactory.create(
             srcPath,
             false,
-            ImmutableSortedSet.<Path>of(Paths.get("Source2.java"))));
+            ImmutableSortedSet.of(Paths.get("Source2.java"))));
   }
 
   @Test
@@ -70,11 +70,11 @@ public abstract class IjFolderTest {
         folderFactory.create(
             parentPath,
             false,
-            ImmutableSortedSet.<Path>of(Paths.get("Source.java"))),
+            ImmutableSortedSet.of(Paths.get("Source.java"))),
         folderFactory.create(
             childPath,
             false,
-            ImmutableSortedSet.<Path>of(Paths.get("Source2.java"))));
+            ImmutableSortedSet.of(Paths.get("Source2.java"))));
   }
 
   @Ignore
@@ -133,8 +133,8 @@ public abstract class IjFolderTest {
   public void testMerge(IjFolder.IJFolderFactory otherFactory) {
     Path path = Paths.get("/src");
 
-    IjFolder left = folderFactory.create(path, false, ImmutableSortedSet.<Path>of());
-    IjFolder right = otherFactory.create(path, false, ImmutableSortedSet.<Path>of());
+    IjFolder left = folderFactory.create(path, false, ImmutableSortedSet.of());
+    IjFolder right = otherFactory.create(path, false, ImmutableSortedSet.of());
 
     if (!left.canMergeWith(right)) {
       throw new IllegalArgumentException("Can't merge " + left + " with " + right);

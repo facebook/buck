@@ -80,7 +80,7 @@ public class AbiRuleKeyBuilderFactoryTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeFileHashCache hashCache = new FakeFileHashCache(
-        ImmutableMap.<Path, HashCode>of());
+        ImmutableMap.of());
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver);
 

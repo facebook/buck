@@ -146,12 +146,12 @@ public class CxxPreprocessablesTest {
   @Test
   public void resolveHeaderMap() {
     BuildTarget target = BuildTargetFactory.newInstance("//hello/world:test");
-    ImmutableMap<String, SourcePath> headerMap = ImmutableMap.<String, SourcePath>of(
+    ImmutableMap<String, SourcePath> headerMap = ImmutableMap.of(
         "foo/bar.h", new FakeSourcePath("header1.h"),
         "foo/hello.h", new FakeSourcePath("header2.h"));
 
     // Verify that the resolveHeaderMap returns sane results.
-    ImmutableMap<Path, SourcePath> expected = ImmutableMap.<Path, SourcePath>of(
+    ImmutableMap<Path, SourcePath> expected = ImmutableMap.of(
         target.getBasePath().resolve("foo/bar.h"), new FakeSourcePath("header1.h"),
         target.getBasePath().resolve("foo/hello.h"), new FakeSourcePath("header2.h"));
     ImmutableMap<Path, SourcePath> actual = CxxPreprocessables.resolveHeaderMap(
@@ -222,7 +222,7 @@ public class CxxPreprocessablesTest {
         pathResolver);
     BuildTarget target = BuildTargetFactory.newInstance(filesystem, "//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target)
-        .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(dep))
+        .setDeclaredDeps(ImmutableSortedSet.of(dep))
         .setProjectFilesystem(filesystem)
         .build();
     Path root = filesystem.resolve("root");
@@ -236,7 +236,7 @@ public class CxxPreprocessablesTest {
 
     // Setup the link map with both a regular path-based source path and one provided by
     // another build rule.
-    ImmutableMap<Path, SourcePath> links = ImmutableMap.<Path, SourcePath>of(
+    ImmutableMap<Path, SourcePath> links = ImmutableMap.of(
         Paths.get("link1"),
         new FakeSourcePath("hello"),
         Paths.get("link2"),

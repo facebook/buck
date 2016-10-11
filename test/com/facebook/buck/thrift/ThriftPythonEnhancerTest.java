@@ -87,15 +87,15 @@ public class ThriftPythonEnhancerTest {
         new CommandTool.Builder()
             .addArg(new StringArg("compiler"))
             .build(),
-        ImmutableList.<String>of(),
+        ImmutableList.of(),
         Paths.get("output"),
         new FakeSourcePath("source"),
         "language",
-        ImmutableSet.<String>of(),
-        ImmutableList.<Path>of(),
-        ImmutableSet.<Path>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableSortedSet.<String>of());
+        ImmutableSet.of(),
+        ImmutableList.of(),
+        ImmutableSet.of(),
+        ImmutableMap.of(),
+        ImmutableSortedSet.of());
   }
 
   @Test
@@ -160,10 +160,10 @@ public class ThriftPythonEnhancerTest {
         ImmutableSet.<String>of(),
         ENHANCER.getOptions(TARGET, arg));
     assertEquals(
-        addTwisted(ImmutableSet.<String>of()),
+        addTwisted(ImmutableSet.of()),
         TWISTED_ENHANCER.getOptions(TARGET, arg));
     assertEquals(
-        addAsyncio(ImmutableSet.<String>of()),
+        addAsyncio(ImmutableSet.of()),
         ASYNCIO_ENHANCER.getOptions(TARGET, arg));
   }
 
@@ -210,7 +210,7 @@ public class ThriftPythonEnhancerTest {
     // With no options we just need to find the python thrift library.
     expectImplicitDeps(
         enhancer,
-        ImmutableSet.<String>of(),
+        ImmutableSet.of(),
         ImmutableSet.of(
             config.get("python_library")));
 
@@ -247,15 +247,15 @@ public class ThriftPythonEnhancerTest {
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
         "test1.thrift", new ThriftSource(
             createFakeThriftCompiler("//:thrift_source1", pathResolver),
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             Paths.get("output1")),
         "test2.thrift", new ThriftSource(
             createFakeThriftCompiler("//:thrift_source2", pathResolver),
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             Paths.get("output2")));
 
     // Create a dummy implicit dep to pass in.
-    ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.<BuildRule>of(
+    ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of(
         createFakeBuildRule("//:dep", pathResolver));
 
     // Run the enhancer to create the language specific build rule.
@@ -283,7 +283,7 @@ public class ThriftPythonEnhancerTest {
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
         "test.thrift", new ThriftSource(
             createFakeThriftCompiler("//:thrift_source", pathResolver),
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             Paths.get("output")));
 
     // Verify that not setting the base module parameter defaults to the build target base path.
@@ -295,7 +295,7 @@ public class ThriftPythonEnhancerTest {
             resolver,
             arg,
             sources,
-            ImmutableSortedSet.<BuildRule>of());
+            ImmutableSortedSet.of());
     for (ImmutableMap.Entry<Path, SourcePath> ent :
          normal.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
       assertTrue(ent.getKey().toString(), ent.getKey().startsWith(target.getBasePath()));
@@ -310,7 +310,7 @@ public class ThriftPythonEnhancerTest {
             resolver,
             arg,
             sources,
-            ImmutableSortedSet.<BuildRule>of());
+            ImmutableSortedSet.of());
     for (ImmutableMap.Entry<Path, SourcePath> ent :
          baseModule.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
       assertTrue(ent.getKey().startsWith(Paths.get(arg.pyBaseModule.get())));
@@ -334,7 +334,7 @@ public class ThriftPythonEnhancerTest {
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
         "test.thrift", new ThriftSource(
             createFakeThriftCompiler("//:thrift_source", pathResolver),
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             Paths.get("output")));
 
     // Verify that not setting the base module parameter defaults to the build target base path.
@@ -346,7 +346,7 @@ public class ThriftPythonEnhancerTest {
             resolver,
             arg,
             sources,
-            ImmutableSortedSet.<BuildRule>of());
+            ImmutableSortedSet.of());
     for (ImmutableMap.Entry<Path, SourcePath> ent :
          normal.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
       assertTrue(ent.getKey().toString(), ent.getKey().startsWith(target.getBasePath()));
@@ -361,7 +361,7 @@ public class ThriftPythonEnhancerTest {
             resolver,
             arg,
             sources,
-            ImmutableSortedSet.<BuildRule>of());
+            ImmutableSortedSet.of());
     for (ImmutableMap.Entry<Path, SourcePath> ent :
          baseModule.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
       assertTrue(ent.getKey().startsWith(Paths.get(arg.pyTwistedBaseModule.get())));
@@ -385,7 +385,7 @@ public class ThriftPythonEnhancerTest {
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
         "test.thrift", new ThriftSource(
             createFakeThriftCompiler("//:thrift_source", pathResolver),
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             Paths.get("output")));
 
     // Verify that not setting the base module parameter defaults to the build target base path.
@@ -397,7 +397,7 @@ public class ThriftPythonEnhancerTest {
             resolver,
             arg,
             sources,
-            ImmutableSortedSet.<BuildRule>of());
+            ImmutableSortedSet.of());
     for (ImmutableMap.Entry<Path, SourcePath> ent :
         normal.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
       assertTrue(ent.getKey().toString(), ent.getKey().startsWith(target.getBasePath()));
@@ -412,7 +412,7 @@ public class ThriftPythonEnhancerTest {
             resolver,
             arg,
             sources,
-            ImmutableSortedSet.<BuildRule>of());
+            ImmutableSortedSet.of());
     for (ImmutableMap.Entry<Path, SourcePath> ent :
         baseModule.getSrcs(PythonTestUtils.PYTHON_PLATFORM).entrySet()) {
       assertTrue(ent.getKey().startsWith(Paths.get(arg.pyAsyncioBaseModule.get())));

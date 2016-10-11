@@ -73,7 +73,7 @@ public class IjModuleFactoryTest {
 
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.<TargetNode<?>>of(javaLibBase));
+        ImmutableSet.of(javaLibBase));
 
     assertEquals(ImmutableMap.of(buildTargetGuava, IjModuleGraph.DependencyType.PROD),
         module.getDependencies());
@@ -125,7 +125,7 @@ public class IjModuleFactoryTest {
 
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.<TargetNode<?>>of(javaTestExtra));
+        ImmutableSet.of(javaTestExtra));
 
     assertEquals(ImmutableMap.of(buildTargetJunit, IjModuleGraph.DependencyType.TEST),
         module.getDependencies());
@@ -230,11 +230,11 @@ public class IjModuleFactoryTest {
 
     IjModule moduleJavaLib = factory.createModule(
         moduleBasePath,
-        ImmutableSet.<TargetNode<?>>of(javaLibBase));
+        ImmutableSet.of(javaLibBase));
 
     IjModule moduleFromBinary = factory.createModule(
         moduleBasePath,
-        ImmutableSet.<TargetNode<?>>of(androidBinary));
+        ImmutableSet.of(androidBinary));
 
     assertEquals(ImmutableMap.of(
             buildTargetGuava, IjModuleGraph.DependencyType.PROD),
@@ -267,11 +267,11 @@ public class IjModuleFactoryTest {
 
     IjModule moduleJavaLibWithGenrule = factory.createModule(
         moduleBasePath,
-        ImmutableSet.<TargetNode<?>>of(javaLibWithGenrule));
+        ImmutableSet.of(javaLibWithGenrule));
 
     IjModule moduleJavaLibWithAnnotationProcessor = factory.createModule(
         moduleBasePath,
-        ImmutableSet.<TargetNode<?>>of(javaLibWithAnnotationProcessor));
+        ImmutableSet.of(javaLibWithAnnotationProcessor));
 
     assertEquals(ImmutableMap.of(
             genruleBuildTarget, IjModuleGraph.DependencyType.PROD,
@@ -296,7 +296,7 @@ public class IjModuleFactoryTest {
     Path moduleBasePath = Paths.get("java/com/example/base");
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.<TargetNode<?>>of(javaLib));
+        ImmutableSet.of(javaLib));
 
     assertEquals(moduleBasePath, module.getModuleBasePath());
     assertFalse(module.getAndroidFacet().isPresent());
@@ -321,7 +321,7 @@ public class IjModuleFactoryTest {
     Path moduleBasePath = Paths.get("");
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.<TargetNode<?>>of(javaLib));
+        ImmutableSet.of(javaLib));
 
     assertEquals(moduleBasePath, module.getModuleBasePath());
 
@@ -404,7 +404,7 @@ public class IjModuleFactoryTest {
     Path moduleBasePath = Paths.get("java/com/example/base");
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.<TargetNode<?>>of(androidLib));
+        ImmutableSet.of(androidLib));
 
     assertTrue(module.getAndroidFacet().isPresent());
     assertEquals(ImmutableSet.of(moduleBasePath), getFolderPaths(module.getFolders()));
@@ -444,7 +444,7 @@ public class IjModuleFactoryTest {
     Path moduleBasePath = Paths.get("java/com/example");
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.<TargetNode<?>>of(androidBinary));
+        ImmutableSet.of(androidBinary));
 
     assertTrue(module.getAndroidFacet().isPresent());
     assertEquals(Paths.get(manifestName), module.getAndroidFacet().get().getManifestPath().get());
@@ -468,10 +468,10 @@ public class IjModuleFactoryTest {
 
     IjModule moduleWithDefault = factory.createModule(
         moduleBasePath,
-        ImmutableSet.<TargetNode<?>>of(defaultJavaNode));
+        ImmutableSet.of(defaultJavaNode));
     IjModule moduleWithJava8 = factory.createModule(
         moduleBasePath,
-        ImmutableSet.<TargetNode<?>>of(java8Node));
+        ImmutableSet.of(java8Node));
 
     assertThat(moduleWithDefault.getSdkName(), equalTo(Optional.<String>absent()));
     assertThat(moduleWithJava8.getSdkName(), equalTo(Optional.of("1.8")));
@@ -499,10 +499,10 @@ public class IjModuleFactoryTest {
 
     IjModule moduleWithDefault = factory.createModule(
         moduleBasePath,
-        ImmutableSet.<TargetNode<?>>of(defaultJavaNode));
+        ImmutableSet.of(defaultJavaNode));
     IjModule moduleWithJava8 = factory.createModule(
         moduleBasePath,
-        ImmutableSet.<TargetNode<?>>of(java8Node));
+        ImmutableSet.of(java8Node));
 
     assertThat(moduleWithDefault.getSdkName(), equalTo(Optional.<String>absent()));
     assertThat(moduleWithJava8.getSdkName(), equalTo(Optional.of("TestSDK")));
@@ -611,7 +611,7 @@ public class IjModuleFactoryTest {
     Path moduleBasePath = Paths.get("java/com/example/base");
     IjModule module = factory.createModule(
         moduleBasePath,
-        ImmutableSet.<TargetNode<?>>of(cxxLibrary));
+        ImmutableSet.of(cxxLibrary));
 
     IjFolder cxxLibraryModel =
         new SourceFolder(

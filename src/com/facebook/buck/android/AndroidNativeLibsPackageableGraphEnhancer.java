@@ -310,7 +310,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                   .addAll(strippedLibsMap.keySet())
                   .addAll(strippedLibsAssetsMap.keySet())
                   .build()),
-            /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+            /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
       moduleMappedCopyNativeLibriesBuilder.put(
           module,
           new CopyNativeLibraries(
@@ -327,7 +327,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         .setCopyNativeLibraries(
             hasCopyNativeLibraries ?
                 Optional.of(moduleMappedCopyNativeLibriesBuilder.build()) :
-                Optional.<ImmutableMap<APKModule, CopyNativeLibraries>>absent())
+                Optional.absent())
         .build();
 
   }
@@ -379,7 +379,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(pathResolver.filterBuildRuleInputs(ImmutableList.of(sourcePath)))
                     .build()),
-            /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+            /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
 
         stripLinkable = new StripLinkable(
             paramsForStripLinkable,

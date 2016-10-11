@@ -192,7 +192,7 @@ public class Depfiles {
     // included them using source relative include paths. To handle both cases we check for the
     // prerequisites both in the values and the keys of the replacement map.
     Logger.get(Depfiles.class).debug("Processing dependency file %s as Makefile", sourceDepFile);
-    ImmutableMap<String, Object> params = ImmutableMap.<String, Object>of(
+    ImmutableMap<String, Object> params = ImmutableMap.of(
         "input", inputPath, "output", outputPath);
     try (InputStream input = filesystem.newFileInputStream(sourceDepFile);
          BufferedReader reader = new BufferedReader(new InputStreamReader(input));

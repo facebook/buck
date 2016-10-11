@@ -153,7 +153,7 @@ public class GoTestDescription implements
             params.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("test-main-src")),
             Suppliers.ofInstance(ImmutableSortedSet.copyOf(
                 testMainGenerator.getDeps(sourceResolver))),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())
+            Suppliers.ofInstance(ImmutableSortedSet.of())
         ),
         sourceResolver,
         testMainGenerator,
@@ -190,8 +190,8 @@ public class GoTestDescription implements
 
     return new GoTest(
         params.copyWithDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(testMain)),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())
+            Suppliers.ofInstance(ImmutableSortedSet.of(testMain)),
+            Suppliers.ofInstance(ImmutableSortedSet.of())
         ),
         new SourcePathResolver(resolver),
         testMain,
@@ -223,7 +223,7 @@ public class GoTestDescription implements
             Suppliers.ofInstance(ImmutableSortedSet.of(generatedTestMain))),
         resolver,
         goBuckConfig,
-        ImmutableSet.<SourcePath>of(new BuildTargetSourcePath(generatedTestMain.getBuildTarget())),
+        ImmutableSet.of(new BuildTargetSourcePath(generatedTestMain.getBuildTarget())),
         args.compilerFlags.get(),
         args.assemblerFlags.get(),
         args.linkerFlags.get(),
@@ -300,7 +300,7 @@ public class GoTestDescription implements
                   // Make sure to include dynamically generated sources as deps.
                   .addAll(
                       sourcePathResolver.filterBuildRuleInputs(
-                          libraryArg.srcs.or(ImmutableSortedSet.<SourcePath>of())))
+                          libraryArg.srcs.or(ImmutableSortedSet.of())))
                   .build();
             }
           });
@@ -311,7 +311,7 @@ public class GoTestDescription implements
           goBuckConfig,
           packageName,
           ImmutableSet.<SourcePath>builder()
-              .addAll(libraryArg.srcs.or(ImmutableSortedSet.<SourcePath>of()))
+              .addAll(libraryArg.srcs.or(ImmutableSortedSet.of()))
               .addAll(args.srcs)
               .build(),
           ImmutableList.<String>builder()

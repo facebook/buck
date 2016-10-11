@@ -83,7 +83,7 @@ public class PrebuiltHaskellLibraryDescription
           Linker.LinkableDepType depType)
           throws NoSuchBuildTargetException {
         return HaskellCompileInput.builder()
-            .addAllFlags(args.exportedCompilerFlags.or(ImmutableList.<String>of()))
+            .addAllFlags(args.exportedCompilerFlags.or(ImmutableList.of()))
             .addPackages(
                 HaskellPackage.builder()
                     .setInfo(
@@ -96,11 +96,11 @@ public class PrebuiltHaskellLibraryDescription
                                     getBuildTarget().getShortName(),
                                     args.version))))
                     .setPackageDb(args.db)
-                    .addAllInterfaces(args.importDirs.or(ImmutableList.<SourcePath>of()))
+                    .addAllInterfaces(args.importDirs.or(ImmutableList.of()))
                     .addAllLibraries(
                         depType == Linker.LinkableDepType.SHARED ?
-                            args.sharedLibs.or(ImmutableMap.<String, SourcePath>of()).values() :
-                            args.staticLibs.or(ImmutableList.<SourcePath>of()))
+                            args.sharedLibs.or(ImmutableMap.of()).values() :
+                            args.staticLibs.or(ImmutableList.of()))
                     .build())
             .build();
       }
@@ -122,15 +122,15 @@ public class PrebuiltHaskellLibraryDescription
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type) {
         NativeLinkableInput.Builder builder = NativeLinkableInput.builder();
-        builder.addAllArgs(StringArg.from(args.exportedLinkerFlags.or(ImmutableList.<String>of())));
+        builder.addAllArgs(StringArg.from(args.exportedLinkerFlags.or(ImmutableList.of())));
         if (type == Linker.LinkableDepType.SHARED) {
           builder.addAllArgs(
               SourcePathArg.from(getResolver(),
-                  args.sharedLibs.or(ImmutableMap.<String, SourcePath>of()).values()));
+                  args.sharedLibs.or(ImmutableMap.of()).values()));
         } else {
           builder.addAllArgs(
               SourcePathArg.from(getResolver(),
-                  args.staticLibs.or(ImmutableList.<SourcePath>of())));
+                  args.staticLibs.or(ImmutableList.of())));
         }
         return builder.build();
       }
@@ -142,7 +142,7 @@ public class PrebuiltHaskellLibraryDescription
 
       @Override
       public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
-        return args.sharedLibs.or(ImmutableMap.<String, SourcePath>of());
+        return args.sharedLibs.or(ImmutableMap.of());
       }
 
       @Override
@@ -163,7 +163,7 @@ public class PrebuiltHaskellLibraryDescription
           HeaderVisibility headerVisibility)
           throws NoSuchBuildTargetException {
         CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
-        for (SourcePath headerDir : args.cxxHeaderDirs.or(ImmutableSortedSet.<SourcePath>of())) {
+        for (SourcePath headerDir : args.cxxHeaderDirs.or(ImmutableSortedSet.of())) {
           builder.addIncludes(CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, headerDir));
         }
         return builder.build();

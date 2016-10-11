@@ -166,7 +166,7 @@ public class ShTest
         public TestResults call() throws Exception {
           return TestResults.of(
               getBuildTarget(),
-              ImmutableList.<TestCaseSummary>of(),
+              ImmutableList.of(),
               contacts,
               FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
         }

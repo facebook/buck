@@ -82,7 +82,7 @@ public class UserInputTest {
         fixture.getUserInput().selectRange(
             "selectrangequery",
             ImmutableList.of("a", "b", "c", "d", "e", "f", "g", "h", "i", "j"),
-            Functions.<String>identity()),
+            Functions.identity()),
         Matchers.contains("b", "c", "d", "e", "j"));
 
   }

@@ -23,7 +23,6 @@ import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.cli.VerbosityParser;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -89,7 +88,7 @@ public class DxStepTest extends EasyMockSupport {
       MoreAsserts.assertShellCommands(
           "--no-optimize should be present, but --force-jumbo should not.",
           ImmutableList.of(expected),
-          ImmutableList.<Step>of(dx),
+          ImmutableList.of(dx),
           context);
       verifyAll();
     }
@@ -114,7 +113,7 @@ public class DxStepTest extends EasyMockSupport {
       MoreAsserts.assertShellCommands(
           "Neither --no-optimize nor --force-jumbo should be present.",
           ImmutableList.of(expected),
-          ImmutableList.<Step>of(dx),
+          ImmutableList.of(dx),
           context);
       verifyAll();
     }
@@ -141,7 +140,7 @@ public class DxStepTest extends EasyMockSupport {
       MoreAsserts.assertShellCommands(
           "Both --no-optimize and --force-jumbo should be present.",
           ImmutableList.of(expected),
-          ImmutableList.<Step>of(dx),
+          ImmutableList.of(dx),
           context);
       verifyAll();
     }
@@ -166,7 +165,7 @@ public class DxStepTest extends EasyMockSupport {
       MoreAsserts.assertShellCommands(
           "Ensure that the --statistics flag is present.",
           ImmutableList.of(expected),
-          ImmutableList.<Step>of(dx),
+          ImmutableList.of(dx),
           context);
 
       assertTrue("Should print stdout to show statistics.",
@@ -197,7 +196,7 @@ public class DxStepTest extends EasyMockSupport {
       MoreAsserts.assertShellCommands(
           "Ensure that the --statistics flag is present.",
           ImmutableList.of(expected),
-          ImmutableList.<Step>of(dx),
+          ImmutableList.of(dx),
           context);
 
       assertTrue("Should print stdout since `dx --verbose` is enabled.",
@@ -234,7 +233,7 @@ public class DxStepTest extends EasyMockSupport {
       MoreAsserts.assertShellCommands(
           "/home/mbolin/dx should be used instead of /usr/bin/dx.",
           ImmutableList.of(expected),
-          ImmutableList.<Step>of(dx),
+          ImmutableList.of(dx),
           context);
       verifyAll();
     }
@@ -266,7 +265,7 @@ public class DxStepTest extends EasyMockSupport {
       MoreAsserts.assertShellCommands(
           "Should fall back to /usr/bin/dx even though USE_CUSTOM_DX_IF_AVAILABLE is used.",
           ImmutableList.of(expected),
-          ImmutableList.<Step>of(dx),
+          ImmutableList.of(dx),
           context);
       verifyAll();
     }

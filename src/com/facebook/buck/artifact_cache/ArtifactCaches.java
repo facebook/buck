@@ -133,7 +133,7 @@ public class ArtifactCaches {
           @Override
           public ArtifactCache apply(DirCacheEntry input) {
             return createDirArtifactCache(
-                Optional.<BuckEventBus>absent(),
+                Optional.absent(),
                 input,
                 projectFilesystem);
           }

@@ -51,7 +51,7 @@ abstract class AbstractTargetNodePredicateSpec implements TargetNodeSpec {
 
     for (TargetNode<?> node : nodes) {
       if (getPredicate().apply(node)) {
-        resultBuilder.put(node.getBuildTarget(), Optional.<TargetNode<?>>of(node));
+        resultBuilder.put(node.getBuildTarget(), Optional.of(node));
       }
     }
 

@@ -625,7 +625,7 @@ public class AppleBundleIntegrationTest {
     ImmutableSet<String> targetsThatShouldContainIncludeFrameworkFlavors =
         ImmutableSet.of("//:DemoAppWithExtension", "//:DemoExtension");
 
-    ImmutableSet<Flavor> includeFrameworkFlavors = ImmutableSet.<Flavor>of(
+    ImmutableSet<Flavor> includeFrameworkFlavors = ImmutableSet.of(
         ImmutableFlavor.of("no-include-frameworks"),
         ImmutableFlavor.of("include-frameworks"));
 

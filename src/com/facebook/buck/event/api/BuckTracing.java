@@ -56,7 +56,7 @@ public final class BuckTracing {
    * to {@link #end(Map)} should be in the finally block.
    */
   public void begin(final String eventName) {
-    begin(eventName, Collections.<String, String>emptyMap());
+    begin(eventName, Collections.emptyMap());
   }
 
   /**
@@ -83,7 +83,7 @@ public final class BuckTracing {
    * {@link #begin(String, Map)} call immediately before the try.
    */
   public void end() {
-    end(Collections.<String, String>emptyMap());
+    end(Collections.emptyMap());
   }
 
   /**

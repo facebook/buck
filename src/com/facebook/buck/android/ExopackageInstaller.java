@@ -177,7 +177,7 @@ public class ExopackageInstaller {
     eventBus.post(InstallEvent.finished(
             started,
             success,
-            Optional.<Long>absent(),
+            Optional.absent(),
             Optional.of(AdbHelper.tryToExtractPackageNameFromManifest(apkRule))));
     return success;
   }

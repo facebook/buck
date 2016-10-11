@@ -38,7 +38,7 @@ public class HttpArtifactCacheListener implements BuckEventListener {
   public HttpArtifactCacheListener(
       BatchingLogger logger,
       ObjectMapper jsonConverter) {
-    this(logger, jsonConverter, ImmutableMap.<String, String>of());
+    this(logger, jsonConverter, ImmutableMap.of());
   }
 
   public HttpArtifactCacheListener(

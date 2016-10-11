@@ -109,7 +109,7 @@ public class DTestDescription implements
             cxxBuckConfig,
             ImmutableList.of("-unittest"),
             args.srcs,
-            args.linkerFlags.or(ImmutableList.<String>of()),
+            args.linkerFlags.or(ImmutableList.of()),
             DIncludes.builder()
                 .setLinkTree(new BuildTargetSourcePath(sourceTree.getBuildTarget()))
                 .addAllSources(args.srcs.getPaths())

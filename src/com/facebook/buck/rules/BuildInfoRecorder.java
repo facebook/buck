@@ -319,7 +319,7 @@ public class BuildInfoRecorder {
           "buck_artifact_" + MoreFiles.sanitize(buildTarget.getShortName()),
           ".zip");
       buildMetadata = getBuildMetadata();
-      projectFilesystem.createZip(pathsToIncludeInZip, zip, ImmutableMap.<Path, String>of());
+      projectFilesystem.createZip(pathsToIncludeInZip, zip, ImmutableMap.of());
     } catch (IOException e) {
       eventBus.post(ConsoleEvent.info("Failed to create zip for %s containing:\n%s",
           buildTarget,

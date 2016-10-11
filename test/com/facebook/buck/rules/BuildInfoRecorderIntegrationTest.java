@@ -73,7 +73,7 @@ public class BuildInfoRecorderIntegrationTest {
                 .getPathForRuleKey(
                     artifactCache,
                     new RuleKey(RULE_KEY),
-                    Optional.<String>absent()))
+                    Optional.absent()))
         .toFile()
         .exists());
   }
@@ -85,6 +85,6 @@ public class BuildInfoRecorderIntegrationTest {
         new DefaultClock(),
         new BuildId(),
         ObjectMappers.newDefaultInstance(),
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
   }
 }

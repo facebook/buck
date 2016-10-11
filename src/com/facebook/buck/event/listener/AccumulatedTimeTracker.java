@@ -97,7 +97,7 @@ public class AccumulatedTimeTracker {
   }
 
   public void didFinishTestRule(TestRuleEvent.Finished finished) {
-    threadsToRunningTestRuleEvent.put(finished.getThreadId(), Optional.<TestRuleEvent>absent());
+    threadsToRunningTestRuleEvent.put(finished.getThreadId(), Optional.absent());
     accumulatedRuleTime.remove(finished.getBuildTarget());
   }
 
@@ -106,7 +106,7 @@ public class AccumulatedTimeTracker {
         Preconditions.checkNotNull(
             threadsToRunningBuildRuleEvent.put(
                 buildRuleEvent.getThreadId(),
-                Optional.<BuildRuleEvent>absent()));
+                Optional.absent()));
     Preconditions.checkState(started.isPresent());
     Preconditions.checkState(buildRuleEvent.getBuildRule().equals(started.get().getBuildRule()));
     AtomicLong current = accumulatedRuleTime.get(buildRuleEvent.getBuildRule().getBuildTarget());

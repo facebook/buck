@@ -92,7 +92,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
     BuildRuleParams gwtParams = params.copyWithChanges(
         flavoredBuildTarget,
         /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(prebuilt)),
-        /* inferredDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+        /* inferredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
     BuildRule gwtModule = createGwtModule(gwtParams, pathResolver, args);
     resolver.addToIndex(gwtModule);
 

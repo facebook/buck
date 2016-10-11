@@ -66,7 +66,7 @@ public class MacroFinderTest {
 
   @Test(expected = MacroException.class)
   public void findAllUnexpectedMacro() throws MacroException {
-    FINDER.findAll(ImmutableSet.<String>of(), "hello world $(macro)");
+    FINDER.findAll(ImmutableSet.of(), "hello world $(macro)");
   }
 
   @Test
@@ -77,7 +77,7 @@ public class MacroFinderTest {
             "arg1", "something",
             "arg2", "something else"));
     String actual = FINDER.replace(
-        ImmutableMap.<String, MacroReplacer>of("macro", new FunctionMacroReplacer(replacer)),
+        ImmutableMap.of("macro", new FunctionMacroReplacer(replacer)),
         "hello $(macro arg1) goodbye $(macro arg2)");
     assertEquals("hello something goodbye something else", actual);
   }
@@ -89,7 +89,7 @@ public class MacroFinderTest {
             "arg1", "something",
             "arg2", "something else"));
     String actual = FINDER.replace(
-        ImmutableMap.<String, MacroReplacer>of("macro", new FunctionMacroReplacer(replacer)),
+        ImmutableMap.of("macro", new FunctionMacroReplacer(replacer)),
         "hello \\$(macro arg1) goodbye $(macro arg2)");
     assertEquals("hello $(macro arg1) goodbye something else", actual);
   }
@@ -102,7 +102,7 @@ public class MacroFinderTest {
             "arg2", "something else",
             "$", "dollar"));
     String actual = FINDER.replace(
-        ImmutableMap.<String, MacroReplacer>of("macro", new FunctionMacroReplacer(replacer)),
+        ImmutableMap.of("macro", new FunctionMacroReplacer(replacer)),
         "hello $\\$(macro arg1) goodbye $$(macro arg2) $(macro \\$)");
     assertEquals("hello $$(macro arg1) goodbye $something else dollar", actual);
   }

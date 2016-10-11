@@ -21,7 +21,6 @@ import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -81,8 +80,8 @@ abstract class AbstractLuaScriptStarter implements Starter {
         new WriteFile(
             getBaseParams().copyWithChanges(
                 templateTarget,
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                Suppliers.ofInstance(ImmutableSortedSet.of()),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
             getPathResolver(),
             getPureStarterTemplate(),
             BuildTargets.getGenPath(

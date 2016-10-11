@@ -148,8 +148,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
             executionContext.getPathToAdbExecutable(),
             Optional.of(getProjectFilesystem().resolve(pathToTestOutput)),
             Optional.of(device.getSerialNumber()),
-            Optional.<Path>absent(),
-            Optional.<Path>absent()));
+            Optional.absent(),
+            Optional.absent()));
 
     return steps.build();
   }
@@ -286,8 +286,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
     }
     InstrumentationStep step = getInstrumentationStep(
         executionContext.getPathToAdbExecutable(),
-        Optional.<Path>absent(),
-        Optional.<String>absent(),
+        Optional.absent(),
+        Optional.absent(),
         Optional.of(toPath(apk)),
         apkUnderTestPath);
 

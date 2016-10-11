@@ -40,7 +40,7 @@ public class DefaultExecutionEnvironmentTest {
     properties.setProperty("user.name", name);
     DefaultExecutionEnvironment environment =
         new DefaultExecutionEnvironment(
-            ImmutableMap.<String, String>of(),
+            ImmutableMap.of(),
             properties);
     assertEquals("Username should match test data.", name, environment.getUsername());
   }

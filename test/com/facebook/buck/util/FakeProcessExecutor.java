@@ -33,7 +33,7 @@ public class FakeProcessExecutor extends ProcessExecutor {
   private final Set<ProcessExecutorParams> launchedProcesses;
 
   public FakeProcessExecutor() {
-    this(ImmutableMap.<ProcessExecutorParams, FakeProcess>of());
+    this(ImmutableMap.of());
   }
 
   public FakeProcessExecutor(Map<ProcessExecutorParams, FakeProcess> processMap) {

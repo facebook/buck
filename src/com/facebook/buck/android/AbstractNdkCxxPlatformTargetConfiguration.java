@@ -44,15 +44,15 @@ abstract class AbstractNdkCxxPlatformTargetConfiguration {
   ImmutableMap<NdkCxxPlatformCompiler.Type, ImmutableList<String>> getLinkerFlags();
 
   public ImmutableList<String> getAssemblerFlags(NdkCxxPlatformCompiler.Type type) {
-    return Optional.fromNullable(getAssemblerFlags().get(type)).or(ImmutableList.<String>of());
+    return Optional.fromNullable(getAssemblerFlags().get(type)).or(ImmutableList.of());
   }
 
   public ImmutableList<String> getCompilerFlags(NdkCxxPlatformCompiler.Type type) {
-    return Optional.fromNullable(getCompilerFlags().get(type)).or(ImmutableList.<String>of());
+    return Optional.fromNullable(getCompilerFlags().get(type)).or(ImmutableList.of());
   }
 
   public ImmutableList<String> getLinkerFlags(NdkCxxPlatformCompiler.Type type) {
-    return Optional.fromNullable(getLinkerFlags().get(type)).or(ImmutableList.<String>of());
+    return Optional.fromNullable(getLinkerFlags().get(type)).or(ImmutableList.of());
   }
 
 }

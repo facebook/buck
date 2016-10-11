@@ -43,7 +43,7 @@ public class AndroidBinaryBuilder extends AbstractNodeBuilder<AndroidBinaryDescr
             DEFAULT_JAVA_OPTIONS,
             ANDROID_JAVAC_OPTIONS,
             new ProGuardConfig(FakeBuckConfig.builder().build()),
-            ImmutableMap.<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform>of(),
+            ImmutableMap.of(),
             MoreExecutors.newDirectExecutorService(),
             CxxPlatformUtils.DEFAULT_CONFIG),
         target);

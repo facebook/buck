@@ -57,9 +57,9 @@ public class CSharpLibraryDescription implements Description<CSharpLibraryDescri
     ImmutableList.Builder<Either<BuildRule, String>> refsAsRules = ImmutableList.builder();
     for (Either<BuildTarget, String> ref : args.deps.get()) {
       if (ref.isLeft()) {
-        refsAsRules.add(Either.<BuildRule, String>ofLeft(resolver.getRule(ref.getLeft())));
+        refsAsRules.add(Either.ofLeft(resolver.getRule(ref.getLeft())));
       } else {
-        refsAsRules.add(Either.<BuildRule, String>ofRight(ref.getRight()));
+        refsAsRules.add(Either.ofRight(ref.getRight()));
       }
     }
 

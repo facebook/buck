@@ -117,7 +117,7 @@ public class ProjectCommandXcodeTest {
     BuildTarget fooBinTarget = BuildTargetFactory.newInstance("//foo:bin");
     fooBinNode = AppleBundleBuilder
         .createBuilder(fooBinTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP))
+        .setExtension(Either.ofLeft(AppleBundleExtension.APP))
         .setBinary(fooBinBinaryTarget)
         .setTests(Optional.of(ImmutableSortedSet.of(fooBinTestTarget)))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
@@ -184,7 +184,7 @@ public class ProjectCommandXcodeTest {
     TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
         targetGraph,
         ProjectCommand.Ide.XCODE,
-        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.of(),
         /* withTests = */ false,
         /* withDependenciesTests = */ false);
 
@@ -207,7 +207,7 @@ public class ProjectCommandXcodeTest {
     TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
         targetGraph,
         ProjectCommand.Ide.XCODE,
-        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.of(),
         /* withTests = */ true,
         /* withDependenciesTests */ true);
 

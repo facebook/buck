@@ -220,7 +220,7 @@ public class PrebuiltHaskellLibraryDescriptionTest {
             .setVersion("1.0.0")
             .setDb(new FakeSourcePath("package.conf.d"))
             .setImportDirs(ImmutableList.of(interfaces))
-            .setCxxHeaderDirs(ImmutableSortedSet.<SourcePath>of(path))
+            .setCxxHeaderDirs(ImmutableSortedSet.of(path))
             .build(resolver);
     assertThat(
         library.getCxxPreprocessorInput(

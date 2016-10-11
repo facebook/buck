@@ -28,7 +28,6 @@ import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -36,7 +35,6 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -48,9 +46,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
-import java.nio.file.Path;
 import java.util.logging.Level;
-import java.util.regex.Pattern;
 
 public class GroovyTestDescription implements Description<GroovyTestDescription.Arg> {
 
@@ -122,36 +118,36 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                     params.getProjectFilesystem(),
                     args.resources.get()),
                 defaultJavacOptions.getGeneratedSourceFolderName(),
-                /* proguardConfig */ Optional.<SourcePath>absent(),
-                /* postprocessClassesCommands */ ImmutableList.<String>of(),
-                /* exportDeps */ ImmutableSortedSet.<BuildRule>of(),
-                /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
+                /* proguardConfig */ Optional.absent(),
+                /* postprocessClassesCommands */ ImmutableList.of(),
+                /* exportDeps */ ImmutableSortedSet.of(),
+                /* providedDeps */ ImmutableSortedSet.of(),
                 new BuildTargetSourcePath(abiJarTarget),
                 /* trackClassUsage */ false,
-                /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+                /* additionalClasspathEntries */ ImmutableSet.of(),
                 stepFactory,
-                /* resourcesRoot */ Optional.<Path>absent(),
-                /* manifest file */ Optional.<SourcePath>absent(),
-                /* mavenCoords */ Optional.<String>absent(),
-                /* tests */ ImmutableSortedSet.<BuildTarget>of(),
-                /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of()
+                /* resourcesRoot */ Optional.absent(),
+                /* manifest file */ Optional.absent(),
+                /* mavenCoords */ Optional.absent(),
+                /* tests */ ImmutableSortedSet.of(),
+                /* classesToRemoveFromJar */ ImmutableSet.of()
             ));
 
     JavaTest javaTest =
         resolver.addToIndex(
             new JavaTest(
                 params.copyWithDeps(
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(testsLibrary)),
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                    Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
+                    Suppliers.ofInstance(ImmutableSortedSet.of())),
                 pathResolver,
                 testsLibrary,
-                /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+                /* additionalClasspathEntries */ ImmutableSet.of(),
                 args.labels.get(),
                 args.contacts.get(),
                 args.testType.or(TestType.JUNIT),
                 javaOptions.getJavaRuntimeLauncher(),
                 args.vmArgs.get(),
-                /* nativeLibsEnvironment */ ImmutableMap.<String, String>of(),
+                /* nativeLibsEnvironment */ ImmutableMap.of(),
                 args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
                 args.env.get(),
                 args.getRunTestSeparately(),

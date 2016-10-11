@@ -219,7 +219,7 @@ public class BuildCommand extends AbstractCommand {
   }
 
   public BuildCommand() {
-    this(ImmutableList.<String>of());
+    this(ImmutableList.of());
   }
 
   public BuildCommand(List<String> arguments) {
@@ -329,7 +329,7 @@ public class BuildCommand extends AbstractCommand {
     try (CommandThreadManager pool = new CommandThreadManager(
         "Build",
         getConcurrencyLimit(params.getBuckConfig()))) {
-      return run(params, pool.getExecutor(), ImmutableSet.<String>of());
+      return run(params, pool.getExecutor(), ImmutableSet.of());
     }
   }
 
@@ -678,13 +678,13 @@ public class BuildCommand extends AbstractCommand {
         artifactCache,
         params.getConsole(),
         params.getBuckEventBus(),
-        Optional.<TargetDevice>absent(),
+        Optional.absent(),
         rootCellBuckConfig.getPlatform(),
         rootCellBuckConfig.getEnvironment(),
         params.getObjectMapper(),
         params.getClock(),
-        Optional.<AdbOptions>absent(),
-        Optional.<TargetDeviceOptions>absent(),
+        Optional.absent(),
+        Optional.absent(),
         params.getExecutors())) {
       lastBuild = build;
       return build.executeAndPrintFailuresToEventBus(

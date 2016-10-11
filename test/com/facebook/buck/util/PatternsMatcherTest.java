@@ -62,14 +62,14 @@ public class PatternsMatcherTest {
 
   @Test
   public void testHasNoPatterns() {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.<String>emptyList());
+    PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.emptyList());
 
     assertFalse(patternsMatcher.hasPatterns());
   }
 
   @Test
   public void testFilterMatchingMapEntriesWithEmptyPatterns() {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.<String>emptyList());
+    PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.emptyList());
 
     Map<String, String> entries = new TreeMap<String, String>() {{
       put("e1", "v1");

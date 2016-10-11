@@ -108,7 +108,7 @@ public class JUnitStep extends ShellStep {
 
   @Override
   protected Optional<Function<Process, Void>> getTimeoutHandler(final ExecutionContext context) {
-    return Optional.<Function<Process, Void>>of(
+    return Optional.of(
         new Function<Process, Void>() {
           @Override
           public Void apply(Process process) {
@@ -165,9 +165,9 @@ public class JUnitStep extends ShellStep {
                       .add(ProcessExecutor.Option.PRINT_STD_OUT)
                       .add(ProcessExecutor.Option.PRINT_STD_ERR)
                       .build(),
-                  /* stdin */ Optional.<String>absent(),
+                  /* stdin */ Optional.absent(),
                   /* timeOutMs */ Optional.of(TimeUnit.SECONDS.toMillis(30)),
-                  /* timeOutHandler */ Optional.<Function<Process, Void>>of(
+                  /* timeOutHandler */ Optional.of(
                       new Function<Process, Void>() {
                         @Override
                         public Void apply(Process input) {

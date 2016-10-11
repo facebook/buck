@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java.intellij;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -150,7 +149,7 @@ public class IjProjectTemplateDataPreparer {
       supplementalModules = ImmutableSet.of(
           IjModule.builder()
               .setModuleBasePath(rootModuleBasePath)
-              .setTargets(ImmutableSet.<TargetNode<?>>of())
+              .setTargets(ImmutableSet.of())
               .build());
     }
 

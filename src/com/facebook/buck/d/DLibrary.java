@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -71,8 +70,8 @@ public class DLibrary extends NoopBuildRule implements NativeLinkable {
                 CxxDescriptionEnhancer.STATIC_FLAVOR));
     return NativeLinkableInput.of(
         ImmutableList.of(archive.toArg()),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
+        ImmutableSet.of(),
+        ImmutableSet.of());
   }
 
   @Override

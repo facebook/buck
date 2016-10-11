@@ -190,7 +190,7 @@ public class TypeCoercerTest {
     coercer.traverse(input, traversal);
 
     Matcher<Iterable<?>> matcher = Matchers.contains(
-        ImmutableList.<Matcher<? super Object>>of(
+        ImmutableList.of(
             sameInstance((Object) input),
             is((Object) "foo"),
             sameInstance((Object) input.get("foo")),
@@ -301,7 +301,7 @@ public class TypeCoercerTest {
     coercer.traverse(input, traversal);
     assertThat(
         traversal.getObjects(),
-        Matchers.contains(ImmutableList.<Matcher<? super Object>>of(
+        Matchers.contains(ImmutableList.of(
             sameInstance((Object) input.getRight()),
             sameInstance((Object) input.getRight().get(0)))));
 
@@ -360,7 +360,7 @@ public class TypeCoercerTest {
     assertThat(
         traversal.getObjects(),
         Matchers.contains(
-            ImmutableList.<Matcher<? super Object>>of(
+            ImmutableList.of(
                 sameInstance((Object) input.getFirst()),
                 sameInstance((Object) input.getSecond()))));
   }
@@ -426,7 +426,7 @@ public class TypeCoercerTest {
     ImmutableList<String> input = ImmutableList.of("cheese", "cake", "tastes", "good");
 
     Object result = coercer.coerce(cellRoots, filesystem, Paths.get(""), input);
-    ImmutableSortedSet<Label> expected = ImmutableSortedSet.<Label>of(
+    ImmutableSortedSet<Label> expected = ImmutableSortedSet.of(
         Label.of("cake"),
         Label.of("cheese"),
         Label.of("good"),
@@ -450,11 +450,11 @@ public class TypeCoercerTest {
         NeededCoverageSpec.of(
             0.0f,
             BuildTargetFactory.newInstance("//some:build-target"),
-            Optional.<String>absent()),
+            Optional.absent()),
         NeededCoverageSpec.of(
             0.9f,
             BuildTargetFactory.newInstance("//other/build:target"),
-            Optional.<String>absent()),
+            Optional.absent()),
         NeededCoverageSpec.of(
             1.0f,
             BuildTargetFactory.newInstance("//:target"),

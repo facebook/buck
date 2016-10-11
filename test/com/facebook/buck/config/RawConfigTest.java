@@ -61,7 +61,7 @@ public class RawConfigTest {
   public void emptySectionReturnsEmptyList() {
     assertThat(
         RawConfig.builder().build().getSection("foo"),
-        Matchers.<String, String>anEmptyMap());
+        Matchers.anEmptyMap());
   }
 }
 

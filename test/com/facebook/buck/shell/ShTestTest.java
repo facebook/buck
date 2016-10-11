@@ -28,11 +28,8 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -69,12 +66,12 @@ public class ShTestTest extends EasyMockSupport {
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
         new FakeSourcePath("run_test.sh"),
-        /* args */ ImmutableList.<Arg>of(),
-        /* env */ ImmutableMap.<String, Arg>of(),
-        /* resources */ ImmutableSortedSet.<SourcePath>of(),
-        Optional.<Long>absent(),
-        /* labels */ ImmutableSet.<Label>of(),
-        /* contacts */ ImmutableSet.<String>of());
+        /* args */ ImmutableList.of(),
+        /* env */ ImmutableMap.of(),
+        /* resources */ ImmutableSortedSet.of(),
+        Optional.absent(),
+        /* labels */ ImmutableSet.of(),
+        /* contacts */ ImmutableSet.of());
     filesystem.touch(shTest.getPathToTestOutputResult());
 
     assertTrue(
@@ -103,12 +100,12 @@ public class ShTestTest extends EasyMockSupport {
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
         new FakeSourcePath("run_test.sh"),
-        /* args */ ImmutableList.<Arg>of(),
-        /* env */ ImmutableMap.<String, Arg>of(),
-        /* resources */ ImmutableSortedSet.<SourcePath>of(),
-        Optional.<Long>absent(),
-        /* labels */ ImmutableSet.<Label>of(),
-        /* contacts */ ImmutableSet.<String>of());
+        /* args */ ImmutableList.of(),
+        /* env */ ImmutableMap.of(),
+        /* resources */ ImmutableSortedSet.of(),
+        Optional.absent(),
+        /* labels */ ImmutableSet.of(),
+        /* contacts */ ImmutableSet.of());
 
     assertThat(
         shTest.getRuntimeDeps(),

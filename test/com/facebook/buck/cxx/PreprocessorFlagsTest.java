@@ -141,7 +141,7 @@ public class PreprocessorFlagsTest {
                   new DefaultTargetNodeToBuildRuleTransformer()));
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       final FakeFileHashCache hashCache =
-          FakeFileHashCache.createFromStrings(ImmutableMap.<String, String>of());
+          FakeFileHashCache.createFromStrings(ImmutableMap.of());
       final BuildRule fakeBuildRule = new FakeBuildRule(target, pathResolver);
 
       class TestData {

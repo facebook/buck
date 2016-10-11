@@ -141,7 +141,7 @@ public class HalideLibraryDescription
         pathResolver,
         cxxPlatform,
         halideSources,
-        PatternMatchedCollection.<ImmutableSortedSet<SourceWithFlags>>of());
+        PatternMatchedCollection.of());
 
     Optional<ImmutableList<String>> preprocessorFlags = Optional.absent();
     Optional<PatternMatchedCollection<ImmutableList<String>>>
@@ -162,7 +162,7 @@ public class HalideLibraryDescription
             cxxBuckConfig,
             cxxPlatform,
             srcs,
-            /* headers */ ImmutableMap.<Path, SourcePath>of(),
+            /* headers */ ImmutableMap.of(),
             flavoredStripStyle,
             Linker.LinkableDepType.STATIC,
             preprocessorFlags,
@@ -185,8 +185,8 @@ public class HalideLibraryDescription
         pathResolver,
         cxxLinkAndCompileRules.getBinaryRule(),
         cxxLinkAndCompileRules.executable,
-        ImmutableSortedSet.<FrameworkPath>of(),
-        ImmutableSortedSet.<BuildTarget>of(),
+        ImmutableSortedSet.of(),
+        ImmutableSortedSet.of(),
         params.getBuildTarget().withoutFlavors(cxxPlatforms.getFlavors()));
     ruleResolver.addToIndex(cxxBinary);
     return cxxBinary;
@@ -221,7 +221,7 @@ public class HalideLibraryDescription
             platform.getFlavor(),
             CxxSourceRuleFactory.PicType.PIC,
             platform.getStaticLibraryExtension()),
-        ImmutableList.<SourcePath>of(
+        ImmutableList.of(
             new BuildTargetSourcePath(
                 buildTarget,
                 HalideCompile.objectOutputPath(
@@ -258,7 +258,7 @@ public class HalideLibraryDescription
 
     return new HalideCompile(
         params.copyWithExtraDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(halideCompiler))),
+            Suppliers.ofInstance(ImmutableSortedSet.of(halideCompiler))),
         pathResolver,
         halideCompiler.getExecutableCommand(),
         halideBuckConfig.getHalideTargetForPlatform(platform),
@@ -302,12 +302,12 @@ public class HalideLibraryDescription
       CxxPlatform hostCxxPlatform = cxxPlatforms.getValue(CxxPlatforms.getHostFlavor());
       Preconditions.checkState(args.srcs.isPresent());
       final ImmutableSortedSet<BuildTarget> compilerDeps =
-          args.compilerDeps.or(ImmutableSortedSet.<BuildTarget>of());
+          args.compilerDeps.or(ImmutableSortedSet.of());
       return createHalideCompiler(
           params.copyWithChanges(
               params.getBuildTarget().withFlavors(HALIDE_COMPILER_FLAVOR),
               Suppliers.ofInstance(resolver.getAllRules(compilerDeps)),
-              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+              Suppliers.ofInstance(ImmutableSortedSet.of())),
           resolver,
           new SourcePathResolver(resolver),
           hostCxxPlatform,
@@ -336,9 +336,9 @@ public class HalideLibraryDescription
       return createHalideCompile(
           params.copyWithDeps(
               Suppliers.ofInstance(
-                  ImmutableSortedSet.<BuildRule>of()),
+                  ImmutableSortedSet.of()),
               Suppliers.ofInstance(
-                  ImmutableSortedSet.<BuildRule>of())),
+                  ImmutableSortedSet.of())),
           resolver,
           new SourcePathResolver(resolver),
           cxxPlatform,

@@ -286,7 +286,7 @@ public class JavaBuckConfigTest {
 
   private OptionAccumulator visitOptions(JavacOptions options) {
     OptionAccumulator optionsConsumer = new OptionAccumulator();
-    options.appendOptionsTo(optionsConsumer, Functions.<Path>identity());
+    options.appendOptionsTo(optionsConsumer, Functions.identity());
     return optionsConsumer;
   }
 

@@ -72,7 +72,7 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
         new JavacStep(
             outputDirectory,
             usedClassesFileWriter,
-            Optional.<StandardJavaFileManagerFactory>absent(),
+            Optional.absent(),
             workingDirectory,
             sourceFilePaths,
             pathToSrcsList,

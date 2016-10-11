@@ -40,6 +40,6 @@ public class RustBuckConfig {
 
     Path compiler = new ExecutableFinder().getExecutable(compilerPath, delegate.getEnvironment());
 
-    return Suppliers.<Tool>ofInstance(new HashedFileTool(compiler));
+    return Suppliers.ofInstance(new HashedFileTool(compiler));
   }
 }

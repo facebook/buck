@@ -25,7 +25,7 @@ import java.nio.file.Path;
  */
 abstract class IjFolder implements Comparable<IjFolder> {
 
-  private static final ImmutableSortedSet<Path> EMPTY_INPUTS = ImmutableSortedSet.<Path>of();
+  private static final ImmutableSortedSet<Path> EMPTY_INPUTS = ImmutableSortedSet.of();
 
   private final Path path;
   private final ImmutableSortedSet<Path> inputs;

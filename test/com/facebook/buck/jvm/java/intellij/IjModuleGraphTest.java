@@ -212,7 +212,7 @@ public class IjModuleGraphTest {
         .build();
 
     IjModuleGraph moduleGraph = createModuleGraph(
-        ImmutableSet.<TargetNode<?>>of(
+        ImmutableSet.of(
             guavaTargetNode,
             hamcrestTargetNode,
             junitTargetNode,
@@ -421,8 +421,8 @@ public class IjModuleGraphTest {
             productGenruleTarget,
             libraryJavaTarget,
             productTarget),
-        ImmutableMap.<TargetNode<?>, Path>of(productTarget, Paths.get("buck-out/product.jar")),
-        Functions.constant(Optional.<Path>absent()));
+        ImmutableMap.of(productTarget, Paths.get("buck-out/product.jar")),
+        Functions.constant(Optional.absent()));
 
     IjModule libraryModule = getModuleForTarget(moduleGraph, libraryJavaTarget);
     IjModule productModule = getModuleForTarget(moduleGraph, productTarget);
@@ -444,8 +444,8 @@ public class IjModuleGraphTest {
         .build();
 
     IjModuleGraph moduleGraph = createModuleGraph(
-        ImmutableSet.<TargetNode<?>>of(productTarget),
-        ImmutableMap.<TargetNode<?>, Path>of(productTarget, Paths.get("buck-out/product.jar")),
+        ImmutableSet.of(productTarget),
+        ImmutableMap.of(productTarget, Paths.get("buck-out/product.jar")),
         new Function<TargetNode<?>, Optional<Path>>() {
           @Override
           public Optional<Path> apply(TargetNode<?> input) {
@@ -587,8 +587,8 @@ public class IjModuleGraphTest {
 
     IjModuleGraph moduleGraph = createModuleGraph(
         ImmutableSet.of(guava, papaya, base, core),
-        ImmutableMap.<TargetNode<?>, Path>of(),
-        Functions.constant(Optional.<Path>absent()),
+        ImmutableMap.of(),
+        Functions.constant(Optional.absent()),
         IjModuleGraph.AggregationMode.SHALLOW);
 
     IjModule guavaModule = getModuleForTarget(moduleGraph, guava);
@@ -627,8 +627,8 @@ public class IjModuleGraphTest {
 
     IjModuleGraph moduleGraph = createModuleGraph(
         ImmutableSet.of(blah1, blah2, commonApp),
-        ImmutableMap.<TargetNode<?>, Path>of(),
-        Functions.constant(Optional.<Path>absent()),
+        ImmutableMap.of(),
+        Functions.constant(Optional.absent()),
         IjModuleGraph.AggregationMode.SHALLOW);
 
     IjModule blah1Module = getModuleForTarget(moduleGraph, blah1);
@@ -660,8 +660,8 @@ public class IjModuleGraphTest {
 
     IjModuleGraph moduleGraph = createModuleGraph(
         ImmutableSet.of(blah1, blah2, commonApp),
-        ImmutableMap.<TargetNode<?>, Path>of(),
-        Functions.constant(Optional.<Path>absent()),
+        ImmutableMap.of(),
+        Functions.constant(Optional.absent()),
         IjModuleGraph.AggregationMode.SHALLOW);
 
     IjModule blah1Module = getModuleForTarget(moduleGraph, blah1);
@@ -772,8 +772,8 @@ public class IjModuleGraphTest {
 
 
   public static IjModuleGraph createModuleGraph(ImmutableSet<TargetNode<?>> targets) {
-    return createModuleGraph(targets, ImmutableMap.<TargetNode<?>, Path>of(),
-        Functions.constant(Optional.<Path>absent()));
+    return createModuleGraph(targets, ImmutableMap.of(),
+        Functions.constant(Optional.absent()));
   }
 
   public static IjModuleGraph createModuleGraph(

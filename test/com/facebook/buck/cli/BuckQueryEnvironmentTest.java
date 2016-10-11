@@ -23,7 +23,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
@@ -93,7 +92,7 @@ public class BuckQueryEnvironmentTest {
         ImmutableMap.copyOf(System.getenv()),
         new FakeJavaPackageFinder(),
         ObjectMappers.newDefaultInstance(),
-        Optional.<WebServer>absent());
+        Optional.absent());
     parserState =
         new PerBuildState(
             params.getParser(),

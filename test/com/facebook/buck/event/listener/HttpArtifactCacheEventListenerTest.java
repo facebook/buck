@@ -23,14 +23,12 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Finished;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.network.BatchingLogger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListenableFuture;
 
 import org.easymock.Capture;
 import org.easymock.EasyMock;
@@ -57,7 +55,7 @@ public class HttpArtifactCacheEventListenerTest {
     EasyMock.expect(
         logger.log(
             EasyMock.capture(logLineCapture)))
-        .andReturn(Optional.<ListenableFuture<Void>>absent())
+        .andReturn(Optional.absent())
         .once();
     EasyMock.expect(logger.close())
         .andReturn(null)
@@ -67,7 +65,7 @@ public class HttpArtifactCacheEventListenerTest {
     String errorMsg = "My super cool error message!!!";
 
     HttpArtifactCacheEvent.Started startedEvent = HttpArtifactCacheEvent.newFetchStartedEvent(
-        ImmutableSet.<RuleKey>of());
+        ImmutableSet.of());
     startedEvent.configure(-1, -1, -1, -1, null);
     Finished event = HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
         .setFetchResult(CacheResult.hit("http"))

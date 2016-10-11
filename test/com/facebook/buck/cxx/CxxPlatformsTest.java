@@ -25,7 +25,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
@@ -102,7 +101,7 @@ public class CxxPlatformsTest {
     assertThat(
         CxxPlatforms.getConfigDefaultCxxPlatform(
             new CxxBuckConfig(buckConfig),
-            ImmutableMap.<Flavor, CxxPlatform>of(),
+            ImmutableMap.of(),
             CxxPlatformUtils.DEFAULT_PLATFORM),
         equalTo(
             CxxPlatformUtils.DEFAULT_PLATFORM));

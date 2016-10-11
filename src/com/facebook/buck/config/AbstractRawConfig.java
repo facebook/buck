@@ -43,7 +43,7 @@ abstract class AbstractRawConfig {
   public ImmutableMap<String, String> getSection(String sectionName) {
     return Optional
         .fromNullable(getValues().get(sectionName))
-        .or(ImmutableMap.<String, String>of());
+        .or(ImmutableMap.of());
   }
 
   /**
@@ -57,7 +57,7 @@ abstract class AbstractRawConfig {
    * Returns an empty config.
    */
   public static RawConfig of() {
-    return RawConfig.of(ImmutableMap.<String, ImmutableMap<String, String>>of());
+    return RawConfig.of(ImmutableMap.of());
   }
 
   public static Builder builder() {

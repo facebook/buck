@@ -238,7 +238,7 @@ abstract class GoDescriptors {
                     .add(symlinkTree)
                     .add(library)
                     .build()),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,
         platform.getCxxPlatform().transform(
             new Function<CxxPlatform, Linker>() {
@@ -282,8 +282,8 @@ abstract class GoDescriptors {
             new WriteFile(
                 sourceParams.copyWithChanges(
                     generatorSourceTarget,
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                    Suppliers.ofInstance(ImmutableSortedSet.of()),
+                    Suppliers.ofInstance(ImmutableSortedSet.of())),
                 new SourcePathResolver(resolver),
                 extractTestMainGenerator(),
                 BuildTargets.getGenPath(
@@ -297,14 +297,14 @@ abstract class GoDescriptors {
             createGoBinaryRule(
                 sourceParams.copyWithChanges(
                     generatorTarget,
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of(writeFile))),
+                    Suppliers.ofInstance(ImmutableSortedSet.of()),
+                    Suppliers.ofInstance(ImmutableSortedSet.of(writeFile))),
                 resolver,
                 goBuckConfig,
-                ImmutableSet.<SourcePath>of(new BuildTargetSourcePath(generatorSourceTarget)),
-                ImmutableList.<String>of(),
-                ImmutableList.<String>of(),
-                ImmutableList.<String>of(),
+                ImmutableSet.of(new BuildTargetSourcePath(generatorSourceTarget)),
+                ImmutableList.of(),
+                ImmutableList.of(),
+                ImmutableList.of(),
                 goBuckConfig.getDefaultPlatform()));
     return binary.getExecutableCommand();
   }

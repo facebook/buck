@@ -77,7 +77,7 @@ public class DefaultRuleKeyLoggerTest {
   @Test
   public void nullFieldsDontHaveKeys() {
     ImmutableList<Matcher<? super Iterable<? super String>>> matchers =
-        ImmutableList.<Matcher<? super Iterable<? super String>>>of(
+        ImmutableList.of(
             Matchers.hasItem("key(stringField):"),
             Matchers.hasItem("key(pathField):"),
             Matchers.hasItem("key(appendableField.appendableSubKey):"));

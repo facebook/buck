@@ -23,7 +23,6 @@ import com.facebook.buck.config.ConfigBuilder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.FakeWatchmanClient;
 import com.facebook.buck.io.Watchman;
-import com.facebook.buck.io.WatchmanClient;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -151,7 +150,7 @@ public class BuildFileSpecTest {
                     Watchman.Capability.DIRNAME,
                     Watchman.Capability.WILDMATCH_GLOB),
                 Optional.of(Paths.get(".watchman-sock")),
-                Optional.<WatchmanClient>of(fakeWatchmanClient),
+                Optional.of(fakeWatchmanClient),
                 TimeUnit.SECONDS.toMillis(45)))
         .build();
     ImmutableSet<Path> actualBuildFiles = recursiveSpec.findBuildFiles(
@@ -199,7 +198,7 @@ public class BuildFileSpecTest {
                     Watchman.Capability.DIRNAME,
                     Watchman.Capability.WILDMATCH_GLOB),
                 Optional.of(Paths.get(".watchman-sock")),
-                Optional.<WatchmanClient>of(fakeWatchmanClient),
+                Optional.of(fakeWatchmanClient),
                 TimeUnit.SECONDS.toMillis(45)))
         .build();
 
@@ -256,7 +255,7 @@ public class BuildFileSpecTest {
                     Watchman.Capability.DIRNAME,
                     Watchman.Capability.WILDMATCH_GLOB),
                 Optional.of(Paths.get(".watchman-sock")),
-                Optional.<WatchmanClient>of(timingOutWatchmanClient),
+                Optional.of(timingOutWatchmanClient),
                 TimeUnit.SECONDS.toMillis(45)))
         .build();
     ImmutableSet<Path> expectedBuildFiles =

@@ -64,7 +64,7 @@ final class PrebuiltJarSymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
         providedSymbols.add(fullyQualifiedName);
       }
     }.traverse();
-    return new Symbols(providedSymbols, ImmutableList.<String>of(), ImmutableList.<String>of());
+    return new Symbols(providedSymbols, ImmutableList.of(), ImmutableList.of());
   }
 
   @Override

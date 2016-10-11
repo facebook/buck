@@ -220,7 +220,7 @@ public class SourcePathResolver {
       BuildTarget target,
       String parameter,
       Iterable<SourcePath> sourcePaths) {
-    return getSourcePathNames(target, parameter, sourcePaths, Functions.<SourcePath>identity());
+    return getSourcePathNames(target, parameter, sourcePaths, Functions.identity());
   }
 
   /**

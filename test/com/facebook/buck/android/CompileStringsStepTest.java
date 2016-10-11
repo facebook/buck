@@ -253,7 +253,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
             "zero", "%d people ate this m2",
             "many", "%d people ate this m2"));
     EnumMap<Gender, ImmutableMap<String, String>> map3 = Maps.newEnumMap(Gender.class);
-    map3.put(Gender.unknown, ImmutableMap.<String, String>of());
+    map3.put(Gender.unknown, ImmutableMap.of());
 
     Map<Integer, EnumMap<Gender, ImmutableMap<String, String>>> pluralsMap = Maps.newHashMap();
     CompileStringsStep step = createNonExecutingStep();
@@ -388,7 +388,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
   private CompileStringsStep createNonExecutingStep() {
     return new CompileStringsStep(
         new FakeProjectFilesystem(),
-        ImmutableList.<Path>of(),
+        ImmutableList.of(),
         createMock(Path.class),
         new Function<String, Path>() {
           @Override

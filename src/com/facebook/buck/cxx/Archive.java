@@ -131,7 +131,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
     BuildRuleParams archiveParams =
         baseParams.copyWithChanges(
             target,
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.of()),
             Suppliers.ofInstance(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(resolver.filterBuildRuleInputs(inputs))
@@ -168,7 +168,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
               .equals(getProjectFilesystem().getRootPath()));
     }
 
-    ImmutableList.Builder<Step> builder = ImmutableList.<Step>builder();
+    ImmutableList.Builder<Step> builder = ImmutableList.builder();
 
     builder.add(
         new MkdirStep(getProjectFilesystem(), output.getParent()),

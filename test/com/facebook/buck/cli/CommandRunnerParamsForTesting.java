@@ -39,7 +39,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.TriState;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
@@ -104,7 +103,7 @@ public class CommandRunnerParamsForTesting {
         javaPackageFinder,
         objectMapper,
         new DefaultClock(),
-        Optional.<ProcessManager>absent(),
+        Optional.absent(),
         webServer,
         config,
         new NullFileHashCache(),

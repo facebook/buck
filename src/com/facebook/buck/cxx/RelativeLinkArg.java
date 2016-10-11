@@ -49,7 +49,7 @@ public class RelativeLinkArg extends Arg {
 
   @Override
   public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableList.<SourcePath>of(library);
+    return ImmutableList.of(library);
   }
 
   @Override

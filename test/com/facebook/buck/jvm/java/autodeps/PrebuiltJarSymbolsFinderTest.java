@@ -29,7 +29,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
@@ -118,7 +117,7 @@ public class PrebuiltJarSymbolsFinderTest {
     // DefaultRuleKeyBuilderFactory.
     final SourcePathResolver pathResolver = createMock(SourcePathResolver.class);
     expect(pathResolver.getRule(anyObject(SourcePath.class)))
-        .andReturn(Optional.<BuildRule>absent())
+        .andReturn(Optional.absent())
         .anyTimes();
     expect(pathResolver.getRelativePath(anyObject(SourcePath.class)))
         .andReturn(relativePathToJar)
@@ -149,7 +148,7 @@ public class PrebuiltJarSymbolsFinderTest {
           javaSymbolsRule = new JavaSymbolsRule(
               BuildTargetFactory.newInstance("//foo:rule"),
               finder,
-              /* generatedSymbols */ ImmutableSortedSet.<String>of(),
+              /* generatedSymbols */ ImmutableSortedSet.of(),
               ObjectMappers.newDefaultInstance(),
               new ProjectFilesystem(tmp.getRoot())
           );
@@ -197,7 +196,7 @@ public class PrebuiltJarSymbolsFinderTest {
     JavaSymbolsRule javaSymbolsRule1 = new JavaSymbolsRule(
         BuildTargetFactory.newInstance("//foo:rule"),
         createFinderForGeneratedJar("//foo:jar_genrule1"),
-        /* generatedSymbols */ ImmutableSortedSet.<String>of(),
+        /* generatedSymbols */ ImmutableSortedSet.of(),
         ObjectMappers.newDefaultInstance(),
         new ProjectFilesystem(tmp.getRoot())
     );
@@ -208,7 +207,7 @@ public class PrebuiltJarSymbolsFinderTest {
     JavaSymbolsRule javaSymbolsRule2 = new JavaSymbolsRule(
         BuildTargetFactory.newInstance("//foo:rule"),
         createFinderForGeneratedJar("//foo:jar_genrule2"),
-        /* generatedSymbols */ ImmutableSortedSet.<String>of(),
+        /* generatedSymbols */ ImmutableSortedSet.of(),
         ObjectMappers.newDefaultInstance(),
         new ProjectFilesystem(tmp.getRoot())
     );

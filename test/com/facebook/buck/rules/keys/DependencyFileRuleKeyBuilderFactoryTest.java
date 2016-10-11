@@ -85,8 +85,8 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             pathResolver)
             .build(
                 rule,
-                Optional.<ImmutableSet<SourcePath>>absent(),
-                ImmutableList.<DependencyFileEntry>of()).get().getFirst();
+                Optional.absent(),
+                ImmutableList.of()).get().getFirst();
 
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache = new FakeFileHashCache(
@@ -101,8 +101,8 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             pathResolver)
             .build(
                 rule,
-                Optional.<ImmutableSet<SourcePath>>absent(),
-                ImmutableList.<DependencyFileEntry>of()).get().getFirst();
+                Optional.absent(),
+                ImmutableList.of()).get().getFirst();
 
     assertThat(inputKey1, Matchers.equalTo(inputKey2));
   }
@@ -136,8 +136,8 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             pathResolver)
             .build(
                 rule,
-                Optional.<ImmutableSet<SourcePath>>absent(),
-                ImmutableList.<DependencyFileEntry>of()).get().getFirst();
+                Optional.absent(),
+                ImmutableList.of()).get().getFirst();
 
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache = new FakeFileHashCache(
@@ -152,8 +152,8 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             pathResolver)
             .build(
                 rule,
-                Optional.<ImmutableSet<SourcePath>>absent(),
-                ImmutableList.<DependencyFileEntry>of()).get().getFirst();
+                Optional.absent(),
+                ImmutableList.of()).get().getFirst();
 
     assertThat(inputKey1, Matchers.equalTo(inputKey2));
   }
@@ -175,7 +175,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//:rule").build();
     FakeDepFileBuildRule rule = new FakeDepFileBuildRule(params, pathResolver) {
       {
-        setPossibleInputPaths(ImmutableSet.<SourcePath>of(inputSourcePath));
+        setPossibleInputPaths(ImmutableSet.of(inputSourcePath));
       }
 
       @AddToRuleKey

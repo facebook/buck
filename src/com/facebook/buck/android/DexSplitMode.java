@@ -36,12 +36,12 @@ class DexSplitMode implements RuleKeyAppendable {
       DexStore.JAR,
       /* useLinearAllocSplitDex */ false,
       /* linearAllocHardLimit */ 0,
-      /* primaryDexPatterns */ ImmutableSet.<String>of(),
-      /* primaryDexClassesFile */ Optional.<SourcePath>absent(),
-      /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
+      /* primaryDexPatterns */ ImmutableSet.of(),
+      /* primaryDexClassesFile */ Optional.absent(),
+      /* primaryDexScenarioFile */ Optional.absent(),
       /* isPrimaryDexScenarioOverflowAllowed */ false,
-      /* secondaryDexHeadClassesFile */ Optional.<SourcePath>absent(),
-      /* secondaryDexTailClassesFile */ Optional.<SourcePath>absent());
+      /* secondaryDexHeadClassesFile */ Optional.absent(),
+      /* secondaryDexTailClassesFile */ Optional.absent());
 
   private final boolean shouldSplitDex;
   private final DexStore dexStore;

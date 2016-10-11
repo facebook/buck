@@ -66,7 +66,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
     this.serviceManager = new ServiceManager(ImmutableList.of(this));
     serviceManager.startAsync();
     ProcessRegistry.setsProcessRegisterCallback(
-        Optional.<ProcessRegistry.ProcessRegisterCallback>of(
+        Optional.of(
             new ProcessRegistry.ProcessRegisterCallback() {
               @Override
               public void call(Object process, ProcessExecutorParams params) {
@@ -127,7 +127,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
   @Override
   public void close() {
     ProcessRegistry.setsProcessRegisterCallback(
-        Optional.<ProcessRegistry.ProcessRegisterCallback>absent());
+        Optional.absent());
     serviceManager.stopAsync();
   }
 

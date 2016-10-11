@@ -22,7 +22,6 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
-import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.HeaderSymlinkTree;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.ImmutableCxxPreprocessorInputCacheKey;
@@ -40,7 +39,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Optional;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
@@ -107,8 +105,8 @@ public class HalideLibrary
             cxxPlatform,
             headerVisibility,
             CxxPreprocessables.IncludeType.SYSTEM,
-            ImmutableMultimap.<CxxSource.Type, String>of(),
-            ImmutableList.<FrameworkPath>of());
+            ImmutableMultimap.of(),
+            ImmutableList.of());
       case PRIVATE:
         return CxxPreprocessorInput.EMPTY;
     }
@@ -171,8 +169,8 @@ public class HalideLibrary
     }
     return NativeLinkableInput.of(
         ImmutableList.of(requireLibraryArg(cxxPlatform, type)),
-        ImmutableSet.<FrameworkPath>of(),
-        ImmutableSet.<FrameworkPath>of());
+        ImmutableSet.of(),
+        ImmutableSet.of());
   }
 
   @Override

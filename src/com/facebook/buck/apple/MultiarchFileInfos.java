@@ -143,7 +143,7 @@ public class MultiarchFileInfos {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     MultiarchFile multiarchFile = new MultiarchFile(
         params.copyWithDeps(
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+            Suppliers.ofInstance(ImmutableSortedSet.of()),
             Suppliers.ofInstance(thinRules)),
         pathResolver,
         info.getRepresentativePlatform().getLipo(),

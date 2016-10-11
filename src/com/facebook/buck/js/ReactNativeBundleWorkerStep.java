@@ -49,7 +49,7 @@ public class ReactNativeBundleWorkerStep extends WorkerShellStep {
                     "--platform %s%s",
                     platform.toString(),
                     additionalPackagerFlags.isPresent() ? " " + additionalPackagerFlags.get() : ""),
-                ImmutableMap.<String, String>of(),
+                ImmutableMap.of(),
                 String.format(
                     "--command %s --entry-file %s --platform %s --dev %s --bundle-output %s " +
                         "--assets-dest %s --sourcemap-output %s",
@@ -61,8 +61,8 @@ public class ReactNativeBundleWorkerStep extends WorkerShellStep {
                     resourcePath.toString(),
                     sourceMapFile.toString()),
                 Optional.of(1))),
-        Optional.<WorkerJobParams>absent(),
-        Optional.<WorkerJobParams>absent());
+        Optional.absent(),
+        Optional.absent());
   }
 
   @Override

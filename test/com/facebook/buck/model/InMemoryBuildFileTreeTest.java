@@ -58,7 +58,7 @@ public class InMemoryBuildFileTreeTest {
     assertGetChildPaths("java/com/facebook/common",
         ImmutableSet.of("rpc", "ui"));
     assertGetChildPaths("java/com/facebook/common/rpc",
-        ImmutableSet.<String>of());
+        ImmutableSet.of());
   }
 
   private void assertGetChildPaths(String parent, Set<String> expectedChildren) {

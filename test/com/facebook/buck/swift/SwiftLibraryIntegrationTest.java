@@ -66,7 +66,7 @@ public class SwiftLibraryIntegrationTest {
         BuildTargets.getGenPath(projectFilesystem, symlinkTarget, "%s/symlink-tree-root"));
 
     // Setup the map representing the link tree.
-    ImmutableMap<Path, SourcePath> links = ImmutableMap.<Path, SourcePath>of();
+    ImmutableMap<Path, SourcePath> links = ImmutableMap.of();
 
     BuildRule symlinkTreeBuildRule = new HeaderSymlinkTreeWithHeaderMap(
         new FakeBuildRuleParamsBuilder(symlinkTarget).build(),
@@ -88,12 +88,12 @@ public class SwiftLibraryIntegrationTest {
         new FakeBuildRule("//:shared", pathResolver),
         Paths.get("output/path/lib.so"),
         "lib.so",
-        ImmutableSortedSet.<BuildTarget>of()
+        ImmutableSortedSet.of()
     );
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-x86_64");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
-        .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(depRule))
+        .setDeclaredDeps(ImmutableSortedSet.of(depRule))
         .build();
 
     SwiftLibraryDescription.Arg args =

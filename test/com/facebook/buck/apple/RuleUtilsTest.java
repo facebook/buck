@@ -52,9 +52,9 @@ public class RuleUtilsTest {
     ImmutableList<GroupedSource> sources = RuleUtils.createGroupsFromSourcePaths(
         resolver.deprecatedPathFunction(),
         input,
-        /* extraXcodeSources */ ImmutableSortedSet.<SourcePath>of(),
-        /* publicHeaders */ ImmutableSortedSet.<SourcePath>of(),
-        /* privateHeaders */ ImmutableSortedSet.<SourcePath>of());
+        /* extraXcodeSources */ ImmutableSortedSet.of(),
+        /* publicHeaders */ ImmutableSortedSet.of(),
+        /* privateHeaders */ ImmutableSortedSet.of());
     assertEquals(
         ImmutableList.of(
             GroupedSource.ofSourceGroup(
@@ -84,7 +84,7 @@ public class RuleUtilsTest {
 
   @Test
   public void creatingGroupsFromSourcePaths() {
-    ImmutableList<SourcePath> input = ImmutableList.<SourcePath>of(
+    ImmutableList<SourcePath> input = ImmutableList.of(
         new FakeSourcePath("File.h"),
         new FakeSourcePath("Lib/Foo/File2.h"),
         new FakeSourcePath("App/Foo/File.h"),
@@ -138,9 +138,9 @@ public class RuleUtilsTest {
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
             resolver.deprecatedPathFunction(),
-            ImmutableList.<SourceWithFlags>of(),
-            ImmutableSortedSet.<SourcePath>of(),
-            ImmutableList.<SourcePath>of(),
+            ImmutableList.of(),
+            ImmutableSortedSet.of(),
+            ImmutableList.of(),
             input);
 
     assertEquals(expected, actual);
@@ -148,7 +148,7 @@ public class RuleUtilsTest {
 
   @Test
   public void creatingGroupsFromSourcePathsRemovesLongestCommonPrefix() {
-    ImmutableList<SourcePath> input = ImmutableList.<SourcePath>of(
+    ImmutableList<SourcePath> input = ImmutableList.of(
         new FakeSourcePath("Lib/Foo/File1.h"),
         new FakeSourcePath("Lib/Foo/File2.h"),
         new FakeSourcePath("Lib/Bar/File1.h"));
@@ -175,9 +175,9 @@ public class RuleUtilsTest {
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
             resolver.deprecatedPathFunction(),
-            ImmutableList.<SourceWithFlags>of(),
-            ImmutableSortedSet.<SourcePath>of(),
-            ImmutableList.<SourcePath>of(),
+            ImmutableList.of(),
+            ImmutableSortedSet.of(),
+            ImmutableList.of(),
             input);
 
     assertEquals(expected, actual);
@@ -185,7 +185,7 @@ public class RuleUtilsTest {
 
   @Test
   public void creatingGroupsFromSingleSourcePath() {
-    ImmutableList<SourcePath> input = ImmutableList.<SourcePath>of(
+    ImmutableList<SourcePath> input = ImmutableList.of(
         new FakeSourcePath("Lib/Foo/File1.h"));
 
     ImmutableList<GroupedSource> expected = ImmutableList.of(
@@ -198,9 +198,9 @@ public class RuleUtilsTest {
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
             resolver.deprecatedPathFunction(),
-            ImmutableList.<SourceWithFlags>of(),
-            ImmutableList.<SourcePath>of(),
-            ImmutableList.<SourcePath>of(),
+            ImmutableList.of(),
+            ImmutableList.of(),
+            ImmutableList.of(),
             input);
 
     assertEquals(expected, actual);
@@ -216,10 +216,10 @@ public class RuleUtilsTest {
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
             resolver.deprecatedPathFunction(),
-            ImmutableList.<SourceWithFlags>of(),
-            ImmutableList.<SourcePath>of(),
-            ImmutableList.<SourcePath>of(),
-            ImmutableList.<SourcePath>of());
+            ImmutableList.of(),
+            ImmutableList.of(),
+            ImmutableList.of(),
+            ImmutableList.of());
 
     assertEquals(expected, actual);
   }

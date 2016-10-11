@@ -74,7 +74,7 @@ public class AppleSdkDiscoveryTest {
     );
     ImmutableMap<AppleSdk, AppleSdkPaths> sdks = AppleSdkDiscovery.discoverAppleSdkPaths(
         Optional.of(path),
-        ImmutableList.<Path>of(),
+        ImmutableList.of(),
         toolchains,
         new FakeAppleConfig());
 
@@ -193,7 +193,7 @@ public class AppleSdkDiscoveryTest {
     );
     ImmutableMap<AppleSdk, AppleSdkPaths> sdks = AppleSdkDiscovery.discoverAppleSdkPaths(
         Optional.of(root),
-        ImmutableList.<Path>of(),
+        ImmutableList.of(),
         toolchains,
         new FakeAppleConfig());
 
@@ -217,7 +217,7 @@ public class AppleSdkDiscoveryTest {
     );
     ImmutableMap<AppleSdk, AppleSdkPaths> sdks = AppleSdkDiscovery.discoverAppleSdkPaths(
         Optional.of(root),
-        ImmutableList.<Path>of(),
+        ImmutableList.of(),
         toolchains,
         new FakeAppleConfig());
 
@@ -379,7 +379,7 @@ public class AppleSdkDiscoveryTest {
     assertThat(
         AppleSdkDiscovery.discoverAppleSdkPaths(
             Optional.of(root),
-            ImmutableList.<Path>of(),
+            ImmutableList.of(),
             toolchains,
             new FakeAppleConfig()),
         equalTo(expected));
@@ -399,7 +399,7 @@ public class AppleSdkDiscoveryTest {
     assertThat(
         AppleSdkDiscovery.discoverAppleSdkPaths(
             Optional.of(root),
-            ImmutableList.<Path>of(),
+            ImmutableList.of(),
             toolchains,
             new FakeAppleConfig()).entrySet(),
         empty());
@@ -519,7 +519,7 @@ public class AppleSdkDiscoveryTest {
     assertThat(
         AppleSdkDiscovery.discoverAppleSdkPaths(
             Optional.of(root),
-            ImmutableList.<Path>of(),
+            ImmutableList.of(),
             toolchains,
             new FakeAppleConfig()),
         equalTo(expected));

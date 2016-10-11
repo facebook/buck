@@ -36,7 +36,6 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.rules.ActionGraph;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Cell;
@@ -44,7 +43,6 @@ import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -112,7 +110,7 @@ public class DistributedBuildStateTest {
     BuildJobState dump = DistBuildState.dump(
         new DistBuildCellIndexer(rootCellWhenSaving),
         emptyActionGraph(),
-        createDefaultCodec(rootCellWhenSaving, Optional.<Parser>absent()),
+        createDefaultCodec(rootCellWhenSaving, Optional.absent()),
         createTargetGraph(filesystem));
 
 
@@ -179,7 +177,7 @@ public class DistributedBuildStateTest {
         distributedBuildState.getCells().get(0).getFilesystem();
     assertThat(
         reconstructedJavaLibrary.getConstructorArg().srcs.get(),
-        Matchers.<SourcePath>contains(
+        Matchers.contains(
             new PathSourcePath(
                 reconstructedCellFilesystem,
                 reconstructedCellFilesystem.getRootPath().getFileSystem().getPath("A.java"))));
@@ -207,7 +205,7 @@ public class DistributedBuildStateTest {
     BuildJobState dump = DistBuildState.dump(
         new DistBuildCellIndexer(cell),
         emptyActionGraph(),
-        createDefaultCodec(cell, Optional.<Parser>absent()),
+        createDefaultCodec(cell, Optional.absent()),
         createTargetGraph(filesystem));
 
     expectedException.expect(IllegalStateException.class);
@@ -245,7 +243,7 @@ public class DistributedBuildStateTest {
     BuildJobState dump = DistBuildState.dump(
         new DistBuildCellIndexer(rootCellWhenSaving),
         emptyActionGraph(),
-        createDefaultCodec(rootCellWhenSaving, Optional.<Parser>absent()),
+        createDefaultCodec(rootCellWhenSaving, Optional.absent()),
         createCrossCellTargetGraph(cell1Filesystem, cell2Filesystem));
 
     Cell rootCellWhenLoading = new TestCellBuilder()
@@ -258,7 +256,7 @@ public class DistributedBuildStateTest {
   }
 
   private DistBuildFileHashes emptyActionGraph() throws IOException {
-    ActionGraph actionGraph = new ActionGraph(ImmutableList.<BuildRule>of());
+    ActionGraph actionGraph = new ActionGraph(ImmutableList.of());
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleResolver);

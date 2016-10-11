@@ -33,7 +33,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
@@ -224,7 +223,7 @@ public class HaskellLibraryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORMS)
             .setSrcs(
                 SourceList.ofUnnamedSources(
-                    ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("Test.hs"))))
+                    ImmutableSortedSet.of(new FakeSourcePath("Test.hs"))))
             .setLinkWhole(true);
     BuildRuleResolver resolver =
         new BuildRuleResolver(

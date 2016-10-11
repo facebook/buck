@@ -23,7 +23,6 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -86,7 +85,7 @@ public class AuditInputCommandTest {
         ImmutableMap.copyOf(System.getenv()),
         new FakeJavaPackageFinder(),
         objectMapper,
-        Optional.<WebServer>absent());
+        Optional.absent());
   }
 
   @Test
@@ -144,7 +143,7 @@ public class AuditInputCommandTest {
         .addSrc(Paths.get("src/com/facebook/NonExistentFile.java"))
         .build();
 
-    ImmutableSet<TargetNode<?>> nodes = ImmutableSet.<TargetNode<?>>of(rootNode);
+    ImmutableSet<TargetNode<?>> nodes = ImmutableSet.of(rootNode);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
     auditInputCommand.printJsonInputs(params, targetGraph);
   }

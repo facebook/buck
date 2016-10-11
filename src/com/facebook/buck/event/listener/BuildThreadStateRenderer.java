@@ -19,8 +19,6 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleEvent;
-import com.facebook.buck.rules.TestStatusMessageEvent;
-import com.facebook.buck.rules.TestSummaryEvent;
 import com.facebook.buck.util.Ansi;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -92,8 +90,8 @@ public class BuildThreadStateRenderer implements ThreadStateRenderer {
           new ThreadRenderingInformation(
               buildTarget,
               buildRuleEvent,
-              Optional.<TestSummaryEvent>absent(),
-              Optional.<TestStatusMessageEvent>absent(),
+              Optional.absent(),
+              Optional.absent(),
               runningStep,
               elapsedTimeMs));
     }

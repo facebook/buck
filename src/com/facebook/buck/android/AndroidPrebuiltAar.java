@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.PrebuiltJar;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -56,25 +55,25 @@ public class AndroidPrebuiltAar
     super(
         androidLibraryParams,
         resolver,
-        /* srcs */ ImmutableSortedSet.<SourcePath>of(),
-        /* resources */ ImmutableSortedSet.<SourcePath>of(),
+        /* srcs */ ImmutableSortedSet.of(),
+        /* resources */ ImmutableSortedSet.of(),
         Optional.of(proguardConfig),
-        /* postprocessClassesCommands */ ImmutableList.<String>of(),
+        /* postprocessClassesCommands */ ImmutableList.of(),
         /* deps */ ImmutableSortedSet.<BuildRule>naturalOrder()
             .add(prebuiltJar)
             .addAll(exportedDeps)
             .build(),
-        /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
+        /* providedDeps */ ImmutableSortedSet.of(),
         abiJar,
-        /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+        /* additionalClasspathEntries */ ImmutableSet.of(),
         javacOptions,
         /* trackClassUsage */ false,
         compileStepFactory,
-        /* resourcesRoot */ Optional.<Path>absent(),
-        /* mavenCoords */ Optional.<String>absent(),
-        Optional.<SourcePath>of(
+        /* resourcesRoot */ Optional.absent(),
+        /* mavenCoords */ Optional.absent(),
+        Optional.of(
             new BuildTargetSourcePath(unzipAar.getBuildTarget(), unzipAar.getAndroidManifest())),
-        /* tests */ ImmutableSortedSet.<BuildTarget>of());
+        /* tests */ ImmutableSortedSet.of());
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
     this.nativeLibsDirectory = nativeLibsDirectory;
@@ -127,7 +126,7 @@ public class AndroidPrebuiltAar
   // a dependent is building against us.
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>of(unzipAar);
+    return ImmutableSortedSet.of(unzipAar);
   }
 
 }

@@ -97,7 +97,7 @@ public class GoLibraryDescription implements
                           args.packageName.transform(MorePaths.TO_PATH)
                               .or(goBuckConfig.getDefaultPackageName(buildTarget)),
                           output))
-                  .setExportedDeps(args.exportedDeps.or(ImmutableSortedSet.<BuildTarget>of()))
+                  .setExportedDeps(args.exportedDeps.or(ImmutableSortedSet.of()))
                   .build()));
     } else if (buildTarget.getFlavors().contains(GoDescriptors.TRANSITIVE_LINKABLES_FLAVOR)) {
       Preconditions.checkState(platform.isPresent());
@@ -109,8 +109,8 @@ public class GoLibraryDescription implements
                   resolver,
                   platform.get(),
                   Iterables.concat(
-                      args.deps.or(ImmutableSortedSet.<BuildTarget>of()),
-                      args.exportedDeps.or(ImmutableSortedSet.<BuildTarget>of())),
+                      args.deps.or(ImmutableSortedSet.of()),
+                      args.exportedDeps.or(ImmutableSortedSet.of())),
                   /* includeSelf */ true)));
     } else {
       return Optional.absent();
@@ -133,13 +133,13 @@ public class GoLibraryDescription implements
           goBuckConfig,
           args.packageName.transform(MorePaths.TO_PATH)
               .or(goBuckConfig.getDefaultPackageName(params.getBuildTarget())),
-          args.srcs.or(ImmutableSortedSet.<SourcePath>of()),
-          args.compilerFlags.or(ImmutableList.<String>of()),
+          args.srcs.or(ImmutableSortedSet.of()),
+          args.compilerFlags.or(ImmutableList.of()),
           args.assemblerFlags.get(),
           platform.get(),
           FluentIterable.from(params.getDeclaredDeps().get())
               .transform(HasBuildTarget.TO_TARGET)
-              .append(args.exportedDeps.or(ImmutableSortedSet.<BuildTarget>of())));
+              .append(args.exportedDeps.or(ImmutableSortedSet.of())));
     }
 
     return new NoopBuildRule(params, new SourcePathResolver(resolver));

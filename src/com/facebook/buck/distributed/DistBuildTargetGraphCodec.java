@@ -19,7 +19,6 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuildTarget;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetGraph;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetNode;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.graph.MutableDirectedGraph;
@@ -30,7 +29,6 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetGroup;
 import com.facebook.buck.rules.TargetNode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -148,7 +146,7 @@ public class DistBuildTargetGraphCodec {
           new Function<PerfEventId, SimplePerfEvent.Scope>() {
             @Override
             public SimplePerfEvent.Scope apply(PerfEventId input) {
-              return SimplePerfEvent.scope(Optional.<BuckEventBus>absent(), input);
+              return SimplePerfEvent.scope(Optional.absent(), input);
             }
           });
       targetNodeIndexBuilder.put(targetNode.getBuildTarget(), targetNode);
@@ -166,6 +164,6 @@ public class DistBuildTargetGraphCodec {
     }
 
     // TODO(csarbora): make this work with TargetGroups
-    return new TargetGraph(mutableTargetGraph, targetNodeIndex, ImmutableSet.<TargetGroup>of());
+    return new TargetGraph(mutableTargetGraph, targetNodeIndex, ImmutableSet.of());
   }
 }

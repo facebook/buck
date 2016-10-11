@@ -30,7 +30,7 @@ public class CommandSplitterTest {
 
     assertEquals(
         ImmutableList.<ImmutableList<String>>of(),
-        commandSplitter.getCommandsForArguments(ImmutableList.<String>of()));
+        commandSplitter.getCommandsForArguments(ImmutableList.of()));
   }
 
   @Test

@@ -374,7 +374,7 @@ public class TargetsCommand extends AbstractCommand {
               executor,
               ImmutableList.of(
                   TargetNodePredicateSpec.of(
-                      Predicates.<TargetNode<?>>alwaysTrue(),
+                      Predicates.alwaysTrue(),
                       BuildFileSpec.fromRecursivePath(
                           Paths.get(""),
                           params.getCell().getRoot()))),
@@ -419,7 +419,7 @@ public class TargetsCommand extends AbstractCommand {
           params,
           executor,
           matchingNodes.values(),
-          ImmutableMap.<BuildTarget, ShowOptions>of(),
+          ImmutableMap.of(),
           getOutputAttributes());
     } else if (isPrint0()) {
       printNullDelimitedTargets(matchingNodes.keySet(), params.getConsole().getStdOut());
@@ -450,13 +450,13 @@ public class TargetsCommand extends AbstractCommand {
       matchingNodes = getMatchingNodes(
           targetGraphAndBuildTargets.getTargetGraph(),
           referencedFiles.relativePathsUnderProjectRoot.isEmpty() ?
-              Optional.<ImmutableSet<Path>>absent() :
+              Optional.absent() :
               Optional.of(referencedFiles.relativePathsUnderProjectRoot),
           matchingBuildTargets.isEmpty() ?
-              Optional.<ImmutableSet<BuildTarget>>absent() :
+              Optional.absent() :
               Optional.of(matchingBuildTargets),
           buildRuleTypes.get().isEmpty() ?
-              Optional.<ImmutableSet<BuildRuleType>>absent() :
+              Optional.absent() :
               buildRuleTypes,
           isDetectTestChanges(),
           parserConfig.getBuildFileName());
@@ -480,7 +480,7 @@ public class TargetsCommand extends AbstractCommand {
     // longer be necessary.
     if (getArguments().isEmpty() || isDetectTestChanges()) {
       return TargetGraphAndBuildTargets.builder()
-          .setBuildTargets(ImmutableSet.<BuildTarget>of())
+          .setBuildTargets(ImmutableSet.of())
           .setTargetGraph(params.getParser()
               .buildTargetGraphForTargetNodeSpecs(
                   params.getBuckEventBus(),
@@ -489,7 +489,7 @@ public class TargetsCommand extends AbstractCommand {
                   executor,
                   ImmutableList.of(
                       TargetNodePredicateSpec.of(
-                          Predicates.<TargetNode<?>>alwaysTrue(),
+                          Predicates.alwaysTrue(),
                           BuildFileSpec.fromRecursivePath(
                               Paths.get(""),
                               params.getCell().getRoot()))),
@@ -812,7 +812,7 @@ public class TargetsCommand extends AbstractCommand {
       actionGraph = Optional.of(result.getActionGraph());
       buildRuleResolver = Optional.of(result.getResolver());
       if (isShowRuleKey()) {
-        ruleKeyBuilderFactory = Optional.<DefaultRuleKeyBuilderFactory>of(
+        ruleKeyBuilderFactory = Optional.of(
             new DefaultRuleKeyBuilderFactory(
                 params.getBuckConfig().getKeySeed(),
                 params.getFileHashCache(),

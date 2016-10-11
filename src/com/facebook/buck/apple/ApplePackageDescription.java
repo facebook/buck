@@ -180,7 +180,7 @@ public class ApplePackageDescription implements
                       packageConfig.get(),
                       macroExpander,
                       platform))
-              : Optional.<ApplePackageConfigAndPlatformInfo>absent(),
+              : Optional.absent(),
           flavor);
     }
 

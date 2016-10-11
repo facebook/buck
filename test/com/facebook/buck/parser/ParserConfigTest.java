@@ -116,7 +116,7 @@ public class ParserConfigTest {
   public void shouldGetReadOnlyDirs() throws IOException {
     String existingPath1 = "tmp/tmp-file";
     String existingPath2 = "tmp2/tmp2-file";
-    ImmutableSet<Path> readOnlyPaths = ImmutableSet.<Path>of(
+    ImmutableSet<Path> readOnlyPaths = ImmutableSet.of(
         Paths.get(existingPath1),
         Paths.get(existingPath2));
     ProjectFilesystem filesystem = new FakeProjectFilesystem(readOnlyPaths);
@@ -131,7 +131,7 @@ public class ParserConfigTest {
     assertTrue(parserConfig.getReadOnlyPaths().isPresent());
     assertEquals(
         parserConfig.getReadOnlyPaths().get(),
-        ImmutableList.<Path>of(
+        ImmutableList.of(
             filesystem.resolve(Paths.get(existingPath1)),
             filesystem.resolve(Paths.get(existingPath2))));
 
@@ -184,6 +184,6 @@ public class ParserConfigTest {
     ParserConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
         temporaryFolder,
         reader).getView(ParserConfig.class);
-    assertEquals(ImmutableList.<String>of("os", "foo"), config.getBuildFileImportWhitelist());
+    assertEquals(ImmutableList.of("os", "foo"), config.getBuildFileImportWhitelist());
   }
 }

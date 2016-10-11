@@ -42,8 +42,8 @@ import javax.annotation.Nullable;
 public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
   public static final TargetGraph EMPTY = new TargetGraph(
       new MutableDirectedGraph<TargetNode<?>>(),
-      ImmutableMap.<BuildTarget, TargetNode<?>>of(),
-      ImmutableSet.<TargetGroup>of());
+      ImmutableMap.of(),
+      ImmutableSet.of());
 
   private final ImmutableMap<BuildTarget, TargetNode<?>> targetsToNodes;
   private final ImmutableSetMultimap<BuildTarget, TargetGroup> groupsByBuildTarget;
@@ -91,7 +91,7 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
   }
 
   public Optional<TargetNode<?>> getOptional(BuildTarget target) {
-    return Optional.<TargetNode<?>>fromNullable(getInternal(target));
+    return Optional.fromNullable(getInternal(target));
   }
 
   public TargetNode<?> get(BuildTarget target) {

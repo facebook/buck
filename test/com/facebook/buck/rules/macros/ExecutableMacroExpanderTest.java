@@ -82,7 +82,7 @@ public class ExecutableMacroExpanderTest {
     // Interpolate the build target in the genrule cmd string.
 
     MacroHandler macroHandler = new MacroHandler(
-        ImmutableMap.<String, MacroExpander>of(
+        ImmutableMap.of(
             "exe",
             new ExecutableMacroExpander()));
     String transformedString = macroHandler.expand(
@@ -113,7 +113,7 @@ public class ExecutableMacroExpanderTest {
     // Interpolate the build target in the genrule cmd string.
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     MacroHandler macroHandler = new MacroHandler(
-        ImmutableMap.<String, MacroExpander>of(
+        ImmutableMap.of(
             "exe",
             new ExecutableMacroExpander()));
     String transformedString = macroHandler.expand(
@@ -144,7 +144,7 @@ public class ExecutableMacroExpanderTest {
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     MacroHandler macroHandler = new MacroHandler(
-        ImmutableMap.<String, MacroExpander>of(
+        ImmutableMap.of(
             "exe",
             new ExecutableMacroExpander()));
     String transformedString = macroHandler.expand(
@@ -243,7 +243,7 @@ public class ExecutableMacroExpanderTest {
             createCellRoots(params.getProjectFilesystem()),
             ruleResolver,
             ImmutableList.of("//:rule")),
-        Matchers.<Object>equalTo(tool));
+        Matchers.equalTo(tool));
   }
 
   private abstract static class NoopBinaryBuildRule

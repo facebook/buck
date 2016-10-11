@@ -101,7 +101,7 @@ public class JavaSourceJar extends AbstractBuildRule implements HasMavenCoordina
         new ZipStep(
             getProjectFilesystem(),
             output,
-            ImmutableSet.<Path>of(),
+            ImmutableSet.of(),
             /* junk paths */ false,
             DEFAULT_COMPRESSION_LEVEL,
             temp));

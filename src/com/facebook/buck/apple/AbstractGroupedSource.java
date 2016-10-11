@@ -127,10 +127,10 @@ abstract class AbstractGroupedSource {
     return GroupedSource.of(
         Type.SOURCE_WITH_FLAGS,
         Optional.of(sourceWithFlags),
-        Optional.<SourcePath>absent(),
-        Optional.<String>absent(),
-        Optional.<Path>absent(),
-        Optional.<List<GroupedSource>>absent());
+        Optional.absent(),
+        Optional.absent(),
+        Optional.absent(),
+        Optional.absent());
   }
 
   /**
@@ -139,11 +139,11 @@ abstract class AbstractGroupedSource {
   public static GroupedSource ofPublicHeader(SourcePath headerPath) {
     return GroupedSource.of(
         Type.PUBLIC_HEADER,
-        Optional.<SourceWithFlags>absent(),
+        Optional.absent(),
         Optional.of(headerPath),
-        Optional.<String>absent(),
-        Optional.<Path>absent(),
-        Optional.<List<GroupedSource>>absent());
+        Optional.absent(),
+        Optional.absent(),
+        Optional.absent());
   }
 
   /**
@@ -152,11 +152,11 @@ abstract class AbstractGroupedSource {
   public static GroupedSource ofPrivateHeader(SourcePath headerPath) {
     return GroupedSource.of(
         Type.PRIVATE_HEADER,
-        Optional.<SourceWithFlags>absent(),
+        Optional.absent(),
         Optional.of(headerPath),
-        Optional.<String>absent(),
-        Optional.<Path>absent(),
-        Optional.<List<GroupedSource>>absent());
+        Optional.absent(),
+        Optional.absent(),
+        Optional.absent());
   }
 
   /**
@@ -169,8 +169,8 @@ abstract class AbstractGroupedSource {
       Collection<GroupedSource> sourceGroup) {
     return GroupedSource.of(
         Type.SOURCE_GROUP,
-        Optional.<SourceWithFlags>absent(),
-        Optional.<SourcePath>absent(),
+        Optional.absent(),
+        Optional.absent(),
         Optional.of(sourceGroupName),
         Optional.of(sourceGroupPathRelativeToTarget),
         Optional.of((List<GroupedSource>) ImmutableList.copyOf(sourceGroup)));

@@ -223,7 +223,7 @@ public class MoreFilesTest {
   public void concatenatingNoFilesReturnsFalse() throws IOException {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
     Path outputPath = vfs.getPath("logs.txt");
-    boolean collected = MoreFiles.concatenateFiles(outputPath, ImmutableList.<Path>of());
+    boolean collected = MoreFiles.concatenateFiles(outputPath, ImmutableList.of());
     assertThat(collected, is(false));
     assertThat(Files.exists(outputPath), is(false));
   }
@@ -267,6 +267,6 @@ public class MoreFilesTest {
 
     assertThat(
         Files.readAllLines(outputPath, UTF_8),
-        Matchers.<List<String>>equalTo(ImmutableList.of("hello world", "goodbye world")));
+        Matchers.equalTo(ImmutableList.of("hello world", "goodbye world")));
   }
 }

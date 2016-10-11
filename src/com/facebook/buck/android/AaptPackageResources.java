@@ -177,7 +177,7 @@ public class AaptPackageResources extends AbstractBuildRule
             getAndroidManifestXml(),
             filteredResourcesProvider.getResDirectories(),
             FluentIterable.from(getResolver().getAllAbsolutePaths(assetsDirectories))
-                .toSortedSet(Ordering.<Path>natural()),
+                .toSortedSet(Ordering.natural()),
             getResourceApkPath(),
             rDotTxtDir,
             pathToGeneratedProguardConfig,

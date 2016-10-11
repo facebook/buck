@@ -224,9 +224,9 @@ public class GoBuckConfig {
           ProcessExecutorParams.builder().addCommand(
               goTool.toString(), "env", env).setEnvironment(goRootEnv).build(),
           EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
-                    /* stdin */ Optional.<String>absent(),
-                    /* timeOutMs */ Optional.<Long>absent(),
-                    /* timeoutHandler */ Optional.<Function<Process, Void>>absent());
+                    /* stdin */ Optional.absent(),
+                    /* timeOutMs */ Optional.absent(),
+                    /* timeoutHandler */ Optional.absent());
       if (goToolResult.getExitCode() == 0) {
         return CharMatcher.whitespace().trimFrom(goToolResult.getStdout().get());
       } else {

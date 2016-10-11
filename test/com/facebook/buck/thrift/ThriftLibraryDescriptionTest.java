@@ -96,7 +96,7 @@ public class ThriftLibraryDescriptionTest {
         params,
         resolver,
         root,
-        ImmutableMap.<Path, SourcePath>of());
+        ImmutableMap.of());
   }
 
   private static class FakeThriftLanguageSpecificEnhancer
@@ -220,7 +220,7 @@ public class ThriftLibraryDescriptionTest {
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     ThriftLibraryDescription desc = new ThriftLibraryDescription(
         thriftBuckConfig,
-        ImmutableList.<ThriftLanguageSpecificEnhancer>of());
+        ImmutableList.of());
 
     // Setup a simple thrift source.
     String sourceName = "test.thrift";
@@ -232,12 +232,12 @@ public class ThriftLibraryDescriptionTest {
             flavoredParams,
             resolver,
             ThriftLibraryDescription.CompilerType.THRIFT,
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             language,
             options,
             ImmutableMap.of(sourceName, sourcePath),
-            ImmutableSortedSet.<ThriftLibrary>of(),
-            ImmutableMap.of(sourceName, ImmutableSortedSet.<String>of()));
+            ImmutableSortedSet.of(),
+            ImmutableMap.of(sourceName, ImmutableSortedSet.of()));
 
     // Now verify that the generated rule had no associated deps.
     assertSame(rules.size(), 1);
@@ -256,9 +256,9 @@ public class ThriftLibraryDescriptionTest {
     ThriftLibrary lib = new ThriftLibrary(
         unflavoredParams,
         pathResolver,
-        ImmutableSortedSet.<ThriftLibrary>of(),
+        ImmutableSortedSet.of(),
         thriftIncludeSymlinkTree,
-        ImmutableMap.<Path, SourcePath>of());
+        ImmutableMap.of());
 
     // Generate these rules using no deps.
     rules =
@@ -266,12 +266,12 @@ public class ThriftLibraryDescriptionTest {
             flavoredParams,
             resolver,
             ThriftLibraryDescription.CompilerType.THRIFT,
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             language,
             options,
             ImmutableMap.of(sourceName, sourcePath),
             ImmutableSortedSet.of(lib),
-            ImmutableMap.of(sourceName, ImmutableSortedSet.<String>of()));
+            ImmutableMap.of(sourceName, ImmutableSortedSet.of()));
 
     // Now verify that the generated rule has all the deps from the passed in thrift library.
     assertSame(rules.size(), 1);
@@ -294,12 +294,12 @@ public class ThriftLibraryDescriptionTest {
             flavoredParams,
             resolver,
             ThriftLibraryDescription.CompilerType.THRIFT,
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             language,
             options,
             ImmutableMap.of(sourceName, ruleSourcePath),
-            ImmutableSortedSet.<ThriftLibrary>of(),
-            ImmutableMap.of(sourceName, ImmutableSortedSet.<String>of()));
+            ImmutableSortedSet.of(),
+            ImmutableMap.of(sourceName, ImmutableSortedSet.of()));
 
     // Now verify that the generated rule had no associated deps.
     assertSame(rules.size(), 1);
@@ -327,7 +327,7 @@ public class ThriftLibraryDescriptionTest {
     thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     desc = new ThriftLibraryDescription(
         thriftBuckConfig,
-        ImmutableList.<ThriftLanguageSpecificEnhancer>of());
+        ImmutableList.of());
 
     // Generate these rules using no deps with a compiler target.
     rules =
@@ -335,12 +335,12 @@ public class ThriftLibraryDescriptionTest {
             flavoredParams,
             resolver,
             ThriftLibraryDescription.CompilerType.THRIFT,
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             language,
             options,
             ImmutableMap.of(sourceName, sourcePath),
-            ImmutableSortedSet.<ThriftLibrary>of(),
-            ImmutableMap.of(sourceName, ImmutableSortedSet.<String>of()));
+            ImmutableSortedSet.of(),
+            ImmutableMap.of(sourceName, ImmutableSortedSet.of()));
 
     // Now verify that the generated rule only has deps from the compiler target.
     assertSame(rules.size(), 1);
@@ -366,7 +366,7 @@ public class ThriftLibraryDescriptionTest {
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     ThriftLibraryDescription desc = new ThriftLibraryDescription(
         thriftBuckConfig,
-        ImmutableList.<ThriftLanguageSpecificEnhancer>of());
+        ImmutableList.of());
 
     // Setup the thrift source.
     String sourceName = "test.thrift";
@@ -380,9 +380,9 @@ public class ThriftLibraryDescriptionTest {
     ThriftLibrary dep = new ThriftLibrary(
         new FakeBuildRuleParamsBuilder(depTarget).build(),
         pathResolver,
-        ImmutableSortedSet.<ThriftLibrary>of(),
+        ImmutableSortedSet.of(),
         depIncludeSymlinkTree,
-        ImmutableMap.<Path, SourcePath>of());
+        ImmutableMap.of());
     resolver.addToIndex(dep);
 
     // Build up the constructor arg.
@@ -466,7 +466,7 @@ public class ThriftLibraryDescriptionTest {
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     ThriftLibraryDescription desc = new ThriftLibraryDescription(
         thriftBuckConfig,
-        ImmutableList.<ThriftLanguageSpecificEnhancer>of());
+        ImmutableList.of());
 
     // Setup the include rules.
     final BuildRule thriftIncludeSymlinkTree = createFakeBuildRule(
@@ -518,7 +518,7 @@ public class ThriftLibraryDescriptionTest {
     // Recreate the description with the enhancer we setup above.
     desc = new ThriftLibraryDescription(
         thriftBuckConfig,
-        ImmutableList.<ThriftLanguageSpecificEnhancer>of(enhancer));
+        ImmutableList.of(enhancer));
 
     // Setup the internal structure indicating that the thrift target was set in the
     // buck config.
@@ -554,7 +554,7 @@ public class ThriftLibraryDescriptionTest {
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(buckConfig);
     ThriftLibraryDescription desc = new ThriftLibraryDescription(
         thriftBuckConfig,
-        ImmutableList.<ThriftLanguageSpecificEnhancer>of());
+        ImmutableList.of());
 
     ThriftConstructorArg constructorArg = desc.createUnpopulatedConstructorArg();
 

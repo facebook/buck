@@ -116,7 +116,7 @@ public class CompDirReplacerIntegrationTest {
         250,
         File.separatorChar,
         Paths.get("."),
-        ImmutableBiMap.<Path, Path>of());
+        ImmutableBiMap.of());
 
     String oldCompDirValue = sanitizer.getCompilationDirectory();
     String newCompDirValue = workspace.getDestPath().toString();

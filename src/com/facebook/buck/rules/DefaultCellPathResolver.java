@@ -71,7 +71,7 @@ public class DefaultCellPathResolver implements CellPathResolver {
    */
   public ImmutableMap<RelativeCellName, Path> getTransitivePathMapping() throws IOException {
     ImmutableMap.Builder<RelativeCellName, Path> builder = ImmutableMap.builder();
-    builder.put(RelativeCellName.of(ImmutableList.<String>of()), root);
+    builder.put(RelativeCellName.of(ImmutableList.of()), root);
 
     HashSet<Path> seenPaths = new HashSet<>();
     seenPaths.add(root);
@@ -79,7 +79,7 @@ public class DefaultCellPathResolver implements CellPathResolver {
     constructFullMapping(
         builder,
         seenPaths,
-        RelativeCellName.of(ImmutableList.<String>of()),
+        RelativeCellName.of(ImmutableList.of()),
         this);
     return builder.build();
   }

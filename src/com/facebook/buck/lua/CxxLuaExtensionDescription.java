@@ -53,7 +53,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -151,7 +150,7 @@ public class CxxLuaExtensionDescription implements
                 args.langPreprocessorFlags,
                 cxxPlatform),
             ImmutableList.of(headerSymlinkTree),
-            ImmutableSet.<FrameworkPath>of(),
+            ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 cxxPlatform,
                 params.getDeps()));
@@ -218,8 +217,8 @@ public class CxxLuaExtensionDescription implements
             .filter(NativeLinkable.class)
             .append(luaConfig.getLuaCxxLibrary(ruleResolver)),
         args.cxxRuntimeType,
-        Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of(),
+        Optional.absent(),
+        ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(getExtensionArgs(params, ruleResolver, pathResolver, cxxPlatform, args))
             .build());
@@ -294,7 +293,7 @@ public class CxxLuaExtensionDescription implements
           throws NoSuchBuildTargetException {
         return NativeLinkableInput.builder()
             .addAllArgs(getExtensionArgs(params, resolver, pathResolver, cxxPlatform, args))
-            .addAllFrameworks(args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()))
+            .addAllFrameworks(args.frameworks.or(ImmutableSortedSet.of()))
             .build();
       }
 

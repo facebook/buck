@@ -23,7 +23,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
@@ -88,9 +87,9 @@ class CodeSignStep implements Step {
       result = processExecutor.launchAndExecute(
           processExecutorParams,
           options,
-              /* stdin */ Optional.<String>absent(),
-              /* timeOutMs */ Optional.<Long>absent(),
-              /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
+              /* stdin */ Optional.absent(),
+              /* timeOutMs */ Optional.absent(),
+              /* timeOutHandler */ Optional.absent());
     } catch (InterruptedException | IOException e) {
       context.logError(e, "Could not execute codesign.");
       return StepExecutionResult.ERROR;

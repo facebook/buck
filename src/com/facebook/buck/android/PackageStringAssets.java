@@ -118,7 +118,7 @@ public class PackageStringAssets extends AbstractBuildRule
     steps.add(new ZipStep(
             getProjectFilesystem(),
             pathToAllLocalesStringAssetsZip,
-            ImmutableSet.<Path>of(),
+            ImmutableSet.of(),
             false,
         ZipCompressionLevel.MAX_COMPRESSION_LEVEL,
             pathToDirContainingAssetsDir));

@@ -76,14 +76,14 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
    * Creates a new graph with no nodes or edges.
    */
   public MutableDirectedGraph() {
-    this(new HashSet<T>(), HashMultimap.<T, T>create(), HashMultimap.<T, T>create());
+    this(new HashSet<T>(), HashMultimap.create(), HashMultimap.create());
   }
 
   public static <T> MutableDirectedGraph<T> createConcurrent() {
     return new MutableDirectedGraph<>(
         Collections.newSetFromMap(new ConcurrentHashMap<T, Boolean>()),
-        Multimaps.synchronizedSetMultimap(HashMultimap.<T, T>create()),
-        Multimaps.synchronizedSetMultimap(HashMultimap.<T, T>create()));
+        Multimaps.synchronizedSetMultimap(HashMultimap.create()),
+        Multimaps.synchronizedSetMultimap(HashMultimap.create()));
   }
 
   /** @return the number of nodes in the graph */

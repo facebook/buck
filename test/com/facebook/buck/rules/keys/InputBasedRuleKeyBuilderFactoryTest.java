@@ -81,7 +81,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
             .setSrcs(
-                ImmutableList.<SourcePath>of(
+                ImmutableList.of(
                     new BuildTargetSourcePath(dep.getBuildTarget())))
             .build(resolver, filesystem);
 
@@ -318,7 +318,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
             .setSrcs(
-                ImmutableList.<SourcePath>of(
+                ImmutableList.of(
                     new PathSourcePath(filesystem, input1),
                     new PathSourcePath(filesystem, input2)))
             .build(resolver, filesystem);

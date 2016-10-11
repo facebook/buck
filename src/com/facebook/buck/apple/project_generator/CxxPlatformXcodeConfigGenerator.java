@@ -55,7 +55,7 @@ class CxxPlatformXcodeConfigGenerator {
     LinkedHashMap<String, String> notProcessedAppendedConfig =
         new LinkedHashMap<String, String>(appendedConfig);
 
-    ImmutableMap.Builder<String, String> configBuilder = ImmutableMap.<String, String>builder();
+    ImmutableMap.Builder<String, String> configBuilder = ImmutableMap.builder();
     setSdkRootAndDeploymentTargetValues(
         configBuilder,
         cxxPlatform,
@@ -79,7 +79,7 @@ class CxxPlatformXcodeConfigGenerator {
       ImmutableMap.Builder<String, String> configBuilder,
       Map<String, String> notProcessedAppendedConfig) {
     for (Map.Entry<String, String> entry:
-        ImmutableSet.<Map.Entry<String, String>>copyOf(notProcessedAppendedConfig.entrySet())) {
+        ImmutableSet.copyOf(notProcessedAppendedConfig.entrySet())) {
       if (entry.getValue().length() > 0) {
         configBuilder.put(entry);
       }
@@ -109,7 +109,7 @@ class CxxPlatformXcodeConfigGenerator {
         CLANG_CXX_LIBRARY,
         notProcessedCxxFlags,
         "-stdlib=",
-        Optional.<String>absent(),
+        Optional.absent(),
         notProcessedAppendedConfig);
     if (clangCxxLibraryValue != null) {
       configBuilder.put(CLANG_CXX_LIBRARY, clangCxxLibraryValue);
@@ -152,7 +152,7 @@ class CxxPlatformXcodeConfigGenerator {
         CLANG_CXX_LANGUAGE_STANDARD,
         notProcessedCxxFlags,
         "-std=",
-        Optional.<String>absent(),
+        Optional.absent(),
         notProcessedAppendedConfig);
     if (clangCxxLanguageStandardValue != null) {
       configBuilder.put(CLANG_CXX_LANGUAGE_STANDARD, clangCxxLanguageStandardValue);
@@ -170,7 +170,7 @@ class CxxPlatformXcodeConfigGenerator {
         deploymentTargetKey,
         notProcessedCxxFlags,
         "-m",    // format is like "-mmacosx-version-min=10.9"
-        Optional.<String>of("-version-min="),
+        Optional.of("-version-min="),
         notProcessedAppendedConfig);
     if (deploymentTargetValue != null) {
       configBuilder.put(deploymentTargetKey, deploymentTargetValue);

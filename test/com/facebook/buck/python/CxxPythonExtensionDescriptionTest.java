@@ -45,7 +45,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
@@ -63,7 +62,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.regex.Pattern;
 
@@ -178,7 +176,7 @@ public class CxxPythonExtensionDescriptionTest {
             ImmutableSortedSet.of(
                 SourceWithFlags.of(
                     new FakeSourcePath("something.cpp"),
-                    ImmutableList.<String>of())));
+                    ImmutableList.of())));
     CxxPythonExtensionBuilder builder = new CxxPythonExtensionBuilder(
         target,
         FlavorDomain.of("Python Platform", PY2, PY3),
@@ -269,12 +267,12 @@ public class CxxPythonExtensionDescriptionTest {
             PY2.getFlavor(),
             CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()));
     PythonPackageComponents expectedComponents = PythonPackageComponents.of(
-        ImmutableMap.<Path, SourcePath>of(
+        ImmutableMap.of(
             target.getBasePath().resolve(CxxPythonExtensionDescription.getExtensionName(target)),
             new BuildTargetSourcePath(rule.getBuildTarget())),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableSet.<SourcePath>of(),
+        ImmutableMap.of(),
+        ImmutableMap.of(),
+        ImmutableSet.of(),
         Optional.of(false));
     assertEquals(
         expectedComponents,

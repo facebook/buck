@@ -33,7 +33,7 @@ abstract class AbstractWatchmanQuery {
   abstract ImmutableMap<String, Object> getQueryParams();
 
   public ImmutableList<Object> toList(String sinceCursor) {
-    return ImmutableList.<Object>of(
+    return ImmutableList.of(
         "query",
         getQueryPath(),
         ImmutableMap.<String, Object>builder()

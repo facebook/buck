@@ -65,7 +65,7 @@ public class ClasspathMacroExpander
       BuildRuleResolver resolver,
       BuildTarget input)
       throws MacroException {
-    return ImmutableList.<BuildRule>copyOf(
+    return ImmutableList.copyOf(
         getHasClasspathEntries(resolve(resolver, input)).getTransitiveClasspathDeps());
   }
 

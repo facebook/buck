@@ -204,7 +204,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
                PathListing.GET_PATH_MODIFIED_TIME,
                PathListing.FilterMode.EXCLUDE,
                Optional.of(tracesToKeep),
-               Optional.<Long>absent())) {
+               Optional.absent())) {
         projectFilesystem.deleteFileAtPath(path);
       }
     } catch (IOException e) {
@@ -288,7 +288,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         "build",
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         started);
   }
 
@@ -297,7 +297,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         "build",
         ChromeTraceEvent.Phase.END,
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         finished);
   }
 
@@ -307,7 +307,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         buildRule.getFullyQualifiedName(),
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         started);
   }
 
@@ -350,7 +350,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         started.getShortStepName(),
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         started);
   }
 
@@ -370,7 +370,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         "parse",
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         started);
   }
 
@@ -451,7 +451,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         "buck",
         "action_graph",
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         started);
   }
 
@@ -461,7 +461,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         "buck",
         "action_graph",
         ChromeTraceEvent.Phase.END,
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         finished);
   }
 
@@ -470,7 +470,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         "install",
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         started);
   }
 
@@ -490,7 +490,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         "start_activity",
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         started);
   }
 
@@ -511,7 +511,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         "uninstall",
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         started);
   }
 
@@ -577,7 +577,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         "artifact_connect",
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         started);
   }
 
@@ -586,7 +586,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent("buck",
         "artifact_connect",
         ChromeTraceEvent.Phase.END,
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         finished);
   }
 
@@ -616,7 +616,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         started.getAnnotationProcessorName(),
         started.getCategory(),
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         started);
   }
 
@@ -626,7 +626,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         finished.getAnnotationProcessorName(),
         finished.getCategory(),
         ChromeTraceEvent.Phase.END,
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
         finished);
   }
 

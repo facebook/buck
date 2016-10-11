@@ -17,7 +17,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -187,8 +186,8 @@ public class SmartDexingStep implements Step {
             } else {
               xzStep = new XzStep(filesystem, secondaryBlobOutput, secondaryCompressedBlobOutput);
             }
-            stepRunner.runStepForBuildTarget(concatStep, Optional.<BuildTarget>absent());
-            stepRunner.runStepForBuildTarget(xzStep, Optional.<BuildTarget>absent());
+            stepRunner.runStepForBuildTarget(concatStep, Optional.absent());
+            stepRunner.runStepForBuildTarget(xzStep, Optional.absent());
           }
         }
       }
@@ -208,7 +207,7 @@ public class SmartDexingStep implements Step {
     List<Step> dxSteps = generateDxCommands(filesystem, outputToInputs);
     stepRunner.runStepsInParallelAndWait(
         dxSteps,
-        Optional.<BuildTarget>absent(),
+        Optional.absent(),
         executorService,
         DefaultStepRunner.NOOP_CALLBACK);
   }
@@ -385,7 +384,7 @@ public class SmartDexingStep implements Step {
       // Use a composite step to ensure that runDxSteps can still make use of
       // runStepsInParallelAndWait.  This is necessary to keep the DxStep and
       // WriteFileStep dependent in series.
-      return ImmutableList.<Step>of(new CompositeStep(steps));
+      return ImmutableList.of(new CompositeStep(steps));
     }
   }
 

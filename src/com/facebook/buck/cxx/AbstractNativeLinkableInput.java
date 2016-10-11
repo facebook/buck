@@ -38,9 +38,9 @@ abstract class AbstractNativeLinkableInput {
 
   private static final NativeLinkableInput EMPTY =
       NativeLinkableInput.of(
-          ImmutableList.<Arg>of(),
-          ImmutableSet.<FrameworkPath>of(),
-          ImmutableSet.<FrameworkPath>of());
+          ImmutableList.of(),
+          ImmutableSet.of(),
+          ImmutableSet.of());
 
   // Arguments to pass to the linker.  In the future it'd be nice to make this more aware of
   // the differences between archives, objects, flags, etc.

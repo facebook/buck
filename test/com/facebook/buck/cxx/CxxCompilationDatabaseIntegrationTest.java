@@ -64,7 +64,7 @@ CxxCompilationDatabaseIntegrationTest {
               "-fdebug-compilation-dir",
               "-Xclang",
               "." + Strings.repeat("/", 249)) :
-          ImmutableList.<String>of();
+          ImmutableList.of();
   private static final boolean PREPROCESSOR_SUPPORTS_HEADER_MAPS =
       Platform.detect() == Platform.MACOS;
 
@@ -551,6 +551,6 @@ CxxCompilationDatabaseIntegrationTest {
     // This works around OS X being amusing about the location of temp directories.
     return PREPROCESSOR_SUPPORTS_HEADER_MAPS ?
         ImmutableList.of("-I", filesystem.getBuckPaths().getBuckOut().toString()) :
-        ImmutableList.<String>of();
+        ImmutableList.of();
   }
 }

@@ -127,7 +127,7 @@ public class BsdArchiver implements Archiver {
 
   @Override
   public ImmutableList<FileScrubber> getScrubbers() {
-    return ImmutableList.<FileScrubber>of(
+    return ImmutableList.of(
         ObjectFileScrubbers.createDateUidGidScrubber(ObjectFileScrubbers.PaddingStyle.RIGHT),
         SYMBOL_NAME_TABLE_PADDING_SCRUBBER);
   }
@@ -140,7 +140,7 @@ public class BsdArchiver implements Archiver {
   @Override
   public ImmutableList<String> getArchiveOptions(boolean isThinArchive) {
     String options = isThinArchive ? "qcT" : "qc";
-    return ImmutableList.<String>of(options);
+    return ImmutableList.of(options);
   }
 
   @Override

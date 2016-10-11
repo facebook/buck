@@ -71,7 +71,7 @@ abstract class AbstractCxxSource {
         String language,
         String preprocessedLanguage,
         String... extensions) {
-      this(language, preprocessedLanguage, Optional.<String>absent(), extensions);
+      this(language, preprocessedLanguage, Optional.absent(), extensions);
     }
 
     Type(

@@ -36,7 +36,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
-import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.HumanReadableException;
@@ -381,7 +380,7 @@ public class AppleTest
         } else if (isUiTest()) {
           TestCaseSummary noTestsSummary =
                 new TestCaseSummary("XCUITest runs not supported with buck test",
-                                    Collections.<TestResultSummary>emptyList());
+                                    Collections.emptyList());
           testCaseSummaries = Collections.singletonList(noTestsSummary);
         } else {
           Path resolvedOutputPath = getProjectFilesystem().resolve(testOutputPath);

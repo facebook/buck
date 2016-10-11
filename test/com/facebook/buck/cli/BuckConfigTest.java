@@ -180,7 +180,7 @@ public class BuckConfigTest {
         temporaryFolder,
         reader);
 
-    ImmutableList<String> expected = ImmutableList.<String>of(
+    ImmutableList<String> expected = ImmutableList.of(
         "//java/com/example:foo",
         "//java/com/example:bar");
     ImmutableList<String> result = ImmutableList.copyOf(FluentIterable
@@ -369,7 +369,7 @@ public class BuckConfigTest {
         .setPlatform(Platform.WINDOWS)
         .build();
     // "auto" on Windows is equivalent to "never".
-    assertFalse(windowsConfig.createAnsi(Optional.<String>absent()).isAnsiTerminal());
+    assertFalse(windowsConfig.createAnsi(Optional.absent()).isAnsiTerminal());
     assertFalse(windowsConfig.createAnsi(Optional.of("auto")).isAnsiTerminal());
     assertTrue(windowsConfig.createAnsi(Optional.of("always")).isAnsiTerminal());
     assertFalse(windowsConfig.createAnsi(Optional.of("never")).isAnsiTerminal());
@@ -590,7 +590,7 @@ public class BuckConfigTest {
   @Test
   public void hasUserDefinedValueReturnsFalseForNoSetting() {
     BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(ImmutableMap.<String, ImmutableMap<String, String>>of())
+        .setSections(ImmutableMap.of())
         .build();
     assertFalse(buckConfig.hasUserDefinedValue("cache", "mode"));
   }

@@ -154,7 +154,7 @@ public class ExopackageInstallerTest {
   public void testChunkArgs() {
     assertEquals(
         ImmutableList.of(),
-        ExopackageInstaller.chunkArgs(ImmutableList.<String>of(), 8));
+        ExopackageInstaller.chunkArgs(ImmutableList.of(), 8));
 
     assertEquals(
         ImmutableList.of(
@@ -184,7 +184,7 @@ public class ExopackageInstallerTest {
             libsDir,
             allLibs,
             "armeabi-v7a",
-            ImmutableSet.<String>of()).keySet());
+            ImmutableSet.of()).keySet());
 
     assertEquals(
         ImmutableSet.of(Strings.repeat("d", 40)),

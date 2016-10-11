@@ -167,13 +167,13 @@ abstract class AbstractFrameworkPath implements
     return FrameworkPath.of(
         Type.SOURCE_TREE_PATH,
         Optional.of(sourceTreePath),
-        Optional.<SourcePath>absent());
+        Optional.absent());
   }
 
   public static FrameworkPath ofSourcePath(SourcePath sourcePath) {
     return FrameworkPath.of(
         Type.SOURCE_PATH,
-        Optional.<SourceTreePath>absent(),
+        Optional.absent(),
         Optional.of(sourcePath));
   }
 }

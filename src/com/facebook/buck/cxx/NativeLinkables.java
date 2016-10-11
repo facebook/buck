@@ -152,7 +152,7 @@ public class NativeLinkables {
 
     // Topologically sort the rules.
     Iterable<BuildTarget> ordered =
-        TopologicalSort.sort(graph, Predicates.<BuildTarget>alwaysTrue()).reverse();
+        TopologicalSort.sort(graph, Predicates.alwaysTrue()).reverse();
 
     // Return a map of of the results.
     ImmutableMap.Builder<BuildTarget, NativeLinkable> result = ImmutableMap.builder();

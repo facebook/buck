@@ -41,7 +41,7 @@ public class MachoHeaderUtilsTest {
                 UnsignedInteger.ZERO,
                 UnsignedInteger.ZERO,
                 UnsignedInteger.ZERO,
-                Optional.<UnsignedInteger>absent())),
+                Optional.absent())),
         equalTo(MachoHeader.MACH_HEADER_SIZE_32));
     assertThat(
         MachoHeaderUtils.getHeaderSize(

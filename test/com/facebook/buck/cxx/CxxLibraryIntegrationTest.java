@@ -152,7 +152,7 @@ public class CxxLibraryIntegrationTest {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
         this,
         tmp,
-        Optional.<String>absent());
+        Optional.absent());
     workspace.runBuckBuild("//foo:dep_one#infer").assertSuccess();
   }
 
@@ -162,7 +162,7 @@ public class CxxLibraryIntegrationTest {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
         this,
         tmp,
-        Optional.<String>absent());
+        Optional.absent());
     workspace.runBuckBuild("//foo:headers_only_lib#infer-capture-all").assertSuccess();
   }
 

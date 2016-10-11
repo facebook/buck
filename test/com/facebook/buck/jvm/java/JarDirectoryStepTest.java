@@ -221,7 +221,7 @@ public class JarDirectoryStepTest {
         /* main class */ null,
         tmp.resolve("manifest"),
         /* merge manifest */ true,
-        /* blacklist */ ImmutableSet.<Pattern>of());
+        /* blacklist */ ImmutableSet.of());
     ExecutionContext context = TestExecutionContext.newInstance();
     assertEquals(0, step.execute(context).getExitCode());
 
@@ -502,7 +502,7 @@ public class JarDirectoryStepTest {
         /* main class */ null,
         manifestFile,
         mergeEntries,
-        /* blacklist */ ImmutableSet.<Pattern>of());
+        /* blacklist */ ImmutableSet.of());
     ExecutionContext context = TestExecutionContext.newInstance();
     step.execute(context);
 

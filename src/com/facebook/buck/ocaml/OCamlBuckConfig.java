@@ -123,6 +123,6 @@ public class OCamlBuckConfig {
     if (!executable.isPresent()) {
       return Optional.absent();
     }
-    return Optional.<Tool>of(new HashedFileTool(executable.get()));
+    return Optional.of(new HashedFileTool(executable.get()));
   }
 }

@@ -215,7 +215,7 @@ public class ArtifactCacheBuckConfigTest {
         config.getServedLocalCache(),
         Matchers.equalTo(Optional.of(
                 DirCacheEntry.builder()
-                    .setMaxSizeBytes(Optional.<Long>absent())
+                    .setMaxSizeBytes(Optional.absent())
                     .setCacheDir(cacheDir)
                     .setCacheReadMode(ArtifactCacheBuckConfig.CacheReadMode.readonly)
                     .build())));
@@ -248,7 +248,7 @@ public class ArtifactCacheBuckConfigTest {
         config.getServedLocalCache(),
         Matchers.equalTo(Optional.of(
                 DirCacheEntry.builder()
-                    .setMaxSizeBytes(Optional.<Long>absent())
+                    .setMaxSizeBytes(Optional.absent())
                     .setCacheDir(cacheDir)
                     .setCacheReadMode(ArtifactCacheBuckConfig.CacheReadMode.readwrite)
                     .build())));

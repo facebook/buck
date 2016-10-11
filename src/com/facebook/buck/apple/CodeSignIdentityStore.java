@@ -21,7 +21,6 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -88,9 +87,9 @@ public class CodeSignIdentityStore implements RuleKeyAppendable {
               result = processExecutor.launchAndExecute(
                   processExecutorParams,
                   options,
-              /* stdin */ Optional.<String>absent(),
-              /* timeOutMs */ Optional.<Long>absent(),
-              /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
+              /* stdin */ Optional.absent(),
+              /* timeOutMs */ Optional.absent(),
+              /* timeOutHandler */ Optional.absent());
             } catch (InterruptedException | IOException e) {
               LOG.warn("Could not execute security, continuing without codesign identity.");
               return ImmutableList.of();

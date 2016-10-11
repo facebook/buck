@@ -99,7 +99,7 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, final BuildableContext buildableContext) {
-    return ImmutableList.<Step>of(
+    return ImmutableList.of(
         new AbstractExecutionStep("compute_android_binary_deps_abi") {
           @Override
           public StepExecutionResult execute(ExecutionContext context) {

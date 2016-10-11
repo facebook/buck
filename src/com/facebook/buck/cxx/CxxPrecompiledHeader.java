@@ -181,7 +181,7 @@ public class CxxPrecompiledHeader
                 preprocessorDelegate.getArguments(compilerFlags),
                 preprocessorDelegate.getEnvironment(),
                 preprocessorDelegate.getFlagsForColorDiagnostics())),
-        Optional.<CxxPreprocessAndCompileStep.ToolCommand>absent(),
+        Optional.absent(),
         preprocessorDelegate.getHeaderPathNormalizer(),
         sanitizer,
         preprocessorDelegate.getHeaderVerification(),

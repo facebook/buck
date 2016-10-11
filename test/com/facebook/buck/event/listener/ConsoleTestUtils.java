@@ -20,7 +20,6 @@ import static com.facebook.buck.event.TestEventConfigerator.configureTestEventAt
 
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.rules.RuleKey;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
@@ -37,7 +36,7 @@ public class ConsoleTestUtils {
       long timeInMs) {
     HttpArtifactCacheEvent.Scheduled storeScheduled =
         HttpArtifactCacheEvent.newStoreScheduledEvent(
-            Optional.of(target), ImmutableSet.<RuleKey>of());
+            Optional.of(target), ImmutableSet.of());
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(

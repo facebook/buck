@@ -44,7 +44,7 @@ public class BuildConfigs {
 
   /** @see #getDefaultBuildConfigFields() */
   private static final BuildConfigFields DEFAULT_BUILD_CONFIG_CONSTANTS =
-      BuildConfigFields.fromFields(ImmutableList.<BuildConfigFields.Field>of(
+      BuildConfigFields.fromFields(ImmutableList.of(
               // DEBUG is expected by the standard Android tools.
               BuildConfigFields.Field.of("boolean", DEBUG_CONSTANT, "true"),
               // IS_EXOPACKAGE is a value we use internally for checking whether exopackage is being

@@ -114,8 +114,8 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
           new WriteFile(
               getBaseParams().copyWithChanges(
                   templateTarget,
-                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-                  Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                  Suppliers.ofInstance(ImmutableSortedSet.of()),
+                  Suppliers.ofInstance(ImmutableSortedSet.of())),
               getPathResolver(),
               getNativeStarterCxxSourceTemplate(),
               BuildTargets.getGenPath(
@@ -155,7 +155,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
     return CxxSource.of(
         CxxSource.Type.CXX,
         new BuildTargetSourcePath(target),
-        ImmutableList.<String>of());
+        ImmutableList.of());
   }
 
   private ImmutableList<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
@@ -199,13 +199,13 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                         .putAllPreprocessorFlags(
                             CxxSource.Type.CXX,
                             getNativeStarterLibrary().isPresent() ?
-                                ImmutableList.<String>of() :
+                                ImmutableList.of() :
                                 ImmutableList.of("-DBUILTIN_NATIVE_STARTER"))
                         .build())
                 .addAll(getTransitiveCxxPreprocessorInput(getCxxPlatform(), nativeStarterDeps))
                 .build(),
-            ImmutableMultimap.<CxxSource.Type, String>of(),
-            Optional.<SourcePath>absent(),
+            ImmutableMultimap.of(),
+            Optional.absent(),
             getCxxBuckConfig().getPreprocessMode(),
             ImmutableMap.of("native-starter.cpp", getNativeStarterCxxSource()),
             CxxSourceRuleFactory.PicType.PDC);
@@ -219,7 +219,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                             "%s/%s",
                             getCxxPlatform().getLd().resolve(getRuleResolver()).origin(),
                             getRelativeNativeLibsDir().get().toString()))) :
-                ImmutableList.<com.facebook.buck.rules.args.Arg>of())
+                ImmutableList.of())
         .addAllArgs(SourcePathArg.from(getPathResolver(), objects.values()))
         .build();
   }
@@ -235,13 +235,13 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
             getPathResolver(),
             getTarget(),
             Linker.LinkType.EXECUTABLE,
-            Optional.<String>absent(),
+            Optional.absent(),
             getOutput(),
             Linker.LinkableDepType.SHARED,
             getNativeStarterDeps(),
-            Optional.<Linker.CxxRuntimeType>absent(),
-            Optional.<SourcePath>absent(),
-            ImmutableSet.<BuildTarget>of(),
+            Optional.absent(),
+            Optional.absent(),
+            ImmutableSet.of(),
             getNativeLinkableInput()));
     return new BuildTargetSourcePath(getTarget());
   }

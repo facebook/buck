@@ -31,7 +31,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.model.MacroException;
-import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.shell.ShBinaryBuilder;
@@ -65,7 +64,7 @@ public class WorkerMacroArgTest {
 
     MacroHandler macroHandler =
         new MacroHandler(
-            ImmutableMap.<String, MacroExpander>of("worker", new WorkerMacroExpander()));
+            ImmutableMap.of("worker", new WorkerMacroExpander()));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -89,7 +88,7 @@ public class WorkerMacroArgTest {
 
     MacroHandler macroHandler =
         new MacroHandler(
-            ImmutableMap.<String, MacroExpander>of("worker", new WorkerMacroExpander()));
+            ImmutableMap.of("worker", new WorkerMacroExpander()));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     try {
@@ -117,7 +116,7 @@ public class WorkerMacroArgTest {
 
     MacroHandler macroHandler =
         new MacroHandler(
-            ImmutableMap.<String, MacroExpander>of("worker", new WorkerMacroExpander()));
+            ImmutableMap.of("worker", new WorkerMacroExpander()));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     try {
@@ -139,7 +138,7 @@ public class WorkerMacroArgTest {
 
     MacroHandler macroHandler =
         new MacroHandler(
-            ImmutableMap.<String, MacroExpander>of("worker", new WorkerMacroExpander()));
+            ImmutableMap.of("worker", new WorkerMacroExpander()));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     try {

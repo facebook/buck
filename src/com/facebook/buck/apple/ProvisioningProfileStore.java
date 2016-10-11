@@ -48,9 +48,9 @@ import javax.annotation.Nullable;
  */
 public class ProvisioningProfileStore implements RuleKeyAppendable {
   public static final Optional<ImmutableMap<String, NSObject>> MATCH_ANY_ENTITLEMENT =
-      Optional.<ImmutableMap<String, NSObject>>absent();
+      Optional.absent();
   public static final Optional<ImmutableList<CodeSignIdentity>> MATCH_ANY_IDENTITY =
-      Optional.<ImmutableList<CodeSignIdentity>>absent();
+      Optional.absent();
 
   private static final Logger LOG = Logger.get(ProvisioningProfileStore.class);
   private final Supplier<ImmutableList<ProvisioningProfileMetadata>>
@@ -99,7 +99,7 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
     if (entitlements.isPresent()) {
       prefix = Optional.of(ProvisioningProfileMetadata.prefixFromEntitlements(entitlements.get()));
     } else {
-      prefix = Optional.<String>absent();
+      prefix = Optional.absent();
     }
 
     int bestMatchLength = -1;

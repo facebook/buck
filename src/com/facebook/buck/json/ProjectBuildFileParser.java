@@ -427,7 +427,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     }
     return BuildFilePythonResult.of(
         values,
-        diagnostics == null ? ImmutableList.<Map<String, String>>of() : diagnostics,
+        diagnostics == null ? ImmutableList.of() : diagnostics,
         profile == null ? "" : profile);
   }
 

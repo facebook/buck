@@ -47,7 +47,7 @@ public class PythonLibraryTest {
 
   @Test
   public void testGetters() {
-    ImmutableMap<Path, SourcePath> srcs = ImmutableMap.<Path, SourcePath>of(
+    ImmutableMap<Path, SourcePath> srcs = ImmutableMap.of(
         Paths.get("dummy"), new FakeSourcePath(""));
     PythonLibrary pythonLibrary = new PythonLibrary(
         new FakeBuildRuleParamsBuilder(
@@ -59,8 +59,8 @@ public class PythonLibraryTest {
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
         Functions.constant(srcs),
-        Functions.constant(ImmutableMap.<Path, SourcePath>of()),
-        Optional.<Boolean>absent());
+        Functions.constant(ImmutableMap.of()),
+        Optional.absent());
 
     assertTrue(pythonLibrary.getProperties().is(LIBRARY));
   }

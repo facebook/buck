@@ -54,7 +54,7 @@ public class AppleLibraryDescriptionTest {
         new AppleLibraryBuilder(BuildTargetFactory.newInstance("//:rule#shared,default"))
             .setLinkerFlags(ImmutableList.of("--linker-script=$(location //:dep)"))
             .setSrcs(
-                ImmutableSortedSet.<SourceWithFlags>of(
+                ImmutableSortedSet.of(
                     SourceWithFlags.of(new FakeSourcePath("foo.c"))));
     assertThat(
         builder.findImplicitDeps(),

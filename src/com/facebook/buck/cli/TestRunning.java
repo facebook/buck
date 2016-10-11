@@ -143,7 +143,7 @@ public class TestRunning {
               new MakeCleanDirectoryStep(
                   library.getProjectFilesystem(),
                   JacocoConstants.getJacocoOutputDir(library.getProjectFilesystem())),
-              Optional.<BuildTarget>absent());
+              Optional.absent());
         } catch (StepFailedException e) {
           params.getBuckEventBus().post(
               ConsoleEvent.severe(Throwables.getRootCause(e).getLocalizedMessage()));
@@ -451,7 +451,7 @@ public class TestRunning {
                 options.getCoverageReportTitle(),
                 options.getCoverageIncludes(),
                 options.getCoverageExcludes()),
-            Optional.<BuildTarget>absent());
+            Optional.absent());
       } catch (StepFailedException e) {
         params.getBuckEventBus().post(
             ConsoleEvent.severe(Throwables.getRootCause(e).getLocalizedMessage()));

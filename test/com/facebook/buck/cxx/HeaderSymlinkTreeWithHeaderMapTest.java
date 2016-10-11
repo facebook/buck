@@ -86,7 +86,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     Files.write(file2, "hello world".getBytes(Charsets.UTF_8));
 
     // Setup the map representing the link tree.
-    links = ImmutableMap.<Path, SourcePath>of(
+    links = ImmutableMap.of(
         link1,
         new PathSourcePath(
             projectFilesystem,
@@ -161,7 +161,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
         symlinkTreeRoot,
-        ImmutableMap.<Path, SourcePath>of(
+        ImmutableMap.of(
             Paths.get("different/link"),
             new PathSourcePath(
                 projectFilesystem,
@@ -173,7 +173,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
 
     // Calculate their rule keys and verify they're different.
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     RuleKey key1 = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
         symlinkTreeBuildRule);
     RuleKey key2 = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
@@ -192,7 +192,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
         0,
         FakeFileHashCache.createFromStrings(
-            ImmutableMap.<String, String>of()),
+            ImmutableMap.of()),
         resolver);
 
     // Calculate the rule key

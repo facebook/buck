@@ -51,7 +51,7 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver) {
     ImmutableSet<String> annotationProcessors =
-        this.annotationProcessors.or(ImmutableSet.<String>of());
+        this.annotationProcessors.or(ImmutableSet.of());
 
     if (annotationProcessors.isEmpty()) {
       return AnnotationProcessingParams.EMPTY;
@@ -62,11 +62,11 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
     builder.addAllProcessors(annotationProcessors);
     builder.setProjectFilesystem(filesystem);
     ImmutableSortedSet<BuildRule> processorDeps =
-        resolver.getAllRules(annotationProcessorDeps.or(ImmutableSortedSet.<BuildTarget>of()));
+        resolver.getAllRules(annotationProcessorDeps.or(ImmutableSortedSet.of()));
     for (BuildRule processorDep : processorDeps) {
       builder.addProcessorBuildTarget(processorDep);
     }
-    for (String processorParam : annotationProcessorParams.or(ImmutableList.<String>of())) {
+    for (String processorParam : annotationProcessorParams.or(ImmutableList.of())) {
       builder.addParameter(processorParam);
     }
     builder.setProcessOnly(annotationProcessorOnly.or(Boolean.FALSE));

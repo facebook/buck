@@ -55,7 +55,7 @@ public class WorkerToolDescriptionTest {
 
   @Test
   public void testGetMaxWorkersDefaultValue() throws NoSuchBuildTargetException {
-    WorkerTool workerTool = createWorkerTool(Optional.<Integer>absent());
+    WorkerTool workerTool = createWorkerTool(Optional.absent());
     assertThat(workerTool.getMaxWorkers(), Matchers.equalTo(Optional.of(1)));
   }
 

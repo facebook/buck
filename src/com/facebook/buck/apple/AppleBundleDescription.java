@@ -232,7 +232,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
           .append(watchTargets)
           .append(BuildTargets.propagateFlavorDomains(
               buildTarget,
-              ImmutableSet.<FlavorDomain<?>>of(cxxPlatformFlavorDomain),
+              ImmutableSet.of(cxxPlatformFlavorDomain),
               targetsWithoutPlatformFlavors));
     }
 

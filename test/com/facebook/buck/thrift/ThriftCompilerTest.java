@@ -64,7 +64,7 @@ public class ThriftCompilerTest {
   private static final ImmutableSet<Path> DEFAULT_HEADER_MAPS =
       ImmutableSet.of(Paths.get("some-header-map"));
   private static final ImmutableMap<Path, SourcePath> DEFAULT_INCLUDES =
-      ImmutableMap.<Path, SourcePath>of(
+      ImmutableMap.of(
           Paths.get("something.thrift"),
           new FakeSourcePath("blah/something.thrift"));
   private static final ImmutableSortedSet<String> DEFAULT_GENERATED_SOURCES =
@@ -262,7 +262,7 @@ public class ThriftCompilerTest {
             DEFAULT_OPTIONS,
             DEFAULT_INCLUDE_ROOTS,
             DEFAULT_HEADER_MAPS,
-            ImmutableMap.<Path, SourcePath>of(
+            ImmutableMap.of(
                 DEFAULT_INCLUDES.entrySet().iterator().next().getKey(),
                 new FakeSourcePath("different")),
             DEFAULT_GENERATED_SOURCES));
@@ -315,7 +315,7 @@ public class ThriftCompilerTest {
         new MakeCleanDirectoryStep(params.getProjectFilesystem(), DEFAULT_OUTPUT_DIR),
         new ThriftCompilerStep(
             params.getProjectFilesystem().getRootPath(),
-            ImmutableMap.<String, String>of(),
+            ImmutableMap.of(),
             ImmutableList.<String>builder()
                 .addAll(DEFAULT_COMPILER.getCommandPrefix(pathResolver))
                 .addAll(DEFAULT_FLAGS)

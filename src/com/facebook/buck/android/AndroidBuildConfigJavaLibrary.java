@@ -21,8 +21,6 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -33,8 +31,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.nio.file.Path;
-import java.util.regex.Pattern;
 
 
 /**
@@ -58,21 +54,21 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         resolver,
         /* srcs */ ImmutableSortedSet.of(
             new BuildTargetSourcePath(androidBuildConfig.getBuildTarget())),
-        /* resources */ ImmutableSortedSet.<SourcePath>of(),
+        /* resources */ ImmutableSortedSet.of(),
         javacOptions.getGeneratedSourceFolderName(),
-        /* proguardConfig */ Optional.<SourcePath>absent(),
-        /* postprocessClassesCommands */ ImmutableList.<String>of(),
-        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
-        /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
+        /* proguardConfig */ Optional.absent(),
+        /* postprocessClassesCommands */ ImmutableList.of(),
+        /* exportedDeps */ ImmutableSortedSet.of(),
+        /* providedDeps */ ImmutableSortedSet.of(),
         abiJar,
         /* trackClassUsage */ javacOptions.trackClassUsage(),
-        /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
+        /* additionalClasspathEntries */ ImmutableSet.of(),
         new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
-        /* resourcesRoot */ Optional.<Path>absent(),
-        /* manifest file */ Optional.<SourcePath>absent(),
-        /* mavenCoords */ Optional.<String>absent(),
-        /* tests */ ImmutableSortedSet.<BuildTarget>of(),
-        /* classesToRemoveFromJar */ ImmutableSet.<Pattern>of());
+        /* resourcesRoot */ Optional.absent(),
+        /* manifest file */ Optional.absent(),
+        /* mavenCoords */ Optional.absent(),
+        /* tests */ ImmutableSortedSet.of(),
+        /* classesToRemoveFromJar */ ImmutableSet.of());
     this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(
         params.getDeps().contains(androidBuildConfig),

@@ -60,7 +60,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
@@ -110,15 +109,15 @@ public class ThriftCxxEnhancerTest {
         new CommandTool.Builder()
             .addArg(new StringArg("compiler"))
             .build(),
-        ImmutableList.<String>of(),
+        ImmutableList.of(),
         Paths.get("output"),
         new FakeSourcePath("source"),
         "language",
-        ImmutableSet.<String>of(),
-        ImmutableList.<Path>of(),
-        ImmutableSet.<Path>of(),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableSortedSet.<String>of());
+        ImmutableSet.of(),
+        ImmutableList.of(),
+        ImmutableSet.of(),
+        ImmutableMap.of(),
+        ImmutableSortedSet.of());
   }
 
   @Test
@@ -188,11 +187,11 @@ public class ThriftCxxEnhancerTest {
     // Test absent options.
     arg.cppOptions = Optional.absent();
     assertEquals(
-        getExpectedOptions(TARGET, ImmutableSet.<String>of()),
+        getExpectedOptions(TARGET, ImmutableSet.of()),
         ENHANCER_CPP.getOptions(TARGET, arg));
     arg.cpp2Options = Optional.absent();
     assertEquals(
-        getExpectedOptions(TARGET, ImmutableSet.<String>of()),
+        getExpectedOptions(TARGET, ImmutableSet.of()),
         ENHANCER_CPP2.getOptions(TARGET, arg));
   }
 
@@ -238,13 +237,13 @@ public class ThriftCxxEnhancerTest {
     // With no options we just need to find the C/C++ thrift library.
     expectImplicitDeps(
         cppEnhancerWithSettings,
-        ImmutableSet.<String>of(),
+        ImmutableSet.of(),
         ImmutableSet.of(
             config.get("cpp_library"),
             config.get("cpp_reflection_library")));
     expectImplicitDeps(
         cpp2EnhancerWithSettings,
-        ImmutableSet.<String>of(),
+        ImmutableSet.of(),
         ImmutableSet.of(
             config.get("cpp2_library"),
             config.get("cpp_reflection_library")));
@@ -253,11 +252,11 @@ public class ThriftCxxEnhancerTest {
     expectImplicitDeps(
         cppEnhancerWithSettings,
         ImmutableSet.of("bootstrap"),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.of());
     expectImplicitDeps(
         cpp2EnhancerWithSettings,
         ImmutableSet.of("bootstrap"),
-        ImmutableSet.<BuildTarget>of());
+        ImmutableSet.of());
 
     // Check the "frozen2" option
     expectImplicitDeps(
@@ -325,7 +324,7 @@ public class ThriftCxxEnhancerTest {
         ENHANCER_CPP.getGeneratedSources(
             "test.thrift",
             ImmutableList.of("Test"),
-            ImmutableSet.<String>of()));
+            ImmutableSet.of()));
     assertEquals(
         ImmutableSortedSet.of(
             "test_constants.h",
@@ -342,7 +341,7 @@ public class ThriftCxxEnhancerTest {
         ENHANCER_CPP2.getGeneratedSources(
             "test.thrift",
             ImmutableList.of("Test"),
-            ImmutableSet.<String>of()));
+            ImmutableSet.of()));
 
     // Test with "frozen" option.
     assertEquals(
@@ -544,18 +543,18 @@ public class ThriftCxxEnhancerTest {
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
         "test1.thrift", new ThriftSource(
             thrift1,
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             Paths.get("output1")),
         "test2.thrift", new ThriftSource(
             thrift2,
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             Paths.get("output2")));
 
     // Create a dummy implicit dep to pass in.
     CxxLibrary dep =
         (CxxLibrary) new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .build(resolver);
-    ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.<BuildRule>of(dep);
+    ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of(dep);
 
     // Run the enhancer to create the language specific build rule.
     CxxLibrary rule =
@@ -581,7 +580,7 @@ public class ThriftCxxEnhancerTest {
 
     final String cppHeaderNamespace = "foo";
     final ImmutableSortedMap<String, SourcePath> cppHeaders =
-        ImmutableSortedMap.<String, SourcePath>of(
+        ImmutableSortedMap.of(
             "header.h", new FakeSourcePath("header.h"));
     final ImmutableSortedMap<String, SourceWithFlags> cppSrcs =
         ImmutableSortedMap.of(
@@ -601,7 +600,7 @@ public class ThriftCxxEnhancerTest {
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
         "test.thrift", new ThriftSource(
             thrift,
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             Paths.get("output")));
 
     // Run the enhancer with a modified C++ description which checks that appropriate args are
@@ -643,7 +642,7 @@ public class ThriftCxxEnhancerTest {
         resolver,
         arg,
         sources,
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.of());
   }
 
   @Test
@@ -697,8 +696,8 @@ public class ThriftCxxEnhancerTest {
           flavoredParams,
           resolver,
           arg,
-          ImmutableMap.<String, ThriftSource>of(),
-          ImmutableSortedSet.<BuildRule>of());
+          ImmutableMap.of(),
+          ImmutableSortedSet.of());
     }
   }
 

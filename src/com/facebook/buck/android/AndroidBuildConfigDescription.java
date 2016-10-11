@@ -146,8 +146,8 @@ public class AndroidBuildConfigDescription
     BuildRuleParams javaLibraryParams = params.copyWithChanges(
         params.getBuildTarget(),
         /* declaredDeps */ Suppliers.ofInstance(
-            ImmutableSortedSet.<BuildRule>of(androidBuildConfig)),
-        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+            ImmutableSortedSet.of(androidBuildConfig)),
+        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
     AndroidBuildConfigJavaLibrary library =
         ruleResolver.addToIndex(
             new AndroidBuildConfigJavaLibrary(

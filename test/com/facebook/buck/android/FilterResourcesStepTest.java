@@ -75,8 +75,8 @@ public class FilterResourcesStepTest {
         inResDirToOutResDirMap,
         /* filterByDensity */ true,
         /* enableStringWhitelisting */ false,
-        /* whitelistedStringDirs */ ImmutableSet.<Path>of(),
-        /* locales */ ImmutableSet.<String>of(),
+        /* whitelistedStringDirs */ ImmutableSet.of(),
+        /* locales */ ImmutableSet.of(),
         DefaultFilteredDirectoryCopier.getInstance(),
         ImmutableSet.of(ResourceFilters.Density.MDPI),
         FilterResourcesStep.DefaultDrawableFinder.getInstance(),
@@ -116,7 +116,7 @@ public class FilterResourcesStepTest {
   @Test
   public void testWhitelistFilter() throws IOException, InterruptedException {
     Predicate<Path> filePredicate = getTestPathPredicate(
-        true, ImmutableSet.of(Paths.get("com/whitelisted/res")), ImmutableSet.<String>of());
+        true, ImmutableSet.of(Paths.get("com/whitelisted/res")), ImmutableSet.of());
 
     assertTrue(filePredicate.apply(Paths.get("com/example/res/drawables/image.png")));
     assertTrue(filePredicate.apply(Paths.get("com/example/res/values/strings.xml")));
@@ -129,7 +129,7 @@ public class FilterResourcesStepTest {
   @Test
   public void testFilterLocales() throws IOException, InterruptedException {
     Predicate<Path> filePredicate = getTestPathPredicate(
-        false, ImmutableSet.<Path>of(), ImmutableSet.of("es", "es_US"));
+        false, ImmutableSet.of(), ImmutableSet.of("es", "es_US"));
 
     assertTrue(filePredicate.apply(Paths.get("com/example/res/drawables/image.png")));
     assertTrue(filePredicate.apply(Paths.get("com/example/res/values/strings.xml")));
@@ -195,8 +195,8 @@ public class FilterResourcesStepTest {
         ImmutableBiMap.of(resDir, resOutDir),
         /* filterByDPI */ true,
         /* enableStringWhitelisting */ false,
-        /* whitelistedStringDirs */ ImmutableSet.<Path>of(),
-        /* locales */ ImmutableSet.<String>of(),
+        /* whitelistedStringDirs */ ImmutableSet.of(),
+        /* locales */ ImmutableSet.of(),
         DefaultFilteredDirectoryCopier.getInstance(),
         ImmutableSet.of(targetDensity),
         FilterResourcesStep.DefaultDrawableFinder.getInstance(),
@@ -247,8 +247,8 @@ public class FilterResourcesStepTest {
         ImmutableBiMap.of(resDir, resOutDir),
         /* filterByDPI */ true,
         /* enableStringWhitelisting */ false,
-        /* whitelistedStringDirs */ ImmutableSet.<Path>of(),
-        /* locales */ ImmutableSet.<String>of(),
+        /* whitelistedStringDirs */ ImmutableSet.of(),
+        /* locales */ ImmutableSet.of(),
         DefaultFilteredDirectoryCopier.getInstance(),
         ImmutableSet.of(targetDensity),
         FilterResourcesStep.DefaultDrawableFinder.getInstance(),
@@ -301,8 +301,8 @@ public class FilterResourcesStepTest {
         ImmutableBiMap.of(resDir, resOutDir),
         /* filterByDPI */ true,
         /* enableStringWhitelisting */ false,
-        /* whitelistedStringDirs */ ImmutableSet.<Path>of(),
-        /* locales */ ImmutableSet.<String>of(),
+        /* whitelistedStringDirs */ ImmutableSet.of(),
+        /* locales */ ImmutableSet.of(),
         DefaultFilteredDirectoryCopier.getInstance(),
         ImmutableSet.of(targetDensityIncluded, targetDensityExcluded),
         FilterResourcesStep.DefaultDrawableFinder.getInstance(),
@@ -348,8 +348,8 @@ public class FilterResourcesStepTest {
         ImmutableBiMap.of(resDir, resOutDir),
         /* filterByDPI */ true,
         /* enableStringWhitelisting */ false,
-        /* whitelistedStringDirs */ ImmutableSet.<Path>of(),
-        /* locales */ ImmutableSet.<String>of(),
+        /* whitelistedStringDirs */ ImmutableSet.of(),
+        /* locales */ ImmutableSet.of(),
         DefaultFilteredDirectoryCopier.getInstance(),
         ImmutableSet.of(targetDensity),
         FilterResourcesStep.DefaultDrawableFinder.getInstance(),
@@ -383,7 +383,7 @@ public class FilterResourcesStepTest {
       ImmutableSet<String> locales) throws IOException, InterruptedException {
     FilterResourcesStep step = new FilterResourcesStep(
         null,
-        /* inResDirToOutResDirMap */ ImmutableBiMap.<Path, Path>of(),
+        /* inResDirToOutResDirMap */ ImmutableBiMap.of(),
         /* filterByDensity */ false,
         /* enableStringWhitelisting */ enableStringWhitelisting,
         /* whitelistedStringDirs */ whitelistedStringDirs,

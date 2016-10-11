@@ -44,7 +44,7 @@ public class HeaderPathNormalizerTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.h");
     HeaderPathNormalizer normalizer =
-        new HeaderPathNormalizer.Builder(pathResolver, Functions.<Path>identity())
+        new HeaderPathNormalizer.Builder(pathResolver, Functions.identity())
             .build();
     assertThat(
         normalizer.getAbsolutePathForUnnormalizedPath(header),
@@ -60,7 +60,7 @@ public class HeaderPathNormalizerTest {
     Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.h");
     SourcePath headerPath = new PathSourcePath(filesystem, header);
     HeaderPathNormalizer normalizer =
-        new HeaderPathNormalizer.Builder(pathResolver, Functions.<Path>identity())
+        new HeaderPathNormalizer.Builder(pathResolver, Functions.identity())
             .addHeader(headerPath)
             .build();
     assertThat(
@@ -80,7 +80,7 @@ public class HeaderPathNormalizerTest {
     Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.h");
     SourcePath headerDirPath = new PathSourcePath(filesystem, header.getParent());
     HeaderPathNormalizer normalizer =
-        new HeaderPathNormalizer.Builder(pathResolver, Functions.<Path>identity())
+        new HeaderPathNormalizer.Builder(pathResolver, Functions.identity())
             .addHeaderDir(headerDirPath)
             .build();
     assertThat(

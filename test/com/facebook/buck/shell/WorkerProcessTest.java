@@ -55,7 +55,7 @@ public class WorkerProcessTest {
 
   private ProcessExecutorParams createDummyParams() {
     return ProcessExecutorParams.builder()
-        .setCommand(ImmutableList.<String>of())
+        .setCommand(ImmutableList.of())
         .build();
   }
 

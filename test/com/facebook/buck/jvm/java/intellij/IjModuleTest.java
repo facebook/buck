@@ -50,7 +50,7 @@ public class IjModuleTest {
   private static <T> IjModule createModule(TargetNode<?> targetNode) {
     Path moduleBasePath = targetNode.getBuildTarget().getBasePath();
     return IjModule.builder()
-        .setTargets(ImmutableSet.<TargetNode<?>>of(targetNode))
+        .setTargets(ImmutableSet.of(targetNode))
         .setModuleBasePath(moduleBasePath)
         .build();
   }

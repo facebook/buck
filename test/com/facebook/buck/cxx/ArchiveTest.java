@@ -64,7 +64,7 @@ public class ArchiveTest {
   private static final Tool DEFAULT_RANLIB = new HashedFileTool(RANLIB);
   private static final Path DEFAULT_OUTPUT = Paths.get("foo/libblah.a");
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS =
-      ImmutableList.<SourcePath>of(
+      ImmutableList.of(
           new FakeSourcePath("a.o"),
           new FakeSourcePath("b.o"),
           new FakeSourcePath("c.o"));
@@ -94,9 +94,9 @@ public class ArchiveTest {
             params,
             pathResolver,
             DEFAULT_ARCHIVER,
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             DEFAULT_RANLIB,
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             Archive.Contents.NORMAL,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
@@ -108,9 +108,9 @@ public class ArchiveTest {
             params,
             pathResolver,
             new GnuArchiver(new HashedFileTool(Paths.get("different"))),
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             DEFAULT_RANLIB,
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             Archive.Contents.NORMAL,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
@@ -123,9 +123,9 @@ public class ArchiveTest {
             params,
             pathResolver,
             DEFAULT_ARCHIVER,
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             DEFAULT_RANLIB,
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             Archive.Contents.NORMAL,
             Paths.get("different"),
             DEFAULT_INPUTS));
@@ -138,12 +138,12 @@ public class ArchiveTest {
             params,
             pathResolver,
             DEFAULT_ARCHIVER,
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             DEFAULT_RANLIB,
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             Archive.Contents.NORMAL,
             DEFAULT_OUTPUT,
-            ImmutableList.<SourcePath>of(new FakeSourcePath("different"))));
+            ImmutableList.of(new FakeSourcePath("different"))));
     assertNotEquals(defaultRuleKey, inputChange);
 
     // Verify that changing the type of archiver causes a rulekey change.
@@ -153,9 +153,9 @@ public class ArchiveTest {
             params,
             pathResolver,
             new BsdArchiver(new HashedFileTool(AR)),
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             DEFAULT_RANLIB,
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             Archive.Contents.NORMAL,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS));
@@ -178,7 +178,7 @@ public class ArchiveTest {
         ImmutableList.of("-bar"),
         Archive.Contents.NORMAL,
         DEFAULT_OUTPUT,
-        ImmutableList.<SourcePath>of(new FakeSourcePath("simple.o")));
+        ImmutableList.of(new FakeSourcePath("simple.o")));
 
     ImmutableList<Step> steps =
         archive.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
@@ -217,12 +217,12 @@ public class ArchiveTest {
             params,
             new SourcePathResolver(resolver),
             DEFAULT_ARCHIVER,
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             DEFAULT_RANLIB,
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             Archive.Contents.NORMAL,
             DEFAULT_OUTPUT,
-            ImmutableList.<SourcePath>of(
+            ImmutableList.of(
                 new FakeSourcePath("simple.o"),
                 new BuildTargetSourcePath(genrule1.getBuildTarget()),
                 new BuildTargetSourcePath(genrule2.getBuildTarget())));
@@ -258,9 +258,9 @@ public class ArchiveTest {
             params,
             pathResolver,
             DEFAULT_ARCHIVER,
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             DEFAULT_RANLIB,
-            ImmutableList.<String>of(),
+            ImmutableList.of(),
             Archive.Contents.NORMAL,
             DEFAULT_OUTPUT,
             DEFAULT_INPUTS);

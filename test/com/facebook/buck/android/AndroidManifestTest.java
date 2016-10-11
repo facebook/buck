@@ -40,7 +40,6 @@ import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 
 public class AndroidManifestTest {
@@ -75,7 +74,7 @@ public class AndroidManifestTest {
         new GenerateManifestStep(
             filesystem,
             filesystem.resolve("java/com/example/AndroidManifestSkeleton.xml"),
-            /* libraryManifestPaths */ ImmutableSet.<Path>of(),
+            /* libraryManifestPaths */ ImmutableSet.of(),
             BuildTargets.getGenPath(
                 filesystem,
                 BuildTargetFactory.newInstance(MANIFEST_TARGET),

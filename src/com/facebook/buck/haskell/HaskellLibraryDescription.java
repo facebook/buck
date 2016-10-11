@@ -123,9 +123,9 @@ public class HaskellLibraryDescription implements
         cxxPlatform,
         haskellConfig,
         depType,
-        Optional.<String>absent(),
+        Optional.absent(),
         Optional.of(getPackageInfo(params.getBuildTarget())),
-        args.compilerFlags.or(ImmutableList.<String>of()),
+        args.compilerFlags.or(ImmutableList.of()),
         HaskellSources.from(
             params.getBuildTarget(),
             resolver,
@@ -260,7 +260,7 @@ public class HaskellLibraryDescription implements
         getPackageInfo(target),
         depPackages,
         compileRule.getModules(),
-        ImmutableSortedSet.<SourcePath>of(new BuildTargetSourcePath(library.getBuildTarget())),
+        ImmutableSortedSet.of(new BuildTargetSourcePath(library.getBuildTarget())),
         ImmutableSortedSet.of(compileRule.getInterfaces()));
   }
 
@@ -325,7 +325,7 @@ public class HaskellLibraryDescription implements
         cxxPlatform,
         haskellConfig,
         Linker.LinkType.SHARED,
-        ImmutableList.<String>of(),
+        ImmutableList.of(),
         ImmutableList.copyOf(SourcePathArg.from(pathResolver, compileRule.getObjects())),
         Iterables.filter(baseParams.getDeclaredDeps().get(), NativeLinkable.class),
         Linker.LinkableDepType.SHARED);
@@ -492,7 +492,7 @@ public class HaskellLibraryDescription implements
                     cxxPlatform,
                     args);
             linkArgs =
-                ImmutableList.<com.facebook.buck.rules.args.Arg>of(
+                ImmutableList.of(
                     new SourcePathArg(getResolver(),
                         new BuildTargetSourcePath(rule.getBuildTarget())));
             break;
@@ -515,7 +515,7 @@ public class HaskellLibraryDescription implements
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
             CxxDescriptionEnhancer.getSharedLibrarySoname(
-                Optional.<String>absent(),
+                Optional.absent(),
                 getBuildTarget(),
                 cxxPlatform);
         BuildRule sharedLibraryBuildRule =

@@ -82,9 +82,9 @@ public class JUnitStepTest {
 
     JUnitStep junit = new JUnitStep(
         filesystem,
-        /* nativeLibsEnvironment */ ImmutableMap.<String, String>of(),
-        /* testRuleTimeoutMs*/ Optional.<Long>absent(),
-        ImmutableMap.<String, String>of(),
+        /* nativeLibsEnvironment */ ImmutableMap.of(),
+        /* testRuleTimeoutMs*/ Optional.absent(),
+        ImmutableMap.of(),
         new ExternalJavaRuntimeLauncher("/foo/bar/custom/java"),
         args);
 
@@ -134,17 +134,17 @@ public class JUnitStepTest {
         .setBuckModuleBaseSourceCodePath(modulePath)
         .setClasspathFile(classpathFile)
         .setTestRunnerClasspath(testRunnerClasspath)
-        .setExtraJvmArgs(ImmutableList.<String>of())
+        .setExtraJvmArgs(ImmutableList.of())
         .setTestType(TestType.JUNIT)
         .setDirectoryForTestResults(directoryForTestResults)
-        .addAllTestClasses(ImmutableList.<String>of())
+        .addAllTestClasses(ImmutableList.of())
         .build();
 
     JUnitStep junit = new JUnitStep(
         filesystem,
-        /* nativeLibsEnvironment */ ImmutableMap.<String, String>of(),
-        /* testRuleTimeoutMs*/ Optional.<Long>absent(),
-        ImmutableMap.<String, String>of("FOO", "BAR"),
+        /* nativeLibsEnvironment */ ImmutableMap.of(),
+        /* testRuleTimeoutMs*/ Optional.absent(),
+        ImmutableMap.of("FOO", "BAR"),
         new ExternalJavaRuntimeLauncher("/foo/bar/custom/java"),
         args);
 
@@ -191,9 +191,9 @@ public class JUnitStepTest {
 
     JUnitStep junit = new JUnitStep(
         filesystem,
-        ImmutableMap.<String, String>of(),
-        /* testRuleTimeoutMs*/ Optional.<Long>absent(),
-        ImmutableMap.<String, String>of(),
+        ImmutableMap.of(),
+        /* testRuleTimeoutMs*/ Optional.absent(),
+        ImmutableMap.of(),
         new ExternalJavaRuntimeLauncher("/foo/bar/custom/java"),
         args);
 

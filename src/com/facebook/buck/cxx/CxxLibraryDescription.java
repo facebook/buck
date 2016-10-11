@@ -45,7 +45,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -82,7 +81,7 @@ public class CxxLibraryDescription implements
 
   private static final MacroHandler MACRO_HANDLER =
       new MacroHandler(
-          ImmutableMap.<String, MacroExpander>of(
+          ImmutableMap.of(
               "location", new LocationMacroExpander()));
 
   public enum Type implements FlavorConvertible {
@@ -331,10 +330,10 @@ public class CxxLibraryDescription implements
     arg.platformSrcs = Optional.of(
         PatternMatchedCollection.<ImmutableSortedSet<SourceWithFlags>>of());
     arg.prefixHeader = Optional.absent();
-    arg.headers = Optional.of(SourceList.ofUnnamedSources(ImmutableSortedSet.<SourcePath>of()));
+    arg.headers = Optional.of(SourceList.ofUnnamedSources(ImmutableSortedSet.of()));
     arg.platformHeaders = Optional.of(PatternMatchedCollection.<SourceList>of());
     arg.exportedHeaders = Optional.of(
-        SourceList.ofUnnamedSources(ImmutableSortedSet.<SourcePath>of()));
+        SourceList.ofUnnamedSources(ImmutableSortedSet.of()));
     arg.exportedPlatformHeaders = Optional.of(PatternMatchedCollection.<SourceList>of());
     arg.compilerFlags = Optional.of(ImmutableList.<String>of());
     arg.platformCompilerFlags =
@@ -452,8 +451,8 @@ public class CxxLibraryDescription implements
       return new NoopBuildRule(
           new BuildRuleParams(
               staticTarget,
-              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-              Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
+              Suppliers.ofInstance(ImmutableSortedSet.of()),
+              Suppliers.ofInstance(ImmutableSortedSet.of()),
               params.getProjectFilesystem(),
               params.getCellRoots()),
           sourcePathResolver);
@@ -513,8 +512,8 @@ public class CxxLibraryDescription implements
         cxxPlatform,
         args,
         linkerFlags.build(),
-        args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
-        args.libraries.or(ImmutableSortedSet.<FrameworkPath>of()),
+        args.frameworks.or(ImmutableSortedSet.of()),
+        args.libraries.or(ImmutableSortedSet.of()),
         args.soname,
         args.cxxRuntimeType,
         linkType,
@@ -534,8 +533,8 @@ public class CxxLibraryDescription implements
         resolver,
         args,
         args.linkStyle,
-        Optional.<SourcePath>absent(),
-        ImmutableSet.<BuildTarget>of());
+        Optional.absent(),
+        ImmutableSet.of());
   }
 
   public <A extends Arg> BuildRule createBuildRule(
@@ -650,7 +649,7 @@ public class CxxLibraryDescription implements
               args,
               Linker.LinkType.SHARED,
               linkableDepType.or(Linker.LinkableDepType.SHARED),
-              Optional.<SourcePath>absent(),
+              Optional.absent(),
               blacklist);
         case MACH_O_BUNDLE:
           return createSharedLibraryBuildRule(
@@ -767,16 +766,16 @@ public class CxxLibraryDescription implements
                       args.exportedLinkerFlags,
                       args.exportedPlatformLinkerFlags,
                       cxxPlatform),
-                  args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
-                  args.libraries.or(ImmutableSortedSet.<FrameworkPath>of()));
+                  args.frameworks.or(ImmutableSortedSet.of()),
+                  args.libraries.or(ImmutableSortedSet.of()));
             } catch (NoSuchBuildTargetException e) {
               throw new RuntimeException(e);
             }
           }
         },
         args.supportedPlatformsRegex,
-        args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
-        args.libraries.or(ImmutableSortedSet.<FrameworkPath>of()),
+        args.frameworks.or(ImmutableSortedSet.of()),
+        args.libraries.or(ImmutableSortedSet.of()),
         args.forceStatic.or(false)
             ? NativeLinkable.Linkage.STATIC
             : args.preferredLinkage.or(NativeLinkable.Linkage.ANY),

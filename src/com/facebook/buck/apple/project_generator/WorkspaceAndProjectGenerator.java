@@ -38,7 +38,6 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -433,7 +432,7 @@ public class WorkspaceAndProjectGenerator {
     }
 
     final AtomicReference<Iterable<PBXTarget>> combinedTestTargets =
-        new AtomicReference<Iterable<PBXTarget>>(ImmutableList.<PBXTarget>of());
+        new AtomicReference<Iterable<PBXTarget>>(ImmutableList.of());
 
     if (!groupedTests.isEmpty()) {
       projectGeneratorFutures.add(
@@ -491,7 +490,7 @@ public class WorkspaceAndProjectGenerator {
           groupedTests) throws IOException {
     ProjectGenerator combinedTestsProjectGenerator = new ProjectGenerator(
         projectGraph,
-        ImmutableSortedSet.<BuildTarget>of(),
+        ImmutableSortedSet.of(),
         rootCell,
         BuildTargets.getGenPath(
             rootCell.getFilesystem(),
@@ -500,7 +499,7 @@ public class WorkspaceAndProjectGenerator {
         "_CombinedTestBundles",
         buildFileName,
         projectGeneratorOptions,
-        Optional.<BuildTarget>absent(),
+        Optional.absent(),
         buildWithBuckFlags,
         focusModules,
         executableFinder,
@@ -565,7 +564,7 @@ public class WorkspaceAndProjectGenerator {
                   public Optional<BuildTarget> apply(BuildTarget input) {
                     return rules.contains(input)
                         ? Optional.of(input)
-                        : Optional.<BuildTarget>absent();
+                        : Optional.absent();
                   }
                 }),
             buildWithBuckFlags,
@@ -596,7 +595,7 @@ public class WorkspaceAndProjectGenerator {
         generator.getProjectPath(),
         requiredBuildTargets,
         generator.getBuildTargetToGeneratedTargetMap(),
-        ImmutableList.<PBXTarget>of());
+        ImmutableList.of());
   }
 
   private Iterable<PBXTarget> generateCombinedProject(
@@ -641,7 +640,7 @@ public class WorkspaceAndProjectGenerator {
         generator.getRequiredBuildTargets(),
         generator.getBuildTargetToGeneratedTargetMap(),
         generator.getBuildableCombinedTestTargets());
-    workspaceGenerator.addFilePath(result.getProjectPath(), Optional.<Path>absent());
+    workspaceGenerator.addFilePath(result.getProjectPath(), Optional.absent());
     processGenerationResult(
         buildTargetToPbxTargetMapBuilder,
         targetToProjectPathMapBuilder,
@@ -733,11 +732,11 @@ public class WorkspaceAndProjectGenerator {
                   projectGraph,
                   projectGraph.get(
                       schemeArguments.srcTarget.get().getBuildTarget())),
-              Optionals.<TargetNode<?>>toOptional()));
+              Optionals.toOptional()));
     } else {
       schemeNameToSrcTargetNodeBuilder.put(
           XcodeWorkspaceConfigDescription.getWorkspaceNameFromArg(schemeArguments),
-          Optional.<TargetNode<?>>absent());
+          Optional.absent());
     }
 
     for (BuildTarget extraTarget : schemeArguments.extraTargets.get()) {
@@ -747,7 +746,7 @@ public class WorkspaceAndProjectGenerator {
               AppleBuildRules.getSchemeBuildableTargetNodes(
                   projectGraph,
                   Preconditions.checkNotNull(projectGraph.get(extraTarget))),
-              Optionals.<TargetNode<?>>toOptional()));
+              Optionals.toOptional()));
     }
 
     extraTestNodesBuilder.putAll(
@@ -906,7 +905,7 @@ public class WorkspaceAndProjectGenerator {
                     projectGraph,
                     AppleBuildRules.RecursiveDependenciesMode.BUILDING,
                     input,
-                    Optional.<ImmutableSet<BuildRuleType>>absent());
+                    Optional.absent());
               }
             })
         .append(nodes)
@@ -1080,7 +1079,7 @@ public class WorkspaceAndProjectGenerator {
         targetToBuildWithBuck,
         targetNodes);
     if (buildWithBuckTargetNode.isPresent() && targetToBuildWithBuck.isPresent()) {
-      productName = Optional.<String>of(
+      productName = Optional.of(
           ProjectGenerator.getProductName(
               buildWithBuckTargetNode.get(),
               targetToBuildWithBuck.get()));

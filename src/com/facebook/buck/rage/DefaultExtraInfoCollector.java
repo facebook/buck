@@ -19,7 +19,6 @@ package com.facebook.buck.rage;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -75,9 +74,9 @@ public class DefaultExtraInfoCollector implements ExtraInfoCollector {
           ImmutableSet.of(
               ProcessExecutor.Option.EXPECTING_STD_OUT,
               ProcessExecutor.Option.PRINT_STD_ERR),
-          Optional.<String>absent(),
+          Optional.absent(),
           Optional.of(PROCESS_TIMEOUT_MS),
-          Optional.<Function<Process, Void>>absent()
+          Optional.absent()
       );
     } catch (IOException e) {
       throw new ExtraInfoExecutionException("Could not invoke extra report command.", e);

@@ -84,7 +84,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   }
 
   public static FileHashCache createDefaultFileHashCache(ProjectFilesystem projectFilesystem) {
-    return new DefaultFileHashCache(projectFilesystem, Optional.<Path>absent());
+    return new DefaultFileHashCache(projectFilesystem, Optional.absent());
   }
 
   private HashCodeAndFileType getHashCodeAndFileType(Path path) throws IOException {

@@ -86,7 +86,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
         outputFile.toPath(),
         outputHashFile,
         EnumSet.of(DxStep.Option.NO_OPTIMIZE),
-        Optional.<Integer>absent());
+        Optional.absent());
     assertFalse("'dummy' is not a matching input hash", rule.checkIsCached());
 
     // Write the real hash into the output hash file and ensure that checkIsCached now
@@ -112,7 +112,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
         filesToDex,
         outputPath,
         dxOptions,
-        Optional.<Integer>absent());
+        Optional.absent());
 
     assertTrue("Result should be a CompositeStep.", dxStep instanceof CompositeStep);
     List<Step> steps = ImmutableList.copyOf((CompositeStep) dxStep);
@@ -195,7 +195,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
         filesToDex,
         outputPath,
         dxOptions,
-        Optional.<Integer>absent());
+        Optional.absent());
 
     String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
     assertEquals(
@@ -226,7 +226,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
         filesToDex,
         outputPath,
         dxOptions,
-        Optional.<Integer>absent());
+        Optional.absent());
 
     String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
     assertEquals(
@@ -259,7 +259,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
         filesToDex,
         outputPath,
         dxOptions,
-        Optional.<Integer>absent());
+        Optional.absent());
   }
 
   private ExecutionContext createMockedExecutionContext()

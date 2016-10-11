@@ -29,7 +29,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
-import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.jvm.core.HasJavaClassHashes;
@@ -51,7 +50,6 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -75,10 +73,6 @@ import org.junit.Test;
 
 import java.nio.file.Paths;
 import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
 
 public class AndroidBinaryGraphEnhancerTest {
 
@@ -126,11 +120,11 @@ public class AndroidBinaryGraphEnhancerTest {
         ResourcesFilter.ResourceCompressionMode.DISABLED,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
         /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-        Optional.<String>absent(),
-        /* locales */ ImmutableSet.<String>of(),
+        Optional.absent(),
+        /* locales */ ImmutableSet.of(),
         createStrictMock(PathSourcePath.class),
         AndroidBinary.PackageType.DEBUG,
-        /* cpuFilters */ ImmutableSet.< TargetCpuType>of(),
+        /* cpuFilters */ ImmutableSet.of(),
         /* shouldBuildStringSourceMap */ false,
         /* shouldPreDex */ true,
         BuildTargets.getScratchPath(
@@ -139,21 +133,21 @@ public class AndroidBinaryGraphEnhancerTest {
             "%s/classes.dex"),
         DexSplitMode.NO_SPLIT,
         buildRulesToExcludeFromDex,
-        /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
+        /* resourcesToExclude */ ImmutableSet.of(),
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
         ANDROID_JAVAC_OPTIONS,
         EnumSet.noneOf(ExopackageMode.class),
         createStrictMock(Keystore.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
-        /* buildConfigValuesFile */ Optional.<SourcePath>absent(),
-        /* xzCompressionLevel */ Optional.<Integer>absent(),
+        /* buildConfigValuesFile */ Optional.absent(),
+        /* xzCompressionLevel */ Optional.absent(),
         /* trimResourceIds */ false,
-        /* keepResourcePattern */ Optional.<String>absent(),
-        /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
-        /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
-        /* nativeLibraryMergeGlue */ Optional.<BuildTarget>absent(),
-        /* nativeLibraryMergeCodeGenerator */ Optional.<BuildTarget>absent(),
+        /* keepResourcePattern */ Optional.absent(),
+        /* nativePlatforms */ ImmutableMap.of(),
+        /* nativeLibraryMergeMap */ Optional.absent(),
+        /* nativeLibraryMergeGlue */ Optional.absent(),
+        /* nativeLibraryMergeCodeGenerator */ Optional.absent(),
         AndroidBinary.RelinkerMode.DISABLED,
         MoreExecutors.newDirectExecutorService(),
         /* manifestEntries */ ManifestEntries.empty(),
@@ -161,7 +155,7 @@ public class AndroidBinaryGraphEnhancerTest {
         new APKModuleGraph(
             TargetGraph.EMPTY,
             originalParams.getBuildTarget(),
-            Optional.<Set<BuildTarget>>absent()));
+            Optional.absent()));
 
     BuildTarget aaptPackageResourcesTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
@@ -172,9 +166,9 @@ public class AndroidBinaryGraphEnhancerTest {
         new SourcePathResolver(ruleResolver),
         /* manifest */ new FakeSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         createMock(FilteredResourcesProvider.class),
-        ImmutableList.<HasAndroidResourceDeps>of(),
-        ImmutableSet.<SourcePath>of(),
-        /* resourceUnionPackage */ Optional.<String>absent(),
+        ImmutableList.of(),
+        ImmutableSet.of(),
+        /* resourceUnionPackage */ Optional.absent(),
         AndroidBinary.PackageType.DEBUG,
         false,
         /* skipCrunchPngs */ false,
@@ -186,11 +180,11 @@ public class AndroidBinaryGraphEnhancerTest {
     AndroidPackageableCollection collection = new AndroidPackageableCollector(
             /* collectionRoot */ apkTarget,
             ImmutableSet.of(javaDep2BuildTarget),
-            /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
+            /* resourcesToExclude */ ImmutableSet.of(),
             new APKModuleGraph(
                 TargetGraph.EMPTY,
                 apkTarget,
-                Optional.<Set<BuildTarget>>absent()))
+                Optional.absent()))
         .addClasspathEntry(
             ((HasJavaClassHashes) javaDep1), new FakeSourcePath("ignored"))
         .addClasspathEntry(
@@ -202,7 +196,7 @@ public class AndroidBinaryGraphEnhancerTest {
     ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexedLibraries =
         graphEnhancer.createPreDexRulesForLibraries(
               /* additionalJavaLibrariesToDex */
-              ImmutableList.<BuildRule>of(),
+              ImmutableList.of(),
             collection);
 
     BuildTarget fakeUberRDotJavaCompileTarget = BuildTargetFactory.newInstance(
@@ -264,14 +258,14 @@ public class AndroidBinaryGraphEnhancerTest {
           buildConfigParams,
           "com.example.buck",
           /* values */ BuildConfigFields.empty(),
-          /* valuesFile */ Optional.<SourcePath>absent(),
+          /* valuesFile */ Optional.absent(),
           /* useConstantExpressions */ false,
           ANDROID_JAVAC_OPTIONS,
           ruleResolver);
 
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
     BuildRuleParams originalParams = new FakeBuildRuleParamsBuilder(apkTarget)
-        .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(buildConfigJavaLibrary))
+        .setDeclaredDeps(ImmutableSortedSet.of(buildConfigJavaLibrary))
         .build();
 
     // set it up.
@@ -282,11 +276,11 @@ public class AndroidBinaryGraphEnhancerTest {
         ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
         /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-        Optional.<String>absent(),
-        /* locales */ ImmutableSet.<String>of(),
+        Optional.absent(),
+        /* locales */ ImmutableSet.of(),
         new FakeSourcePath("AndroidManifest.xml"),
         AndroidBinary.PackageType.DEBUG,
-        /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
+        /* cpuFilters */ ImmutableSet.of(),
         /* shouldBuildStringSourceMap */ false,
         /* shouldPreDex */ false,
         BuildTargets.getScratchPath(
@@ -294,22 +288,22 @@ public class AndroidBinaryGraphEnhancerTest {
             apkTarget,
             "%s/classes.dex"),
         DexSplitMode.NO_SPLIT,
-        /* buildRulesToExcludeFromDex */ ImmutableSet.<BuildTarget>of(),
-        /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
+        /* buildRulesToExcludeFromDex */ ImmutableSet.of(),
+        /* resourcesToExclude */ ImmutableSet.of(),
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
         ANDROID_JAVAC_OPTIONS,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
         keystore,
         /* buildConfigValues */ BuildConfigFields.empty(),
-        /* buildConfigValuesFiles */ Optional.<SourcePath>absent(),
-        /* xzCompressionLevel */ Optional.<Integer>absent(),
+        /* buildConfigValuesFiles */ Optional.absent(),
+        /* xzCompressionLevel */ Optional.absent(),
         /* trimResourceIds */ false,
-        /* keepResourcePattern */ Optional.<String>absent(),
-        /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
-        /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
-        /* nativeLibraryMergeGlue */ Optional.<BuildTarget>absent(),
-        /* nativeLibraryMergeCodeGenerator */ Optional.<BuildTarget>absent(),
+        /* keepResourcePattern */ Optional.absent(),
+        /* nativePlatforms */ ImmutableMap.of(),
+        /* nativeLibraryMergeMap */ Optional.absent(),
+        /* nativeLibraryMergeGlue */ Optional.absent(),
+        /* nativeLibraryMergeCodeGenerator */ Optional.absent(),
         AndroidBinary.RelinkerMode.DISABLED,
         MoreExecutors.newDirectExecutorService(),
         /* manifestEntries */ ManifestEntries.empty(),
@@ -317,7 +311,7 @@ public class AndroidBinaryGraphEnhancerTest {
         new APKModuleGraph(
             TargetGraph.EMPTY,
             originalParams.getBuildTarget(),
-            Optional.<Set<BuildTarget>>absent()));
+            Optional.absent()));
     replay(keystore);
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
@@ -419,7 +413,7 @@ public class AndroidBinaryGraphEnhancerTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams originalParams =
         new FakeBuildRuleParamsBuilder(target)
-            .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(resource))
+            .setDeclaredDeps(ImmutableSortedSet.of(resource))
             .build();
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
         originalParams,
@@ -427,11 +421,11 @@ public class AndroidBinaryGraphEnhancerTest {
         ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
         /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-        Optional.<String>absent(),
-        /* locales */ ImmutableSet.<String>of(),
+        Optional.absent(),
+        /* locales */ ImmutableSet.of(),
         new FakeSourcePath("AndroidManifest.xml"),
         AndroidBinary.PackageType.DEBUG,
-        /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
+        /* cpuFilters */ ImmutableSet.of(),
         /* shouldBuildStringSourceMap */ false,
         /* shouldPreDex */ false,
         BuildTargets.getScratchPath(
@@ -439,22 +433,22 @@ public class AndroidBinaryGraphEnhancerTest {
             target,
             "%s/classes.dex"),
         DexSplitMode.NO_SPLIT,
-        /* buildRulesToExcludeFromDex */ ImmutableSet.<BuildTarget>of(),
-        /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
+        /* buildRulesToExcludeFromDex */ ImmutableSet.of(),
+        /* resourcesToExclude */ ImmutableSet.of(),
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
         ANDROID_JAVAC_OPTIONS,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
         createNiceMock(Keystore.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
-        /* buildConfigValuesFiles */ Optional.<SourcePath>absent(),
-        /* xzCompressionLevel */ Optional.<Integer>absent(),
+        /* buildConfigValuesFiles */ Optional.absent(),
+        /* xzCompressionLevel */ Optional.absent(),
         /* trimResourceIds */ false,
-        /* keepResourcePattern */ Optional.<String>absent(),
-        /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
-        /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
-        /* nativeLibraryMergeGlue */ Optional.<BuildTarget>absent(),
-        /* nativeLibraryMergeCodeGenerator */ Optional.<BuildTarget>absent(),
+        /* keepResourcePattern */ Optional.absent(),
+        /* nativePlatforms */ ImmutableMap.of(),
+        /* nativeLibraryMergeMap */ Optional.absent(),
+        /* nativeLibraryMergeGlue */ Optional.absent(),
+        /* nativeLibraryMergeCodeGenerator */ Optional.absent(),
         AndroidBinary.RelinkerMode.DISABLED,
         MoreExecutors.newDirectExecutorService(),
         /* manifestEntries */ ManifestEntries.empty(),
@@ -462,7 +456,7 @@ public class AndroidBinaryGraphEnhancerTest {
         new APKModuleGraph(
             TargetGraph.EMPTY,
             originalParams.getBuildTarget(),
-            Optional.<Set<BuildTarget>>absent()));
+            Optional.absent()));
     graphEnhancer.createAdditionalBuildables();
 
     BuildRule aaptPackageResourcesRule = findRuleOfType(ruleResolver, AaptPackageResources.class);
@@ -488,11 +482,11 @@ public class AndroidBinaryGraphEnhancerTest {
         ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
         /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-        Optional.<String>absent(),
-        /* locales */ ImmutableSet.<String>of(),
+        Optional.absent(),
+        /* locales */ ImmutableSet.of(),
         new FakeSourcePath("AndroidManifest.xml"),
         AndroidBinary.PackageType.DEBUG,
-        /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
+        /* cpuFilters */ ImmutableSet.of(),
         /* shouldBuildStringSourceMap */ false,
         /* shouldPreDex */ false,
         BuildTargets.getScratchPath(
@@ -500,22 +494,22 @@ public class AndroidBinaryGraphEnhancerTest {
             target,
             "%s/classes.dex"),
         DexSplitMode.NO_SPLIT,
-        /* buildRulesToExcludeFromDex */ ImmutableSet.<BuildTarget>of(),
-        /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
+        /* buildRulesToExcludeFromDex */ ImmutableSet.of(),
+        /* resourcesToExclude */ ImmutableSet.of(),
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
         ANDROID_JAVAC_OPTIONS,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
         createNiceMock(Keystore.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
-        /* buildConfigValuesFiles */ Optional.<SourcePath>absent(),
-        /* xzCompressionLevel */ Optional.<Integer>absent(),
+        /* buildConfigValuesFiles */ Optional.absent(),
+        /* xzCompressionLevel */ Optional.absent(),
         /* trimResourceIds */ false,
-        /* keepResourcePattern */ Optional.<String>absent(),
-        /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
-        /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
-        /* nativeLibraryMergeGlue */ Optional.<BuildTarget>absent(),
-        /* nativeLibraryMergeCodeGenerator */ Optional.<BuildTarget>absent(),
+        /* keepResourcePattern */ Optional.absent(),
+        /* nativePlatforms */ ImmutableMap.of(),
+        /* nativeLibraryMergeMap */ Optional.absent(),
+        /* nativeLibraryMergeGlue */ Optional.absent(),
+        /* nativeLibraryMergeCodeGenerator */ Optional.absent(),
         AndroidBinary.RelinkerMode.DISABLED,
         MoreExecutors.newDirectExecutorService(),
         /* manifestEntries */ ManifestEntries.empty(),
@@ -523,7 +517,7 @@ public class AndroidBinaryGraphEnhancerTest {
         new APKModuleGraph(
             TargetGraph.EMPTY,
             originalParams.getBuildTarget(),
-            Optional.<Set<BuildTarget>>absent()));
+            Optional.absent()));
     graphEnhancer.createAdditionalBuildables();
 
     ResourcesFilter resourcesFilter = findRuleOfType(ruleResolver, ResourcesFilter.class);
@@ -553,14 +547,14 @@ public class AndroidBinaryGraphEnhancerTest {
                 new FakeBuildRuleParamsBuilder("//:resources").build()
                     .appendExtraDeps(ImmutableSortedSet.of(resourcesDep)),
                 pathResolver,
-                ImmutableSortedSet.<BuildRule>of(),
+                ImmutableSortedSet.of(),
                 new BuildTargetSourcePath(resourcesDep.getBuildTarget()),
-                ImmutableSortedSet.<SourcePath>of(),
-                Optional.<SourcePath>absent(),
+                ImmutableSortedSet.of(),
+                Optional.absent(),
                 null,
                 null,
-                ImmutableSortedSet.<SourcePath>of(),
-                Optional.<SourcePath>absent(),
+                ImmutableSortedSet.of(),
+                Optional.absent(),
                 new FakeSourcePath("manifest"),
                 false));
 
@@ -568,7 +562,7 @@ public class AndroidBinaryGraphEnhancerTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams originalParams =
         new FakeBuildRuleParamsBuilder(target)
-            .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(resource))
+            .setDeclaredDeps(ImmutableSortedSet.of(resource))
             .build();
     AndroidBinaryGraphEnhancer graphEnhancer = new AndroidBinaryGraphEnhancer(
         originalParams,
@@ -576,11 +570,11 @@ public class AndroidBinaryGraphEnhancerTest {
         ResourcesFilter.ResourceCompressionMode.ENABLED_WITH_STRINGS_AS_ASSETS,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
         /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-        Optional.<String>absent(),
-        /* locales */ ImmutableSet.<String>of(),
+        Optional.absent(),
+        /* locales */ ImmutableSet.of(),
         new FakeSourcePath("AndroidManifest.xml"),
         AndroidBinary.PackageType.DEBUG,
-        /* cpuFilters */ ImmutableSet.<TargetCpuType>of(),
+        /* cpuFilters */ ImmutableSet.of(),
         /* shouldBuildStringSourceMap */ false,
         /* shouldPreDex */ false,
         BuildTargets.getScratchPath(
@@ -588,22 +582,22 @@ public class AndroidBinaryGraphEnhancerTest {
             target,
             "%s/classes.dex"),
         DexSplitMode.NO_SPLIT,
-        /* buildRulesToExcludeFromDex */ ImmutableSet.<BuildTarget>of(),
-        /* resourcesToExclude */ ImmutableSet.<BuildTarget>of(),
+        /* buildRulesToExcludeFromDex */ ImmutableSet.of(),
+        /* resourcesToExclude */ ImmutableSet.of(),
         /* skipCrunchPngs */ false,
         /* includesVectorDrawables */ false,
         ANDROID_JAVAC_OPTIONS,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
         createNiceMock(Keystore.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
-        /* buildConfigValuesFiles */ Optional.<SourcePath>absent(),
-        /* xzCompressionLevel */ Optional.<Integer>absent(),
+        /* buildConfigValuesFiles */ Optional.absent(),
+        /* xzCompressionLevel */ Optional.absent(),
         /* trimResourceIds */ false,
-        /* keepResourcePattern */ Optional.<String>absent(),
-        /* nativePlatforms */ ImmutableMap.<TargetCpuType, NdkCxxPlatform>of(),
-        /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
-        /* nativeLibraryMergeGlue */ Optional.<BuildTarget>absent(),
-        /* nativeLibraryMergeCodeGenerator */ Optional.<BuildTarget>absent(),
+        /* keepResourcePattern */ Optional.absent(),
+        /* nativePlatforms */ ImmutableMap.of(),
+        /* nativeLibraryMergeMap */ Optional.absent(),
+        /* nativeLibraryMergeGlue */ Optional.absent(),
+        /* nativeLibraryMergeCodeGenerator */ Optional.absent(),
         AndroidBinary.RelinkerMode.DISABLED,
         MoreExecutors.newDirectExecutorService(),
         /* manifestEntries */ ManifestEntries.empty(),
@@ -611,7 +605,7 @@ public class AndroidBinaryGraphEnhancerTest {
         new APKModuleGraph(
             TargetGraph.EMPTY,
             originalParams.getBuildTarget(),
-            Optional.<Set<BuildTarget>>absent()));
+            Optional.absent()));
     graphEnhancer.createAdditionalBuildables();
 
 

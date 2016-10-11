@@ -58,9 +58,9 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
         buildRuleParams,
         resolver,
         labels,
-        Optional.<Path>absent(),
+        Optional.absent(),
         false, // runTestSeparately
-        ImmutableList.<Step>of(),
+        ImmutableList.of(),
         new Callable<TestResults>() {
           @Override
           public TestResults call() {

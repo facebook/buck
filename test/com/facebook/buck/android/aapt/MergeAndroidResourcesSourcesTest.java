@@ -106,7 +106,7 @@ public class MergeAndroidResourcesSourcesTest {
     BuildRuleParams buildRuleParams = new FakeBuildRuleParamsBuilder("//:output_folder")
         .setProjectFilesystem(filesystem)
         .build();
-    ImmutableList<SourcePath> directories = ImmutableList.<SourcePath>of(
+    ImmutableList<SourcePath> directories = ImmutableList.of(
         new FakeSourcePath(filesystem, "res_in_1"),
         new FakeSourcePath(filesystem, "res_in_2"));
     MergeAndroidResourceSources mergeAndroidResourceSourcesStep =

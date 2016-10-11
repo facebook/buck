@@ -21,13 +21,11 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.StringExpander;
 import com.facebook.buck.shell.Genrule;
@@ -44,7 +42,7 @@ public class MacroArgTest {
   public void stringify() {
     MacroHandler macroHandler =
         new MacroHandler(
-            ImmutableMap.<String, MacroExpander>of("macro", new StringExpander("expanded")));
+            ImmutableMap.of("macro", new StringExpander("expanded")));
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -62,7 +60,7 @@ public class MacroArgTest {
   public void getDeps() throws Exception {
     MacroHandler macroHandler =
         new MacroHandler(
-            ImmutableMap.<String, MacroExpander>of("loc", new LocationMacroExpander()));
+            ImmutableMap.of("loc", new LocationMacroExpander()));
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -80,7 +78,7 @@ public class MacroArgTest {
             "$(loc //:rule)");
     assertThat(
         arg.getDeps(pathResolver),
-        Matchers.<BuildRule>contains(rule));
+        Matchers.contains(rule));
   }
 
 }

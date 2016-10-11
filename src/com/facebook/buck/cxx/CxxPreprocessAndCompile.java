@@ -107,12 +107,12 @@ public class CxxPreprocessAndCompile
         params,
         resolver,
         CxxPreprocessAndCompileStep.Operation.COMPILE,
-        Optional.<PreprocessorDelegate>absent(),
+        Optional.absent(),
         compilerDelegate,
         output,
         input,
         inputType,
-        Optional.<PrecompiledHeaderReference>absent(),
+        Optional.absent(),
         sanitizer);
   }
 
@@ -137,7 +137,7 @@ public class CxxPreprocessAndCompile
         output,
         input,
         inputType,
-        Optional.<PrecompiledHeaderReference>absent(),
+        Optional.absent(),
         sanitizer);
   }
 

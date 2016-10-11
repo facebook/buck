@@ -101,7 +101,7 @@ public class DummyRDotJavaTest {
         new FakeSourcePath("abi.jar"),
         ANDROID_JAVAC_OPTIONS,
         /* forceFinalResourceIds */ false,
-        Optional.<String>absent(),
+        Optional.absent(),
         Optional.of("R2"));
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
@@ -185,12 +185,12 @@ public class DummyRDotJavaTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSet.<HasAndroidResourceDeps>of(),
+        ImmutableSet.of(),
         new FakeSourcePath("abi.jar"),
         ANDROID_JAVAC_OPTIONS,
         /* forceFinalResourceIds */ false,
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
     assertEquals(
         BuildTargets.getScratchPath(
             dummyRDotJava.getProjectFilesystem(),

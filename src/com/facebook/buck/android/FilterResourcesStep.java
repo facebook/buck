@@ -374,7 +374,7 @@ public class FilterResourcesStep implements Step {
    */
   public static class ResourceFilter implements RuleKeyAppendable {
 
-    static final ResourceFilter EMPTY_FILTER = new ResourceFilter(ImmutableList.<String>of());
+    static final ResourceFilter EMPTY_FILTER = new ResourceFilter(ImmutableList.of());
 
     private final Set<String> filter;
     private final Set<ResourceFilters.Density> densities;

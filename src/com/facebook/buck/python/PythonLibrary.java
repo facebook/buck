@@ -62,8 +62,8 @@ public class PythonLibrary extends NoopBuildRule implements PythonPackagable, Ha
     return PythonPackageComponents.of(
         Preconditions.checkNotNull(srcs.apply(pythonPlatform)),
         Preconditions.checkNotNull(resources.apply(pythonPlatform)),
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableSet.<SourcePath>of(),
+        ImmutableMap.of(),
+        ImmutableSet.of(),
         zipSafe);
   }
 

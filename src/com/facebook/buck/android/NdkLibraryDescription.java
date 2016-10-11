@@ -41,14 +41,12 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.macros.EnvironmentVariableMacroExpander;
-import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -79,7 +77,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
               MoreStrings.regexPatternForAny("mk", "h", "hpp", "c", "cpp", "cc", "cxx") + "$");
 
   public static final MacroHandler MACRO_HANDLER = new MacroHandler(
-      ImmutableMap.<String, MacroExpander>of(
+      ImmutableMap.of(
           "env", new EnvironmentVariableMacroExpander(Platform.detect())
       )
   );
@@ -194,7 +192,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
           CxxHeaders.getArgs(
               cxxPreprocessorInput.getIncludes(),
               pathResolver,
-              Optional.<Function<Path, Path>>absent(),
+              Optional.absent(),
               preprocessor));
       String localCflags =
           Joiner.on(' ').join(escapeForMakefile(params.getProjectFilesystem(), ppFlags.build()));

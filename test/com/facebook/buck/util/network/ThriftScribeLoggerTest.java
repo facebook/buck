@@ -106,7 +106,7 @@ public class ThriftScribeLoggerTest {
     assertThat(request.getLogRequest().getScribeData().getLines(), Matchers.allOf(
         hasItem(LINES.get(0)),
         hasItem(LINES.get(1)),
-        IsIterableWithSize.<String>iterableWithSize(2)
+        IsIterableWithSize.iterableWithSize(2)
     ));
   }
 

@@ -221,9 +221,9 @@ public class AppleBundle
       this.codeSignIdentityStore = codeSignIdentityStore;
     } else {
       this.provisioningProfileStore = ProvisioningProfileStore.fromProvisioningProfiles(
-          ImmutableList.<ProvisioningProfileMetadata>of());
+          ImmutableList.of());
       this.codeSignIdentityStore =
-          CodeSignIdentityStore.fromIdentities(ImmutableList.<CodeSignIdentity>of());
+          CodeSignIdentityStore.fromIdentities(ImmutableList.of());
     }
     this.codesignAllocatePath = appleCxxPlatform.getCodesignAllocate();
     this.swiftStdlibTool = appleCxxPlatform.getSwiftPlatform()
@@ -344,7 +344,7 @@ public class AppleBundle
             infoPlistSubstitutionTempPath,
             assetCatalog.isPresent() ?
                 Optional.of(assetCatalog.get().getOutputPlist()) :
-                Optional.<Path>absent(),
+                Optional.absent(),
             infoPlistOutputPath,
             getInfoPlistAdditionalKeys(),
             getInfoPlistOverrideKeys(),
@@ -460,7 +460,7 @@ public class AppleBundle
             new ProvisioningProfileCopyStep(
                 getProjectFilesystem(),
                 infoPlistOutputPath,
-                Optional.<String>absent(),  // Provisioning profile UUID -- find automatically.
+                Optional.absent(),  // Provisioning profile UUID -- find automatically.
                 entitlementsPlist,
                 provisioningProfileStore,
                 resourcesDestinationPath.resolve("embedded.mobileprovision"),
@@ -511,7 +511,7 @@ public class AppleBundle
               codeSignIdentitySupplier,
               codesignAllocatePath));
     } else {
-      addSwiftStdlibStepIfNeeded(Optional.<Supplier<CodeSignIdentity>>absent(), stepsBuilder);
+      addSwiftStdlibStepIfNeeded(Optional.absent(), stepsBuilder);
     }
 
     // Ensure the bundle directory is archived so we can fetch it later.
@@ -804,10 +804,10 @@ public class AppleBundle
             new PlistProcessStep(
                 getProjectFilesystem(),
                 sourcePath,
-                Optional.<Path>absent(),
+                Optional.absent(),
                 destinationPath,
-                ImmutableMap.<String, NSObject>of(),
-                ImmutableMap.<String, NSObject>of(),
+                ImmutableMap.of(),
+                ImmutableMap.of(),
                 PlistProcessStep.OutputFormat.BINARY));
         break;
       case "storyboard":

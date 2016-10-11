@@ -111,7 +111,7 @@ public class PythonRunTestsStep implements Step {
     ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(
         params,
         EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
-        Optional.<String>absent(),
+        Optional.absent(),
         testRuleTimeoutMs,
         Optional.of(timeoutHandler));
 

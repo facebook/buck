@@ -163,7 +163,7 @@ public class ExportFile extends AbstractBuildRule implements HasOutputName, HasR
     return ImmutableSortedSet.copyOf(
         mode == ExportFileDescription.Mode.REFERENCE ?
             getResolver().filterBuildRuleInputs(src) :
-            ImmutableList.<BuildRule>of());
+            ImmutableList.of());
   }
 
 }

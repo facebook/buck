@@ -55,7 +55,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
-import com.google.common.hash.HashCode;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -119,7 +118,7 @@ public class EventSerializationTest {
 
   @Test
   public void testParseEventStarted() throws IOException {
-    ParseEvent.Started event = ParseEvent.started(ImmutableList.<BuildTarget>of());
+    ParseEvent.Started event = ParseEvent.started(ImmutableList.of());
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = MAPPER.writeValueAsString(event);
     assertJsonEquals("{%s,\"buildTargets\":[],\"type\":\"ParseStarted\"," +
@@ -130,7 +129,7 @@ public class EventSerializationTest {
   public void testParseEventFinished() throws IOException {
     ParseEvent.Started started = ParseEvent.started(ImmutableList.of(
             BuildTargetFactory.newInstance("//base:short#flv")));
-    ParseEvent.Finished event = ParseEvent.finished(started, Optional.<TargetGraph>absent());
+    ParseEvent.Finished event = ParseEvent.finished(started, Optional.absent());
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = MAPPER.writeValueAsString(event);
     assertJsonEquals("{%s," +
@@ -186,10 +185,10 @@ public class EventSerializationTest {
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-            Optional.<HashCode>absent(),
-            Optional.<Long>absent(),
-            Optional.<Integer>absent(),
-            Optional.<Long>absent());
+            Optional.absent(),
+            Optional.absent(),
+            Optional.absent(),
+            Optional.absent());
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = MAPPER.writeValueAsString(event);
     assertJsonEquals(
@@ -206,7 +205,7 @@ public class EventSerializationTest {
   @Test
   public void testTestRunEventStarted() throws IOException {
     TestRunEvent.Started event = TestRunEvent.started(
-        true, TestSelectorList.empty(), false, ImmutableSet.<String>of());
+        true, TestSelectorList.empty(), false, ImmutableSet.of());
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = MAPPER.writeValueAsString(event);
     assertJsonEquals("{%s,\"runAllTests\":true," +
@@ -247,7 +246,7 @@ public class EventSerializationTest {
 
   @Test
   public void testIndividualTestEventFinished() throws IOException {
-    IndividualTestEvent.Finished event = IndividualTestEvent.finished(ImmutableList.<String>of(),
+    IndividualTestEvent.Finished event = IndividualTestEvent.finished(ImmutableList.of(),
         generateFakeTestResults());
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = MAPPER.writeValueAsString(event);
@@ -287,7 +286,7 @@ public class EventSerializationTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.of());
   }
 
   private TestResults generateFakeTestResults() {

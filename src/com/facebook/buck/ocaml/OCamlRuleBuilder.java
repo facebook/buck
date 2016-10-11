@@ -163,7 +163,7 @@ public class OCamlRuleBuilder {
             deps,
             Predicates.instanceOf(OCamlLibrary.class),
             Predicates.instanceOf(OCamlLibrary.class)),
-        Predicates.<BuildRule>alwaysTrue());
+        Predicates.alwaysTrue());
   }
 
   private static NativeLinkableInput getNativeLinkableInput(Iterable<BuildRule> deps) {
@@ -265,7 +265,7 @@ public class OCamlRuleBuilder {
     final BuildRuleParams compileParams = params.copyWithChanges(
         buildTarget,
         /* declaredDeps */ Suppliers.ofInstance(allDeps),
-        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     ImmutableList.Builder<String> flagsBuilder = ImmutableList.builder();
     flagsBuilder.addAll(argFlags);
@@ -332,9 +332,9 @@ public class OCamlRuleBuilder {
               .toList(),
           ocamlContext,
           ocamlLibraryBuild,
-          ImmutableSortedSet.<BuildRule>of(ocamlLibraryBuild),
-          ImmutableSortedSet.<BuildRule>of(ocamlLibraryBuild),
-          ImmutableSortedSet.<BuildRule>of(ocamlLibraryBuild));
+          ImmutableSortedSet.of(ocamlLibraryBuild),
+          ImmutableSortedSet.of(ocamlLibraryBuild),
+          ImmutableSortedSet.of(ocamlLibraryBuild));
     } else {
       return new OCamlBinary(
           params.copyWithDeps(
@@ -409,7 +409,7 @@ public class OCamlRuleBuilder {
                     pathResolver.filterBuildRuleInputs(
                         ocamlBuckConfig.getCxxCompiler().resolve(resolver).getInputs()))
                 .build()),
-        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     ImmutableList.Builder<String> flagsBuilder = ImmutableList.builder();
     flagsBuilder.addAll(argFlags);
@@ -576,9 +576,9 @@ public class OCamlRuleBuilder {
     ProcessExecutor.Result result = exe.launchAndExecute(
         params,
         options.build(),
-        /* stdin */ Optional.<String>absent(),
-        /* timeOutMs */ Optional.<Long>absent(),
-        /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
+        /* stdin */ Optional.absent(),
+        /* timeOutMs */ Optional.absent(),
+        /* timeOutHandler */ Optional.absent());
     if (result.getExitCode() != 0) {
       throw new HumanReadableException(result.getStderr().get());
     }

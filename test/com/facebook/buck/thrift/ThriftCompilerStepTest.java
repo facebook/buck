@@ -43,7 +43,7 @@ public class ThriftCompilerStepTest {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     // Setup some dummy values for inputs to the ThriftCompilerStep
-    ImmutableMap<String, String> compilerEnvironment = ImmutableMap.<String, String>of();
+    ImmutableMap<String, String> compilerEnvironment = ImmutableMap.of();
     ImmutableList<String> compilerPrefix = ImmutableList.of("compiler", "--allow-64-bit");
     Path outputDir = Paths.get("output-dir");
     Path input = Paths.get("test.thrift");

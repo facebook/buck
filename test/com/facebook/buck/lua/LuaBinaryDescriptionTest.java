@@ -42,7 +42,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
@@ -65,7 +64,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.nio.file.Paths;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 public class LuaBinaryDescriptionTest {
@@ -167,12 +165,12 @@ public class LuaBinaryDescriptionTest {
     LuaLibrary libraryA =
         (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:a"))
             .setSrcs(
-                ImmutableSortedMap.<String, SourcePath>of("foo.lua", new FakeSourcePath("test")))
+                ImmutableSortedMap.of("foo.lua", new FakeSourcePath("test")))
             .build(resolver);
     LuaLibrary libraryB =
         (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:b"))
             .setSrcs(
-                ImmutableSortedMap.<String, SourcePath>of("foo.lua", new FakeSourcePath("test")))
+                ImmutableSortedMap.of("foo.lua", new FakeSourcePath("test")))
             .build(resolver);
     new LuaBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
         .setMainModule("hello.world")
@@ -187,12 +185,12 @@ public class LuaBinaryDescriptionTest {
     LuaLibrary libraryA =
         (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:a"))
             .setSrcs(
-                ImmutableSortedMap.<String, SourcePath>of("foo.lua", new FakeSourcePath("foo")))
+                ImmutableSortedMap.of("foo.lua", new FakeSourcePath("foo")))
             .build(resolver);
     LuaLibrary libraryB =
         (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:b"))
             .setSrcs(
-                ImmutableSortedMap.<String, SourcePath>of("foo.lua", new FakeSourcePath("bar")))
+                ImmutableSortedMap.of("foo.lua", new FakeSourcePath("bar")))
             .build(resolver);
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(Matchers.containsString("conflicting modules for foo.lua"));
@@ -210,7 +208,7 @@ public class LuaBinaryDescriptionTest {
         (PythonLibrary) new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setSrcs(
                 SourceList.ofUnnamedSources(
-                    ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("foo.py"))))
+                    ImmutableSortedSet.of(new FakeSourcePath("foo.py"))))
             .build(resolver);
     LuaBinary luaBinary =
         (LuaBinary) new LuaBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -299,7 +297,7 @@ public class LuaBinaryDescriptionTest {
         (PythonLibrary) new PythonLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setSrcs(
                 SourceList.ofUnnamedSources(
-                    ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("foo.py"))))
+                    ImmutableSortedSet.of(new FakeSourcePath("foo.py"))))
             .build(resolver);
     LuaBinary luaBinary =
         (LuaBinary) new LuaBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -486,7 +484,7 @@ public class LuaBinaryDescriptionTest {
     LuaBinary binary = (LuaBinary) binaryBuilder.build(resolver);
     assertThat(
         binary.getComponents().getNativeLibraries().entrySet(),
-        Matchers.<Map.Entry<String, SourcePath>>empty());
+        Matchers.empty());
     assertThat(
         Iterables.transform(
             binary.getComponents().getPythonModules().keySet(),

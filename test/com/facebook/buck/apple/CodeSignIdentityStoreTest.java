@@ -47,7 +47,7 @@ public class CodeSignIdentityStoreTest {
     FakeProcessExecutor processExecutor = new FakeProcessExecutor(
         ImmutableMap.of(processExecutorParams, process));
     CodeSignIdentityStore store = CodeSignIdentityStore.fromSystem(processExecutor);
-    ImmutableList<CodeSignIdentity> expected = ImmutableList.<CodeSignIdentity>of(
+    ImmutableList<CodeSignIdentity> expected = ImmutableList.of(
         CodeSignIdentity.builder()
             .setFingerprint(
                 CodeSignIdentity.toFingerprint("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"))

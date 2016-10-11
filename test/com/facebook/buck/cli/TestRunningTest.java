@@ -40,7 +40,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildResult;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -55,7 +54,6 @@ import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutionOrderAwareFakeStep;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.FakeTestResults;
 import com.facebook.buck.test.TestCaseSummary;
@@ -431,7 +429,7 @@ public class TestRunningTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.of());
 
     CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
     BuildResult result = BuildResult.success(testRule, FETCHED_FROM_CACHE, CacheResult.hit("dir"));
@@ -469,7 +467,7 @@ public class TestRunningTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.of());
 
     CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
     BuildResult result = BuildResult.success(testRule, BUILT_LOCALLY, CacheResult.miss());
@@ -506,7 +504,7 @@ public class TestRunningTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSortedSet.<BuildRule>of()) {
+        ImmutableSortedSet.of()) {
 
       @Override
       public boolean hasTestResultFiles() {
@@ -553,7 +551,7 @@ public class TestRunningTest {
                 TargetGraph.EMPTY,
                 new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSortedSet.<BuildRule>of()) {
+        ImmutableSortedSet.of()) {
 
       @Override
       public boolean hasTestResultFiles() {
@@ -609,7 +607,7 @@ public class TestRunningTest {
             new BuildRuleResolver(
                 TargetGraph.EMPTY,
                 new DefaultTargetNodeToBuildRuleTransformer())),
-        ImmutableSortedSet.<BuildRule>of()) {
+        ImmutableSortedSet.of()) {
 
       @Override
       public boolean hasTestResultFiles() {
@@ -688,10 +686,10 @@ public class TestRunningTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSet.<Label>of(),
+        ImmutableSet.of(),
         Optional.of(Paths.get("separateTestStep1OutputDir")),
         true, // runTestSeparately
-        ImmutableList.<Step>of(separateTestStep1),
+        ImmutableList.of(separateTestStep1),
         new Callable<TestResults>() {
           @Override
           public TestResults call() {
@@ -713,10 +711,10 @@ public class TestRunningTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSet.<Label>of(),
+        ImmutableSet.of(),
         Optional.of(Paths.get("separateTestStep2OutputDir")),
         true, // runTestSeparately
-        ImmutableList.<Step>of(separateTestStep2),
+        ImmutableList.of(separateTestStep2),
         new Callable<TestResults>() {
           @Override
           public TestResults call() {
@@ -738,10 +736,10 @@ public class TestRunningTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSet.<Label>of(),
+        ImmutableSet.of(),
         Optional.of(Paths.get("separateTestStep3OutputDir")),
         true, // runTestSeparately
-        ImmutableList.<Step>of(separateTestStep3),
+        ImmutableList.of(separateTestStep3),
         new Callable<TestResults>() {
           @Override
           public TestResults call() {
@@ -771,7 +769,7 @@ public class TestRunningTest {
     DefaultStepRunner stepRunner = new DefaultStepRunner(fakeExecutionContext);
     int ret = TestRunning.runTests(
         commandRunnerParams,
-        ImmutableList.<TestRule>of(separateTest1, separateTest2, separateTest3),
+        ImmutableList.of(separateTest1, separateTest2, separateTest3),
         fakeExecutionContext,
         DEFAULT_OPTIONS,
         service,
@@ -836,10 +834,10 @@ public class TestRunningTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSet.<Label>of(),
+        ImmutableSet.of(),
         Optional.of(Paths.get("separateTestStep1OutputDir")),
         true, // runTestSeparately
-        ImmutableList.<Step>of(separateTestStep1),
+        ImmutableList.of(separateTestStep1),
         new Callable<TestResults>() {
           @Override
           public TestResults call() {
@@ -861,10 +859,10 @@ public class TestRunningTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSet.<Label>of(),
+        ImmutableSet.of(),
         Optional.of(Paths.get("separateTestStep2OutputDir")),
         true, // runTestSeparately
-        ImmutableList.<Step>of(separateTestStep2),
+        ImmutableList.of(separateTestStep2),
         new Callable<TestResults>() {
           @Override
           public TestResults call() {
@@ -886,10 +884,10 @@ public class TestRunningTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSet.<Label>of(),
+        ImmutableSet.of(),
         Optional.of(Paths.get("separateTestStep3OutputDir")),
         true, // runTestSeparately
-        ImmutableList.<Step>of(separateTestStep3),
+        ImmutableList.of(separateTestStep3),
         new Callable<TestResults>() {
           @Override
           public TestResults call() {
@@ -911,10 +909,10 @@ public class TestRunningTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSet.<Label>of(),
+        ImmutableSet.of(),
         Optional.of(Paths.get("parallelTestStep1OutputDir")),
         false, // runTestSeparately
-        ImmutableList.<Step>of(parallelTestStep1),
+        ImmutableList.of(parallelTestStep1),
         new Callable<TestResults>() {
           @Override
           public TestResults call() {
@@ -936,10 +934,10 @@ public class TestRunningTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSet.<Label>of(),
+        ImmutableSet.of(),
         Optional.of(Paths.get("parallelTestStep2OutputDir")),
         false, // runTestSeparately
-        ImmutableList.<Step>of(parallelTestStep2),
+        ImmutableList.of(parallelTestStep2),
         new Callable<TestResults>() {
           @Override
           public TestResults call() {
@@ -961,10 +959,10 @@ public class TestRunningTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSet.<Label>of(),
+        ImmutableSet.of(),
         Optional.of(Paths.get("parallelTestStep3OutputDir")),
         false, // runTestSeparately
-        ImmutableList.<Step>of(parallelTestStep3),
+        ImmutableList.of(parallelTestStep3),
         new Callable<TestResults>() {
           @Override
           public TestResults call() {
@@ -1009,7 +1007,7 @@ public class TestRunningTest {
     DefaultStepRunner stepRunner = new DefaultStepRunner(fakeExecutionContext);
     int ret = TestRunning.runTests(
         commandRunnerParams,
-        ImmutableList.<TestRule>of(
+        ImmutableList.of(
             separateTest1,
             parallelTest1,
             separateTest2,
@@ -1114,10 +1112,10 @@ public class TestRunningTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        ImmutableSet.<Label>of(),
+        ImmutableSet.of(),
         Optional.of(Paths.get("failingTestStep1OutputDir")),
         true, // runTestSeparately
-        ImmutableList.<Step>of(),
+        ImmutableList.of(),
         new Callable<TestResults>() {
           @Override
           public TestResults call() {
@@ -1138,7 +1136,7 @@ public class TestRunningTest {
     DefaultStepRunner stepRunner = new DefaultStepRunner(fakeExecutionContext);
     int ret = TestRunning.runTests(
         commandRunnerParams,
-        ImmutableList.<TestRule>of(failingTest),
+        ImmutableList.of(failingTest),
         fakeExecutionContext,
         DEFAULT_OPTIONS,
         service,

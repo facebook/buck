@@ -92,7 +92,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
       TargetNodeFactory targetNodeFactory) {
     return new DefaultParserTargetNodeFactory(
         marshaller,
-        Optional.<LoadingCache<Cell, BuildFileTree>>absent(),
+        Optional.absent(),
         new TargetNodeListener<TargetNode<?>>() {
           @Override
           public void onCreate(Path buildFile, TargetNode<?> node) throws IOException {

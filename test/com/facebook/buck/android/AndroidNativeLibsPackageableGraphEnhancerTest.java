@@ -49,10 +49,6 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
 
 public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
@@ -69,35 +65,35 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams originalParams =
         new FakeBuildRuleParamsBuilder(target)
-            .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(ndkLibrary))
+            .setDeclaredDeps(ImmutableSortedSet.of(ndkLibrary))
             .build();
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(
         TargetGraph.EMPTY,
         target,
-        Optional.<Set<BuildTarget>>absent());
+        Optional.absent());
 
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
             ruleResolver,
             originalParams,
-            ImmutableMap.<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform>of(),
-            ImmutableSet.<NdkCxxPlatforms.TargetCpuType>of(),
+            ImmutableMap.of(),
+            ImmutableSet.of(),
             CxxPlatformUtils.DEFAULT_CONFIG,
-            /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
-            /* nativeLibraryMergeGlue */ Optional.<BuildTarget>absent(),
+            /* nativeLibraryMergeMap */ Optional.absent(),
+            /* nativeLibraryMergeGlue */ Optional.absent(),
             AndroidBinary.RelinkerMode.DISABLED,
             apkModuleGraph
         );
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(
         target,
-        ImmutableSet.<BuildTarget>of(),
-        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.of(),
+        ImmutableSet.of(),
         apkModuleGraph);
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(
-            ImmutableSet.<BuildRule>of(ndkLibrary)));
+            ImmutableSet.of(ndkLibrary)));
 
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibrariesOptional =
         enhancer.enhance(collector.build()).getCopyNativeLibraries();
@@ -152,13 +148,13 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams originalParams =
         new FakeBuildRuleParamsBuilder(target)
-            .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(cxxLibrary))
+            .setDeclaredDeps(ImmutableSortedSet.of(cxxLibrary))
             .build();
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(
         TargetGraph.EMPTY,
         target,
-        Optional.<Set<BuildTarget>>absent());
+        Optional.absent());
 
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
@@ -167,20 +163,20 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             nativePlatforms,
             ImmutableSet.of(NdkCxxPlatforms.TargetCpuType.ARMV7),
             CxxPlatformUtils.DEFAULT_CONFIG,
-            /* nativeLibraryMergeMap */ Optional.<Map<String, List<Pattern>>>absent(),
-            /* nativeLibraryMergeGlue */ Optional.<BuildTarget>absent(),
+            /* nativeLibraryMergeMap */ Optional.absent(),
+            /* nativeLibraryMergeGlue */ Optional.absent(),
             AndroidBinary.RelinkerMode.DISABLED,
             apkModuleGraph
         );
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(
         target,
-        ImmutableSet.<BuildTarget>of(),
-        ImmutableSet.<BuildTarget>of(),
+        ImmutableSet.of(),
+        ImmutableSet.of(),
         apkModuleGraph);
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(
-            ImmutableSet.<BuildRule>of(cxxLibrary)));
+            ImmutableSet.of(cxxLibrary)));
 
     AndroidPackageableCollection packageableCollection = collector.build();
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibrariesOptional =

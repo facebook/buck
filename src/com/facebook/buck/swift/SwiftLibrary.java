@@ -170,7 +170,7 @@ class SwiftLibrary
     ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
     BuildRule sharedLibraryBuildRule = requireSwiftLinkRule(cxxPlatform.getFlavor());
     String sharedLibrarySoname = CxxDescriptionEnhancer.getSharedLibrarySoname(
-        Optional.<String>absent(),
+        Optional.absent(),
         sharedLibraryBuildRule.getBuildTarget(),
         cxxPlatform);
     libs.put(

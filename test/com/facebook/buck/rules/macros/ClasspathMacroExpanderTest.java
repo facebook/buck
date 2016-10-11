@@ -160,7 +160,7 @@ public class ClasspathMacroExpanderTest {
             createCellRoots(filesystem),
             ruleResolver,
             ImmutableList.of(rule.getBuildTarget().toString())),
-        Matchers.<Object>equalTo(
+        Matchers.equalTo(
             ImmutableSortedSet.of(
                 new BuildTargetSourcePath(rule.getBuildTarget()),
                 new BuildTargetSourcePath(dep.getBuildTarget()))));

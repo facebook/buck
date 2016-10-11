@@ -84,7 +84,7 @@ public class CxxTestIntegrationTest {
 
   @Test
   public void testSpinningTestTimesOutWithPerRuleTimeout() throws IOException {
-    runAndAssertSpinningTestTimesOutWithPerRuleTimeout(ImmutableSet.<Flavor>of());
+    runAndAssertSpinningTestTimesOutWithPerRuleTimeout(ImmutableSet.of());
   }
 
   @Test

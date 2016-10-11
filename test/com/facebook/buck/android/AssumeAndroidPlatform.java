@@ -40,7 +40,7 @@ public class AssumeAndroidPlatform {
     return new DefaultAndroidDirectoryResolver(
         projectFilesystem.getRootPath().getFileSystem(),
         ImmutableMap.copyOf(System.getenv()),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
   }
 }

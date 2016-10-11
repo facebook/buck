@@ -34,7 +34,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
@@ -124,10 +123,10 @@ public class InstallCommandIntegrationTest {
     // run lldb session
     ProcessExecutor.Result lldbResult = executor.launchAndExecute(
         ProcessExecutorParams.builder().addCommand(lldbCommand).build(),
-        ImmutableSet.<ProcessExecutor.Option>of(),
+        ImmutableSet.of(),
         Optional.of("b application:didFinishLaunchingWithOptions:\nb\nexit\nY\n"),
-        Optional.<Long>absent(),
-        Optional.<Function<Process, Void>>absent());
+        Optional.absent(),
+        Optional.absent());
     assertThat(lldbResult.getExitCode(), equalTo(0));
 
     // check that lldb resolved breakpoint locations
@@ -160,10 +159,10 @@ public class InstallCommandIntegrationTest {
     // run lldb session again - now on top of files fetched from cache
     lldbResult = executor.launchAndExecute(
         ProcessExecutorParams.builder().addCommand(lldbCommand2).build(),
-        ImmutableSet.<ProcessExecutor.Option>of(),
+        ImmutableSet.of(),
         Optional.of("b application:didFinishLaunchingWithOptions:\nb\nexit\nY\n"),
-        Optional.<Long>absent(),
-        Optional.<Function<Process, Void>>absent());
+        Optional.absent(),
+        Optional.absent());
     assertThat(lldbResult.getExitCode(), equalTo(0));
 
     // check that lldb resolved breakpoint locations with files from cache

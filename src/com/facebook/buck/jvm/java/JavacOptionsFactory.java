@@ -73,7 +73,7 @@ public final class JavacOptionsFactory {
         if (possibleRule.isPresent() && possibleRule.get() instanceof PrebuiltJar) {
           builder.setJavacJarPath(new BuildTargetSourcePath(possibleRule.get().getBuildTarget()));
         } else {
-          builder.setJavacPath(Either.<Path, SourcePath>ofRight(sourcePath));
+          builder.setJavacPath(Either.ofRight(sourcePath));
         }
       }
     } else {
@@ -86,7 +86,7 @@ public final class JavacOptionsFactory {
                 new Function<Path, Either<Path, SourcePath>>() {
                   @Override
                   public Either<Path, SourcePath> apply(Path input) {
-                    return Either.<Path, SourcePath>ofLeft(input);
+                    return Either.ofLeft(input);
                   }
                 }));
         builder.setJavacJarPath(jvmLibraryArg.javacJar);

@@ -69,7 +69,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
-import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -862,7 +861,7 @@ public class DefaultJavaLibraryIntegrationTest {
     final List<Path> allFiles = new ArrayList<>();
     Files.walkFileTree(
         path,
-        ImmutableSet.<FileVisitOption>of(),
+        ImmutableSet.of(),
         Integer.MAX_VALUE,
         new SimpleFileVisitor<Path>() {
           @Override

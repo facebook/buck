@@ -225,14 +225,14 @@ public class NewNativeTargetProjectMutatorTest {
             FrameworkPath.ofSourceTreePath(
                 new SourceTreePath(
                     PBXReference.SourceTree.SDKROOT, Paths.get("Foo.framework"),
-                    Optional.<String>absent()))));
+                    Optional.absent()))));
     mutator.setArchives(
         ImmutableSet.of(
             new PBXFileReference(
                 "libdep.a",
                 "libdep.a",
                 PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-                Optional.<String>absent())));
+                Optional.absent())));
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject);
     assertHasSingletonFrameworksPhaseWithFrameworkEntries(
@@ -248,7 +248,7 @@ public class NewNativeTargetProjectMutatorTest {
 
     AppleResourceDescription appleResourceDescription = new AppleResourceDescription();
     AppleResourceDescription.Arg arg = createDescriptionArgWithDefaults(appleResourceDescription);
-    arg.files = ImmutableSet.<SourcePath>of(new FakeSourcePath("foo.png"));
+    arg.files = ImmutableSet.of(new FakeSourcePath("foo.png"));
 
     mutator.setRecursiveResources(ImmutableSet.of(arg));
     NewNativeTargetProjectMutator.Result result =
@@ -297,7 +297,7 @@ public class NewNativeTargetProjectMutatorTest {
         .setCmd("echo \"hello world!\"")
         .build();
     mutator.setPostBuildRunScriptPhasesFromTargetNodes(
-        ImmutableList.<TargetNode<?>>of(postbuildNode));
+        ImmutableList.of(postbuildNode));
 
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject);
@@ -322,7 +322,7 @@ public class NewNativeTargetProjectMutatorTest {
   public void assetCatalogsBuildPhaseBuildsAssetCatalogs()
       throws NoSuchBuildTargetException {
     AppleAssetCatalogDescription.Arg arg = new AppleAssetCatalogDescription.Arg();
-    arg.dirs = ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("AssetCatalog1.xcassets"));
+    arg.dirs = ImmutableSortedSet.of(new FakeSourcePath("AssetCatalog1.xcassets"));
 
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
     mutator.setRecursiveAssetCatalogs(
@@ -341,13 +341,13 @@ public class NewNativeTargetProjectMutatorTest {
 
     TargetNode<?> prebuildNode = XcodePrebuildScriptBuilder
         .createBuilder(BuildTargetFactory.newInstance("//foo:script"))
-        .setSrcs(ImmutableSortedSet.<SourcePath>of(new FakeSourcePath("script/input.png")))
+        .setSrcs(ImmutableSortedSet.of(new FakeSourcePath("script/input.png")))
         .setOutputs(ImmutableSortedSet.of("helloworld.txt"))
         .setCmd("echo \"hello world!\"")
         .build();
 
     mutator.setPostBuildRunScriptPhasesFromTargetNodes(
-        ImmutableList.<TargetNode<?>>of(prebuildNode));
+        ImmutableList.of(prebuildNode));
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject);
 
@@ -388,7 +388,7 @@ public class NewNativeTargetProjectMutatorTest {
             .build();
 
     mutator.setPostBuildRunScriptPhasesFromTargetNodes(
-        ImmutableList.<TargetNode<?>>of(reactNativeNode));
+        ImmutableList.of(reactNativeNode));
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject);
 

@@ -50,7 +50,7 @@ public class OmnibusTest {
         Omnibus.buildSpec(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(root),
-            ImmutableList.<NativeLinkable>of());
+            ImmutableList.of());
     assertThat(
         spec.getGraph().getNodes(),
         Matchers.containsInAnyOrder(a.getBuildTarget(), b.getBuildTarget()));
@@ -62,10 +62,10 @@ public class OmnibusTest {
         Matchers.containsInAnyOrder(root.getBuildTarget()));
     assertThat(
         spec.getDeps().keySet(),
-        Matchers.<BuildTarget>empty());
+        Matchers.empty());
     assertThat(
         spec.getExcluded().keySet(),
-        Matchers.<BuildTarget>empty());
+        Matchers.empty());
 
     // Verify the libs.
     BuildRuleResolver resolver =
@@ -81,9 +81,9 @@ public class OmnibusTest {
                 pathResolver,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
-                ImmutableList.<Arg>of(),
+                ImmutableList.of(),
                 ImmutableList.of(root),
-                ImmutableList.<NativeLinkable>of()));
+                ImmutableList.of()));
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(root.getBuildTarget().toString(), "libomnibus.so"));
@@ -111,7 +111,7 @@ public class OmnibusTest {
         Omnibus.buildSpec(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(root),
-            ImmutableList.<NativeLinkable>of());
+            ImmutableList.of());
     assertThat(
         spec.getGraph().getNodes(),
         Matchers.containsInAnyOrder(a.getBuildTarget()));
@@ -142,9 +142,9 @@ public class OmnibusTest {
                 pathResolver,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
-                ImmutableList.<Arg>of(),
+                ImmutableList.of(),
                 ImmutableList.of(root),
-                ImmutableList.<NativeLinkable>of()));
+                ImmutableList.of()));
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(
@@ -177,7 +177,7 @@ public class OmnibusTest {
         Omnibus.buildSpec(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(root),
-            ImmutableList.<NativeLinkable>of());
+            ImmutableList.of());
     assertThat(
         spec.getGraph().getNodes(),
         Matchers.containsInAnyOrder(a.getBuildTarget()));
@@ -208,9 +208,9 @@ public class OmnibusTest {
                 pathResolver,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
-                ImmutableList.<Arg>of(),
+                ImmutableList.of(),
                 ImmutableList.of(root),
-                ImmutableList.<NativeLinkable>of()));
+                ImmutableList.of()));
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(
@@ -259,7 +259,7 @@ public class OmnibusTest {
         Matchers.containsInAnyOrder(root.getBuildTarget()));
     assertThat(
         spec.getDeps().keySet(),
-        Matchers.<BuildTarget>empty());
+        Matchers.empty());
     assertThat(
         spec.getExcluded().keySet(),
         Matchers.containsInAnyOrder(excludedRoot.getBuildTarget(), b.getBuildTarget()));
@@ -278,7 +278,7 @@ public class OmnibusTest {
                 pathResolver,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
-                ImmutableList.<Arg>of(),
+                ImmutableList.of(),
                 ImmutableList.of(root),
                 ImmutableList.of(excludedRoot)));
     assertThat(
@@ -318,10 +318,10 @@ public class OmnibusTest {
             ImmutableList.of(excludedRoot));
     assertThat(
         spec.getGraph().getNodes(),
-        Matchers.<BuildTarget>empty());
+        Matchers.empty());
     assertThat(
         spec.getBody().keySet(),
-        Matchers.<BuildTarget>empty());
+        Matchers.empty());
     assertThat(
         spec.getRoots().keySet(),
         Matchers.containsInAnyOrder(root.getBuildTarget()));
@@ -346,7 +346,7 @@ public class OmnibusTest {
                 pathResolver,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
-                ImmutableList.<Arg>of(),
+                ImmutableList.of(),
                 ImmutableList.of(root),
                 ImmutableList.of(excludedRoot)));
     assertThat(
@@ -371,8 +371,8 @@ public class OmnibusTest {
     NativeLinkable a =
         new OmnibusNode(
             "//:a",
-            ImmutableList.<NativeLinkable>of(),
-            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.of(),
+            ImmutableList.of(),
             NativeLinkable.Linkage.STATIC);
     NativeLinkable b = new OmnibusNode("//:b");
     NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(a, b));
@@ -382,7 +382,7 @@ public class OmnibusTest {
         Omnibus.buildSpec(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(root),
-            ImmutableList.<NativeLinkable>of());
+            ImmutableList.of());
     assertThat(
         spec.getGraph().getNodes(),
         Matchers.containsInAnyOrder(b.getBuildTarget()));
@@ -394,10 +394,10 @@ public class OmnibusTest {
         Matchers.containsInAnyOrder(root.getBuildTarget()));
     assertThat(
         spec.getDeps().keySet(),
-        Matchers.<BuildTarget>empty());
+        Matchers.empty());
     assertThat(
         spec.getExcluded().keySet(),
-        Matchers.<BuildTarget>empty());
+        Matchers.empty());
 
     // Verify the libs.
     BuildRuleResolver resolver =
@@ -413,9 +413,9 @@ public class OmnibusTest {
                 pathResolver,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
-                ImmutableList.<Arg>of(),
+                ImmutableList.of(),
                 ImmutableList.of(root),
-                ImmutableList.<NativeLinkable>of()));
+                ImmutableList.of()));
     assertThat(
         libs.keySet(),
         Matchers.containsInAnyOrder(root.getBuildTarget().toString(), "libomnibus.so"));

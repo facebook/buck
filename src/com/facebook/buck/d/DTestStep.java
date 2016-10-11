@@ -20,7 +20,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.AbstractTestStep;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 
@@ -41,9 +40,9 @@ public class DTestStep extends AbstractTestStep {
     super(
         NAME,
         filesystem,
-        Optional.<Path>absent(),
+        Optional.absent(),
         command,
-        Optional.<ImmutableMap<String, String>>absent(),
+        Optional.absent(),
         exitCode,
         testRuleTimeoutMs,
         output);

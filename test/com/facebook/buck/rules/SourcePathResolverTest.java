@@ -363,7 +363,7 @@ public class SourcePathResolverTest {
       resolver.getSourcePathNames(
           target,
           parameter,
-          ImmutableList.<SourcePath>of(pathSourcePath1, pathSourcePath2));
+          ImmutableList.of(pathSourcePath1, pathSourcePath2));
       fail("expected to throw");
     } catch (HumanReadableException e) {
       assertTrue(e.getMessage().contains("duplicate entries"));

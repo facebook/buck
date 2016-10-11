@@ -73,7 +73,7 @@ public class JarDirectoryStep implements Step {
         mainClass,
         manifestFile,
         true,
-        ImmutableSet.<Pattern>of());
+        ImmutableSet.of());
   }
 
   /**

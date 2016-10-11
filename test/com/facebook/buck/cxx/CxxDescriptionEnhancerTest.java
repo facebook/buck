@@ -25,7 +25,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -35,7 +34,6 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -80,16 +78,16 @@ public class CxxDescriptionEnhancerTest {
     );
 
     BuildRuleParams testParams = new FakeBuildRuleParamsBuilder(testTarget)
-        .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(libRule))
+        .setDeclaredDeps(ImmutableSortedSet.of(libRule))
         .build();
 
     ImmutableList<CxxPreprocessorInput> combinedInput =
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             testParams,
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            ImmutableMultimap.<CxxSource.Type, String>of(),
-            ImmutableList.<HeaderSymlinkTree>of(),
-            ImmutableSet.<FrameworkPath>of(),
+            ImmutableMultimap.of(),
+            ImmutableList.of(),
+            ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 FluentIterable.from(testParams.getDeps())
@@ -102,7 +100,7 @@ public class CxxDescriptionEnhancerTest {
     assertThat(
         "Test of library should include both public and private headers",
         roots,
-        Matchers.<SourcePath>hasItems(
+        Matchers.hasItems(
             new BuildTargetSourcePath(BuildTargetFactory.newInstance("//:symlink")),
             new BuildTargetSourcePath(BuildTargetFactory.newInstance("//:privatesymlink"))));
   }
@@ -130,11 +128,11 @@ public class CxxDescriptionEnhancerTest {
         Paths.get("output/path/lib.so"),
         "lib.so",
         // This library has no tests.
-        ImmutableSortedSet.<BuildTarget>of()
+        ImmutableSortedSet.of()
     );
 
     BuildRuleParams libParams = new FakeBuildRuleParamsBuilder(libTarget)
-        .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(otherlibRule)).build();
+        .setDeclaredDeps(ImmutableSortedSet.of(otherlibRule)).build();
     FakeCxxLibrary libRule = new FakeCxxLibrary(
         libParams,
         pathResolver,
@@ -151,16 +149,16 @@ public class CxxDescriptionEnhancerTest {
     );
 
     BuildRuleParams testParams = new FakeBuildRuleParamsBuilder(testTarget)
-        .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(libRule))
+        .setDeclaredDeps(ImmutableSortedSet.of(libRule))
         .build();
 
     ImmutableList<CxxPreprocessorInput> combinedInput =
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             testParams,
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            ImmutableMultimap.<CxxSource.Type, String>of(),
-            ImmutableList.<HeaderSymlinkTree>of(),
-            ImmutableSet.<FrameworkPath>of(),
+            ImmutableMultimap.of(),
+            ImmutableList.of(),
+            ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 FluentIterable.from(testParams.getDeps())
@@ -209,21 +207,21 @@ public class CxxDescriptionEnhancerTest {
         Paths.get("output/path/lib.so"),
         "lib.so",
         // This library has no tests.
-        ImmutableSortedSet.<BuildTarget>of()
+        ImmutableSortedSet.of()
     );
 
     BuildTarget otherLibDepTarget = BuildTargetFactory.newInstance("//:other");
     BuildRuleParams otherLibDepParams = new FakeBuildRuleParamsBuilder(otherLibDepTarget)
-        .setDeclaredDeps(ImmutableSortedSet.<BuildRule>of(libRule))
+        .setDeclaredDeps(ImmutableSortedSet.of(libRule))
         .build();
 
     ImmutableList<CxxPreprocessorInput> otherInput =
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             otherLibDepParams,
             CxxPlatformUtils.DEFAULT_PLATFORM,
-            ImmutableMultimap.<CxxSource.Type, String>of(),
-            ImmutableList.<HeaderSymlinkTree>of(),
-            ImmutableSet.<FrameworkPath>of(),
+            ImmutableMultimap.of(),
+            ImmutableList.of(),
+            ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 FluentIterable.from(otherLibDepParams.getDeps())

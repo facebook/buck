@@ -42,7 +42,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -79,7 +78,7 @@ public class ObjectPathsAbsolutifierIntegrationTest {
         250,
         File.separatorChar,
         Paths.get("."),
-        ImmutableBiMap.<Path, Path>of());
+        ImmutableBiMap.of());
   }
 
   @Test
@@ -233,16 +232,16 @@ public class ObjectPathsAbsolutifierIntegrationTest {
         ProcessExecutorParams.builder()
             .setCommand(ImmutableList.of("codesign", "-vvvv", "-d", file1.toString())).build(),
         EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT, ProcessExecutor.Option.IS_SILENT),
-        /* stdin */ Optional.<String>absent(),
-        /* timeOutMs */ Optional.<Long>absent(),
-        /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
+        /* stdin */ Optional.absent(),
+        /* timeOutMs */ Optional.absent(),
+        /* timeOutHandler */ Optional.absent());
     ProcessExecutor.Result result2 = processExecutor.launchAndExecute(
         ProcessExecutorParams.builder()
             .setCommand(ImmutableList.of("codesign", "-vvvv", "-d", file1.toString())).build(),
         EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT, ProcessExecutor.Option.IS_SILENT),
-        /* stdin */ Optional.<String>absent(),
-        /* timeOutMs */ Optional.<Long>absent(),
-        /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
+        /* stdin */ Optional.absent(),
+        /* timeOutMs */ Optional.absent(),
+        /* timeOutHandler */ Optional.absent());
 
     String stderr1 = result1.getStderr().or("");
     String stderr2 = result2.getStderr().or("");

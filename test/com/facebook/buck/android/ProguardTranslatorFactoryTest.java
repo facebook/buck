@@ -43,7 +43,7 @@ public class ProguardTranslatorFactoryTest {
 
     ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
     EasyMock.expect(projectFilesystem.readLines(proguardConfigFile))
-        .andReturn(ImmutableList.<String>of());
+        .andReturn(ImmutableList.of());
     EasyMock.expect(projectFilesystem.readLines(proguardMappingFile))
         .andReturn(linesInMappingFile);
     EasyMock.replay(projectFilesystem);

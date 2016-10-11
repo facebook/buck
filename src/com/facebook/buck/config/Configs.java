@@ -50,7 +50,7 @@ public final class Configs {
       throws IOException {
     return createDefaultConfig(
         root,
-        RawConfig.of(ImmutableMap.<String, ImmutableMap<String, String>>of()));
+        RawConfig.of(ImmutableMap.of()));
   }
 
   /**

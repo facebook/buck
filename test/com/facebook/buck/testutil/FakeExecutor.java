@@ -130,7 +130,7 @@ public class FakeExecutor implements ScheduledExecutorService {
     runnableList.add(runnable);
 
     FakeScheduledFuture<Void> future = new FakeScheduledFuture<Void>(
-        Executors.<Void>callable(runnable, (Void) null)
+        Executors.callable(runnable, (Void) null)
     );
 
     runnable.setFuture(future);
@@ -152,7 +152,7 @@ public class FakeExecutor implements ScheduledExecutorService {
     runnableList.add(runnable);
 
     FakeScheduledFuture<Void> future = new FakeScheduledFuture<Void>(
-        Executors.<Void>callable(runnable, (Void) null)
+        Executors.callable(runnable, (Void) null)
     );
 
     runnable.setFuture(future);

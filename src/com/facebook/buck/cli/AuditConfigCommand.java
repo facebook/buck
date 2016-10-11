@@ -97,7 +97,7 @@ public class AuditConfigCommand extends AbstractCommand {
             if (parts.length != 2) {
               params.getConsole().getStdErr().println(
                   String.format("%s is not a valid section/property string", input));
-              return ConfigValue.of(input, "", input, Optional.<String>absent());
+              return ConfigValue.of(input, "", input, Optional.absent());
             }
             return ConfigValue.of(
                 input,

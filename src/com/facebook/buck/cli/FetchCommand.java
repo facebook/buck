@@ -33,9 +33,6 @@ import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
-import com.facebook.buck.step.AdbOptions;
-import com.facebook.buck.step.TargetDevice;
-import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -118,13 +115,13 @@ public class FetchCommand extends BuildCommand {
           params.getArtifactCache(),
           params.getConsole(),
           params.getBuckEventBus(),
-          Optional.<TargetDevice>absent(),
+          Optional.absent(),
           params.getPlatform(),
           params.getEnvironment(),
           params.getObjectMapper(),
           params.getClock(),
-          Optional.<AdbOptions>absent(),
-          Optional.<TargetDeviceOptions>absent(),
+          Optional.absent(),
+          Optional.absent(),
           params.getExecutors())) {
         exitCode = build.executeAndPrintFailuresToEventBus(
             buildTargets,
@@ -149,15 +146,15 @@ public class FetchCommand extends BuildCommand {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         params.getCell().getRoot().getFileSystem(),
         params.getEnvironment(),
-        Optional.<String>absent(),
-        Optional.<String>absent());
+        Optional.absent(),
+        Optional.absent());
 
     Optional<Path> sdkDir = resolver.getSdkOrAbsent();
 
     Downloader downloader = StackedDownloader.createFromConfig(params.getBuckConfig(), sdkDir);
     Description<?> description = new RemoteFileDescription(downloader);
     return new FetchTargetNodeToBuildRuleTransformer(
-        ImmutableSet.<Description<?>>of(description)
+        ImmutableSet.of(description)
     );
   }
 

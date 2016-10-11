@@ -104,8 +104,8 @@ public class CxxTestDescriptionTest {
     CxxTestDescription desc = new CxxTestDescription(
         cxxBuckConfig,
         cxxPlatform,
-        FlavorDomain.<CxxPlatform>of("platform"),
-        /* testRuleTimeoutMs */ Optional.<Long>absent());
+        FlavorDomain.of("platform"),
+        /* testRuleTimeoutMs */ Optional.absent());
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     CxxTestDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();
@@ -270,9 +270,9 @@ public class CxxTestDescriptionTest {
     CxxBuckConfig config = new CxxBuckConfig(
         FakeBuckConfig.builder()
             .setSections(
-                ImmutableMap.<String, ImmutableMap<String, String>>of(
+                ImmutableMap.of(
                     "cxx",
-                    ImmutableMap.<String, String>of("gtest_dep", "//:gtest_dep")))
+                    ImmutableMap.of("gtest_dep", "//:gtest_dep")))
             .build());
     CxxTestBuilder builder =
         new CxxTestBuilder(BuildTargetFactory.newInstance("//:rule"), config)

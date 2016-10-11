@@ -313,7 +313,7 @@ public class LuaBinaryDescription implements
 
     final LuaPackageComponents.Builder builder = LuaPackageComponents.builder();
     final OmnibusRoots.Builder omnibusRoots =
-        OmnibusRoots.builder(cxxPlatform, ImmutableSet.<BuildTarget>of());
+        OmnibusRoots.builder(cxxPlatform, ImmutableSet.of());
 
     final Map<BuildTarget, NativeLinkable> nativeLinkableRoots = new LinkedHashMap<>();
     final Map<BuildTarget, CxxLuaExtension> luaExtensions = new LinkedHashMap<>();
@@ -409,7 +409,7 @@ public class LuaBinaryDescription implements
               pathResolver,
               cxxBuckConfig,
               cxxPlatform,
-              ImmutableList.<com.facebook.buck.rules.args.Arg>of(),
+              ImmutableList.of(),
               roots.getIncludedRoots().values(),
               roots.getExcludedRoots().values());
 
@@ -538,7 +538,7 @@ public class LuaBinaryDescription implements
                 Suppliers.ofInstance(
                     ImmutableSortedSet.copyOf(
                         pathResolver.filterBuildRuleInputs(components.values()))),
-                Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                Suppliers.ofInstance(ImmutableSortedSet.of())),
             pathResolver,
             root,
             components));
@@ -723,10 +723,10 @@ public class LuaBinaryDescription implements
                             .addAll(lua.getDeps(pathResolver))
                             .addAll(packager.getDeps(pathResolver))
                             .build()),
-                    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+                    Suppliers.ofInstance(ImmutableSortedSet.of())),
                 pathResolver,
                 packager,
-                ImmutableList.<String>of(),
+                ImmutableList.of(),
                 output,
                 Optional.of(starter),
                 components,

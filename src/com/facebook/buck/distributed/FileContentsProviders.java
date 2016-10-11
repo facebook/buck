@@ -42,7 +42,7 @@ public abstract class FileContentsProviders {
     public Optional<InputStream> getFileContents(BuildJobStateFileHashEntry entry) {
       if (entry.isSetContents()) {
         byte[] contents = entry.getContents();
-        return Optional.<InputStream>of(new ByteArrayInputStream(contents));
+        return Optional.of(new ByteArrayInputStream(contents));
       }
 
       return Optional.absent();

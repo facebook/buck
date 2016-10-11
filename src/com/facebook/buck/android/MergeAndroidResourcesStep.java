@@ -39,7 +39,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
@@ -107,7 +106,7 @@ public class MergeAndroidResourcesStep implements Step {
         filesystem,
         pathResolver,
         androidResourceDeps,
-        /* uberRDotTxt */ Optional.<Path>absent(),
+        /* uberRDotTxt */ Optional.absent(),
         outputDir,
         forceFinalResourceIds,
         /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
@@ -132,7 +131,7 @@ public class MergeAndroidResourcesStep implements Step {
         /* forceFinalResourceIds */ true,
         bannedDuplicateResourceTypes,
         unionPackage,
-        /* rName */ Optional.<String>absent());
+        /* rName */ Optional.absent());
   }
 
   public ImmutableSortedSet<Path> getRDotJavaFiles() {
@@ -145,7 +144,7 @@ public class MergeAndroidResourcesStep implements Step {
                 return getPathToRDotJava(input);
               }
             })
-        .toSortedSet(Ordering.<Path>natural());
+        .toSortedSet(natural());
   }
 
   @Override

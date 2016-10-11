@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;
@@ -38,7 +37,6 @@ import org.easymock.EasyMock;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.objectweb.asm.tree.ClassNode;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
@@ -163,15 +161,15 @@ public class SplitZipStepTest {
 
     SplitZipStep splitZipStep = new SplitZipStep(
         projectFilesystem,
-        /* inputPathsToSplit */ ImmutableSet.<Path>of(),
+        /* inputPathsToSplit */ ImmutableSet.of(),
         /* secondaryJarMetaPath */ Paths.get(""),
         /* primaryJarPath */ Paths.get(""),
         /* secondaryJarDir */ Paths.get(""),
         /* secondaryJarPattern */ "",
         /* additionalDexStoreJarMetaPath */ Paths.get(""),
         /* additionalDexStoreJarDir */ Paths.get(""),
-        /* proguardFullConfigFile */ Optional.<Path>absent(),
-        /* proguardMappingFile */ Optional.<Path>absent(),
+        /* proguardFullConfigFile */ Optional.absent(),
+        /* proguardMappingFile */ Optional.absent(),
         new DexSplitMode(
             /* shouldSplitDex */ true,
             ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
@@ -179,23 +177,23 @@ public class SplitZipStepTest {
             /* useLinearAllocSplitDex */ true,
             /* linearAllocHardLimit */ 4 * 1024 * 1024,
             /* primaryDexPatterns */ ImmutableSet.of("List"),
-            Optional.<SourcePath>of(new FakeSourcePath("the/manifest.txt")),
-            /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
+            Optional.of(new FakeSourcePath("the/manifest.txt")),
+            /* primaryDexScenarioFile */ Optional.absent(),
             /* isPrimaryDexScenarioOverflowAllowed */ false,
-            /* secondaryDexHeadClassesFile */ Optional.<SourcePath>absent(),
-            /* secondaryDexTailClassesFile */ Optional.<SourcePath>absent()),
-        Optional.<Path>absent(),
+            /* secondaryDexHeadClassesFile */ Optional.absent(),
+            /* secondaryDexTailClassesFile */ Optional.absent()),
+        Optional.absent(),
         Optional.of(Paths.get("the/manifest.txt")),
-        Optional.<Path>absent(),
-        Optional.<Path>absent(),
-        /* additionalDexStoreToJarPathMap */ ImmutableMultimap.<APKModule, Path>of(),
+        Optional.absent(),
+        Optional.absent(),
+        /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
         new APKModuleGraph(null, null, null),
         /* pathToReportDir */ Paths.get(""));
 
     Predicate<String> requiredInPrimaryZipPredicate = splitZipStep
         .createRequiredInPrimaryZipPredicate(
-            ProguardTranslatorFactory.createForTest(Optional.<Map<String, String>>absent()),
-            Suppliers.ofInstance(ImmutableList.<ClassNode>of()));
+            ProguardTranslatorFactory.createForTest(Optional.absent()),
+            Suppliers.ofInstance(ImmutableList.of()));
     assertTrue(
         "com/google/common/collect/ImmutableSortedSet.class is listed in the manifest verbatim.",
         requiredInPrimaryZipPredicate.apply("com/google/common/collect/ImmutableSortedSet.class"));
@@ -247,14 +245,14 @@ public class SplitZipStepTest {
     EasyMock.expect(projectFilesystem.readLines(primaryDexClassesFile))
         .andReturn(linesInManifestFile);
     EasyMock.expect(projectFilesystem.readLines(proguardConfigFile))
-        .andReturn(ImmutableList.<String>of());
+        .andReturn(ImmutableList.of());
     EasyMock.expect(projectFilesystem.readLines(proguardMappingFile))
         .andReturn(linesInMappingFile);
     EasyMock.replay(projectFilesystem);
 
     SplitZipStep splitZipStep = new SplitZipStep(
         projectFilesystem,
-        /* inputPathsToSplit */ ImmutableSet.<Path>of(),
+        /* inputPathsToSplit */ ImmutableSet.of(),
         /* secondaryJarMetaPath */ Paths.get(""),
         /* primaryJarPath */ Paths.get(""),
         /* secondaryJarDir */ Paths.get(""),
@@ -270,16 +268,16 @@ public class SplitZipStepTest {
             /* useLinearAllocSplitDex */ true,
             /* linearAllocHardLimit */ 4 * 1024 * 1024,
             /* primaryDexPatterns */ ImmutableSet.of("/primary/", "x/"),
-            Optional.<SourcePath>of(new FakeSourcePath("the/manifest.txt")),
-            /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
+            Optional.of(new FakeSourcePath("the/manifest.txt")),
+            /* primaryDexScenarioFile */ Optional.absent(),
             /* isPrimaryDexScenarioOverflowAllowed */ false,
-            /* secondaryDexHeadClassesFile */ Optional.<SourcePath>absent(),
-            /* secondaryDexTailClassesFile */ Optional.<SourcePath>absent()),
-        Optional.<Path>absent(),
+            /* secondaryDexHeadClassesFile */ Optional.absent(),
+            /* secondaryDexTailClassesFile */ Optional.absent()),
+        Optional.absent(),
         Optional.of(Paths.get("the/manifest.txt")),
-        Optional.<Path>absent(),
-        Optional.<Path>absent(),
-        /* additionalDexStoreToJarPathMap */ ImmutableMultimap.<APKModule, Path>of(),
+        Optional.absent(),
+        Optional.absent(),
+        /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
         new APKModuleGraph(null, null, null),
         /* pathToReportDir */ Paths.get(""));
 
@@ -290,7 +288,7 @@ public class SplitZipStepTest {
     Predicate<String> requiredInPrimaryZipPredicate = splitZipStep
         .createRequiredInPrimaryZipPredicate(
             translatorFactory,
-            Suppliers.ofInstance(ImmutableList.<ClassNode>of()));
+            Suppliers.ofInstance(ImmutableList.of()));
     assertTrue(
         "Mapped class from primary list should be in primary.",
         requiredInPrimaryZipPredicate.apply("foo/bar/a.class"));
@@ -328,7 +326,7 @@ public class SplitZipStepTest {
 
     SplitZipStep splitZipStep = new SplitZipStep(
         projectFilesystem,
-        /* inputPathsToSplit */ ImmutableSet.<Path>of(),
+        /* inputPathsToSplit */ ImmutableSet.of(),
         /* secondaryJarMetaPath */ Paths.get(""),
         /* primaryJarPath */ Paths.get(""),
         /* secondaryJarDir */ Paths.get(""),
@@ -344,16 +342,16 @@ public class SplitZipStepTest {
             /* useLinearAllocSplitDex */ true,
             /* linearAllocHardLimit */ 4 * 1024 * 1024,
             /* primaryDexPatterns */ ImmutableSet.of("primary"),
-            /* primaryDexClassesFile */ Optional.<SourcePath>absent(),
-            /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
+            /* primaryDexClassesFile */ Optional.absent(),
+            /* primaryDexScenarioFile */ Optional.absent(),
             /* isPrimaryDexScenarioOverflowAllowed */ false,
-            /* secondaryDexHeadClassesFile */ Optional.<SourcePath>absent(),
-            /* secondaryDexTailClassesFile */ Optional.<SourcePath>absent()),
-        Optional.<Path>absent(),
-        Optional.<Path>absent(),
-        Optional.<Path>absent(),
-        Optional.<Path>absent(),
-        /* additionalDexStoreToJarPathMap */ ImmutableMultimap.<APKModule, Path>of(),
+            /* secondaryDexHeadClassesFile */ Optional.absent(),
+            /* secondaryDexTailClassesFile */ Optional.absent()),
+        Optional.absent(),
+        Optional.absent(),
+        Optional.absent(),
+        Optional.absent(),
+        /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
         new APKModuleGraph(null, null, null),
         /* pathToReportDir */ Paths.get(""));
 
@@ -364,7 +362,7 @@ public class SplitZipStepTest {
     Predicate<String> requiredInPrimaryZipPredicate = splitZipStep
         .createRequiredInPrimaryZipPredicate(
             translatorFactory,
-            Suppliers.ofInstance(ImmutableList.<ClassNode>of()));
+            Suppliers.ofInstance(ImmutableList.of()));
     assertTrue(
         "Primary class should be in primary.",
         requiredInPrimaryZipPredicate.apply("primary.class"));

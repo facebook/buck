@@ -76,7 +76,7 @@ public class FakeProjectFilesystemTest {
   public void testReadLines() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.writeContentsToPath("line one.\nline two.\n", Paths.get("A.txt"));
-    filesystem.writeLinesToPath(ImmutableList.<String>of(), Paths.get("B.txt"));
+    filesystem.writeLinesToPath(ImmutableList.of(), Paths.get("B.txt"));
     filesystem.writeContentsToPath("\n", Paths.get("C.txt"));
 
     MoreAsserts.assertIterablesEquals(

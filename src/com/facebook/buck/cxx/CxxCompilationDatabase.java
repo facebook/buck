@@ -88,7 +88,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule
         pathResolver,
         compileRules.build(),
         preprocessMode,
-        ImmutableSortedSet.<BuildRule>copyOf(headerSymlinkTreeRuntimeDeps));
+        ImmutableSortedSet.copyOf(headerSymlinkTreeRuntimeDeps));
   }
 
   CxxCompilationDatabase(

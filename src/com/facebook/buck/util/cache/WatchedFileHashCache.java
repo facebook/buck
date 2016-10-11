@@ -34,7 +34,7 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
   private static final Logger LOG = Logger.get(WatchedFileHashCache.class);
 
   public WatchedFileHashCache(ProjectFilesystem projectFilesystem) {
-    super(projectFilesystem, Optional.<Path>absent());
+    super(projectFilesystem, Optional.absent());
   }
 
   /**

@@ -39,7 +39,6 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
@@ -197,7 +196,7 @@ public class JvmLibraryArgInterpreterTest {
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
     arg.compiler = Optional.of(either);
-    arg.javacJar = Optional.<SourcePath>of(
+    arg.javacJar = Optional.of(
         new PathSourcePath(new FakeProjectFilesystem(), Paths.get("does-not-exist")));
     JavacOptions options = createJavacOptions(arg);
 
@@ -214,7 +213,7 @@ public class JvmLibraryArgInterpreterTest {
     Path expected = Paths.get("does-not-exist");
 
     arg.compiler = Optional.absent();
-    arg.javacJar = Optional.<SourcePath>of(
+    arg.javacJar = Optional.of(
         new PathSourcePath(new FakeProjectFilesystem(), expected));
     JavacOptions options = createJavacOptions(arg);
 
@@ -246,9 +245,9 @@ public class JvmLibraryArgInterpreterTest {
           factoryParams.getProjectFilesystem(),
           factoryParams,
           arg,
-          ImmutableSet.<BuildTarget>builder(),
-          ImmutableSet.<VisibilityPattern>builder(),
-          ImmutableMap.<String, Object>of());
+          ImmutableSet.builder(),
+          ImmutableSet.builder(),
+          ImmutableMap.of());
     } catch (ConstructorArgMarshalException | NoSuchBuildTargetException error) {
       throw Throwables.propagate(error);
     }

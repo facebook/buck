@@ -37,9 +37,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -124,7 +122,7 @@ public class AppleDsym
 
     Path unstrippedBinaryPath = getResolver().getAbsolutePath(unstrippedBinarySourcePath);
     Path dwarfFileFolder = dsymOutputPath.resolve(DSYM_DWARF_FILE_FOLDER);
-    return ImmutableList.<Step>of(
+    return ImmutableList.of(
         new RmStep(getProjectFilesystem(), dsymOutputPath, true, true),
         new DsymStep(
             getProjectFilesystem(),
@@ -146,7 +144,7 @@ public class AppleDsym
   @Override
   public ImmutableList<Step> getPostBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    return ImmutableList.<Step>of(
+    return ImmutableList.of(
         new Step() {
           @Override
           public StepExecutionResult execute(ExecutionContext context)
@@ -158,13 +156,13 @@ public class AppleDsym
                 .build();
             return StepExecutionResult.of(context.getProcessExecutor().launchAndExecute(
                 params,
-                ImmutableSet.<ProcessExecutor.Option>of(),
+                ImmutableSet.of(),
                 Optional.of(
                     String.format("target create %s\ntarget symbols add %s",
                         getResolver().getAbsolutePath(unstrippedBinarySourcePath),
                         dsymOutputPath)),
-                Optional.<Long>absent(),
-                Optional.<Function<Process, Void>>absent()));
+                Optional.absent(),
+                Optional.absent()));
           }
 
           @Override

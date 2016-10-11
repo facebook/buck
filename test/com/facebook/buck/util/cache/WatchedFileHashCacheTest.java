@@ -116,7 +116,7 @@ public class WatchedFileHashCacheTest {
         new WatchedFileHashCache(new FakeProjectFilesystem());
     Path dir = Paths.get("foo/bar/baz");
     HashCodeAndFileType value =
-        HashCodeAndFileType.ofDirectory(HashCode.fromInt(42), ImmutableSet.<Path>of());
+        HashCodeAndFileType.ofDirectory(HashCode.fromInt(42), ImmutableSet.of());
     cache.loadingCache.put(dir, value);
     cache.onFileSystemChange(
         createPathEvent(

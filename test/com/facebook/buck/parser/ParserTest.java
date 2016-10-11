@@ -515,7 +515,7 @@ public class ParserTest {
     ImmutableSet<BuildTarget> targets = filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.<TargetNode<?>>alwaysTrue(),
+        Predicates.alwaysTrue(),
         BuckEventBusFactory.newInstance(),
         executorService);
 
@@ -532,13 +532,13 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.<TargetNode<?>>alwaysTrue(),
+        Predicates.alwaysTrue(),
         eventBus,
         executorService);
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.<TargetNode<?>>alwaysTrue(),
+        Predicates.alwaysTrue(),
         eventBus,
         executorService);
 
@@ -552,7 +552,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.<TargetNode<?>>alwaysTrue(),
+        Predicates.alwaysTrue(),
         eventBus,
         executorService);
 
@@ -564,7 +564,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.<TargetNode<?>>alwaysTrue(),
+        Predicates.alwaysTrue(),
         eventBus,
         executorService);
 
@@ -578,7 +578,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.<TargetNode<?>>alwaysTrue(),
+        Predicates.alwaysTrue(),
         eventBus,
         executorService);
 
@@ -589,7 +589,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.<TargetNode<?>>alwaysTrue(),
+        Predicates.alwaysTrue(),
         eventBus,
         executorService);
 
@@ -606,7 +606,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.<TargetNode<?>>alwaysTrue(),
+        Predicates.alwaysTrue(),
         eventBus,
         executorService);
 
@@ -628,7 +628,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.<TargetNode<?>>alwaysTrue(),
+        Predicates.alwaysTrue(),
         eventBus,
         executorService);
 
@@ -644,7 +644,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.<TargetNode<?>>alwaysTrue(),
+        Predicates.alwaysTrue(),
         eventBus,
         executorService);
 
@@ -666,7 +666,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.<TargetNode<?>>alwaysTrue(),
+        Predicates.alwaysTrue(),
         eventBus,
         executorService);
 
@@ -674,7 +674,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.<TargetNode<?>>alwaysTrue(),
+        Predicates.alwaysTrue(),
         eventBus,
         executorService);
 
@@ -1384,7 +1384,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.<TargetNode<?>>alwaysTrue(),
+        Predicates.alwaysTrue(),
         eventBus,
         executorService);
 
@@ -1403,7 +1403,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.<TargetNode<?>>alwaysTrue(),
+        Predicates.alwaysTrue(),
         eventBus,
         executorService);
 
@@ -1416,7 +1416,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.<TargetNode<?>>alwaysTrue(),
+        Predicates.alwaysTrue(),
         eventBus,
         executorService);
 
@@ -1440,7 +1440,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.<TargetNode<?>>alwaysTrue(),
+        Predicates.alwaysTrue(),
         eventBus,
         executorService);
 
@@ -1453,7 +1453,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.<TargetNode<?>>alwaysTrue(),
+        Predicates.alwaysTrue(),
         eventBus,
         executorService);
     BuildTarget foo = BuildTarget.builder(cellRoot, "//java/com/facebook", "foo").build();
@@ -1480,7 +1480,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.<TargetNode<?>>alwaysTrue(),
+        Predicates.alwaysTrue(),
         eventBus,
         executorService);
 
@@ -1993,7 +1993,7 @@ public class ParserTest {
     BuildTarget buildTarget = BuildTarget.of(
         UnflavoredBuildTarget.of(
             filesystem.getRootPath(),
-            Optional.<String>absent(),
+            Optional.absent(),
             "//",
             "cake"));
     Files.write(

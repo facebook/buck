@@ -79,10 +79,10 @@ public class CxxTestStepTest {
         new CxxTestStep(
             filesystem,
             trueCmd,
-            ImmutableMap.<String, String>of(),
+            ImmutableMap.of(),
             exitCode,
             output,
-            /* testRuleTimeoutMs */ Optional.<Long>absent());
+            /* testRuleTimeoutMs */ Optional.absent());
     step.execute(context);
     assertSame(0, readExitCode(exitCode));
     assertContents(output, "");
@@ -96,10 +96,10 @@ public class CxxTestStepTest {
         new CxxTestStep(
             filesystem,
             falseCmd,
-            ImmutableMap.<String, String>of(),
+            ImmutableMap.of(),
             exitCode,
             output,
-            /* testRuleTimeoutMs */ Optional.<Long>absent());
+            /* testRuleTimeoutMs */ Optional.absent());
     step.execute(context);
     assertSame(1, readExitCode(exitCode));
     assertContents(output, "");
@@ -115,10 +115,10 @@ public class CxxTestStepTest {
         new CxxTestStep(
             filesystem,
             echoCmd,
-            ImmutableMap.<String, String>of(),
+            ImmutableMap.of(),
             exitCode,
             output,
-            /* testRuleTimeoutMs */ Optional.<Long>absent());
+            /* testRuleTimeoutMs */ Optional.absent());
     step.execute(context);
     assertSame(0, readExitCode(exitCode));
     assertContents(output, stdout + System.lineSeparator());
@@ -132,7 +132,7 @@ public class CxxTestStepTest {
         new CxxTestStep(
             filesystem,
             sleepCmd,
-            ImmutableMap.<String, String>of(),
+            ImmutableMap.of(),
             exitCode,
             output,
             /* testRuleTimeoutMs */ Optional.of(10L));

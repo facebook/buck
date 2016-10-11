@@ -85,7 +85,7 @@ public class UnskippedRulesTrackerTest {
     ruleE = createRule("//:e", ImmutableSet.of(ruleG, ruleH));
     ruleD = createRule("//:d", ImmutableSet.of(ruleG), ImmutableSet.of(ruleF));
     ruleC = createRule("//:c", ImmutableSet.of(ruleD, ruleE));
-    ruleB = createRule("//:b", ImmutableSet.<BuildRule>of(), ImmutableSet.of(ruleD));
+    ruleB = createRule("//:b", ImmutableSet.of(), ImmutableSet.of(ruleD));
     ruleA = createRule("//:a", ImmutableSet.of(ruleD));
   }
 
@@ -212,7 +212,7 @@ public class UnskippedRulesTrackerTest {
     return new FakeBuildRule(
         BuildTargetFactory.newInstance(buildTarget),
         sourcePathResolver,
-        ImmutableSortedSet.<BuildRule>of());
+        ImmutableSortedSet.of());
   }
 
   private static BuildRule createRule(

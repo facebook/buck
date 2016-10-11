@@ -146,7 +146,7 @@ public class CxxTestDescription implements
           public ImmutableMap<String, String> get() {
             return ImmutableMap.copyOf(
                 Maps.transformValues(
-                    args.env.or(ImmutableMap.<String, String>of()),
+                    args.env.or(ImmutableMap.of()),
                     CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
                         params.getBuildTarget(),
                         params.getCellRoots(),
@@ -159,7 +159,7 @@ public class CxxTestDescription implements
         new Supplier<ImmutableList<String>>() {
           @Override
           public ImmutableList<String> get() {
-            return FluentIterable.from(args.args.or(ImmutableList.<String>of()))
+            return FluentIterable.from(args.args.or(ImmutableList.of()))
                 .transform(
                     CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
                         params.getBuildTarget(),
@@ -185,8 +185,8 @@ public class CxxTestDescription implements
             // Add any build-time from any macros embedded in the `env` or `args` parameter.
             for (String part :
                 Iterables.concat(
-                    args.args.or(ImmutableList.<String>of()),
-                    args.env.or(ImmutableMap.<String, String>of()).values())) {
+                    args.args.or(ImmutableList.of()),
+                    args.env.or(ImmutableMap.of()).values())) {
               try {
                 deps.addAll(
                     CxxDescriptionEnhancer.MACRO_HANDLER.extractBuildTimeDeps(
@@ -219,7 +219,7 @@ public class CxxTestDescription implements
             cxxLinkAndCompileRules.executable,
             testEnv,
             testArgs,
-            FluentIterable.from(args.resources.or(ImmutableSortedSet.<Path>of()))
+            FluentIterable.from(args.resources.or(ImmutableSortedSet.of()))
                 .transform(SourcePaths.toSourcePath(params.getProjectFilesystem()))
                 .toSortedSet(Ordering.natural()),
             additionalDeps,
@@ -238,7 +238,7 @@ public class CxxTestDescription implements
             cxxLinkAndCompileRules.executable,
             testEnv,
             testArgs,
-            FluentIterable.from(args.resources.or(ImmutableSortedSet.<Path>of()))
+            FluentIterable.from(args.resources.or(ImmutableSortedSet.of()))
                 .transform(SourcePaths.toSourcePath(params.getProjectFilesystem()))
                 .toSortedSet(Ordering.natural()),
             additionalDeps,

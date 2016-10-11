@@ -44,7 +44,7 @@ public class DotTest {
         mutableGraph);
 
     StringBuilder output = new StringBuilder();
-    Dot<String> dot = new Dot<String>(graph, "the_graph", Functions.<String>identity(), output);
+    Dot<String> dot = new Dot<String>(graph, "the_graph", Functions.identity(), output);
     dot.writeOutput();
 
     String dotGraph = output.toString();

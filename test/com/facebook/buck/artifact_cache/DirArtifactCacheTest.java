@@ -134,7 +134,7 @@ public class DirArtifactCacheTest {
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
         /* doStore */ true,
-        /* maxCacheSizeBytes */ Optional.<Long>absent());
+        /* maxCacheSizeBytes */ Optional.absent());
 
     Files.write(fileX, "x".getBytes(UTF_8));
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
@@ -176,7 +176,7 @@ public class DirArtifactCacheTest {
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
         /* doStore */ true,
-        /* maxCacheSizeBytes */ Optional.<Long>absent());
+        /* maxCacheSizeBytes */ Optional.absent());
 
     Files.write(fileX, "x".getBytes(UTF_8));
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
@@ -221,7 +221,7 @@ public class DirArtifactCacheTest {
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
         /* doStore */ true,
-        /* maxCacheSizeBytes */ Optional.<Long>absent());
+        /* maxCacheSizeBytes */ Optional.absent());
 
     Files.write(fileX, "x".getBytes(UTF_8));
     Files.write(fileY, "y".getBytes(UTF_8));
@@ -320,7 +320,7 @@ public class DirArtifactCacheTest {
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
         /* doStore */ true,
-        /* maxCacheSizeBytes */ Optional.<Long>absent());
+        /* maxCacheSizeBytes */ Optional.absent());
 
     Files.write(fileX, "x".getBytes(UTF_8));
     Files.write(fileY, "y".getBytes(UTF_8));
@@ -476,7 +476,7 @@ public class DirArtifactCacheTest {
         new ProjectFilesystem(tmpDir.getRoot()),
         Paths.get("."),
         /* doStore */ true,
-        /* maxCacheSizeBytes */ Optional.<Long>absent());
+        /* maxCacheSizeBytes */ Optional.absent());
 
     Files.write(fileX, "x".getBytes(UTF_8));
     Files.write(fileY, "y".getBytes(UTF_8));
@@ -584,7 +584,7 @@ public class DirArtifactCacheTest {
             LazyPath.ofInstance(fileX)).getType());
 
     Files.setAttribute(
-        dirArtifactCache.getPathForRuleKey(ruleKeyX, Optional.<String>absent()),
+        dirArtifactCache.getPathForRuleKey(ruleKeyX, Optional.absent()),
         "lastAccessTime",
         FileTime.fromMillis(0));
     Files.setAttribute(
@@ -603,7 +603,7 @@ public class DirArtifactCacheTest {
             LazyPath.ofInstance(fileY)).getType());
 
     Files.setAttribute(
-        dirArtifactCache.getPathForRuleKey(ruleKeyY, Optional.<String>absent()),
+        dirArtifactCache.getPathForRuleKey(ruleKeyY, Optional.absent()),
         "lastAccessTime",
         FileTime.fromMillis(1000));
     Files.setAttribute(
@@ -638,7 +638,7 @@ public class DirArtifactCacheTest {
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
         /* doStore */ true,
-        /* maxCacheSizeBytes */ Optional.<Long>absent());
+        /* maxCacheSizeBytes */ Optional.absent());
 
     Files.write(fileX, "x".getBytes(UTF_8));
 
@@ -667,7 +667,7 @@ public class DirArtifactCacheTest {
             filesystem,
             Paths.get("cache"),
             /* doStore */ true,
-            /* maxCacheSizeBytes */ Optional.<Long>absent());
+            /* maxCacheSizeBytes */ Optional.absent());
 
     RuleKey ruleKey = new RuleKey("0000");
     ImmutableMap<String, String> metadata = ImmutableMap.of("some", "metadata");
@@ -703,16 +703,16 @@ public class DirArtifactCacheTest {
         new FakeProjectFilesystem(),
         Paths.get("cache"),
         /* doStore */ false,
-        /* maxCacheSizeBytes */ Optional.<Long>absent());
+        /* maxCacheSizeBytes */ Optional.absent());
 
     Path result = cache.getPathForRuleKey(
         new RuleKey("aabb0123123234e324"),
-        Optional.<String>absent());
+        Optional.absent());
     assertThat(result.endsWith(Paths.get("aa/bb/aabb0123123234e324")), Matchers.equalTo(true));
 
     result = cache.getPathForRuleKey(
         new RuleKey("aabb0123123234e324"),
-        Optional.<String>of(".ext"));
+        Optional.of(".ext"));
     assertThat(result.endsWith(Paths.get("aa/bb/aabb0123123234e324.ext")), Matchers.equalTo(true));
 
     cache.close();

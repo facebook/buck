@@ -47,7 +47,7 @@ public class GetStringsFilesStepTest {
   @Test
   public void testStringFileOrderIsMaintained() throws IOException {
     setUpFakeFilesystem(
-        ImmutableSet.<Path>of(
+        ImmutableSet.of(
             Paths.get("test/res/values/strings.xml"),
             Paths.get("test/res/values-es/strings.xml"),
             Paths.get("test/res/values-es-rES/strings.xml"),

@@ -127,7 +127,7 @@ public class MultiarchFileTest {
   public void shouldAllowMultiplePlatformFlavors() {
     assertTrue(
         ((Flavored) description).hasFlavors(
-            ImmutableSet.<Flavor>of(
+            ImmutableSet.of(
                 ImmutableFlavor.of("iphoneos-i386"),
                 ImmutableFlavor.of("iphoneos-x86_64"))));
   }

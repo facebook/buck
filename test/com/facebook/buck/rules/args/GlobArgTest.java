@@ -46,7 +46,7 @@ public class GlobArgTest {
     Arg arg = GlobArg.of(pathResolver, new PathSourcePath(filesystem, dir), "**");
     assertThat(
         Arg.stringify(ImmutableList.of(arg)),
-        Matchers.<String>empty());
+        Matchers.empty());
   }
 
   @Test

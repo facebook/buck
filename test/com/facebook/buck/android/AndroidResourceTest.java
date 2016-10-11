@@ -191,14 +191,14 @@ public class AndroidResourceTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        /* deps */ ImmutableSortedSet.<BuildRule>of(),
+        /* deps */ ImmutableSortedSet.of(),
         new FakeSourcePath("foo/res"),
         ImmutableSortedSet.of((SourcePath) new FakeSourcePath("foo/res/values/strings.xml")),
-        Optional.<SourcePath>absent(),
+        Optional.absent(),
         /* rDotJavaPackage */ "com.example.android",
         /* assets */ null,
-        /* assetsSrcs */ ImmutableSortedSet.<SourcePath>of(),
-        Optional.<SourcePath>absent(),
+        /* assetsSrcs */ ImmutableSortedSet.of(),
+        Optional.absent(),
         /* manifestFile */ null,
         /* hasWhitelistedStrings */ false);
     assertEquals("com.example.android", androidResource.getRDotJavaPackage());
@@ -214,14 +214,14 @@ public class AndroidResourceTest {
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
-        /* deps */ ImmutableSortedSet.<BuildRule>of(),
+        /* deps */ ImmutableSortedSet.of(),
         new FakeSourcePath("foo/res"),
         ImmutableSortedSet.of((SourcePath) new FakeSourcePath("foo/res/values/strings.xml")),
-        Optional.<SourcePath>absent(),
+        Optional.absent(),
         /* rDotJavaPackage */ null,
         /* assets */ null,
-        /* assetsSrcs */ ImmutableSortedSet.<SourcePath>of(),
-        Optional.<SourcePath>absent(),
+        /* assetsSrcs */ ImmutableSortedSet.of(),
+        Optional.absent(),
         /* manifestFile */ new PathSourcePath(
             projectFilesystem,
             Paths.get("foo/AndroidManifest.xml")),

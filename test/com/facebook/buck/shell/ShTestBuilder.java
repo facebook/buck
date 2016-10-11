@@ -29,7 +29,7 @@ import java.nio.file.Path;
 public class ShTestBuilder extends AbstractNodeBuilder<ShTestDescription.Arg> {
 
   public ShTestBuilder(BuildTarget target) {
-    super(new ShTestDescription(Optional.<Long>absent()), target);
+    super(new ShTestDescription(Optional.absent()), target);
   }
 
   public ShTestBuilder setTest(SourcePath path) {

@@ -53,7 +53,7 @@ public class BuildTargetMacroExpanderTest {
     resolver.addToIndex(rule);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     MacroHandler handler = new MacroHandler(
-        ImmutableMap.<String, MacroExpander>of(
+        ImmutableMap.of(
             "exe",
             new BuildTargetMacroExpander() {
               @Override

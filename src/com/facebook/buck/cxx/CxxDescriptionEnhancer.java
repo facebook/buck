@@ -48,7 +48,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
@@ -92,7 +91,7 @@ public class CxxDescriptionEnhancer {
 
   protected static final MacroHandler MACRO_HANDLER =
       new MacroHandler(
-          ImmutableMap.<String, MacroExpander>of(
+          ImmutableMap.of(
               "location", new LocationMacroExpander()));
 
   private static final Pattern SONAME_EXT_MACRO_PATTERN =
@@ -530,7 +529,7 @@ public class CxxDescriptionEnhancer {
         Function<FrameworkPath, Path> convertToPath =
             FrameworkPath.getUnexpandedSearchPathFunction(
                 resolver.getAbsolutePathFunction(),
-                Functions.<Path>identity());
+                Functions.identity());
         String pathAsString = convertToPath.apply(input).toString();
         return Paths.get(translateMacrosFn.apply(pathAsString));
       }
@@ -790,18 +789,18 @@ public class CxxDescriptionEnhancer {
               sourcePathResolver,
               linkRuleTarget,
               Linker.LinkType.EXECUTABLE,
-              Optional.<String>absent(),
+              Optional.absent(),
               linkOutput,
               linkStyle,
               FluentIterable.from(params.getDeps())
                   .filter(NativeLinkable.class),
               cxxRuntimeType,
-              Optional.<SourcePath>absent(),
-              ImmutableSet.<BuildTarget>of(),
+              Optional.absent(),
+              ImmutableSet.of(),
               NativeLinkableInput.builder()
                   .setArgs(argsBuilder.build())
-                  .setFrameworks(frameworks.or(ImmutableSortedSet.<FrameworkPath>of()))
-                  .setLibraries(libraries.or(ImmutableSortedSet.<FrameworkPath>of()))
+                  .setFrameworks(frameworks.or(ImmutableSortedSet.of()))
+                  .setLibraries(libraries.or(ImmutableSortedSet.of()))
                   .build());
       resolver.addToIndex(cxxLink);
     }
@@ -820,7 +819,7 @@ public class CxxDescriptionEnhancer {
             params.getBuildTarget().withAppendedFlavors(
                 CxxStrip.RULE_FLAVOR, stripStyle.getFlavor()),
             Suppliers.ofInstance(ImmutableSortedSet.of(unstrippedBinaryRule)),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+            Suppliers.ofInstance(ImmutableSortedSet.of()));
     Optional<BuildRule> exisitingRule = resolver.getRuleOptional(stripRuleParams.getBuildTarget());
     if (exisitingRule.isPresent()) {
       Preconditions.checkArgument(exisitingRule.get() instanceof CxxStrip);
@@ -961,7 +960,7 @@ public class CxxDescriptionEnhancer {
                 ImmutableSortedSet.copyOf(
                     pathResolver.filterBuildRuleInputs(
                         compilationDatabases.get().getSourcePaths()))),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,
         ImmutableSortedSet.copyOf(
             pathResolver.getAllAbsolutePaths(compilationDatabases.get().getSourcePaths())),
@@ -1053,7 +1052,7 @@ public class CxxDescriptionEnhancer {
                 args.langPreprocessorFlags,
                 cxxPlatform),
             ImmutableList.of(headerSymlinkTree),
-            ImmutableSet.<FrameworkPath>of(),
+            ImmutableSet.of(),
             CxxLibraryDescription.getTransitiveCxxPreprocessorInput(
                 params,
                 ruleResolver,
@@ -1061,7 +1060,7 @@ public class CxxDescriptionEnhancer {
                 cxxPlatform,
                 exportedPreprocessorFlags,
                 exportedHeaders,
-                args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of())));
+                args.frameworks.or(ImmutableSortedSet.of())));
 
     // Create rule to build the object files.
     return CxxSourceRuleFactory.requirePreprocessAndCompileRules(
@@ -1148,8 +1147,8 @@ public class CxxDescriptionEnhancer {
     return new SymlinkTree(
         params.copyWithChanges(
             symlinkTreeTarget,
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
+            Suppliers.ofInstance(ImmutableSortedSet.of()),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,
         symlinkTreeRoot,
         links.build());

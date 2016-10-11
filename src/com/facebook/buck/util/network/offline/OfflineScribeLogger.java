@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util.network.offline;
 
-import com.facebook.buck.counters.Counter;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.event.BuckEventBus;
@@ -130,17 +129,17 @@ public class OfflineScribeLogger extends ScribeLogger {
     this.totalLinesResent = new IntegerCounter(
         COUNTERS_CATEGORY,
         "total_lines_resent",
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     this.totalBytesResent = new IntegerCounter(
         COUNTERS_CATEGORY,
         "total_bytes_resent",
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     this.logfilesResent = new IntegerCounter(
         COUNTERS_CATEGORY,
         "logfiles_resent",
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     buckEventBus.post(new CounterRegistry.AsyncCounterRegistrationEvent(
-        ImmutableSet.<Counter>of(totalLinesResent, totalBytesResent, logfilesResent)));
+        ImmutableSet.of(totalLinesResent, totalBytesResent, logfilesResent)));
   }
 
   @Override

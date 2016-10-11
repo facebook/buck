@@ -54,7 +54,7 @@ public class TouchStepTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(
         new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1)),
         tmp.getRoot(),
-        ImmutableSet.<Path>of());
+        ImmutableSet.of());
     TouchStep touchStep = new TouchStep(projectFilesystem, path);
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     touchStep.execute(executionContext);

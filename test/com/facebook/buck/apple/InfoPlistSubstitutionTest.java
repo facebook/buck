@@ -42,7 +42,7 @@ public class InfoPlistSubstitutionTest {
     assertThat(
         InfoPlistSubstitution.replaceVariablesInString(
             "",
-            ImmutableMap.<String, String>of()),
+            ImmutableMap.of()),
         is(emptyString()));
   }
 
@@ -51,7 +51,7 @@ public class InfoPlistSubstitutionTest {
     assertThat(
         InfoPlistSubstitution.replaceVariablesInString(
             "Hello world",
-            ImmutableMap.<String, String>of()),
+            ImmutableMap.of()),
         equalTo("Hello world"));
   }
 
@@ -99,7 +99,7 @@ public class InfoPlistSubstitutionTest {
     thrown.expectMessage("Unrecognized plist variable: ${XYZZY:blurgh}");
     InfoPlistSubstitution.replaceVariablesInString(
         "Hello ${XYZZY:blurgh} world",
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
   }
 
   @Test
@@ -108,7 +108,7 @@ public class InfoPlistSubstitutionTest {
     thrown.expectMessage("Recursive plist variable: FOO -> BAR -> BAZ -> FOO");
     InfoPlistSubstitution.replaceVariablesInString(
         "Hello ${FOO}",
-        ImmutableMap.<String, String>of(
+        ImmutableMap.of(
             "FOO", "${BAR}",
             "BAR", "${BAZ}",
             "BAZ", "${FOO}"));
@@ -119,7 +119,7 @@ public class InfoPlistSubstitutionTest {
     assertThat(
         InfoPlistSubstitution.replaceVariablesInString(
             "Hello $(FOO} world",
-            ImmutableMap.<String, String>of()),
+            ImmutableMap.of()),
         equalTo("Hello $(FOO} world"));
   }
 
@@ -128,7 +128,7 @@ public class InfoPlistSubstitutionTest {
     assertThat(
         InfoPlistSubstitution.replaceVariablesInString(
             "Hello ${FOO) world",
-            ImmutableMap.<String, String>of()),
+            ImmutableMap.of()),
         equalTo("Hello ${FOO) world"));
   }
 

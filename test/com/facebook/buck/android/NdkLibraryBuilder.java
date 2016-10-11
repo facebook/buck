@@ -47,12 +47,12 @@ public class NdkLibraryBuilder extends AbstractNodeBuilder<NdkLibraryDescription
 
   public NdkLibraryBuilder(BuildTarget target) {
     super(
-        new NdkLibraryDescription(Optional.<String>absent(), NDK_PLATFORMS) {
+        new NdkLibraryDescription(Optional.absent(), NDK_PLATFORMS) {
           @Override
           protected ImmutableSortedSet<SourcePath> findSources(
               ProjectFilesystem filesystem,
               Path buildRulePath) {
-            return ImmutableSortedSet.<SourcePath>of(
+            return ImmutableSortedSet.of(
                 new PathSourcePath(filesystem, buildRulePath.resolve("Android.mk")));
           }
         },

@@ -56,15 +56,15 @@ public class HeaderPathNormalizer {
   public static HeaderPathNormalizer empty(SourcePathResolver pathResolver) {
     return new HeaderPathNormalizer(
         pathResolver,
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of());
+        ImmutableMap.of(),
+        ImmutableMap.of());
   }
 
   private static <T> Optional<Map.Entry<Path, T>> pathLookup(Path path, Map<Path, T> map) {
     while (path != null) {
       T res = map.get(path);
       if (res != null) {
-        return Optional.<Map.Entry<Path, T>>of(new AbstractMap.SimpleEntry<>(path, res));
+        return Optional.of(new AbstractMap.SimpleEntry<>(path, res));
       }
       path = path.getParent();
     }

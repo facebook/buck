@@ -117,7 +117,7 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
     Optional<Integer> maxWorkers;
     if (args.maxWorkers.isPresent()) {
       // negative or zero: unlimited number of worker processes
-      maxWorkers = args.maxWorkers.get() < 1 ? Optional.<Integer>absent() : args.maxWorkers;
+      maxWorkers = args.maxWorkers.get() < 1 ? Optional.absent() : args.maxWorkers;
     } else {
       // default is 1 worker process (for backwards compatibility)
       maxWorkers = Optional.of(1);

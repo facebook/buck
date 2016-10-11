@@ -26,7 +26,6 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
-import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.i18n.NumberFormatter;
 import com.facebook.buck.json.ParseBuckFileEvent;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
@@ -139,7 +138,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   protected final AtomicInteger numRulesCompleted = new AtomicInteger();
 
-  protected Optional<ProgressEstimator> progressEstimator = Optional.<ProgressEstimator>absent();
+  protected Optional<ProgressEstimator> progressEstimator = Optional.absent();
 
   protected final CacheRateStatsKeeper cacheRateStatsKeeper;
 
@@ -192,7 +191,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   public void setProgressEstimator(ProgressEstimator estimator) {
-    progressEstimator = Optional.<ProgressEstimator>of(estimator);
+    progressEstimator = Optional.of(estimator);
   }
 
   public void setPublicAnnouncements(ImmutableList<String> announcements) {
@@ -212,7 +211,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       if (progressEstimator.isPresent()) {
         return progressEstimator.get().getApproximateBuildProgress();
       } else {
-        return Optional.<Double>absent();
+        return Optional.absent();
       }
     }
   }
@@ -221,7 +220,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     if (progressEstimator.isPresent()) {
       return progressEstimator.get().getEstimatedProgressOfGeneratingProjectFiles();
     } else {
-      return Optional.<Double>absent();
+      return Optional.absent();
     }
   }
 
@@ -229,7 +228,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     if (progressEstimator.isPresent()) {
       return progressEstimator.get().getEstimatedProgressOfProcessingBuckFiles();
     } else {
-      return Optional.<Double>absent();
+      return Optional.absent();
     }
   }
 
@@ -300,7 +299,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
     EventPair pair = EventPair.builder()
         .setStart(startEvent)
-        .setFinish(Optional.<BuckEventExternalInterface>fromNullable(finishedEvent))
+        .setFinish(Optional.fromNullable(finishedEvent))
         .build();
     return logEventPair(prefix,
         suffix,

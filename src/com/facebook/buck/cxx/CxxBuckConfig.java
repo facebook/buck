@@ -219,7 +219,7 @@ public class CxxBuckConfig {
   }
 
   public Optional<PreprocessorProvider> getPreprocessorProvider(String field) {
-    Optional<CxxToolProvider.Type> defaultType = Optional.<CxxToolProvider.Type>absent();
+    Optional<CxxToolProvider.Type> defaultType = Optional.absent();
     Optional<CxxToolProviderParams> params = getCxxToolProviderParams(field, defaultType);
     if (!params.isPresent()) {
       return Optional.absent();
@@ -230,7 +230,7 @@ public class CxxBuckConfig {
   public Optional<CompilerProvider> getCompilerProvider(String field) {
     Optional<CxxToolProviderParams> params = getCxxToolProviderParams(
         field,
-        Optional.<CxxToolProvider.Type>absent());
+        Optional.absent());
     if (!params.isPresent()) {
       return Optional.absent();
     }
@@ -246,7 +246,7 @@ public class CxxBuckConfig {
     }
     Optional<LinkerProvider.Type> type =
         delegate.getEnum(cxxSection, "linker_platform", LinkerProvider.Type.class);
-    return Optional.<LinkerProvider>of(
+    return Optional.of(
         new DefaultLinkerProvider(type.or(defaultType), toolProvider.get()));
   }
 

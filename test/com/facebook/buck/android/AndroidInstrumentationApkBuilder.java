@@ -36,7 +36,7 @@ public class AndroidInstrumentationApkBuilder
         new AndroidInstrumentationApkDescription(
             new ProGuardConfig(FakeBuckConfig.builder().build()),
             ANDROID_JAVAC_OPTIONS,
-            ImmutableMap.<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform>of(),
+            ImmutableMap.of(),
             MoreExecutors.newDirectExecutorService(),
             new CxxBuckConfig(new FakeBuckConfig.Builder().build())),
         target);

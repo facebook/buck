@@ -109,7 +109,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
 
   public static final Optional<String> getTarget(final ImmutableMap<String, String> metadata) {
     return metadata.containsKey(TARGET_KEY) ?
-        Optional.of(metadata.get(TARGET_KEY)) : Optional.<String>absent();
+        Optional.of(metadata.get(TARGET_KEY)) : Optional.absent();
   }
 
   public abstract static class Started extends ArtifactCacheEvent {

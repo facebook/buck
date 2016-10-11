@@ -38,7 +38,7 @@ public class CxxTestBuilder extends
             cxxBuckConfig,
             defaultCxxPlatform,
             cxxPlatforms,
-            /* testRuleTimeoutMs */ Optional.<Long>absent()),
+            /* testRuleTimeoutMs */ Optional.absent()),
         target);
   }
 

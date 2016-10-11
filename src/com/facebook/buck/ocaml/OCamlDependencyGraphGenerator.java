@@ -48,7 +48,7 @@ public class OCamlDependencyGraphGenerator {
     parseDependencies(depToolOutput);
     Preconditions.checkNotNull(graph);
     final ImmutableList<String> sortedDeps = TopologicalSort.sort(
-        graph, Predicates.<String>alwaysTrue());
+        graph, Predicates.alwaysTrue());
 
     // Two copies of dependencies as .cmo can map to .ml or .re
 

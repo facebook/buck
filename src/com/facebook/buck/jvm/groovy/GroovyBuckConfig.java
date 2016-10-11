@@ -56,6 +56,6 @@ public class GroovyBuckConfig {
             groovyHomePath.resolve("bin/groovyc"),
             delegate.getEnvironment());
 
-    return Suppliers.<Tool>ofInstance(new HashedFileTool(compiler));
+    return Suppliers.ofInstance(new HashedFileTool(compiler));
   }
 }

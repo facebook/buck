@@ -98,7 +98,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         new DefaultPreprocessor(preprocessorTool),
         PreprocessorFlags.builder().build(),
         defaultFrameworkPathSearchPathFunction,
-        ImmutableList.<CxxHeaders>of());
+        ImmutableList.of());
 
     return new CxxInferCapture(
         buildRuleParams,
@@ -125,7 +125,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         .setUnflavoredBuildTarget(
             UnflavoredBuildTarget.of(
                 filesystem.getRootPath(),
-                Optional.<String>absent(),
+                Optional.absent(),
                 "//target",
                 "short"))
         .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
@@ -143,7 +143,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAndAggregatingRules =
         new CxxInferCaptureAndAggregatingRules<>(
-            ImmutableSet.<CxxInferCapture>of(),
+            ImmutableSet.of(),
             ImmutableSet.<CxxInferAnalyze>of());
 
     CxxInferAnalyze analyzeRule = new CxxInferAnalyze(
@@ -201,7 +201,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     CxxInferCaptureAndAggregatingRules<CxxInferAnalyze> captureAndAggregatingRules =
         new CxxInferCaptureAndAggregatingRules<>(
-            ImmutableSet.<CxxInferCapture>of(),
+            ImmutableSet.of(),
             ImmutableSet.<CxxInferAnalyze>of());
 
     CxxInferAnalyze analyzeRule = new CxxInferAnalyze(
@@ -317,7 +317,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         .setUnflavoredBuildTarget(
             UnflavoredBuildTarget.of(
                 filesystem1.getRootPath(),
-                Optional.<String>absent(),
+                Optional.absent(),
                 "//target/in_default_cell",
                 "short"))
         .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())

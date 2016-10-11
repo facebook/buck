@@ -35,7 +35,6 @@ import com.google.common.hash.Hashing;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
@@ -65,7 +64,7 @@ public class PathHashingTest {
         hasher,
         new NullFileHashCache(),
         emptyFilesystem,
-        ImmutableSortedSet.<Path>of());
+        ImmutableSortedSet.of());
     HashCode emptyStringHashCode = Hashing.sha1().newHasher().hash();
     assertThat(
         hasher.hash(),

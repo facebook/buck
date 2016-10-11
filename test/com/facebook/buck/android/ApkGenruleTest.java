@@ -38,7 +38,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -129,7 +128,7 @@ public class ApkGenruleTest {
         parser.parse(
             EasyMock.eq(":fb4a"),
             EasyMock.anyObject(BuildTargetPatternParser.class),
-            EasyMock.<CellPathResolver>anyObject()))
+            EasyMock.anyObject()))
         .andStubReturn(apkTarget);
     EasyMock.replay(parser);
     BuildTarget buildTarget =

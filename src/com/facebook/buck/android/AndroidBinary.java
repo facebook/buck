@@ -452,7 +452,7 @@ public class AndroidBinary
         getStepsForNativeAssets(
             steps,
             nativeLibDirs == null ?
-                Optional.<ImmutableCollection<SourcePath>>absent() : Optional.of(nativeLibDirs),
+                Optional.absent() : Optional.of(nativeLibDirs),
             libSubdirectory,
             module.isRootModule() ? "metadata.txt" : "libs.txt",
             module);
@@ -749,9 +749,9 @@ public class AndroidBinary
           .toSet();
 
       AbstractGenruleStep.CommandString commandString = new AbstractGenruleStep.CommandString(
-          /* cmd */ Optional.<String>absent(),
+          /* cmd */ Optional.absent(),
           /* bash */ preprocessJavaClassesBash.transform(macroExpander),
-          /* cmdExe */ Optional.<String>absent());
+          /* cmdExe */ Optional.absent());
       steps.add(new AbstractGenruleStep(
           getProjectFilesystem(),
           this.getBuildTarget(),
@@ -963,7 +963,7 @@ public class AndroidBinary
         getProjectFilesystem(),
         proguardJarOverride.isPresent() ?
             Optional.of(getResolver().getAbsolutePath(proguardJarOverride.get())) :
-            Optional.<Path>absent(),
+            Optional.absent(),
         proguardMaxHeapSize,
         proguardAgentPath,
         proguardConfigDir.resolve("proguard.txt"),
@@ -1131,7 +1131,7 @@ public class AndroidBinary
       }
 
       // Adjust smart-dex inputs for the split-zip case.
-      primaryInputsToDex = Suppliers.<Set<Path>>ofInstance(ImmutableSet.of(primaryJarPath));
+      primaryInputsToDex = Suppliers.ofInstance(ImmutableSet.of(primaryJarPath));
       Supplier<Multimap<Path, Path>> secondaryOutputToInputsMap =
           splitZipCommand.getOutputToInputsMapSupplier(
               secondaryDexDir.get(),

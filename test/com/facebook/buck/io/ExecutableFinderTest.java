@@ -52,7 +52,7 @@ public class ExecutableFinderTest {
             .getOptionalExecutable(
                 Paths.get("blech"),
                 ImmutableList.of(dir1, dir2, dir3),
-                ImmutableList.<String>of()));
+                ImmutableList.of()));
   }
 
   @Test
@@ -72,7 +72,7 @@ public class ExecutableFinderTest {
         new ExecutableFinder().getOptionalExecutable(
             Paths.get("blech"),
             ImmutableList.of(dir1, dir2, dir3),
-            ImmutableList.<String>of()));
+            ImmutableList.of()));
   }
 
   @Test
@@ -88,7 +88,7 @@ public class ExecutableFinderTest {
         new ExecutableFinder().getOptionalExecutable(
             Paths.get("foo"),
             ImmutableList.of(dir1, dir2),
-            ImmutableList.<String>of()));
+            ImmutableList.of()));
   }
 
   @Test
@@ -104,7 +104,7 @@ public class ExecutableFinderTest {
         new ExecutableFinder().getOptionalExecutable(
             Paths.get("blech"),
             ImmutableList.of(dir1, dir2, dir3),
-            ImmutableList.<String>of()));
+            ImmutableList.of()));
   }
 
   @Test
@@ -119,7 +119,7 @@ public class ExecutableFinderTest {
         new ExecutableFinder().getOptionalExecutable(
             Paths.get("blech"),
             ImmutableList.of(dir2),
-            ImmutableList.<String>of()));
+            ImmutableList.of()));
   }
 
   @Test
@@ -137,7 +137,7 @@ public class ExecutableFinderTest {
         new ExecutableFinder().getOptionalExecutable(
             Paths.get("blech"),
             ImmutableList.of(dir1, dir2, dir3),
-            ImmutableList.<String>of()));
+            ImmutableList.of()));
   }
 
   @Test
@@ -151,7 +151,7 @@ public class ExecutableFinderTest {
         new ExecutableFinder().getOptionalExecutable(
             Paths.get("blech"),
             ImmutableList.of(dir1, dir2, dir3),
-            ImmutableList.<String>of()));
+            ImmutableList.of()));
   }
 
   @Test
@@ -160,8 +160,8 @@ public class ExecutableFinderTest {
         Optional.<Path>absent(),
         new ExecutableFinder().getOptionalExecutable(
             Paths.get("blech"),
-            ImmutableList.<Path>of(),
-            ImmutableList.<String>of()));
+            ImmutableList.of(),
+            ImmutableList.of()));
   }
 
   @Test
@@ -181,7 +181,7 @@ public class ExecutableFinderTest {
         new ExecutableFinder().getOptionalExecutable(
             Paths.get("bar"),
             ImmutableList.of(baz),
-            ImmutableList.<String>of()));
+            ImmutableList.of()));
   }
 
   @Test
@@ -220,7 +220,7 @@ public class ExecutableFinderTest {
         Optional.absent(),
         new ExecutableFinder().getOptionalExecutable(
             exe.toAbsolutePath(),
-            ImmutableMap.<String, String>of()));
+            ImmutableMap.of()));
   }
 
   @Test
@@ -241,7 +241,7 @@ public class ExecutableFinderTest {
         Optional.absent(),
         new ExecutableFinder().getOptionalToolPath(
             "swift",
-            ImmutableList.<Path>of()));
+            ImmutableList.of()));
   }
 
   private Path createExecutable(String executablePath) throws IOException {

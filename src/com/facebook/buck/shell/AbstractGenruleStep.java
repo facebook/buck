@@ -179,7 +179,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
   }
 
   private enum ShellType {
-    CMD_EXE("cmd", ImmutableList.<String>of()),
+    CMD_EXE("cmd", ImmutableList.of()),
     BASH("sh", ImmutableList.of("/bin/bash", "-e")),
     ;
     private final String extension;

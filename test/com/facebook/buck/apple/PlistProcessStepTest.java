@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
 import com.dd.plist.NSArray;
-import com.dd.plist.NSObject;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 
@@ -48,10 +47,10 @@ public class PlistProcessStepTest {
     PlistProcessStep plistProcessStep = new PlistProcessStep(
         projectFilesystem,
         INPUT_PATH,
-        Optional.<Path>absent(),
+        Optional.absent(),
         OUTPUT_PATH,
-        ImmutableMap.<String, NSObject>of(),
-        ImmutableMap.<String, NSObject>of(),
+        ImmutableMap.of(),
+        ImmutableMap.of(),
         PlistProcessStep.OutputFormat.XML);
 
     projectFilesystem.writeContentsToPath(
@@ -72,10 +71,10 @@ public class PlistProcessStepTest {
     PlistProcessStep plistProcessStep = new PlistProcessStep(
         projectFilesystem,
         INPUT_PATH,
-        Optional.<Path>absent(),
+        Optional.absent(),
         OUTPUT_PATH,
-        ImmutableMap.<String, NSObject>of(),
-        ImmutableMap.<String, NSObject>of(
+        ImmutableMap.of(),
+        ImmutableMap.of(
             "Key1", new NSString("OverrideValue")),
         PlistProcessStep.OutputFormat.XML);
 
@@ -103,11 +102,11 @@ public class PlistProcessStepTest {
     PlistProcessStep plistProcessStep = new PlistProcessStep(
         projectFilesystem,
         INPUT_PATH,
-        Optional.<Path>absent(),
+        Optional.absent(),
         OUTPUT_PATH,
-        ImmutableMap.<String, NSObject>of(
+        ImmutableMap.of(
             "Key1", new NSString("OverrideValue")),
-        ImmutableMap.<String, NSObject>of(),
+        ImmutableMap.of(),
         PlistProcessStep.OutputFormat.XML);
 
     NSDictionary dict = new NSDictionary();
@@ -133,10 +132,10 @@ public class PlistProcessStepTest {
     PlistProcessStep plistProcessStep = new PlistProcessStep(
         projectFilesystem,
         INPUT_PATH,
-        Optional.<Path>absent(),
+        Optional.absent(),
         OUTPUT_PATH,
-        ImmutableMap.<String, NSObject>of(),
-        ImmutableMap.<String, NSObject>of(
+        ImmutableMap.of(),
+        ImmutableMap.of(
             "Key1", new NSString("OverrideValue")),
         PlistProcessStep.OutputFormat.XML);
 
@@ -165,8 +164,8 @@ public class PlistProcessStepTest {
         INPUT_PATH,
         Optional.of(MERGE_PATH),
         OUTPUT_PATH,
-        ImmutableMap.<String, NSObject>of(),
-        ImmutableMap.<String, NSObject>of(),
+        ImmutableMap.of(),
+        ImmutableMap.of(),
         PlistProcessStep.OutputFormat.XML);
 
     NSDictionary dict = new NSDictionary();

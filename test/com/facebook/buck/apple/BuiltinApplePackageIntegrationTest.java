@@ -35,7 +35,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.Unzip;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
@@ -223,9 +222,9 @@ public class BuiltinApplePackageIntegrationTest {
     ProcessExecutor.Result result = executor.launchAndExecute(
         processExecutorParams,
         options,
-        /* stdin */ Optional.<String>absent(),
-        /* timeOutMs */ Optional.<Long>absent(),
-        /* timeOutHandler */ Optional.<Function<Process, Void>>absent());
+        /* stdin */ Optional.absent(),
+        /* timeOutMs */ Optional.absent(),
+        /* timeOutHandler */ Optional.absent());
 
     assertEquals(result.getExitCode(), 0);
     assertTrue(result.getStdout().isPresent());

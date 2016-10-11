@@ -17,7 +17,6 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.event.BuckEventBus;
-import okhttp3.Request;
 
 import org.easymock.EasyMock;
 import org.junit.Assert;
@@ -42,10 +41,10 @@ public class RetryingHttpServiceTest {
   @Test
   public void testRetryOnce() throws IOException {
     EasyMock.expect(
-        mockService.makeRequest(EasyMock.<String>isNull(), EasyMock.<Request.Builder>isNull()))
+        mockService.makeRequest(EasyMock.isNull(), EasyMock.isNull()))
         .andThrow(new IOException()).once();
     EasyMock.expect(
-        mockService.makeRequest(EasyMock.<String>isNull(), EasyMock.<Request.Builder>isNull()))
+        mockService.makeRequest(EasyMock.isNull(), EasyMock.isNull()))
         .andReturn(null).once();
     EasyMock.replay(mockService);
 
@@ -61,7 +60,7 @@ public class RetryingHttpServiceTest {
   public void testAllRetriesFailed() throws IOException {
     String errorMessage = "Super cool and amazing error msg.";
     EasyMock.expect(
-        mockService.makeRequest(EasyMock.<String>isNull(), EasyMock.<Request.Builder>isNull()))
+        mockService.makeRequest(EasyMock.isNull(), EasyMock.isNull()))
         .andThrow(new IOException(errorMessage)).times(2);
     EasyMock.replay(mockService);
 

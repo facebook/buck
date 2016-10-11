@@ -108,7 +108,7 @@ public class CxxPrepareForLinkStepTest {
     CxxPrepareForLinkStep step = new CxxPrepareForLinkStep(
         argFilePath,
         fileListPath,
-        ImmutableList.<Arg>of(
+        ImmutableList.of(
             new StringArg("-filelist"),
             new StringArg(fileListPath.toString())),
         output,
@@ -145,7 +145,7 @@ public class CxxPrepareForLinkStepTest {
 
   private void checkContentsOfFile(Path file, ImmutableList<String> contents) throws IOException {
     List<String> fileContents = Files.readAllLines(file, StandardCharsets.UTF_8);
-    assertThat(fileContents, Matchers.<List<String>>equalTo(contents));
+    assertThat(fileContents, Matchers.equalTo(contents));
   }
 
 

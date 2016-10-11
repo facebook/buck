@@ -72,7 +72,7 @@ public class WatchmanWatcherIntegrationTest {
             ImmutableMap.copyOf(System.getenv()),
             new Console(Verbosity.ALL, System.out, System.err, Ansi.withoutTty()),
             new DefaultClock(),
-            Optional.<Long>absent());
+            Optional.absent());
     assumeTrue(watchman.getWatchmanClient().isPresent());
 
     eventBus = new EventBus();

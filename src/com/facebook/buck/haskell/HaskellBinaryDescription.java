@@ -171,8 +171,8 @@ public class HaskellBinaryDescription implements
                 haskellConfig,
                 depType,
                 args.main,
-                Optional.<HaskellPackageInfo>absent(),
-                args.compilerFlags.or(ImmutableList.<String>of()),
+                Optional.absent(),
+                args.compilerFlags.or(ImmutableList.of()),
                 HaskellSources.from(
                     params.getBuildTarget(),
                     resolver,

@@ -165,7 +165,7 @@ public class ZipStep implements Step {
           throws IOException {
         if (!dir.equals(baseDir) && !isSkipFile(dir)) {
           CustomZipEntry entry = getZipEntry(getEntryName(dir), dir, attrs);
-          entries.put(entry.getName(), new Pair<>(entry, Optional.<Path>absent()));
+          entries.put(entry.getName(), new Pair<>(entry, Optional.absent()));
         }
         return FileVisitResult.CONTINUE;
       }

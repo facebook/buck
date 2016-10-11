@@ -66,7 +66,7 @@ public class RecordingFileHashLoader implements FileHashLoader {
     synchronized (this) {
       if (!seenPaths.contains(path)) {
         seenPaths.add(path);
-        record(path, Optional.<String>absent(), hashCode);
+        record(path, Optional.absent(), hashCode);
       }
     }
     return hashCode;

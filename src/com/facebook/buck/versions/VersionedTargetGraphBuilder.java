@@ -23,7 +23,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
-import com.facebook.buck.rules.TargetGroup;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -306,7 +305,7 @@ public class VersionedTargetGraphBuilder {
     return new TargetGraph(
         graph,
         ImmutableMap.copyOf(index),
-        ImmutableSet.<TargetGroup>of());
+        ImmutableSet.of());
   }
 
   public static TargetGraphAndBuildTargets transform(

@@ -392,7 +392,7 @@ public final class Main {
         return Optional.absent();
       }
 
-      return port >= 0 ? Optional.of(port) : Optional.<Integer>absent();
+      return port >= 0 ? Optional.of(port) : Optional.absent();
     }
 
     public Optional<WebServer> getWebServer() {
@@ -1093,7 +1093,7 @@ public final class Main {
 
           ImmutableList<String> remainingArgs = args.length > 1
               ? ImmutableList.copyOf(Arrays.copyOfRange(args, 1, args.length))
-              : ImmutableList.<String>of();
+              : ImmutableList.of();
 
           CommandEvent.Started startedEvent = CommandEvent.started(
               args.length > 0 ? args[0] : "",
@@ -1159,7 +1159,7 @@ public final class Main {
           if (platform == Platform.WINDOWS) {
             processManager = Optional.absent();
           } else {
-            processManager = Optional.<ProcessManager>of(new PkillProcessManager(processExecutor));
+            processManager = Optional.of(new PkillProcessManager(processExecutor));
           }
           Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier =
               createAndroidPlatformTargetSupplier(
@@ -1213,7 +1213,7 @@ public final class Main {
         } catch (Throwable t) {
           LOG.debug(t, "Failing build on exception.");
           closeHttpExecutorService(
-              cacheBuckConfig, Optional.<BuckEventBus>absent(), httpWriteExecutorService);
+              cacheBuckConfig, Optional.absent(), httpWriteExecutorService);
           closeDiskIoExecutorService(diskIoExecutorService);
           flushEventListeners(console, buildId, eventListeners);
           throw t;
@@ -1732,7 +1732,7 @@ public final class Main {
   }
 
   public static void main(String[] args) {
-    new Main(System.out, System.err, System.in).runMainThenExit(args, Optional.<NGContext>absent());
+    new Main(System.out, System.err, System.in).runMainThenExit(args, Optional.absent());
   }
 
   private static void markFdCloseOnExec(int fd) {

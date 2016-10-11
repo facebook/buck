@@ -106,23 +106,23 @@ public class NativeLinkablesTest {
     FakeNativeLinkable b =
         new FakeNativeLinkable(
             "//:b",
-            ImmutableList.<NativeLinkable>of(),
-            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.of(),
+            ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder()
                 .addAllArgs(StringArg.from("b"))
                 .build(),
-            ImmutableMap.<String, SourcePath>of());
+            ImmutableMap.of());
     FakeNativeLinkable a =
         new FakeNativeLinkable(
             "//:a",
             ImmutableList.of(b),
-            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder()
                 .addAllArgs(StringArg.from("a"))
                 .build(),
-            ImmutableMap.<String, SourcePath>of());
+            ImmutableMap.of());
     assertThat(
         NativeLinkables.getNativeLinkables(
             CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -136,23 +136,23 @@ public class NativeLinkablesTest {
     FakeNativeLinkable b =
         new FakeNativeLinkable(
             "//:b",
-            ImmutableList.<NativeLinkable>of(),
-            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.of(),
+            ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder()
                 .addAllArgs(StringArg.from("b"))
                 .build(),
-            ImmutableMap.<String, SourcePath>of());
+            ImmutableMap.of());
     FakeNativeLinkable a =
         new FakeNativeLinkable(
             "//:a",
-            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.of(),
             ImmutableList.of(b),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder()
                 .addAllArgs(StringArg.from("a"))
                 .build(),
-            ImmutableMap.<String, SourcePath>of());
+            ImmutableMap.of());
     assertThat(
         NativeLinkables.getNativeLinkables(
             CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -166,23 +166,23 @@ public class NativeLinkablesTest {
     FakeNativeLinkable b =
         new FakeNativeLinkable(
             "//:b",
-            ImmutableList.<NativeLinkable>of(),
-            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.of(),
+            ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder()
                 .addAllArgs(StringArg.from("b"))
                 .build(),
-            ImmutableMap.<String, SourcePath>of());
+            ImmutableMap.of());
     FakeNativeLinkable a =
         new FakeNativeLinkable(
             "//:a",
             ImmutableList.of(b),
-            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.of(),
             NativeLinkable.Linkage.STATIC,
             NativeLinkableInput.builder()
                 .addAllArgs(StringArg.from("a"))
                 .build(),
-            ImmutableMap.<String, SourcePath>of());
+            ImmutableMap.of());
     assertThat(
         NativeLinkables.getNativeLinkables(
             CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -196,23 +196,23 @@ public class NativeLinkablesTest {
     FakeNativeLinkable b =
         new FakeNativeLinkable(
             "//:b",
-            ImmutableList.<NativeLinkable>of(),
-            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.of(),
+            ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder()
                 .addAllArgs(StringArg.from("b"))
                 .build(),
-            ImmutableMap.<String, SourcePath>of());
+            ImmutableMap.of());
     FakeNativeLinkable a =
         new FakeNativeLinkable(
             "//:a",
             ImmutableList.of(b),
-            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder()
                 .addAllArgs(StringArg.from("a"))
                 .build(),
-            ImmutableMap.<String, SourcePath>of());
+            ImmutableMap.of());
     assertThat(
         NativeLinkables.getNativeLinkables(
             CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -226,27 +226,27 @@ public class NativeLinkablesTest {
     FakeNativeLinkable c =
         new FakeNativeLinkable(
             "//:c",
-            ImmutableList.<NativeLinkable>of(),
-            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.of(),
+            ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder().build(),
-            ImmutableMap.<String, SourcePath>of("libc.so", new FakeSourcePath("libc.so")));
+            ImmutableMap.of("libc.so", new FakeSourcePath("libc.so")));
     FakeNativeLinkable b =
         new FakeNativeLinkable(
             "//:b",
             ImmutableList.of(c),
-            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.of(),
             NativeLinkable.Linkage.STATIC,
             NativeLinkableInput.builder().build(),
-            ImmutableMap.<String, SourcePath>of("libb.so", new FakeSourcePath("libb.so")));
+            ImmutableMap.of("libb.so", new FakeSourcePath("libb.so")));
     FakeNativeLinkable a =
         new FakeNativeLinkable(
             "//:a",
             ImmutableList.of(b),
-            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder().build(),
-            ImmutableMap.<String, SourcePath>of("liba.so", new FakeSourcePath("liba.so")));
+            ImmutableMap.of("liba.so", new FakeSourcePath("liba.so")));
     ImmutableSortedMap<String, SourcePath> sharedLibs =
         NativeLinkables.getTransitiveSharedLibraries(
             CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -268,13 +268,13 @@ public class NativeLinkablesTest {
     FakeNativeLinkable c =
         new FakeNativeLinkable(
             "//:c",
-            ImmutableList.<NativeLinkable>of(),
-            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.of(),
+            ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder()
                 .addAllArgs(StringArg.from("c"))
                 .build(),
-            ImmutableMap.<String, SourcePath>of());
+            ImmutableMap.of());
     FakeBuildRule b =
         new FakeBuildRule(
             "//:b",
@@ -283,13 +283,13 @@ public class NativeLinkablesTest {
     FakeNativeLinkable a =
         new FakeNativeLinkable(
             "//:a",
-            ImmutableList.<NativeLinkable>of(),
-            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.of(),
+            ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder()
                 .addAllArgs(StringArg.from("a"))
                 .build(),
-            ImmutableMap.<String, SourcePath>of(),
+            ImmutableMap.of(),
             b);
     assertThat(a.getDeps(), Matchers.hasItem(b));
     assertThat(
@@ -324,19 +324,19 @@ public class NativeLinkablesTest {
     FakeNativeLinkable a =
         new FakeNativeLinkable(
             "//:a",
-            ImmutableList.<NativeLinkable>of(),
-            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.of(),
+            ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder().build(),
-            ImmutableMap.<String, SourcePath>of("liba.so", new FakeSourcePath("liba1.so")));
+            ImmutableMap.of("liba.so", new FakeSourcePath("liba1.so")));
     FakeNativeLinkable b =
         new FakeNativeLinkable(
             "//:b",
-            ImmutableList.<NativeLinkable>of(),
-            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.of(),
+            ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder().build(),
-            ImmutableMap.<String, SourcePath>of("liba.so", new FakeSourcePath("liba2.so")));
+            ImmutableMap.of("liba.so", new FakeSourcePath("liba2.so")));
     NativeLinkables.getTransitiveSharedLibraries(
         CxxPlatformUtils.DEFAULT_PLATFORM,
         ImmutableList.of(a, b),
@@ -349,19 +349,19 @@ public class NativeLinkablesTest {
     FakeNativeLinkable a =
         new FakeNativeLinkable(
             "//:a",
-            ImmutableList.<NativeLinkable>of(),
-            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.of(),
+            ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder().build(),
-            ImmutableMap.<String, SourcePath>of("libc.so", path));
+            ImmutableMap.of("libc.so", path));
     FakeNativeLinkable b =
         new FakeNativeLinkable(
             "//:b",
-            ImmutableList.<NativeLinkable>of(),
-            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.of(),
+            ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder().build(),
-            ImmutableMap.<String, SourcePath>of("libc.so", path));
+            ImmutableMap.of("libc.so", path));
     ImmutableSortedMap<String, SourcePath> sharedLibs =
         NativeLinkables.getTransitiveSharedLibraries(
             CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -377,25 +377,25 @@ public class NativeLinkablesTest {
     FakeNativeLinkable b =
         new FakeNativeLinkable(
             "//:b",
-            ImmutableList.<NativeLinkable>of(),
-            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.of(),
+            ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder().build(),
-            ImmutableMap.<String, SourcePath>of());
+            ImmutableMap.of());
     FakeNativeLinkable a =
         new FakeNativeLinkable(
             "//:a",
             ImmutableList.<NativeLinkable>of(b),
-            ImmutableList.<NativeLinkable>of(),
+            ImmutableList.of(),
             NativeLinkable.Linkage.ANY,
             NativeLinkableInput.builder().build(),
-            ImmutableMap.<String, SourcePath>of());
+            ImmutableMap.of());
     assertThat(
         NativeLinkables.getNativeLinkables(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(a),
             Linker.LinkableDepType.STATIC,
-            Predicates.<NativeLinkable>alwaysTrue()),
+            Predicates.alwaysTrue()),
         Matchers.equalTo(
             ImmutableMap.<BuildTarget, NativeLinkable>of(
                 a.getBuildTarget(), a,
@@ -405,7 +405,7 @@ public class NativeLinkablesTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(a),
             Linker.LinkableDepType.STATIC,
-            Predicates.<NativeLinkable>equalTo(a)),
+            Predicates.equalTo(a)),
         Matchers.equalTo(ImmutableMap.<BuildTarget, NativeLinkable>of(a.getBuildTarget(), a)));
   }
 

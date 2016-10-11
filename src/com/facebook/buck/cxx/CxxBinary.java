@@ -128,7 +128,7 @@ public class CxxBinary
         cxxPlatform,
         headerVisibility,
         CxxPreprocessables.IncludeType.LOCAL,
-        ImmutableMultimap.<CxxSource.Type, String>of(),
+        ImmutableMultimap.of(),
         frameworks);
   }
 

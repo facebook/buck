@@ -71,7 +71,7 @@ public class OCamlDepToolStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(@Nullable ExecutionContext context) {
 
-    ImmutableList.Builder<String> cmd = ImmutableList.<String>builder();
+    ImmutableList.Builder<String> cmd = ImmutableList.builder();
 
     cmd
         .addAll(ocamlDepTool.getCommandPrefix(resolver))

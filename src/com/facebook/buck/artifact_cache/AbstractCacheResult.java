@@ -31,24 +31,24 @@ abstract class AbstractCacheResult {
   private static final CacheResult MISS_RESULT =
       CacheResult.of(
           CacheResultType.MISS,
-          Optional.<String>absent(),
-          Optional.<String>absent(),
-          Optional.<ImmutableMap<String, String>>absent(),
-          Optional.<Long>absent());
+          Optional.absent(),
+          Optional.absent(),
+          Optional.absent(),
+          Optional.absent());
   private static final CacheResult IGNORED_RESULT =
       CacheResult.of(
           CacheResultType.IGNORED,
-          Optional.<String>absent(),
-          Optional.<String>absent(),
-          Optional.<ImmutableMap<String, String>>absent(),
-          Optional.<Long>absent());
+          Optional.absent(),
+          Optional.absent(),
+          Optional.absent(),
+          Optional.absent());
   private static final CacheResult LOCAL_KEY_UNCHANGED_HIT_RESULT =
       CacheResult.of(
           CacheResultType.LOCAL_KEY_UNCHANGED_HIT,
-          Optional.<String>absent(),
-          Optional.<String>absent(),
-          Optional.<ImmutableMap<String, String>>absent(),
-          Optional.<Long>absent());
+          Optional.absent(),
+          Optional.absent(),
+          Optional.absent(),
+          Optional.absent());
 
   @Value.Parameter
   @JsonProperty("type") public abstract CacheResultType getType();
@@ -101,7 +101,7 @@ abstract class AbstractCacheResult {
     return CacheResult.of(
         CacheResultType.HIT,
         Optional.of(cacheSource),
-        Optional.<String>absent(),
+        Optional.absent(),
         Optional.of(metadata),
         Optional.of(artifactSize));
   }
@@ -110,9 +110,9 @@ abstract class AbstractCacheResult {
     return CacheResult.of(
         CacheResultType.HIT,
         Optional.of(cacheSource),
-        Optional.<String>absent(),
-        Optional.of(ImmutableMap.<String, String>of()),
-        Optional.<Long>absent());
+        Optional.absent(),
+        Optional.of(ImmutableMap.of()),
+        Optional.absent());
   }
 
   public static CacheResult error(String cacheSource, String cacheError) {
@@ -120,8 +120,8 @@ abstract class AbstractCacheResult {
         CacheResultType.ERROR,
         Optional.of(cacheSource),
         Optional.of(cacheError),
-        Optional.<ImmutableMap<String, String>>absent(),
-        Optional.<Long>absent());
+        Optional.absent(),
+        Optional.absent());
   }
 
   public static CacheResult miss() {
@@ -147,13 +147,13 @@ abstract class AbstractCacheResult {
         return CacheResult.of(
             type,
             rest.isEmpty() ?
-                Optional.<String>absent() :
+                Optional.absent() :
                 Optional.of(rest.substring(0, rest.length() - 1).toLowerCase()),
             type == CacheResultType.ERROR ?
                 Optional.of("") :
-                Optional.<String>absent(),
-            Optional.<ImmutableMap<String, String>>absent(),
-            Optional.<Long>absent());
+                Optional.absent(),
+            Optional.absent(),
+            Optional.absent());
       }
     }
     throw new IllegalStateException("invalid cache result string: " + val);

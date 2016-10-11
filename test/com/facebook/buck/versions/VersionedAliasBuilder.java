@@ -53,7 +53,7 @@ class VersionedAliasBuilder extends AbstractNodeBuilder<AbstractVersionedAlias.A
 
   public VersionedAliasBuilder setVersions(String version, String target) {
     return setVersions(
-        ImmutableList.<Map.Entry<Version, BuildTarget>>of(
+        ImmutableList.of(
             new AbstractMap.SimpleEntry<>(
                 Version.of(version),
                 BuildTargetFactory.newInstance(target))));
@@ -61,7 +61,7 @@ class VersionedAliasBuilder extends AbstractNodeBuilder<AbstractVersionedAlias.A
 
   public VersionedAliasBuilder setVersions(String v1, String t1, String v2, String t2) {
     return setVersions(
-        ImmutableList.<Map.Entry<Version, BuildTarget>>of(
+        ImmutableList.of(
             new AbstractMap.SimpleEntry<>(Version.of(v1), BuildTargetFactory.newInstance(t1)),
             new AbstractMap.SimpleEntry<>(Version.of(v2), BuildTargetFactory.newInstance(t2))));
   }

@@ -46,7 +46,7 @@ public class FileFinderTest {
         result);
 
     result = FileFinder.combine(
-        ImmutableSet.<String>of(),
+        ImmutableSet.of(),
         "foo",
         ImmutableSet.of(".exe", ".com", ".bat")).toArray();
     Arrays.sort(result);
@@ -55,7 +55,7 @@ public class FileFinderTest {
         result);
 
     result = FileFinder.combine(
-        ImmutableSet.<String>of("lib", ""),
+        ImmutableSet.of("lib", ""),
         "foo",
         null).toArray();
     Arrays.sort(result);

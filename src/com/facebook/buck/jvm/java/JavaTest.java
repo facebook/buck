@@ -416,7 +416,7 @@ public class JavaTest
         if (testClassNames.isEmpty()) {
           return TestResults.of(
               getBuildTarget(),
-              ImmutableList.<TestCaseSummary>of(),
+              ImmutableList.of(),
               contacts,
               FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
         }
@@ -511,7 +511,7 @@ public class JavaTest
 
   @Override
   public ImmutableSortedSet<BuildRule> getExportedDeps() {
-    return ImmutableSortedSet.<BuildRule>of(compiledTestsLibrary);
+    return ImmutableSortedSet.of(compiledTestsLibrary);
   }
 
   @VisibleForTesting
@@ -648,8 +648,8 @@ public class JavaTest
         getJUnitStep(
             executionContext,
             options,
-            Optional.<Path>absent(),
-            Optional.<Path>absent(),
+            Optional.absent(),
+            Optional.absent(),
             getClassNamesForSources()
             );
     return ExternalTestRunnerTestSpec.builder()

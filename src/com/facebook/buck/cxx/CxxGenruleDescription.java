@@ -378,7 +378,7 @@ public class CxxGenruleDescription
       CxxToolFlags flags =
           ppFlags.toToolFlags(
               pathResolver,
-              Functions.<Path>identity(),
+              Functions.identity(),
               CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
               preprocessor);
       return Joiner.on(' ').join(Iterables.transform(flags.getAllFlags(), Escaper.SHELL_ESCAPER));

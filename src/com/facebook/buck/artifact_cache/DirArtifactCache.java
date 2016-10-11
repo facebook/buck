@@ -36,7 +36,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -106,7 +105,7 @@ public class DirArtifactCache implements ArtifactCache {
       }
 
       // Now copy the artifact out.
-      filesystem.copyFile(getPathForRuleKey(ruleKey, Optional.<String>absent()), output.get());
+      filesystem.copyFile(getPathForRuleKey(ruleKey, Optional.absent()), output.get());
 
       result = CacheResult.hit(name, metadata.build(), filesystem.getFileSize(output.get()));
     } catch (NoSuchFileException e) {
@@ -140,7 +139,7 @@ public class DirArtifactCache implements ArtifactCache {
     try {
       Optional<Path> borrowedAndStoredArtifactPath = Optional.absent();
       for (RuleKey ruleKey : info.getRuleKeys()) {
-        Path artifactPath = getPathForRuleKey(ruleKey, Optional.<String>absent());
+        Path artifactPath = getPathForRuleKey(ruleKey, Optional.absent());
         Path metadataPath = getPathForRuleKey(ruleKey, Optional.of(".metadata"));
 
         if (filesystem.exists(artifactPath) && filesystem.exists(metadataPath)) {
@@ -289,7 +288,7 @@ public class DirArtifactCache implements ArtifactCache {
     final List<Path> allFiles = new ArrayList<>();
     Files.walkFileTree(
         filesystem.resolve(cacheDir),
-        ImmutableSet.<FileVisitOption>of(),
+        ImmutableSet.of(),
         Integer.MAX_VALUE,
         new SimpleFileVisitor<Path>() {
 

@@ -40,7 +40,7 @@ public class ArtifactCachesTest {
         cacheConfig,
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent(),
+        Optional.absent(),
         MoreExecutors.newDirectExecutorService());
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(HttpArtifactCache.class));
   }
@@ -56,7 +56,7 @@ public class ArtifactCachesTest {
         cacheConfig,
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent(),
+        Optional.absent(),
         MoreExecutors.newDirectExecutorService());
 
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
@@ -73,7 +73,7 @@ public class ArtifactCachesTest {
         cacheConfig,
         buckEventBus,
         projectFilesystem,
-        Optional.<String>absent(),
+        Optional.absent(),
         MoreExecutors.newDirectExecutorService());
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(MultiArtifactCache.class));
   }

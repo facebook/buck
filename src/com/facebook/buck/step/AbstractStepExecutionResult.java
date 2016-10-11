@@ -34,7 +34,7 @@ abstract class AbstractStepExecutionResult {
   }
 
   public static StepExecutionResult of(int exitCode) {
-    return StepExecutionResult.of(exitCode, Optional.<String>absent());
+    return StepExecutionResult.of(exitCode, Optional.absent());
   }
 
   public static StepExecutionResult of(ProcessExecutor.Result result) {

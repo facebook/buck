@@ -59,7 +59,7 @@ public class BuildRuleDependencyVisitors {
                 }
               }
             }
-            return traverse.apply(rule) ? rule.getDeps() : ImmutableSet.<BuildRule>of();
+            return traverse.apply(rule) ? rule.getDeps() : ImmutableSet.of();
           }
         };
     visitor.start();
@@ -67,6 +67,6 @@ public class BuildRuleDependencyVisitors {
   }
 
   public static ImmutableSet<BuildRule> maybeVisitAllDeps(BuildRule rule, boolean visitDeps) {
-    return visitDeps ? rule.getDeps() : ImmutableSet.<BuildRule>of();
+    return visitDeps ? rule.getDeps() : ImmutableSet.of();
   }
 }

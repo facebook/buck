@@ -113,7 +113,7 @@ public class JavaBinaryDescription implements
         args.manifestFile.orNull(),
         args.mergeManifests.or(true),
         args.metaInfDirectory.orNull(),
-        args.blacklist.or(ImmutableSet.<Pattern>of()),
+        args.blacklist.or(ImmutableSet.of()),
         transitiveClasspathDeps,
         transitiveClasspaths);
 

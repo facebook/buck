@@ -210,8 +210,8 @@ public class OCamlBuildRulesGenerator {
   private BuildRule generateDebugLauncherRule() {
     BuildRuleParams debugParams = params.copyWithChanges(
         addDebugFlavor(params.getBuildTarget()),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-        Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+        Suppliers.ofInstance(ImmutableSortedSet.of()),
+        Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     OCamlDebugLauncher debugLauncher = new OCamlDebugLauncher(
         debugParams,
@@ -245,7 +245,7 @@ public class OCamlBuildRulesGenerator {
                 .addAll(cxxCompiler.getDeps(pathResolver))
                 .build()),
         Suppliers.ofInstance(
-            ImmutableSortedSet.<BuildRule>of()));
+            ImmutableSortedSet.of()));
 
     ImmutableList.Builder<String> flags = ImmutableList.builder();
     flags.addAll(ocamlContext.getFlags());
@@ -292,7 +292,7 @@ public class OCamlBuildRulesGenerator {
                         .filter(Predicates.not(Predicates.instanceOf(OCamlBuild.class))))
                 .addAll(cxxCompiler.getDeps(pathResolver))
                 .build()),
-    Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
+    Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     ImmutableList.Builder<String> flags = ImmutableList.builder();
     flags.addAll(ocamlContext.getFlags());
@@ -417,7 +417,7 @@ public class OCamlBuildRulesGenerator {
           cmxFiles,
           mlSource.getKey(),
           mlSources,
-          ImmutableList.<Path>of());
+          ImmutableList.of());
     }
     return cmxFiles.build();
   }
@@ -516,7 +516,7 @@ public class OCamlBuildRulesGenerator {
           cmoFiles,
           mlSource.getKey(),
           mlSources,
-          ImmutableList.<Path>of());
+          ImmutableList.of());
     }
     return cmoFiles.build();
   }

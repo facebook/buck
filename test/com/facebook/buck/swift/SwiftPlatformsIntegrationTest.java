@@ -52,7 +52,7 @@ public class SwiftPlatformsIntegrationTest {
   public void testBuildSwiftPlatformWithEmptyToolchainPaths() {
     SwiftPlatform swiftPlatform = SwiftPlatforms.build(
         "iphoneos",
-        ImmutableSet.<Path>of(),
+        ImmutableSet.of(),
         swiftTool, swiftStdTool);
     assertThat(swiftPlatform.getSwiftStdlibTool(), equalTo(swiftStdTool));
     assertThat(swiftPlatform.getSwift(), equalTo(swiftTool));

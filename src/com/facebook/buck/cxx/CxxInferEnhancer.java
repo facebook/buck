@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -331,7 +330,7 @@ public final class CxxInferEnhancer {
             args.langPreprocessorFlags,
             cxxPlatform),
         ImmutableList.of(headerSymlinkTree),
-        args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of()),
+        args.frameworks.or(ImmutableSortedSet.of()),
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
             cxxPlatform,
             FluentIterable.from(params.getDeps())
@@ -355,7 +354,7 @@ public final class CxxInferEnhancer {
             args.langPreprocessorFlags,
             cxxPlatform),
         ImmutableList.of(headerSymlinkTree),
-        ImmutableSet.<FrameworkPath>of(),
+        ImmutableSet.of(),
         CxxLibraryDescription.getTransitiveCxxPreprocessorInput(
             params,
             resolver,
@@ -371,7 +370,7 @@ public final class CxxInferEnhancer {
                 pathResolver,
                 Optional.of(cxxPlatform),
                 args),
-            args.frameworks.or(ImmutableSortedSet.<FrameworkPath>of())));
+            args.frameworks.or(ImmutableSortedSet.of())));
   }
 
   private static ImmutableSet<CxxInferCapture> requireInferCaptureBuildRules(

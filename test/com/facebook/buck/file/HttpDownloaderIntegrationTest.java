@@ -33,7 +33,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
-import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
@@ -62,7 +61,7 @@ public class HttpDownloaderIntegrationTest {
 
   @Before
   public void createDownloader() throws IOException {
-    downloader = new HttpDownloader(Optional.<Proxy>absent());
+    downloader = new HttpDownloader(Optional.absent());
     outputDir = tmp.newFolder().toPath();
   }
 

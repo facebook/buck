@@ -112,7 +112,7 @@ public final class MoreFiles {
   public static void copyRecursively(
       final Path fromPath,
       final Path toPath) throws IOException {
-    copyRecursively(fromPath, toPath, Functions.<Path>identity());
+    copyRecursively(fromPath, toPath, Functions.identity());
   }
 
   /**

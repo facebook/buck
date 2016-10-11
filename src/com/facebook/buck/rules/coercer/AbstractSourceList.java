@@ -34,7 +34,7 @@ import org.immutables.value.Value;
 abstract class AbstractSourceList {
 
   public static final SourceList EMPTY =
-      SourceList.ofUnnamedSources(ImmutableSortedSet.<SourcePath>of());
+      SourceList.ofUnnamedSources(ImmutableSortedSet.of());
 
   public enum Type {
     UNNAMED,
@@ -68,13 +68,13 @@ abstract class AbstractSourceList {
     return SourceList.of(
         Type.UNNAMED,
         Optional.of(unnamedSources),
-        Optional.<ImmutableSortedMap<String, SourcePath>>absent());
+        Optional.absent());
   }
 
   public static SourceList ofNamedSources(ImmutableSortedMap<String, SourcePath> namedSources) {
     return SourceList.of(
         Type.NAMED,
-        Optional.<ImmutableSortedSet<SourcePath>>absent(),
+        Optional.absent(),
         Optional.of(namedSources));
   }
 

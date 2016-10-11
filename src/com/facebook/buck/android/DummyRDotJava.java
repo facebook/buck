@@ -124,7 +124,7 @@ public class DummyRDotJava extends AbstractBuildRule
           rDotJavaSrcFolder,
           forceFinalResourceIds,
           unionPackage,
-          /* rName */ Optional.<String>absent());
+          /* rName */ Optional.absent());
       steps.add(mergeStep);
 
       if (!finalRName.isPresent()) {

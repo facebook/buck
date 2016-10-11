@@ -86,7 +86,7 @@ public class DebugSectionFinderTest {
 
     // No debug sections.
     assertDebugSections(
-        Optional.of(ImmutableMap.<String, ImmutableSet<DebugSectionProperty>>of()),
+        Optional.of(ImmutableMap.of()),
         workspace.resolve("elf.o"));
 
     // DWARF
@@ -149,7 +149,7 @@ public class DebugSectionFinderTest {
   @Test
   public void testUnrecognizedData() {
     assertDebugSections(
-        Optional.<ImmutableMap<String, ImmutableSet<DebugSectionProperty>>>absent(),
+        Optional.absent(),
         ByteBuffer.wrap("some random data".getBytes()));
   }
 

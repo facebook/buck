@@ -101,19 +101,19 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
     secondLevelCacheHitTypes = new TagSetCounter(
         COUNTER_CATEGORY,
         "second_level_cache_hit_types",
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     secondLevelCacheHitBytes = new SamplingCounter(
         COUNTER_CATEGORY,
         "second_level_cache_hit_bytes",
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     secondLevelCacheMisses = new IntegerCounter(
         COUNTER_CATEGORY,
         "second_level_cache_misses",
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     secondLevelHashComputationTimeMs = new SamplingCounter(
         COUNTER_CATEGORY,
         "second_level_hash_computation_time_ms",
-        ImmutableMap.<String, String>of());
+        ImmutableMap.of());
     buckEventBus.post(new CounterRegistry.AsyncCounterRegistrationEvent(
         ImmutableSet.of(
             secondLevelCacheHitTypes,
@@ -175,7 +175,7 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
       final BorrowablePath output) {
 
     return Futures.transformAsync(
-        Futures.<Void>immediateFuture(null),
+        Futures.immediateFuture(null),
         new AsyncFunction<Void, Boolean>() {
           @Override
           public ListenableFuture<Boolean> apply(Void input) throws Exception {

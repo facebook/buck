@@ -134,7 +134,7 @@ public class CxxInferCapture
             new DefaultShellStep(
                 getProjectFilesystem().getRootPath(),
                 frontendCommand,
-                ImmutableMap.<String, String>of()))
+                ImmutableMap.of()))
         .add(new ParseAndWriteBuckCompatibleDepfileStep(getTempDepFilePath(), getDepFilePath()))
         .build();
   }

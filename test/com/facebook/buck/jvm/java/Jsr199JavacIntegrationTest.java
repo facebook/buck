@@ -122,13 +122,13 @@ public class Jsr199JavacIntegrationTest {
         createProjectFilesystem(),
         PATH_RESOLVER,
         BuildTargetFactory.newInstance("//some:example"),
-        ImmutableList.<String>of(),
-        ImmutableSet.<String>of(),
+        ImmutableList.of(),
+        ImmutableSet.of(),
         SOURCE_PATHS,
         pathToSrcsList,
-        Optional.<Path>absent(),
+        Optional.absent(),
         NoOpClassUsageFileWriter.instance(),
-        Optional.<StandardJavaFileManagerFactory>absent());
+        Optional.absent());
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
     assertTrue(Files.exists(pathToSrcsList));
@@ -159,13 +159,13 @@ public class Jsr199JavacIntegrationTest {
         createProjectFilesystem(),
         PATH_RESOLVER,
         BuildTargetFactory.newInstance("//some:example"),
-        ImmutableList.<String>of(),
-        ImmutableSet.<String>of(),
+        ImmutableList.of(),
+        ImmutableSet.of(),
         SOURCE_PATHS,
         pathToSrcsList,
-        Optional.<Path>absent(),
+        Optional.absent(),
         NoOpClassUsageFileWriter.instance(),
-        Optional.<StandardJavaFileManagerFactory>absent());
+        Optional.absent());
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
     assertTrue(Files.exists(pathToSrcsList));
@@ -232,7 +232,7 @@ public class Jsr199JavacIntegrationTest {
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     MockClassLoader mockClassLoader = new MockClassLoader(
         ClassLoader.getSystemClassLoader(),
-        ImmutableMap.<String, Class<?>>of(
+        ImmutableMap.of(
             "com.sun.tools.javac.api.JavacTool",
             MockJavac.class));
     executionContext.getClassLoaderCache().injectClassLoader(
@@ -252,13 +252,13 @@ public class Jsr199JavacIntegrationTest {
           createProjectFilesystem(),
           PATH_RESOLVER,
           BuildTargetFactory.newInstance("//some:example"),
-          ImmutableList.<String>of(),
-          ImmutableSet.<String>of(),
+          ImmutableList.of(),
+          ImmutableSet.of(),
           SOURCE_PATHS,
           pathToSrcsList,
-          Optional.<Path>absent(),
+          Optional.absent(),
           NoOpClassUsageFileWriter.instance(),
-          Optional.<StandardJavaFileManagerFactory>absent());
+          Optional.absent());
       fail("Did not expect compilation to succeed");
     } catch (UnsupportedOperationException ex) {
       if (ex.toString().contains("abcdef")) {
@@ -297,7 +297,7 @@ public class Jsr199JavacIntegrationTest {
   }
 
   private Jsr199Javac createJavac(boolean withSyntaxError) throws IOException {
-    return createJavac(withSyntaxError, Optional.<Path>absent());
+    return createJavac(withSyntaxError, Optional.absent());
   }
 
   private ProjectFilesystem createProjectFilesystem() {

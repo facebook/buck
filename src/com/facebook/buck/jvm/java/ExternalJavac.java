@@ -101,7 +101,7 @@ public class ExternalJavac implements Javac {
   public ImmutableCollection<SourcePath> getInputs() {
     return pathToJavac.isRight() ?
         ImmutableSortedSet.of(pathToJavac.getRight()) :
-        ImmutableSortedSet.<SourcePath>of();
+        ImmutableSortedSet.of();
   }
 
   @Override

@@ -29,11 +29,8 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -66,15 +63,15 @@ public class AppleBuildRulesTest {
 
     AppleTestBuilder appleTestBuilder = new AppleTestBuilder(
         BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386"))
-        .setContacts(Optional.of(ImmutableSortedSet.<String>of()))
-        .setLabels(Optional.of(ImmutableSortedSet.<Label>of()))
-        .setDeps(Optional.of(ImmutableSortedSet.<BuildTarget>of()));
+        .setContacts(Optional.of(ImmutableSortedSet.of()))
+        .setLabels(Optional.of(ImmutableSortedSet.of()))
+        .setDeps(Optional.of(ImmutableSortedSet.of()));
 
     TargetNode<?> appleTestNode = appleTestBuilder.build();
     BuildRule testRule = appleTestBuilder.build(
         resolver,
         new FakeProjectFilesystem(),
-        TargetGraphFactory.newInstance(ImmutableSet.<TargetNode<?>>of(appleTestNode)));
+        TargetGraphFactory.newInstance(ImmutableSet.of(appleTestNode)));
     assertTrue(AppleBuildRules.isXcodeTargetTestBuildRule(testRule));
   }
 
@@ -109,7 +106,7 @@ public class AppleBuildRulesTest {
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo:bundle");
     TargetNode<?> bundleNode = AppleBundleBuilder
         .createBuilder(bundleTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.XCTEST))
+        .setExtension(Either.ofLeft(AppleBundleExtension.XCTEST))
         .setBinary(libraryTarget)
         .build();
 
@@ -123,7 +120,7 @@ public class AppleBuildRulesTest {
         TargetGraphFactory.newInstance(ImmutableSet.of(libraryNode, bundleNode, rootNode)),
         AppleBuildRules.RecursiveDependenciesMode.BUILDING,
         rootNode,
-        Optional.<ImmutableSet<BuildRuleType>>absent());
+        Optional.absent());
 
     assertTrue(Iterables.elementsEqual(ImmutableSortedSet.of(libraryNode, bundleNode), rules));
   }
@@ -139,7 +136,7 @@ public class AppleBuildRulesTest {
     BuildTarget fooFrameworkTarget = BuildTargetFactory.newInstance("//foo:framework");
     TargetNode<?> fooFrameworkNode = AppleBundleBuilder
         .createBuilder(fooFrameworkTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
         .setBinary(fooLibTarget)
         .build();
 
@@ -154,7 +151,7 @@ public class AppleBuildRulesTest {
     BuildTarget barFrameworkTarget = BuildTargetFactory.newInstance("//bar:framework");
     TargetNode<?> barFrameworkNode = AppleBundleBuilder
         .createBuilder(barFrameworkTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
         .setBinary(barLibTarget)
         .build();
 
@@ -174,7 +171,7 @@ public class AppleBuildRulesTest {
                 barFrameworkNode)),
         AppleBuildRules.RecursiveDependenciesMode.LINKING,
         rootNode,
-        Optional.<ImmutableSet<BuildRuleType>>absent());
+        Optional.absent());
 
     assertEquals(
         ImmutableSortedSet.of(
@@ -194,7 +191,7 @@ public class AppleBuildRulesTest {
     BuildTarget fooFrameworkTarget = BuildTargetFactory.newInstance("//foo:framework");
     TargetNode<?> fooFrameworkNode = AppleBundleBuilder
         .createBuilder(fooFrameworkTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
         .setBinary(fooLibTarget)
         .build();
 
@@ -209,7 +206,7 @@ public class AppleBuildRulesTest {
     BuildTarget barFrameworkTarget = BuildTargetFactory.newInstance("//bar:framework");
     TargetNode<?> barFrameworkNode = AppleBundleBuilder
         .createBuilder(barFrameworkTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
         .setBinary(barLibTarget)
         .build();
 
@@ -223,7 +220,7 @@ public class AppleBuildRulesTest {
     BuildTarget bazFrameworkTarget = BuildTargetFactory.newInstance("//baz:framework");
     TargetNode<?> bazFrameworkNode = AppleBundleBuilder
         .createBuilder(bazFrameworkTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
         .setBinary(bazLibTarget)
         .build();
 
@@ -242,7 +239,7 @@ public class AppleBuildRulesTest {
         TargetGraphFactory.newInstance(targetNodes),
         AppleBuildRules.RecursiveDependenciesMode.COPYING,
         bazFrameworkNode,
-        Optional.<ImmutableSet<BuildRuleType>>absent());
+        Optional.absent());
 
     assertEquals(
         ImmutableSortedSet.of(
@@ -265,7 +262,7 @@ public class AppleBuildRulesTest {
         .newGenruleBuilder(fooGenruleTarget)
         .setOut("foo")
         .setCmd("echo hi > $OUT")
-        .setSrcs(ImmutableList.<SourcePath>of(new BuildTargetSourcePath(fooLibTarget)))
+        .setSrcs(ImmutableList.of(new BuildTargetSourcePath(fooLibTarget)))
         .build();
 
     BuildTarget barLibTarget =
@@ -277,7 +274,7 @@ public class AppleBuildRulesTest {
     BuildTarget barFrameworkTarget = BuildTargetFactory.newInstance("//bar:framework");
     TargetNode<?> barFrameworkNode = AppleBundleBuilder
         .createBuilder(barFrameworkTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
         .setBinary(barLibTarget)
         .build();
 
@@ -294,7 +291,7 @@ public class AppleBuildRulesTest {
         TargetGraphFactory.newInstance(targetNodes),
         AppleBuildRules.RecursiveDependenciesMode.LINKING,
         barFrameworkNode,
-        Optional.<ImmutableSet<BuildRuleType>>absent());
+        Optional.absent());
 
     assertEquals(
         ImmutableSortedSet.of(fooGenruleNode),
@@ -315,7 +312,7 @@ public class AppleBuildRulesTest {
         .newGenruleBuilder(fooGenruleTarget)
         .setOut("foo")
         .setCmd("echo hi > $OUT")
-        .setSrcs(ImmutableList.<SourcePath>of(new BuildTargetSourcePath(fooLibTarget)))
+        .setSrcs(ImmutableList.of(new BuildTargetSourcePath(fooLibTarget)))
         .build();
 
     BuildTarget barLibTarget =
@@ -327,7 +324,7 @@ public class AppleBuildRulesTest {
     BuildTarget barFrameworkTarget = BuildTargetFactory.newInstance("//bar:framework");
     TargetNode<?> barFrameworkNode = AppleBundleBuilder
         .createBuilder(barFrameworkTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
         .setBinary(barLibTarget)
         .build();
 
@@ -344,7 +341,7 @@ public class AppleBuildRulesTest {
         TargetGraphFactory.newInstance(targetNodes),
         AppleBuildRules.RecursiveDependenciesMode.COPYING,
         barFrameworkNode,
-        Optional.<ImmutableSet<BuildRuleType>>absent());
+        Optional.absent());
 
     assertEquals(
         ImmutableSortedSet.of(fooGenruleNode),
@@ -365,7 +362,7 @@ public class AppleBuildRulesTest {
         .newGenruleBuilder(fooGenruleTarget)
         .setOut("foo")
         .setCmd("echo hi > $OUT")
-        .setSrcs(ImmutableList.<SourcePath>of(new BuildTargetSourcePath(fooLibTarget)))
+        .setSrcs(ImmutableList.of(new BuildTargetSourcePath(fooLibTarget)))
         .build();
 
     BuildTarget barLibTarget =
@@ -377,7 +374,7 @@ public class AppleBuildRulesTest {
     BuildTarget barFrameworkTarget = BuildTargetFactory.newInstance("//bar:framework");
     TargetNode<?> barFrameworkNode = AppleBundleBuilder
         .createBuilder(barFrameworkTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
         .setBinary(barLibTarget)
         .build();
 
@@ -390,7 +387,7 @@ public class AppleBuildRulesTest {
     BuildTarget bazFrameworkTarget = BuildTargetFactory.newInstance("//baz:framework");
     TargetNode<?> bazFrameworkNode = AppleBundleBuilder
         .createBuilder(bazFrameworkTarget)
-        .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
         .setBinary(bazLibTarget)
         .build();
 
@@ -409,7 +406,7 @@ public class AppleBuildRulesTest {
         TargetGraphFactory.newInstance(targetNodes),
         AppleBuildRules.RecursiveDependenciesMode.BUILDING,
         bazFrameworkNode,
-        Optional.<ImmutableSet<BuildRuleType>>absent());
+        Optional.absent());
 
     assertEquals(
         ImmutableSortedSet.of(barFrameworkNode, fooGenruleNode),

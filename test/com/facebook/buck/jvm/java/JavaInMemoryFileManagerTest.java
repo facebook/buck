@@ -28,7 +28,6 @@ import org.junit.Test;
 
 import java.io.OutputStream;
 import java.util.List;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 
 import javax.tools.DiagnosticCollector;
@@ -51,7 +50,7 @@ public class JavaInMemoryFileManagerTest {
     inMemoryFileManager = new JavaInMemoryFileManager(
         ToolProvider.getSystemJavaCompiler().getStandardFileManager(diagnostics, null, null),
         outputStream,
-        /*classesToBeRemovedFromJar */ ImmutableSet.<Pattern>of());
+        /*classesToBeRemovedFromJar */ ImmutableSet.of());
   }
 
   @Test

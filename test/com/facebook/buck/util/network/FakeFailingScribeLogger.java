@@ -33,8 +33,8 @@ public final class FakeFailingScribeLogger extends ScribeLogger {
   @Override
   public ListenableFuture<Void> log(String category, Iterable<String> lines) {
     return failLogging.compareAndSet(false, true) ?
-        Futures.<Void>immediateFuture(null) :
-        Futures.<Void>immediateFailedFuture(new IOException());
+        Futures.immediateFuture(null) :
+        Futures.immediateFailedFuture(new IOException());
   }
 
   @Override

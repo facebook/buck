@@ -17,7 +17,6 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.hashing.FileHashLoader;
-import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CachingBuildEngineDelegate;
@@ -57,7 +56,7 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
             FileHashCache buckOutCache = DefaultFileHashCache.createBuckOutFileHashCache(
                 new ProjectFilesystem(
                     filesystem.getRootPath(),
-                    ImmutableSet.<PathOrGlobMatcher>of()),
+                    ImmutableSet.of()),
                 filesystem.getBuckPaths().getBuckOut());
             return new StackedFileHashCache(
                 ImmutableList.of(remoteCache, cellCache, buckOutCache));

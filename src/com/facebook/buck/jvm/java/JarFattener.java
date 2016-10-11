@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -159,7 +158,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
     Step zipStep = new ZipStep(
         getProjectFilesystem(),
         zipped,
-        ImmutableSet.<Path>of(),
+        ImmutableSet.of(),
         false,
         ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
         fatJarDir);
@@ -177,11 +176,11 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
         getBuildTarget(),
         getResolver(),
         getProjectFilesystem(),
-        /* classpathEntries */ ImmutableSortedSet.<Path>of(),
+        /* classpathEntries */ ImmutableSortedSet.of(),
         fatJarDir,
-        /* workingDir */ Optional.<Path>absent(),
+        /* workingDir */ Optional.absent(),
         pathToSrcsList,
-        /* suggestBuildRule */ Optional.<SuggestBuildRules>absent(),
+        /* suggestBuildRule */ Optional.absent(),
         NoOpClassUsageFileWriter.instance(),
         steps,
         buildableContext);
