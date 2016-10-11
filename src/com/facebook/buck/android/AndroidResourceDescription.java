@@ -140,9 +140,7 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
       // about and pass those in separately, so that that `AndroidResource` rule knows to only hash
       // these into it's rule key.
       PathSourcePath path = (PathSourcePath) sourcePath.get();
-      inputFiles = collectInputFiles(
-          path.getFilesystem(),
-          Optional.of(path.getRelativePath()));
+      inputFiles = collectInputFiles(path.getFilesystem(), path.getRelativePath());
     } else {
       // Otherwise, we can't inspect the contents of the directory, so we can't populate the
       // `resSrcs` set.  Instead, we have to pass the source path unfiltered.
@@ -154,10 +152,7 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
   @VisibleForTesting
   ImmutableSortedSet<SourcePath> collectInputFiles(
       final ProjectFilesystem filesystem,
-      Optional<Path> inputDir) {
-    if (!inputDir.isPresent()) {
-      return ImmutableSortedSet.of();
-    }
+      Path inputDir) {
     final ImmutableSortedSet.Builder<SourcePath> paths = ImmutableSortedSet.naturalOrder();
 
     // We ignore the same files that mini-aapt and aapt ignore.
@@ -198,9 +193,9 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
     };
 
     try {
-      filesystem.walkRelativeFileTree(inputDir.get(), fileVisitor);
+      filesystem.walkRelativeFileTree(inputDir, fileVisitor);
     } catch (IOException e) {
-      throw new HumanReadableException(e, "Error traversing directory: %s.", inputDir.get());
+      throw new HumanReadableException(e, "Error traversing directory: %s.", inputDir);
     }
     return paths.build();
   }

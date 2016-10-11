@@ -22,7 +22,6 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -82,9 +81,7 @@ public class AndroidResourceDescriptionTest {
 
     AndroidResourceDescription description = new AndroidResourceDescription();
     ProjectFilesystem filesystem = new ProjectFilesystem(tmpFolder.getRoot().toPath());
-    Set<SourcePath> inputs = description.collectInputFiles(
-        filesystem,
-            Optional.of(Paths.get("res")));
+    Set<SourcePath> inputs = description.collectInputFiles(filesystem, Paths.get("res"));
 
     assertThat(
         inputs,
