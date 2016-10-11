@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -44,14 +45,30 @@ public class BuildRuleResolver {
 
   private final TargetGraph targetGraph;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
+
+  /**
+   * Event bus for reporting performance information.
+   * Will likely be null in unit tests.
+   */
+  @Nullable
+  private final BuckEventBus eventBus;
+
   private final ConcurrentHashMap<BuildTarget, BuildRule> buildRuleIndex;
   private final LoadingCache<Pair<BuildTarget, Class<?>>, Optional<?>> metadataCache;
 
   public BuildRuleResolver(
       TargetGraph targetGraph,
       TargetNodeToBuildRuleTransformer buildRuleGenerator) {
+    this(targetGraph, buildRuleGenerator, null);
+  }
+
+  public BuildRuleResolver(
+      TargetGraph targetGraph,
+      TargetNodeToBuildRuleTransformer buildRuleGenerator,
+      @Nullable BuckEventBus eventBus) {
     this.targetGraph = targetGraph;
     this.buildRuleGenerator = buildRuleGenerator;
+    this.eventBus = eventBus;
     this.buildRuleIndex = new ConcurrentHashMap<>();
     this.metadataCache = CacheBuilder.newBuilder()
         .build(
@@ -211,4 +228,8 @@ public class BuildRuleResolver {
     return buildRules;
   }
 
+  @Nullable
+  public BuckEventBus getEventBus() {
+    return eventBus;
+  }
 }
