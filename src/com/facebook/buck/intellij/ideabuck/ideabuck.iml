@@ -7,9 +7,11 @@
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/gen" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/resources" type="java-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/tests/unit" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/tests/integration" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/tests/testdata" type="java-test-resource" />
     </content>
-    <orderEntry type="jdk" jdkName="IDEA jdk" jdkType="IDEA JDK" />
+    <orderEntry type="jdk" jdkName="IDEA SDK" jdkType="IDEA JDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="jetty" level="project" />
     <orderEntry type="library" name="jackson-mrbean-2.5.5" level="project" />
