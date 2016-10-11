@@ -68,6 +68,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.Callables;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -408,7 +409,8 @@ public class TestRunningTest {
             createMock(CachingBuildEngine.class),
             executionContext,
             createMock(TestRuleKeyFileHelper.class),
-            true,
+            TestRunningOptions.TestResultCacheMode.ENABLED,
+            Callables.<TestResults>returning(null),
             false,
             /* hasEnvironmentOverrides */ false,
             /* isDryRun */ false));
@@ -444,7 +446,8 @@ public class TestRunningTest {
             cachingBuildEngine,
             executionContext,
             createMock(TestRuleKeyFileHelper.class),
-            /* results cache enabled */ true,
+            TestRunningOptions.TestResultCacheMode.ENABLED,
+            Callables.<TestResults>returning(null),
             /* running with test selectors */ false,
             /* hasEnvironmentOverrides */ false,
             /* isDryRun */ false));
@@ -481,7 +484,8 @@ public class TestRunningTest {
             cachingBuildEngine,
             executionContext,
             createMock(TestRuleKeyFileHelper.class),
-            /* results cache enabled */ true,
+            TestRunningOptions.TestResultCacheMode.ENABLED,
+            Callables.<TestResults>returning(null),
             /* running with test selectors */ false,
             /* hasEnvironmentOverrides */ false,
             /* isDryRun */ false));
@@ -528,7 +532,8 @@ public class TestRunningTest {
             cachingBuildEngine,
             executionContext,
             testRuleKeyFileHelper,
-            /* results cache enabled */ true,
+            TestRunningOptions.TestResultCacheMode.ENABLED,
+            Callables.<TestResults>returning(null),
             /* running with test selectors */ false,
             /* hasEnvironmentOverrides */ false,
             /* isDryRun */ false));
@@ -574,7 +579,8 @@ public class TestRunningTest {
             cachingBuildEngine,
             executionContext,
             testRuleKeyFileHelper,
-            /* results cache enabled */ true,
+            TestRunningOptions.TestResultCacheMode.ENABLED,
+            Callables.<TestResults>returning(null),
             /* running with test selectors */ false,
             /* hasEnvironmentOverrides */ false,
             /* isDryRun */ false));
@@ -585,9 +591,99 @@ public class TestRunningTest {
             cachingBuildEngine,
             executionContext,
             testRuleKeyFileHelper,
-            /* results cache enabled */ true,
+            TestRunningOptions.TestResultCacheMode.ENABLED,
+            Callables.<TestResults>returning(null),
             /* running with test selectors */ false,
             /* hasEnvironmentOverrides */ true,
+            /* isDryRun */ false));
+
+    verify(cachingBuildEngine, testRuleKeyFileHelper);
+  }
+
+  @Test
+  public void testRunWhenPreviouslyFailed() throws Exception {
+    ExecutionContext executionContext = TestExecutionContext.newBuilder()
+        .setDebugEnabled(false)
+        .build();
+
+    FakeTestRule testRule = new FakeTestRule(
+        ImmutableSet.of(Label.of("windows")),
+        BuildTargetFactory.newInstance("//:lulz"),
+        new SourcePathResolver(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY,
+                new DefaultTargetNodeToBuildRuleTransformer())),
+        ImmutableSortedSet.of()) {
+
+      @Override
+      public boolean hasTestResultFiles() {
+        return true;
+      }
+    };
+
+    TestRuleKeyFileHelper testRuleKeyFileHelper = createNiceMock(TestRuleKeyFileHelper.class);
+    expect(testRuleKeyFileHelper.isRuleKeyInDir(testRule)).andReturn(true).times(2);
+
+    CachingBuildEngine cachingBuildEngine = createMock(CachingBuildEngine.class);
+    BuildResult result = BuildResult.success(testRule, MATCHING_RULE_KEY, CacheResult.miss());
+    expect(cachingBuildEngine.getBuildRuleResult(BuildTargetFactory.newInstance("//:lulz")))
+        .andReturn(result).times(2);
+    replay(cachingBuildEngine, testRuleKeyFileHelper);
+
+    final TestResults failedTestResults =
+        FakeTestResults.of(
+            ImmutableList.of(
+                new TestCaseSummary(
+                    "TestCase",
+                    ImmutableList.of(
+                        new TestResultSummary(
+                            "TestCaseResult",
+                            "passTest",
+                            ResultType.FAILURE,
+                            5000,
+                            null,
+                            null,
+                            null,
+                            null)))));
+    assertTrue(
+        "Test will be rerun if it previously failed",
+        TestRunning.isTestRunRequiredForTest(
+            testRule,
+            cachingBuildEngine,
+            executionContext,
+            testRuleKeyFileHelper,
+            TestRunningOptions.TestResultCacheMode.ENABLED_IF_PASSED,
+            Callables.<TestResults>returning(failedTestResults),
+            /* running with test selectors */ false,
+            /* hasEnvironmentOverrides */ false,
+            /* isDryRun */ false));
+
+    final TestResults passedTestResults =
+        FakeTestResults.of(
+            ImmutableList.of(
+                new TestCaseSummary(
+                    "TestCase",
+                    ImmutableList.of(
+                        new TestResultSummary(
+                            "TestCaseResult",
+                            "passTest",
+                            ResultType.SUCCESS,
+                            5000,
+                            null,
+                            null,
+                            null,
+                            null)))));
+    assertFalse(
+        "Test will be not rerun if it previously passed",
+        TestRunning.isTestRunRequiredForTest(
+            testRule,
+            cachingBuildEngine,
+            executionContext,
+            testRuleKeyFileHelper,
+            TestRunningOptions.TestResultCacheMode.ENABLED_IF_PASSED,
+            Callables.<TestResults>returning(passedTestResults),
+            /* running with test selectors */ false,
+            /* hasEnvironmentOverrides */ false,
             /* isDryRun */ false));
 
     verify(cachingBuildEngine, testRuleKeyFileHelper);
@@ -630,7 +726,8 @@ public class TestRunningTest {
             cachingBuildEngine,
             executionContext,
             testRuleKeyFileHelper,
-            /* results cache enabled */ true,
+            TestRunningOptions.TestResultCacheMode.ENABLED,
+            Callables.<TestResults>returning(null),
             /* running with test selectors */ false,
             /* hasEnvironmentOverrides */ false,
             /* isDryRun */ false));
@@ -641,7 +738,8 @@ public class TestRunningTest {
             cachingBuildEngine,
             executionContext,
             testRuleKeyFileHelper,
-            /* results cache enabled */ true,
+            TestRunningOptions.TestResultCacheMode.ENABLED,
+            Callables.<TestResults>returning(null),
             /* running with test selectors */ false,
             /* hasEnvironmentOverrides */ false,
             /* isDryRun */ true));

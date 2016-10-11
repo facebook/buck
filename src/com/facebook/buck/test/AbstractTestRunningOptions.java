@@ -26,6 +26,11 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractTestRunningOptions {
+  public enum TestResultCacheMode {
+    ENABLED,
+    ENABLED_IF_PASSED,
+    DISABLED
+  }
 
   @Value.Default
   public boolean isCodeCoverageEnabled() {
@@ -48,8 +53,8 @@ abstract class AbstractTestRunningOptions {
   }
 
   @Value.Default
-  public boolean isResultsCacheEnabled() {
-    return true;
+  public TestResultCacheMode getTestResultCacheMode() {
+    return TestResultCacheMode.ENABLED;
   }
 
   @Value.Default

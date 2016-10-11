@@ -178,13 +178,20 @@ public class TestRunning {
     List<TestRun> parallelTestRuns = Lists.newArrayList();
     for (final TestRule test : tests) {
       // Determine whether the test needs to be executed.
+      final Callable<TestResults> resultsInterpreter = getCachingCallable(
+          test.interpretTestResults(
+              executionContext,
+              /*isUsingTestSelectors*/ !options.getTestSelectorList().isEmpty(),
+              /*isDryRun*/ options.isDryRun()));
+
       boolean isTestRunRequired;
       isTestRunRequired = isTestRunRequiredForTest(
           test,
           buildEngine,
           executionContext,
           testRuleKeyFileHelper,
-          options.isResultsCacheEnabled(),
+          options.getTestResultCacheMode(),
+          resultsInterpreter,
           !options.getTestSelectorList().isEmpty(),
           !options.getEnvironmentOverrides().isEmpty(),
           options.isDryRun());
@@ -292,12 +299,9 @@ public class TestRunning {
       TestRun testRun = TestRun.of(
           test,
           steps,
-          getCachingStatusTransformingCallable(
+          getStatusTransformingCallable(
               isTestRunRequired,
-              test.interpretTestResults(
-                  executionContext,
-                  /*isUsingTestSelectors*/ !options.getTestSelectorList().isEmpty(),
-                  /*isDryRun*/ options.isDryRun())),
+              resultsInterpreter),
           testReportingCallback);
 
       // Always run the commands, even if the list of commands as empty. There may be zero
@@ -553,7 +557,31 @@ public class TestRunning {
     return transformedTestResults;
   }
 
-  private static Callable<TestResults> getCachingStatusTransformingCallable(
+  private static Callable<TestResults> getCachingCallable(final Callable<TestResults> callable) {
+    return new Callable<TestResults>() {
+      private TestResults results = null;
+      private Exception exception = null;
+      private boolean ran = false;
+
+      @Override
+      public synchronized TestResults call() throws Exception {
+        if (!ran) {
+          try {
+            results = callable.call();
+          } catch (Exception t) {
+            exception = t;
+          }
+          ran = true;
+        }
+        if (exception != null) {
+          throw exception;
+        }
+        return results;
+      }
+    };
+  }
+
+  private static Callable<TestResults> getStatusTransformingCallable(
       boolean isTestRunRequired,
       final Callable<TestResults> originalCallable) {
     if (isTestRunRequired) {
@@ -579,7 +607,8 @@ public class TestRunning {
       BuildEngine cachingBuildEngine,
       ExecutionContext executionContext,
       TestRuleKeyFileHelper testRuleKeyFileHelper,
-      boolean isResultsCacheEnabled,
+      TestRunningOptions.TestResultCacheMode resultCacheMode,
+      Callable<TestResults> testResultInterpreter,
       boolean isRunningWithTestSelectors,
       boolean hasEnvironmentOverrides,
       boolean isDryRun)
@@ -603,10 +632,12 @@ public class TestRunning {
       isTestRunRequired = true;
     } else if (((result = cachingBuildEngine.getBuildRuleResult(
         test.getBuildTarget())) != null) &&
-            result.getSuccess() == BuildRuleSuccessType.MATCHING_RULE_KEY &&
-            isResultsCacheEnabled &&
-            test.hasTestResultFiles() &&
-            testRuleKeyFileHelper.isRuleKeyInDir(test)) {
+        result.getSuccess() == BuildRuleSuccessType.MATCHING_RULE_KEY &&
+        test.hasTestResultFiles() &&
+        testRuleKeyFileHelper.isRuleKeyInDir(test) &&
+        (resultCacheMode == TestRunningOptions.TestResultCacheMode.ENABLED ||
+            (resultCacheMode == TestRunningOptions.TestResultCacheMode.ENABLED_IF_PASSED &&
+                areTestsSuccessful(testResultInterpreter)))) {
       // If this build rule's artifacts (which includes the rule's output and its test result
       // files) are up to date, then no commands are necessary to run the tests. The test result
       // files will be read from the XML files in interpretTestResults().
@@ -615,6 +646,15 @@ public class TestRunning {
       isTestRunRequired = true;
     }
     return isTestRunRequired;
+  }
+
+  private static boolean areTestsSuccessful(Callable<TestResults> callable) {
+    try {
+      return callable.call().isSuccess();
+    } catch (Exception ex) {
+      LOG.error(ex);
+      return false;
+    }
   }
 
   /**
