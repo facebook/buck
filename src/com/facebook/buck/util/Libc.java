@@ -31,17 +31,17 @@ public interface Libc extends Library {
   int kill(int pid, int sig) throws LastErrorException;
 
   public interface OpenPtyLibrary extends Library {
-    void openpty(
+    int openpty(
         IntByReference master,
         IntByReference slave,
         Pointer name,
         Pointer terp,
-        Pointer winp) throws LastErrorException;
+        Pointer winp);
   }
 
   int setsid();
 
-  void ioctl(int fd, Pointer request, Object... args) throws LastErrorException;
+  int ioctl(int fd, Pointer request, Object... args);
   int fcntl(int fd, int cmd, Object... args);
 
   public static final class Constants {

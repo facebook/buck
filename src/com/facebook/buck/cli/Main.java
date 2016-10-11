@@ -1786,7 +1786,10 @@ public final class Main {
     IntByReference master = new IntByReference();
     IntByReference slave = new IntByReference();
 
-    openPtyLibrary.openpty(master, slave, Pointer.NULL, Pointer.NULL, Pointer.NULL);
+    int success = openPtyLibrary.openpty(master, slave, Pointer.NULL, Pointer.NULL, Pointer.NULL);
+    if (success != 0) {
+      throw new RuntimeException("Failed to open pty");
+    }
 
     // Deliberately leak the file descriptors for the lifetime of this process; NuProcess can
     // sometimes leak file descriptors to children, so make sure these FDs are marked close-on-exec.
@@ -1794,10 +1797,13 @@ public final class Main {
     markFdCloseOnExec(slave.getValue());
 
     // Make the pty our controlling terminal; works because we disconnected above with setsid.
-    Libc.INSTANCE.ioctl(
+    success = Libc.INSTANCE.ioctl(
         slave.getValue(),
         Pointer.createConstant(Libc.Constants.rTIOCSCTTY),
         0);
+    if (success == -1) {
+      throw new RuntimeException("Failed to set pty");
+    }
 
     LOG.info("enabled background process killing for buckd");
     isSessionLeader = true;
