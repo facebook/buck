@@ -410,7 +410,7 @@ public class CxxGenruleDescription
         sink.setReflectively(
             "headers",
             FluentIterable.from(transitivePreprocessorInput)
-                .transformAndConcat(CxxPreprocessorInput.GET_INCLUDES)
+                .transformAndConcat(CxxPreprocessorInput::getIncludes)
                 .toList());
       };
     }

@@ -22,7 +22,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -40,15 +39,6 @@ import java.nio.file.Path;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractCxxPreprocessorInput {
-
-  public static final Function<CxxPreprocessorInput, ImmutableList<CxxHeaders>> GET_INCLUDES =
-      CxxPreprocessorInput::getIncludes;
-
-  public static final Function<CxxPreprocessorInput, ImmutableSet<Path>> GET_SYSTEM_INCLUDE_ROOTS =
-      CxxPreprocessorInput::getSystemIncludeRoots;
-
-  public static final Function<CxxPreprocessorInput, ImmutableSet<FrameworkPath>> GET_FRAMEWORKS =
-      CxxPreprocessorInput::getFrameworks;
 
   @Value.Parameter
   public abstract Multimap<CxxSource.Type, String> getPreprocessorFlags();
