@@ -451,7 +451,10 @@ public class AndroidBinaryGraphEnhancer {
         new BuildTargetSourcePath(compileUberRDotJavaTarget),
         /* trackClassUsage */ false,
         /* additionalClasspathEntries */ ImmutableSet.of(),
-        new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
+        new JavacToJarStepFactory(
+            javacOptions.withSourceLevel("7").withTargetLevel("7"),
+            JavacOptionsAmender.IDENTITY
+        ),
         /* resourcesRoot */ Optional.absent(),
         /* manifest file */ Optional.absent(),
         /* mavenCoords */ Optional.absent(),
