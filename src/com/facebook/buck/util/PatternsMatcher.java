@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -37,20 +36,10 @@ public class PatternsMatcher {
   private final boolean hasPatterns;
 
   private final Predicate<Map.Entry<String, ?>> keyMatchingPredicate =
-      new Predicate<Map.Entry<String, ?>>() {
-        @Override
-        public boolean apply(Map.Entry<String, ?> entry) {
-          return matches(entry.getKey());
-        }
-      };
+      entry -> matches(entry.getKey());
 
   public PatternsMatcher(Iterable<String> rawPatterns) {
-    patterns = Iterables.transform(rawPatterns, new Function<String, Pattern>() {
-      @Override
-      public Pattern apply(String rawPattern) {
-        return Pattern.compile(rawPattern);
-      }
-    });
+    patterns = Iterables.transform(rawPatterns, Pattern::compile);
     hasPatterns = rawPatterns.iterator().hasNext();
   }
 

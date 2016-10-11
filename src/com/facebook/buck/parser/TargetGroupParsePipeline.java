@@ -96,17 +96,12 @@ public class TargetGroupParsePipeline
         PerfEventId.of("GetTargetGroup"),
         "target", buildTarget)) {
       Function<PerfEventId, SimplePerfEvent.Scope> perfEventScopeFunction =
-          new Function<PerfEventId, SimplePerfEvent.Scope>() {
-            @Override
-            public SimplePerfEvent.Scope apply(PerfEventId perfEventId) {
-              return SimplePerfEvent.scopeIgnoringShortEvents(
-                  eventBus,
-                  perfEventId,
-                  scope,
-                  getMinimumPerfEventTimeMs(),
-                  TimeUnit.MILLISECONDS);
-            }
-          };
+          perfEventId -> SimplePerfEvent.scopeIgnoringShortEvents(
+              eventBus,
+              perfEventId,
+              scope,
+              getMinimumPerfEventTimeMs(),
+              TimeUnit.MILLISECONDS);
       return delegate.createTargetNode(
           cell,
           cell.getAbsolutePathToBuildFile(buildTarget),

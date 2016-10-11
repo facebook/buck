@@ -64,7 +64,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -557,12 +556,7 @@ public class LuaBinaryDescription implements
             Joiner.on("[.\\d]*").join(
                 Iterables.transform(
                     Splitter.on("%s").split(cxxPlatform.getSharedLibraryVersionedExtensionFormat()),
-                    new Function<String, String>() {
-                      @Override
-                      public String apply(String input) {
-                        return input.isEmpty() ? input : Pattern.quote(input);
-                      }
-                    })));
+                    input -> input.isEmpty() ? input : Pattern.quote(input))));
     Map<String, SourcePath> librariesPaths = new HashMap<>();
     for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {
       String name = ent.getKey();

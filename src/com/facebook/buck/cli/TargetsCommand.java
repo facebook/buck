@@ -20,7 +20,6 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal.CycleException;
-import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.hashing.FilePathHashLoader;
 import com.facebook.buck.io.BuckPaths;
@@ -100,12 +99,7 @@ public class TargetsCommand extends AbstractCommand {
   private static final Logger LOG = Logger.get(TargetsCommand.class);
 
   private static final Function<TargetNode<?>, Iterable<BuildTarget>> NODE_TO_TEST_TARGETS =
-      new Function<TargetNode<?>, Iterable<BuildTarget>>() {
-        @Override
-        public Iterable<BuildTarget> apply(TargetNode<?> node) {
-          return TargetNodes.getTestTargetsForNode(node);
-        }
-      };
+      TargetNodes::getTestTargetsForNode;
 
   // TODO(bolinfest): Use org.kohsuke.args4j.spi.PathOptionHandler. Currently, we resolve paths
   // manually, which is likely the path to madness.
@@ -596,21 +590,18 @@ public class TargetsCommand extends AbstractCommand {
     Iterable<TargetNode<?>> selectedReferrers = FluentIterable
         .from(getDependentNodes(graph, directOwners, detectTestChanges))
         .filter(
-            new Predicate<TargetNode<?>>() {
-              @Override
-              public boolean apply(TargetNode<?> targetNode) {
-                if (matchingBuildTargets.isPresent() &&
-                    !matchingBuildTargets.get().contains(targetNode.getBuildTarget())) {
-                  return false;
-                }
-
-                if (buildRuleTypes.isPresent() &&
-                    !buildRuleTypes.get().contains(targetNode.getType())) {
-                  return false;
-                }
-
-                return true;
+            targetNode -> {
+              if (matchingBuildTargets.isPresent() &&
+                  !matchingBuildTargets.get().contains(targetNode.getBuildTarget())) {
+                return false;
               }
+
+              if (buildRuleTypes.isPresent() &&
+                  !buildRuleTypes.get().contains(targetNode.getType())) {
+                return false;
+              }
+
+              return true;
             });
     ImmutableSortedMap.Builder<String, TargetNode<?>> matchingNodesBuilder =
         ImmutableSortedMap.naturalOrder();
@@ -982,12 +973,8 @@ public class TargetsCommand extends AbstractCommand {
     }
 
     AcyclicDepthFirstPostOrderTraversal<TargetNode<?>> traversal =
-        new AcyclicDepthFirstPostOrderTraversal<>(new GraphTraversable<TargetNode<?>>() {
-          @Override
-          public Iterator<TargetNode<?>> findChildren(TargetNode<?> node) {
-            return targetGraphWithTests.getAll(node.getDeps()).iterator();
-          }
-        });
+        new AcyclicDepthFirstPostOrderTraversal<>(
+            node -> targetGraphWithTests.getAll(node.getDeps()).iterator());
 
     Map<BuildTarget, HashCode> hashesWithTests = Maps.newHashMap();
 

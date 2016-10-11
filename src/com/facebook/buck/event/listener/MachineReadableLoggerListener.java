@@ -91,19 +91,16 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   private void writeToLog(final String prefix, final Object obj) {
-    executor.submit(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          outputStream.write((prefix + " ").getBytes(Charsets.UTF_8));
-          outputStream.write(objectWriter.writeValueAsBytes(obj));
-          outputStream.write(NEWLINE);
-          outputStream.flush();
-        } catch (JsonProcessingException e) {
-          LOG.warn("Failed to process json for event type: %s ", prefix);
-        } catch (IOException e) {
-          LOG.debug("Failed to write to %s", BuckConstant.BUCK_MACHINE_LOG_FILE_NAME, e);
-        }
+    executor.submit(() -> {
+      try {
+        outputStream.write((prefix + " ").getBytes(Charsets.UTF_8));
+        outputStream.write(objectWriter.writeValueAsBytes(obj));
+        outputStream.write(NEWLINE);
+        outputStream.flush();
+      } catch (JsonProcessingException e) {
+        LOG.warn("Failed to process json for event type: %s ", prefix);
+      } catch (IOException e) {
+        LOG.debug("Failed to write to %s", BuckConstant.BUCK_MACHINE_LOG_FILE_NAME, e);
       }
     });
   }

@@ -41,32 +41,28 @@ final class RetainOrderComparator {
    */
   public static <T> Comparator<T> createComparator(Iterable<T> iterable) {
     final ImmutableList<T> items = ImmutableList.copyOf(iterable);
-    return new Comparator<T>() {
-
-      @Override
-      public int compare(T a, T b) {
-        int indexA = -1;
-        int indexB = -1;
-        int index = 0;
-        for (T item : items) {
-          // Note that == is used rather than .equals() because this is often used with a list of
-          // objects created via EasyMock, which means it would be a pain to mock out all of the
-          // calls to .equals(). Fortunately, most lists used during are short, so this is not
-          // prohibitively expensive even though it is O(N).
-          if (a == item) {
-            indexA = index;
-          }
-          if (b == item) {
-            indexB = index;
-          }
-          ++index;
+    return (a, b) -> {
+      int indexA = -1;
+      int indexB = -1;
+      int index = 0;
+      for (T item : items) {
+        // Note that == is used rather than .equals() because this is often used with a list of
+        // objects created via EasyMock, which means it would be a pain to mock out all of the
+        // calls to .equals(). Fortunately, most lists used during are short, so this is not
+        // prohibitively expensive even though it is O(N).
+        if (a == item) {
+          indexA = index;
         }
-
-        Preconditions.checkState(indexA >= 0, "The first element must be in the collection");
-        Preconditions.checkState(indexB >= 0, "The second element must be in the collection");
-
-        return indexA - indexB;
+        if (b == item) {
+          indexB = index;
+        }
+        ++index;
       }
+
+      Preconditions.checkState(indexA >= 0, "The first element must be in the collection");
+      Preconditions.checkState(indexB >= 0, "The second element must be in the collection");
+
+      return indexA - indexB;
     };
   }
 }

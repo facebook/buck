@@ -21,7 +21,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -45,19 +44,9 @@ public class MorePaths {
   /** Utility class: do not instantiate. */
   private MorePaths() {}
 
-  public static final Function<String, Path> TO_PATH = new Function<String, Path>() {
-    @Override
-    public Path apply(String path) {
-      return Paths.get(path);
-    }
-  };
+  public static final Function<String, Path> TO_PATH = path -> Paths.get(path);
 
-  public static final Function<Path, String> UNIX_PATH = new Function<Path, String>() {
-    @Override
-    public String apply(Path path) {
-      return pathWithUnixSeparators(path);
-    }
-  };
+  public static final Function<Path, String> UNIX_PATH = MorePaths::pathWithUnixSeparators;
 
   private static final Path EMPTY_PATH = Paths.get("");
 
@@ -194,24 +183,18 @@ public class MorePaths {
   public static ImmutableSet<Path> filterForSubpaths(Iterable<Path> paths, final Path root) {
     final Path normalizedRoot = root.toAbsolutePath().normalize();
     return FluentIterable.from(paths)
-        .filter(new Predicate<Path>() {
-          @Override
-          public boolean apply(Path input) {
-            if (input.isAbsolute()) {
-              return input.normalize().startsWith(normalizedRoot);
-            } else {
-              return true;
-            }
+        .filter(input -> {
+          if (input.isAbsolute()) {
+            return input.normalize().startsWith(normalizedRoot);
+          } else {
+            return true;
           }
         })
-        .transform(new Function<Path, Path>() {
-          @Override
-          public Path apply(Path input) {
-            if (input.isAbsolute()) {
-              return relativize(normalizedRoot, input);
-            } else {
-              return input;
-            }
+        .transform(input -> {
+          if (input.isAbsolute()) {
+            return relativize(normalizedRoot, input);
+          } else {
+            return input;
           }
         })
         .toSet();
@@ -283,11 +266,6 @@ public class MorePaths {
   }
 
   public static Function<String, Path> toPathFn(final FileSystem fileSystem) {
-    return new Function<String, Path>() {
-      @Override
-      public Path apply(String input) {
-        return fileSystem.getPath(input);
-      }
-    };
+    return input -> fileSystem.getPath(input);
   }
 }

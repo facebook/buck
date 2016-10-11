@@ -19,7 +19,6 @@ package com.facebook.buck.testrunner;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -77,12 +76,7 @@ public class TimeoutTest {
     // expected messages.
     Set<String> messages = FluentIterable
         .from(result.getFailures())
-        .transform(new Function<Failure, String>() {
-          @Override
-          public String apply(Failure failure) {
-            return failure.getMessage();
-          }
-        })
+        .transform(Failure::getMessage)
         .toSet();
     assertEquals(
         "Should contain explicit call to fail() from failingTestsAreReported() and " +

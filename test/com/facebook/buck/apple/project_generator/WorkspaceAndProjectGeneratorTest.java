@@ -1586,14 +1586,9 @@ public class WorkspaceAndProjectGeneratorTest {
 
   private Function<TargetNode<?>, SourcePathResolver> getSourcePathResolverForNodeFunction(
       final TargetGraph targetGraph) {
-    return new Function<TargetNode<?>, SourcePathResolver>() {
-      @Override
-      public SourcePathResolver apply(TargetNode<?> input) {
-        return new SourcePathResolver(ActionGraphCache.getFreshActionGraph(
-            BuckEventBusFactory.newInstance(),
-            targetGraph.getSubgraph(ImmutableSet.of(input))).getResolver());
-      }
-    };
+    return input -> new SourcePathResolver(ActionGraphCache.getFreshActionGraph(
+        BuckEventBusFactory.newInstance(),
+        targetGraph.getSubgraph(ImmutableSet.of(input))).getResolver());
   }
 
 }

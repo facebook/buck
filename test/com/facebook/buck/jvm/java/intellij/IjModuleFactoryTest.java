@@ -43,7 +43,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -333,12 +332,7 @@ public class IjModuleFactoryTest {
   private ImmutableSet<Path> getFolderPaths(ImmutableSet<IjFolder> folders) {
     return FluentIterable.from(folders)
         .transform(
-            new Function<IjFolder, Path>() {
-              @Override
-              public Path apply(IjFolder input) {
-                return input.getPath();
-              }
-            })
+            IjFolder::getPath)
         .toSet();
   }
 

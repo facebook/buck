@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -68,12 +67,7 @@ public class IjModuleFactory {
       RobolectricTestDescription.TYPE);
 
   public static final Predicate<TargetNode<?>> SUPPORTED_MODULE_TYPES_PREDICATE =
-      new Predicate<TargetNode<?>>() {
-        @Override
-        public boolean apply(TargetNode<?> input) {
-          return SUPPORTED_MODULE_TYPES.contains(input.getType());
-        }
-      };
+      input -> SUPPORTED_MODULE_TYPES.contains(input.getType());
 
   /**
    * Provides the {@link IjModuleFactory} with {@link Path}s to various elements of the project.
@@ -156,12 +150,7 @@ public class IjModuleFactory {
 
     public Optional<IjModuleAndroidFacet> getAndroidFacet() {
       return androidFacetBuilder.transform(
-          new Function<IjModuleAndroidFacet.Builder, IjModuleAndroidFacet>() {
-            @Override
-            public IjModuleAndroidFacet apply(IjModuleAndroidFacet.Builder input) {
-              return input.build();
-            }
-          });
+          IjModuleAndroidFacet.Builder::build);
     }
 
     public ImmutableSet<IjFolder> getSourceFolders() {
@@ -436,15 +425,12 @@ public class IjModuleFactory {
       ImmutableSet<Path> paths) {
     return FluentIterable.from(paths)
         .index(
-            new Function<Path, Path>() {
-              @Override
-              public Path apply(Path input) {
-                Path parent = input.getParent();
-                if (parent == null) {
-                  return Paths.get("");
-                }
-                return parent;
+            input -> {
+              Path parent = input.getParent();
+              if (parent == null) {
+                return Paths.get("");
               }
+              return parent;
             });
   }
 
@@ -458,12 +444,7 @@ public class IjModuleFactory {
     }
     return FluentIterable.from(paths.get())
         .anyMatch(
-            new Predicate<SourcePath>() {
-              @Override
-              public boolean apply(SourcePath input) {
-                return !(input instanceof PathSourcePath);
-              }
-            });
+            input -> !(input instanceof PathSourcePath));
   }
 
   /**

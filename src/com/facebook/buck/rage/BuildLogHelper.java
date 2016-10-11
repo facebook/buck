@@ -23,7 +23,6 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -82,12 +81,7 @@ public class BuildLogHelper {
 
     Optional <Path> traceFile = FluentIterable
         .from(projectFilesystem.getFilesUnderPath(logFile.getParent()))
-        .filter(new Predicate<Path>() {
-          @Override
-          public boolean apply(Path input) {
-            return input.toString().endsWith(".trace");
-          }
-        }).first();
+        .filter(input -> input.toString().endsWith(".trace")).first();
     return builder
         .setRelativePath(logFile)
         .setSize(projectFilesystem.getFileSize(logFile))

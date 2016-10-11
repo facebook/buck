@@ -32,13 +32,7 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
    * Transformation to annotate TestCaseSummary marking them as being read from cached results
    */
   public static final Function<TestCaseSummary, TestCaseSummary> TO_CACHED_TRANSFORMATION =
-      new Function<TestCaseSummary, TestCaseSummary>() {
-
-        @Override
-        public TestCaseSummary apply(TestCaseSummary summary) {
-          return new TestCaseSummary(summary, /* isCached */ true);
-        }
-      };
+      summary -> new TestCaseSummary(summary, /* isCached */ true);
   public static final int MAX_STATUS_WIDTH = 7;
 
   private final String testCaseName;

@@ -154,14 +154,11 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
 
     return Futures.transformAsync(
         attemptTwoLevelStore(info, output),
-        new AsyncFunction<Boolean, Void>() {
-          @Override
-          public ListenableFuture<Void> apply(Boolean input) throws Exception {
-            if (input) {
-              return Futures.immediateFuture(null);
-            }
-            return delegate.store(info, output);
+        input -> {
+          if (input) {
+            return Futures.immediateFuture(null);
           }
+          return delegate.store(info, output);
         });
   }
 
@@ -176,43 +173,40 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
 
     return Futures.transformAsync(
         Futures.immediateFuture(null),
-        new AsyncFunction<Void, Boolean>() {
-          @Override
-          public ListenableFuture<Boolean> apply(Void input) throws Exception {
-            long fileSize = projectFilesystem.getFileSize(output.getPath());
+        (AsyncFunction<Void, Boolean>) input -> {
+          long fileSize = projectFilesystem.getFileSize(output.getPath());
 
-            if (!performTwoLevelStores ||
-                fileSize < minimumTwoLevelStoredArtifactSize ||
-                (maximumTwoLevelStoredArtifactSize.isPresent() &&
-                    fileSize > maximumTwoLevelStoredArtifactSize.get())) {
-              return Futures.immediateFuture(false);
-            }
-
-            long hashComputationStart = System.currentTimeMillis();
-            String hashCode = projectFilesystem.computeSha1(output.getPath()) + "2c00";
-            long hashComputationEnd = System.currentTimeMillis();
-            secondLevelHashComputationTimeMs.addSample(hashComputationEnd - hashComputationStart);
-
-            ImmutableMap<String, String> metadataWithCacheKey =
-                ImmutableMap.<String, String>builder()
-                    .putAll(info.getMetadata())
-                    .put(METADATA_KEY, hashCode)
-                    .build();
-
-            return Futures.transform(
-                Futures.allAsList(
-                    delegate.store(
-                        ArtifactInfo.builder()
-                            .setRuleKeys(info.getRuleKeys())
-                            .setMetadata(metadataWithCacheKey)
-                            .build(),
-                        BorrowablePath.notBorrowablePath(emptyFilePath)),
-                    delegate.store(
-                        ArtifactInfo.builder().addRuleKeys(new RuleKey(hashCode)).build(),
-                        output)
-                ),
-                Functions.constant(true));
+          if (!performTwoLevelStores ||
+              fileSize < minimumTwoLevelStoredArtifactSize ||
+              (maximumTwoLevelStoredArtifactSize.isPresent() &&
+                  fileSize > maximumTwoLevelStoredArtifactSize.get())) {
+            return Futures.immediateFuture(false);
           }
+
+          long hashComputationStart = System.currentTimeMillis();
+          String hashCode = projectFilesystem.computeSha1(output.getPath()) + "2c00";
+          long hashComputationEnd = System.currentTimeMillis();
+          secondLevelHashComputationTimeMs.addSample(hashComputationEnd - hashComputationStart);
+
+          ImmutableMap<String, String> metadataWithCacheKey =
+              ImmutableMap.<String, String>builder()
+                  .putAll(info.getMetadata())
+                  .put(METADATA_KEY, hashCode)
+                  .build();
+
+          return Futures.transform(
+              Futures.allAsList(
+                  delegate.store(
+                      ArtifactInfo.builder()
+                          .setRuleKeys(info.getRuleKeys())
+                          .setMetadata(metadataWithCacheKey)
+                          .build(),
+                      BorrowablePath.notBorrowablePath(emptyFilePath)),
+                  delegate.store(
+                      ArtifactInfo.builder().addRuleKeys(new RuleKey(hashCode)).build(),
+                      output)
+              ),
+              Functions.constant(true));
         }
     );
   }

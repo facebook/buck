@@ -47,7 +47,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -72,7 +71,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -263,6 +261,7 @@ public class Parser {
     }
   }
 
+  @SuppressWarnings("PMD.PrematureDeclaration")
   protected TargetGraph buildTargetGraph(
       final PerBuildState state,
       final BuckEventBus eventBus,
@@ -285,56 +284,45 @@ public class Parser {
     ParseEvent.Started parseStart = ParseEvent.started(toExplore);
     eventBus.post(parseStart);
 
-    GraphTraversable<BuildTarget> traversable = new GraphTraversable<BuildTarget>() {
-      @Override
-      public Iterator<BuildTarget> findChildren(BuildTarget target) {
-        TargetNode<?> node;
-        try {
-          node = state.getTargetNode(target);
-        } catch (BuildFileParseException | BuildTargetException e) {
-          throw new RuntimeException(e);
-        }
-
-        if (ignoreBuckAutodepsFiles) {
-          return Collections.emptyIterator();
-        }
-
-        // this second lookup loop may *seem* pointless, but it allows us to report which node is
-        // referring to a node we can't find - something that's very difficult in this Traversable
-        // visitor pattern otherwise.
-        // it's also work we need to do anyways. the getTargetNode() result is cached, so that
-        // when we come around and re-visit that node there won't actually be any work performed.
-        for (BuildTarget dep : node.getDeps()) {
-          try {
-            state.getTargetNode(dep);
-          } catch (BuildFileParseException | BuildTargetException | HumanReadableException e) {
-            throw new HumanReadableException(
-                e,
-                "Couldn't get dependency '%s' of target '%s':\n%s",
-                dep,
-                target,
-                e.getMessage());
-          }
-        }
-        return node.getDeps().iterator();
+    GraphTraversable<BuildTarget> traversable = target -> {
+      TargetNode<?> node;
+      try {
+        node = state.getTargetNode(target);
+      } catch (BuildFileParseException | BuildTargetException e) {
+        throw new RuntimeException(e);
       }
+
+      if (ignoreBuckAutodepsFiles) {
+        return Collections.emptyIterator();
+      }
+
+      // this second lookup loop may *seem* pointless, but it allows us to report which node is
+      // referring to a node we can't find - something that's very difficult in this Traversable
+      // visitor pattern otherwise.
+      // it's also work we need to do anyways. the getTargetNode() result is cached, so that
+      // when we come around and re-visit that node there won't actually be any work performed.
+      for (BuildTarget dep : node.getDeps()) {
+        try {
+          state.getTargetNode(dep);
+        } catch (BuildFileParseException | BuildTargetException | HumanReadableException e) {
+          throw new HumanReadableException(
+              e,
+              "Couldn't get dependency '%s' of target '%s':\n%s",
+              dep,
+              target,
+              e.getMessage());
+        }
+      }
+      return node.getDeps().iterator();
     };
 
-    GraphTraversable<BuildTarget> groupExpander = new GraphTraversable<BuildTarget>() {
-      @Override
-      public Iterator<BuildTarget> findChildren(BuildTarget target) {
-        TargetGroup group = groups.get(target);
-        Preconditions.checkNotNull(
-            group,
-            "SANITY FAILURE: Tried to expand group %s but it doesn't exist.",
-            target);
-        return Iterators.filter(group.iterator(), new Predicate<BuildTarget>() {
-          @Override
-          public boolean apply(BuildTarget input) {
-            return groups.containsKey(input);
-          }
-        });
-      }
+    GraphTraversable<BuildTarget> groupExpander = target -> {
+      TargetGroup group = groups.get(target);
+      Preconditions.checkNotNull(
+          group,
+          "SANITY FAILURE: Tried to expand group %s but it doesn't exist.",
+          target);
+      return Iterators.filter(group.iterator(), groups::containsKey);
     };
 
     AcyclicDepthFirstPostOrderTraversal<BuildTarget> targetGroupExpansion =
@@ -366,16 +354,13 @@ public class Parser {
       for (BuildTarget groupTarget : targetGroupExpansion.traverse(groups.keySet())) {
         ImmutableMap<BuildTarget, Iterable<BuildTarget>> replacements = Maps.toMap(
             groupExpander.findChildren(groupTarget),
-            new Function<BuildTarget, Iterable<BuildTarget>>() {
-              @Override
-              public Iterable<BuildTarget> apply(BuildTarget target) {
-                TargetGroup group = groups.get(target);
-                Preconditions.checkNotNull(
-                    group,
-                    "SANITY FAILURE: Tried to expand group %s but it doesn't exist.",
-                    target);
-                return group;
-              }
+            target -> {
+              TargetGroup group = groups.get(target);
+              Preconditions.checkNotNull(
+                  group,
+                  "SANITY FAILURE: Tried to expand group %s but it doesn't exist.",
+                  target);
+              return group;
             });
         if (!replacements.isEmpty()) {
           // TODO(csarbora): Stop duplicating target lists

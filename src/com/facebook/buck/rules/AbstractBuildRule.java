@@ -41,12 +41,7 @@ public abstract class AbstractBuildRule implements BuildRule {
   private final ProjectFilesystem projectFilesystem;
 
   private final Supplier<String> typeSupplier = Suppliers.memoize(
-      new Supplier<String>() {
-        @Override
-        public String get() {
-          return getTypeForClass();
-        }
-      });
+      this::getTypeForClass);
 
   protected AbstractBuildRule(BuildRuleParams buildRuleParams, SourcePathResolver resolver) {
     this.buildTarget = buildRuleParams.getBuildTarget();

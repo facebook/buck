@@ -101,12 +101,8 @@ public class PackageStringAssets extends AbstractBuildRule
     Path pathToDirContainingAssetsDir = pathToBaseDir.resolve("string_assets");
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToDirContainingAssetsDir));
     final Path pathToStrings = pathToDirContainingAssetsDir.resolve("assets").resolve("strings");
-    Function<String, Path> assetPathBuilder = new Function<String, Path>() {
-      @Override
-      public Path apply(String locale) {
-        return pathToStrings.resolve(locale + STRING_ASSET_FILE_EXTENSION);
-      }
-    };
+    Function<String, Path> assetPathBuilder =
+        locale -> pathToStrings.resolve(locale + STRING_ASSET_FILE_EXTENSION);
     Path pathToStringAssetsZip = getPathToStringAssetsZip();
     Path pathToAllLocalesStringAssetsZip = getPathToAllLocalesStringAssetsZip();
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), pathToStrings));

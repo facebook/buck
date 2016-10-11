@@ -62,12 +62,7 @@ public class PackagedResource implements Supplier<Path> {
     this.filename = Paths.get(pathRelativeToClass).getFileName();
 
     this.supplier = Suppliers.memoize(
-        new Supplier<Path>() {
-          @Override
-          public Path get() {
-            return unpack();
-          }
-        });
+        this::unpack);
   }
 
   @Override

@@ -192,41 +192,38 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
   public static ProvisioningProfileStore fromSearchPath(final Path searchPath) {
     LOG.debug("Provisioning profile search path: " + searchPath);
     return new ProvisioningProfileStore(Suppliers.memoize(
-        new Supplier<ImmutableList<ProvisioningProfileMetadata>>() {
-          @Override
-          public ImmutableList<ProvisioningProfileMetadata> get() {
-            final ImmutableList.Builder<ProvisioningProfileMetadata> profilesBuilder =
-                ImmutableList.builder();
-            try {
-              Files.walkFileTree(
-                  searchPath.toAbsolutePath(), new SimpleFileVisitor<Path>() {
-                    @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                        throws IOException {
-                      if (file.toString().endsWith(".mobileprovision")) {
-                        try {
-                          ProvisioningProfileMetadata profile =
-                              ProvisioningProfileMetadata.fromProvisioningProfilePath(file);
-                          profilesBuilder.add(profile);
-                        } catch (IOException | IllegalArgumentException e) {
-                          LOG.error(e, "Ignoring invalid or malformed .mobileprovision file");
-                        } catch (InterruptedException e) {
-                          throw new IOException(e);
-                        }
+        () -> {
+          final ImmutableList.Builder<ProvisioningProfileMetadata> profilesBuilder =
+              ImmutableList.builder();
+          try {
+            Files.walkFileTree(
+                searchPath.toAbsolutePath(), new SimpleFileVisitor<Path>() {
+                  @Override
+                  public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                      throws IOException {
+                    if (file.toString().endsWith(".mobileprovision")) {
+                      try {
+                        ProvisioningProfileMetadata profile =
+                            ProvisioningProfileMetadata.fromProvisioningProfilePath(file);
+                        profilesBuilder.add(profile);
+                      } catch (IOException | IllegalArgumentException e) {
+                        LOG.error(e, "Ignoring invalid or malformed .mobileprovision file");
+                      } catch (InterruptedException e) {
+                        throw new IOException(e);
                       }
-
-                      return FileVisitResult.CONTINUE;
                     }
-                  });
-            } catch (IOException e) {
-              if (e.getCause() instanceof InterruptedException) {
-                LOG.error(e, "Interrupted while searching for mobileprovision files");
-              } else {
-                LOG.error(e, "Error while searching for mobileprovision files");
-              }
+
+                    return FileVisitResult.CONTINUE;
+                  }
+                });
+          } catch (IOException e) {
+            if (e.getCause() instanceof InterruptedException) {
+              LOG.error(e, "Interrupted while searching for mobileprovision files");
+            } else {
+              LOG.error(e, "Error while searching for mobileprovision files");
             }
-            return profilesBuilder.build();
           }
+          return profilesBuilder.build();
         }
     ));
   }

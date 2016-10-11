@@ -30,14 +30,12 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -211,12 +209,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     ImmutableCollection<BuildRule> stripRules = sourcePathResolver.filterBuildRuleInputs(
         FluentIterable.from(copyNativeLibraries.getStrippedObjectDescriptions())
             .transform(
-                new Function<StrippedObjectDescription, SourcePath>() {
-                  @Override
-                  public SourcePath apply(StrippedObjectDescription input) {
-                    return input.getSourcePath();
-                  }
-                })
+                StrippedObjectDescription::getSourcePath)
             .toSet());
     assertThat(
         stripRules,

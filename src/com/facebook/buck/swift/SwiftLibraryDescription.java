@@ -72,12 +72,8 @@ public class SwiftLibraryDescription implements
       SWIFT_COMPANION_FLAVOR,
       SWIFT_COMPILE_FLAVOR);
 
-  private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
-    @Override
-    public boolean apply(Flavor flavor) {
-      return SUPPORTED_FLAVORS.contains(flavor);
-    }
-  };
+  private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR =
+      SUPPORTED_FLAVORS::contains;
 
   public enum Type implements FlavorConvertible {
     SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR),
@@ -195,15 +191,12 @@ public class SwiftLibraryDescription implements
       params = params.appendExtraDeps(
           FluentIterable.from(params.getDeps())
               .filter(SwiftLibrary.class)
-              .transform(new Function<SwiftLibrary, BuildRule>() {
-                @Override
-                public BuildRule apply(SwiftLibrary input) {
-                  try {
-                    return input.requireSwiftCompileRule(cxxPlatform.getFlavor());
-                  } catch (NoSuchBuildTargetException e) {
-                    throw new HumanReadableException(e,
-                        "Could not find SwiftCompile with target %s", buildTarget);
-                  }
+              .transform((Function<SwiftLibrary, BuildRule>) input -> {
+                try {
+                  return input.requireSwiftCompileRule(cxxPlatform.getFlavor());
+                } catch (NoSuchBuildTargetException e) {
+                  throw new HumanReadableException(e,
+                      "Could not find SwiftCompile with target %s", buildTarget);
                 }
               })
               .toSortedSet(Ordering.natural()));

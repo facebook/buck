@@ -27,7 +27,6 @@ import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -66,12 +65,7 @@ public class CxxInferComputeReport extends AbstractBuildRule implements HasPostB
     ImmutableSortedSet<Path> reportsToMergeFromDeps =
         FluentIterable.from(analysisToReport.getTransitiveAnalyzeRules())
             .transform(
-                new Function<CxxInferAnalyze, Path>() {
-                  @Override
-                  public Path apply(CxxInferAnalyze input) {
-                    return input.getAbsolutePathToOutput();
-                  }
-                })
+                CxxInferAnalyze::getAbsolutePathToOutput)
             .toSortedSet(Ordering.natural());
 
     ImmutableSortedSet<Path> reportsToMerge = ImmutableSortedSet.<Path>naturalOrder()

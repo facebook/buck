@@ -73,38 +73,23 @@ public class MultiarchFileTest {
         {
             "AppleBinaryDescription",
             FakeAppleRuleDescriptions.BINARY_DESCRIPTION,
-            new NodeBuilderFactory() {
-              @Override
-              public AbstractNodeBuilder<?> getNodeBuilder(BuildTarget target) {
-                return AppleBinaryBuilder.createBuilder(target);
-              }
-            }
+            (NodeBuilderFactory) AppleBinaryBuilder::createBuilder
         },
         {
             "AppleLibraryDescription (static)",
             FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION,
-            new NodeBuilderFactory() {
-              @Override
-              public AbstractNodeBuilder<?> getNodeBuilder(BuildTarget target) {
-                return AppleLibraryBuilder
-                    .createBuilder(target.withAppendedFlavors(ImmutableFlavor.of("static")))
-                    .setSrcs(Optional.of(ImmutableSortedSet.of(
-                        SourceWithFlags.of(new FakeSourcePath("foo.c")))));
-              }
-            }
+            (NodeBuilderFactory) target -> AppleLibraryBuilder
+                .createBuilder(target.withAppendedFlavors(ImmutableFlavor.of("static")))
+                .setSrcs(Optional.of(ImmutableSortedSet.of(
+                    SourceWithFlags.of(new FakeSourcePath("foo.c")))))
         },
         {
             "AppleLibraryDescription (shared)",
             FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION,
-            new NodeBuilderFactory() {
-              @Override
-              public AbstractNodeBuilder<?> getNodeBuilder(BuildTarget target) {
-                return AppleLibraryBuilder
-                    .createBuilder(target.withAppendedFlavors(ImmutableFlavor.of("shared")))
-                    .setSrcs(Optional.of(ImmutableSortedSet.of(
-                        SourceWithFlags.of(new FakeSourcePath("foo.c")))));
-              }
-            }
+            (NodeBuilderFactory) target -> AppleLibraryBuilder
+                .createBuilder(target.withAppendedFlavors(ImmutableFlavor.of("shared")))
+                .setSrcs(Optional.of(ImmutableSortedSet.of(
+                    SourceWithFlags.of(new FakeSourcePath("foo.c")))))
         },
     });
   }

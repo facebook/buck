@@ -49,12 +49,7 @@ public class AndroidReactNativeLibraryDescription
 
   public AndroidReactNativeLibraryDescription(final ReactNativeBuckConfig buckConfig) {
     this.enhancer = new ReactNativeLibraryGraphEnhancer(buckConfig);
-    this.packager = new Supplier<SourcePath>() {
-      @Override
-      public SourcePath get() {
-        return buckConfig.getPackagerSourcePath();
-      }
-    };
+    this.packager = buckConfig::getPackagerSourcePath;
   }
 
   @Override

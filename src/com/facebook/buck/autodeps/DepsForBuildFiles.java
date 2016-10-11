@@ -17,7 +17,6 @@
 package com.facebook.buck.autodeps;
 
 import com.facebook.buck.model.BuildTarget;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Sets;
@@ -113,14 +112,7 @@ public class DepsForBuildFiles implements Iterable<DepsForBuildFiles.BuildFileWi
     @Override
     public Iterator<DepsForRule> iterator() {
       return Iterators.transform(deps.entrySet().iterator(),
-          new Function<Map.Entry<String,
-                                 EnumMap<DependencyType, Set<BuildTarget>>>, DepsForRule>() {
-        @Override
-        public DepsForRule apply(
-            Map.Entry<String, EnumMap<DependencyType, Set<BuildTarget>>> entry) {
-          return new DepsForRule(entry.getKey(), entry.getValue());
-        }
-      });
+          entry -> new DepsForRule(entry.getKey(), entry.getValue()));
     }
   }
 

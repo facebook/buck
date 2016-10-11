@@ -160,19 +160,16 @@ public class RuleUtils {
       final ProjectFilesystem projectFilesystem,
       final Set<Path> dirs) {
     return Suppliers.memoize(
-        new Supplier<ImmutableCollection<Path>>() {
-          @Override
-          public ImmutableCollection<Path> get() {
-            ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
-            for (Path dir : dirs) {
-              try {
-                paths.addAll(projectFilesystem.getFilesUnderPath(dir));
-              } catch (IOException e) {
-                throw new HumanReadableException(e, "Error traversing directory: %s.", dir);
-              }
+        () -> {
+          ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
+          for (Path dir : dirs) {
+            try {
+              paths.addAll(projectFilesystem.getFilesUnderPath(dir));
+            } catch (IOException e) {
+              throw new HumanReadableException(e, "Error traversing directory: %s.", dir);
             }
-            return paths.build();
           }
+          return paths.build();
         });
   }
 }

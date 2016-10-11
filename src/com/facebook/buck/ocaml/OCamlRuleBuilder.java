@@ -47,7 +47,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -75,9 +74,7 @@ public class OCamlRuleBuilder {
   public static Function<BuildRule, ImmutableList<String>> getLibInclude(
       final boolean isBytecode) {
     return
-      new Function<BuildRule, ImmutableList<String>>() {
-        @Override
-        public ImmutableList<String> apply(BuildRule input) {
+        input -> {
           if (input instanceof OCamlLibrary) {
             OCamlLibrary library = (OCamlLibrary) input;
             if (isBytecode) {
@@ -88,20 +85,14 @@ public class OCamlRuleBuilder {
           } else {
             return ImmutableList.of();
           }
-        }
-      };
+        };
   }
 
   public static ImmutableList<SourcePath> getInput(Iterable<OCamlSource> source) {
     return ImmutableList.copyOf(
         FluentIterable.from(source)
             .transform(
-                new Function<OCamlSource, SourcePath>() {
-                  @Override
-                  public SourcePath apply(OCamlSource input) {
-                    return input.getSource();
-                  }
-                })
+                OCamlSource::getSource)
     );
   }
 
@@ -551,12 +542,7 @@ public class OCamlRuleBuilder {
       if (mlInput.contains(entry.getKey())) {
         builder.put(entry.getKey(),
             FluentIterable.from(entry.getValue())
-              .filter(new Predicate<Path>() {
-                        @Override
-                        public boolean apply(Path input) {
-                          return mlInput.contains(input);
-                        }
-                      }).toList()
+              .filter(mlInput::contains).toList()
             );
       }
     }

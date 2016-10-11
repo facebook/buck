@@ -120,12 +120,7 @@ public abstract class BuildTargetsMacroExpander
       throws MacroException {
     return FluentIterable.from(input)
         .transform(
-            new Function<BuildTarget, SourcePath>() {
-              @Override
-              public SourcePath apply(BuildTarget name) {
-                return new BuildTargetSourcePath(name);
-              }
-            })
+            (Function<BuildTarget, SourcePath>) BuildTargetSourcePath::new)
         .toSortedSet(Ordering.natural());
   }
 

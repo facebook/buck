@@ -55,7 +55,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -87,12 +86,7 @@ public class Build implements Closeable {
   private static final Logger LOG = Logger.get(Build.class);
 
   private static final Predicate<BuildResult> RULES_FAILED_PREDICATE =
-      new Predicate<BuildResult>() {
-        @Override
-        public boolean apply(BuildResult input) {
-          return input.getSuccess() == null;
-        }
-      };
+      input -> input.getSuccess() == null;
 
   private final ActionGraph actionGraph;
   private final BuildRuleResolver ruleResolver;
@@ -266,18 +260,15 @@ public class Build implements Closeable {
     ImmutableList<BuildRule> rulesToBuild = ImmutableList.copyOf(
         FluentIterable
             .from(targetsToBuild)
-            .transform(new Function<HasBuildTarget, BuildRule>() {
-                         @Override
-                         public BuildRule apply(HasBuildTarget hasBuildTarget) {
-                           try {
-                             return getRuleResolver().requireRule(hasBuildTarget.getBuildTarget());
-                           } catch (NoSuchBuildTargetException e) {
-                             throw new HumanReadableException(
-                                 "No build rule found for target %s",
-                                 hasBuildTarget.getBuildTarget());
-                           }
-                         }
-                       })
+            .transform(hasBuildTarget -> {
+              try {
+                return getRuleResolver().requireRule(hasBuildTarget.getBuildTarget());
+              } catch (NoSuchBuildTargetException e) {
+                throw new HumanReadableException(
+                    "No build rule found for target %s",
+                    hasBuildTarget.getBuildTarget());
+              }
+            })
             .toSet());
 
     // Calculate and post the number of rules that need to built.
@@ -293,12 +284,7 @@ public class Build implements Closeable {
     final BuildContext currentBuildContext = buildContext;
     List<ListenableFuture<BuildResult>> futures = FluentIterable.from(rulesToBuild)
         .transform(
-        new Function<BuildRule, ListenableFuture<BuildResult>>() {
-          @Override
-          public ListenableFuture<BuildResult> apply(BuildRule rule) {
-            return buildEngine.build(currentBuildContext, rule);
-          }
-        }).toList();
+            rule -> buildEngine.build(currentBuildContext, rule)).toList();
 
     // Get the Future representing the build and then block until everything is built.
     ListenableFuture<List<BuildResult>> buildFuture = Futures.allAsList(futures);

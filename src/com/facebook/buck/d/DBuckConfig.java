@@ -24,7 +24,6 @@ import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Architecture;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -79,12 +78,7 @@ public class DBuckConfig {
           FluentIterable
             .from(getBaseLibraryPaths())
             .transform(
-                new Function<Path, String>() {
-                  @Override
-                  public String apply(Path input) {
-                    return "-L" + input;
-                  }
-                }));
+                input -> "-L" + input));
       builder.add("-lphobos2", "-lpthread", "-lm");
       return builder.build();
     }
@@ -102,12 +96,7 @@ public class DBuckConfig {
       return FluentIterable
           .from(configuredPaths.get())
           .transform(
-              new Function<String, Path>() {
-                @Override
-                public Path apply(String input) {
-                  return Paths.get(input);
-                }
-              });
+              input -> Paths.get(input));
     }
 
     // No paths configured. Make an educated guess and return that.

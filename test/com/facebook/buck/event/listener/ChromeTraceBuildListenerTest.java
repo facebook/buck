@@ -61,10 +61,8 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -145,18 +143,8 @@ public class ChromeTraceBuildListenerTest {
 
     ImmutableList<String> files = FluentIterable.
         from(Arrays.asList(projectFilesystem.listFiles(invocationInfo.getLogDirectoryPath()))).
-        filter(new Predicate<File>() {
-          @Override
-          public boolean apply(File input) {
-            return input.toString().endsWith(".trace");
-          }
-        }).
-        transform(new Function<File, String>() {
-          @Override
-          public String apply(File input) {
-            return input.getName();
-          }
-        }).
+        filter(input -> input.toString().endsWith(".trace")).
+        transform(File::getName).
         toList();
     assertEquals(4, files.size());
     assertEquals(

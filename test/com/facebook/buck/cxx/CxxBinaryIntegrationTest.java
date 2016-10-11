@@ -44,11 +44,9 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -262,16 +260,11 @@ public class CxxBinaryIntegrationTest {
         FluentIterable.from(buildLog.getAllTargets())
             // Filter out header symlink tree rules, as they are always built locally.
             .filter(
-                new Predicate<BuildTarget>() {
-                  @Override
-                  public boolean apply(BuildTarget target) {
-                    return (
-                        !target.getFlavors()
-                            .contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR) &&
-                        !target.getFlavors()
-                            .contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR));
-                  }
-                })
+                target -> (
+                    !target.getFlavors()
+                        .contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR) &&
+                    !target.getFlavors()
+                        .contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)))
             .transform(Functions.toStringFunction())
             // Filter out any rules that are explicitly built locally.
             .filter(Predicates.not(Predicates.in(locallyBuiltTargets)))
@@ -1269,12 +1262,7 @@ public class CxxBinaryIntegrationTest {
     String out = workspace.getFileContents(specsPathList);
 
     ImmutableList<Path> paths = FluentIterable.of(out.split("\n")).transform(
-        new Function<String, Path>() {
-          @Override
-          public Path apply(String input) {
-            return new File(input).toPath();
-          }
-        }).toList();
+        input -> new File(input).toPath()).toList();
 
     assertSame("There must be 2 paths in total", paths.size(), 2);
 

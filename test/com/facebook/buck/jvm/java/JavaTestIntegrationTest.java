@@ -26,7 +26,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
@@ -261,12 +260,7 @@ public class JavaTestIntegrationTest {
     result.assertSuccess();
     ImmutableSortedSet<Path> actualPaths = FluentIterable.from(Arrays.asList(result.getStdout()
         .split("\\s+")))
-        .transform(new Function<String, Path>() {
-          @Override
-          public Path apply(String input) {
-            return temp.getRoot().relativize(Paths.get(input));
-          }
-        })
+        .transform(input -> temp.getRoot().relativize(Paths.get(input)))
         .toSortedSet(Ordering.natural());
     ImmutableSortedSet<Path> expectedPaths = ImmutableSortedSet.of(
         Paths.get("buck-out/gen/lib__top__output/top.jar"),

@@ -74,13 +74,7 @@ public class RageCommandIntegrationTest {
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
-  private static final ExtraInfoCollector EMPTY_EXTRA_INFO_HELPER = new ExtraInfoCollector() {
-    @Override
-    public Optional<ExtraInfoResult> run()
-        throws IOException, InterruptedException, ExtraInfoExecutionException {
-      return Optional.absent();
-    }
-  };
+  private static final ExtraInfoCollector EMPTY_EXTRA_INFO_HELPER = Optional::absent;
 
   @Test
   public void testRageNonInteractiveReport() throws Exception {

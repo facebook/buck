@@ -22,7 +22,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
@@ -42,12 +41,7 @@ public class AppleNativeIntegrationTestUtils {
       final ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths) {
     return Iterables.tryFind(
         sdkPaths.keySet(),
-        new Predicate<AppleSdk>() {
-          @Override
-          public boolean apply(AppleSdk sdk) {
-            return sdk.getApplePlatform().equals(platform);
-          }
-        });
+        sdk -> sdk.getApplePlatform().equals(platform));
   }
 
   public static boolean isApplePlatformAvailable(ApplePlatform platform) {

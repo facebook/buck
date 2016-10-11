@@ -50,13 +50,11 @@ import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.StringExpander;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -135,12 +133,7 @@ public class PrebuiltCxxLibraryDescription implements
   // Platform unlike most macro expanders needs access to the cxx build flavor.
   // Because of that it can't be like normal expanders. So just create a handler here.
   private static MacroHandler getMacroHandler(final Optional<CxxPlatform> cxxPlatform) {
-    String flav = cxxPlatform.transform(new Function<CxxPlatform, String>() {
-      @Override
-      public String apply(CxxPlatform input) {
-        return input.getFlavor().toString();
-      }
-    }).or("");
+    String flav = cxxPlatform.transform(input -> input.getFlavor().toString()).or("");
     return new MacroHandler(
         ImmutableMap.of(
             "location", new LocationMacroExpander(),
@@ -502,25 +495,15 @@ public class PrebuiltCxxLibraryDescription implements
         args.includeDirs.or(ImmutableList.of("include")),
         args.libDir,
         args.libName,
-        new Function<CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>() {
-          @Override
-          public ImmutableMultimap<CxxSource.Type, String> apply(CxxPlatform input) {
-            return CxxFlags.getLanguageFlags(
-                args.exportedPreprocessorFlags,
-                args.exportedPlatformPreprocessorFlags,
-                args.exportedLangPreprocessorFlags,
-                input);
-          }
-        },
-        new Function<CxxPlatform, ImmutableList<String>>() {
-          @Override
-          public ImmutableList<String> apply(CxxPlatform input) {
-            return CxxFlags.getFlags(
-                args.exportedLinkerFlags,
-                args.exportedPlatformLinkerFlags,
-                input);
-          }
-        },
+        input -> CxxFlags.getLanguageFlags(
+            args.exportedPreprocessorFlags,
+            args.exportedPlatformPreprocessorFlags,
+            args.exportedLangPreprocessorFlags,
+            input),
+        input -> CxxFlags.getFlags(
+            args.exportedLinkerFlags,
+            args.exportedPlatformLinkerFlags,
+            input),
         args.soname,
         args.linkWithoutSoname.or(false),
         args.frameworks.or(ImmutableSortedSet.of()),
@@ -529,23 +512,20 @@ public class PrebuiltCxxLibraryDescription implements
         args.headerOnly.or(false),
         args.linkWhole.or(false),
         args.provided.or(false),
-        new Function<CxxPlatform, Boolean>() {
-          @Override
-          public Boolean apply(CxxPlatform cxxPlatform) {
-            if (args.exportedHeaders.isPresent() && !args.exportedHeaders.get().isEmpty()) {
-              return true;
-            }
-            if (args.exportedPlatformHeaders.isPresent()) {
-              for (SourceList sourceList :
-                   args.exportedPlatformHeaders.get()
-                       .getMatchingValues(cxxPlatform.getFlavor().toString())) {
-                if (!sourceList.isEmpty()) {
-                  return true;
-                }
+        cxxPlatform -> {
+          if (args.exportedHeaders.isPresent() && !args.exportedHeaders.get().isEmpty()) {
+            return true;
+          }
+          if (args.exportedPlatformHeaders.isPresent()) {
+            for (SourceList sourceList :
+                 args.exportedPlatformHeaders.get()
+                     .getMatchingValues(cxxPlatform.getFlavor().toString())) {
+              if (!sourceList.isEmpty()) {
+                return true;
               }
             }
-            return false;
           }
+          return false;
         },
     args.supportedPlatformsRegex);
   }

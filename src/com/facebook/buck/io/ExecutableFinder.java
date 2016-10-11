@@ -59,19 +59,9 @@ public class ExecutableFinder {
           ".wsf",
           ".wsh");
   // Avoid using MorePaths.TO_PATH because of circular deps in this package
-  private static final Function<String, Path> TO_PATH = new Function<String, Path>() {
-    @Override
-    public Path apply(String path) {
-      return Paths.get(path);
-    }
-  };
+  private static final Function<String, Path> TO_PATH = path -> Paths.get(path);
 
-  private static final Function<Path, Boolean> IS_EXECUTABLE = new Function<Path, Boolean>() {
-    @Override
-    public Boolean apply(Path path) {
-      return ExecutableFinder.isExecutable(path);
-    }
-  };
+  private static final Function<Path, Boolean> IS_EXECUTABLE = ExecutableFinder::isExecutable;
 
   private final Platform platform;
 

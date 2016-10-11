@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -54,12 +53,7 @@ class SwiftDescriptions {
       final A args,
       BuildTarget buildTarget) {
     output.srcs = args.srcs.transform(
-        new Function<ImmutableSortedSet<SourceWithFlags>, ImmutableSortedSet<SourcePath>>() {
-          @Override
-          public ImmutableSortedSet<SourcePath> apply(ImmutableSortedSet<SourceWithFlags> input) {
-            return filterSwiftSources(sourcePathResolver, args.srcs.get());
-          }
-        });
+        input -> filterSwiftSources(sourcePathResolver, args.srcs.get()));
     output.compilerFlags = args.compilerFlags;
     output.frameworks = args.frameworks;
     output.libraries = args.libraries;

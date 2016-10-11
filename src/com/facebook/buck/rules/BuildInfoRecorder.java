@@ -34,7 +34,6 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -211,12 +210,7 @@ public class BuildInfoRecorder {
     return FluentIterable.from(metadataToWrite.keySet())
         .transform(MorePaths.TO_PATH)
         .transform(
-            new Function<Path, Path>() {
-              @Override
-              public Path apply(Path input) {
-                return pathToMetadataDirectory.resolve(input);
-              }
-            })
+            pathToMetadataDirectory::resolve)
         .toSortedSet(Ordering.natural());
   }
 

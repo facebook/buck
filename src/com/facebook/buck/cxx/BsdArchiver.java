@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Arrays;
@@ -39,83 +38,80 @@ public class BsdArchiver implements Archiver {
   private static final byte[] LONG_NAME_MARKER = "#1/".getBytes(Charsets.US_ASCII);
 
   private static final FileContentsScrubber SYMBOL_NAME_TABLE_PADDING_SCRUBBER =
-      new FileContentsScrubber() {
-        @Override
-        public void scrubFile(FileChannel file) throws IOException, ScrubException {
-          MappedByteBuffer map = file.map(FileChannel.MapMode.READ_WRITE, 0, file.size());
+      file -> {
+        MappedByteBuffer map = file.map(FileChannel.MapMode.READ_WRITE, 0, file.size());
 
-          // Grab the global header chunk and verify it's accurate.
-          byte[] globalHeader = ObjectFileScrubbers.getBytes(map, EXPECTED_GLOBAL_HEADER.length);
-          ObjectFileScrubbers.checkArchive(
-              Arrays.equals(EXPECTED_GLOBAL_HEADER, globalHeader),
-              "invalid global header");
+        // Grab the global header chunk and verify it's accurate.
+        byte[] globalHeader = ObjectFileScrubbers.getBytes(map, EXPECTED_GLOBAL_HEADER.length);
+        ObjectFileScrubbers.checkArchive(
+            Arrays.equals(EXPECTED_GLOBAL_HEADER, globalHeader),
+            "invalid global header");
 
-          byte[] marker = ObjectFileScrubbers.getBytes(map, 3);
-          if (!Arrays.equals(LONG_NAME_MARKER, marker)) {
-            // This file isn't actually made with BSD ar; skip scrubbing it.
-            return;
+        byte[] marker = ObjectFileScrubbers.getBytes(map, 3);
+        if (!Arrays.equals(LONG_NAME_MARKER, marker)) {
+          // This file isn't actually made with BSD ar; skip scrubbing it.
+          return;
+        }
+
+        int nameLength = ObjectFileScrubbers.getDecimalStringAsInt(map, 13);
+
+        /* File modification timestamp */ ObjectFileScrubbers.getDecimalStringAsInt(map, 12);
+        /* Owner ID */ ObjectFileScrubbers.getDecimalStringAsInt(map, 6);
+        /* Group ID */ ObjectFileScrubbers.getDecimalStringAsInt(map, 6);
+
+        /* File mode */ ObjectFileScrubbers.getOctalStringAsInt(map, 8);
+        /* File size */ ObjectFileScrubbers.getDecimalStringAsInt(map, 10);
+
+        // Lastly, grab the file magic entry and verify it's accurate.
+        byte[] fileMagic = ObjectFileScrubbers.getBytes(map, 2);
+        ObjectFileScrubbers.checkArchive(
+            Arrays.equals(ObjectFileScrubbers.END_OF_FILE_HEADER_MARKER, fileMagic),
+            "invalid file magic");
+
+        // Skip the file name
+        map.position(map.position() + nameLength);
+
+        int descriptorsSize = ObjectFileScrubbers.getLittleEndianInt(map);
+
+        if (descriptorsSize > 0) {
+
+          // We need to find where the last symbol name entry is in the symbol name table, as
+          // we need to sanitize the padding that comes immediately after it.
+          // There are two types of symbol table formats, one where the descriptors are ordered by
+          // archive ordering and one where the descriptors are ordered alphabetically by their
+          // name.  In the former case, we could just read the last descriptors offset into the
+          // symbol name table.  However, this seems implementation-specific and won't work in the
+          // latter case (where the order of the descriptors doesn't correspond to the order of
+          // the symbol name table).  So, just search through all the descriptors to find the last
+          // symbol name table offset.
+          int lastSymbolNameOffset = 0;
+          for (int i = 0; i < descriptorsSize / 8; i++) {
+            lastSymbolNameOffset =
+                Math.max(
+                    lastSymbolNameOffset,
+                    ObjectFileScrubbers.getLittleEndianInt(map));
+            // Skip the corresponding object offset
+            ObjectFileScrubbers.getLittleEndianInt(map);
           }
 
-          int nameLength = ObjectFileScrubbers.getDecimalStringAsInt(map, 13);
+          int symbolNameTableSize = ObjectFileScrubbers.getLittleEndianInt(map);
+          int endOfSymbolNameTableOffset = map.position() + symbolNameTableSize;
 
-          /* File modification timestamp */ ObjectFileScrubbers.getDecimalStringAsInt(map, 12);
-          /* Owner ID */ ObjectFileScrubbers.getDecimalStringAsInt(map, 6);
-          /* Group ID */ ObjectFileScrubbers.getDecimalStringAsInt(map, 6);
+          // Skip to the last symbol name
+          map.position(map.position() + lastSymbolNameOffset);
 
-          /* File mode */ ObjectFileScrubbers.getOctalStringAsInt(map, 8);
-          /* File size */ ObjectFileScrubbers.getDecimalStringAsInt(map, 10);
-
-          // Lastly, grab the file magic entry and verify it's accurate.
-          byte[] fileMagic = ObjectFileScrubbers.getBytes(map, 2);
-          ObjectFileScrubbers.checkArchive(
-              Arrays.equals(ObjectFileScrubbers.END_OF_FILE_HEADER_MARKER, fileMagic),
-              "invalid file magic");
-
-          // Skip the file name
-          map.position(map.position() + nameLength);
-
-          int descriptorsSize = ObjectFileScrubbers.getLittleEndianInt(map);
-
-          if (descriptorsSize > 0) {
-
-            // We need to find where the last symbol name entry is in the symbol name table, as
-            // we need to sanitize the padding that comes immediately after it.
-            // There are two types of symbol table formats, one where the descriptors are ordered by
-            // archive ordering and one where the descriptors are ordered alphabetically by their
-            // name.  In the former case, we could just read the last descriptors offset into the
-            // symbol name table.  However, this seems implementation-specific and won't work in the
-            // latter case (where the order of the descriptors doesn't correspond to the order of
-            // the symbol name table).  So, just search through all the descriptors to find the last
-            // symbol name table offset.
-            int lastSymbolNameOffset = 0;
-            for (int i = 0; i < descriptorsSize / 8; i++) {
-              lastSymbolNameOffset =
-                  Math.max(
-                      lastSymbolNameOffset,
-                      ObjectFileScrubbers.getLittleEndianInt(map));
-              // Skip the corresponding object offset
-              ObjectFileScrubbers.getLittleEndianInt(map);
-            }
-
-            int symbolNameTableSize = ObjectFileScrubbers.getLittleEndianInt(map);
-            int endOfSymbolNameTableOffset = map.position() + symbolNameTableSize;
-
-            // Skip to the last symbol name
-            map.position(map.position() + lastSymbolNameOffset);
-
-            // Skip to the terminating null
-            while (map.get() != 0x00) { // NOPMD
-            }
-
-            while (map.position() < endOfSymbolNameTableOffset) {
-              map.put((byte) 0x00);
-            }
-          } else {
-            int symbolNameTableSize = ObjectFileScrubbers.getLittleEndianInt(map);
-            ObjectFileScrubbers.checkArchive(
-                symbolNameTableSize == 0,
-                "archive has no symbol descriptors but has symbol names");
+          // Skip to the terminating null
+          while (map.get() != 0x00) { // NOPMD
           }
+
+          while (map.position() < endOfSymbolNameTableOffset) {
+            map.put((byte) 0x00);
+          }
+        } else {
+          int symbolNameTableSize = ObjectFileScrubbers.getLittleEndianInt(map);
+          ObjectFileScrubbers.checkArchive(
+              symbolNameTableSize == 0,
+              "archive has no symbol descriptors but has symbol names");
         }
       };
 

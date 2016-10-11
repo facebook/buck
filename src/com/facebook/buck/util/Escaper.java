@@ -99,12 +99,7 @@ public final class Escaper {
   public static Function<String, String> escaper(
       final Quoter quoter,
       final CharMatcher matcher) {
-    return new Function<String, String>() {
-      @Override
-      public String apply(String input) {
-        return escape(quoter, matcher, input);
-      }
-    };
+    return input -> escape(quoter, matcher, input);
   }
 
   public static Function<String, String> javacEscaper() {
@@ -136,12 +131,7 @@ public final class Escaper {
    * passed to {@link com.google.common.collect.Iterables#transform Iterables.transform()}.
    */
   public static final Function<String, String> CREATE_PROCESS_ESCAPER =
-      new Function<String, String>() {
-        @Override
-        public String apply(String input) {
-          return WindowsCreateProcessEscape.quote(input);
-        }
-      };
+      WindowsCreateProcessEscape::quote;
 
   /**
    * Platform-aware shell quoting {@link com.google.common.base.Function Function} which can be

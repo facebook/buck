@@ -32,13 +32,10 @@ import org.junit.Test;
 
 public class NumberFormatterTest {
   private static Function<Locale, NumberFormat> decimalFormatCreator() {
-    return new Function<Locale, NumberFormat>() {
-      @Override
-      public NumberFormat apply(Locale locale) {
-        NumberFormat format = NumberFormat.getNumberInstance(locale);
-        format.setMaximumFractionDigits(10);
-        return format;
-      }
+    return locale -> {
+      NumberFormat format = NumberFormat.getNumberInstance(locale);
+      format.setMaximumFractionDigits(10);
+      return format;
     };
   }
 

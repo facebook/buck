@@ -30,7 +30,6 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -67,12 +66,7 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
     expect(androidPlatformTarget.getProguardJar()).andStubReturn(Paths.get("proguard.jar"));
     replay(androidPlatformTarget);
     executionContext = TestExecutionContext.newBuilder()
-        .setAndroidPlatformTargetSupplier(new Supplier<AndroidPlatformTarget>() {
-          @Override
-          public AndroidPlatformTarget get() {
-            return androidPlatformTarget;
-          }
-        })
+        .setAndroidPlatformTargetSupplier(() -> androidPlatformTarget)
         .build();
 
     assertEquals(executionContext.getAndroidPlatformTarget(), androidPlatformTarget);

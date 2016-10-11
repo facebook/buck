@@ -574,12 +574,7 @@ class XctoolRunTestsStep implements Step {
       throw e;
     }
     stutterTimeoutExecutorService.schedule(
-        new Runnable() {
-          @Override
-          public void run() {
-            releaseStutterLock(stutterLockIsNotified);
-          }
-        },
+        () -> releaseStutterLock(stutterLockIsNotified),
         xctoolStutterTimeout.get(),
         TimeUnit.MILLISECONDS);
   }

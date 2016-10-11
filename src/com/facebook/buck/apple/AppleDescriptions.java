@@ -324,15 +324,10 @@ public class AppleDescriptions {
       ImmutableList<String>,
       ImmutableList<String>> expandSdkVariableReferencesFunction(
       final AppleSdkPaths appleSdkPaths) {
-    return new Function<ImmutableList<String>, ImmutableList<String>>() {
-      @Override
-      public ImmutableList<String> apply(ImmutableList<String> flags) {
-        return FluentIterable
-            .from(flags)
-            .transform(appleSdkPaths.replaceSourceTreeReferencesFunction())
-            .toList();
-      }
-    };
+    return flags -> FluentIterable
+        .from(flags)
+        .transform(appleSdkPaths.replaceSourceTreeReferencesFunction())
+        .toList();
   }
 
   public static Optional<AppleAssetCatalog> createBuildRuleForTransitiveAssetCatalogDependencies(

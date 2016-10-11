@@ -35,7 +35,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -114,22 +113,13 @@ public class PerBuildState implements AutoCloseable {
     this.stderr = new PrintStream(ByteStreams.nullOutputStream());
     this.console = new Console(Verbosity.STANDARD_INFORMATION, stdout, stderr, Ansi.withoutTty());
 
-    TargetNodeListener<TargetNode<?>> symlinkCheckers = new TargetNodeListener<TargetNode<?>>() {
-      @Override
-      public void onCreate(Path buildFile, TargetNode<?> node) throws IOException {
-        registerInputsUnderSymlinks(buildFile, node);
-      }
-    };
+    TargetNodeListener<TargetNode<?>> symlinkCheckers =
+        this::registerInputsUnderSymlinks;
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
     int numParsingThreads = parserConfig.getNumParsingThreads();
     this.projectBuildFileParserPool = new ProjectBuildFileParserPool(
         numParsingThreads, // Max parsers to create per cell.
-        new Function<Cell, ProjectBuildFileParser>() {
-          @Override
-          public ProjectBuildFileParser apply(Cell input) {
-            return createBuildFileParser(input, PerBuildState.this.ignoreBuckAutodepsFiles);
-          }
-        });
+        input -> createBuildFileParser(input, PerBuildState.this.ignoreBuckAutodepsFiles));
 
     this.rawNodeParsePipeline = new RawNodeParsePipeline(
         parser.getPermState().getRawNodeCache(),

@@ -59,15 +59,12 @@ public final class RunCommand extends AbstractCommand {
   private List<String> withDashArguments = Lists.newArrayList();
 
   private final Supplier<ImmutableList<String>> arguments = Suppliers.memoize(
-    new Supplier<ImmutableList<String>>() {
-      @Override
-      public ImmutableList<String> get() {
+      () -> {
         ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
         builder.addAll(noDashArguments);
         builder.addAll(withDashArguments);
         return builder.build();
-      }
-    });
+      });
 
   @VisibleForTesting
   ImmutableList<String> getArguments() {

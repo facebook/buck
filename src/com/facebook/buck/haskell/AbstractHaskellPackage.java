@@ -82,12 +82,7 @@ abstract class AbstractHaskellPackage implements RuleKeyAppendable {
 
   public static Function<HaskellPackage, Iterable<BuildRule>> getDepsFunction(
       final SourcePathResolver resolver) {
-    return new Function<HaskellPackage, Iterable<BuildRule>>() {
-      @Override
-      public Iterable<BuildRule> apply(HaskellPackage input) {
-        return input.getDeps(resolver);
-      }
-    };
+    return input -> input.getDeps(resolver);
   }
 
 }

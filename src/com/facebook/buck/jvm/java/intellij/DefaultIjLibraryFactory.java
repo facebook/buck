@@ -109,12 +109,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
     if (rule == null) {
       rule = libraryFactoryResolver.getPathIfJavaLibrary(targetNode)
           .transform(
-              new Function<Path, IjLibraryRule>() {
-                @Override
-                public IjLibraryRule apply(Path input) {
-                  return new JavaLibraryRule(input);
-                }
-              })
+              (Function<Path, IjLibraryRule>) JavaLibraryRule::new)
           .orNull();
     }
     return Optional.fromNullable(rule);
@@ -122,21 +117,18 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
 
   private Optional<IjLibrary> createLibrary(final TargetNode<?> targetNode) {
     return getRule(targetNode).transform(
-        new Function<IjLibraryRule, IjLibrary>() {
-          @Override
-          public IjLibrary apply(IjLibraryRule rule) {
-            // Use a "library_" prefix so that the names don't clash with module names.
-            String libraryName = Util.intelliJLibraryName(targetNode.getBuildTarget());
-            Preconditions.checkState(
-                !uniqueLibraryNamesSet.contains(libraryName),
-                "Trying to use the same library name for different targets.");
+        rule -> {
+          // Use a "library_" prefix so that the names don't clash with module names.
+          String libraryName = Util.intelliJLibraryName(targetNode.getBuildTarget());
+          Preconditions.checkState(
+              !uniqueLibraryNamesSet.contains(libraryName),
+              "Trying to use the same library name for different targets.");
 
-            IjLibrary.Builder libraryBuilder = IjLibrary.builder();
-            rule.applyRule(targetNode, libraryBuilder);
-            libraryBuilder.setName(libraryName);
-            libraryBuilder.setTargets(ImmutableSet.of(targetNode));
-            return libraryBuilder.build();
-          }
+          IjLibrary.Builder libraryBuilder = IjLibrary.builder();
+          rule.applyRule(targetNode, libraryBuilder);
+          libraryBuilder.setName(libraryName);
+          libraryBuilder.setTargets(ImmutableSet.of(targetNode));
+          return libraryBuilder.build();
         });
   }
 
@@ -170,12 +162,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
       AndroidPrebuiltAarDescription.Arg arg = targetNode.getConstructorArg();
       library.setSourceJar(
           arg.sourceJar.transform(
-              new Function<SourcePath, Path>() {
-                @Override
-                public Path apply(SourcePath input) {
-                  return libraryFactoryResolver.getPath(input);
-                }
-              }));
+              input -> libraryFactoryResolver.getPath(input)));
       library.setJavadocUrl(arg.javadocUrl);
     }
   }
@@ -195,12 +182,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
       library.setBinaryJar(libraryFactoryResolver.getPath(arg.binaryJar));
       library.setSourceJar(
           arg.sourceJar.transform(
-              new Function<SourcePath, Path>() {
-                @Override
-                public Path apply(SourcePath input) {
-                  return libraryFactoryResolver.getPath(input);
-                }
-              }));
+              input -> libraryFactoryResolver.getPath(input)));
       library.setJavadocUrl(arg.javadocUrl);
     }
   }

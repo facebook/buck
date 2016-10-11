@@ -56,7 +56,6 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.swift.SwiftPlatform;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -227,12 +226,7 @@ public class AppleBundle
     }
     this.codesignAllocatePath = appleCxxPlatform.getCodesignAllocate();
     this.swiftStdlibTool = appleCxxPlatform.getSwiftPlatform()
-        .transform(new Function<SwiftPlatform, Tool>() {
-          @Override
-          public Tool apply(SwiftPlatform input) {
-            return input.getSwiftStdlibTool();
-          }
-        });
+        .transform(SwiftPlatform::getSwiftStdlibTool);
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -427,12 +421,7 @@ public class AppleBundle
 
       if (adHocCodeSignIsSufficient()) {
         signingEntitlementsTempPath = Optional.absent();
-        codeSignIdentitySupplier = new Supplier<CodeSignIdentity>() {
-          @Override
-          public CodeSignIdentity get() {
-            return CodeSignIdentity.AD_HOC;
-          }
-        };
+        codeSignIdentitySupplier = () -> CodeSignIdentity.AD_HOC;
       } else {
         // Copy the .mobileprovision file if the platform requires it, and sign the executable.
         Optional<Path> entitlementsPlist = Optional.absent();
@@ -468,35 +457,32 @@ public class AppleBundle
                 codeSignIdentityStore);
         stepsBuilder.add(provisioningProfileCopyStep);
 
-        codeSignIdentitySupplier = new Supplier<CodeSignIdentity>() {
-          @Override
-          public CodeSignIdentity get() {
-            // Using getUnchecked here because the previous step should already throw if exception
-            // occurred, and this supplier would never be evaluated.
-            ProvisioningProfileMetadata selectedProfile = Futures.getUnchecked(
-                provisioningProfileCopyStep.getSelectedProvisioningProfileFuture());
-            ImmutableSet<HashCode> fingerprints =
-                selectedProfile.getDeveloperCertificateFingerprints();
-            if (fingerprints.isEmpty()) {
-              // No constraints, pick an arbitrary identity.
-              // If no identities are available, use an ad-hoc identity.
-              return Iterables.getFirst(
-                  codeSignIdentityStore.getIdentities(),
-                  CodeSignIdentity.AD_HOC);
-            }
-            for (CodeSignIdentity identity : codeSignIdentityStore.getIdentities()) {
-              if (identity.getFingerprint().isPresent() &&
-                  fingerprints.contains(identity.getFingerprint().get())) {
-                return identity;
-              }
-            }
-            throw new HumanReadableException(
-                "No code sign identity available for provisioning profile: %s\n" +
-                    "Profile requires an identity with one of the following SHA1 fingerprints " +
-                    "available in your keychain: \n  %s",
-                selectedProfile.getProfilePath(),
-                Joiner.on("\n  ").join(fingerprints));
+        codeSignIdentitySupplier = () -> {
+          // Using getUnchecked here because the previous step should already throw if exception
+          // occurred, and this supplier would never be evaluated.
+          ProvisioningProfileMetadata selectedProfile = Futures.getUnchecked(
+              provisioningProfileCopyStep.getSelectedProvisioningProfileFuture());
+          ImmutableSet<HashCode> fingerprints =
+              selectedProfile.getDeveloperCertificateFingerprints();
+          if (fingerprints.isEmpty()) {
+            // No constraints, pick an arbitrary identity.
+            // If no identities are available, use an ad-hoc identity.
+            return Iterables.getFirst(
+                codeSignIdentityStore.getIdentities(),
+                CodeSignIdentity.AD_HOC);
           }
+          for (CodeSignIdentity identity : codeSignIdentityStore.getIdentities()) {
+            if (identity.getFingerprint().isPresent() &&
+                fingerprints.contains(identity.getFingerprint().get())) {
+              return identity;
+            }
+          }
+          throw new HumanReadableException(
+              "No code sign identity available for provisioning profile: %s\n" +
+                  "Profile requires an identity with one of the following SHA1 fingerprints " +
+                  "available in your keychain: \n  %s",
+              selectedProfile.getProfilePath(),
+              Joiner.on("\n  ").join(fingerprints));
         };
       }
 

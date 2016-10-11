@@ -46,7 +46,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Types;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -182,12 +181,7 @@ public final class ProjectGeneratorTestUtils {
       PBXTarget target, final Class<T> cls) {
     Iterable<PBXBuildPhase> buildPhases =
         Iterables.filter(
-            target.getBuildPhases(), new Predicate<PBXBuildPhase>() {
-              @Override
-              public boolean apply(PBXBuildPhase input) {
-                return cls.isInstance(input);
-              }
-            });
+            target.getBuildPhases(), cls::isInstance);
     assertEquals("Build phase should be singleton", 1, Iterables.size(buildPhases));
     @SuppressWarnings("unchecked")
     T element = (T) Iterables.getOnlyElement(buildPhases);

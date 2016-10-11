@@ -92,7 +92,6 @@ import com.facebook.buck.zip.ZipConstants;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -2956,20 +2955,10 @@ public class CachingBuildEngineTest {
       for (List<BuildRuleEvent> queue : grouped.values()) {
         Collections.sort(
             queue,
-            new Comparator<BuildRuleEvent>() {
-              @Override
-              public int compare(BuildRuleEvent o1, BuildRuleEvent o2) {
-                return Long.compare(o1.getNanoTime(), o2.getNanoTime());
-              }
-            });
+            (o1, o2) -> Long.compare(o1.getNanoTime(), o2.getNanoTime()));
         ImmutableList<String> queueDescription = FluentIterable.from(queue)
             .transform(
-                new Function<BuildRuleEvent, String>() {
-                  @Override
-                  public String apply(BuildRuleEvent event) {
-                    return String.format("%s@%s", event, event.getNanoTime());
-                  }
-                })
+                event -> String.format("%s@%s", event, event.getNanoTime()))
             .toList();
         Iterator<BuildRuleEvent> itr = queue.iterator();
 

@@ -35,15 +35,12 @@ public final class HiveRowFormatter {
    */
   private static final String ARRAY_SEPARATOR = "\002";
 
-  private static final Function<Object, String> ESCAPE_FUNCTION = new Function<Object, String>() {
-    @Override
-    public String apply(Object input) {
-      if (input == null) {
-        return "";
-      }
-
-      return escapeHiveString(input.toString());
+  private static final Function<Object, String> ESCAPE_FUNCTION = input -> {
+    if (input == null) {
+      return "";
     }
+
+    return escapeHiveString(input.toString());
   };
 
   private final StringBuilder row;

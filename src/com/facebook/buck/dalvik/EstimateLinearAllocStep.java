@@ -46,12 +46,7 @@ public class EstimateLinearAllocStep implements Step, Supplier<Integer> {
    * be used instead.
    */
   private static final LinearAllocEstimator DEFAULT_LINEAR_ALLOC_ESTIMATOR =
-      new LinearAllocEstimator() {
-    @Override
-    public int getEstimate(FileLike fileLike) throws IOException {
-      return (int) fileLike.getSize();
-    }
-  };
+      fileLike -> (int) fileLike.getSize();
 
   private final ProjectFilesystem filesystem;
   private final Path pathToJarOrClassesDirectory;

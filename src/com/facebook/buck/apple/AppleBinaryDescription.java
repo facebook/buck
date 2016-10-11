@@ -48,11 +48,9 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -80,6 +78,7 @@ public class AppleBinaryDescription implements
       ImmutableSet.of(APP_FLAVOR));
   public static final Flavor LEGACY_WATCH_FLAVOR = ImmutableFlavor.of("legacy_watch");
 
+  @SuppressWarnings("PMD") // PMD doesn't understand method references
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       APP_FLAVOR,
       CxxCompilationDatabase.COMPILATION_DATABASE,
@@ -87,13 +86,6 @@ public class AppleBinaryDescription implements
       AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
       AppleDebugFormat.DWARF.getFlavor(),
       AppleDebugFormat.NONE.getFlavor());
-
-  private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
-    @Override
-    public boolean apply(Flavor flavor) {
-      return SUPPORTED_FLAVORS.contains(flavor);
-    }
-  };
 
   private final CxxBinaryDescription delegate;
   private final SwiftLibraryDescription swiftDelegate;
@@ -129,7 +121,7 @@ public class AppleBinaryDescription implements
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    if (FluentIterable.from(flavors).allMatch(IS_SUPPORTED_FLAVOR)) {
+    if (FluentIterable.from(flavors).allMatch(SUPPORTED_FLAVORS::contains)) {
       return true;
     }
     ImmutableSet<Flavor> delegateFlavors = ImmutableSet.copyOf(Sets.difference(
@@ -142,12 +134,7 @@ public class AppleBinaryDescription implements
     if (thinFlavorSets.size() > 0) {
       return Iterables.all(
           thinFlavorSets,
-          new Predicate<ImmutableSortedSet<Flavor>>() {
-            @Override
-            public boolean apply(ImmutableSortedSet<Flavor> input) {
-              return delegate.hasFlavors(input);
-            }
-          });
+          delegate::hasFlavors);
     } else {
       return delegate.hasFlavors(delegateFlavors);
     }
@@ -471,16 +458,11 @@ public class AppleBinaryDescription implements
       return Iterables.concat(
           Iterables.transform(
               thinFlavorSets,
-              new Function<ImmutableSortedSet<Flavor>, Iterable<BuildTarget>>() {
-                @Override
-                public Iterable<BuildTarget> apply(ImmutableSortedSet<Flavor> input) {
-                  return delegate.findDepsForTargetFromConstructorArgs(
-                      buildTarget.withFlavors(input),
-                      cellRoots,
-                      constructorArg.linkerFlags.get(),
-                      constructorArg.platformLinkerFlags.get().getValues());
-                }
-              })
+              input -> delegate.findDepsForTargetFromConstructorArgs(
+                  buildTarget.withFlavors(input),
+                  cellRoots,
+                  constructorArg.linkerFlags.get(),
+                  constructorArg.platformLinkerFlags.get().getValues()))
       );
     } else {
       return delegate.findDepsForTargetFromConstructorArgs(

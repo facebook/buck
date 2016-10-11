@@ -44,7 +44,6 @@ import com.facebook.buck.swift.SwiftPlatforms;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
@@ -195,12 +194,7 @@ public class AppleCxxPlatforms {
         Optional.presentInstances(
             Iterables.transform(
                 targetSdk.getToolchains(),
-                new Function<AppleToolchain, Optional<String>>() {
-                  @Override
-                  public Optional<String> apply(AppleToolchain input) {
-                    return input.getVersion();
-                  }
-                })));
+                AppleToolchain::getVersion)));
     if (toolchainVersions.isEmpty()) {
       if (!xcodeBuildVersion.isPresent()) {
         throw new HumanReadableException("Failed to read toolchain versions and Xcode version.");
@@ -281,12 +275,7 @@ public class AppleCxxPlatforms {
         version);
 
     Optional<Path> stubBinaryPath = targetSdk.getApplePlatform().getStubBinaryPath().transform(
-        new Function<Path, Path>() {
-          @Override
-          public Path apply(Path input) {
-            return sdkPaths.getSdkPath().resolve(input);
-          }
-        });
+        input -> sdkPaths.getSdkPath().resolve(input));
 
     CxxBuckConfig config = new CxxBuckConfig(buckConfig);
 
@@ -506,17 +495,12 @@ public class AppleCxxPlatforms {
       final String version,
       final ImmutableList<String> params) {
     return executableFinder.getOptionalToolPath(tool, toolSearchPaths)
-        .transform(new Function<Path, Tool>() {
-          @Override
-          public VersionedTool apply(Path input) {
-            return VersionedTool.builder()
-                .setPath(input)
-                .setName(tool)
-                .setVersion(version)
-                .setExtraArgs(params)
-                .build();
-          }
-        });
+        .transform(input -> VersionedTool.builder()
+            .setPath(input)
+            .setName(tool)
+            .setVersion(version)
+            .setExtraArgs(params)
+            .build());
   }
 
   private static Path getToolPath(

@@ -48,7 +48,6 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -103,12 +102,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     return FluentIterable
         .from(arg.includeDirs.or(ImmutableList.of("include")))
         .transform(
-            new Function<String, Path>() {
-              @Override
-              public Path apply(String input) {
-                return TARGET.getBasePath().resolve(input);
-              }
-            })
+            input -> TARGET.getBasePath().resolve(input))
         .toList();
   }
 

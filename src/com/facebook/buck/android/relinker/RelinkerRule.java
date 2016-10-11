@@ -41,7 +41,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Charsets;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -112,17 +111,14 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
         .addAll(Sets.intersection(needed, provided))
         .addAll(
             Sets.filter(
-                provided, new Predicate<String>() {
-                  @Override
-                  public boolean apply(String s) {
-                    if (s.contains("JNI_OnLoad")) {
-                      return true;
-                    }
-                    if (s.contains("Java_")) {
-                      return true;
-                    }
-                    return false;
+                provided, s -> {
+                  if (s.contains("JNI_OnLoad")) {
+                    return true;
                   }
+                  if (s.contains("Java_")) {
+                    return true;
+                  }
+                  return false;
                 }))
         .build();
     String res = "{\n";

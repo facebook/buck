@@ -161,7 +161,6 @@ import com.facebook.buck.zip.ZipDescription;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -281,12 +280,7 @@ public class KnownBuildRuleTypes {
       final Optional<String> swiftToolChainName = swiftVersion.transform(
           AppleCxxPlatform.SWIFT_VERSION_TO_TOOLCHAIN_IDENTIFIER);
       swiftToolChain = FluentIterable.from(toolchains.values())
-          .firstMatch(new Predicate<AppleToolchain>() {
-            @Override
-            public boolean apply(AppleToolchain input) {
-              return input.getIdentifier().equals(swiftToolChainName.get());
-            }
-          });
+          .firstMatch(input -> input.getIdentifier().equals(swiftToolChainName.get()));
     }
 
     for (Map.Entry<AppleSdk, AppleSdkPaths> entry : sdkPaths.entrySet()) {

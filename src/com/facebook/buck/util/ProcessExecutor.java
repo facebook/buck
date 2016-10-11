@@ -247,19 +247,16 @@ public class ProcessExecutor {
     final AtomicBoolean timedOut = new AtomicBoolean(false);
     Thread waiter =
         new Thread(
-            new Runnable() {
-              @Override
-              public void run() {
-                try {
-                  process.waitFor();
-                } catch (InterruptedException e) {
-                  timedOut.set(true);
-                  if (timeOutHandler.isPresent()) {
-                    try {
-                      timeOutHandler.get().apply(process);
-                    } catch (RuntimeException e2) {
-                      LOG.error(e2, "timeOutHandler threw an Exception!");
-                    }
+            () -> {
+              try {
+                process.waitFor();
+              } catch (InterruptedException e) {
+                timedOut.set(true);
+                if (timeOutHandler.isPresent()) {
+                  try {
+                    timeOutHandler.get().apply(process);
+                  } catch (RuntimeException e2) {
+                    LOG.error(e2, "timeOutHandler threw an Exception!");
                   }
                 }
               }

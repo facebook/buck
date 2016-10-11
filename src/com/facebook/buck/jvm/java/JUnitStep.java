@@ -109,79 +109,73 @@ public class JUnitStep extends ShellStep {
   @Override
   protected Optional<Function<Process, Void>> getTimeoutHandler(final ExecutionContext context) {
     return Optional.of(
-        new Function<Process, Void>() {
-          @Override
-          public Void apply(Process process) {
-            Optional<Long> pid = Optional.absent();
-            Platform platform = context.getPlatform();
-            try {
-              switch(platform) {
-                case LINUX:
-                case FREEBSD:
-                case MACOS: {
-                  Field field = process.getClass().getDeclaredField("pid");
-                  field.setAccessible(true);
-                  try {
-                    pid = Optional.of((long) field.getInt(process));
-                  } catch (IllegalAccessException e) {
-                    LOG.error(e, "Failed to access `pid`.");
-                  }
-                  break;
+        process -> {
+          Optional<Long> pid = Optional.absent();
+          Platform platform = context.getPlatform();
+          try {
+            switch(platform) {
+              case LINUX:
+              case FREEBSD:
+              case MACOS: {
+                Field field = process.getClass().getDeclaredField("pid");
+                field.setAccessible(true);
+                try {
+                  pid = Optional.of((long) field.getInt(process));
+                } catch (IllegalAccessException e) {
+                  LOG.error(e, "Failed to access `pid`.");
                 }
-                case WINDOWS: {
-                  Field field = process.getClass().getDeclaredField("handle");
-                  field.setAccessible(true);
-                  try {
-                    pid = Optional.of(field.getLong(process));
-                  } catch (IllegalAccessException e) {
-                    LOG.error(e, "Failed to access `handle`.");
-                  }
-                  break;
-                }
-                case UNKNOWN:
-                  LOG.info("Unknown platform; unable to obtain the process id!");
-                  break;
+                break;
               }
-            } catch (NoSuchFieldException e) {
-              LOG.error(e);
+              case WINDOWS: {
+                Field field = process.getClass().getDeclaredField("handle");
+                field.setAccessible(true);
+                try {
+                  pid = Optional.of(field.getLong(process));
+                } catch (IllegalAccessException e) {
+                  LOG.error(e, "Failed to access `handle`.");
+                }
+                break;
+              }
+              case UNKNOWN:
+                LOG.info("Unknown platform; unable to obtain the process id!");
+                break;
             }
+          } catch (NoSuchFieldException e) {
+            LOG.error(e);
+          }
 
-            Optional<Path> jstack = new ExecutableFinder(context.getPlatform())
-                .getOptionalExecutable(Paths.get("jstack"), context.getEnvironment());
-            if (!pid.isPresent() || !jstack.isPresent()) {
-              LOG.info("Unable to print a stack trace for timed out test!");
-              return null;
-            }
-
-            context.getStdErr().print(
-                "Test has timed out!  Here is a trace of what it is currently doing:%n");
-            try {
-              context.getProcessExecutor().launchAndExecute(
-                  /* command */ ProcessExecutorParams.builder()
-                      .addCommand(jstack.get().toString(), "-l", pid.get().toString())
-                      .setEnvironment(context.getEnvironment())
-                      .build(),
-                  /* options */ ImmutableSet.<ProcessExecutor.Option>builder()
-                      .add(ProcessExecutor.Option.PRINT_STD_OUT)
-                      .add(ProcessExecutor.Option.PRINT_STD_ERR)
-                      .build(),
-                  /* stdin */ Optional.absent(),
-                  /* timeOutMs */ Optional.of(TimeUnit.SECONDS.toMillis(30)),
-                  /* timeOutHandler */ Optional.of(
-                      new Function<Process, Void>() {
-                        @Override
-                        public Void apply(Process input) {
-                          context.getStdErr().print(
-                              "Printing the stack took longer than 30 seconds. No longer trying.");
-                          return null;
-                        }
-                      }
-                  ));
-            } catch (Exception e) {
-              LOG.error(e);
-            }
+          Optional<Path> jstack = new ExecutableFinder(context.getPlatform())
+              .getOptionalExecutable(Paths.get("jstack"), context.getEnvironment());
+          if (!pid.isPresent() || !jstack.isPresent()) {
+            LOG.info("Unable to print a stack trace for timed out test!");
             return null;
           }
+
+          context.getStdErr().print(
+              "Test has timed out!  Here is a trace of what it is currently doing:%n");
+          try {
+            context.getProcessExecutor().launchAndExecute(
+                /* command */ ProcessExecutorParams.builder()
+                    .addCommand(jstack.get().toString(), "-l", pid.get().toString())
+                    .setEnvironment(context.getEnvironment())
+                    .build(),
+                /* options */ ImmutableSet.<ProcessExecutor.Option>builder()
+                    .add(ProcessExecutor.Option.PRINT_STD_OUT)
+                    .add(ProcessExecutor.Option.PRINT_STD_ERR)
+                    .build(),
+                /* stdin */ Optional.absent(),
+                /* timeOutMs */ Optional.of(TimeUnit.SECONDS.toMillis(30)),
+                /* timeOutHandler */ Optional.of(
+                    input -> {
+                      context.getStdErr().print(
+                          "Printing the stack took longer than 30 seconds. No longer trying.");
+                      return null;
+                    }
+                ));
+          } catch (Exception e) {
+            LOG.error(e);
+          }
+          return null;
         });
   }
 

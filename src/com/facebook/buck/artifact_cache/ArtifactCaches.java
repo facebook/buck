@@ -27,7 +27,6 @@ import com.facebook.buck.slb.RetryingHttpService;
 import com.facebook.buck.slb.SingleUriService;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -41,7 +40,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.ConnectionPool;
-import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -64,19 +62,9 @@ public class ArtifactCaches {
     ArtifactCache newInstance(NetworkCacheArgs args);
   }
 
-  private static final NetworkCacheFactory HTTP_PROTOCOL = new NetworkCacheFactory() {
-    @Override
-    public ArtifactCache newInstance(NetworkCacheArgs args) {
-      return new HttpArtifactCache(args);
-    }
-  };
+  private static final NetworkCacheFactory HTTP_PROTOCOL = HttpArtifactCache::new;
 
-  private static final NetworkCacheFactory THRIFT_PROTOCOL = new NetworkCacheFactory() {
-    @Override
-    public ArtifactCache newInstance(NetworkCacheArgs args) {
-      return new ThriftArtifactCache(args);
-    }
-  };
+  private static final NetworkCacheFactory THRIFT_PROTOCOL = ThriftArtifactCache::new;
 
   private ArtifactCaches() {
   }
@@ -129,15 +117,10 @@ public class ArtifactCaches {
       ArtifactCacheBuckConfig buckConfig,
       final ProjectFilesystem projectFilesystem) {
     return buckConfig.getServedLocalCache().transform(
-        new Function<DirCacheEntry, ArtifactCache>() {
-          @Override
-          public ArtifactCache apply(DirCacheEntry input) {
-            return createDirArtifactCache(
-                Optional.absent(),
-                input,
-                projectFilesystem);
-          }
-        });
+        input -> createDirArtifactCache(
+            Optional.absent(),
+            input,
+            projectFilesystem));
   }
 
   private static ArtifactCache newInstanceInternal(
@@ -272,16 +255,11 @@ public class ArtifactCaches {
     // Setup the default client to use.
     OkHttpClient.Builder storeClientBuilder = new OkHttpClient.Builder();
     storeClientBuilder.networkInterceptors().add(
-        new Interceptor() {
-          @Override
-          public Response intercept(Chain chain) throws IOException {
-            return chain.proceed(
-                chain.request().newBuilder()
-                    .addHeader("X-BuckCache-User", System.getProperty("user.name", "<unknown>"))
-                    .addHeader("X-BuckCache-Host", hostToReportToRemote)
-                    .build());
-          }
-        });
+        chain -> chain.proceed(
+            chain.request().newBuilder()
+                .addHeader("X-BuckCache-User", System.getProperty("user.name", "<unknown>"))
+                .addHeader("X-BuckCache-Host", hostToReportToRemote)
+                .build()));
     int timeoutSeconds = cacheDescription.getTimeoutSeconds();
     setTimeouts(storeClientBuilder, timeoutSeconds);
     storeClientBuilder.connectionPool(
@@ -297,14 +275,9 @@ public class ArtifactCaches {
     // If write headers are specified, add them to every default client request.
     if (!writeHeaders.isEmpty()) {
       storeClientBuilder.networkInterceptors().add(
-          new Interceptor() {
-            @Override
-            public Response intercept(Chain chain) throws IOException {
-              return chain.proceed(
-                addHeadersToBuilder(chain.request().newBuilder(), writeHeaders).build()
-              );
-            }
-          });
+          chain -> chain.proceed(
+            addHeadersToBuilder(chain.request().newBuilder(), writeHeaders).build()
+          ));
     }
 
     OkHttpClient storeClient = storeClientBuilder.build();
@@ -316,24 +289,16 @@ public class ArtifactCaches {
     // If read headers are specified, add them to every read client request.
     if (!readHeaders.isEmpty()) {
       fetchClientBuilder.networkInterceptors().add(
-          new Interceptor() {
-            @Override
-            public Response intercept(Chain chain) throws IOException {
-              return chain.proceed(
-                addHeadersToBuilder(chain.request().newBuilder(), readHeaders).build()
-              );
-            }
-          });
+          chain -> chain.proceed(
+            addHeadersToBuilder(chain.request().newBuilder(), readHeaders).build()
+          ));
     }
 
-    fetchClientBuilder.networkInterceptors().add((new Interceptor() {
-      @Override
-      public Response intercept(Chain chain) throws IOException {
-        Response originalResponse = chain.proceed(chain.request());
-        return originalResponse.newBuilder()
-            .body(new ProgressResponseBody(originalResponse.body(), buckEventBus))
-            .build();
-      }
+    fetchClientBuilder.networkInterceptors().add((chain -> {
+      Response originalResponse = chain.proceed(chain.request());
+      return originalResponse.newBuilder()
+          .body(new ProgressResponseBody(originalResponse.body(), buckEventBus))
+          .build();
     }));
     OkHttpClient fetchClient = fetchClientBuilder.build();
 
@@ -365,12 +330,7 @@ public class ArtifactCaches {
     }
 
     String cacheName = cacheDescription.getName()
-        .transform(new Function<String, String>() {
-          @Override
-          public String apply(String input) {
-            return "http-" + input;
-          }
-        })
+        .transform(input -> "http-" + input)
         .or("http");
     boolean doStore = cacheDescription.getCacheReadMode().isDoStore();
     return factory.newInstance(

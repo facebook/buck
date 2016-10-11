@@ -125,13 +125,7 @@ public class InteractiveReportIntegrationTest {
         BuckEventBusFactory.newInstance(clock),
         clock);
     CapturingPrintStream outputStream = new CapturingPrintStream();
-    ExtraInfoCollector extraInfoCollector = new ExtraInfoCollector() {
-      @Override
-      public Optional<ExtraInfoResult> run()
-          throws IOException, InterruptedException, ExtraInfoExecutionException {
-        return Optional.absent();
-      }
-    };
+    ExtraInfoCollector extraInfoCollector = Optional::absent;
     InteractiveReport interactiveReport =
         new InteractiveReport(
             defectReporter,

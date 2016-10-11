@@ -50,11 +50,8 @@ public class AndroidPlatformTarget {
    * {@link NoAndroidSdkException}.
    */
   public static final Supplier<AndroidPlatformTarget> EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER =
-      new Supplier<AndroidPlatformTarget>() {
-        @Override
-        public AndroidPlatformTarget get() {
-          throw new NoAndroidSdkException();
-        }
+      () -> {
+        throw new NoAndroidSdkException();
       };
 
   @VisibleForTesting
@@ -324,12 +321,7 @@ public class AndroidPlatformTarget {
 
       if (addonsParentDir.isDirectory()) {
         String[] addonsApiDirs = addonsParentDir.list(
-            new FilenameFilter() {
-              @Override
-              public boolean accept(File dir, String name) {
-                return apiDirPattern.matcher(name).matches();
-              }
-            });
+            (dir, name1) -> apiDirPattern.matcher(name1).matches());
         Arrays.sort(addonsApiDirs, new Comparator<String>() {
               @Override
               public int compare(String o1, String o2) {

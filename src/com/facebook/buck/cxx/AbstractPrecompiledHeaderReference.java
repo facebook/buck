@@ -56,14 +56,11 @@ abstract class AbstractPrecompiledHeaderReference {
   public static PrecompiledHeaderReference from(final CxxPrecompiledHeader rule) {
     return PrecompiledHeaderReference.of(
         new BuildTargetSourcePath(rule.getBuildTarget()),
-        new Supplier<ImmutableList<String>>() {
-          @Override
-          public ImmutableList<String> get() {
-            try {
-              return rule.readDepFileLines();
-            } catch (IOException e) {
-              throw new RuntimeException(e);
-            }
+        () -> {
+          try {
+            return rule.readDepFileLines();
+          } catch (IOException e) {
+            throw new RuntimeException(e);
           }
         });
   }

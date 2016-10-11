@@ -118,23 +118,15 @@ public class BuildTargets {
   }
 
   public static Predicate<BuildTarget> containsFlavors(final FlavorDomain<?> domain) {
-    return new Predicate<BuildTarget>() {
-      @Override
-      public boolean apply(BuildTarget input) {
-        ImmutableSet<Flavor> flavorSet =
-            Sets.intersection(domain.getFlavors(), input.getFlavors()).immutableCopy();
-        return !flavorSet.isEmpty();
-      }
+    return input -> {
+      ImmutableSet<Flavor> flavorSet =
+          Sets.intersection(domain.getFlavors(), input.getFlavors()).immutableCopy();
+      return !flavorSet.isEmpty();
     };
   }
 
   public static Predicate<BuildTarget> containsFlavor(final Flavor flavor) {
-    return new Predicate<BuildTarget>() {
-      @Override
-      public boolean apply(BuildTarget input) {
-        return input.getFlavors().contains(flavor);
-      }
-    };
+    return input -> input.getFlavors().contains(flavor);
   }
 
 

@@ -18,13 +18,11 @@ package com.facebook.buck.apple;
 
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
-import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.VersionStringComparator;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -62,12 +60,7 @@ public class AppleSdkDiscovery {
   private static final Ordering<AppleSdk> APPLE_SDK_VERSION_ORDERING =
     Ordering
         .from(new VersionStringComparator())
-        .onResultOf(new Function<AppleSdk, String>() {
-            @Override
-            public String apply(AppleSdk appleSdk) {
-                return appleSdk.getVersion();
-            }
-        });
+        .onResultOf(AppleSdk::getVersion);
 
   private static final String DEFAULT_TOOLCHAIN_ID = "com.apple.dt.toolchain.XcodeDefault";
 
@@ -221,12 +214,7 @@ public class AppleSdkDiscovery {
               FluentIterable
                   .from(Arrays.asList(settingsToolchains.getArray()))
                   .transform(
-                      new Function<NSObject, String>() {
-                        @Override
-                        public String apply(NSObject input) {
-                          return input.toString();
-                        }
-                      })
+                      Object::toString)
                   .toList());
           }
       }

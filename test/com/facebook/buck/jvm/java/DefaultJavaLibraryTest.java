@@ -78,7 +78,6 @@ import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -163,12 +162,7 @@ public class DefaultJavaLibraryTest {
     List<Step> steps = javaLibrary.getBuildSteps(context, new FakeBuildableContext());
 
     // Find the JavacStep and verify its bootclasspath.
-    Step step = Iterables.find(steps, new Predicate<Step>() {
-      @Override
-      public boolean apply(Step command) {
-        return command instanceof JavacStep;
-      }
-    });
+    Step step = Iterables.find(steps, command -> command instanceof JavacStep);
     assertNotNull("Expected a JavacStep in the steplist.", step);
     JavacStep javac = (JavacStep) step;
     assertEquals("Should compile Main.java rather than generated R.java.",

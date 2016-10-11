@@ -51,12 +51,9 @@ public class AssertScopeExclusiveAccess {
           "More than one thread attempting access to single-threaded scope.");
     }
 
-    return new Scope() {
-      @Override
-      public void close() {
-        if (firstOneInScope) {
-          inScope.set(false);
-        }
+    return () -> {
+      if (firstOneInScope) {
+        inScope.set(false);
       }
     };
   }

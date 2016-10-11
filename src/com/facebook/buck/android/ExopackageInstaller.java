@@ -33,7 +33,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.NamedTemporaryFile;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -326,24 +325,21 @@ public class ExopackageInstaller {
         return;
       }
 
+      String metadataContents = Joiner.on('\n').join(
+          FluentIterable.from(libraries.entrySet()).transform(
+              input -> {
+                String hash = input.getKey();
+                String filename = input.getValue().getFileName().toString();
+                int index = filename.indexOf('.');
+                String libname = index == -1 ? filename : filename.substring(0, index);
+                return String.format("%s native-%s.so", libname, hash);
+              }));
+
       ImmutableSet<String> requiredHashes = libraries.keySet();
       ImmutableSet<String> presentHashes = prepareNativeLibsDir(abi, requiredHashes);
 
       Map<String, Path> filesToInstallByHash =
           Maps.filterKeys(libraries, Predicates.not(Predicates.in(presentHashes)));
-
-      String metadataContents = Joiner.on('\n').join(
-          FluentIterable.from(libraries.entrySet()).transform(
-              new Function<Map.Entry<String, Path>, String>() {
-                @Override
-                public String apply(Map.Entry<String, Path> input) {
-                  String hash = input.getKey();
-                  String filename = input.getValue().getFileName().toString();
-                  int index = filename.indexOf('.');
-                  String libname = index == -1 ? filename : filename.substring(0, index);
-                  return String.format("%s native-%s.so", libname, hash);
-                }
-              }));
 
       installFiles(
           "native_library",

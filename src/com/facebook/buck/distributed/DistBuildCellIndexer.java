@@ -23,7 +23,6 @@ import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;
 import com.facebook.buck.rules.Cell;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
@@ -81,15 +80,12 @@ public class DistBuildCellIndexer implements Function<Path, Integer> {
     jobState.setUserEnvironment(buckConfig.getEnvironment());
     Map<String, List<OrderedStringMapEntry>> rawConfig = Maps.transformValues(
         buckConfig.getRawConfigForDistBuild(),
-        new Function<ImmutableMap<String, String>, List<OrderedStringMapEntry>>() {
-          @Override
-          public List<OrderedStringMapEntry> apply(ImmutableMap<String, String> input) {
-            List<OrderedStringMapEntry> result = new ArrayList<>();
-            for (Map.Entry<String, String> entry : input.entrySet()) {
-              result.add(new OrderedStringMapEntry(entry.getKey(), entry.getValue()));
-            }
-            return result;
+        input -> {
+          List<OrderedStringMapEntry> result = new ArrayList<>();
+          for (Map.Entry<String, String> entry : input.entrySet()) {
+            result.add(new OrderedStringMapEntry(entry.getKey(), entry.getValue()));
           }
+          return result;
         });
     jobState.setRawBuckConfig(rawConfig);
     jobState.setArchitecture(buckConfig.getArchitecture().name());

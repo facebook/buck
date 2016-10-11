@@ -18,7 +18,6 @@ package com.facebook.buck.graph;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -108,12 +107,8 @@ public class AbstractBreadthFirstTraversalTest {
       @Override
       public ImmutableSet<FakeNode> visit(FakeNode node) {
         nodeTraversalOrder.add(node);
-        return ImmutableSet.copyOf(Iterables.filter(node.getDeps(), new Predicate<FakeNode>() {
-          @Override
-          public boolean apply(FakeNode input) {
-            return Integer.parseInt(input.getName()) % 2 == 0;
-          }
-        }));
+        return ImmutableSet.copyOf(Iterables.filter(node.getDeps(),
+            input -> Integer.parseInt(input.getName()) % 2 == 0));
       }
     }.start();
 

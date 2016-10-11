@@ -29,12 +29,7 @@ public abstract class Flavor implements Comparable<Flavor> {
   private static final Pattern INVALID_FLAVOR_CHARACTERS = Pattern.compile("[^-a-zA-Z0-9_\\.]");
 
   public static final Function<String, Flavor> TO_FLAVOR =
-      new Function<String, Flavor>() {
-        @Override
-        public Flavor apply(String input) {
-          return ImmutableFlavor.of(input);
-        }
-      };
+      ImmutableFlavor::of;
 
   public static String replaceInvalidCharacters(String name) {
     return INVALID_FLAVOR_CHARACTERS.matcher(name).replaceAll("_");

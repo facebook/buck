@@ -273,26 +273,23 @@ public class DistributedBuildStateTest {
   private static DistBuildTargetGraphCodec createDefaultCodec(
       final Cell cell,
       final Optional<Parser> parser) {
-    final ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-    final BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance(); // NOPMD confused by lambda
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
 
     Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode;
     if (parser.isPresent()) {
-     nodeToRawNode = new Function<TargetNode<?>, Map<String, Object>>() {
-        @Override
-        public Map<String, Object> apply(TargetNode<?> input) {
-          try {
-            return parser.get().getRawTargetNode(
-                eventBus,
-                cell.getCell(input.getBuildTarget()),
-                /* enableProfiling */ false,
-                MoreExecutors.listeningDecorator(MoreExecutors.newDirectExecutorService()),
-                input);
-          } catch (BuildFileParseException | InterruptedException e) {
-            throw new RuntimeException(e);
-          }
-        }
-      };
+     nodeToRawNode = (Function<TargetNode<?>, Map<String, Object>>) input -> {
+       try {
+         return parser.get().getRawTargetNode(
+             eventBus,
+             cell.getCell(input.getBuildTarget()),
+             /* enableProfiling */ false,
+             MoreExecutors.listeningDecorator(MoreExecutors.newDirectExecutorService()),
+             input);
+       } catch (BuildFileParseException | InterruptedException e) {
+         throw new RuntimeException(e);
+       }
+     };
     } else {
       nodeToRawNode = Functions.constant(ImmutableMap.<String, Object>of());
     }

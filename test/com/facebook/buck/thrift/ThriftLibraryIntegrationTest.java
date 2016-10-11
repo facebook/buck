@@ -51,7 +51,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -132,12 +131,7 @@ public class ThriftLibraryIntegrationTest {
     assertThat(
         FluentIterable.from(deps)
             .anyMatch(
-                new Predicate<BuildRule>() {
-                  @Override
-                  public boolean apply(BuildRule input) {
-                    return input instanceof NoopBuildRule;
-                  }
-                }),
+                input -> input instanceof NoopBuildRule),
         Matchers.is(false));
   }
 

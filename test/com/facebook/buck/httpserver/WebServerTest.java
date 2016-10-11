@@ -48,13 +48,8 @@ public class WebServerTest {
     }
 
     Function<String, TemplateHandlerDelegate> getDelegate =
-        new Function<String, TemplateHandlerDelegate>() {
-          @Override
-          public TemplateHandlerDelegate apply(String contextPath) {
-            return ((TemplateHandler) contextPathToHandler.get(contextPath).getHandler())
-                .getDelegate();
-          }
-        };
+        contextPath -> ((TemplateHandler) contextPathToHandler.get(contextPath).getHandler())
+            .getDelegate();
     assertTrue(getDelegate.apply("/") instanceof IndexHandlerDelegate);
     assertTrue(contextPathToHandler.get("/static").getHandler() instanceof ResourceHandler);
     assertTrue(getDelegate.apply("/trace") instanceof TraceHandlerDelegate);

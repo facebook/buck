@@ -53,7 +53,6 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -72,6 +71,7 @@ public class AppleLibraryDescription implements
     MetadataProvidingDescription<AppleLibraryDescription.Arg> {
   public static final BuildRuleType TYPE = BuildRuleType.of("apple_library");
 
+  @SuppressWarnings("PMD") // PMD doesn't understand method references
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       CxxCompilationDatabase.COMPILATION_DATABASE,
       CxxCompilationDatabase.UBER_COMPILATION_DATABASE,
@@ -87,13 +87,6 @@ public class AppleLibraryDescription implements
       StripStyle.ALL_SYMBOLS.getFlavor(),
       StripStyle.DEBUGGING_SYMBOLS.getFlavor(),
       ImmutableFlavor.of("default"));
-
-  private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR = new Predicate<Flavor>() {
-    @Override
-    public boolean apply(Flavor flavor) {
-      return SUPPORTED_FLAVORS.contains(flavor);
-    }
-  };
 
   private enum Type implements FlavorConvertible {
     HEADERS(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
@@ -157,7 +150,7 @@ public class AppleLibraryDescription implements
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return FluentIterable.from(flavors).allMatch(IS_SUPPORTED_FLAVOR) ||
+    return FluentIterable.from(flavors).allMatch(SUPPORTED_FLAVORS::contains) ||
         delegate.hasFlavors(flavors) ||
         swiftDelegate.hasFlavors(flavors);
   }

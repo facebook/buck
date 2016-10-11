@@ -114,12 +114,10 @@ public class TimeoutIntegrationTest {
    */
   private void modifyTimeoutInTestAnnotation(String path, final boolean addTimeout)
       throws IOException {
-    Function<String, String> transform = new Function<String, String>() {
-      @Override public String apply(String line) {
-        String original = addTimeout ? "@Test" : "@Test(timeout = 100000)";
-        String replacement = addTimeout ? "@Test(timeout = 100000)" : "@Test";
-        return line.replace(original, replacement) + '\n';
-      }
+    Function<String, String> transform = line -> {
+      String original = addTimeout ? "@Test" : "@Test(timeout = 100000)";
+      String replacement = addTimeout ? "@Test(timeout = 100000)" : "@Test";
+      return line.replace(original, replacement) + '\n';
     };
     rewriteFileWithTransform(path, transform);
   }
@@ -132,17 +130,14 @@ public class TimeoutIntegrationTest {
    * </pre>
    */
   private void insertTimeoutRule(String path) throws IOException {
-    Function<String, String> transform = new Function<String, String>() {
-      @Override
-      public String apply(String line) {
-        if (line.startsWith("public class")) {
-          return line + "\n\n" +
-              "  @org.junit.Rule\n" +
-              "  public org.junit.rules.Timeout timeoutForTests = " +
-              "new org.junit.rules.Timeout(10000);\n";
-        } else {
-          return line + '\n';
-        }
+    Function<String, String> transform = line -> {
+      if (line.startsWith("public class")) {
+        return line + "\n\n" +
+            "  @org.junit.Rule\n" +
+            "  public org.junit.rules.Timeout timeoutForTests = " +
+            "new org.junit.rules.Timeout(10000);\n";
+      } else {
+        return line + '\n';
       }
     };
     rewriteFileWithTransform(path, transform);

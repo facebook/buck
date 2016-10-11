@@ -80,14 +80,11 @@ public class PythonTest
     super(params, resolver);
 
     this.env = Suppliers.memoize(
-        new Supplier<ImmutableMap<String, String>>() {
-          @Override
-          public ImmutableMap<String, String> get() {
-            ImmutableMap.Builder<String, String> environment = ImmutableMap.builder();
-            environment.putAll(binary.getExecutableCommand().getEnvironment(getResolver()));
-            environment.putAll(env.get());
-            return environment.build();
-          }
+        () -> {
+          ImmutableMap.Builder<String, String> environment = ImmutableMap.builder();
+          environment.putAll(binary.getExecutableCommand().getEnvironment(getResolver()));
+          environment.putAll(env.get());
+          return environment.build();
         });
     this.binary = binary;
     this.labels = labels;
@@ -157,28 +154,25 @@ public class PythonTest
       final ExecutionContext executionContext,
       boolean isUsingTestSelectors,
       final boolean isDryRun) {
-    return new Callable<TestResults>() {
-      @Override
-      public TestResults call() throws Exception {
-        ImmutableList.Builder<TestCaseSummary> summaries = ImmutableList.builder();
-        if (!isDryRun) {
-          Optional<String> resultsFileContents =
-              getProjectFilesystem().readFileIfItExists(
-                  getPathToTestOutputResult());
-          ObjectMapper mapper = executionContext.getObjectMapper();
-          TestResultSummary[] testResultSummaries = mapper.readValue(
-              resultsFileContents.get(),
-              TestResultSummary[].class);
-          summaries.add(new TestCaseSummary(
-              getBuildTarget().getFullyQualifiedName(),
-              ImmutableList.copyOf(testResultSummaries)));
-        }
-        return TestResults.of(
-            getBuildTarget(),
-            summaries.build(),
-            contacts,
-            FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
+    return () -> {
+      ImmutableList.Builder<TestCaseSummary> summaries = ImmutableList.builder();
+      if (!isDryRun) {
+        Optional<String> resultsFileContents =
+            getProjectFilesystem().readFileIfItExists(
+                getPathToTestOutputResult());
+        ObjectMapper mapper = executionContext.getObjectMapper();
+        TestResultSummary[] testResultSummaries = mapper.readValue(
+            resultsFileContents.get(),
+            TestResultSummary[].class);
+        summaries.add(new TestCaseSummary(
+            getBuildTarget().getFullyQualifiedName(),
+            ImmutableList.copyOf(testResultSummaries)));
       }
+      return TestResults.of(
+          getBuildTarget(),
+          summaries.build(),
+          contacts,
+          FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
     };
   }
 

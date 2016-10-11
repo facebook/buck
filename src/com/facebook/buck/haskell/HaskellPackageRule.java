@@ -34,9 +34,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -103,19 +101,14 @@ public class HaskellPackageRule extends AbstractBuildRule {
         baseParams.copyWithChanges(
             target,
             Suppliers.memoize(
-                new Supplier<ImmutableSortedSet<BuildRule>>() {
-                  @Override
-                  public ImmutableSortedSet<BuildRule> get() {
-                    return ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(ghcPkg.getDeps(resolver))
-                        .addAll(
-                            FluentIterable.from(depPackages.values())
-                                .transformAndConcat(HaskellPackage.getDepsFunction(resolver)))
-                        .addAll(
-                            resolver.filterBuildRuleInputs(Iterables.concat(libraries, interfaces)))
-                        .build();
-                  }
-                }),
+                () -> ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(ghcPkg.getDeps(resolver))
+                    .addAll(
+                        FluentIterable.from(depPackages.values())
+                            .transformAndConcat(HaskellPackage.getDepsFunction(resolver)))
+                    .addAll(
+                        resolver.filterBuildRuleInputs(Iterables.concat(libraries, interfaces)))
+                    .build()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         resolver,
         ghcPkg,
@@ -174,12 +167,7 @@ public class HaskellPackageRule extends AbstractBuildRule {
             .join(
                 FluentIterable.from(entries.entrySet())
                     .transform(
-                        new Function<Map.Entry<String, String>, String>() {
-                          @Override
-                          public String apply(Map.Entry<String, String> input) {
-                            return input.getKey() + ": " + input.getValue();
-                          }
-                        })),
+                        input -> input.getKey() + ": " + input.getValue())),
         registrationFile,
         /* executable */ false);
   }
@@ -222,13 +210,8 @@ public class HaskellPackageRule extends AbstractBuildRule {
                 Joiner.on(':').join(
                     FluentIterable.from(depPackages.values())
                         .transform(
-                            new Function<HaskellPackage, String>() {
-                              @Override
-                              public String apply(HaskellPackage input) {
-                                return getResolver().getAbsolutePath(input.getPackageDb())
-                                    .toString();
-                              }
-                            })))));
+                            input -> getResolver().getAbsolutePath(input.getPackageDb())
+                                .toString())))));
 
     return steps.build();
   }

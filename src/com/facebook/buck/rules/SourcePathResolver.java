@@ -56,12 +56,7 @@ public class SourcePathResolver {
   }
 
   public Function<SourcePath, Path> deprecatedPathFunction() {
-    return new Function<SourcePath, Path>() {
-      @Override
-      public Path apply(SourcePath input) {
-        return deprecatedGetPath(input);
-      }
-    };
+    return this::deprecatedGetPath;
   }
 
   public ImmutableList<Path> deprecatedAllPaths(Iterable<? extends SourcePath> sourcePaths) {
@@ -132,12 +127,7 @@ public class SourcePathResolver {
   }
 
   public Function<SourcePath, Path> getAbsolutePathFunction() {
-    return new Function<SourcePath, Path>() {
-      @Override
-      public Path apply(SourcePath input) {
-        return getAbsolutePath(input);
-      }
-    };
+    return this::getAbsolutePath;
   }
 
   public ImmutableList<Path> getAllAbsolutePaths(Iterable<? extends SourcePath> sourcePaths) {
@@ -164,12 +154,7 @@ public class SourcePathResolver {
   }
 
   public Function<SourcePath, Path> getRelativePathFunction() {
-    return new Function<SourcePath, Path>() {
-      @Override
-      public Path apply(SourcePath input) {
-        return getRelativePath(input);
-      }
-    };
+    return this::getRelativePath;
   }
 
   /**
@@ -303,12 +288,7 @@ public class SourcePathResolver {
     return FluentIterable.from(sources)
         .filter(PathSourcePath.class)
         .transform(
-            new Function<PathSourcePath, Path>() {
-              @Override
-              public Path apply(PathSourcePath input) {
-                return input.getRelativePath();
-              }
-            })
+            PathSourcePath::getRelativePath)
         .toList();
   }
 
@@ -321,12 +301,7 @@ public class SourcePathResolver {
     return FluentIterable.from(sources)
         .filter(BuildTargetSourcePath.class)
         .transform(
-            new Function<BuildTargetSourcePath, BuildRule>() {
-              @Override
-              public BuildRule apply(BuildTargetSourcePath input) {
-                return ruleResolver.getRule(input.getTarget());
-              }
-            })
+            input -> ruleResolver.getRule(input.getTarget()))
         .toList();
   }
 
@@ -336,12 +311,7 @@ public class SourcePathResolver {
 
   public Function<Iterable<? extends SourcePath>, ImmutableCollection<BuildRule>>
       filterBuildRuleInputsFunction() {
-    return new Function<Iterable<? extends SourcePath>, ImmutableCollection<BuildRule>>() {
-      @Override
-      public ImmutableCollection<BuildRule> apply(Iterable<? extends SourcePath> input) {
-        return filterBuildRuleInputs(input);
-      }
-    };
+    return this::filterBuildRuleInputs;
   }
 
 }

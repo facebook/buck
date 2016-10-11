@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -77,12 +76,7 @@ class WatchmanSocketClient implements WatchmanClient, AutoCloseable {
       final List<Object> query)
     throws IOException, InterruptedException {
     ListenableFuture<Optional<Map<String, Object>>> future = listeningExecutorService.submit(
-        new Callable<Optional<Map<String, Object>>>() {
-          @Override
-          public Optional<Map<String, Object>> call() throws IOException {
-            return sendWatchmanQuery(query);
-          }
-        });
+        () -> sendWatchmanQuery(query));
     try {
       long startTimeNanos = clock.nanoTime();
       Optional<Map<String, Object>> result = waitForQueryNotifyingUserIfSlow(

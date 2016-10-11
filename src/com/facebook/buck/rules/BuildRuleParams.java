@@ -52,16 +52,10 @@ public class BuildRuleParams {
     this.cellRoots = cellRoots;
 
     this.totalDeps = Suppliers.memoize(
-        new Supplier<ImmutableSortedSet<BuildRule>>() {
-
-          @Override
-          public ImmutableSortedSet<BuildRule> get() {
-            return ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(declaredDeps.get())
-                .addAll(extraDeps.get())
-                .build();
-          }
-        });
+        () -> ImmutableSortedSet.<BuildRule>naturalOrder()
+            .addAll(declaredDeps.get())
+            .addAll(extraDeps.get())
+            .build());
   }
 
   public BuildRuleParams copyWithExtraDeps(Supplier<ImmutableSortedSet<BuildRule>> extraDeps) {
@@ -72,16 +66,10 @@ public class BuildRuleParams {
       final Supplier<? extends Iterable<? extends BuildRule>> additional) {
     return copyWithDeps(
         declaredDeps,
-        new Supplier<ImmutableSortedSet<BuildRule>>() {
-
-          @Override
-          public ImmutableSortedSet<BuildRule> get() {
-            return ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(extraDeps.get())
-                .addAll(additional.get())
-                .build();
-          }
-        });
+        () -> ImmutableSortedSet.<BuildRule>naturalOrder()
+            .addAll(extraDeps.get())
+            .addAll(additional.get())
+            .build());
   }
 
   public BuildRuleParams appendExtraDeps(Iterable<? extends BuildRule> additional) {

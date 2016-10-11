@@ -16,11 +16,8 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.jvm.java.autodeps.JavaDepsFinder;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -54,21 +51,15 @@ public class SuggestCommand extends AbstractCommand {
     final String fullyQualifiedTarget = getCommandLineBuildTargetNormalizer(params.getBuckConfig())
         .normalize(targetToBreakDown);
 
-    JavaBuildGraphProcessor.Processor processor = new JavaBuildGraphProcessor.Processor() {
-      @Override
-      public void process(
-          TargetGraph graph,
-          JavaDepsFinder javaDepsFinder,
-          WeightedListeningExecutorService executorService) {
-        BuildTarget buildTarget = params.getBuckConfig().getBuildTargetForFullyQualifiedTarget(
-            fullyQualifiedTarget);
-        FineGrainedJavaDependencySuggester suggester = new FineGrainedJavaDependencySuggester(
-            buildTarget,
-            graph,
-            javaDepsFinder,
-            console);
-        suggester.suggestRefactoring();
-      }
+    JavaBuildGraphProcessor.Processor processor = (graph, javaDepsFinder, executorService) -> {
+      BuildTarget buildTarget = params.getBuckConfig().getBuildTargetForFullyQualifiedTarget(
+          fullyQualifiedTarget);
+      FineGrainedJavaDependencySuggester suggester = new FineGrainedJavaDependencySuggester(
+          buildTarget,
+          graph,
+          javaDepsFinder,
+          console);
+      suggester.suggestRefactoring();
     };
     try {
       JavaBuildGraphProcessor.run(params, this, processor);

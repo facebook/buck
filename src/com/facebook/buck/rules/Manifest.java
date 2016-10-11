@@ -198,12 +198,7 @@ public class Manifest {
 
   private static Function<SourcePath, String> sourcePathToManifestHeaderFunction(
       final SourcePathResolver resolver) {
-    return new Function<SourcePath, String>() {
-      @Override
-      public String apply(SourcePath input) {
-        return sourcePathToManifestHeader(input, resolver);
-      }
-    };
+    return input -> sourcePathToManifestHeader(input, resolver);
   }
 
   private static String sourcePathToManifestHeader(

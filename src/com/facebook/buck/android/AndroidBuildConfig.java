@@ -173,12 +173,7 @@ public class AndroidBuildConfig extends AbstractBuildRule {
           getProjectFilesystem(),
           getResolver().getAbsolutePath(valuesFile.get()));
       steps.add(readValuesStep);
-      totalFields = Suppliers.memoize(new Supplier<BuildConfigFields>() {
-        @Override
-        public BuildConfigFields get() {
-          return defaultValues.putAll(readValuesStep.get());
-        }
-      });
+      totalFields = Suppliers.memoize(() -> defaultValues.putAll(readValuesStep.get()));
     } else {
       totalFields = Suppliers.ofInstance(defaultValues);
     }

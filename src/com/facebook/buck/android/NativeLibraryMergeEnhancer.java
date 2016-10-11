@@ -68,7 +68,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -299,29 +298,25 @@ class NativeLibraryMergeEnhancer {
     Iterable<MergedNativeLibraryConstituents> ordered;
     try {
       ordered = new AcyclicDepthFirstPostOrderTraversal<>(
-          new GraphTraversable<MergedNativeLibraryConstituents>() {
-            @Override
-            public Iterator<MergedNativeLibraryConstituents> findChildren(
-                MergedNativeLibraryConstituents node) {
-              ImmutableSet.Builder<MergedNativeLibraryConstituents> depBuilder =
-                  ImmutableSet.builder();
-              for (NativeLinkable linkable : node.getLinkables()) {
-                // Ideally, we would sort the deps to get consistent traversal order,
-                // but in practice they are already SortedSets, so it's not necessary.
-                for (NativeLinkable dep : Iterables.concat(
-                    linkable.getNativeLinkableDeps(null),
-                    linkable.getNativeLinkableExportedDeps(null))) {
-                  MergedNativeLibraryConstituents mappedDep =
-                      linkableMembership.get(dep);
-                  // Merging can result in a native library "depending on itself",
-                  // which is a cycle.  Just drop these unnecessary deps.
-                  if (mappedDep != node) {
-                    depBuilder.add(mappedDep);
-                  }
+          (GraphTraversable<MergedNativeLibraryConstituents>) node -> {
+            ImmutableSet.Builder<MergedNativeLibraryConstituents> depBuilder =
+                ImmutableSet.builder();
+            for (NativeLinkable linkable : node.getLinkables()) {
+              // Ideally, we would sort the deps to get consistent traversal order,
+              // but in practice they are already SortedSets, so it's not necessary.
+              for (NativeLinkable dep : Iterables.concat(
+                  linkable.getNativeLinkableDeps(null),
+                  linkable.getNativeLinkableExportedDeps(null))) {
+                MergedNativeLibraryConstituents mappedDep =
+                    linkableMembership.get(dep);
+                // Merging can result in a native library "depending on itself",
+                // which is a cycle.  Just drop these unnecessary deps.
+                if (mappedDep != node) {
+                  depBuilder.add(mappedDep);
                 }
               }
-              return depBuilder.build().iterator();
             }
+            return depBuilder.build().iterator();
           }).traverse(possibleRoots);
     } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
       throw new RuntimeException(
@@ -350,21 +345,11 @@ class NativeLibraryMergeEnhancer {
 
       List<MergedLibNativeLinkable> orderedDeps = getStructuralDeps(
           constituents,
-          new Function<NativeLinkable, Iterable<? extends NativeLinkable>>() {
-            @Override
-            public Iterable<? extends NativeLinkable> apply(NativeLinkable l) {
-              return l.getNativeLinkableDeps(null);
-            }
-          },
+          l -> l.getNativeLinkableDeps(null),
           mergeResults);
       List<MergedLibNativeLinkable> orderedExportedDeps = getStructuralDeps(
           constituents,
-          new Function<NativeLinkable, Iterable<? extends NativeLinkable>>() {
-            @Override
-            public Iterable<? extends NativeLinkable> apply(NativeLinkable l) {
-              return l.getNativeLinkableExportedDeps(null);
-            }
-          },
+          l -> l.getNativeLinkableExportedDeps(null),
           mergeResults);
 
       MergedLibNativeLinkable mergedLinkable = new MergedLibNativeLinkable(
@@ -625,23 +610,13 @@ class NativeLibraryMergeEnhancer {
 
     @Override
     public Iterable<? extends NativeLinkable> getNativeLinkableDeps(final CxxPlatform cxxPlatform) {
-      return getMappedDeps(new Function<NativeLinkable, Iterable<? extends NativeLinkable>>() {
-        @Override
-        public Iterable<? extends NativeLinkable> apply(NativeLinkable l) {
-          return l.getNativeLinkableDeps(cxxPlatform);
-        }
-      });
+      return getMappedDeps(l -> l.getNativeLinkableDeps(cxxPlatform));
     }
 
     @Override
     public Iterable<? extends NativeLinkable>
     getNativeLinkableExportedDeps(final CxxPlatform cxxPlatform) {
-      return getMappedDeps(new Function<NativeLinkable, Iterable<? extends NativeLinkable>>() {
-        @Override
-        public Iterable<? extends NativeLinkable> apply(NativeLinkable l) {
-          return l.getNativeLinkableExportedDeps(cxxPlatform);
-        }
-      });
+      return getMappedDeps(l -> l.getNativeLinkableExportedDeps(cxxPlatform));
     }
 
     private Iterable<? extends NativeLinkable> getMappedDeps(

@@ -56,7 +56,6 @@ import com.facebook.buck.util.UnixUserIdFetcher;
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -322,13 +321,9 @@ public class InstallCommand extends BuildCommand {
               Optional<BuildTarget> deviceHelperTarget = appleConfig.getAppleDeviceHelperTarget();
               Optionals.addIfPresent(
                   Optionals.bind(deviceHelperTarget,
-                      new Function<BuildTarget, Optional<String>>() {
-                        @Override
-                        public Optional<String> apply(BuildTarget input) {
-                          return !input.toString().isEmpty()
-                              ? Optional.of(input.toString())
-                              : Optional.absent();
-                        }}),
+                      input -> !input.toString().isEmpty()
+                          ? Optional.of(input.toString())
+                          : Optional.absent()),
                   installHelperTargets);
               }
             }

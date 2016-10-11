@@ -45,13 +45,8 @@ public class AutodepsCommand extends AbstractCommand {
   @Override
   public int runWithoutHelp(final CommandRunnerParams params)
       throws IOException, InterruptedException {
-    JavaBuildGraphProcessor.Processor processor = new JavaBuildGraphProcessor.Processor() {
-      @Override
-      public void process(
-          TargetGraph graph,
-          JavaDepsFinder javaDepsFinder,
-          WeightedListeningExecutorService executorService) throws IOException {
-        generateAutodeps(
+    JavaBuildGraphProcessor.Processor processor =
+        (graph, javaDepsFinder, executorService) -> generateAutodeps(
             params,
             getConcurrencyLimit(params.getBuckConfig()),
             params.getCell(),
@@ -59,8 +54,6 @@ public class AutodepsCommand extends AbstractCommand {
             graph,
             javaDepsFinder,
             params.getConsole());
-      }
-    };
     try {
       JavaBuildGraphProcessor.run(params, this, processor);
     } catch (JavaBuildGraphProcessor.ExitCodeException e) {

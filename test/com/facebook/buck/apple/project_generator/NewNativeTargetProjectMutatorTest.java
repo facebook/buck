@@ -69,7 +69,6 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -419,12 +418,7 @@ public class NewNativeTargetProjectMutatorTest {
     assertThat(
         "Should contain a target group named: " + name,
         Iterables.filter(
-            project.getMainGroup().getChildren(), new Predicate<PBXReference>() {
-              @Override
-              public boolean apply(PBXReference input) {
-                return input.getName().equals(name);
-              }
-            }),
+            project.getMainGroup().getChildren(), input -> input.getName().equals(name)),
         not(emptyIterable()));
   }
 
@@ -432,12 +426,7 @@ public class NewNativeTargetProjectMutatorTest {
     ImmutableList<PBXGroup> candidates = FluentIterable
         .from(group.getChildren())
         .filter(
-            new Predicate<PBXReference>() {
-              @Override
-              public boolean apply(PBXReference input) {
-                return input.getName().equals(subgroupName);
-              }
-            })
+            input -> input.getName().equals(subgroupName))
         .filter(PBXGroup.class)
         .toList();
     if (candidates.size() != 1) {

@@ -21,7 +21,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -45,7 +44,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -108,21 +106,17 @@ public class RemoteFileTest {
       @Nullable Downloader downloader,
       String contentsOfFile,
       HashCode hashCode) throws Exception {
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath().toAbsolutePath());
-
     final byte[] bytes = contentsOfFile.getBytes(UTF_8);
 
     if (downloader == null) {
-      downloader = new Downloader() {
-        @Override
-        public boolean fetch(
-            BuckEventBus eventBus, URI uri, Path output) throws IOException {
-          Files.createDirectories(output.getParent());
-          Files.write(output, bytes);
-          return true;
-        }
+      downloader = (eventBus, uri, output) -> {
+        Files.createDirectories(output.getParent());
+        Files.write(output, bytes);
+        return true;
       };
     }
+
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot().toPath().toAbsolutePath());
 
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//cake:walk")
         .setProjectFilesystem(filesystem)

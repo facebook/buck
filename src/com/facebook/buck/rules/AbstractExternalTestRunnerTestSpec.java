@@ -23,7 +23,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializable;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -100,12 +99,7 @@ abstract class AbstractExternalTestRunnerTestSpec implements JsonSerializable {
                 "needed_coverage",
                 Iterables.transform(
                     getNeededCoverage(),
-                    new Function<Pair<Float, ImmutableSet<Path>>, ImmutableList<?>>() {
-                        @Override
-                        public ImmutableList<?> apply(Pair<Float, ImmutableSet<Path>> input) {
-                            return ImmutableList.of(input.getFirst(), input.getSecond());
-                        }
-                    }));
+                    input -> ImmutableList.of(input.getFirst(), input.getSecond())));
     }
     jsonGenerator.writeObjectField(
         "labels",

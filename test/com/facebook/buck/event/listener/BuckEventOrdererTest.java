@@ -23,6 +23,7 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
+import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -43,12 +44,7 @@ public class BuckEventOrdererTest {
   private static final long THREAD_TWO = 2;
   private static final long MAX_SKEW = 10;
   private static final Function<BuckEvent, Long> TO_EVENT_TIMESTAMP_FUNCTION =
-      new Function<BuckEvent, Long>() {
-        @Override
-        public Long apply(BuckEvent input) {
-          return input.getTimestamp();
-        }
-      };
+      BuckEventExternalInterface::getTimestamp;
 
   private Deque<BuckEvent> serializedEvents = new ArrayDeque<>();
   private Function<BuckEvent, Void> addToSerializedEventsFunction =

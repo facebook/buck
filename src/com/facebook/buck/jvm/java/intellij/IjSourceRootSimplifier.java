@@ -20,10 +20,8 @@ import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -133,12 +131,7 @@ public class IjSourceRootSimplifier {
       ImmutableList<Optional<IjFolder>> children =
           FluentIterable.from(tree.getOutgoingNodesFor(currentPath))
               .transform(
-                  new Function<Path, Optional<IjFolder>>() {
-                    @Override
-                    public Optional<IjFolder> apply(Path input) {
-                      return walk(input);
-                    }
-                  })
+                  this::walk)
               .toList();
 
       List<IjFolder> presentChildren = new ArrayList<>(children.size());
@@ -171,12 +164,7 @@ public class IjSourceRootSimplifier {
 
       boolean allChildrenCanBeMerged = FluentIterable.from(presentChildren)
           .allMatch(
-              new Predicate<IjFolder>() {
-                @Override
-                public boolean apply(IjFolder input) {
-                  return canMerge(mergeDistination, input, packagePathCache);
-                }
-              });
+              input -> canMerge(mergeDistination, input, packagePathCache));
       if (!allChildrenCanBeMerged) {
         return Optional.absent();
       }

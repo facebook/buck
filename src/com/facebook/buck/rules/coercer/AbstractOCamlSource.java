@@ -28,13 +28,7 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractOCamlSource {
-  public static final Function<OCamlSource, SourcePath> TO_SOURCE_PATH = new
-      Function<OCamlSource, SourcePath>() {
-    @Override
-    public SourcePath apply(OCamlSource input) {
-      return input.getSource();
-    }
-  };
+  public static final Function<OCamlSource, SourcePath> TO_SOURCE_PATH = OCamlSource::getSource;
 
   @Value.Parameter
   public abstract String getName();

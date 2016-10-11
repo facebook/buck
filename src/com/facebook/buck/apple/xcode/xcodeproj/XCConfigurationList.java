@@ -24,7 +24,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -66,12 +65,7 @@ public class XCConfigurationList extends PBXProjectItem {
   public void serializeInto(XcodeprojSerializer s) {
     super.serializeInto(s);
 
-    Collections.sort(buildConfigurations, new Comparator<XCBuildConfiguration>() {
-      @Override
-      public int compare(XCBuildConfiguration o1, XCBuildConfiguration o2) {
-        return o1.getName().compareTo(o2.getName());
-      }
-    });
+    Collections.sort(buildConfigurations, (o1, o2) -> o1.getName().compareTo(o2.getName()));
     s.addField("buildConfigurations", buildConfigurations);
 
     if (defaultConfigurationName.isPresent()) {

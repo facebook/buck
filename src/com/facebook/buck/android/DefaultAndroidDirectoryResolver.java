@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -197,28 +196,25 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
       // are named build-tools-18.0.0. We need to support all of these scenarios.
       File[] directories;
       try {
-        directories = toolsDir.toFile().listFiles(new FileFilter() {
-          @Override
-          public boolean accept(File pathname) {
-            if (!pathname.isDirectory()) {
-              return false;
-            }
-            String version = stripBuildToolsPrefix(pathname.getName());
-            if (!VersionStringComparator.isValidVersionString(version)) {
-              throw new HumanReadableException(
-                  "%s in %s is not a valid build tools directory.%n" +
-                      "Build tools directories should be follow the naming scheme: " +
-                      "android-<VERSION>, build-tools-<VERSION>, or <VERSION>. Please remove " +
-                      "directory %s.",
-                  pathname.getName(),
-                  buildTools,
-                  pathname.getName());
-            }
-            if (targetBuildToolsVersion.isPresent()) {
-              return targetBuildToolsVersion.get().equals(pathname.getName());
-            }
-            return true;
+        directories = toolsDir.toFile().listFiles(pathname -> {
+          if (!pathname.isDirectory()) {
+            return false;
           }
+          String version = stripBuildToolsPrefix(pathname.getName());
+          if (!VersionStringComparator.isValidVersionString(version)) {
+            throw new HumanReadableException(
+                "%s in %s is not a valid build tools directory.%n" +
+                    "Build tools directories should be follow the naming scheme: " +
+                    "android-<VERSION>, build-tools-<VERSION>, or <VERSION>. Please remove " +
+                    "directory %s.",
+                pathname.getName(),
+                buildTools,
+                pathname.getName());
+          }
+          if (targetBuildToolsVersion.isPresent()) {
+            return targetBuildToolsVersion.get().equals(pathname.getName());
+          }
+          return true;
         });
       } catch (HumanReadableException e) {
         buildToolsErrorMessage = Optional.of(e.getHumanReadableErrorMessage());

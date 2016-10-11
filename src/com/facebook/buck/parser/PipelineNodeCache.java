@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.rules.Cell;
 import com.google.common.base.Optional;
-import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -71,12 +70,7 @@ class PipelineNodeCache<K, T> {
     try {
       ListenableFuture<T> nodeJob = Futures.transformAsync(
           jobSupplier.get(),
-          new AsyncFunction<T, T>() {
-            @Override
-            public ListenableFuture<T> apply(T input) throws BuildTargetException {
-              return Futures.immediateFuture(cache.putComputedNodeIfNotPresent(cell, key, input));
-            }
-          });
+          input -> Futures.immediateFuture(cache.putComputedNodeIfNotPresent(cell, key, input)));
       resultFuture.setFuture(nodeJob);
     } catch (Throwable t) {
       resultFuture.setException(t);

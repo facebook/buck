@@ -130,46 +130,43 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
 
     // HTTP Store operations are asynchronous.
     return httpWriteExecutorService.submit(
-        new Runnable() {
-          @Override
-          public void run() {
-            HttpArtifactCacheEvent.Started startedEvent =
-                HttpArtifactCacheEvent.newStoreStartedEvent(scheduled);
-            buckEventBus.post(startedEvent);
-            HttpArtifactCacheEvent.Finished.Builder finishedEventBuilder =
-                HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
-                    .setRuleKeys(info.getRuleKeys());
+        () -> {
+          HttpArtifactCacheEvent.Started startedEvent =
+              HttpArtifactCacheEvent.newStoreStartedEvent(scheduled);
+          buckEventBus.post(startedEvent);
+          HttpArtifactCacheEvent.Finished.Builder finishedEventBuilder =
+              HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
+                  .setRuleKeys(info.getRuleKeys());
 
-            try {
-              if (!isArtefactTooBigToBeStored(tmp, maxStoreSize, projectFilesystem)) {
-                storeImpl(info, tmp, finishedEventBuilder);
-              } else {
-                LOG.info("Artifact too big so not storing it in the distributed cache. " +
-                    "file=[%s] buildTarget=[%s]",
-                    tmp,
-                    info.getBuildTarget());
-              }
-              buckEventBus.post(finishedEventBuilder.build());
-
-            } catch (IOException e) {
-              reportFailure(
-                  e,
-                  "store(%s): %s: %s",
-                  info.getRuleKeys(),
-                  e.getClass().getName(),
-                  e.getMessage());
-
-              buckEventBus.post(
-                  finishedEventBuilder
-                      .setWasUploadSuccessful(false)
-                      .setErrorMessage(e.toString())
-                      .build());
+          try {
+            if (!isArtefactTooBigToBeStored(tmp, maxStoreSize, projectFilesystem)) {
+              storeImpl(info, tmp, finishedEventBuilder);
+            } else {
+              LOG.info("Artifact too big so not storing it in the distributed cache. " +
+                  "file=[%s] buildTarget=[%s]",
+                  tmp,
+                  info.getBuildTarget());
             }
-            try {
-              projectFilesystem.deleteFileAtPathIfExists(tmp);
-            } catch (IOException e) {
-              LOG.warn(e, "Failed to delete file %s", tmp);
-            }
+            buckEventBus.post(finishedEventBuilder.build());
+
+          } catch (IOException e) {
+            reportFailure(
+                e,
+                "store(%s): %s: %s",
+                info.getRuleKeys(),
+                e.getClass().getName(),
+                e.getMessage());
+
+            buckEventBus.post(
+                finishedEventBuilder
+                    .setWasUploadSuccessful(false)
+                    .setErrorMessage(e.toString())
+                    .build());
+          }
+          try {
+            projectFilesystem.deleteFileAtPathIfExists(tmp);
+          } catch (IOException e) {
+            LOG.warn(e, "Failed to delete file %s", tmp);
           }
         },
         /* result */ null

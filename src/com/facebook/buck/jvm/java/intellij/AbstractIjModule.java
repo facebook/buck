@@ -40,12 +40,7 @@ import java.util.Map;
 abstract class AbstractIjModule implements IjProjectElement {
 
   public static final Function<IjModule, Path> TO_MODULE_BASE_PATH =
-      new Function<IjModule, Path>() {
-        @Override
-        public Path apply(IjModule input) {
-          return input.getModuleBasePath();
-        }
-      };
+      IjModule::getModuleBasePath;
 
   @Override
   @Value.Derived

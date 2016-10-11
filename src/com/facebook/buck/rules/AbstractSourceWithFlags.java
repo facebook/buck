@@ -67,11 +67,6 @@ abstract class AbstractSourceWithFlags implements Comparable<AbstractSourceWithF
   }
 
   public static final Function<SourceWithFlags, SourcePath> TO_SOURCE_PATH =
-      new Function<SourceWithFlags, SourcePath>() {
-        @Override
-        public SourcePath apply(SourceWithFlags sourceWithFlags) {
-          return sourceWithFlags.getSourcePath();
-        }
-      };
+      SourceWithFlags::getSourcePath;
 
 }

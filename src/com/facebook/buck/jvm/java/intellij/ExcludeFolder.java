@@ -25,15 +25,11 @@ import java.nio.file.Path;
  */
 public class ExcludeFolder extends IjFolder {
 
-  public static final IJFolderFactory FACTORY = new IJFolderFactory() {
-    @Override
-    public IjFolder create(
-        Path path, boolean wantsPrefix, ImmutableSortedSet<Path> inputs) {
-      if (wantsPrefix) {
-        throw new IllegalArgumentException("ExcludeFolder does not support prefixes");
-      }
-      return new ExcludeFolder(path, inputs);
+  public static final IJFolderFactory FACTORY = (path, wantsPrefix, inputs) -> {
+    if (wantsPrefix) {
+      throw new IllegalArgumentException("ExcludeFolder does not support prefixes");
     }
+    return new ExcludeFolder(path, inputs);
   };
 
   private static final String FOLDER_IJ_NAME = "excludeFolder";

@@ -27,7 +27,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -76,12 +75,7 @@ public class LogFileHandlerTest {
   }
 
   private static int countSubDirectories(Path dir) {
-    File[] directories = new File(dir.toString()).listFiles(new FileFilter() {
-      @Override
-      public boolean accept(File file) {
-        return file.isDirectory();
-      }
-    });
+    File[] directories = new File(dir.toString()).listFiles(File::isDirectory);
 
     return directories.length;
   }

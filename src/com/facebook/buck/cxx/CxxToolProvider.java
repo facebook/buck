@@ -100,12 +100,7 @@ public abstract class CxxToolProvider<T> {
         type.isPresent() ?
             Suppliers.ofInstance(type.get()) :
             Suppliers.memoize(
-                new Supplier<Type>() {
-                  @Override
-                  public Type get() {
-                    return getTypeFromPath(path);
-                  }
-                }));
+                (Supplier<Type>) () -> getTypeFromPath(path)));
   }
 
   private static Type getTypeFromPath(Path path) {

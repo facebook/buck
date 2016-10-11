@@ -79,12 +79,7 @@ public class TestSelectorOptions {
         OptionDef option,
         Setter<Supplier<TestSelectorList>> setter) throws CmdLineException {
       super(parser, option, setter);
-      setter.addValue(Suppliers.memoize(new Supplier<TestSelectorList>() {
-        @Override
-        public TestSelectorList get() {
-          return builder.build();
-        }
-      }));
+      setter.addValue(Suppliers.memoize(builder::build));
     }
 
     @Override

@@ -185,26 +185,23 @@ public class FilterResourcesStep implements Step {
     final boolean localeFilterEnabled = !locales.isEmpty();
     if (localeFilterEnabled || enableStringWhitelisting) {
       pathPredicates.add(
-          new Predicate<Path>() {
-            @Override
-            public boolean apply(Path path) {
-              Matcher matcher = NON_ENGLISH_STRINGS_FILE_PATH.matcher(
-                  MorePaths.pathWithUnixSeparators(path));
-              if (!matcher.matches()) {
-                return true;
+          path -> {
+            Matcher matcher = NON_ENGLISH_STRINGS_FILE_PATH.matcher(
+                MorePaths.pathWithUnixSeparators(path));
+            if (!matcher.matches()) {
+              return true;
+            }
+
+            if (enableStringWhitelisting) {
+              return isPathWhitelisted(path);
+            } else {
+              Preconditions.checkState(localeFilterEnabled);
+              String locale = matcher.group(1);
+              if (matcher.group(2) != null) {
+                locale += "_" + matcher.group(2);
               }
 
-              if (enableStringWhitelisting) {
-                return isPathWhitelisted(path);
-              } else {
-                Preconditions.checkState(localeFilterEnabled);
-                String locale = matcher.group(1);
-                if (matcher.group(2) != null) {
-                  locale += "_" + matcher.group(2);
-                }
-
-                return locales.contains(locale);
-              }
+              return locales.contains(locale);
             }
           });
     }

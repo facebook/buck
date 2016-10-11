@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.DependencyMode;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -80,12 +79,7 @@ public class AndroidLibraryGraphEnhancer {
     Optional<BuildRule> previouslyCreated = ruleResolver.getRuleOptional(dummyRDotJavaBuildTarget);
     if (previouslyCreated.isPresent()) {
       return previouslyCreated.transform(
-          new Function<BuildRule, DummyRDotJava>() {
-            @Override
-            public DummyRDotJava apply(BuildRule input) {
-              return (DummyRDotJava) input;
-            }
-          });
+          input -> (DummyRDotJava) input);
     }
     ImmutableSortedSet<BuildRule> originalDeps = originalBuildRuleParams.getDeps();
     ImmutableSet<HasAndroidResourceDeps> androidResourceDeps;

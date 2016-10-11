@@ -103,23 +103,13 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
   }
 
   public Function<BuildTarget, TargetNode<?>> get() {
-    return new Function<BuildTarget, TargetNode<?>>() {
-      @Override
-      public TargetNode<?> apply(BuildTarget input) {
-        return get(input);
-      }
-    };
+    return this::get;
   }
 
   public Iterable<TargetNode<?>> getAll(Iterable<BuildTarget> targets) {
     return Iterables.transform(
         targets,
-        new Function<BuildTarget, TargetNode<?>>() {
-          @Override
-          public TargetNode<?> apply(BuildTarget input) {
-            return get(input);
-          }
-        });
+        this::get);
   }
 
   public ImmutableSet<TargetGroup> getGroupsContainingTarget(BuildTarget target) {

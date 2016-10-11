@@ -68,15 +68,10 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
     return new ApkGenrule(
         params.copyWithExtraDeps(
             Suppliers.memoize(
-                new Supplier<ImmutableSortedSet<BuildRule>>() {
-                  @Override
-                  public ImmutableSortedSet<BuildRule> get() {
-                    return ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(originalExtraDeps.get())
-                        .add(installableApk)
-                        .build();
-                  }
-                })),
+                () -> ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(originalExtraDeps.get())
+                    .add(installableApk)
+                    .build())),
         new SourcePathResolver(resolver),
         args.srcs.get(),
         cmd,

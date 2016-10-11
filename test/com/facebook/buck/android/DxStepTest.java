@@ -30,7 +30,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -219,12 +218,7 @@ public class DxStepTest extends EasyMockSupport {
           SAMPLE_OUTPUT_PATH,
           SAMPLE_FILES_TO_DEX,
           EnumSet.of(Option.USE_CUSTOM_DX_IF_AVAILABLE),
-          new Supplier<String>() {
-            @Override
-            public String get() {
-              return "/home/mbolin/dx";
-            }
-          });
+          () -> "/home/mbolin/dx");
 
       String expected = String.format("%s --output %s %s",
           EXPECTED_DX_PREFIX.replace(Paths.get("/usr/bin/dx").toString(), "/home/mbolin/dx"),
@@ -251,12 +245,7 @@ public class DxStepTest extends EasyMockSupport {
           SAMPLE_OUTPUT_PATH,
           SAMPLE_FILES_TO_DEX,
           EnumSet.of(Option.USE_CUSTOM_DX_IF_AVAILABLE),
-          new Supplier<String>() {
-            @Override
-            public String get() {
-              return null;
-            }
-          });
+          () -> null);
 
       String expected = String.format("%s --output %s %s",
           EXPECTED_DX_PREFIX,

@@ -38,15 +38,12 @@ class SameThreadFailOnTimeout extends Statement {
     this.executor = executor;
     this.timeout = timeout;
     this.testName = testName;
-    this.callable = new Callable<Throwable>() {
-      @Override
-      public Throwable call() {
-        try {
-          next.evaluate();
-          return null;
-        } catch (Throwable throwable) {
-          return throwable;
-        }
+    this.callable = () -> {
+      try {
+        next.evaluate();
+        return null;
+      } catch (Throwable throwable) {
+        return throwable;
       }
     };
   }

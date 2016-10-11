@@ -119,12 +119,7 @@ public class IjProject {
         new IjModuleFactory.IjModuleFactoryResolver() {
 
           private Function<SourcePath, Path> getAbsolutePathAndRecordRuleFunction =
-              new Function<SourcePath, Path>() {
-                @Override
-                public Path apply(SourcePath input) {
-                  return getRelativePathAndRecordRule(input);
-                }
-              };
+              this::getRelativePathAndRecordRule;
 
           @Override
           public Optional<Path> getDummyRDotJavaPath(TargetNode<?> targetNode) {

@@ -48,14 +48,11 @@ public class MacroHandler {
       final BuildTarget target,
       final CellPathResolver cellNames,
       final BuildRuleResolver resolver) {
-    return new Function<String, String>() {
-      @Override
-      public String apply(String blob) {
-        try {
-          return expand(target, cellNames, resolver, blob);
-        } catch (MacroException e) {
-          throw new HumanReadableException("%s: %s", target, e.getMessage());
-        }
+    return blob -> {
+      try {
+        return expand(target, cellNames, resolver, blob);
+      } catch (MacroException e) {
+        throw new HumanReadableException("%s: %s", target, e.getMessage());
       }
     };
   }
@@ -106,16 +103,11 @@ public class MacroHandler {
     for (final Map.Entry<String, MacroExpander> entry : expanders.entrySet()) {
       replacers.put(
           entry.getKey(),
-          new MacroReplacer() {
-            @Override
-            public String replace(ImmutableList<String> input) throws MacroException {
-              return getExpander(entry.getKey()).expand(
-                  target,
-                  cellNames,
-                  resolver,
-                  input);
-            }
-          });
+          input -> getExpander(entry.getKey()).expand(
+              target,
+              cellNames,
+              resolver,
+              input));
     }
     return replacers.build();
   }

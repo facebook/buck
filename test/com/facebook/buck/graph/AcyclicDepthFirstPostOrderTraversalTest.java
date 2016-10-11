@@ -27,7 +27,6 @@ import com.google.common.collect.Multimap;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -187,12 +186,9 @@ public class AcyclicDepthFirstPostOrderTraversalTest {
         throws AcyclicDepthFirstPostOrderTraversal.CycleException {
       AcyclicDepthFirstPostOrderTraversal<String> traversal =
           new AcyclicDepthFirstPostOrderTraversal<>(
-              new GraphTraversable<String>() {
-                @Override
-                public Iterator<String> findChildren(String node) {
-                  ++numFindChildrenCalls;
-                  return graph.get(node).iterator();
-                }
+              node -> {
+                ++numFindChildrenCalls;
+                return graph.get(node).iterator();
               });
       for (String node : traversal.traverse(initial)) {
         exploredNodes.add(node);

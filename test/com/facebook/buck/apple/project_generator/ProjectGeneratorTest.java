@@ -120,7 +120,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -256,12 +255,7 @@ public class ProjectGeneratorTest {
 
     Iterable<String> childNames = Iterables.transform(
         sourcesGroup.getChildren(),
-        new Function<PBXReference, String>() {
-          @Override
-          public String apply(PBXReference fileReference) {
-            return fileReference.getName();
-          }
-        });
+        PBXReference::getName);
     assertThat(childNames, hasItem("Info.plist"));
   }
 
@@ -357,12 +351,7 @@ public class ProjectGeneratorTest {
     assertEquals(
         Optional.<PBXBuildPhase>absent(),
         Iterables.tryFind(
-            target.getBuildPhases(), new Predicate<PBXBuildPhase>() {
-              @Override
-              public boolean apply(PBXBuildPhase input) {
-                return input instanceof PBXHeadersBuildPhase;
-              }
-            }));
+            target.getBuildPhases(), input -> input instanceof PBXHeadersBuildPhase));
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
     assertThat(headerSymlinkTrees, hasSize(2));
@@ -455,12 +444,7 @@ public class ProjectGeneratorTest {
     assertEquals(
         Optional.<PBXBuildPhase>absent(),
         Iterables.tryFind(
-            target.getBuildPhases(), new Predicate<PBXBuildPhase>() {
-              @Override
-              public boolean apply(PBXBuildPhase input) {
-                return input instanceof PBXHeadersBuildPhase;
-              }
-            }));
+            target.getBuildPhases(), input -> input instanceof PBXHeadersBuildPhase));
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
     assertThat(headerSymlinkTrees, hasSize(2));
@@ -4493,12 +4477,7 @@ public class ProjectGeneratorTest {
       PBXCopyFilesBuildPhase copyFilesBuildPhase = (PBXCopyFilesBuildPhase) buildPhase;
       ImmutableSet<String> frameworkNames =
           FluentIterable.from(copyFilesBuildPhase.getFiles())
-              .transform(new Function<PBXBuildFile, String>() {
-                @Override
-                public String apply(PBXBuildFile input) {
-                  return input.getFileRef().getName();
-                }
-              }).toSortedSet(Ordering.natural());
+              .transform(input -> input.getFileRef().getName()).toSortedSet(Ordering.natural());
     assertThat(frameworkNames,
         Matchers.equalToObject(
             ImmutableSortedSet.of("framework_1.framework", "framework_2.framework")));
@@ -4685,15 +4664,10 @@ public class ProjectGeneratorTest {
 
   private Function<TargetNode<?>, SourcePathResolver> getSourcePathResolverForNodeFunction(
       final TargetGraph targetGraph) {
-    return new Function<TargetNode<?>, SourcePathResolver>() {
-      @Override
-      public SourcePathResolver apply(TargetNode<?> input) {
-        return new SourcePathResolver(
-            new BuildRuleResolver(
-                targetGraph,
-                new DefaultTargetNodeToBuildRuleTransformer()));
-      }
-    };
+    return input -> new SourcePathResolver(
+        new BuildRuleResolver(
+            targetGraph,
+            new DefaultTargetNodeToBuildRuleTransformer()));
   }
 
   private Function<TargetNode<?>, SourcePathResolver> getSourcePathResolverWithRulesForNodeFunction(
@@ -4705,12 +4679,7 @@ public class ProjectGeneratorTest {
       ruleResolver.requireRule(node.getBuildTarget());
       ruleResolver.requireRule(node.getBuildTarget().withFlavors());
     }
-    return new Function<TargetNode<?>, SourcePathResolver>() {
-      @Override
-      public SourcePathResolver apply(TargetNode<?> input) {
-        return new SourcePathResolver(ruleResolver);
-      }
-    };
+    return input -> new SourcePathResolver(ruleResolver);
   }
 
   private ImmutableSet<TargetNode<?>> setupSimpleLibraryWithResources(

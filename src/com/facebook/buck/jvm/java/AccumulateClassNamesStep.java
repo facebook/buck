@@ -25,7 +25,6 @@ import com.facebook.buck.jvm.java.classes.FileLikes;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -41,8 +40,6 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 /**
  * {@link Step} that takes a directory or zip of {@code .class} files and traverses it to get the
@@ -99,12 +96,7 @@ public class AccumulateClassNamesStep implements Step {
       filesystem.writeLinesToPath(
           Iterables.transform(
               classNames.entrySet(),
-              new Function<Map.Entry<String, HashCode>, String>() {
-                @Override
-                public String apply(Entry<String, HashCode> entry) {
-                  return entry.getKey() + CLASS_NAME_HASH_CODE_SEPARATOR + entry.getValue();
-                }
-              }),
+              entry -> entry.getKey() + CLASS_NAME_HASH_CODE_SEPARATOR + entry.getValue()),
           whereClassNamesShouldBeWritten);
     } catch (IOException e) {
       context.getBuckEventBus().post(ThrowableConsoleEvent.create(e,

@@ -33,12 +33,7 @@ public abstract class MoreFunctions {
    * @return a function that applies arg to a function it receives as input.
    */
   public static final <A, V> Function<Function<A, V>, V> applyFunction(final A arg) {
-    return new Function<Function<A, V>, V>() {
-      @Override
-      public V apply(Function<A, V> input) {
-        return input.apply(arg);
-      }
-    };
+    return input -> input.apply(arg);
   }
 
   public static final <T> Function<T, String> toJsonFunction(final ObjectMapper mapper) {

@@ -34,7 +34,6 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -172,12 +171,7 @@ public class CxxDescriptionEnhancerTest {
         "Test of library should include public dependency headers",
         Iterables.transform(
             CxxPreprocessorInput.concat(combinedInput).getIncludes(),
-            new Function<CxxHeaders, SourcePath>() {
-              @Override
-              public SourcePath apply(CxxHeaders input) {
-                return input.getRoot();
-              }
-            }),
+            CxxHeaders::getRoot),
         allOf(
             hasItem(new BuildTargetSourcePath(BuildTargetFactory.newInstance("//:othersymlink"))),
             not(

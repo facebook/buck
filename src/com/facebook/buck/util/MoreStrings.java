@@ -24,17 +24,11 @@ import com.google.common.base.Strings;
 
 import java.util.Arrays;
 
-import javax.annotation.Nullable;
 
 public final class MoreStrings {
 
   public static final Predicate<String> NON_EMPTY =
-      new Predicate<String>() {
-        @Override
-        public boolean apply(@Nullable String input) {
-          return !Strings.isNullOrEmpty(input);
-        }
-      };
+      input -> !Strings.isNullOrEmpty(input);
 
   /** Utility class: do not instantiate. */
   private MoreStrings() {}

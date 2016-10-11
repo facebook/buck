@@ -65,7 +65,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -1725,12 +1724,7 @@ public class ParserTest {
     assertThat(
         FluentIterable.from(targetNodes)
             .transform(
-                new Function<TargetNode<?>, BuildTarget>() {
-                  @Override
-                  public BuildTarget apply(TargetNode<?> targetNode) {
-                    return targetNode.getBuildTarget();
-                  }
-                })
+                TargetNode::getBuildTarget)
             .toList(),
         hasItems(fooLib1Target, fooLib2Target));
   }

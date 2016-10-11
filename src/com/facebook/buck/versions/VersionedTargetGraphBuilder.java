@@ -25,7 +25,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -506,12 +505,7 @@ public class VersionedTargetGraphBuilder {
                   .addAll(
                       FluentIterable.from(newInternalDeclaredDeps)
                           .transform(
-                              new Function<BuildTarget, BuildTarget>() {
-                                @Override
-                                public BuildTarget apply(BuildTarget depTarget) {
-                                  return getNewTarget(getNode(depTarget), selectedVersions);
-                                }
-                              }))
+                              depTarget -> getNewTarget(getNode(depTarget), selectedVersions)))
                   .addAll(newExternalDeclaredDeps)
                   .build());
 

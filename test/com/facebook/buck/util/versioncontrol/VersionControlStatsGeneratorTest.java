@@ -148,13 +148,10 @@ public class VersionControlStatsGeneratorTest {
     ExecutorService executorService = createMock(ExecutorService.class);
     executorService.submit(anyObject(Runnable.class));
     expectLastCall().andAnswer(
-        new IAnswer<Object>() {
-          @Override
-          public Object answer() throws Throwable {
-            Runnable runnable = (Runnable) getCurrentArguments()[0];
-            runnable.run();
-            return null;
-          }
+        () -> {
+          Runnable runnable = (Runnable) getCurrentArguments()[0];
+          runnable.run();
+          return null;
         }
     ).anyTimes();
     replay(executorService);

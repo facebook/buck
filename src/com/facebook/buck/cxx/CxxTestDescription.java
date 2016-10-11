@@ -36,7 +36,6 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -87,6 +86,7 @@ public class CxxTestDescription implements
     return new Arg();
   }
 
+  @SuppressWarnings("PMD.PrematureDeclaration")
   @Override
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
@@ -141,70 +141,57 @@ public class CxxTestDescription implements
 
     // Supplier which expands macros in the passed in test environment.
     Supplier<ImmutableMap<String, String>> testEnv =
-        new Supplier<ImmutableMap<String, String>>() {
-          @Override
-          public ImmutableMap<String, String> get() {
-            return ImmutableMap.copyOf(
-                Maps.transformValues(
-                    args.env.or(ImmutableMap.of()),
-                    CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
-                        params.getBuildTarget(),
-                        params.getCellRoots(),
-                        resolver)));
-          }
-        };
+        () -> ImmutableMap.copyOf(
+            Maps.transformValues(
+                args.env.or(ImmutableMap.of()),
+                CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
+                    params.getBuildTarget(),
+                    params.getCellRoots(),
+                    resolver)));
 
     // Supplier which expands macros in the passed in test arguments.
     Supplier<ImmutableList<String>> testArgs =
-        new Supplier<ImmutableList<String>>() {
-          @Override
-          public ImmutableList<String> get() {
-            return FluentIterable.from(args.args.or(ImmutableList.of()))
-                .transform(
-                    CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
-                        params.getBuildTarget(),
-                        params.getCellRoots(),
-                        resolver))
-                .toList();
-          }
-        };
+        () -> FluentIterable.from(args.args.or(ImmutableList.of()))
+            .transform(
+                CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
+                    params.getBuildTarget(),
+                    params.getCellRoots(),
+                    resolver))
+            .toList();
 
     Supplier<ImmutableSortedSet<BuildRule>> additionalDeps =
-        new Supplier<ImmutableSortedSet<BuildRule>>() {
-          @Override
-          public ImmutableSortedSet<BuildRule> get() {
-            ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
+        () -> {
+          ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
 
-            // It's not uncommon for users to add dependencies onto other binaries that they run
-            // during the test, so make sure to add them as runtime deps.
-            deps.addAll(
-                Sets.difference(
-                    params.getDeps(),
-                    cxxLinkAndCompileRules.getBinaryRule().getDeps()));
+          // It's not uncommon for users to add dependencies onto other binaries that they run
+          // during the test, so make sure to add them as runtime deps.
+          deps.addAll(
+              Sets.difference(
+                  params.getDeps(),
+                  cxxLinkAndCompileRules.getBinaryRule().getDeps()));
 
-            // Add any build-time from any macros embedded in the `env` or `args` parameter.
-            for (String part :
-                Iterables.concat(
-                    args.args.or(ImmutableList.of()),
-                    args.env.or(ImmutableMap.of()).values())) {
-              try {
-                deps.addAll(
-                    CxxDescriptionEnhancer.MACRO_HANDLER.extractBuildTimeDeps(
-                        params.getBuildTarget(),
-                        params.getCellRoots(),
-                        resolver,
-                        part));
-              } catch (MacroException e) {
-                throw new HumanReadableException(
-                    e,
-                    "%s: %s",
-                    params.getBuildTarget(),
-                    e.getMessage());
-              }
+          // Add any build-time from any macros embedded in the `env` or `args` parameter.
+          for (String part :
+              Iterables.concat(
+                  args.args.or(ImmutableList.of()),
+                  args.env.or(ImmutableMap.of()).values())) {
+            try {
+              deps.addAll(
+                  CxxDescriptionEnhancer.MACRO_HANDLER.extractBuildTimeDeps(
+                      params.getBuildTarget(),
+                      params.getCellRoots(),
+                      resolver,
+                      part));
+            } catch (MacroException e) {
+              throw new HumanReadableException(
+                  e,
+                  "%s: %s",
+                  params.getBuildTarget(),
+                  e.getMessage());
             }
-
-            return deps.build();
           }
+
+          return deps.build();
         };
 
     CxxTest test;
@@ -359,12 +346,7 @@ public class CxxTestDescription implements
     return CxxDescriptionEnhancer
         .createCompilationDatabaseDependencies(buildTarget, cxxPlatforms, resolver, args)
         .transform(
-            new Function<CxxCompilationDatabaseDependencies, U>() {
-              @Override
-              public U apply(CxxCompilationDatabaseDependencies input) {
-                return metadataClass.cast(input);
-              }
-            }
+            metadataClass::cast
         );
   }
 

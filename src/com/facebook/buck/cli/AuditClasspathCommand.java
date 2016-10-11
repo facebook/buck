@@ -33,7 +33,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -102,15 +101,10 @@ public class AuditClasspathCommand extends AbstractCommand {
     // BuildRules for the specified BuildTargets.
     final ImmutableSet<BuildTarget> targets = FluentIterable
         .from(getArgumentsFormattedAsBuildTargets(params.getBuckConfig()))
-        .transform(new Function<String, BuildTarget>() {
-                     @Override
-                     public BuildTarget apply(String input) {
-                       return BuildTargetParser.INSTANCE.parse(
-                           input,
-                           BuildTargetPatternParser.fullyQualified(),
-                           params.getCell().getCellPathResolver());
-                     }
-                   })
+        .transform(input -> BuildTargetParser.INSTANCE.parse(
+            input,
+            BuildTargetPatternParser.fullyQualified(),
+            params.getCell().getCellPathResolver()))
         .toSet();
 
     if (targets.isEmpty()) {
@@ -158,12 +152,7 @@ public class AuditClasspathCommand extends AbstractCommand {
     Dot<TargetNode<?>> dot = new Dot<>(
         targetGraph,
         "target_graph",
-        new Function<TargetNode<?>, String>() {
-          @Override
-          public String apply(TargetNode<?> targetNode) {
-            return "\"" + targetNode.getBuildTarget().getFullyQualifiedName() + "\"";
-          }
-        },
+        targetNode -> "\"" + targetNode.getBuildTarget().getFullyQualifiedName() + "\"",
         params.getConsole().getStdOut());
     try {
       dot.writeOutput();

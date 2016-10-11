@@ -306,14 +306,11 @@ public class WorkerShellStepTest {
 
     step1.execute(context);
 
-    Future<?> stepExecution = Executors.newSingleThreadExecutor().submit(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          step2.execute(context);
-        } catch (InterruptedException e) {
-          throw new RuntimeException(e);
-        }
+    Future<?> stepExecution = Executors.newSingleThreadExecutor().submit(() -> {
+      try {
+        step2.execute(context);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
       }
     });
 

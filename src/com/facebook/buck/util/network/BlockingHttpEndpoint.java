@@ -32,7 +32,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
@@ -79,16 +78,13 @@ public class BlockingHttpEndpoint implements HttpEndpoint {
   @Override
   public ListenableFuture<HttpResponse> post(final String content) {
     return requestService.submit(
-        new Callable<HttpResponse>() {
-          @Override
-          public HttpResponse call() {
-            try {
-              HttpURLConnection connection = buildConnection("POST");
-              connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-              return send(connection, content);
-            } catch (IOException e) {
-              throw new RuntimeException(e);
-            }
+        () -> {
+          try {
+            HttpURLConnection connection = buildConnection("POST");
+            connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            return send(connection, content);
+          } catch (IOException e) {
+            throw new RuntimeException(e);
           }
         });
   }

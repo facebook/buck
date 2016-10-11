@@ -47,15 +47,10 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder<RuleKey> {
       final SourcePathResolver resolver,
       final FileHashCache hashCache,
       final RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
-    return new Supplier<UncachedRuleKeyBuilder>() {
-      @Override
-      public UncachedRuleKeyBuilder get() {
-        return new UncachedRuleKeyBuilder(
-            resolver,
-            hashCache,
-            ruleKeyBuilderFactory);
-      }
-    };
+    return () -> new UncachedRuleKeyBuilder(
+        resolver,
+        hashCache,
+        ruleKeyBuilderFactory);
   }
 
   @Override

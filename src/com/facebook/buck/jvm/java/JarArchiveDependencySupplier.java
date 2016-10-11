@@ -20,7 +20,6 @@ import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.exportedfiles.Nullable;
-import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableSortedSet;
@@ -59,15 +58,12 @@ public class JarArchiveDependencySupplier extends ZipArchiveDependencySupplier {
     return ImmutableSortedSet.copyOf(
         Collections2.filter(
             super.getArchiveMembers(resolver),
-            new Predicate<SourcePath>() {
-              @Override
-              public boolean apply(SourcePath input) {
-                ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) input;
-                // Don't include the manifest file, because it contains all the hashes and thus
-                // won't have a hash for itself.
-                return !archiveMemberSourcePath.getMemberPath().equals(
-                    Paths.get(JarFile.MANIFEST_NAME));
-              }
+            input -> {
+              ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) input;
+              // Don't include the manifest file, because it contains all the hashes and thus
+              // won't have a hash for itself.
+              return !archiveMemberSourcePath.getMemberPath().equals(
+                  Paths.get(JarFile.MANIFEST_NAME));
             }));
   }
 }

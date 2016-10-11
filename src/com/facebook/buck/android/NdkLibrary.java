@@ -41,7 +41,6 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -180,12 +179,7 @@ public class NdkLibrary extends AbstractBuildRule
           Set<Path> unstrippedSharedObjs = getProjectFilesystem()
               .getFilesUnderPath(
                   buildArtifactsDirectory,
-                  new Predicate<Path>() {
-                    @Override
-                    public boolean apply(Path input) {
-                      return input.toString().endsWith(".so");
-                    }
-                  });
+                  input -> input.toString().endsWith(".so"));
           for (Path path : unstrippedSharedObjs) {
             buildableContext.recordArtifact(path);
           }

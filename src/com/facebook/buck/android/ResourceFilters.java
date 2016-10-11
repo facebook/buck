@@ -20,7 +20,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -186,12 +185,7 @@ public class ResourceFilters {
       Set<Density> targets = targetDensities;
       if (available.contains(Density.NO_QUALIFIER) && !available.contains(Density.MDPI)) {
         targets = Sets.newHashSet(Iterables.transform(targetDensities,
-            new Function<Density, Density>() {
-              @Override
-              public Density apply(Density input) {
-                return (input == Density.MDPI) ? Density.NO_QUALIFIER : input;
-              }
-            }));
+            input -> (input == Density.MDPI) ? Density.NO_QUALIFIER : input));
       }
 
       // We intend to keep all available targeted densities.
@@ -240,12 +234,7 @@ public class ResourceFilters {
       Set<ResourceFilters.Density> targetDensities,
       boolean canDownscale) {
     final Set<Path> pathsToRemove = filterByDensity(candidates, targetDensities, canDownscale);
-    return new Predicate<Path>() {
-      @Override
-      public boolean apply(Path path) {
-        return !pathsToRemove.contains(path);
-      }
-    };
+    return path -> !pathsToRemove.contains(path);
   }
 
   private static String getResourceType(Path resourceFolder) {
@@ -275,40 +264,34 @@ public class ResourceFilters {
   public static Predicate<Path> createDensityFilter(
       final ProjectFilesystem filesystem,
       final Set<Density> targetDensities) {
-    return new Predicate<Path>() {
-      @Override
-      public boolean apply(final Path resourceFile) {
-        final Path resourceFolder = getResourceFolder(resourceFile);
-        if (resourceFolder.getFileName().toString().startsWith("drawable")) {
-          // Drawables are handled independently, so do not do anything with them.
-          return true;
-        }
-        Density density = Qualifiers.from(resourceFolder).density;
-
-        // We should include the resource in these situations:
-        // * it is one of the target densities
-        // * this is a "values" resource, which we include the fallback and any targets so we do not
-        //   have to parse the XML to determine if there are differences.
-        // * there is no resource at any one of the target densities, and this is the fallback.
-        if (targetDensities.contains(density)) {
-          return true;
-        }
-
-        if (density.equals(Density.NO_QUALIFIER)) {
-          final String resourceType = getResourceType(resourceFolder);
-          return resourceType.equals("values") ||
-              FluentIterable.from(targetDensities).anyMatch(new Predicate<Density>() {
-                @Override
-                public boolean apply(Density target) {
-                  Path targetResourceFile = resourceFolder
-                      .resolveSibling(String.format("%s-%s", resourceType, target))
-                      .resolve(resourceFolder.relativize(resourceFile));
-                  return !filesystem.exists(targetResourceFile);
-                }
-              });
-        }
-        return false;
+    return resourceFile -> {
+      final Path resourceFolder = getResourceFolder(resourceFile);
+      if (resourceFolder.getFileName().toString().startsWith("drawable")) {
+        // Drawables are handled independently, so do not do anything with them.
+        return true;
       }
+      Density density = Qualifiers.from(resourceFolder).density;
+
+      // We should include the resource in these situations:
+      // * it is one of the target densities
+      // * this is a "values" resource, which we include the fallback and any targets so we do not
+      //   have to parse the XML to determine if there are differences.
+      // * there is no resource at any one of the target densities, and this is the fallback.
+      if (targetDensities.contains(density)) {
+        return true;
+      }
+
+      if (density.equals(Density.NO_QUALIFIER)) {
+        final String resourceType = getResourceType(resourceFolder);
+        return resourceType.equals("values") ||
+            FluentIterable.from(targetDensities).anyMatch(target -> {
+              Path targetResourceFile = resourceFolder
+                  .resolveSibling(String.format("%s-%s", resourceType, target))
+                  .resolve(resourceFolder.relativize(resourceFile));
+              return !filesystem.exists(targetResourceFile);
+            });
+      }
+      return false;
     };
   }
 }

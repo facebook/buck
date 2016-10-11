@@ -18,9 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -90,21 +88,18 @@ public class AuditConfigCommand extends AbstractCommand {
 
     final ImmutableList<ConfigValue> configs = FluentIterable.from(
         getArguments()).transform(
-        new Function<String, ConfigValue>() {
-          @Override
-          public ConfigValue apply(String input) {
-            String[] parts = input.split("\\.", 2);
-            if (parts.length != 2) {
-              params.getConsole().getStdErr().println(
-                  String.format("%s is not a valid section/property string", input));
-              return ConfigValue.of(input, "", input, Optional.absent());
-            }
-            return ConfigValue.of(
-                input,
-                parts[0],
-                parts[1],
-                buckConfig.getValue(parts[0], parts[1]));
+        input -> {
+          String[] parts = input.split("\\.", 2);
+          if (parts.length != 2) {
+            params.getConsole().getStdErr().println(
+                String.format("%s is not a valid section/property string", input));
+            return ConfigValue.of(input, "", input, Optional.absent());
           }
+          return ConfigValue.of(
+              input,
+              parts[0],
+              parts[1],
+              buckConfig.getValue(parts[0], parts[1]));
         }).toList();
 
     if (shouldGenerateJsonOutput()) {
@@ -148,19 +143,9 @@ public class AuditConfigCommand extends AbstractCommand {
     ImmutableListMultimap<String, ConfigValue> iniData =
         FluentIterable.from(configs)
             .filter(
-                new Predicate<ConfigValue>() {
-                  @Override
-                  public boolean apply(ConfigValue config) {
-                    return config.getSection() != "" && config.getValue().isPresent();
-                  }
-                })
+                config -> config.getSection() != "" && config.getValue().isPresent())
             .index(
-                new Function<ConfigValue, String>() {
-                  @Override
-                  public String apply(ConfigValue config) {
-                    return config.getSection();
-                  }
-                });
+                ConfigValue::getSection);
 
     for (Map.Entry<String, Collection<ConfigValue>> entry : iniData.asMap().entrySet()) {
       params.getConsole().getStdOut().println(String.format("[%s]", entry.getKey()));

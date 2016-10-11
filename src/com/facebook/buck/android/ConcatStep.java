@@ -60,15 +60,10 @@ public class ConcatStep implements Step {
    */
   public ConcatStep(
       ProjectFilesystem filesystem,
-      final ImmutableList.Builder<Path> inputsBuilder,
+      ImmutableList.Builder<Path> inputsBuilder, // NOPMD confused by method reference
       Path outputPath) {
     this.filesystem = filesystem;
-    this.inputs = Suppliers.memoize(new Supplier<ImmutableList<Path>>() {
-                                      @Override
-                                      public ImmutableList<Path> get() {
-                                        return inputsBuilder.build();
-                                      }
-                                    });
+    this.inputs = Suppliers.memoize(inputsBuilder::build);
     output = outputPath;
   }
 

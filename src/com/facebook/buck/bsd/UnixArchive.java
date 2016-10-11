@@ -59,12 +59,7 @@ public class UnixArchive {
     if (!checkHeader(buffer)) {
       throw new IOException("Archive file has unexpected header");
     }
-    this.entries = Suppliers.memoize(new Supplier<ImmutableList<UnixArchiveEntry>>() {
-      @Override
-      public ImmutableList<UnixArchiveEntry> get() {
-        return loadEntries();
-      }
-    });
+    this.entries = Suppliers.memoize(this::loadEntries);
     this.nulTerminatedCharsetDecoder = nulTerminatedCharsetDecoder;
   }
 

@@ -28,11 +28,6 @@ public interface HasMavenCoordinates extends BuildRule {
   Optional<String> getMavenCoords();
 
   public static final Predicate<BuildRule> MAVEN_COORDS_PRESENT_PREDICATE =
-      new Predicate<BuildRule>() {
-    @Override
-    public boolean apply(BuildRule input) {
-      return input instanceof HasMavenCoordinates &&
+      input -> input instanceof HasMavenCoordinates &&
           ((HasMavenCoordinates) input).getMavenCoords().isPresent();
-    }
-  };
 }

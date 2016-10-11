@@ -19,7 +19,6 @@ package com.facebook.buck.event;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
@@ -525,12 +524,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
       finishedInfoBuilder.putAll(
           Maps.transformValues(
               finishedCounters,
-              new Function<AtomicLong, Long>() {
-                @Override
-                public Long apply(AtomicLong input) {
-                  return input.get();
-                }
-              }));
+              AtomicLong::get));
       return new Finished(started, finishedInfoBuilder.build());
     }
 

@@ -40,7 +40,6 @@ import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -214,15 +213,10 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       FluentIterable<BuildTarget> watchTargets = targetsWithoutPlatformFlavors
           .filter(BuildTargets.containsFlavor(WATCH))
           .transform(
-              new Function<BuildTarget, BuildTarget>() {
-                @Override
-                public BuildTarget apply(BuildTarget input) {
-                  return BuildTarget.builder(
-                      input.withoutFlavors(ImmutableSet.of(WATCH)))
-                      .addFlavors(actualWatchFlavor)
-                      .build();
-                }
-              });
+              input -> BuildTarget.builder(
+                  input.withoutFlavors(ImmutableSet.of(WATCH)))
+                  .addFlavors(actualWatchFlavor)
+                  .build());
 
       targetsWithoutPlatformFlavors = targetsWithoutPlatformFlavors
           .filter(Predicates.not(BuildTargets.containsFlavor(WATCH)));

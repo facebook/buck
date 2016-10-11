@@ -34,7 +34,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -131,12 +130,7 @@ public class CopyNativeLibrariesTest {
     Iterable<String> descriptions =
         Iterables.transform(
             steps,
-            new Function<Step, String>() {
-              @Override
-              public String apply(Step step) {
-                return step.getDescription(TestExecutionContext.newInstance());
-              }
-            });
+            step -> step.getDescription(TestExecutionContext.newInstance()));
     assertThat(
         "lib1 contents should be copied *after* lib2",
         Iterables.indexOf(

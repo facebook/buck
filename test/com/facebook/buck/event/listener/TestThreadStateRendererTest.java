@@ -48,12 +48,7 @@ public class TestThreadStateRendererTest {
 
   private static final Ansi ANSI = Ansi.withoutTty();
   private static final Function<Long, String> FORMAT_TIME_FUNCTION =
-      new Function<Long, String>() {
-        @Override
-        public String apply(Long timeMs) {
-          return String.format(Locale.US, "%.1fs", timeMs / 1000.0);
-        }
-      };
+      timeMs -> String.format(Locale.US, "%.1fs", timeMs / 1000.0);
   private static final BuildTarget TARGET1 = BuildTargetFactory.newInstance("//:target1");
   private static final BuildTarget TARGET2 = BuildTargetFactory.newInstance("//:target2");
   private static final BuildTarget TARGET3 = BuildTargetFactory.newInstance("//:target3");

@@ -83,13 +83,10 @@ public class FakeExecutor implements ScheduledExecutorService {
   }
 
   private <T> Callable<T> toCallable(final Runnable runnable, final T result) {
-    return new Callable<T>() {
-      @Override
-      public T call() throws Exception {
-        runnable.run();
+    return () -> {
+      runnable.run();
 
-        return result;
-      }
+      return result;
     };
 
   }
@@ -201,16 +198,13 @@ public class FakeExecutor implements ScheduledExecutorService {
 
   @Override
   public <T> Future<T> submit(final Callable<T> task) {
-    runnableList.add(new AnnotatedRunnable(new Runnable() {
-        @Override
-        public void run() {
-          try {
-            task.call();
-          } catch (Exception e) {
-            throw new RuntimeException(e);
-          }
-        }
-      }));
+    runnableList.add(new AnnotatedRunnable(() -> {
+      try {
+        task.call();
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }));
 
     return new FakeScheduledFuture<T>(task);
   }

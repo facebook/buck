@@ -27,7 +27,6 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -60,12 +59,8 @@ public class DirectoryCleaner {
     }
 
     if (shouldDeleteOldestLog(pathStats.size(), totalSizeBytes)) {
-      Collections.sort(pathStats, new Comparator<PathStats>() {
-        @Override
-        public int compare(PathStats stats1, PathStats stats2) {
-          return args.getPathSelector().comparePaths(stats1, stats2);
-        }
-      });
+      Collections.sort(pathStats,
+          (stats1, stats2) -> args.getPathSelector().comparePaths(stats1, stats2));
 
       int remainingLogDirectories = pathStats.size();
       long finalMaxSizeBytes = args.getMaxTotalSizeBytes();

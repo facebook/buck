@@ -462,28 +462,13 @@ public class AppleTestDescription implements
     ImmutableSet<BuildTarget> getBlacklist();
 
     Function<TestHostInfo, AppleBundle> GET_TEST_HOST_APP_FUNCTION =
-        new Function<TestHostInfo, AppleBundle>() {
-          @Override
-          public AppleBundle apply(TestHostInfo input) {
-            return input.getTestHostApp();
-          }
-        };
+        TestHostInfo::getTestHostApp;
 
     Function<TestHostInfo, SourcePath> GET_TEST_HOST_APP_BINARY_SOURCE_PATH_FUNCTION =
-        new Function<TestHostInfo, SourcePath>() {
-          @Override
-          public SourcePath apply(TestHostInfo input) {
-            return input.getTestHostAppBinarySourcePath();
-          }
-        };
+        TestHostInfo::getTestHostAppBinarySourcePath;
 
     Function<TestHostInfo, ImmutableSet<BuildTarget>> GET_BLACKLIST_FUNCTION =
-        new Function<TestHostInfo, ImmutableSet<BuildTarget>>() {
-          @Override
-          public ImmutableSet<BuildTarget> apply(TestHostInfo input) {
-            return input.getBlacklist();
-          }
-        };
+        TestHostInfo::getBlacklist;
   }
 
   @SuppressFieldNotInitialized

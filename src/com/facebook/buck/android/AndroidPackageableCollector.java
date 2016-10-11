@@ -27,7 +27,6 @@ import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -251,17 +250,14 @@ public class AndroidPackageableCollector {
     collectionBuilder.addAllJavaLibrariesToDex(
         FluentIterable.from(javaClassProviders).transform(BuildTarget.TO_TARGET).toSet());
     collectionBuilder.setClassNamesToHashesSupplier(Suppliers.memoize(
-            new Supplier<Map<String, HashCode>>() {
-              @Override
-              public Map<String, HashCode> get() {
+        () -> {
 
-                ImmutableMap.Builder<String, HashCode> builder = ImmutableMap.builder();
-                for (HasJavaClassHashes hasJavaClassHashes : javaClassProviders) {
-                  builder.putAll(hasJavaClassHashes.getClassNamesToHashes());
-                }
-                return builder.build();
-              }
-            }));
+          ImmutableMap.Builder<String, HashCode> builder = ImmutableMap.builder();
+          for (HasJavaClassHashes hasJavaClassHashes : javaClassProviders) {
+            builder.putAll(hasJavaClassHashes.getClassNamesToHashes());
+          }
+          return builder.build();
+        }));
 
     ImmutableSet<BuildTarget> resources = ImmutableSet.copyOf(resourcesWithNonEmptyResDir.build());
     for (BuildTarget buildTarget : resourcesWithAssets.build()) {

@@ -88,18 +88,8 @@ public interface DexWithClasses {
   };
 
   Comparator<DexWithClasses> DEX_WITH_CLASSES_COMPARATOR =
-      new Comparator<DexWithClasses>() {
-        @Override
-        public int compare(DexWithClasses o1, DexWithClasses o2) {
-          return o1.getPathToDexFile().compareTo(o2.getPathToDexFile());
-        }
-      };
+      (o1, o2) -> o1.getPathToDexFile().compareTo(o2.getPathToDexFile());
 
   Function <DexWithClasses, Path> TO_PATH =
-      new Function<DexWithClasses, Path>() {
-        @Override
-        public Path apply(DexWithClasses input) {
-          return input.getPathToDexFile();
-        }
-      };
+      DexWithClasses::getPathToDexFile;
 }

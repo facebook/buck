@@ -34,7 +34,6 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -217,12 +216,7 @@ class DaemonicParserState {
                 ImmutableMap.copyOf(
                     Maps.transformValues(
                         ent.getValue(),
-                        new Function<String, Optional<String>>() {
-                          @Override
-                          public Optional<String> apply(@Nullable String input) {
-                            return Optional.fromNullable(input);
-                          }
-                        })));
+                        Optional::fromNullable)));
           }
           configs = builder.build();
         } else if (rawNode.containsKey(ENV_META_RULE)) {
@@ -549,12 +543,7 @@ class DaemonicParserState {
    */
   private boolean isTempFile(Cell cell, Path path) {
     final String fileName = path.getFileName().toString();
-    Predicate<Pattern> patternMatches = new Predicate<Pattern>() {
-      @Override
-      public boolean apply(Pattern pattern) {
-        return pattern.matcher(fileName).matches();
-      }
-    };
+    Predicate<Pattern> patternMatches = pattern -> pattern.matcher(fileName).matches();
     return Iterators.any(cell.getTempFilePatterns().iterator(), patternMatches);
   }
 

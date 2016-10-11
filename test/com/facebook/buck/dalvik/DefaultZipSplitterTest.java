@@ -55,12 +55,7 @@ public class DefaultZipSplitterTest {
   private Set<Path> testInZips;
   private Path outPrimary;
   private String secondaryPattern;
-  private Predicate<String> processor = new Predicate<String>() {
-    @Override
-    public boolean apply(String name) {
-      return name.startsWith("primary");
-    }
-  };
+  private Predicate<String> processor = name -> name.startsWith("primary");
   private APKModuleGraph apkModuleGraph =
       new APKModuleGraph(
           TargetGraph.EMPTY,

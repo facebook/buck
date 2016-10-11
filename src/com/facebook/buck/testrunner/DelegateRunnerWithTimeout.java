@@ -109,17 +109,14 @@ class DelegateRunnerWithTimeout extends Runner {
 
     // We run the Runner in an Executor so that we can tear it down if we need to.
     executor.get().submit(
-        new Runnable() {
-          @Override
-          public void run() {
-            try {
-              delegate.run(wrapper);
-            } finally {
-              if (!wrapper.hasTestThatExceededTimeout()) {
-                testsCompleted.set(true);
-              }
-              completionSemaphore.release();
+        () -> {
+          try {
+            delegate.run(wrapper);
+          } finally {
+            if (!wrapper.hasTestThatExceededTimeout()) {
+              testsCompleted.set(true);
             }
+            completionSemaphore.release();
           }
         });
 

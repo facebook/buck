@@ -18,7 +18,6 @@ package com.facebook.buck.model;
 
 import com.facebook.buck.io.MorePaths;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
@@ -44,15 +43,10 @@ import javax.annotation.Nullable;
  */
 public class InMemoryBuildFileTree extends BuildFileTree {
 
-  private static final Comparator<Path> PATH_COMPARATOR = new Comparator<Path>() {
-    @Override
-    public int compare(Path a, Path b) {
-      return ComparisonChain.start()
-          .compare(a.getNameCount(), b.getNameCount())
-          .compare(a.toString(), b.toString())
-          .result();
-    }
-  };
+  private static final Comparator<Path> PATH_COMPARATOR = (a, b) -> ComparisonChain.start()
+      .compare(a.getNameCount(), b.getNameCount())
+      .compare(a.toString(), b.toString())
+      .result();
 
   private final Map<Path, Node> basePathToNodeIndex;
 
@@ -116,12 +110,7 @@ public class InMemoryBuildFileTree extends BuildFileTree {
       return ImmutableList.of();
     } else {
       return FluentIterable.from(node.children).transform(
-          new Function<Node, Path>() {
-            @Override
-            public Path apply(Node child) {
-              return MorePaths.relativize(path, child.basePath);
-            }
-          }).toList();
+          child -> MorePaths.relativize(path, child.basePath)).toList();
     }
   }
 

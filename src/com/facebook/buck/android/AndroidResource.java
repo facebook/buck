@@ -220,17 +220,14 @@ public class AndroidResource extends AbstractBuildRule
       this.rDotJavaPackage.set(rDotJavaPackageArgument);
     }
 
-    this.rDotJavaPackageSupplier = new Supplier<String>() {
-      @Override
-      public String get() {
-        String rDotJavaPackage = AndroidResource.this.rDotJavaPackage.get();
-        if (rDotJavaPackage != null) {
-          return rDotJavaPackage;
-        } else {
-          throw new RuntimeException(
-              "rDotJavaPackage for " + AndroidResource.this.getBuildTarget().toString() +
-              " was requested before it was made available.");
-        }
+    this.rDotJavaPackageSupplier = () -> {
+      String rDotJavaPackage1 = AndroidResource.this.rDotJavaPackage.get();
+      if (rDotJavaPackage1 != null) {
+        return rDotJavaPackage1;
+      } else {
+        throw new RuntimeException(
+            "rDotJavaPackage for " + AndroidResource.this.getBuildTarget().toString() +
+            " was requested before it was made available.");
       }
     };
   }
@@ -290,16 +287,11 @@ public class AndroidResource extends AbstractBuildRule
         assetsSrcs,
         additionalAssetsKey,
         manifestFile,
-        new Supplier<ImmutableSortedSet<? extends SourcePath>>() {
-          @Override
-          public ImmutableSortedSet<? extends SourcePath> get() {
-            return FluentIterable.from(buildRuleParams.getDeps())
-                .filter(HasAndroidResourceDeps.class)
-                .filter(NON_EMPTY_RESOURCE)
-                .transform(GET_RES_SYMBOLS_TXT)
-                .toSortedSet(Ordering.natural());
-          }
-        },
+        () -> FluentIterable.from(buildRuleParams.getDeps())
+            .filter(HasAndroidResourceDeps.class)
+            .filter(NON_EMPTY_RESOURCE)
+            .transform(GET_RES_SYMBOLS_TXT)
+            .toSortedSet(Ordering.natural()),
         hasWhitelistedStrings,
         resourceUnion);
   }

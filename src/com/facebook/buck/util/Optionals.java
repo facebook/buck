@@ -51,12 +51,7 @@ public class Optionals {
   }
 
   public static <T> Function<T, Optional<T>> toOptional() {
-    return new Function<T, Optional<T>>() {
-      @Override
-      public Optional<T> apply(T input) {
-        return Optional.of(input);
-      }
-    };
+    return Optional::of;
   }
 
   public static <T extends Comparable<T>> int compare(Optional<T> first, Optional<T> second) {

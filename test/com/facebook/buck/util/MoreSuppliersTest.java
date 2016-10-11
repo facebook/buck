@@ -39,12 +39,7 @@ import java.util.concurrent.TimeUnit;
 public class MoreSuppliersTest {
   @Test
   public void weakMemoizeShouldMemoize() {
-    Supplier<Object> supplier = MoreSuppliers.weakMemoize(new Supplier<Object>() {
-      @Override
-      public Object get() {
-        return new Object();
-      }
-    });
+    Supplier<Object> supplier = MoreSuppliers.weakMemoize(Object::new);
     Object a = supplier.get();
     Object b = supplier.get();
     Assert.assertSame("Supplier should have cached the instance", a, b);
@@ -128,12 +123,7 @@ public class MoreSuppliersTest {
 
   @Test
   public void weakMemoizeShouldNotMemoizeSupplierThatIsAlreadyWeakMemoized() {
-    Supplier<Object> supplier = MoreSuppliers.weakMemoize(new Supplier<Object>() {
-      @Override
-      public Object get() {
-        return new Object();
-      }
-    });
+    Supplier<Object> supplier = MoreSuppliers.weakMemoize(Object::new);
     Supplier<Object> twiceMemoized = MoreSuppliers.weakMemoize(supplier);
     Assert.assertSame("should have just returned the same instance", supplier, twiceMemoized);
   }

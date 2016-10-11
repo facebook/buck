@@ -45,7 +45,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -155,23 +154,18 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
         baseParams.copyWithChanges(
             target,
             Suppliers.memoize(
-                new Supplier<ImmutableSortedSet<BuildRule>>() {
-                  @Override
-                  public ImmutableSortedSet<BuildRule> get() {
-                    return ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(compiler.getDeps(resolver))
-                        .addAll(ppFlags.getDeps(resolver))
-                        .addAll(resolver.filterBuildRuleInputs(includes))
-                        .addAll(sources.getDeps(resolver))
-                        .addAll(
-                            FluentIterable.from(exposedPackages.values())
-                                .transformAndConcat(HaskellPackage.getDepsFunction(resolver)))
-                        .addAll(
-                            FluentIterable.from(packages.values())
-                                .transformAndConcat(HaskellPackage.getDepsFunction(resolver)))
-                        .build();
-                  }
-                }),
+                () -> ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(compiler.getDeps(resolver))
+                    .addAll(ppFlags.getDeps(resolver))
+                    .addAll(resolver.filterBuildRuleInputs(includes))
+                    .addAll(sources.getDeps(resolver))
+                    .addAll(
+                        FluentIterable.from(exposedPackages.values())
+                            .transformAndConcat(HaskellPackage.getDepsFunction(resolver)))
+                    .addAll(
+                        FluentIterable.from(packages.values())
+                            .transformAndConcat(HaskellPackage.getDepsFunction(resolver)))
+                    .build()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         resolver,
         compiler,

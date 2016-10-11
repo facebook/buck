@@ -35,7 +35,6 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.shell.AbstractGenruleStep;
@@ -65,12 +64,7 @@ public class ExternallyBuiltApplePackageTest {
   private ApplePackageConfigAndPlatformInfo config =
       ApplePackageConfigAndPlatformInfo.of(
           ApplePackageConfig.of("echo $SDKROOT $OUT", "api"),
-          new Function<String, Arg>() {
-            @Override
-            public Arg apply(String input) {
-              return new StringArg(input);
-            }
-          },
+          StringArg::new,
           DEFAULT_IPHONEOS_I386_PLATFORM);
 
   @Before
@@ -126,16 +120,11 @@ public class ExternallyBuiltApplePackageTest {
   @Test
   public void platformVersionAffectsRuleKey() {
     Function<String, ExternallyBuiltApplePackage> packageWithVersion =
-        new Function<String, ExternallyBuiltApplePackage>() {
-          @Override
-          public ExternallyBuiltApplePackage apply(String input) {
-            return new ExternallyBuiltApplePackage(
-                params,
-                new SourcePathResolver(resolver),
-                config.withPlatform(config.getPlatform().withBuildVersion(input)),
-                new FakeSourcePath("Fake/Bundle/Location"));
-          }
-        };
+        input -> new ExternallyBuiltApplePackage(
+            params,
+            new SourcePathResolver(resolver),
+            config.withPlatform(config.getPlatform().withBuildVersion(input)),
+            new FakeSourcePath("Fake/Bundle/Location"));
     assertNotEquals(
         newRuleKeyBuilderFactory().build(packageWithVersion.apply("real")),
         newRuleKeyBuilderFactory().build(packageWithVersion.apply("fake")));
@@ -144,18 +133,13 @@ public class ExternallyBuiltApplePackageTest {
   @Test
   public void sdkVersionAffectsRuleKey() {
     Function<String, ExternallyBuiltApplePackage> packageWithSdkVersion =
-        new Function<String, ExternallyBuiltApplePackage>() {
-          @Override
-          public ExternallyBuiltApplePackage apply(String input) {
-            return new ExternallyBuiltApplePackage(
-                params,
-                new SourcePathResolver(resolver),
-                config.withPlatform(
-                    config.getPlatform().withAppleSdk(
-                        config.getPlatform().getAppleSdk().withVersion(input))),
-                new FakeSourcePath("Fake/Bundle/Location"));
-          }
-        };
+        input -> new ExternallyBuiltApplePackage(
+            params,
+            new SourcePathResolver(resolver),
+            config.withPlatform(
+                config.getPlatform().withAppleSdk(
+                    config.getPlatform().getAppleSdk().withVersion(input))),
+            new FakeSourcePath("Fake/Bundle/Location"));
     assertNotEquals(
         newRuleKeyBuilderFactory().build(packageWithSdkVersion.apply("real")),
         newRuleKeyBuilderFactory().build(packageWithSdkVersion.apply("fake")));

@@ -37,7 +37,6 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -101,12 +100,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
 
     if (flavors.contains(JavaLibrary.SRC_JAR)) {
       args.mavenCoords = args.mavenCoords.transform(
-          new Function<String, String>() {
-            @Override
-            public String apply(String input) {
-              return AetherUtil.addClassifier(input, AetherUtil.CLASSIFIER_SOURCES);
-            }
-          });
+          input -> AetherUtil.addClassifier(input, AetherUtil.CLASSIFIER_SOURCES));
 
       if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
         return new JavaSourceJar(

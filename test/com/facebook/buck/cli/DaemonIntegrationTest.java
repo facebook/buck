@@ -50,7 +50,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.martiansoftware.nailgun.NGClientListener;
 
 import org.junit.After;
 import org.junit.Before;
@@ -158,14 +157,7 @@ public class DaemonIntegrationTest {
         ImmutableMap.copyOf(System.getenv()),
         TestContext.createHeartBeatStream(intervalMillis),
         timeoutMillis)) {
-      final Thread commandThread = Thread.currentThread();
-      context.addClientListener(
-          new NGClientListener() {
-            @Override
-            public void clientDisconnected() throws InterruptedException {
-              commandThread.interrupt();
-            }
-          });
+      context.addClientListener(Thread.currentThread()::interrupt);
       Thread.sleep(1000);
       fail("Should have been interrupted.");
     }
@@ -235,30 +227,27 @@ public class DaemonIntegrationTest {
   }
 
   private Runnable createRunnableCommand(final int expectedExitCode, final String ... args) {
-    return new Runnable() {
-      @Override
-      public void run() {
-        try {
-          Main main = new Main(
-              new CapturingPrintStream(),
-              new CapturingPrintStream(),
-              new ByteArrayInputStream("".getBytes("UTF-8")));
-          int exitCode = main.runMainWithExitCode(
-              new BuildId(),
-              tmp.getRoot(),
-              Optional.of(new TestContext()),
-              ImmutableMap.copyOf(System.getenv()),
-              CommandMode.TEST,
-              WatchmanWatcher.FreshInstanceAction.NONE,
-              args);
-          assertEquals("Unexpected exit code.", expectedExitCode, exitCode);
-        } catch (IOException e) {
-          fail("Should not throw exception.");
-          throw Throwables.propagate(e);
-        } catch (InterruptedException e) {
-          fail("Should not throw exception.");
-          Thread.currentThread().interrupt();
-        }
+    return () -> {
+      try {
+        Main main = new Main(
+            new CapturingPrintStream(),
+            new CapturingPrintStream(),
+            new ByteArrayInputStream("".getBytes("UTF-8")));
+        int exitCode = main.runMainWithExitCode(
+            new BuildId(),
+            tmp.getRoot(),
+            Optional.of(new TestContext()),
+            ImmutableMap.copyOf(System.getenv()),
+            CommandMode.TEST,
+            WatchmanWatcher.FreshInstanceAction.NONE,
+            args);
+        assertEquals("Unexpected exit code.", expectedExitCode, exitCode);
+      } catch (IOException e) {
+        fail("Should not throw exception.");
+        throw Throwables.propagate(e);
+      } catch (InterruptedException e) {
+        fail("Should not throw exception.");
+        Thread.currentThread().interrupt();
       }
     };
   }

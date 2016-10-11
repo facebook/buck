@@ -85,35 +85,22 @@ public class APKModuleGraph {
       });
 
   private final Supplier<APKModule> rootAPKModuleSupplier =
-      Suppliers.memoize(new Supplier<APKModule>() {
-        @Override
-        public APKModule get() {
-          return generateRootModule();
-        }
-      });
+      Suppliers.memoize(this::generateRootModule);
 
   private final Supplier<DirectedAcyclicGraph<APKModule>> graphSupplier =
-      Suppliers.memoize(new Supplier<DirectedAcyclicGraph<APKModule>>() {
-        @Override
-        public DirectedAcyclicGraph<APKModule> get() {
-          return generateGraph();
-        }
-      });
+      Suppliers.memoize(this::generateGraph);
 
   private final Supplier<ImmutableSet<APKModule>> modulesSupplier =
-      Suppliers.memoize(new Supplier<ImmutableSet<APKModule>>() {
-        @Override
-        public ImmutableSet<APKModule> get() {
-          final ImmutableSet.Builder<APKModule> moduleBuilder = ImmutableSet.builder();
-          new AbstractBreadthFirstTraversal<APKModule>(getRootAPKModule()) {
-            @Override
-            public Iterable<APKModule> visit(APKModule apkModule) throws RuntimeException {
-              moduleBuilder.add(apkModule);
-              return getGraph().getIncomingNodesFor(apkModule);
-            }
-          }.start();
-          return moduleBuilder.build();
-        }
+      Suppliers.memoize(() -> {
+        final ImmutableSet.Builder<APKModule> moduleBuilder = ImmutableSet.builder();
+        new AbstractBreadthFirstTraversal<APKModule>(getRootAPKModule()) {
+          @Override
+          public Iterable<APKModule> visit(APKModule apkModule) throws RuntimeException {
+            moduleBuilder.add(apkModule);
+            return getGraph().getIncomingNodesFor(apkModule);
+          }
+        }.start();
+        return moduleBuilder.build();
       });
 
   /**

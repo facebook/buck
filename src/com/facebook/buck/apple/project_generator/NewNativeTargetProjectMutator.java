@@ -312,12 +312,7 @@ class NewNativeTargetProjectMutator {
         sourcesGroup,
         sourcesBuildPhase,
         RuleUtils.createGroupsFromSourcePaths(
-            new Function<SourcePath, Path>() {
-              @Override
-              public Path apply(SourcePath sourcePath) {
-                return pathRelativizer.outputPathToSourcePath(sourcePath);
-              }
-            },
+            pathRelativizer::outputPathToSourcePath,
             sourcesWithFlags,
             extraXcodeSources,
             publicHeaders,
@@ -535,21 +530,15 @@ class NewNativeTargetProjectMutator {
         resourceFiles.build(),
         resourceDirs.build(),
         variantResourceFiles.build(),
-        new Function<PBXFileReference, Void>() {
-          @Override
-          public Void apply(PBXFileReference input) {
-            PBXBuildFile buildFile = new PBXBuildFile(input);
-            phase.getFiles().add(buildFile);
-            return null;
-          }
+        input -> {
+          PBXBuildFile buildFile = new PBXBuildFile(input);
+          phase.getFiles().add(buildFile);
+          return null;
         },
-        new Function<PBXVariantGroup, Void>() {
-          @Override
-          public Void apply(PBXVariantGroup input) {
-            PBXBuildFile buildFile = new PBXBuildFile(input);
-            phase.getFiles().add(buildFile);
-            return null;
-          }
+        input -> {
+          PBXBuildFile buildFile = new PBXBuildFile(input);
+          phase.getFiles().add(buildFile);
+          return null;
         });
     if (!phase.getFiles().isEmpty()) {
       target.getBuildPhases().add(phase);

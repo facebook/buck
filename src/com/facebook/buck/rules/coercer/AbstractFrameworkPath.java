@@ -91,30 +91,22 @@ abstract class AbstractFrameworkPath implements
   public static Function<FrameworkPath, Path> getUnexpandedSearchPathFunction(
       final Function<SourcePath, Path> resolver,
       final Function<? super Path, Path> relativizer) {
-    return new Function<FrameworkPath, Path>() {
-      @Override
-      public Path apply(FrameworkPath input) {
-        return getConvertToPathFunction(resolver, relativizer).apply(input).getParent();
-      }
-    };
+    return input -> getConvertToPathFunction(resolver, relativizer).apply(input).getParent();
   }
 
   public static Function<FrameworkPath, Path> getConvertToPathFunction(
       final Function<SourcePath, Path> resolver,
       final Function<? super Path, Path> relativizer) {
-    return new Function<FrameworkPath, Path>() {
-      @Override
-      public Path apply(FrameworkPath input) {
-        switch (input.getType()) {
-          case SOURCE_TREE_PATH:
-            return Paths.get(input.getSourceTreePath().get().toString());
-          case SOURCE_PATH:
-            return relativizer.apply(
-                Preconditions
-                    .checkNotNull(resolver.apply(input.getSourcePath().get())));
-          default:
-            throw new RuntimeException("Unhandled type: " + input.getType());
-        }
+    return input -> {
+      switch (input.getType()) {
+        case SOURCE_TREE_PATH:
+          return Paths.get(input.getSourceTreePath().get().toString());
+        case SOURCE_PATH:
+          return relativizer.apply(
+              Preconditions
+                  .checkNotNull(resolver.apply(input.getSourcePath().get())));
+        default:
+          throw new RuntimeException("Unhandled type: " + input.getType());
       }
     };
   }

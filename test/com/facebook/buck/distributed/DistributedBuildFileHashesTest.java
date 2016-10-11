@@ -382,12 +382,7 @@ public class DistributedBuildFileHashesTest {
   toFileHashEntryIndex(BuildJobStateFileHashes hashes) {
     return Maps.uniqueIndex(
         hashes.getEntries(),
-        new Function<BuildJobStateFileHashEntry, PathWithUnixSeparators>() {
-          @Override
-          public PathWithUnixSeparators apply(BuildJobStateFileHashEntry input) {
-            return input.getPath();
-          }
-        });
+        BuildJobStateFileHashEntry::getPath);
   }
 
   private static class FakeIndexer implements Function<Path, Integer> {

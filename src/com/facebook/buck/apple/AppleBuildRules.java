@@ -27,7 +27,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -35,7 +34,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.util.Collections;
-import java.util.Iterator;
 
 import javax.annotation.Nullable;
 
@@ -122,97 +120,94 @@ public final class AppleBuildRules {
         mode,
         types);
 
-    GraphTraversable<TargetNode<?>> graphTraversable = new GraphTraversable<TargetNode<?>>() {
-      @Override
-      public Iterator<TargetNode<?>> findChildren(TargetNode<?> node) {
-        if (!isXcodeTargetBuildRuleType(node.getType())) {
-          return Collections.emptyIterator();
-        }
-
-        LOG.verbose("Finding children of node: %s", node);
-
-        ImmutableSortedSet.Builder<TargetNode<?>> defaultDepsBuilder =
-            ImmutableSortedSet.naturalOrder();
-        ImmutableSortedSet.Builder<TargetNode<?>> exportedDepsBuilder =
-            ImmutableSortedSet.naturalOrder();
-        addDirectAndExportedDeps(targetGraph, node, defaultDepsBuilder, exportedDepsBuilder);
-        ImmutableSortedSet<TargetNode<?>> defaultDeps = defaultDepsBuilder.build();
-        ImmutableSortedSet<TargetNode<?>> exportedDeps = exportedDepsBuilder.build();
-
-        if (node.getType().equals(AppleBundleDescription.TYPE)) {
-          AppleBundleDescription.Arg arg =
-              (AppleBundleDescription.Arg) node.getConstructorArg();
-
-          ImmutableSortedSet.Builder<TargetNode<?>> editedDeps =
-              ImmutableSortedSet.naturalOrder();
-          ImmutableSortedSet.Builder<TargetNode<?>> editedExportedDeps =
-              ImmutableSortedSet.naturalOrder();
-          for (TargetNode<?> rule : defaultDeps) {
-            if (!rule.getBuildTarget().equals(arg.binary)) {
-              editedDeps.add(rule);
-            } else {
-              addDirectAndExportedDeps(
-                  targetGraph,
-                  targetGraph.get(arg.binary),
-                  editedDeps,
-                  editedExportedDeps);
-            }
-          }
-
-          ImmutableSortedSet<TargetNode<?>> newDefaultDeps = editedDeps.build();
-          ImmutableSortedSet<TargetNode<?>> newExportedDeps = editedExportedDeps.build();
-          LOG.verbose(
-              "Transformed deps for bundle %s: %s -> %s, exported deps %s -> %s",
-              node,
-              defaultDeps,
-              newDefaultDeps,
-              exportedDeps,
-              newExportedDeps);
-          defaultDeps = newDefaultDeps;
-          exportedDeps = newExportedDeps;
-        }
-
-        LOG.verbose("Default deps for node %s mode %s: %s", node, mode, defaultDeps);
-        if (!exportedDeps.isEmpty()) {
-          LOG.verbose("Exported deps for node %s mode %s: %s", node, mode, exportedDeps);
-        }
-
-        ImmutableSortedSet<TargetNode<?>> deps = ImmutableSortedSet.of();
-
-        if (node != targetNode) {
-          switch (mode) {
-            case LINKING:
-              if (node.getType().equals(AppleLibraryDescription.TYPE) ||
-                  node.getType().equals(CxxLibraryDescription.TYPE)) {
-                if (AppleLibraryDescription.isSharedLibraryTarget(node.getBuildTarget())) {
-                  deps = exportedDeps;
-                } else {
-                  deps = defaultDeps;
-                }
-              } else if (RECURSIVE_DEPENDENCIES_STOP_AT_TYPES.contains(node.getType())) {
-                deps = exportedDeps;
-              } else {
-                deps = defaultDeps;
-              }
-              break;
-            case COPYING:
-              if (RECURSIVE_DEPENDENCIES_STOP_AT_TYPES.contains(node.getType())) {
-                deps = exportedDeps;
-              } else {
-                deps = defaultDeps;
-              }
-              break;
-            case BUILDING:
-              deps = defaultDeps;
-              break;
-          }
-        } else {
-          deps = defaultDeps;
-        }
-
-        LOG.verbose("Walking children of node %s: %s", node, deps);
-        return deps.iterator();
+    GraphTraversable<TargetNode<?>> graphTraversable = node -> {
+      if (!isXcodeTargetBuildRuleType(node.getType())) {
+        return Collections.emptyIterator();
       }
+
+      LOG.verbose("Finding children of node: %s", node);
+
+      ImmutableSortedSet.Builder<TargetNode<?>> defaultDepsBuilder =
+          ImmutableSortedSet.naturalOrder();
+      ImmutableSortedSet.Builder<TargetNode<?>> exportedDepsBuilder =
+          ImmutableSortedSet.naturalOrder();
+      addDirectAndExportedDeps(targetGraph, node, defaultDepsBuilder, exportedDepsBuilder);
+      ImmutableSortedSet<TargetNode<?>> defaultDeps = defaultDepsBuilder.build();
+      ImmutableSortedSet<TargetNode<?>> exportedDeps = exportedDepsBuilder.build();
+
+      if (node.getType().equals(AppleBundleDescription.TYPE)) {
+        AppleBundleDescription.Arg arg =
+            (AppleBundleDescription.Arg) node.getConstructorArg();
+
+        ImmutableSortedSet.Builder<TargetNode<?>> editedDeps =
+            ImmutableSortedSet.naturalOrder();
+        ImmutableSortedSet.Builder<TargetNode<?>> editedExportedDeps =
+            ImmutableSortedSet.naturalOrder();
+        for (TargetNode<?> rule : defaultDeps) {
+          if (!rule.getBuildTarget().equals(arg.binary)) {
+            editedDeps.add(rule);
+          } else {
+            addDirectAndExportedDeps(
+                targetGraph,
+                targetGraph.get(arg.binary),
+                editedDeps,
+                editedExportedDeps);
+          }
+        }
+
+        ImmutableSortedSet<TargetNode<?>> newDefaultDeps = editedDeps.build();
+        ImmutableSortedSet<TargetNode<?>> newExportedDeps = editedExportedDeps.build();
+        LOG.verbose(
+            "Transformed deps for bundle %s: %s -> %s, exported deps %s -> %s",
+            node,
+            defaultDeps,
+            newDefaultDeps,
+            exportedDeps,
+            newExportedDeps);
+        defaultDeps = newDefaultDeps;
+        exportedDeps = newExportedDeps;
+      }
+
+      LOG.verbose("Default deps for node %s mode %s: %s", node, mode, defaultDeps);
+      if (!exportedDeps.isEmpty()) {
+        LOG.verbose("Exported deps for node %s mode %s: %s", node, mode, exportedDeps);
+      }
+
+      ImmutableSortedSet<TargetNode<?>> deps = ImmutableSortedSet.of();
+
+      if (node != targetNode) {
+        switch (mode) {
+          case LINKING:
+            if (node.getType().equals(AppleLibraryDescription.TYPE) ||
+                node.getType().equals(CxxLibraryDescription.TYPE)) {
+              if (AppleLibraryDescription.isSharedLibraryTarget(node.getBuildTarget())) {
+                deps = exportedDeps;
+              } else {
+                deps = defaultDeps;
+              }
+            } else if (RECURSIVE_DEPENDENCIES_STOP_AT_TYPES.contains(node.getType())) {
+              deps = exportedDeps;
+            } else {
+              deps = defaultDeps;
+            }
+            break;
+          case COPYING:
+            if (RECURSIVE_DEPENDENCIES_STOP_AT_TYPES.contains(node.getType())) {
+              deps = exportedDeps;
+            } else {
+              deps = defaultDeps;
+            }
+            break;
+          case BUILDING:
+            deps = defaultDeps;
+            break;
+        }
+      } else {
+        deps = defaultDeps;
+      }
+
+      LOG.verbose("Walking children of node %s: %s", node, deps);
+      return deps.iterator();
     };
 
     final ImmutableList.Builder<TargetNode<?>> filteredRules = ImmutableList.builder();
@@ -272,12 +267,7 @@ public final class AppleBuildRules {
     return ImmutableSet.copyOf(
         Iterables.filter(
             targetNodes,
-            new Predicate<TargetNode<?>>() {
-              @Override
-              public boolean apply(TargetNode<?> input) {
-                return isXcodeTargetBuildRuleType(input.getType());
-              }
-            }));
+            input -> isXcodeTargetBuildRuleType(input.getType())));
   }
 
   /**
@@ -301,16 +291,11 @@ public final class AppleBuildRules {
       final TargetGraph targetGraph,
       final RecursiveDependenciesMode mode,
       final ImmutableSet<BuildRuleType> types) {
-    return new Function<TargetNode<?>, Iterable<TargetNode<?>>>() {
-      @Override
-      public Iterable<TargetNode<?>> apply(TargetNode<?> input) {
-        return getRecursiveTargetNodeDependenciesOfTypes(
-            targetGraph,
-            mode,
-            input,
-            Optional.of(types));
-      }
-    };
+    return input -> getRecursiveTargetNodeDependenciesOfTypes(
+        targetGraph,
+        mode,
+        input,
+        Optional.of(types));
   }
 
   public static <T> ImmutableSet<AppleAssetCatalogDescription.Arg>
@@ -323,12 +308,7 @@ public final class AppleBuildRules {
                 RecursiveDependenciesMode.COPYING,
                 ImmutableSet.of(AppleAssetCatalogDescription.TYPE)))
         .transform(
-            new Function<TargetNode<?>, AppleAssetCatalogDescription.Arg>() {
-              @Override
-              public AppleAssetCatalogDescription.Arg apply(TargetNode<?> input) {
-                return (AppleAssetCatalogDescription.Arg) input.getConstructorArg();
-              }
-            })
+            input -> (AppleAssetCatalogDescription.Arg) input.getConstructorArg())
         .toSet();
   }
 

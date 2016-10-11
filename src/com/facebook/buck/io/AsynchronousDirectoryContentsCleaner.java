@@ -83,21 +83,18 @@ public class AsynchronousDirectoryContentsCleaner {
    */
   public void startCleaningDirectory() {
     executor.execute(
-        new Runnable() {
-          @Override
-          public void run() {
-            LOG.debug("Starting to clean %s", pathToClean);
-            try {
-              MoreFiles.deleteRecursivelyWithOptions(
-                  pathToClean,
-                  EnumSet.of(
-                      MoreFiles.DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION,
-                      MoreFiles.DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY));
-            } catch (IOException e) {
-              LOG.warn(e, "I/O error cleaning trash");
-            } finally {
-              LOG.debug("Done cleaning %s", pathToClean);
-            }
+        () -> {
+          LOG.debug("Starting to clean %s", pathToClean);
+          try {
+            MoreFiles.deleteRecursivelyWithOptions(
+                pathToClean,
+                EnumSet.of(
+                    MoreFiles.DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION,
+                    MoreFiles.DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY));
+          } catch (IOException e) {
+            LOG.warn(e, "I/O error cleaning trash");
+          } finally {
+            LOG.debug("Done cleaning %s", pathToClean);
           }
         });
   }

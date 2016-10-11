@@ -41,7 +41,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -75,16 +74,13 @@ import javax.annotation.Nullable;
 public abstract class AbstractConsoleEventBusListener implements BuckEventListener, Closeable {
 
   private static final NumberFormatter TIME_FORMATTER = new NumberFormatter(
-      new Function<Locale, NumberFormat>() {
-        @Override
-        public NumberFormat apply(Locale locale) {
-          // Yes, this is the only way to apply and localize a pattern to a NumberFormat.
-          NumberFormat numberFormat = NumberFormat.getIntegerInstance(locale);
-          Preconditions.checkState(numberFormat instanceof DecimalFormat);
-          DecimalFormat decimalFormat = (DecimalFormat) numberFormat;
-          decimalFormat.applyPattern("0.0s");
-          return decimalFormat;
-        }
+      locale1 -> {
+        // Yes, this is the only way to apply and localize a pattern to a NumberFormat.
+        NumberFormat numberFormat = NumberFormat.getIntegerInstance(locale1);
+        Preconditions.checkState(numberFormat instanceof DecimalFormat);
+        DecimalFormat decimalFormat = (DecimalFormat) numberFormat;
+        decimalFormat.applyPattern("0.0s");
+        return decimalFormat;
       });
 
   protected static final long UNFINISHED_EVENT_PAIR = -1;

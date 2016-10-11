@@ -21,7 +21,6 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.UnsignedInteger;
@@ -56,12 +55,9 @@ public class LoadCommandUtilsTest {
     LoadCommandUtils.enumerateLoadCommandsInFile(
         buffer,
         new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()),
-        new Function<LoadCommand, Boolean>() {
-          @Override
-          public Boolean apply(LoadCommand input) {
-            result.add(input);
-            return Boolean.TRUE;
-          }
+        input -> {
+          result.add(input);
+          return Boolean.TRUE;
         });
 
     assertThat(result.size(), equalTo(2));

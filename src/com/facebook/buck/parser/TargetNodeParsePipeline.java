@@ -106,17 +106,12 @@ public class TargetNodeParsePipeline
         getMinimumPerfEventTimeMs(),
         TimeUnit.MILLISECONDS)) {
       Function<PerfEventId, SimplePerfEvent.Scope> perfEventScopeFunction =
-          new Function<PerfEventId, SimplePerfEvent.Scope>() {
-            @Override
-            public SimplePerfEvent.Scope apply(PerfEventId perfEventId) {
-              return SimplePerfEvent.scopeIgnoringShortEvents(
-                  eventBus,
-                  perfEventId,
-                  scope,
-                  getMinimumPerfEventTimeMs(),
-                  TimeUnit.MILLISECONDS);
-            }
-          };
+          perfEventId -> SimplePerfEvent.scopeIgnoringShortEvents(
+              eventBus,
+              perfEventId,
+              scope,
+              getMinimumPerfEventTimeMs(),
+              TimeUnit.MILLISECONDS);
       final TargetNode<?> targetNode = delegate.createTargetNode(
           cell,
           cell.getAbsolutePathToBuildFile(buildTarget),
@@ -125,24 +120,21 @@ public class TargetNodeParsePipeline
           perfEventScopeFunction);
 
       if (speculativeDepsTraversal) {
-        executorService.submit(new Runnable() {
-          @Override
-          public void run() {
-            for (BuildTarget depTarget : targetNode.getDeps()) {
-              Path depCellPath = depTarget.getCellPath();
-              // TODO(marcinkosiba): Support crossing cell boundary from within the pipeline.
-              // Currently the cell name->Cell object mapping is held by the PerBuildState in a
-              // non-threadsafe way making it inconvenient to access from the pipeline.
-              if (depCellPath.equals(cell.getRoot())) {
-                try {
-                  if (depTarget.isFlavored()) {
-                    getNodeJob(cell, BuildTarget.of(depTarget.getUnflavoredBuildTarget()));
-                  }
-                  getNodeJob(cell, depTarget);
-                } catch (BuildTargetException e) {
-                  // No biggie, we'll hit the error again in the non-speculative path.
-                  LOG.info(e, "Could not schedule speculative parsing for %s", depTarget);
+        executorService.submit(() -> {
+          for (BuildTarget depTarget : targetNode.getDeps()) {
+            Path depCellPath = depTarget.getCellPath();
+            // TODO(marcinkosiba): Support crossing cell boundary from within the pipeline.
+            // Currently the cell name->Cell object mapping is held by the PerBuildState in a
+            // non-threadsafe way making it inconvenient to access from the pipeline.
+            if (depCellPath.equals(cell.getRoot())) {
+              try {
+                if (depTarget.isFlavored()) {
+                  getNodeJob(cell, BuildTarget.of(depTarget.getUnflavoredBuildTarget()));
                 }
+                getNodeJob(cell, depTarget);
+              } catch (BuildTargetException e) {
+                // No biggie, we'll hit the error again in the non-speculative path.
+                LOG.info(e, "Could not schedule speculative parsing for %s", depTarget);
               }
             }
           }

@@ -282,12 +282,9 @@ abstract class AbstractBuildFileSpec {
         cell.getBuildFileName(),
         buildFileSearchMethod,
         cell.getWatchman(),
-        new Function<Path, Void>() {
-          @Override
-          public Void apply(Path buildFile) {
-            buildFiles.add(buildFile);
-            return null;
-          }
+        buildFile -> {
+          buildFiles.add(buildFile);
+          return null;
         });
 
     return buildFiles.build();

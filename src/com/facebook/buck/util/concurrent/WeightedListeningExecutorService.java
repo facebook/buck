@@ -17,7 +17,6 @@
 package com.facebook.buck.util.concurrent;
 
 import com.google.common.util.concurrent.AbstractListeningExecutorService;
-import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -73,24 +72,16 @@ public class WeightedListeningExecutorService extends AbstractListeningExecutorS
     ListenableFuture<T> future =
         Futures.transformAsync(
             semaphore.acquire(amounts),
-            new AsyncFunction<Void, T>() {
-              @Override
-              public ListenableFuture<T> apply(@Nullable Void input) {
-                try {
-                  return Futures.immediateFuture(callable.call());
-                } catch (Throwable thrown) {
-                  return Futures.immediateFailedFuture(thrown);
-                }
+            input -> {
+              try {
+                return Futures.immediateFuture(callable.call());
+              } catch (Throwable thrown) {
+                return Futures.immediateFailedFuture(thrown);
               }
             },
             delegate);
     future.addListener(
-        new Runnable() {
-          @Override
-          public void run() {
-            semaphore.release(amounts);
-          }
-        },
+        () -> semaphore.release(amounts),
         com.google.common.util.concurrent.MoreExecutors.directExecutor());
     return future;
   }
@@ -110,12 +101,9 @@ public class WeightedListeningExecutorService extends AbstractListeningExecutorS
       @Nullable final T result,
       ResourceAmounts amounts) {
     return submitWithSemaphore(
-        new Callable<T>() {
-          @Override
-          public T call() throws Exception {
-            task.run();
-            return result;
-          }
+        () -> {
+          task.run();
+          return result;
         },
         amounts);
   }

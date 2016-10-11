@@ -84,7 +84,6 @@ import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -690,12 +689,7 @@ public class TestRunningTest {
         Optional.of(Paths.get("separateTestStep1OutputDir")),
         true, // runTestSeparately
         ImmutableList.of(separateTestStep1),
-        new Callable<TestResults>() {
-          @Override
-          public TestResults call() {
-            return fakeTestResults;
-          }
-        });
+        () -> fakeTestResults);
 
     ExecutionOrderAwareFakeStep separateTestStep2 =
         new ExecutionOrderAwareFakeStep(
@@ -715,12 +709,7 @@ public class TestRunningTest {
         Optional.of(Paths.get("separateTestStep2OutputDir")),
         true, // runTestSeparately
         ImmutableList.of(separateTestStep2),
-        new Callable<TestResults>() {
-          @Override
-          public TestResults call() {
-            return fakeTestResults;
-          }
-        });
+        () -> fakeTestResults);
 
     ExecutionOrderAwareFakeStep separateTestStep3 =
         new ExecutionOrderAwareFakeStep(
@@ -740,12 +729,7 @@ public class TestRunningTest {
         Optional.of(Paths.get("separateTestStep3OutputDir")),
         true, // runTestSeparately
         ImmutableList.of(separateTestStep3),
-        new Callable<TestResults>() {
-          @Override
-          public TestResults call() {
-            return fakeTestResults;
-          }
-        });
+        () -> fakeTestResults);
 
     // We explicitly use an actual thread pool here; the logic should ensure the
     // separate tests are run in the correct order.
@@ -838,12 +822,7 @@ public class TestRunningTest {
         Optional.of(Paths.get("separateTestStep1OutputDir")),
         true, // runTestSeparately
         ImmutableList.of(separateTestStep1),
-        new Callable<TestResults>() {
-          @Override
-          public TestResults call() {
-            return fakeTestResults;
-          }
-        });
+        () -> fakeTestResults);
 
     ExecutionOrderAwareFakeStep separateTestStep2 =
         new ExecutionOrderAwareFakeStep(
@@ -863,12 +842,7 @@ public class TestRunningTest {
         Optional.of(Paths.get("separateTestStep2OutputDir")),
         true, // runTestSeparately
         ImmutableList.of(separateTestStep2),
-        new Callable<TestResults>() {
-          @Override
-          public TestResults call() {
-            return fakeTestResults;
-          }
-        });
+        () -> fakeTestResults);
 
     ExecutionOrderAwareFakeStep separateTestStep3 =
         new ExecutionOrderAwareFakeStep(
@@ -888,12 +862,7 @@ public class TestRunningTest {
         Optional.of(Paths.get("separateTestStep3OutputDir")),
         true, // runTestSeparately
         ImmutableList.of(separateTestStep3),
-        new Callable<TestResults>() {
-          @Override
-          public TestResults call() {
-            return fakeTestResults;
-          }
-        });
+        () -> fakeTestResults);
 
     ExecutionOrderAwareFakeStep parallelTestStep1 =
         new ExecutionOrderAwareFakeStep(
@@ -913,12 +882,7 @@ public class TestRunningTest {
         Optional.of(Paths.get("parallelTestStep1OutputDir")),
         false, // runTestSeparately
         ImmutableList.of(parallelTestStep1),
-        new Callable<TestResults>() {
-          @Override
-          public TestResults call() {
-            return fakeTestResults;
-          }
-        });
+        () -> fakeTestResults);
 
     ExecutionOrderAwareFakeStep parallelTestStep2 =
         new ExecutionOrderAwareFakeStep(
@@ -938,12 +902,7 @@ public class TestRunningTest {
         Optional.of(Paths.get("parallelTestStep2OutputDir")),
         false, // runTestSeparately
         ImmutableList.of(parallelTestStep2),
-        new Callable<TestResults>() {
-          @Override
-          public TestResults call() {
-            return fakeTestResults;
-          }
-        });
+        () -> fakeTestResults);
 
     ExecutionOrderAwareFakeStep parallelTestStep3 =
         new ExecutionOrderAwareFakeStep(
@@ -963,12 +922,7 @@ public class TestRunningTest {
         Optional.of(Paths.get("parallelTestStep3OutputDir")),
         false, // runTestSeparately
         ImmutableList.of(parallelTestStep3),
-        new Callable<TestResults>() {
-          @Override
-          public TestResults call() {
-            return fakeTestResults;
-          }
-        });
+        () -> fakeTestResults);
 
     // We explicitly use an actual thread pool here; the logic should ensure the
     // separate tests are run in the correct order.
@@ -1116,12 +1070,7 @@ public class TestRunningTest {
         Optional.of(Paths.get("failingTestStep1OutputDir")),
         true, // runTestSeparately
         ImmutableList.of(),
-        new Callable<TestResults>() {
-          @Override
-          public TestResults call() {
-            return failingTestResults;
-          }
-        });
+        () -> failingTestResults);
 
     ListeningExecutorService service =
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(3));

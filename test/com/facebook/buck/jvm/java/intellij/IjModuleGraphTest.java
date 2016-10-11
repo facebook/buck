@@ -446,14 +446,11 @@ public class IjModuleGraphTest {
     IjModuleGraph moduleGraph = createModuleGraph(
         ImmutableSet.of(productTarget),
         ImmutableMap.of(productTarget, Paths.get("buck-out/product.jar")),
-        new Function<TargetNode<?>, Optional<Path>>() {
-          @Override
-          public Optional<Path> apply(TargetNode<?> input) {
-            if (input == productTarget) {
-              return Optional.of(rDotJavaClassPath);
-            }
-            return Optional.absent();
+        input -> {
+          if (input == productTarget) {
+            return Optional.of(rDotJavaClassPath);
           }
+          return Optional.absent();
         });
 
     IjModule productModule = getModuleForTarget(moduleGraph, productTarget);
@@ -862,18 +859,8 @@ public class IjModuleGraphTest {
     return FluentIterable.from(graph.getNodes())
         .filter(type)
         .firstMatch(
-            new Predicate<IjProjectElement>() {
-              @Override
-              public boolean apply(IjProjectElement input) {
-                return FluentIterable.from(input.getTargets()).anyMatch(
-                    new Predicate<TargetNode<?>>() {
-                      @Override
-                      public boolean apply(TargetNode<?> input) {
-                        return input.getBuildTarget().equals(target.getBuildTarget());
-                      }
-                    });
-              }
-            }).get();
+            (Predicate<IjProjectElement>) input -> FluentIterable.from(input.getTargets()).anyMatch(
+                input1 -> input1.getBuildTarget().equals(target.getBuildTarget()))).get();
   }
 
   public static IjModule getModuleForTarget(IjModuleGraph graph, final TargetNode<?> target) {

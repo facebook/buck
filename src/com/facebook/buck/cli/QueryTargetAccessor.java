@@ -53,16 +53,13 @@ public class QueryTargetAccessor {
       Field field = node.getConstructorArg().getClass().getField(attribute);
       ParamInfo info = new ParamInfo(typeCoercerFactory, field);
       info.traverse(
-          new ParamInfo.Traversal() {
-            @Override
-            public void traverse(Object value) {
-              if (value instanceof Path) {
-                builder.add(QueryFileTarget.of((Path) value));
-              } else if (value instanceof SourcePath) {
-                builder.add(extractSourcePath((SourcePath) value));
-              } else if (value instanceof HasBuildTarget) {
-                builder.add(extractBuildTargetContainer((HasBuildTarget) value));
-              }
+          value -> {
+            if (value instanceof Path) {
+              builder.add(QueryFileTarget.of((Path) value));
+            } else if (value instanceof SourcePath) {
+              builder.add(extractSourcePath((SourcePath) value));
+            } else if (value instanceof HasBuildTarget) {
+              builder.add(extractBuildTargetContainer((HasBuildTarget) value));
             }
           },
           node.getConstructorArg()
@@ -87,12 +84,9 @@ public class QueryTargetAccessor {
       Field field = node.getConstructorArg().getClass().getField(attribute);
       ParamInfo info = new ParamInfo(typeCoercerFactory, field);
       info.traverse(
-          new ParamInfo.Traversal() {
-            @Override
-            public void traverse(Object value) {
-              if (predicate.apply(value)) {
-                builder.add(value);
-              }
+          value -> {
+            if (predicate.apply(value)) {
+              builder.add(value);
             }
           },
           node.getConstructorArg()

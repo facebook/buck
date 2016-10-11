@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.zaxxer.nuprocess.codec.NuCharsetDecoder;
-import com.zaxxer.nuprocess.codec.NuCharsetDecoderHandler;
 
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
@@ -37,14 +36,11 @@ public final class ListeningCharsetDecoder {
     this(listener, charset.newDecoder());
   }
 
-  public ListeningCharsetDecoder(final DecoderListener listener, CharsetDecoder charsetDecoder) {
+  public ListeningCharsetDecoder(
+      DecoderListener listener, // NOPMD confused by method reference
+      CharsetDecoder charsetDecoder) {
     this.decoder = new NuCharsetDecoder(
-        new NuCharsetDecoderHandler() {
-          @Override
-          public void onDecode(CharBuffer buffer, boolean closed, CoderResult decoderResult) {
-            listener.onDecode(buffer, closed, decoderResult);
-          }
-        },
+        listener::onDecode,
         charsetDecoder);
   }
 

@@ -59,28 +59,20 @@ public class WatchmanTest {
               "wildmatch_multislash",
               "glob_generator")));
   private static final Function<Path, Optional<WatchmanClient>> NULL_WATCHMAN_CONNECTOR =
-      new Function<Path, Optional<WatchmanClient>>() {
-        @Override
-        public Optional<WatchmanClient> apply(Path path) {
-          return Optional.absent();
-        }
-      };
+      path -> Optional.absent();
 
   private static Function<Path, Optional<WatchmanClient>> fakeWatchmanConnector(
       final Path socketName,
       final long queryElapsedTimeNanos,
       final Map<? extends List<? extends Object>, ? extends Map<String, ? extends Object>>
         queryResults) {
-    return new Function<Path, Optional<WatchmanClient>>() {
-      @Override
-      public Optional<WatchmanClient> apply(Path path) {
-        if (!path.equals(socketName)) {
-          System.err.format("bad path (%s != %s", path, socketName);
-          return Optional.absent();
-        }
-        return Optional.of(
-            new FakeWatchmanClient(queryElapsedTimeNanos, queryResults));
+    return path -> {
+      if (!path.equals(socketName)) {
+        System.err.format("bad path (%s != %s", path, socketName);
+        return Optional.absent();
       }
+      return Optional.of(
+          new FakeWatchmanClient(queryElapsedTimeNanos, queryResults));
     };
   }
 

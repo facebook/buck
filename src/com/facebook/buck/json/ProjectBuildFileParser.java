@@ -117,42 +117,36 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
     this.rawConfigJson =
         Suppliers.memoize(
-            new Supplier<Path>() {
-              @Override
-              public Path get() {
-                try {
-                  Path rawConfigJson = Files.createTempFile("raw_config", ".json");
-                  Files.createDirectories(rawConfigJson.getParent());
-                  try (OutputStream output =
-                           new BufferedOutputStream(Files.newOutputStream(rawConfigJson))) {
-                    bserSerializer.serializeToStream(options.getRawConfig(), output);
-                  }
-                  return rawConfigJson;
-                } catch (IOException e) {
-                  throw new RuntimeException(e);
+            () -> {
+              try {
+                Path rawConfigJson1 = Files.createTempFile("raw_config", ".json");
+                Files.createDirectories(rawConfigJson1.getParent());
+                try (OutputStream output =
+                         new BufferedOutputStream(Files.newOutputStream(rawConfigJson1))) {
+                  bserSerializer.serializeToStream(options.getRawConfig(), output);
                 }
+                return rawConfigJson1;
+              } catch (IOException e) {
+                throw new RuntimeException(e);
               }
             });
     this.ignorePathsJson =
         Suppliers.memoize(
-            new Supplier<Path>() {
-              @Override
-              public Path get() {
-                try {
-                  Path ignorePathsJson = Files.createTempFile("ignore_paths", ".json");
-                  Files.createDirectories(ignorePathsJson.getParent());
-                  try (OutputStream output =
-                           new BufferedOutputStream(Files.newOutputStream(ignorePathsJson))) {
-                    bserSerializer.serializeToStream(
-                        FluentIterable.from(options.getIgnorePaths())
-                            .transform(PathOrGlobMatcher.toPathOrGlob())
-                            .toList(),
-                        output);
-                  }
-                  return ignorePathsJson;
-                } catch (IOException e) {
-                  throw new RuntimeException(e);
+            () -> {
+              try {
+                Path ignorePathsJson1 = Files.createTempFile("ignore_paths", ".json");
+                Files.createDirectories(ignorePathsJson1.getParent());
+                try (OutputStream output =
+                         new BufferedOutputStream(Files.newOutputStream(ignorePathsJson1))) {
+                  bserSerializer.serializeToStream(
+                      FluentIterable.from(options.getIgnorePaths())
+                          .transform(PathOrGlobMatcher.toPathOrGlob())
+                          .toList(),
+                      output);
                 }
+                return ignorePathsJson1;
+              } catch (IOException e) {
+                throw new RuntimeException(e);
               }
             });
   }
@@ -217,13 +211,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
       InputStreamConsumer stderrConsumer = new InputStreamConsumer(
           stderr,
-          new InputStreamConsumer.Handler() {
-            @Override
-            public void handleLine(String line) {
-              buckEventBus.post(
-                  ConsoleEvent.warning("Warning raised by BUCK file parser: %s", line));
-            }
-          });
+          (InputStreamConsumer.Handler) line -> buckEventBus.post(
+              ConsoleEvent.warning("Warning raised by BUCK file parser: %s", line)));
       stderrConsumerTerminationFuture = new FutureTask<>(stderrConsumer);
       stderrConsumerThread = Threads.namedThread(
           ProjectBuildFileParser.class.getSimpleName(),

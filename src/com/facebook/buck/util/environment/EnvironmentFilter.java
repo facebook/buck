@@ -117,16 +117,13 @@ public class EnvironmentFilter {
       Predicates.not(
           Predicates.or(
               Predicates.in(ENV_TO_IGNORE),
-              new Predicate<String>() {
-                @Override
-                public boolean apply(String value) {
-                  for (String prefix : ENV_PREFIXES_TO_IGNORE) {
-                    if (value.startsWith(prefix)) {
-                      return true;
-                    }
+              value -> {
+                for (String prefix : ENV_PREFIXES_TO_IGNORE) {
+                  if (value.startsWith(prefix)) {
+                    return true;
                   }
-                  return false;
                 }
+                return false;
               }));
 
   // Utility class, do not instantiate.

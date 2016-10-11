@@ -32,7 +32,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -82,14 +81,9 @@ public class AppleAssetCatalog extends AbstractBuildRule {
     Preconditions.checkArgument(
         Iterables.all(
             assetCatalogDirs,
-            new Predicate<SourcePath>() {
-              @Override
-              public boolean apply(SourcePath input) {
-                return resolver.getAbsolutePath(input)
-                    .toString()
-                    .endsWith(XCASSETS_DIRECTORY_EXTENSION);
-              }
-            }));
+            input -> resolver.getAbsolutePath(input)
+                .toString()
+                .endsWith(XCASSETS_DIRECTORY_EXTENSION)));
     this.applePlatformName = applePlatformName;
     this.actool = actool;
     this.assetCatalogDirs = ImmutableSortedSet.copyOf(assetCatalogDirs);

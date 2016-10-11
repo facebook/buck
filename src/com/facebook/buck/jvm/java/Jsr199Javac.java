@@ -77,13 +77,7 @@ public abstract class Jsr199Javac implements Javac {
   private static final Logger LOG = Logger.get(Jsr199Javac.class);
   private static final JavacVersion VERSION = JavacVersion.of("in memory");
   private static final StandardJavaFileManagerFactory DEFAULT_FILE_MANAGER_FACTORY =
-      new StandardJavaFileManagerFactory() {
-        @Override
-        public StandardJavaFileManager create(
-            JavaCompiler compiler) {
-          return compiler.getStandardFileManager(null, null, null);
-        }
-      };
+      compiler -> compiler.getStandardFileManager(null, null, null);
 
   @Override
   public JavacVersion getVersion() {
@@ -331,17 +325,14 @@ public abstract class Jsr199Javac implements Javac {
         .split(processorClassPath);
     URL[] urls = FluentIterable.from(rawPaths)
         .transform(
-            new Function<String, URL>() {
-              @Override
-              public URL apply(String pathRelativeToProjectRoot) {
-                try {
-                  return Paths.get(pathRelativeToProjectRoot).toUri().toURL();
-                } catch (MalformedURLException e) {
-                  // The paths we're being given should have all been resolved from the file
-                  // system already. We'd need to be unfortunate to get here. Bubble up a runtime
-                  // exception.
-                  throw new RuntimeException(e);
-                }
+            pathRelativeToProjectRoot -> {
+              try {
+                return Paths.get(pathRelativeToProjectRoot).toUri().toURL();
+              } catch (MalformedURLException e) {
+                // The paths we're being given should have all been resolved from the file
+                // system already. We'd need to be unfortunate to get here. Bubble up a runtime
+                // exception.
+                throw new RuntimeException(e);
               }
             })
         .toArray(URL.class);

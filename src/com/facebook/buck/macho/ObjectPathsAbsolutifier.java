@@ -23,7 +23,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -126,13 +125,8 @@ public class ObjectPathsAbsolutifier {
             LinkEditDataCommand.class);
     ImmutableList<LinkEditDataCommand> codeSignatureCommands = FluentIterable
         .from(linkEditDataCommands)
-        .filter(new Predicate<LinkEditDataCommand>() {
-          @Override
-          public boolean apply(LinkEditDataCommand input) {
-            return input.getLoadCommandCommonFields().getCmd()
-                .equals(LinkEditDataCommand.LC_CODE_SIGNATURE);
-          }
-        })
+        .filter(input -> input.getLoadCommandCommonFields().getCmd()
+            .equals(LinkEditDataCommand.LC_CODE_SIGNATURE))
         .toList();
     if (codeSignatureCommands.size() == 0) {
       LOG.verbose("LinkEditDataCommand for code signature was not found");

@@ -24,14 +24,12 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.StringTemplateStep;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
-import org.stringtemplate.v4.ST;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -77,14 +75,11 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
             getResolver().getAbsolutePath(template),
             getProjectFilesystem(),
             output,
-            new Function<ST, ST>() {
-              @Override
-              public ST apply(ST st) {
-                for (Map.Entry<String, String> ent : values.entrySet()) {
-                  st = st.add(ent.getKey(), ent.getValue());
-                }
-                return st;
+            st -> {
+              for (Map.Entry<String, String> ent : values.entrySet()) {
+                st = st.add(ent.getKey(), ent.getValue());
               }
+              return st;
             }));
     if (executable) {
       steps.add(

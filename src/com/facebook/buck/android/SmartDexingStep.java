@@ -114,16 +114,13 @@ public class SmartDexingStep implements Step {
       Optional<Integer> xzCompressionLevel) {
     this.filesystem = filesystem;
     this.outputToInputsSupplier = Suppliers.memoize(
-        new Supplier<Multimap<Path, Path>>() {
-          @Override
-          public Multimap<Path, Path> get() {
-            final ImmutableMultimap.Builder<Path, Path> map = ImmutableMultimap.builder();
-            map.putAll(primaryOutputPath, primaryInputsToDex.get());
-            if (secondaryInputsToDex.isPresent()) {
-              map.putAll(secondaryInputsToDex.get().get());
-            }
-            return map.build();
+        () -> {
+          final ImmutableMultimap.Builder<Path, Path> map = ImmutableMultimap.builder();
+          map.putAll(primaryOutputPath, primaryInputsToDex.get());
+          if (secondaryInputsToDex.isPresent()) {
+            map.putAll(secondaryInputsToDex.get().get());
           }
+          return map.build();
         });
     this.secondaryOutputDir = secondaryOutputDir;
     this.dexInputHashesProvider = dexInputHashesProvider;

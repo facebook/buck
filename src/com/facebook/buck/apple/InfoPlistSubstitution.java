@@ -170,11 +170,6 @@ class InfoPlistSubstitution {
       Map<String, String> variablesToExpand) {
     final ImmutableMap<String, String> variablesToExpandCopy = ImmutableMap.copyOf(
         variablesToExpand);
-    return new Function<String, String>() {
-      @Override
-      public String apply(String input) {
-        return replaceVariablesInString(input, variablesToExpandCopy);
-      }
-    };
+    return input -> replaceVariablesInString(input, variablesToExpandCopy);
   }
 }

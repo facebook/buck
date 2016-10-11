@@ -20,7 +20,6 @@ import static org.hamcrest.Matchers.equalToObject;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
-import com.google.common.base.Function;
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
 
@@ -143,12 +142,9 @@ public class SegmentCommandUtilsTest {
         new MachoMagicInfo(UnsignedInteger.fromIntBits(0xFEEDFACF)),
         command,
         new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()),
-        new Function<Section, Boolean>() {
-          @Override
-          public Boolean apply(Section input) {
-            enumeratedSections.add(input);
-            return Boolean.TRUE;
-          }
+        input -> {
+          enumeratedSections.add(input);
+          return Boolean.TRUE;
         });
 
     assertThat(enumeratedSections.size(), equalTo(3));
@@ -210,12 +206,9 @@ public class SegmentCommandUtilsTest {
         new MachoMagicInfo(UnsignedInteger.fromIntBits(0xFEEDFACE)),
         command,
         new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()),
-        new Function<Section, Boolean>() {
-          @Override
-          public Boolean apply(Section input) {
-            enumeratedSections.add(input);
-            return Boolean.TRUE;
-          }
+        input -> {
+          enumeratedSections.add(input);
+          return Boolean.TRUE;
         });
 
     assertThat(enumeratedSections.size(), equalTo(3));
@@ -283,12 +276,9 @@ public class SegmentCommandUtilsTest {
         new MachoMagicInfo(UnsignedInteger.fromIntBits(0xFEEDFACF)),
         command,
         new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder()),
-        new Function<Section, Boolean>() {
-          @Override
-          public Boolean apply(Section input) {
-            enumeratedSections.add(input);
-            return Boolean.TRUE;
-          }
+        input -> {
+          enumeratedSections.add(input);
+          return Boolean.TRUE;
         });
 
     assertThat(enumeratedSections.size(), equalTo(3));

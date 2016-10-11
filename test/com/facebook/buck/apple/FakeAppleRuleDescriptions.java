@@ -35,9 +35,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -110,12 +108,7 @@ public class FakeAppleRuleDescriptions {
           Paths.get("usr/bin/xctest")));
 
   public static final ProcessExecutor PROCESS_EXECUTOR = new FakeProcessExecutor(
-      new Function<ProcessExecutorParams, FakeProcess>() {
-        @Override
-        public FakeProcess apply(ProcessExecutorParams input) {
-          return new FakeProcess(0, "Xcode 0.0.0\nBuild version 0A0000", "");
-        }
-      },
+      input -> new FakeProcess(0, "Xcode 0.0.0\nBuild version 0A0000", ""),
       new TestConsole());
 
   public static final AppleCxxPlatform DEFAULT_IPHONEOS_I386_PLATFORM =

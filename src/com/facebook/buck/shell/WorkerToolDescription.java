@@ -37,7 +37,6 @@ import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -96,21 +95,18 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
 
     ImmutableMap<String, String> expandedEnv = ImmutableMap.copyOf(
         FluentIterable.from(args.env.get().entrySet())
-            .transform(new Function<Map.Entry<String, String>, Map.Entry<String, String>>() {
-              @Override
-              public Map.Entry<String, String> apply(Map.Entry<String, String> input) {
-                try {
-                  return Maps.immutableEntry(
-                      input.getKey(),
-                      MACRO_HANDLER.expand(
-                          params.getBuildTarget(),
-                          params.getCellRoots(),
-                          resolver,
-                          input.getValue()));
-                } catch (MacroException e) {
-                  throw new HumanReadableException(
-                      e, "%s: %s", params.getBuildTarget(), e.getMessage());
-                }
+            .transform(input -> {
+              try {
+                return Maps.immutableEntry(
+                    input.getKey(),
+                    MACRO_HANDLER.expand(
+                        params.getBuildTarget(),
+                        params.getCellRoots(),
+                        resolver,
+                        input.getValue()));
+              } catch (MacroException e) {
+                throw new HumanReadableException(
+                    e, "%s: %s", params.getBuildTarget(), e.getMessage());
               }
             }));
 

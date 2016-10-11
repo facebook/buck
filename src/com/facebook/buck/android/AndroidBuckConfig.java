@@ -18,9 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
@@ -56,12 +54,7 @@ public class AndroidBuckConfig {
   public Optional<Set<String>> getNdkCpuAbis() {
     return delegate.getOptionalListWithoutComments("ndk", "cpu_abis")
         .transform(
-            new Function<ImmutableList<String>, Set<String>>() {
-              @Override
-              public Set<String> apply(ImmutableList<String> input) {
-                return ImmutableSet.copyOf(input);
-              }
-            });
+            ImmutableSet::copyOf);
   }
 
   public Optional<NdkCxxPlatformCompiler.Type> getNdkCompiler() {

@@ -28,11 +28,8 @@ import java.util.regex.Pattern;
  */
 public class NullRuleKeyLogger implements RuleKeyLogger {
 
-  private static final Scope NO_OP_SCOPE = new Scope() {
-    @Override
-    public void close() {
-      // Intentional no-op (duh!).
-    }
+  private static final Scope NO_OP_SCOPE = () -> {
+    // Intentional no-op (duh!).
   };
 
   @Override

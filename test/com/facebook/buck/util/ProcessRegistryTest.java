@@ -31,12 +31,7 @@ public class ProcessRegistryTest {
   public void testRegisterCallback() {
     final List<ProcessInfo> registeredProcesses = new ArrayList<>();
     ProcessRegistry.ProcessRegisterCallback callback =
-        new ProcessRegistry.ProcessRegisterCallback() {
-          @Override
-          public void call(Object process, ProcessExecutorParams params) {
-            registeredProcesses.add(new ProcessInfo(process, params));
-          }
-        };
+        (process, params) -> registeredProcesses.add(new ProcessInfo(process, params));
     ProcessRegistry.setsProcessRegisterCallback(Optional.of(callback));
     assertEquals(0, registeredProcesses.size());
 

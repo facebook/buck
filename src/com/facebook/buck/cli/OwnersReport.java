@@ -175,12 +175,8 @@ final class OwnersReport {
     Set<Path> inputsWithNoOwners = Sets.newHashSet(inputs);
     SetMultimap<TargetNode<?>, Path> owners = TreeMultimap.create();
     for (final Path commandInput : inputs) {
-      Predicate<Path> startsWith = new Predicate<Path>() {
-        @Override
-        public boolean apply(Path input) {
-          return !commandInput.equals(input) && commandInput.startsWith(input);
-        }
-      };
+      Predicate<Path> startsWith =
+          input -> !commandInput.equals(input) && commandInput.startsWith(input);
 
       Set<Path> ruleInputs = targetNode.getInputs();
       if (ruleInputs.contains(commandInput) ||

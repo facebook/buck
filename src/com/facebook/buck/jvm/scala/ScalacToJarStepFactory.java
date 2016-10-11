@@ -22,7 +22,6 @@ import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
 import com.facebook.buck.jvm.java.ClassUsageFileWriter;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -40,12 +39,7 @@ import java.nio.file.Path;
 public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
 
   public static final Function<BuildContext, Iterable<Path>> EMPTY_EXTRA_CLASSPATH =
-      new Function<BuildContext, Iterable<Path>>() {
-        @Override
-        public Iterable<Path> apply(BuildContext input) {
-          return ImmutableList.of();
-        }
-      };
+      input -> ImmutableList.of();
 
   public static ImmutableList<String> collectScalacArguments(
       ScalaBuckConfig config,
@@ -58,11 +52,7 @@ public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
         .addAll(
             Iterables.transform(
                 resolver.getAllRules(config.getCompilerPlugins()),
-                new Function<BuildRule, String>() {
-                  @Override public String apply(BuildRule input) {
-                    return "-Xplugin:" + input.getPathToOutput();
-                  }
-                })
+                input -> "-Xplugin:" + input.getPathToOutput())
         )
         .build();
   }

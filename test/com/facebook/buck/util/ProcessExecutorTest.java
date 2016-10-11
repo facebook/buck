@@ -90,15 +90,13 @@ public class ProcessExecutorTest {
 
   @Test
   public void testProcessTimeoutHandlerIsInvoked() throws IOException, InterruptedException {
+    @SuppressWarnings("PMD.PrematureDeclaration")
     ProcessExecutor executor = new ProcessExecutor(new TestConsole(Verbosity.ALL));
 
     final AtomicBoolean called = new AtomicBoolean(false);
-    Function<Process, Void> handler = new Function<Process, Void>() {
-      @Override
-      public Void apply(Process input) {
-        called.set(true);
-        return null;
-      }
+    Function<Process, Void> handler = input -> {
+      called.set(true);
+      return null;
     };
 
     String cmd = (Platform.detect() == Platform.WINDOWS) ? "ping -n 50 0.0.0.0" : "sleep 50";
@@ -119,13 +117,11 @@ public class ProcessExecutorTest {
 
   @Test
   public void testProcessTimeoutHandlerThrowsException() throws IOException, InterruptedException {
+    @SuppressWarnings("PMD.PrematureDeclaration")
     ProcessExecutor executor = new ProcessExecutor(new TestConsole(Verbosity.ALL));
 
-    Function<Process, Void> handler = new Function<Process, Void>() {
-      @Override
-      public Void apply(Process input) {
-        throw new RuntimeException("This shouldn't fail the test!");
-      }
+    Function<Process, Void> handler = input -> {
+      throw new RuntimeException("This shouldn't fail the test!");
     };
 
     String cmd = (Platform.detect() == Platform.WINDOWS) ? "ping -n 50 0.0.0.0" : "sleep 50";

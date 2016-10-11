@@ -16,8 +16,6 @@
 
 package com.facebook.buck.go;
 
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.io.MorePaths;
@@ -241,12 +239,7 @@ abstract class GoDescriptors {
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,
         platform.getCxxPlatform().transform(
-            new Function<CxxPlatform, Linker>() {
-              @Override
-              public Linker apply(CxxPlatform input) {
-                return input.getLd().resolve(resolver);
-              }
-            }),
+            input -> input.getLd().resolve(resolver)),
         symlinkTree,
         library,
         goBuckConfig.getLinker(),

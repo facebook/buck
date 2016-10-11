@@ -36,12 +36,7 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
    * Is likely particularly useful with {@link Optional#transform(Function)}.
    */
   private static final Function<String, Sha1HashCode> TO_SHA1 =
-      new Function<String, Sha1HashCode>() {
-        @Override
-        public Sha1HashCode apply(String hash) {
-          return Sha1HashCode.of(hash);
-        }
-      };
+      Sha1HashCode::of;
 
   private Map<String, String> metadata = Maps.newHashMap();
   private Map<String, ImmutableList<String>> metadataValues = Maps.newHashMap();

@@ -31,10 +31,8 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.util.List;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Nonnull;
 
 /**
  * Encapsulates a group of threads which operate a {@link ListeningExecutorService}, providing an
@@ -77,12 +75,7 @@ public class CommandThreadManager implements AutoCloseable {
                         .setNameFormat(name + "-%d")
                         .setThreadFactory(
                             new CommandThreadFactory(
-                                new ThreadFactory() {
-                                  @Override
-                                  public Thread newThread(@Nonnull Runnable r) {
-                                    return new Thread(threadGroup, r);
-                                  }
-                                }))
+                                r -> new Thread(threadGroup, r)))
                         .build(),
                     new LinkedBlockingStack<Runnable>(),
                     concurrencyLimit)));

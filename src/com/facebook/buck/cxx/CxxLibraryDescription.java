@@ -48,7 +48,6 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -687,12 +686,8 @@ public class CxxLibraryDescription implements
     if (hasObjectsForAnyPlatform) {
       hasObjects = Predicates.alwaysTrue();
     } else {
-      hasObjects = new Predicate<CxxPlatform>() {
-        @Override
-        public boolean apply(CxxPlatform input) {
-          return !args.platformSrcs.get().getMatchingValues(input.getFlavor().toString()).isEmpty();
-        }
-      };
+      hasObjects = input -> !args.platformSrcs.get().getMatchingValues(
+          input.getFlavor().toString()).isEmpty();
     }
 
     Predicate<CxxPlatform> hasExportedHeaders;
@@ -700,13 +695,8 @@ public class CxxLibraryDescription implements
       hasExportedHeaders = Predicates.alwaysTrue();
     } else {
       hasExportedHeaders =
-          new Predicate<CxxPlatform>() {
-            @Override
-            public boolean apply(CxxPlatform input) {
-              return !args.exportedPlatformHeaders.get()
-                  .getMatchingValues(input.getFlavor().toString()).isEmpty();
-            }
-          };
+          input -> !args.exportedPlatformHeaders.get()
+              .getMatchingValues(input.getFlavor().toString()).isEmpty();
     }
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
@@ -720,57 +710,45 @@ public class CxxLibraryDescription implements
             .transform(resolver.getRuleFunction()),
         hasExportedHeaders,
         Predicates.not(hasObjects),
-        new Function<CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>() {
-          @Override
-          public ImmutableMultimap<CxxSource.Type, String> apply(CxxPlatform input) {
-            return CxxFlags.getLanguageFlags(
-                args.exportedPreprocessorFlags,
-                args.exportedPlatformPreprocessorFlags,
-                args.exportedLangPreprocessorFlags,
-                input);
-          }
+        input -> CxxFlags.getLanguageFlags(
+            args.exportedPreprocessorFlags,
+            args.exportedPlatformPreprocessorFlags,
+            args.exportedLangPreprocessorFlags,
+            input),
+        input -> {
+          ImmutableList<String> flags = CxxFlags.getFlags(
+              args.exportedLinkerFlags,
+              args.exportedPlatformLinkerFlags,
+              input);
+          return Iterables.transform(
+              flags,
+              MacroArg.toMacroArgFunction(
+                  MACRO_HANDLER,
+                  params.getBuildTarget(),
+                  params.getCellRoots(),
+                  resolver));
         },
-        new Function<CxxPlatform, Iterable<com.facebook.buck.rules.args.Arg>>() {
-          @Override
-          public Iterable<com.facebook.buck.rules.args.Arg> apply(
-              CxxPlatform input) {
-            ImmutableList<String> flags = CxxFlags.getFlags(
-                args.exportedLinkerFlags,
-                args.exportedPlatformLinkerFlags,
-                input);
-            return Iterables.transform(
-                flags,
-                MacroArg.toMacroArgFunction(
-                    MACRO_HANDLER,
-                    params.getBuildTarget(),
-                    params.getCellRoots(),
-                    resolver));
-          }
-        },
-        new Function<CxxPlatform, NativeLinkableInput>() {
-          @Override
-          public NativeLinkableInput apply(CxxPlatform cxxPlatform) {
-            try {
-              return getSharedLibraryNativeLinkTargetInput(
-                  params,
-                  resolver,
-                  pathResolver,
-                  cxxBuckConfig,
-                  cxxPlatform,
-                  args,
-                  CxxFlags.getFlags(
-                      args.linkerFlags,
-                      args.platformLinkerFlags,
-                      cxxPlatform),
-                  CxxFlags.getFlags(
-                      args.exportedLinkerFlags,
-                      args.exportedPlatformLinkerFlags,
-                      cxxPlatform),
-                  args.frameworks.or(ImmutableSortedSet.of()),
-                  args.libraries.or(ImmutableSortedSet.of()));
-            } catch (NoSuchBuildTargetException e) {
-              throw new RuntimeException(e);
-            }
+        cxxPlatform -> {
+          try {
+            return getSharedLibraryNativeLinkTargetInput(
+                params,
+                resolver,
+                pathResolver,
+                cxxBuckConfig,
+                cxxPlatform,
+                args,
+                CxxFlags.getFlags(
+                    args.linkerFlags,
+                    args.platformLinkerFlags,
+                    cxxPlatform),
+                CxxFlags.getFlags(
+                    args.exportedLinkerFlags,
+                    args.exportedPlatformLinkerFlags,
+                    cxxPlatform),
+                args.frameworks.or(ImmutableSortedSet.of()),
+                args.libraries.or(ImmutableSortedSet.of()));
+          } catch (NoSuchBuildTargetException e) {
+            throw new RuntimeException(e);
           }
         },
         args.supportedPlatformsRegex,
@@ -845,12 +823,7 @@ public class CxxLibraryDescription implements
     return CxxDescriptionEnhancer
         .createCompilationDatabaseDependencies(buildTarget, cxxPlatforms, resolver, args)
         .transform(
-            new Function<CxxCompilationDatabaseDependencies, U>() {
-              @Override
-              public U apply(CxxCompilationDatabaseDependencies input) {
-                return metadataClass.cast(input);
-              }
-            }
+            metadataClass::cast
         );
   }
 

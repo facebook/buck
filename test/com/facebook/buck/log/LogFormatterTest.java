@@ -37,12 +37,7 @@ public class LogFormatterTest {
   @Before
   public void setUp() {
     threadIdToCommandId = new ConcurrentHashMap<>();
-    mapper = new ThreadIdToCommandIdMapper() {
-      @Override
-      public String threadIdToCommandId(long threadId) {
-        return threadIdToCommandId.get(threadId);
-      }
-    };
+    mapper = threadId -> threadIdToCommandId.get(threadId);
   }
 
   @Test

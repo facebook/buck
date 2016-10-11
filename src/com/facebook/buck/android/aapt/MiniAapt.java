@@ -89,12 +89,7 @@ public class MiniAapt implements Step {
       "eat-comment",
       "skip");
 
-  private static final Predicate<Path> ENDS_WITH_XML = new Predicate<Path>() {
-    @Override
-    public boolean apply(Path input) {
-      return input.toString().endsWith(".xml");
-    }
-  };
+  private static final Predicate<Path> ENDS_WITH_XML = input -> input.toString().endsWith(".xml");
 
   private final SourcePathResolver resolver;
   private final ProjectFilesystem filesystem;

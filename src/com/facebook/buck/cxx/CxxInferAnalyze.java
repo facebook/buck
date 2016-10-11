@@ -76,13 +76,8 @@ public class CxxInferAnalyze extends AbstractBuildRule {
   private ImmutableSortedSet<SourcePath> getSpecsOfAllDeps() {
     return FluentIterable.from(captureAndAnalyzeRules.aggregatingRules)
         .transform(
-            new Function<CxxInferAnalyze, SourcePath>() {
-              @Override
-              public SourcePath apply(CxxInferAnalyze input) {
-                return new BuildTargetSourcePath(
-                    input.getBuildTarget(), input.getSpecsDir());
-              }
-            }
+            (Function<CxxInferAnalyze, SourcePath>) input -> new BuildTargetSourcePath(
+                input.getBuildTarget(), input.getSpecsDir())
         )
         .toSortedSet(Ordering.natural());
   }
@@ -132,12 +127,7 @@ public class CxxInferAnalyze extends AbstractBuildRule {
                 getProjectFilesystem(),
                 FluentIterable.from(captureAndAnalyzeRules.captureRules)
                     .transform(
-                        new Function<CxxInferCapture, Path>() {
-                          @Override
-                          public Path apply(CxxInferCapture input) {
-                            return input.getPathToOutput();
-                          }
-                        }).toList(),
+                        CxxInferCapture::getPathToOutput).toList(),
                 resultsDir))
         .add(
             new AbstractExecutionStep("write_specs_path_list") {
@@ -146,12 +136,7 @@ public class CxxInferAnalyze extends AbstractBuildRule {
                 try {
                   ImmutableList<String> specsDirsWithAbsolutePath =
                       FluentIterable.from(getSpecsOfAllDeps()).transform(
-                          new Function<SourcePath, String>() {
-                            @Override
-                            public String apply(SourcePath input) {
-                              return getResolver().getAbsolutePath(input).toString();
-                            }
-                          }
+                          input -> getResolver().getAbsolutePath(input).toString()
                       ).toList();
                   getProjectFilesystem().writeLinesToPath(specsDirsWithAbsolutePath, specsPathList);
                 } catch (IOException e) {

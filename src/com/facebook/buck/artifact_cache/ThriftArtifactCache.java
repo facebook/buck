@@ -28,7 +28,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpResponse;
 import com.facebook.buck.slb.ThriftProtocol;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -222,16 +221,11 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
 
     metadata.setRuleKeys(ImmutableList.copyOf(Iterables.transform(
         info.getRuleKeys(),
-        new Function<RuleKey, com.facebook.buck.artifact_cache.thrift.RuleKey>() {
-
-          @Override
-          public com.facebook.buck.artifact_cache.thrift.RuleKey apply(RuleKey input) {
-            com.facebook.buck.artifact_cache.thrift.RuleKey ruleKey =
-                new com.facebook.buck.artifact_cache.thrift.RuleKey();
-            ruleKey.setHashString(input.getHashCode().toString());
-            return ruleKey;
-          }
-
+        input -> {
+          com.facebook.buck.artifact_cache.thrift.RuleKey ruleKey =
+              new com.facebook.buck.artifact_cache.thrift.RuleKey();
+          ruleKey.setHashString(input.getHashCode().toString());
+          return ruleKey;
         })));
 
     metadata.setMetadata(info.getMetadata());

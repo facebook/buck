@@ -20,14 +20,12 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.WatchEvents;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;
-import java.util.Map;
 
 public class WatchedFileHashCache extends DefaultFileHashCache {
 
@@ -51,18 +49,15 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
       Iterable<Path> pathsToInvalidate =
           Maps.filterEntries(
               loadingCache.asMap(),
-              new Predicate<Map.Entry<Path, HashCodeAndFileType>>() {
-                  @Override
-                  public boolean apply(Map.Entry<Path, HashCodeAndFileType> entry) {
-                    switch (entry.getValue().getType()) {
-                      case ARCHIVE:
-                      case FILE:
-                        return path.equals(entry.getKey());
-                      case DIRECTORY:
-                        return path.startsWith(entry.getKey());
-                    }
-                    return false;
-                  }
+              entry -> {
+                switch (entry.getValue().getType()) {
+                  case ARCHIVE:
+                  case FILE:
+                    return path.equals(entry.getKey());
+                  case DIRECTORY:
+                    return path.startsWith(entry.getKey());
+                }
+                return false;
               }
           ).keySet();
       LOG.verbose("Paths to invalidate: %s", pathsToInvalidate);

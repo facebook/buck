@@ -19,7 +19,6 @@ package com.facebook.buck.step;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.concurrent.MoreFutures;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -83,19 +82,14 @@ public final class DefaultStepRunner implements StepRunner {
       ListeningExecutorService listeningExecutorService,
       final StepRunningCallback callback) {
     Preconditions.checkState(!listeningExecutorService.isShutdown());
-    Callable<T> callable = new Callable<T>() {
-
-      @Override
-      public T call() throws Exception {
-        callback.stepsWillRun(buildTarget);
-        for (Step step : steps) {
-          runStepForBuildTarget(step, buildTarget);
-        }
-        callback.stepsDidRun(buildTarget);
-
-        return interpretResults.call();
+    Callable<T> callable = () -> {
+      callback.stepsWillRun(buildTarget);
+      for (Step step : steps) {
+        runStepForBuildTarget(step, buildTarget);
       }
+      callback.stepsDidRun(buildTarget);
 
+      return interpretResults.call();
     };
 
     return listeningExecutorService.submit(callable);
@@ -115,18 +109,10 @@ public final class DefaultStepRunner implements StepRunner {
       final StepRunningCallback callback)
       throws StepFailedException, InterruptedException {
     List<Callable<Void>> callables = Lists.transform(steps,
-        new Function<Step, Callable<Void>>() {
-      @Override
-      public Callable<Void> apply(final Step step) {
-        return new Callable<Void>() {
-          @Override
-          public Void call() throws Exception {
-            runStepForBuildTarget(step, target);
-            return null;
-          }
-        };
-      }
-    });
+        step -> () -> {
+          runStepForBuildTarget(step, target);
+          return null;
+        });
 
     try {
       callback.stepsWillRun(target);

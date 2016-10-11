@@ -24,7 +24,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 
 import java.io.IOException;
@@ -44,23 +43,20 @@ public class FakeAppleDeveloperEnvironment {
           .size();
 
   private static final boolean hasWildcardProvisioningProfile = Suppliers.memoize(
-      new Supplier<Boolean>() {
-        @Override
-        public Boolean get() {
-          final Path searchPath = Paths.get(System.getProperty("user.home") +
-                  "/Library/MobileDevice/Provisioning Profiles");
-          if (!Files.exists(searchPath)) {
-            LOG.warn("Provisioning profile search path " + searchPath + " doesn't exist!");
-            return false;
-          }
-          ProvisioningProfileStore store = ProvisioningProfileStore.fromSearchPath(searchPath);
-          Optional<ProvisioningProfileMetadata> profile =
-              store.getBestProvisioningProfile(
-                  "*",
-                  ProvisioningProfileStore.MATCH_ANY_ENTITLEMENT,
-                  ProvisioningProfileStore.MATCH_ANY_IDENTITY);
-          return profile.isPresent();
+      () -> {
+        final Path searchPath = Paths.get(System.getProperty("user.home") +
+                "/Library/MobileDevice/Provisioning Profiles");
+        if (!Files.exists(searchPath)) {
+          LOG.warn("Provisioning profile search path " + searchPath + " doesn't exist!");
+          return false;
         }
+        ProvisioningProfileStore store = ProvisioningProfileStore.fromSearchPath(searchPath);
+        Optional<ProvisioningProfileMetadata> profile =
+            store.getBestProvisioningProfile(
+                "*",
+                ProvisioningProfileStore.MATCH_ANY_ENTITLEMENT,
+                ProvisioningProfileStore.MATCH_ANY_IDENTITY);
+        return profile.isPresent();
       }).get();
 
 

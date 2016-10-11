@@ -41,12 +41,7 @@ public abstract class AndroidLibraryCompiler
     implements ImplicitDepsInferringDescription<AndroidLibraryDescription.Arg> {
 
   public static final Function<BuildContext, Iterable<Path>> ANDROID_CLASSPATH_FROM_CONTEXT =
-      new Function<BuildContext, Iterable<Path>>() {
-        @Override
-        public Iterable<Path> apply(BuildContext context) {
-          return context.getAndroidPlatformTargetSupplier().get().getBootclasspathEntries();
-        }
-      };
+      context -> context.getAndroidPlatformTargetSupplier().get().getBootclasspathEntries();
 
   public abstract CompileToJarStepFactory compileToJar(
       AndroidLibraryDescription.Arg args,

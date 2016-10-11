@@ -20,7 +20,6 @@ import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AssociatedTargetNodePredicate;
 import com.facebook.buck.rules.ProjectConfigDescription;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Predicate;
@@ -60,46 +59,27 @@ abstract class AbstractProjectPredicates {
     // Prepare the predicates to create the project graph based on the IDE.
     switch (targetIde) {
       case INTELLIJ:
-        projectRootsPredicate = new Predicate<TargetNode<?>>() {
-          @Override
-          public boolean apply(TargetNode<?> input) {
-            return input.getType() == ProjectConfigDescription.TYPE;
+        projectRootsPredicate = input -> input.getType() == ProjectConfigDescription.TYPE;
+        associatedProjectPredicate = (targetNode, targetGraph) -> {
+          ProjectConfigDescription.Arg projectArg;
+          if (targetNode.getType() == ProjectConfigDescription.TYPE) {
+            projectArg = (ProjectConfigDescription.Arg) targetNode.getConstructorArg();
+          } else {
+            return false;
           }
-        };
-        associatedProjectPredicate = new AssociatedTargetNodePredicate() {
-          @Override
-          public boolean apply(TargetNode<?> targetNode, TargetGraph targetGraph) {
-            ProjectConfigDescription.Arg projectArg;
-            if (targetNode.getType() == ProjectConfigDescription.TYPE) {
-              projectArg = (ProjectConfigDescription.Arg) targetNode.getConstructorArg();
-            } else {
-              return false;
-            }
 
-            BuildTarget projectTarget = null;
-            if (projectArg.srcTarget.isPresent()) {
-              projectTarget = projectArg.srcTarget.get();
-            } else if (projectArg.testTarget.isPresent()) {
-              projectTarget = projectArg.testTarget.get();
-            }
-            return (projectTarget != null && targetGraph.getOptional(projectTarget).isPresent());
+          BuildTarget projectTarget = null;
+          if (projectArg.srcTarget.isPresent()) {
+            projectTarget = projectArg.srcTarget.get();
+          } else if (projectArg.testTarget.isPresent()) {
+            projectTarget = projectArg.testTarget.get();
           }
+          return (projectTarget != null && targetGraph.getOptional(projectTarget).isPresent());
         };
         break;
       case XCODE:
-        projectRootsPredicate = new Predicate<TargetNode<?>>() {
-          @Override
-          public boolean apply(TargetNode<?> input) {
-            return XcodeWorkspaceConfigDescription.TYPE == input.getType();
-          }
-        };
-        associatedProjectPredicate = new AssociatedTargetNodePredicate() {
-          @Override
-          public boolean apply(
-              TargetNode<?> targetNode, TargetGraph targetGraph) {
-            return false;
-          }
-        };
+        projectRootsPredicate = input -> XcodeWorkspaceConfigDescription.TYPE == input.getType();
+        associatedProjectPredicate = (targetNode, targetGraph) -> false;
         break;
       default:
         // unreachable

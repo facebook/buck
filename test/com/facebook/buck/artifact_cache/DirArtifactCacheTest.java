@@ -41,7 +41,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -290,12 +289,7 @@ public class DirArtifactCacheTest {
     assertEquals(6, cachedFiles.size());
 
     ImmutableSet<String> filenames = FluentIterable.from(cachedFiles).transform(
-        new Function<Path, String>() {
-          @Override
-          public String apply(Path input) {
-            return input.getFileName().toString();
-          }
-        }).toSet();
+        input -> input.getFileName().toString()).toSet();
 
     for (RuleKey ruleKey : ImmutableSet.of(ruleKeyX, ruleKeyY, ruleKeyZ)) {
       filenames.contains(ruleKey.toString());

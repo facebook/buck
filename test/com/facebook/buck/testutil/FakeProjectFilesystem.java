@@ -29,7 +29,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -216,14 +215,11 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          MoreFiles.deleteRecursively(tempDir);
-        } catch (IOException e) { // NOPMD
-          // Swallow. At least we tried, right?
-        }
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      try {
+        MoreFiles.deleteRecursively(tempDir);
+      } catch (IOException e) { // NOPMD
+        // Swallow. At least we tried, right?
       }
     }));
     return new FakeProjectFilesystem(tempDir);
@@ -414,14 +410,11 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
         .from(fileContents.keySet())
         .append(directories)
         .filter(
-            new Predicate<Path>() {
-              @Override
-              public boolean apply(Path input) {
-                if (input.equals(Paths.get(""))) {
-                  return false;
-                }
-                return MorePaths.getParentOrEmpty(input).equals(pathRelativeToProjectRoot);
+            input -> {
+              if (input.equals(Paths.get(""))) {
+                return false;
               }
+              return MorePaths.getParentOrEmpty(input).equals(pathRelativeToProjectRoot);
             })
         .toList();
   }
@@ -450,13 +443,8 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     Preconditions.checkState(isDirectory(pathRelativeToProjectRoot));
     final PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:" + globPattern);
     return FluentIterable.from(fileContents.keySet()).filter(
-        new Predicate<Path>() {
-          @Override
-          public boolean apply(Path input) {
-            return input.getParent().equals(pathRelativeToProjectRoot) &&
-                pathMatcher.matches(input.getFileName());
-          }
-        })
+        input -> input.getParent().equals(pathRelativeToProjectRoot) &&
+            pathMatcher.matches(input.getFileName()))
         .toSortedSet(
             Ordering
                 .natural()

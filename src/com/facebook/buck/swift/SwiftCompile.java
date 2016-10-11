@@ -47,7 +47,6 @@ import com.facebook.buck.util.MoreIterables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -94,12 +93,7 @@ class SwiftCompile
 
   // Prepend "-I" before the input with no space (this is required by swift).
   private static final Function<String, String> PREPEND_INCLUDE_FLAG =
-      new Function<String, String>() {
-        @Override
-        public String apply(String input) {
-          return INCLUDE_FLAG.concat(input);
-        }
-      };
+      INCLUDE_FLAG::concat;
 
   SwiftCompile(
       CxxPlatform cxxPlatform,
@@ -131,13 +125,9 @@ class SwiftCompile
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.enableObjcInterop = enableObjcInterop.or(true);
     this.bridgingHeader = bridgingHeader;
-    this.hasMainEntry = FluentIterable.from(srcs).firstMatch(new Predicate<SourcePath>() {
-      @Override
-      public boolean apply(SourcePath input) {
-        return SWIFT_MAIN_FILENAME.equalsIgnoreCase(
-            getResolver().getAbsolutePath(input).getFileName().toString());
-      }
-    }).isPresent();
+    this.hasMainEntry = FluentIterable.from(srcs).firstMatch(
+        input -> SWIFT_MAIN_FILENAME.equalsIgnoreCase(
+            getResolver().getAbsolutePath(input).getFileName().toString())).isPresent();
   }
 
   private SwiftCompileStep makeCompileStep() {
@@ -156,12 +146,7 @@ class SwiftCompile
     compilerCommand.addAll(
         FluentIterable.from(frameworks)
         .transform(frameworkPathToSearchPath)
-        .transformAndConcat(new Function<Path, Iterable<? extends String>>() {
-          @Override
-          public Iterable<? extends String> apply(Path searchPath) {
-            return ImmutableSet.of("-F", searchPath.toString());
-          }
-        }));
+        .transformAndConcat(searchPath -> ImmutableSet.of("-F", searchPath.toString())));
 
     compilerCommand.addAll(
         MoreIterables.zipAndConcat(Iterables.cycle("-Xcc"),
@@ -171,12 +156,7 @@ class SwiftCompile
         FluentIterable.from(getDeps())
             .filter(SwiftCompile.class)
             .transform(SourcePaths.getToBuildTargetSourcePath())
-            .transform(new Function<SourcePath, String>() {
-              @Override
-              public String apply(SourcePath input) {
-                return getResolver().getAbsolutePath(input).toString();
-              }
-            })));
+            .transform(input -> getResolver().getAbsolutePath(input).toString())));
 
     Optional<Iterable<String>> configFlags = swiftBuckConfig.getFlags();
     if (configFlags.isPresent()) {

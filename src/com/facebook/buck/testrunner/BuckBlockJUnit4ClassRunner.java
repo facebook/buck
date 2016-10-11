@@ -72,12 +72,7 @@ public class BuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
     // being run on a thread different from the one it was created on. Work around this by creating
     // the test on the same thread we will be timing it out on.
     // See https://github.com/junit-team/junit/issues/686 for more context.
-    Callable<Object> maker = new Callable<Object>() {
-      @Override
-      public Object call() throws Exception {
-        return BuckBlockJUnit4ClassRunner.super.createTest();
-      }
-    };
+    Callable<Object> maker = () -> BuckBlockJUnit4ClassRunner.super.createTest();
 
     Future<Object> createdTest = executor.get().submit(maker);
     return createdTest.get();

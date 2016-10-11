@@ -37,12 +37,7 @@ import java.nio.file.Path;
 abstract class AbstractAppleCxxPlatform implements FlavorConvertible {
 
   public static final Function<String, String> SWIFT_VERSION_TO_TOOLCHAIN_IDENTIFIER =
-      new Function<String, String>() {
-        @Override
-        public String apply(String version) {
-          return "com.apple.dt.toolchain.Swift_" + version.replaceAll("\\D", "_");
-        }
-      };
+      version -> "com.apple.dt.toolchain.Swift_" + version.replaceAll("\\D", "_");
 
   public abstract CxxPlatform getCxxPlatform();
 

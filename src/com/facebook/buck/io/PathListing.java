@@ -58,12 +58,7 @@ public class PathListing {
    * for a Path.
    */
   public static final PathModifiedTimeFetcher GET_PATH_MODIFIED_TIME =
-      new PathModifiedTimeFetcher() {
-          @Override
-          public FileTime getLastModifiedTime(Path path) throws IOException {
-            return Files.getLastModifiedTime(path);
-          }
-      };
+      path -> Files.getLastModifiedTime(path);
 
   /**
    * Lists matching paths in descending modified time order.

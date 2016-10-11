@@ -36,14 +36,11 @@ public class ConditionalStepTest extends EasyMockSupport {
     // satisfied.
     final AtomicReference<TriState> condition = new AtomicReference<>(
         TriState.UNSPECIFIED);
-    Supplier<Boolean> conditional = new Supplier<Boolean>() {
-      @Override
-      public Boolean get() {
-        if (!condition.get().isSet()) {
-          throw new IllegalStateException("condition must be satisfied before this is queried.");
-        } else {
-          return condition.get().asBoolean();
-        }
+    Supplier<Boolean> conditional = () -> {
+      if (!condition.get().isSet()) {
+        throw new IllegalStateException("condition must be satisfied before this is queried.");
+      } else {
+        return condition.get().asBoolean();
       }
     };
 
@@ -76,14 +73,11 @@ public class ConditionalStepTest extends EasyMockSupport {
     // satisfied.
     final AtomicReference<TriState> condition = new AtomicReference<>(
         TriState.UNSPECIFIED);
-    Supplier<Boolean> conditional = new Supplier<Boolean>() {
-      @Override
-      public Boolean get() {
-        if (!condition.get().isSet()) {
-          throw new IllegalStateException("condition must be satisfied before this is queried.");
-        } else {
-          return condition.get().asBoolean();
-        }
+    Supplier<Boolean> conditional = () -> {
+      if (!condition.get().isSet()) {
+        throw new IllegalStateException("condition must be satisfied before this is queried.");
+      } else {
+        return condition.get().asBoolean();
       }
     };
 

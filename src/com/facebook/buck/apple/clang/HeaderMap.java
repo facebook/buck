@@ -145,19 +145,16 @@ public class HeaderMap {
   }
 
   public void print(final Appendable stream) {
-    visit(new HeaderMapVisitor() {
-      @Override
-      public void apply(String str, String prefix, String suffix) {
-        try {
-          stream.append("\"");
-          stream.append(str);
-          stream.append("\" -> \"");
-          stream.append(prefix);
-          stream.append(suffix);
-          stream.append("\"\n");
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
+    visit((str, prefix, suffix) -> {
+      try {
+        stream.append("\"");
+        stream.append(str);
+        stream.append("\" -> \"");
+        stream.append(prefix);
+        stream.append(suffix);
+        stream.append("\"\n");
+      } catch (IOException e) {
+        throw new RuntimeException(e);
       }
     });
   }
@@ -347,12 +344,9 @@ public class HeaderMap {
             headerMap.numBuckets * 2,
             headerMap.stringBytes.length);
         headerMap.visit(
-            new HeaderMapVisitor() {
-              @Override
-              public void apply(String str, String prefix, String suffix) {
-                AddResult copying = newHeaderMap.add(str, prefix, suffix);
-                assert (copying == AddResult.OK);
-              }
+            (str, prefix1, suffix1) -> {
+              AddResult copying = newHeaderMap.add(str, prefix1, suffix1);
+              assert (copying == AddResult.OK);
             });
         headerMap = newHeaderMap;
         result = headerMap.add(key, prefix, suffix);

@@ -32,7 +32,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -750,12 +749,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
     return FluentIterable
         .from(objects.build())
-        .toMap(new Function<CxxPreprocessAndCompile, SourcePath>() {
-          @Override
-          public SourcePath apply(CxxPreprocessAndCompile input) {
-            return new BuildTargetSourcePath(input.getBuildTarget());
-          }
-        });
+        .toMap(input -> new BuildTargetSourcePath(input.getBuildTarget()));
   }
 
   private boolean shouldUsePrecompiledHeaders(

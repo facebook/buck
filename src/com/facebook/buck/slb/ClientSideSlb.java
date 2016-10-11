@@ -80,12 +80,7 @@ public class ClientSideSlb implements HttpLoadBalancer {
 
     this.schedulerService = config.getSchedulerService();
     backgroundHealthChecker = this.schedulerService.scheduleWithFixedDelay(
-        new Runnable() {
-          @Override
-          public void run() {
-            backgroundThreadCallForHealthCheck();
-          }
-        },
+        this::backgroundThreadCallForHealthCheck,
         0,
         config.getHealthCheckIntervalMillis(),
         TimeUnit.MILLISECONDS);

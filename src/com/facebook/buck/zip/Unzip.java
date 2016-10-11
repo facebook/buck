@@ -20,7 +20,6 @@ import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePosixFilePermissions;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
@@ -210,12 +209,7 @@ public class Unzip {
                 destination.getFileSystem().getPath(""),
                 existingFileMode))
         .transform(
-            new Function<Path, Path>() {
-              @Override
-              public Path apply(Path input) {
-                return destination.resolve(input).toAbsolutePath();
-              }
-            })
+            input -> destination.resolve(input).toAbsolutePath())
         .toList();
   }
 

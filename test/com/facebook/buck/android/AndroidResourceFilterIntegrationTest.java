@@ -36,7 +36,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -295,11 +294,6 @@ public class AndroidResourceFilterIntegrationTest {
     assertEquals(0, result.getExitCode());
     return FluentIterable.from(
         Splitter.on('\n').split(result.getStdout().or(""))).filter(
-        new Predicate<String>() {
-          @Override
-          public boolean apply(String input) {
-            return pattern.matcher(input).matches();
-          }
-        }).size();
+        input -> pattern.matcher(input).matches()).size();
   }
 }

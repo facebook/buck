@@ -21,7 +21,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -42,7 +41,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -205,23 +203,20 @@ public class TracesHelper {
     // Sort by:
     // 1. Reverse chronological order.
     // 2. Alphabetical order.
-    Collections.sort(allTraces, new Comparator<Path>() {
-      @Override
-      public int compare(Path path1, Path path2) {
-        int result = 0;
-        try {
-          result = Long.compare(
-              projectFilesystem.getLastModifiedTime(path2),
-              projectFilesystem.getLastModifiedTime(path1));
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
+    Collections.sort(allTraces, (path1, path2) -> {
+      int result = 0;
+      try {
+        result = Long.compare(
+            projectFilesystem.getLastModifiedTime(path2),
+            projectFilesystem.getLastModifiedTime(path1));
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
 
-        if (result == 0) {
-          return path2.toString().compareTo(path1.toString());
-        } else {
-          return result;
-        }
+      if (result == 0) {
+        return path2.toString().compareTo(path1.toString());
+      } else {
+        return result;
       }
     });
 
@@ -238,12 +233,7 @@ public class TracesHelper {
     Preconditions.checkArgument(TracesHandlerDelegate.TRACE_ID_PATTERN.matcher(id).matches());
 
     Collection<Path> traces = FluentIterable.from(listTraceFilesByLastModified())
-        .filter(new Predicate<Path>() {
-          @Override
-          public boolean apply(Path input) {
-            return input.getFileName().toString().contains(id);
-          }
-        })
+        .filter(input -> input.getFileName().toString().contains(id))
         .toList();
 
     if (traces.isEmpty()) {

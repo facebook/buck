@@ -18,13 +18,11 @@ package com.facebook.buck.parser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
-import com.facebook.buck.parser.PipelineNodeCache.JobSupplier;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -55,37 +53,30 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
     // TODO(csarbora): this hits the chained pipeline before hitting the cache
     ListenableFuture<List<T>> allNodesListJob = Futures.transformAsync(
         getItemsToConvert(cell, buildFile),
-        new AsyncFunction<ImmutableSet<F>, List<T>>() {
-          @Override
-          public ListenableFuture<List<T>> apply(ImmutableSet<F> allToConvert)
-              throws BuildTargetException {
-            if (shuttingDown()) {
-              return Futures.immediateCancelledFuture();
-            }
-
-            ImmutableList.Builder<ListenableFuture<T>> allNodeJobs = ImmutableList.builder();
-
-            for (final F from : allToConvert) {
-              if (isValid(from)) {
-                final BuildTarget target = getBuildTarget(cell.getRoot(), buildFile, from);
-                allNodeJobs.add(
-                    cache.getJobWithCacheLookup(
-                        cell,
-                        target,
-                        new JobSupplier<T>() {
-                          @Override
-                          public ListenableFuture<T> get() throws BuildTargetException {
-                            if (shuttingDown()) {
-                              return Futures.immediateCancelledFuture();
-                            }
-                            return dispatchComputeNode(cell, target, from);
-                          }
-                        }));
-              }
-            }
-
-            return Futures.allAsList(allNodeJobs.build());
+        allToConvert -> {
+          if (shuttingDown()) {
+            return Futures.immediateCancelledFuture();
           }
+
+          ImmutableList.Builder<ListenableFuture<T>> allNodeJobs = ImmutableList.builder();
+
+          for (final F from : allToConvert) {
+            if (isValid(from)) {
+              final BuildTarget target = getBuildTarget(cell.getRoot(), buildFile, from);
+              allNodeJobs.add(
+                  cache.getJobWithCacheLookup(
+                      cell,
+                      target,
+                      () -> {
+                        if (shuttingDown()) {
+                          return Futures.immediateCancelledFuture();
+                        }
+                        return dispatchComputeNode(cell, target, from);
+                      }));
+            }
+          }
+
+          return Futures.allAsList(allNodeJobs.build());
         },
         executorService
     );
@@ -108,20 +99,10 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
     return cache.getJobWithCacheLookup(
         cell,
         buildTarget,
-        new JobSupplier<T>() {
-          @Override
-          public ListenableFuture<T> get() throws BuildTargetException {
-            return Futures.transformAsync(
-                getItemToConvert(cell, buildTarget),
-                new AsyncFunction<F, T>() {
-                  @Override
-                  public ListenableFuture<T> apply(F from) throws BuildTargetException {
-                    return dispatchComputeNode(cell, buildTarget, from);
-                  }
-                }
-            );
-          }
-        });
+        () -> Futures.transformAsync(
+            getItemToConvert(cell, buildTarget),
+            from -> dispatchComputeNode(cell, buildTarget, from)
+        ));
   }
 
   protected boolean isValid(F from) {

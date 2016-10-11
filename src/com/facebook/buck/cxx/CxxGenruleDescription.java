@@ -30,7 +30,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
@@ -406,16 +405,13 @@ public class CxxGenruleDescription
       final Iterable<CxxPreprocessorInput> transitivePreprocessorInput =
           getCxxPreprocessorInput(resolve(resolver, input));
       final PreprocessorFlags ppFlags = getPreprocessorFlags(transitivePreprocessorInput);
-      return new RuleKeyAppendable() {
-        @Override
-        public void appendToRuleKey(RuleKeyObjectSink sink) {
-          ppFlags.appendToRuleKey(sink, cxxPlatform.getDebugPathSanitizer());
-          sink.setReflectively(
-              "headers",
-              FluentIterable.from(transitivePreprocessorInput)
-                  .transformAndConcat(CxxPreprocessorInput.GET_INCLUDES)
-                  .toList());
-        }
+      return (RuleKeyAppendable) sink -> {
+        ppFlags.appendToRuleKey(sink, cxxPlatform.getDebugPathSanitizer());
+        sink.setReflectively(
+            "headers",
+            FluentIterable.from(transitivePreprocessorInput)
+                .transformAndConcat(CxxPreprocessorInput.GET_INCLUDES)
+                .toList());
       };
     }
 

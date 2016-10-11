@@ -21,10 +21,8 @@ import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -195,12 +193,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
         REVISION_ID_TEMPLATE,
         fromRevisionId));
     return FluentIterable.of(hgChangedFilesString.split("\0"))
-        .filter(new Predicate<String>() {
-          @Override
-          public boolean apply(String input) {
-            return !Strings.isNullOrEmpty(input);
-          }
-        })
+        .filter(input -> !Strings.isNullOrEmpty(input))
         .toSet();
   }
 
@@ -208,12 +201,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   public ImmutableSet<String> untrackedFiles()
       throws VersionControlCommandFailedException, InterruptedException {
     return FluentIterable.of(executeCommand(UNTRACKED_FILES_COMMAND).split("\0"))
-        .filter(new Predicate<String>() {
-          @Override
-          public boolean apply(String input) {
-            return !Strings.isNullOrEmpty(input);
-          }
-        })
+        .filter(input -> !Strings.isNullOrEmpty(input))
         .toSet();
   }
 
@@ -243,12 +231,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     // Remove the potential asterisk that shows the active bookmark.
     FluentIterable<String> allBookmarks =
         FluentIterable.of(executeCommand(ALL_BOOKMARKS_COMMAND).replaceAll("\\*", "").split(" "))
-            .filter(new Predicate<String>() {
-              @Override
-              public boolean apply(String input) {
-                return !Strings.isNullOrEmpty(input);
-              }
-            });
+            .filter(input -> !Strings.isNullOrEmpty(input));
 
     if (allBookmarks.size() % 2 != 0) {
       throw new VersionControlCommandFailedException("Unable to retrieve map of bookmarks");
@@ -328,12 +311,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     return FluentIterable
         .from(values)
         .transform(
-            new Function<String, String>() {
-              @Override
-              public String apply(String text) {
-                return text.contains(template) ? text.replace(template, replacement) : text;
-              }
-            })
+            text -> text.contains(template) ? text.replace(template, replacement) : text)
         .toList();
   }
 

@@ -41,12 +41,8 @@ public class BuckEventBus implements Closeable {
 
   public static final int DEFAULT_SHUTDOWN_TIMEOUT_MS = 15000;
 
-  private static final Supplier<Long> DEFAULT_THREAD_ID_SUPPLIER = new Supplier<Long>() {
-    @Override
-    public Long get() {
-      return Thread.currentThread().getId();
-    }
-  };
+  private static final Supplier<Long> DEFAULT_THREAD_ID_SUPPLIER =
+      () -> Thread.currentThread().getId();
 
   private final Clock clock;
   private final ExecutorService executorService;
@@ -78,12 +74,7 @@ public class BuckEventBus implements Closeable {
 
   private void dispatch(final BuckEvent event) {
     executorService.submit(
-        new Runnable() {
-          @Override
-          public void run() {
-            eventBus.post(event);
-          }
-        });
+        () -> eventBus.post(event));
   }
 
   public void post(BuckEvent event) {

@@ -38,19 +38,9 @@ import java.lang.annotation.RetentionPolicy;
 public class FirstOrderTest {
 
   private static final Function<Class<?>, ClassNode> CLASS_NODE_FROM_CLASS =
-      new Function<Class<?>, ClassNode>() {
-        @Override
-        public ClassNode apply(Class<?> input) {
-          return loadClassNode(input);
-        }
-      };
+      FirstOrderTest::loadClassNode;
 
-  private static final Function<Class<?>, Type> TYPE_FROM_CLASS = new Function<Class<?>, Type>() {
-    @Override
-    public Type apply(Class<?> input) {
-      return Type.getType(input);
-    }
-  };
+  private static final Function<Class<?>, Type> TYPE_FROM_CLASS = Type::getType;
 
   private static final ImmutableList<Class<?>> KNOWN_TYPES = ImmutableList.of(
       DependencyEnum.class,

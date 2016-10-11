@@ -26,8 +26,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 
 import org.junit.Test;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -105,14 +103,11 @@ public class BuildTargetTypeCoercerTest {
     Path stubPath = (Path) Proxy.newProxyInstance(
         getClass().getClassLoader(),
         new Class[]{Path.class},
-        new InvocationHandler() {
-          @Override
-          public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            if ("toString".equals(method.getName())) {
-              return "foo\\bar";
-            }
-            return method.invoke(concreteType, args);
+        (proxy, method, args) -> {
+          if ("toString".equals(method.getName())) {
+            return "foo\\bar";
           }
+          return method.invoke(concreteType, args);
         });
 
     BuildTarget seen = new BuildTargetTypeCoercer().coerce(

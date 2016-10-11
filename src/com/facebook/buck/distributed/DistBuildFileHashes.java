@@ -32,7 +32,6 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -51,7 +50,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -130,14 +128,9 @@ public class DistBuildFileHashes {
     for (final BuildRule rule : actionGraph.getNodes()) {
       ruleKeyEntries.add(
           executorService.submit(
-              new Callable<Map.Entry<BuildRule, RuleKey>>() {
-                @Override
-                public Map.Entry<BuildRule, RuleKey> call() throws Exception {
-                  return Maps.immutableEntry(
-                      rule,
-                      ruleKeyFactories.get(rule.getProjectFilesystem()).build(rule));
-                }
-              }));
+              () -> Maps.immutableEntry(
+                  rule,
+                  ruleKeyFactories.get(rule.getProjectFilesystem()).build(rule))));
     }
     ListenableFuture<List<Map.Entry<BuildRule, RuleKey>>> ruleKeyComputation =
         Futures.allAsList(ruleKeyEntries);
@@ -231,20 +224,10 @@ public class DistBuildFileHashes {
       return ImmutableMap.of();
     }
     return FluentIterable.from(remoteFileHashes.entries)
-        .filter(new Predicate<BuildJobStateFileHashEntry>() {
-          @Override
-          public boolean apply(BuildJobStateFileHashEntry input) {
-            return !input.isPathIsAbsolute() && !input.isSetArchiveMemberPath();
-          }
-        })
+        .filter(input -> !input.isPathIsAbsolute() && !input.isSetArchiveMemberPath())
         .uniqueIndex(
-            new Function<BuildJobStateFileHashEntry, Path>() {
-              @Override
-              public Path apply(BuildJobStateFileHashEntry input) {
-                return projectFilesystem.resolve(
-                    MorePaths.pathWithPlatformSeparators(input.getPath().getPath()));
-              }
-            });
+            input -> projectFilesystem.resolve(
+                MorePaths.pathWithPlatformSeparators(input.getPath().getPath())));
   }
 
   public static ImmutableMap<ArchiveMemberPath, BuildJobStateFileHashEntry>
@@ -255,22 +238,12 @@ public class DistBuildFileHashes {
       return ImmutableMap.of();
     }
     return FluentIterable.from(remoteFileHashes.entries)
-        .filter(new Predicate<BuildJobStateFileHashEntry>() {
-          @Override
-          public boolean apply(BuildJobStateFileHashEntry input) {
-            return !input.isPathIsAbsolute() && input.isSetArchiveMemberPath();
-          }
-        })
+        .filter(input -> !input.isPathIsAbsolute() && input.isSetArchiveMemberPath())
         .uniqueIndex(
-            new Function<BuildJobStateFileHashEntry, ArchiveMemberPath>() {
-              @Override
-              public ArchiveMemberPath apply(BuildJobStateFileHashEntry input) {
-                return ArchiveMemberPath.of(
-                    projectFilesystem.resolve(
-                        MorePaths.pathWithPlatformSeparators(input.getPath().getPath())),
-                    Paths.get(input.getArchiveMemberPath())
-                );
-              }
-            });
+            input -> ArchiveMemberPath.of(
+                projectFilesystem.resolve(
+                    MorePaths.pathWithPlatformSeparators(input.getPath().getPath())),
+                Paths.get(input.getArchiveMemberPath())
+            ));
   }
 }

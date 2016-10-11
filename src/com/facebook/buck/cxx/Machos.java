@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.util.MoreStrings;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -222,12 +221,7 @@ public class Machos {
                   MoreStrings
                       .stripPrefix(string, rootPrefix)
                       .transform(
-                          new Function<String, String>() {
-                            @Override
-                            public String apply(String input) {
-                              return "./" + input;
-                            }
-                          });
+                          input -> "./" + input);
               if (fixed.isPresent()) {
                 string = fixed.get();
                 break;

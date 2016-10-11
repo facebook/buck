@@ -33,12 +33,7 @@ public class StringArg extends Arg {
   private final String arg;
 
   private static final Function<String, Arg> CONVERT =
-      new Function<String, Arg>() {
-        @Override
-        public Arg apply(String input) {
-          return new StringArg(input);
-        }
-      };
+      StringArg::new;
 
   public StringArg(String arg) {
     this.arg = arg;

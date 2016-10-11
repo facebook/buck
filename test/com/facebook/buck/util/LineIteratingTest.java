@@ -205,12 +205,7 @@ public class LineIteratingTest {
 
   @Test
   public void stopIteratingAfterTwoEol() {
-    lineHandler.shouldContinue = new Predicate<List<String>>() {
-      @Override
-      public boolean apply(List<String> lines) {
-        return lines.size() < 2;
-      }
-    };
+    lineHandler.shouldContinue = lines -> lines.size() < 2;
     LineIterating.iterateByLines("foo\nbar\nbaz\n", lineHandler);
     assertThat(lineHandler.lines, contains("foo", "bar"));
 

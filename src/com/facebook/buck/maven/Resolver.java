@@ -43,7 +43,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import org.apache.maven.model.Model;
-import org.apache.maven.model.Repository;
 import org.apache.maven.model.building.DefaultModelBuilderFactory;
 import org.apache.maven.model.building.DefaultModelBuildingRequest;
 import org.apache.maven.model.building.ModelBuilder;
@@ -148,12 +147,7 @@ public class Resolver {
     this.visibility = config.visibility;
 
     this.repos = FluentIterable.from(config.repositories).transform(
-        new Function<ArtifactConfig.Repository, RemoteRepository>() {
-          @Override
-          public RemoteRepository apply(ArtifactConfig.Repository input) {
-            return AetherUtil.toRemoteRepository(input);
-          }
-        })
+        AetherUtil::toRemoteRepository)
         .toList();
   }
 
@@ -204,17 +198,8 @@ public class Resolver {
     List<ListenableFuture<Map.Entry<Path, Prebuilt>>> results =
         (List<ListenableFuture<Map.Entry<Path, Prebuilt>>>) (List<?>)
         exec.invokeAll(FluentIterable.from(graph.getNodes())
-            .transform(new Function<Artifact, Callable<Map.Entry<Path, Prebuilt>>>() {
-              @Override
-              public Callable<Map.Entry<Path, Prebuilt>> apply(final Artifact artifact) {
-                return new Callable<Map.Entry<Path, Prebuilt>>() {
-                  @Override
-                  public Map.Entry<Path, Prebuilt> call() throws Exception {
-                    return downloadArtifact(artifact, graph);
-                  }
-                };
-              }
-            })
+            .transform(artifact ->
+                (Callable<Map.Entry<Path, Prebuilt>>) () -> downloadArtifact(artifact, graph))
             .toList());
 
     try {
@@ -481,15 +466,11 @@ public class Resolver {
 
   private ImmutableList<RemoteRepository> getReposFromPom(Model model) {
     return FluentIterable.from(model.getRepositories())
-        .transform(new Function<Repository, RemoteRepository>() {
-          @Override
-          public RemoteRepository apply(Repository input) {
-            return new RemoteRepository.Builder(input.getId(), input.getLayout(), input.getUrl())
+        .transform(input ->
+            new RemoteRepository.Builder(input.getId(), input.getLayout(), input.getUrl())
                 .setReleasePolicy(toPolicy(input.getReleases()))
                 .setSnapshotPolicy(toPolicy(input.getSnapshots()))
-                .build();
-          }
-        })
+                .build())
         .toList();
   }
 
@@ -503,41 +484,36 @@ public class Resolver {
 
   private ImmutableList<Dependency> getDependenciesFromPom(Model model) {
     return FluentIterable.from(model.getDependencies())
-        .transform(new Function<org.apache.maven.model.Dependency, Dependency>() {
-          @Override
-          public Dependency apply(org.apache.maven.model.Dependency dep) {
-            ArtifactType stereotype = session.getArtifactTypeRegistry().get(dep.getType());
-            if (stereotype == null) {
-              stereotype = new DefaultArtifactType(dep.getType());
-            }
-
-            Map<String, String> props = null;
-            boolean system = dep.getSystemPath() != null && dep.getSystemPath().length() > 0;
-            if (system) {
-              props = ImmutableMap.of(ArtifactProperties.LOCAL_PATH, dep.getSystemPath());
-            }
-
-            DefaultArtifact artifact = new DefaultArtifact(
-                dep.getGroupId(), dep.getArtifactId(),
-                dep.getClassifier(), null, dep.getVersion(),
-                props, stereotype);
-
-            ImmutableList<Exclusion> exclusions = FluentIterable.from(dep.getExclusions())
-                .transform(new Function<org.apache.maven.model.Exclusion, Exclusion>() {
-                  @Override
-                  public Exclusion apply(org.apache.maven.model.Exclusion input) {
-                    String group = input.getGroupId();
-                    String artifact = input.getArtifactId();
-
-                    group = (group == null || group.length() == 0) ? "*" : group;
-                    artifact = (artifact == null || artifact.length() == 0) ? "*" : artifact;
-
-                    return new Exclusion(group, artifact, "*", "*");
-                  }
-                })
-                .toList();
-            return new Dependency(artifact, dep.getScope(), dep.isOptional(), exclusions);
+        .transform(dep -> {
+          ArtifactType stereotype = session.getArtifactTypeRegistry().get(dep.getType());
+          if (stereotype == null) {
+            stereotype = new DefaultArtifactType(dep.getType());
           }
+
+          Map<String, String> props = null;
+          boolean system = dep.getSystemPath() != null && dep.getSystemPath().length() > 0;
+          if (system) {
+            props = ImmutableMap.of(ArtifactProperties.LOCAL_PATH, dep.getSystemPath());
+          }
+
+          @SuppressWarnings("PMD.PrematureDeclaration")
+          DefaultArtifact artifact = new DefaultArtifact(
+              dep.getGroupId(), dep.getArtifactId(),
+              dep.getClassifier(), null, dep.getVersion(),
+              props, stereotype);
+
+          ImmutableList<Exclusion> exclusions = FluentIterable.from(dep.getExclusions())
+              .transform(input -> {
+                String group = input.getGroupId();
+                String artifact1 = input.getArtifactId();
+
+                group = (group == null || group.length() == 0) ? "*" : group;
+                artifact1 = (artifact1 == null || artifact1.length() == 0) ? "*" : artifact1;
+
+                return new Exclusion(group, artifact1, "*", "*");
+              })
+              .toList();
+          return new Dependency(artifact, dep.getScope(), dep.isOptional(), exclusions);
         })
         .toList();
   }

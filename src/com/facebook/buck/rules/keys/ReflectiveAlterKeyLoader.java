@@ -29,13 +29,10 @@ import java.util.Comparator;
 class ReflectiveAlterKeyLoader
     extends CacheLoader<Class<? extends BuildRule>, ImmutableCollection<AlterRuleKey>> {
 
-  private static final Comparator<Field> FIELD_COMPARATOR = new Comparator<Field>() {
-    @Override
-    public int compare(Field o1, Field o2) {
-      String o1Name = o1.getDeclaringClass() + "." + o1.getName();
-      String o2Name = o2.getDeclaringClass() + "." + o2.getName();
-      return o1Name.compareTo(o2Name);
-    }
+  private static final Comparator<Field> FIELD_COMPARATOR = (o1, o2) -> {
+    String o1Name = o1.getDeclaringClass() + "." + o1.getName();
+    String o2Name = o2.getDeclaringClass() + "." + o2.getName();
+    return o1Name.compareTo(o2Name);
   };
 
   @Override

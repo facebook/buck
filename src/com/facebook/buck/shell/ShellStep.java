@@ -44,7 +44,6 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
@@ -224,12 +223,7 @@ public abstract class ShellStep implements Step {
     // Get environment variables for this command as VAR1=val1 VAR2=val2... etc., with values
     // quoted as necessary.
     Iterable<String> env = Iterables.transform(getEnvironmentVariables(context).entrySet(),
-        new Function<Entry<String, String>, String>() {
-          @Override
-          public String apply(Entry<String, String> e) {
-            return String.format("%s=%s", e.getKey(), Escaper.escapeAsBashString(e.getValue()));
-          }
-    });
+        e -> String.format("%s=%s", e.getKey(), Escaper.escapeAsBashString(e.getValue())));
 
     // Quote the arguments to the shell command as needed (this applies to $0 as well
     // e.g. if we run '/path/a b.sh' quoting is needed).

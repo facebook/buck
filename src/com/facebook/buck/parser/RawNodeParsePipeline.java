@@ -20,11 +20,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
-import com.facebook.buck.parser.PipelineNodeCache.JobSupplier;
 import com.facebook.buck.rules.Cell;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -91,19 +89,15 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
     return cache.getJobWithCacheLookup(
         cell,
         buildFile,
-        new JobSupplier<ImmutableSet<Map<String, Object>>>() {
-          @Override
-          public ListenableFuture<ImmutableSet<Map<String, Object>>> get()
-              throws BuildTargetException {
-            if (shuttingDown()) {
-              return Futures.immediateCancelledFuture();
-            }
-
-            return projectBuildFileParserPool.getAllRulesAndMetaRules(
-                cell,
-                buildFile,
-                executorService);
+        () -> {
+          if (shuttingDown()) {
+            return Futures.immediateCancelledFuture();
           }
+
+          return projectBuildFileParserPool.getAllRulesAndMetaRules(
+              cell,
+              buildFile,
+              executorService);
         });
   }
 
@@ -113,23 +107,18 @@ public class RawNodeParsePipeline extends ParsePipeline<Map<String, Object>> {
       final BuildTarget buildTarget) throws BuildTargetException {
     return Futures.transformAsync(
         getAllNodesJob(cell, cell.getAbsolutePathToBuildFile(buildTarget)),
-        new AsyncFunction<ImmutableSet<Map<String, Object>>, Map<String, Object>>() {
-          @Override
-          public ListenableFuture<Map<String, Object>>
-          apply(ImmutableSet<Map<String, Object>> input)
-              throws NoSuchBuildTargetException, Cell.MissingBuildFileException {
-            for (Map<String, Object> rawNode : input) {
-              Object shortName = rawNode.get("name");
-              if (buildTarget.getShortName().equals(shortName)) {
-                return Futures.immediateFuture(rawNode);
-              }
+        input -> {
+          for (Map<String, Object> rawNode : input) {
+            Object shortName = rawNode.get("name");
+            if (buildTarget.getShortName().equals(shortName)) {
+              return Futures.immediateFuture(rawNode);
             }
-            throw NoSuchBuildTargetException.createForMissingBuildRule(
-                buildTarget,
-                BuildTargetPatternParser.forBaseName(buildTarget.getBaseName()),
-                cell.getBuildFileName(),
-                "Defined in file: " + cell.getAbsolutePathToBuildFile(buildTarget));
           }
+          throw NoSuchBuildTargetException.createForMissingBuildRule(
+              buildTarget,
+              BuildTargetPatternParser.forBaseName(buildTarget.getBaseName()),
+              cell.getBuildFileName(),
+              "Defined in file: " + cell.getAbsolutePathToBuildFile(buildTarget));
         },
         executorService);
   }

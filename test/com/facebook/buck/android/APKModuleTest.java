@@ -31,7 +31,6 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
@@ -169,12 +168,7 @@ public class APKModuleTest {
     }
 
     assertThat(
-        FluentIterable.from(dag.getAPKModules()).transform(new Function<APKModule, String>() {
-          @Override
-          public String apply(APKModule input) {
-            return input.getName();
-          }
-        }).toSet(),
+        FluentIterable.from(dag.getAPKModules()).transform(APKModule::getName).toSet(),
         containsInAnyOrder(
             "dex",
             "src.com.facebook.test.android.library",

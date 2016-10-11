@@ -111,23 +111,20 @@ public class JavaDepsFinder {
     if (javaPackageMappingOption.isPresent()) {
       // Function that returns the key of the entry ending in `.` if it does not do so already.
       Function<Map.Entry<String, String>, Map.Entry<String, BuildTarget>> normalizePackageMapping =
-          new Function<Map.Entry<String, String>, Map.Entry<String, BuildTarget>>() {
-            @Override
-            public Map.Entry<String, BuildTarget> apply(Map.Entry<String, String> entry) {
-              String originalKey = entry.getKey().trim();
-              // If the key corresponds to a Java package (not an entity), then make sure that it
-              // ends with a `.` so the prefix matching will work as expected in
-              // findProviderForSymbolFromBuckConfig(). Note that this heuristic could be a bit
-              // tighter.
-              boolean appearsToBeJavaPackage = !originalKey.endsWith(".") &&
-                  CharMatcher.javaUpperCase().matchesNoneOf(originalKey);
-              String key = appearsToBeJavaPackage ? originalKey + "." : originalKey;
-              BuildTarget buildTarget = BuildTargetParser.INSTANCE.parse(
-                  entry.getValue().trim(),
-                  BuildTargetPatternParser.fullyQualified(),
-                  cellNames);
-              return Maps.immutableEntry(key, buildTarget);
-            }
+          entry -> {
+            String originalKey = entry.getKey().trim();
+            // If the key corresponds to a Java package (not an entity), then make sure that it
+            // ends with a `.` so the prefix matching will work as expected in
+            // findProviderForSymbolFromBuckConfig(). Note that this heuristic could be a bit
+            // tighter.
+            boolean appearsToBeJavaPackage = !originalKey.endsWith(".") &&
+                CharMatcher.javaUpperCase().matchesNoneOf(originalKey);
+            String key = appearsToBeJavaPackage ? originalKey + "." : originalKey;
+            BuildTarget buildTarget = BuildTargetParser.INSTANCE.parse(
+                entry.getValue().trim(),
+                BuildTargetPatternParser.fullyQualified(),
+                cellNames);
+            return Maps.immutableEntry(key, buildTarget);
           };
 
       Iterable<Map.Entry<String, BuildTarget>> entries = FluentIterable.from(
@@ -271,13 +268,8 @@ public class JavaDepsFinder {
       final Set<BuildTarget> providedDeps = dependencyInfo.rulesWithAutodepsToProvidedDeps.get(
           rule);
       final Predicate<TargetNode<?>> isVisibleDepNotAlreadyInProvidedDeps =
-          new Predicate<TargetNode<?>>() {
-            @Override
-            public boolean apply(TargetNode<?> provider) {
-              return provider.isVisibleTo(graph, rule) &&
-                  !providedDeps.contains(provider.getBuildTarget());
-            }
-          };
+          provider -> provider.isVisibleTo(graph, rule) &&
+              !providedDeps.contains(provider.getBuildTarget());
       final boolean isJavaTestRule = rule.getType() == JavaTestDescription.TYPE;
 
       for (DependencyType type : DependencyType.values()) {

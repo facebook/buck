@@ -41,12 +41,7 @@ public class MultiArtifactCache implements ArtifactCache {
   private final ImmutableList<ArtifactCache> writableArtifactCaches;
   private final boolean isStoreSupported;
   private static final Predicate<ArtifactCache> WRITABLE_CACHES_ONLY =
-      new Predicate<ArtifactCache>() {
-        @Override
-        public boolean apply(ArtifactCache input) {
-          return input.isStoreSupported();
-        }
-      };
+      ArtifactCache::isStoreSupported;
 
   public MultiArtifactCache(ImmutableList<ArtifactCache> artifactCaches) {
     this.artifactCaches = artifactCaches;

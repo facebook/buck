@@ -32,13 +32,11 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProcessExecutor;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 
 import javax.annotation.Nullable;
 
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
-import net.sf.cglib.proxy.MethodProxy;
 
 public class TestCellBuilder {
 
@@ -112,16 +110,12 @@ public class TestCellBuilder {
 
     Enhancer enhancer = new Enhancer();
     enhancer.setSuperclass(Cell.class);
-    enhancer.setCallback(new MethodInterceptor() {
-      @Override
-      public Object intercept(
-          Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
-        if ("createBuildFileParserFactory".equals(method.getName())) {
-          return parserFactory;
-        }
-
-        return proxy.invokeSuper(obj, args);
+    enhancer.setCallback((MethodInterceptor) (obj, method, args, proxy) -> {
+      if ("createBuildFileParserFactory".equals(method.getName())) {
+        return parserFactory;
       }
+
+      return proxy.invokeSuper(obj, args);
     });
 
     return (Cell) enhancer.create();

@@ -87,7 +87,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.AbstractMap;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -559,19 +558,16 @@ public class AndroidBinary
 
     // Input asset libraries are sorted in descending filesize order.
     final ImmutableSortedSet.Builder<Path> inputAssetLibrariesBuilder =
-        ImmutableSortedSet.orderedBy(new Comparator<Path>() {
-          @Override
-          public int compare(Path libPath1, Path libPath2) {
-            try {
-              ProjectFilesystem filesystem = getProjectFilesystem();
-              int filesizeResult = -Long.compare(
-                  filesystem.getFileSize(libPath1),
-                  filesystem.getFileSize(libPath2));
-              int pathnameResult = libPath1.compareTo(libPath2);
-              return filesizeResult != 0 ? filesizeResult : pathnameResult;
-            } catch (IOException e) {
-              return 0;
-            }
+        ImmutableSortedSet.orderedBy((libPath1, libPath2) -> {
+          try {
+            ProjectFilesystem filesystem = getProjectFilesystem();
+            int filesizeResult = -Long.compare(
+                filesystem.getFileSize(libPath1),
+                filesystem.getFileSize(libPath2));
+            int pathnameResult = libPath1.compareTo(libPath2);
+            return filesizeResult != 0 ? filesizeResult : pathnameResult;
+          } catch (IOException e) {
+            return 0;
           }
         });
 
@@ -712,14 +708,9 @@ public class AndroidBinary
             .getPackageableCollection()
             .getModuleMappedClasspathEntriesToDex()
             .entries())
-        .transform(new Function<Map.Entry<APKModule, SourcePath>, Map.Entry<APKModule, Path>>() {
-          @Override
-          public Map.Entry<APKModule, Path> apply(Map.Entry<APKModule, SourcePath> input) {
-            return new AbstractMap.SimpleEntry<>(
-                input.getKey(),
-                getResolver().deprecatedPathFunction().apply(input.getValue()));
-          }
-        })
+        .transform(input -> new AbstractMap.SimpleEntry<>(
+            input.getKey(),
+            getResolver().deprecatedPathFunction().apply(input.getValue())))
         .toSet());
     ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap =
         additionalDexStoreToJarPathMapBuilder.build();
@@ -740,12 +731,7 @@ public class AndroidBinary
               classpathEntriesToDex,
               preprocessJavaClassesInDir));
       classpathEntriesToDex = FluentIterable.from(classpathEntriesToDex)
-          .transform(new Function<Path, Path>() {
-            @Override
-            public Path apply(Path classpathEntry) {
-              return preprocessJavaClassesOutDir.resolve(classpathEntry);
-            }
-          })
+          .transform(preprocessJavaClassesOutDir::resolve)
           .toSet();
 
       AbstractGenruleStep.CommandString commandString = new AbstractGenruleStep.CommandString(
@@ -865,12 +851,7 @@ public class AndroidBinary
         });
 
     return Suppliers.memoize(
-        new Supplier<Map<String, HashCode>>() {
-          @Override
-          public Map<String, HashCode> get() {
-            return builder.build();
-          }
-        });
+        builder::build);
   }
 
   public AndroidPackageableCollection getAndroidPackageableCollection() {
@@ -948,12 +929,7 @@ public class AndroidBinary
     // input classpath. This is fragile and should be replaced with knowledge of the BuildTarget.
     final ImmutableMap<Path, Path> inputOutputEntries = FluentIterable
         .from(classpathEntriesToDex)
-        .toMap(new Function<Path, Path>() {
-          @Override
-          public Path apply(Path classpathEntry) {
-            return getProguardOutputFromInputClasspath(classpathEntry);
-          }
-        });
+        .toMap(this::getProguardOutputFromInputClasspath);
 
     Path proguardConfigDir = enhancementResult.getAaptPackageResources()
         .getPathToGeneratedProguardConfigDir();

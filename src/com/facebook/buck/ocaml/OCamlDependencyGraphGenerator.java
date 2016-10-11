@@ -18,9 +18,7 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
@@ -54,21 +52,11 @@ public class OCamlDependencyGraphGenerator {
 
     FluentIterable<String> dependenciesML =
         FluentIterable.from(sortedDeps).transform(
-            new Function<String, String>() {
-              @Override
-              public String apply(String input) {
-                return replaceObjExtWithSourceExt(input, false /* isReason */);
-              }
-            });
+            input -> replaceObjExtWithSourceExt(input, false /* isReason */));
 
     FluentIterable<String> dependenciesRE =
         FluentIterable.from(sortedDeps).transform(
-            new Function<String, String>() {
-              @Override
-              public String apply(String input) {
-                return replaceObjExtWithSourceExt(input, true /* isReason */);
-              }
-            });
+            input -> replaceObjExtWithSourceExt(input, true /* isReason */));
 
     return new ImmutableList.Builder<String>()
         .addAll(dependenciesML)
@@ -104,37 +92,17 @@ public class OCamlDependencyGraphGenerator {
               .from(
                 Splitter.on(OCAML_DEPS_SEPARATOR)
                   .trimResults().splitToList(sourceAndDeps.get(1)))
-              .filter(new Predicate<String>() {
-                        @Override
-                        public boolean apply(String input) {
-                          return !input.isEmpty();
-                        }
-                      })
+              .filter(input -> !input.isEmpty())
               .transform(
-                  new Function<String, Path>() {
-                    @Override
-                    public Path apply(String input) {
-                      return Paths.get(replaceObjExtWithSourceExt(input, /* isReason */ false));
-                    }
-                  });
+                  input -> Paths.get(replaceObjExtWithSourceExt(input, /* isReason */ false)));
 
           FluentIterable<Path> dependenciesRE = FluentIterable
               .from(
                   Splitter.on(OCAML_DEPS_SEPARATOR)
                       .trimResults().splitToList(sourceAndDeps.get(1)))
-              .filter(new Predicate<String>() {
-                        @Override
-                        public boolean apply(String input) {
-                          return !input.isEmpty();
-                        }
-                      })
+              .filter(input -> !input.isEmpty())
               .transform(
-                  new Function<String, Path>() {
-                    @Override
-                    public Path apply(String input) {
-                      return Paths.get(replaceObjExtWithSourceExt(input, /* isReason */ true));
-                    }
-                  });
+                  input -> Paths.get(replaceObjExtWithSourceExt(input, /* isReason */ true)));
           ImmutableList<Path> dependencies =
               new ImmutableList.Builder<Path>()
                   .addAll(dependenciesML)

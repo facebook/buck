@@ -174,12 +174,7 @@ public class BuildRuleResolver {
   }
 
   public Function<BuildTarget, BuildRule> getRuleFunction() {
-    return new Function<BuildTarget, BuildRule>() {
-      @Override
-      public BuildRule apply(BuildTarget input) {
-        return getRule(input);
-      }
-    };
+    return this::getRule;
   }
 
   public ImmutableSortedSet<BuildRule> getAllRules(Iterable<BuildTarget> targets) {

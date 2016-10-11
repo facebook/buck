@@ -37,12 +37,7 @@ public class HeaderMapTest {
 
   private void assertThatHeaderMapsAreEqual(final HeaderMap hmap1, final HeaderMap hmap2) {
     hmap1.visit(
-        new HeaderMap.HeaderMapVisitor() {
-          @Override
-          public void apply(String str, String prefix, String suffix) {
-            assertEquals(prefix + suffix, hmap2.lookup(str));
-          }
-        });
+        (str, prefix, suffix) -> assertEquals(prefix + suffix, hmap2.lookup(str)));
     if (hmap1 == hmap2) {
       return;
     }
@@ -50,12 +45,7 @@ public class HeaderMapTest {
     assertEquals(hmap1.getNumEntries(), hmap2.getNumEntries());
     assertEquals(hmap1.getMaxValueLength(), hmap2.getMaxValueLength());
     hmap2.visit(
-        new HeaderMap.HeaderMapVisitor() {
-          @Override
-          public void apply(String str, String prefix, String suffix) {
-            assertEquals(prefix + suffix, hmap1.lookup(str));
-          }
-        });
+        (str, prefix, suffix) -> assertEquals(prefix + suffix, hmap1.lookup(str)));
   }
 
   @Before

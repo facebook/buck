@@ -261,13 +261,8 @@ public class JavaTestDescription implements
             buildNativeLibsSymlinkTreeRule(params, pathResolver, cxxPlatform);
         Predicate<BuildRule> shouldInclude = Predicates.alwaysTrue();
         if (cxxLibraryWhitelist.isPresent() && !cxxLibraryWhitelist.get().isEmpty()) {
-          shouldInclude = new Predicate<BuildRule>() {
-            @Override
-            public boolean apply(BuildRule input) {
-              return cxxLibraryWhitelist.get().contains(
-                  input.getBuildTarget().withFlavors());
-            }
-          };
+          shouldInclude = input -> cxxLibraryWhitelist.get().contains(
+              input.getBuildTarget().withFlavors());
         }
         updatedParams = params.appendExtraDeps(ImmutableList.<BuildRule>builder()
             .add(nativeLibsSymlinkTree)

@@ -46,9 +46,7 @@ import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -334,16 +332,11 @@ public class ProjectBuildFileParserTest {
       return new TestProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
-              new Function<ProcessExecutorParams, FakeProcess>() {
-                @Override
-                public FakeProcess apply(ProcessExecutorParams params) {
-                  return fakeProcessWithBserOutput(
-                      1,
-                      ImmutableList.of(),
-                      Optional.absent(),
-                      Optional.absent());
-                }
-              },
+              params -> fakeProcessWithBserOutput(
+                  1,
+                  ImmutableList.of(),
+                  Optional.absent(),
+                  Optional.absent()),
               new TestConsole()),
           BuckEventBusFactory.newInstance(),
           watchmanDiagnosticCache);
@@ -353,16 +346,11 @@ public class ProjectBuildFileParserTest {
       return new TestProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
-              new Function<ProcessExecutorParams, FakeProcess>() {
-                @Override
-                public FakeProcess apply(ProcessExecutorParams params) {
-                  return fakeProcessWithBserOutput(
-                      0,
-                      ImmutableList.of(),
-                      Optional.absent(),
-                      Optional.absent());
-                }
-              },
+              params -> fakeProcessWithBserOutput(
+                  0,
+                  ImmutableList.of(),
+                  Optional.absent(),
+                  Optional.absent()),
               new TestConsole()),
           BuckEventBusFactory.newInstance(),
           watchmanDiagnosticCache);
@@ -373,16 +361,11 @@ public class ProjectBuildFileParserTest {
       return new TestProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
-              new Function<ProcessExecutorParams, FakeProcess>() {
-                @Override
-                public FakeProcess apply(ProcessExecutorParams params) {
-                  return fakeProcessWithBserOutput(
-                      0,
-                      ImmutableList.of(),
-                      Optional.absent(),
-                      Optional.of("Don't Panic!"));
-                }
-              },
+              params -> fakeProcessWithBserOutput(
+                  0,
+                  ImmutableList.of(),
+                  Optional.absent(),
+                  Optional.of("Don't Panic!")),
               new TestConsole()),
           buckEventBus,
           watchmanDiagnosticCache);
@@ -395,24 +378,19 @@ public class ProjectBuildFileParserTest {
       return new TestProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
-              new Function<ProcessExecutorParams, FakeProcess>() {
-                @Override
-                public FakeProcess apply(ProcessExecutorParams params) {
-                  return fakeProcessWithBserOutput(
-                      0,
-                      ImmutableList.of(),
-                      Optional.of(
-                          ImmutableList.of(
-                              ImmutableMap.of(
-                                  "level",
-                                  "warning",
-                                  "message",
-                                  warning,
-                                  "source",
-                                  source))),
-                      Optional.absent());
-                }
-              },
+              params -> fakeProcessWithBserOutput(
+                  0,
+                  ImmutableList.of(),
+                  Optional.of(
+                      ImmutableList.of(
+                          ImmutableMap.of(
+                              "level",
+                              "warning",
+                              "message",
+                              warning,
+                              "source",
+                              source))),
+                  Optional.absent()),
               new TestConsole()),
           buckEventBus,
           watchmanDiagnosticCache);
@@ -425,24 +403,19 @@ public class ProjectBuildFileParserTest {
       return new TestProjectBuildFileParser(
           "fake-python",
           new FakeProcessExecutor(
-              new Function<ProcessExecutorParams, FakeProcess>() {
-                @Override
-                public FakeProcess apply(ProcessExecutorParams params) {
-                  return fakeProcessWithBserOutput(
-                      0,
-                      ImmutableList.of(),
-                      Optional.of(
-                          ImmutableList.of(
-                              ImmutableMap.of(
-                                  "level",
-                                  "error",
-                                  "message",
-                                  error,
-                                  "source",
-                                  source))),
-                      Optional.absent());
-                }
-              },
+              params -> fakeProcessWithBserOutput(
+                  0,
+                  ImmutableList.of(),
+                  Optional.of(
+                      ImmutableList.of(
+                          ImmutableMap.of(
+                              "level",
+                              "error",
+                              "message",
+                              error,
+                              "source",
+                              source))),
+                  Optional.absent()),
               new TestConsole()),
           buckEventBus,
           watchmanDiagnosticCache);

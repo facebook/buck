@@ -45,7 +45,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -282,27 +281,19 @@ public class GoTestDescription implements
 
       final BuildRuleParams originalParams = params;
       BuildRuleParams testTargetParams = params.copyWithDeps(
-          new Supplier<ImmutableSortedSet<BuildRule>>() {
-            @Override
-            public ImmutableSortedSet<BuildRule> get() {
-              return ImmutableSortedSet.<BuildRule>naturalOrder()
-                  .addAll(originalParams.getDeclaredDeps().get())
-                  .addAll(resolver.getAllRules(libraryArg.deps.get()))
-                  .build();
-            }
-          },
-          new Supplier<ImmutableSortedSet<BuildRule>>() {
-            @Override
-            public ImmutableSortedSet<BuildRule> get() {
-              final SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
-              return ImmutableSortedSet.<BuildRule>naturalOrder()
-                  .addAll(originalParams.getExtraDeps().get())
-                  // Make sure to include dynamically generated sources as deps.
-                  .addAll(
-                      sourcePathResolver.filterBuildRuleInputs(
-                          libraryArg.srcs.or(ImmutableSortedSet.of())))
-                  .build();
-            }
+          () -> ImmutableSortedSet.<BuildRule>naturalOrder()
+              .addAll(originalParams.getDeclaredDeps().get())
+              .addAll(resolver.getAllRules(libraryArg.deps.get()))
+              .build(),
+          () -> {
+            final SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+            return ImmutableSortedSet.<BuildRule>naturalOrder()
+                .addAll(originalParams.getExtraDeps().get())
+                // Make sure to include dynamically generated sources as deps.
+                .addAll(
+                    sourcePathResolver.filterBuildRuleInputs(
+                        libraryArg.srcs.or(ImmutableSortedSet.of())))
+                .build();
           });
 
       testLibrary = GoDescriptors.createGoCompileRule(

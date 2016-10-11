@@ -52,12 +52,7 @@ public class BuildRules {
   }
 
   public static Predicate<BuildRule> isBuildRuleWithTarget(final BuildTarget target) {
-    return new Predicate<BuildRule>() {
-      @Override
-      public boolean apply(BuildRule input) {
-        return input.getBuildTarget().equals(target);
-      }
-    };
+    return input -> input.getBuildTarget().equals(target);
   }
 
   /**

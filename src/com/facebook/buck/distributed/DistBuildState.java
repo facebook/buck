@@ -31,7 +31,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
@@ -42,7 +41,6 @@ import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -61,16 +59,13 @@ public class DistBuildState {
     this.cells = cells;
     this.fileHashes = Maps.uniqueIndex(
         remoteState.getFileHashes(),
-        new Function<BuildJobStateFileHashes, ProjectFilesystem>() {
-          @Override
-          public ProjectFilesystem apply(BuildJobStateFileHashes input) {
-            int cellIndex = input.getCellIndex();
-            Cell cell = Preconditions.checkNotNull(
-                cells.get(cellIndex),
-                "Unknown cell index %s. Distributed build state dump corrupt?",
-                cellIndex);
-            return cell.getFilesystem();
-          }
+        input -> {
+          int cellIndex = input.getCellIndex();
+          Cell cell = Preconditions.checkNotNull(
+              cells.get(cellIndex),
+              "Unknown cell index %s. Distributed build state dump corrupt?",
+              cellIndex);
+          return cell.getFilesystem();
         });
   }
 
@@ -133,15 +128,12 @@ public class DistBuildState {
     ImmutableMap<String, ImmutableMap<String, String>> rawConfig = ImmutableMap.copyOf(
         Maps.transformValues(
             remoteBuckConfig.getRawBuckConfig(),
-            new Function<List<OrderedStringMapEntry>, ImmutableMap<String, String>>() {
-              @Override
-              public ImmutableMap<String, String> apply(List<OrderedStringMapEntry> input) {
-                ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-                for (OrderedStringMapEntry entry : input) {
-                  builder.put(entry.getKey(), entry.getValue());
-                }
-                return builder.build();
+            input -> {
+              ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+              for (OrderedStringMapEntry entry : input) {
+                builder.put(entry.getKey(), entry.getValue());
               }
+              return builder.build();
             }));
     return new Config(RawConfig.of(rawConfig));
   }

@@ -56,20 +56,10 @@ public class UnskippedRulesTracker {
   private static final Function<Object, Void> NULL_FUNCTION = Functions.constant(null);
 
   private final AsyncFunction<ImmutableSortedSet<BuildRule>, Void> acquireReferences =
-      new AsyncFunction<ImmutableSortedSet<BuildRule>, Void>() {
-        @Override
-        public ListenableFuture<Void> apply(ImmutableSortedSet<BuildRule> rules) {
-          return acquireReferences(rules);
-        }
-      };
+      this::acquireReferences;
 
   private final AsyncFunction<ImmutableSortedSet<BuildRule>, Void> releaseReferences =
-      new AsyncFunction<ImmutableSortedSet<BuildRule>, Void>() {
-        @Override
-        public ListenableFuture<Void> apply(ImmutableSortedSet<BuildRule> rules) {
-          return releaseReferences(rules);
-        }
-      };
+      this::releaseReferences;
 
   private final RuleDepsCache ruleDepsCache;
   private final ListeningExecutorService executor;
@@ -89,12 +79,7 @@ public class UnskippedRulesTracker {
     // Add a reference to the top-level rule so that it is never marked as skipped.
     ListenableFuture<Void> future = acquireReference(rule);
     future.addListener(
-        new Runnable() {
-          @Override
-          public void run() {
-            sendEventIfStateChanged(eventBus);
-          }
-        },
+        () -> sendEventIfStateChanged(eventBus),
         MoreExecutors.directExecutor());
     return future;
   }
@@ -115,23 +100,13 @@ public class UnskippedRulesTracker {
     // Release references from rule's dependencies since this rule will not need them anymore.
     future = Futures.transformAsync(
         future,
-        new AsyncFunction<Void, Void>() {
-          @Override
-          public ListenableFuture<Void> apply(Void input) {
-            return Futures.transformAsync(
-                ruleDepsCache.get(rule),
-                releaseReferences,
-                executor);
-          }
-        });
+        input -> Futures.transformAsync(
+            ruleDepsCache.get(rule),
+            releaseReferences,
+            executor));
 
     future.addListener(
-        new Runnable() {
-          @Override
-          public void run() {
-            sendEventIfStateChanged(eventBus);
-          }
-        },
+        () -> sendEventIfStateChanged(eventBus),
         MoreExecutors.directExecutor());
 
     return future;

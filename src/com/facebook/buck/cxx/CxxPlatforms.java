@@ -28,7 +28,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -98,19 +97,9 @@ public class CxxPlatforms {
         .setAsmpp(config.getPreprocessorProvider("asmpp"))
         .setLd(config.getLinkerProvider("ld", ld.getType()).or(ld))
         .addAllLdflags(ldFlags)
-        .setAr(new LazyDelegatingArchiver(new Supplier<Archiver>() {
-          @Override
-          public Archiver get() {
-            return getTool("ar", config)
-                .transform(getArchiver(arDelegate.getClass(), config)).or(arDelegate);
-          }
-        }))
-        .setRanlib(new LazyDelegatingTool(new Supplier<Tool>() {
-          @Override
-          public Tool get() {
-            return getTool("ranlib", config).or(ranlib);
-          }
-        }))
+        .setAr(new LazyDelegatingArchiver(() -> getTool("ar", config)
+            .transform(getArchiver(arDelegate.getClass(), config)).or(arDelegate)))
+        .setRanlib(new LazyDelegatingTool(() -> getTool("ranlib", config).or(ranlib)))
         .setStrip(getTool("strip", config).or(strip))
         .setSharedLibraryExtension(sharedLibraryExtension)
         .setSharedLibraryVersionedExtensionFormat(sharedLibraryVersionedExtensionFormat)
@@ -126,15 +115,12 @@ public class CxxPlatforms {
         .setFlagMacros(flagMacros);
 
 
-    builder.setSymbolNameTool(new LazyDelegatingSymbolNameTool(new Supplier<SymbolNameTool>() {
-      @Override
-      public SymbolNameTool get() {
-        Optional<Tool> configNm = getTool("nm", config);
-        if (configNm.isPresent()) {
-          return new PosixNmSymbolNameTool(configNm.get());
-        } else {
-          return nm;
-        }
+    builder.setSymbolNameTool(new LazyDelegatingSymbolNameTool(() -> {
+      Optional<Tool> configNm = getTool("nm", config);
+      if (configNm.isPresent()) {
+        return new PosixNmSymbolNameTool(configNm.get());
+      } else {
+        return nm;
       }
     }));
 
@@ -185,15 +171,12 @@ public class CxxPlatforms {
 
   private static Function<Tool, Archiver> getArchiver(final Class<? extends Archiver> arClass,
       final CxxBuckConfig config) {
-    return new Function<Tool, Archiver>() {
-      @Override
-      public Archiver apply(Tool input) {
-        try {
-          return config.getArchiver(input)
-              .or(arClass.getConstructor(Tool.class).newInstance(input));
-        } catch (ReflectiveOperationException e) {
-          throw new RuntimeException(e);
-        }
+    return input -> {
+      try {
+        return config.getArchiver(input)
+            .or(arClass.getConstructor(Tool.class).newInstance(input));
+      } catch (ReflectiveOperationException e) {
+        throw new RuntimeException(e);
       }
     };
   }

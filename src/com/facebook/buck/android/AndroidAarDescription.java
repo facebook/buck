@@ -34,7 +34,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
@@ -219,17 +218,14 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     }
 
     Optional<Path> assembledNativeLibsDir = nativeLibrariesOptional.transform(
-        new Function<ImmutableMap<APKModule, CopyNativeLibraries>, Path>() {
-          @Override
-          public Path apply(ImmutableMap<APKModule, CopyNativeLibraries> input) {
-            // there will be only one value for the root module
-            CopyNativeLibraries copyNativeLibraries = input.get(apkModuleGraph.getRootAPKModule());
-            if (copyNativeLibraries == null) {
-              throw new HumanReadableException(
-                  "Native libraries are present but not in the root application module.");
-            }
-            return copyNativeLibraries.getPathToNativeLibsDir();
+        input -> {
+          // there will be only one value for the root module
+          CopyNativeLibraries copyNativeLibraries = input.get(apkModuleGraph.getRootAPKModule());
+          if (copyNativeLibraries == null) {
+            throw new HumanReadableException(
+                "Native libraries are present but not in the root application module.");
           }
+          return copyNativeLibraries.getPathToNativeLibsDir();
         });
     BuildRuleParams androidAarParams = originalBuildRuleParams.copyWithExtraDeps(
         Suppliers.ofInstance(ImmutableSortedSet.copyOf(aarExtraDepsBuilder.build())));

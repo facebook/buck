@@ -57,12 +57,9 @@ public class GetStringsFilesStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context) {
     try {
-      Predicate<Path> filter = new Predicate<Path>() {
-        @Override
-        public boolean apply(Path pathRelativeToProjectRoot) {
-          String filePath = MorePaths.pathWithUnixSeparators(pathRelativeToProjectRoot);
-          return STRINGS_FILE_PATH.matcher(filePath).matches();
-        }
+      Predicate<Path> filter = pathRelativeToProjectRoot -> {
+        String filePath = MorePaths.pathWithUnixSeparators(pathRelativeToProjectRoot);
+        return STRINGS_FILE_PATH.matcher(filePath).matches();
       };
 
       for (Path resDir : resDirs) {

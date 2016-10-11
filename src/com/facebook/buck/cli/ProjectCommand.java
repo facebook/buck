@@ -73,7 +73,6 @@ import com.facebook.buck.util.ProcessManager;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -124,12 +123,7 @@ public class ProjectCommand extends BuildCommand {
    * IntelliJ.
    */
   private static final Predicate<TargetNode<?>> ANNOTATION_PREDICATE =
-      new Predicate<TargetNode<?>>() {
-        @Override
-        public boolean apply(TargetNode<?> input) {
-          return isTargetWithAnnotations(input);
-        }
-      };
+      ProjectCommand::isTargetWithAnnotations;
 
   private static final String XCODE_PROCESS_NAME = "Xcode";
 
@@ -326,12 +320,7 @@ public class ProjectCommand extends BuildCommand {
 
   private Optional<Ide> getIdeFromBuckConfig(BuckConfig buckConfig) {
     return buckConfig.getValue("project", "ide").transform(
-            new Function<String, Ide>() {
-              @Override
-              public Ide apply(String input) {
-                return Ide.fromString(input);
-              }
-            });
+        Ide::fromString);
   }
 
   private ProjectTestsMode testsMode(BuckConfig buckConfig) {
@@ -593,13 +582,7 @@ public class ProjectCommand extends BuildCommand {
     return getRootsFromPredicate(
         projectGraph,
         Predicates.and(
-            new Predicate<TargetNode<?>>() {
-
-              @Override
-              public boolean apply(TargetNode<?> input) {
-                return input.getBuildTarget() != null && input.getBuildTarget().isInCellRoot();
-              }
-            },
+            input -> input.getBuildTarget() != null && input.getBuildTarget().isInCellRoot(),
             projectPredicates.getProjectRootsPredicate()
         )
     );
@@ -720,12 +703,9 @@ public class ProjectCommand extends BuildCommand {
       ImmutableSet<BuildTarget> buildTargets) {
     return FluentIterable
         .from(buildTargets)
-        .filter(new Predicate<BuildTarget>() {
-          @Override
-          public boolean apply(@Nullable BuildTarget input) {
-            TargetNode<?> targetNode = targetGraph.get(input);
-            return targetNode != null && isTargetWithAnnotations(targetNode);
-          }
+        .filter(input -> {
+          TargetNode<?> targetNode = targetGraph.get(input);
+          return targetNode != null && isTargetWithAnnotations(targetNode);
         })
         .toSet();
   }
@@ -998,15 +978,10 @@ public class ProjectCommand extends BuildCommand {
           params.getCell().getKnownBuildRuleTypes().getCxxPlatforms(),
           defaultCxxPlatform,
           params.getBuckConfig().getView(ParserConfig.class).getBuildFileName(),
-          new Function<TargetNode<?>, SourcePathResolver>() {
-            @Override
-            public SourcePathResolver apply(TargetNode<?> input) {
-              return new SourcePathResolver(
-                  ActionGraphCache.getFreshActionGraph(params.getBuckEventBus(),
-                      targetGraphAndTargets.getTargetGraph().getSubgraph(
-                      ImmutableSet.of(input))).getResolver());
-            }
-          },
+          input -> new SourcePathResolver(
+              ActionGraphCache.getFreshActionGraph(params.getBuckEventBus(),
+                  targetGraphAndTargets.getTargetGraph().getSubgraph(
+                  ImmutableSet.of(input))).getResolver()),
           params.getBuckEventBus(),
           halideBuckConfig,
           cxxBuckConfig,

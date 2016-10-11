@@ -29,7 +29,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -47,21 +46,13 @@ public class MachineReadableLoggerIntegrationTest {
 
     // The folder should have only one command.
     Path logDir = workspace.resolve("buck-out/log/");
-    File[] commandLogDirectoriesList = (logDir.toFile()).listFiles(new FileFilter() {
-      @Override
-      public boolean accept(File pathname) {
-        return pathname.isDirectory();
-      }
-    });
+    File[] commandLogDirectoriesList =
+        (logDir.toFile()).listFiles(File::isDirectory);
     assertEquals(commandLogDirectoriesList.length, 1);
 
     // The build folder should have only one machine-readable log.
-    File[] logfiles = commandLogDirectoriesList[0].listFiles(new FileFilter() {
-      @Override
-      public boolean accept(File pathname) {
-        return pathname.getName().equals(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME);
-      }
-    });
+    File[] logfiles = commandLogDirectoriesList[0].listFiles(
+        pathname -> pathname.getName().equals(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME));
     assertEquals(logfiles.length, 1);
 
     String data = new String(Files.readAllBytes(logfiles[0].toPath()), Charsets.UTF_8);

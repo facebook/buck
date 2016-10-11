@@ -23,10 +23,8 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 
-import java.nio.file.Path;
 
 public final class JavacOptionsFactory {
   public static JavacOptions create(
@@ -83,12 +81,7 @@ public final class JavacOptionsFactory {
         }
         builder.setJavacPath(
             jvmLibraryArg.javac.transform(
-                new Function<Path, Either<Path, SourcePath>>() {
-                  @Override
-                  public Either<Path, SourcePath> apply(Path input) {
-                    return Either.ofLeft(input);
-                  }
-                }));
+                Either::ofLeft));
         builder.setJavacJarPath(jvmLibraryArg.javacJar);
       }
     }

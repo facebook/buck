@@ -161,36 +161,26 @@ public class ShTest
 
     if (isDryRun) {
       // Again, shortcut to returning no results, because sh-tests have no concept of a dry-run.
-      return new Callable<TestResults>() {
-        @Override
-        public TestResults call() throws Exception {
-          return TestResults.of(
-              getBuildTarget(),
-              ImmutableList.of(),
-              contacts,
-              FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
-        }
-      };
+      return () -> TestResults.of(
+          getBuildTarget(),
+          ImmutableList.of(),
+          contacts,
+          FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
     } else {
-      return new Callable<TestResults>() {
-
-        @Override
-        public TestResults call() throws Exception {
-          Optional<String> resultsFileContents =
-              getProjectFilesystem().readFileIfItExists(getPathToTestOutputResult());
-          ObjectMapper mapper = context.getObjectMapper();
-          TestResultSummary testResultSummary = mapper.readValue(resultsFileContents.get(),
-              TestResultSummary.class);
-          TestCaseSummary testCaseSummary = new TestCaseSummary(
-              getBuildTarget().getFullyQualifiedName(),
-              ImmutableList.of(testResultSummary));
-          return TestResults.of(
-              getBuildTarget(),
-              ImmutableList.of(testCaseSummary),
-              contacts,
-              FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
-        }
-
+      return () -> {
+        Optional<String> resultsFileContents =
+            getProjectFilesystem().readFileIfItExists(getPathToTestOutputResult());
+        ObjectMapper mapper = context.getObjectMapper();
+        TestResultSummary testResultSummary = mapper.readValue(resultsFileContents.get(),
+            TestResultSummary.class);
+        TestCaseSummary testCaseSummary = new TestCaseSummary(
+            getBuildTarget().getFullyQualifiedName(),
+            ImmutableList.of(testResultSummary));
+        return TestResults.of(
+            getBuildTarget(),
+            ImmutableList.of(testCaseSummary),
+            contacts,
+            FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
       };
     }
   }

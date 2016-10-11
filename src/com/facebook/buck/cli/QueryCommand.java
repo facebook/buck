@@ -32,7 +32,6 @@ import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
@@ -167,12 +166,7 @@ public class QueryCommand extends AbstractCommand {
       List<String> formatArgs
   ) throws InterruptedException, QueryException, IOException {
     String argsList = Joiner.on(' ').join(
-        Iterables.transform(formatArgs, new Function<String, String>() {
-          @Override
-          public String apply(String input) {
-            return "'" + input + "'";
-          }
-        })
+        Iterables.transform(formatArgs, input -> "'" + input + "'")
     );
     String setRepresentation = "set(" + argsList + ")";
     String formattedQuery = queryFormat.replace("%Ss", setRepresentation);
@@ -259,12 +253,7 @@ public class QueryCommand extends AbstractCommand {
         env.getTargetGraph(),
         "result_graph",
         env.getNodesFromQueryTargets(queryResult),
-        new Function<TargetNode<?>, String>() {
-          @Override
-          public String apply(TargetNode<?> targetNode) {
-            return "\"" + targetNode.getBuildTarget().getFullyQualifiedName() + "\"";
-          }
-        },
+        targetNode -> "\"" + targetNode.getBuildTarget().getFullyQualifiedName() + "\"",
         params.getConsole().getStdOut());
   }
 
@@ -334,12 +323,7 @@ public class QueryCommand extends AbstractCommand {
     return Joiner.on(" ").join(
         Lists.transform(
             arguments,
-            new Function<String, String>() {
-              @Override
-              public String apply(String arg) {
-                return "'" + arg + "'";
-              }
-            }));
+            arg -> "'" + arg + "'"));
   }
 
   static String getAuditDependenciesQueryFormat(boolean isTransitive, boolean includeTests) {

@@ -49,14 +49,11 @@ public class AsyncCloseable implements AutoCloseable {
    */
   public <T extends AutoCloseable> T closeAsync(final T asyncCloseable) {
     pendingClosers.add(
-        new Runnable() {
-          @Override
-          public void run() {
-            try {
-              asyncCloseable.close();
-            } catch (Exception e) {
-              LOG.warn(e, "Exception when performing async close of %s.", asyncCloseable);
-            }
+        () -> {
+          try {
+            asyncCloseable.close();
+          } catch (Exception e) {
+            LOG.warn(e, "Exception when performing async close of %s.", asyncCloseable);
           }
         });
     return asyncCloseable;

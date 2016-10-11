@@ -114,12 +114,7 @@ public class ParsePipelineTest {
 
     waitForAll(
         libTargetNode.getDeps(),
-        new Predicate<BuildTarget>() {
-          @Override
-          public boolean apply(BuildTarget dep) {
-            return fixture.getTargetNodeParsePipelineCache().lookupComputedNode(cell, dep) != null;
-          }
-        });
+        dep -> fixture.getTargetNodeParsePipelineCache().lookupComputedNode(cell, dep) != null);
     fixture.close();
   }
 
@@ -140,12 +135,7 @@ public class ParsePipelineTest {
             });
     waitForAll(
         allDeps,
-        new Predicate<BuildTarget>() {
-          @Override
-          public boolean apply(BuildTarget dep) {
-            return fixture.getTargetNodeParsePipelineCache().lookupComputedNode(cell, dep) != null;
-          }
-        });
+        dep -> fixture.getTargetNodeParsePipelineCache().lookupComputedNode(cell, dep) != null);
     fixture.close();
   }
 
@@ -362,12 +352,7 @@ public class ParsePipelineTest {
       // Strip meta entries.
       rawNodes = ImmutableSet.copyOf(Iterables.filter(
           rawNodes,
-          new Predicate<Map<String, Object>>() {
-            @Override
-            public boolean apply(Map<String, Object> input) {
-              return input.containsKey("name");
-            }
-          }));
+          input -> input.containsKey("name")));
       return super.putComputedNodeIfNotPresent(cell, buildFile, rawNodes);
     }
   }
@@ -431,26 +416,20 @@ public class ParsePipelineTest {
 
       projectBuildFileParserPool = new ProjectBuildFileParserPool(
           4, // max parsers
-          new Function<Cell, ProjectBuildFileParser>() {
-            @Override
-            public ProjectBuildFileParser apply(Cell input) {
-              ProjectBuildFileParser buildFileParser = input.createBuildFileParser(
-                  constructorArgMarshaller,
-                  console,
-                  eventBus,
-                  /* ignoreBuckAutodepsFiles */ false);
-              synchronized (projectBuildFileParsers) {
-                projectBuildFileParsers.add(buildFileParser);
-              }
-              return buildFileParser;
+          input -> {
+            ProjectBuildFileParser buildFileParser = input.createBuildFileParser(
+                constructorArgMarshaller,
+                console,
+                eventBus,
+                /* ignoreBuckAutodepsFiles */ false);
+            synchronized (projectBuildFileParsers) {
+              projectBuildFileParsers.add(buildFileParser);
             }
+            return buildFileParser;
           });
       final TargetNodeListener<TargetNode<?>> nodeListener =
-          new TargetNodeListener<TargetNode<?>>() {
-        @Override
-        public void onCreate(Path buildFile, TargetNode<?> node) throws IOException {
-        }
-      };
+          (buildFile, node) -> {
+          };
       LoadingCache<Cell, BuildFileTree> buildFileTrees = CacheBuilder.newBuilder().build(
           new CacheLoader<Cell, BuildFileTree>() {
             @Override
@@ -514,12 +493,7 @@ public class ParsePipelineTest {
       }
       waitForAll(
           parserSnapshot,
-          new Predicate<ProjectBuildFileParser>() {
-            @Override
-            public boolean apply(ProjectBuildFileParser input) {
-              return input.isClosed();
-            }
-          }
+          ProjectBuildFileParser::isClosed
       );
     }
 

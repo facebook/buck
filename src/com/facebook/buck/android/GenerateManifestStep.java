@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.android.common.annotations.NonNull;
 import com.android.manifmerger.ICallback;
 import com.android.manifmerger.IMergerLog;
 import com.android.manifmerger.ManifestMerger;
@@ -88,12 +87,7 @@ public class GenerateManifestStep implements Step {
     File skeletonManifestFile =
         filesystem.getPathForRelativeExistingPath(skeletonManifestPath).toAbsolutePath().toFile();
 
-    ICallback callback = new ICallback() {
-      @Override
-      public int queryCodenameApiLevel(@NonNull String codename) {
-        return BASE_SDK_LEVEL;
-      }
-    };
+    ICallback callback = codename -> BASE_SDK_LEVEL;
 
     IMergerLog log = MergerLog.wrapSdkLog(new BuckEventAndroidLogger(context.getBuckEventBus()));
 

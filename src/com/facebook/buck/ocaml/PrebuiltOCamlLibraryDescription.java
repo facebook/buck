@@ -85,14 +85,9 @@ public class PrebuiltOCamlLibraryDescription
         libPath.resolve(bytecodeLib));
     final ImmutableList<SourcePath> staticCLibraryPaths =
         FluentIterable.from(cLibs)
-          .transform(new Function<String, SourcePath>() {
-                       @Override
-                       public SourcePath apply(String input) {
-                         return new PathSourcePath(
-                             params.getProjectFilesystem(),
-                             libPath.resolve(input));
-                       }
-                     }).toList();
+          .transform((Function<String, SourcePath>) input -> new PathSourcePath(
+              params.getProjectFilesystem(),
+              libPath.resolve(input))).toList();
 
     final SourcePath bytecodeLibraryPath = new PathSourcePath(
         params.getProjectFilesystem(),

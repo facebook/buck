@@ -20,7 +20,6 @@ import com.facebook.buck.hashing.PathHashing;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -235,12 +234,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
           ImmutableSet.copyOf(
               FluentIterable.from(projectFilesystem.getFilesUnderPath(path))
                   .transform(
-                      new Function<Path, Path>() {
-                        @Override
-                        public Path apply(Path input) {
-                          return path.relativize(input);
-                        }
-                      })));
+                      path::relativize)));
     } else if (rawPath.toString().endsWith(".jar")) {
       value = HashCodeAndFileType.ofArchive(
           hashCode,

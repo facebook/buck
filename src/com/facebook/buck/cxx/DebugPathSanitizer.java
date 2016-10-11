@@ -131,12 +131,7 @@ public class DebugPathSanitizer {
   }
 
   public Function<String, String> sanitize(final Optional<Path> workingDir) {
-    return new Function<String, String>() {
-      @Override
-      public String apply(String input) {
-        return DebugPathSanitizer.this.sanitize(workingDir, input);
-      }
-    };
+    return input -> DebugPathSanitizer.this.sanitize(workingDir, input);
   }
 
   public ImmutableList<String> sanitizeFlags(Iterable<String> flags) {

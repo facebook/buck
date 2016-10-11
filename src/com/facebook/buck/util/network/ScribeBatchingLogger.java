@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util.network;
 
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -39,12 +38,7 @@ public class ScribeBatchingLogger extends AbstractBatchingLogger {
   protected ListenableFuture<Void> logMultiple(ImmutableCollection<BatchEntry> data) {
     ImmutableList<String> lines = FluentIterable.from(data)
         .transform(
-            new Function<BatchEntry, String>() {
-              @Override
-              public String apply(BatchEntry input) {
-                return input.getLine();
-              }
-            }).toList();
+            BatchEntry::getLine).toList();
     return scribeLogger.log(category, lines);
   }
 }

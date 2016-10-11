@@ -30,12 +30,7 @@ import com.google.common.collect.Iterables;
 
 public class WindowsPreprocessor implements Preprocessor {
 
-  private static Function<String, String> prependIncludeFlag = new Function<String, String>() {
-    @Override
-    public String apply(String input) {
-      return "/I".concat(input);
-    }
-  };
+  private static Function<String, String> prependIncludeFlag = "/I"::concat;
 
   private final Tool tool;
 

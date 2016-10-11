@@ -33,12 +33,7 @@ import java.util.Map;
 public class RemoteStateBasedFileHashCache implements FileHashCache {
   private static final Function<BuildJobStateFileHashEntry, HashCode>
       HASH_CODE_FROM_FILE_HASH_ENTRY =
-      new Function<BuildJobStateFileHashEntry, HashCode>() {
-        @Override
-        public HashCode apply(BuildJobStateFileHashEntry input) {
-          return HashCode.fromString(input.getHashCode());
-        }
-      };
+      input -> HashCode.fromString(input.getHashCode());
 
   private final Map<Path, HashCode> remoteFileHashes;
   private final Map<ArchiveMemberPath, HashCode> remoteArchiveHashes;

@@ -34,12 +34,7 @@ public class AsyncCloseableTest {
     final AtomicBoolean didClose = new AtomicBoolean(false);
     try (AsyncCloseable asyncCloseable = new AsyncCloseable(directExecutor)) {
       asyncCloseable.closeAsync(
-          new AutoCloseable() {
-            @Override
-            public void close() throws Exception {
-              didClose.set(true);
-            }
-          });
+          () -> didClose.set(true));
     }
     assertThat(didClose.get(), Matchers.is(true));
   }

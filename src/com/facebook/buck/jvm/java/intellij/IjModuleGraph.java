@@ -28,7 +28,6 @@ import com.google.common.base.Ascii;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableListMultimap;
@@ -99,12 +98,7 @@ public class IjModuleGraph {
     public static final AggregationMode SHALLOW = new AggregationMode(SHALLOW_MAX_PATH_LENGTH);
 
     public static final Function<String, AggregationMode> FROM_STRING_FUNCTION =
-        new Function<String, AggregationMode>() {
-          @Override
-          public AggregationMode apply(String input) {
-            return fromString(input);
-          }
-        };
+        AggregationMode::fromString;
 
 
     private Optional<Integer> minimumDepth;
@@ -172,9 +166,7 @@ public class IjModuleGraph {
           .from(targetGraph.getNodes())
           .filter(IjModuleFactory.SUPPORTED_MODULE_TYPES_PREDICATE)
           .index(
-            new Function<TargetNode<?>, Path>() {
-              @Override
-              public Path apply(TargetNode<?> input) {
+              input -> {
                 Path basePath = input.getBuildTarget().getBasePath();
 
                 if (input.getConstructorArg() instanceof AndroidResourceDescription.Arg) {
@@ -182,8 +174,7 @@ public class IjModuleGraph {
                 }
 
                 return simplifyPath(basePath, minimumPathDepth, blockedPathTree);
-              }
-            });
+              });
 
     ImmutableMap.Builder<BuildTarget, IjModule> moduleMapBuilder = new ImmutableMap.Builder<>();
 
@@ -306,14 +297,11 @@ public class IjModuleGraph {
               exportedDepsClosureResolver.getExportedDepsClosure(depBuildTarget))
               .append(depBuildTarget)
               .filter(
-                  new Predicate<BuildTarget>() {
-                    @Override
-                    public boolean apply(BuildTarget input) {
-                      // The exported deps closure can contain references back to targets contained
-                      // in the module, so filter those out.
-                      TargetNode<?> targetNode = targetGraph.get(input);
-                      return !module.getTargets().contains(targetNode);
-                    }
+                  input -> {
+                    // The exported deps closure can contain references back to targets contained
+                    // in the module, so filter those out.
+                    TargetNode<?> targetNode = targetGraph.get(input);
+                    return !module.getTargets().contains(targetNode);
                   })
               .transform(
                   new Function<BuildTarget, IjProjectElement>() {
@@ -379,24 +367,14 @@ public class IjModuleGraph {
     final ImmutableMap<IjProjectElement, DependencyType> deps = getDepsFor(source);
     return FluentIterable.from(deps.keySet()).filter(IjModule.class)
         .toMap(
-            new Function<IjModule, DependencyType>() {
-              @Override
-              public DependencyType apply(IjModule input) {
-                return Preconditions.checkNotNull(deps.get(input));
-              }
-            });
+            input -> Preconditions.checkNotNull(deps.get(input)));
   }
 
   public ImmutableMap<IjLibrary, DependencyType> getDependentLibrariesFor(IjModule source) {
     final ImmutableMap<IjProjectElement, DependencyType> deps = getDepsFor(source);
     return FluentIterable.from(deps.keySet()).filter(IjLibrary.class)
         .toMap(
-            new Function<IjLibrary, DependencyType>() {
-              @Override
-              public DependencyType apply(IjLibrary input) {
-                return Preconditions.checkNotNull(deps.get(input));
-              }
-            });
+            input -> Preconditions.checkNotNull(deps.get(input)));
   }
 
   private static void checkNamesAreUnique(

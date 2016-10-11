@@ -42,28 +42,13 @@ import java.nio.file.Path;
 abstract class AbstractCxxPreprocessorInput {
 
   public static final Function<CxxPreprocessorInput, ImmutableList<CxxHeaders>> GET_INCLUDES =
-      new Function<CxxPreprocessorInput, ImmutableList<CxxHeaders>>() {
-        @Override
-        public ImmutableList<CxxHeaders> apply(CxxPreprocessorInput input) {
-          return input.getIncludes();
-        }
-      };
+      CxxPreprocessorInput::getIncludes;
 
   public static final Function<CxxPreprocessorInput, ImmutableSet<Path>> GET_SYSTEM_INCLUDE_ROOTS =
-      new Function<CxxPreprocessorInput, ImmutableSet<Path>>() {
-        @Override
-        public ImmutableSet<Path> apply(CxxPreprocessorInput input) {
-          return input.getSystemIncludeRoots();
-        }
-      };
+      CxxPreprocessorInput::getSystemIncludeRoots;
 
   public static final Function<CxxPreprocessorInput, ImmutableSet<FrameworkPath>> GET_FRAMEWORKS =
-      new Function<CxxPreprocessorInput, ImmutableSet<FrameworkPath>>() {
-        @Override
-        public ImmutableSet<FrameworkPath> apply(CxxPreprocessorInput input) {
-          return input.getFrameworks();
-        }
-      };
+      CxxPreprocessorInput::getFrameworks;
 
   @Value.Parameter
   public abstract Multimap<CxxSource.Type, String> getPreprocessorFlags();

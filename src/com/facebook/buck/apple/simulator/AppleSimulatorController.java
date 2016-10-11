@@ -168,16 +168,13 @@ public class AppleSimulatorController {
     return waitForSimulatorState(
         timeoutMillis,
         "all simulators shutdown",
-        new Predicate<ImmutableSet<AppleSimulator>>() {
-          @Override
-          public boolean apply(ImmutableSet<AppleSimulator> simulators) {
-            for (AppleSimulator simulator : simulators) {
-              if (simulator.getSimulatorState() != AppleSimulatorState.SHUTDOWN) {
-                return false;
-              }
+        simulators -> {
+          for (AppleSimulator simulator : simulators) {
+            if (simulator.getSimulatorState() != AppleSimulatorState.SHUTDOWN) {
+              return false;
             }
-            return true;
           }
+          return true;
         });
   }
 
@@ -193,17 +190,14 @@ public class AppleSimulatorController {
     return waitForSimulatorState(
         timeoutMillis,
         String.format("simulator %s booted", simulatorUdid),
-        new Predicate<ImmutableSet<AppleSimulator>>() {
-          @Override
-          public boolean apply(ImmutableSet<AppleSimulator> simulators) {
-            for (AppleSimulator simulator : simulators) {
-              if (simulator.getUdid().equals(simulatorUdid) &&
-                  simulator.getSimulatorState().equals(AppleSimulatorState.BOOTED)) {
-                return true;
-              }
+        simulators -> {
+          for (AppleSimulator simulator : simulators) {
+            if (simulator.getUdid().equals(simulatorUdid) &&
+                simulator.getSimulatorState().equals(AppleSimulatorState.BOOTED)) {
+              return true;
             }
-            return false;
           }
+          return false;
         });
   }
 

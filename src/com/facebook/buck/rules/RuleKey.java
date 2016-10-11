@@ -70,12 +70,7 @@ public class RuleKey {
    * Is likely particularly useful with {@link Optional#transform(Function)}.
    */
   public static final Function<String, RuleKey> TO_RULE_KEY =
-      new Function<String, RuleKey>() {
-        @Override
-        public RuleKey apply(String hash) {
-          return new RuleKey(hash);
-        }
-  };
+      RuleKey::new;
 
   @Override
   public boolean equals(@Nullable Object obj) {

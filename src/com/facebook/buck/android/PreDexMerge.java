@@ -41,7 +41,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -183,23 +182,10 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
     dexFilesToMergeBuilder.putAll(
       FluentIterable.from(preDexDeps.entries())
           .transform(
-              new Function<
-                  Map.Entry<APKModule, DexProducedFromJavaLibrary>,
-                  Map.Entry<APKModule, DexWithClasses>>() {
-                @Override
-                public Map.Entry<APKModule, DexWithClasses> apply(
-                    Map.Entry<APKModule, DexProducedFromJavaLibrary> input) {
-                  return new AbstractMap.SimpleEntry<>(
-                      input.getKey(),
-                      DexWithClasses.TO_DEX_WITH_CLASSES.apply(input.getValue()));
-                }
-              })
-          .filter(new Predicate<Map.Entry<APKModule, DexWithClasses>>() {
-            @Override
-            public boolean apply(Map.Entry<APKModule, DexWithClasses> input) {
-              return input.getValue() != null;
-            }
-          })
+              input -> new AbstractMap.SimpleEntry<>(
+                  input.getKey(),
+                  DexWithClasses.TO_DEX_WITH_CLASSES.apply(input.getValue())))
+          .filter(input -> input.getValue() != null)
           .toSet());
 
     final SplitDexPaths paths = new SplitDexPaths();
@@ -282,12 +268,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
             Suppliers.ofInstance(rootApkModuleResult.primaryDexInputs),
             Optional.of(paths.jarfilesSubdir),
             Optional.of(Suppliers.ofInstance(aggregatedOutputToInputs)),
-            new SmartDexingStep.DexInputHashesProvider() {
-              @Override
-              public ImmutableMap<Path, Sha1HashCode> getDexInputHashes() {
-                return dexInputHashes;
-              }
-            },
+            () -> dexInputHashes,
             paths.successDir,
             DX_MERGE_OPTIONS,
             dxExecutorService,

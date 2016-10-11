@@ -68,12 +68,10 @@ public class NetworkStatsKeeper {
     long calculationInterval = DOWNLOAD_SPEED_CALCULATION_INTERVAL.getDuration();
     TimeUnit timeUnit = DOWNLOAD_SPEED_CALCULATION_INTERVAL.getUnit();
 
-    scheduler.scheduleAtFixedRate(new Runnable() {
-      @Override
-      public void run() {
-        calculateDownloadSpeedInLastInterval();
-      }
-    }, /* initialDelay */ calculationInterval, /* period */ calculationInterval,
+    scheduler.scheduleAtFixedRate(
+        this::calculateDownloadSpeedInLastInterval,
+        /* initialDelay */ calculationInterval,
+        /* period */ calculationInterval,
         timeUnit);
   }
 

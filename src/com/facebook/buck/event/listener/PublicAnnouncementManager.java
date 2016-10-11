@@ -41,7 +41,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
-import java.util.concurrent.Callable;
 
 public class PublicAnnouncementManager {
 
@@ -79,37 +78,34 @@ public class PublicAnnouncementManager {
 
   public void getAndPostAnnouncements() {
     final ListenableFuture<ImmutableList<Announcement>> message =
-        service.submit(new Callable<ImmutableList<Announcement>>() {
-          @Override
-          public ImmutableList<Announcement> call() throws Exception {
-            Optional<ClientSideSlb> slb = logConfig.getFrontendConfig()
-                .tryCreatingClientSideSlb(
-                    clock,
-                    eventBus,
-                    new CommandThreadFactory("PublicAnnouncement"));
+        service.submit(() -> {
+          Optional<ClientSideSlb> slb = logConfig.getFrontendConfig()
+              .tryCreatingClientSideSlb(
+                  clock,
+                  eventBus,
+                  new CommandThreadFactory("PublicAnnouncement"));
 
-            if (slb.isPresent()) {
-              try (FrontendService frontendService =
-                  new FrontendService(ThriftOverHttpServiceConfig.of(
-                      new LoadBalancedService(
-                          slb.get(),
-                          logConfig.createOkHttpClient(),
-                          eventBus)))) {
-                AnnouncementRequest announcementRequest = new AnnouncementRequest();
-                announcementRequest.setBuckVersion(getBuckVersion());
-                announcementRequest.setRepository(repository);
-                FrontendRequest request = new FrontendRequest();
-                request.setType(FrontendRequestType.ANNOUNCEMENT);
-                request.setAnnouncementRequest(announcementRequest);
+          if (slb.isPresent()) {
+            try (FrontendService frontendService =
+                new FrontendService(ThriftOverHttpServiceConfig.of(
+                    new LoadBalancedService(
+                        slb.get(),
+                        logConfig.createOkHttpClient(),
+                        eventBus)))) {
+              AnnouncementRequest announcementRequest = new AnnouncementRequest();
+              announcementRequest.setBuckVersion(getBuckVersion());
+              announcementRequest.setRepository(repository);
+              FrontendRequest request = new FrontendRequest();
+              request.setType(FrontendRequestType.ANNOUNCEMENT);
+              request.setAnnouncementRequest(announcementRequest);
 
-                FrontendResponse response = frontendService.makeRequest(request);
-                return ImmutableList.copyOf(response.announcementResponse.announcements);
-                } catch (IOException e) {
-                throw new HumanReadableException("Failed to perform request", e);
-              }
-            } else {
-              throw new HumanReadableException("Failed to establish connection to server.");
+              FrontendResponse response = frontendService.makeRequest(request);
+              return ImmutableList.copyOf(response.announcementResponse.announcements);
+              } catch (IOException e) {
+              throw new HumanReadableException("Failed to perform request", e);
             }
+          } else {
+            throw new HumanReadableException("Failed to establish connection to server.");
           }
         });
 

@@ -38,13 +38,10 @@ import java.util.Set;
 
 final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
 
-  private static final Predicate<String> NOT_A_BUILT_IN_SYMBOL = new Predicate<String>() {
-    @Override
-    public boolean apply(String symbol) {
-      // We can ignore things in java.*, but not javax.*, unfortunately since sometimes those are
-      // provided by JSRs.
-      return !symbol.startsWith("java.");
-    }
+  private static final Predicate<String> NOT_A_BUILT_IN_SYMBOL = symbol -> {
+    // We can ignore things in java.*, but not javax.*, unfortunately since sometimes those are
+    // provided by JSRs.
+    return !symbol.startsWith("java.");
   };
 
   private static final Predicate<Object> IS_PATH_SOURCE_PATH =

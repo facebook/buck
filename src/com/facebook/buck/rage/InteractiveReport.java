@@ -21,7 +21,6 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -33,7 +32,6 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -84,29 +82,22 @@ public class InteractiveReport extends AbstractReport {
     }
 
     // Sort the interesting builds based on time, reverse order so the most recent is first.
-    Collections.sort(interestingBuildLogs, new Comparator<BuildLogEntry>() {
-      @Override
-      public int compare(BuildLogEntry o1, BuildLogEntry o2) {
-        return -o1.getLastModifiedTime().compareTo(o2.getLastModifiedTime());
-      }
-    });
+    Collections.sort(interestingBuildLogs,
+        (o1, o2) -> -o1.getLastModifiedTime().compareTo(o2.getLastModifiedTime()));
 
     return input.selectRange(
         "Which buck invocations would you like to report?",
         interestingBuildLogs,
-        new Function<BuildLogEntry, String>() {
-          @Override
-          public String apply(BuildLogEntry input) {
-            Pair<Double, SizeUnit> humanReadableSize = SizeUnit.getHumanReadableSize(
-                input.getSize(),
-                SizeUnit.BYTES);
-            return String.format(
-                "\t%s\tbuck [%s] (%.2f %s)",
-                input.getLastModifiedTime(),
-                input.getCommandArgs().or("unknown command"),
-                humanReadableSize.getFirst(),
-                humanReadableSize.getSecond().getAbbreviation());
-          }
+        input1 -> {
+          Pair<Double, SizeUnit> humanReadableSize = SizeUnit.getHumanReadableSize(
+              input1.getSize(),
+              SizeUnit.BYTES);
+          return String.format(
+              "\t%s\tbuck [%s] (%.2f %s)",
+              input1.getLastModifiedTime(),
+              input1.getCommandArgs().or("unknown command"),
+              humanReadableSize.getFirst(),
+              humanReadableSize.getSecond().getAbbreviation());
         });
   }
 

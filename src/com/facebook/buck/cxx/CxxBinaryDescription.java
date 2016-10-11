@@ -35,7 +35,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -352,12 +351,7 @@ public class CxxBinaryDescription implements
     return CxxDescriptionEnhancer
         .createCompilationDatabaseDependencies(buildTarget, cxxPlatforms, resolver, args)
         .transform(
-            new Function<CxxCompilationDatabaseDependencies, U>() {
-              @Override
-              public U apply(CxxCompilationDatabaseDependencies input) {
-                return metadataClass.cast(input);
-              }
-            }
+            metadataClass::cast
         );
   }
 

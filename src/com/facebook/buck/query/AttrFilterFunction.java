@@ -67,12 +67,7 @@ public class AttrFilterFunction implements QueryFunction {
     String attr = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
 
     final String attrValue = args.get(1).getWord();
-    final Predicate<Object> predicate = new Predicate<Object>() {
-      @Override
-      public boolean apply(Object input) {
-        return attrValue.equals(input.toString());
-      }
-    };
+    final Predicate<Object> predicate = input -> attrValue.equals(input.toString());
 
     Set<QueryTarget> result = new LinkedHashSet<>();
     for (QueryTarget target : argument.eval(env, executor)) {

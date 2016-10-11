@@ -46,12 +46,7 @@ public class StringSetOptionHandler extends OptionHandler<Supplier<ImmutableSet<
 
   private final ImmutableSet.Builder<String> builder = ImmutableSet.builder();
   private final Supplier<ImmutableSet<String>> supplier =
-      Suppliers.memoize(new Supplier<ImmutableSet<String>>() {
-        @Override
-        public ImmutableSet<String> get() {
-          return builder.build();
-        }
-  });
+      Suppliers.memoize(builder::build);
 
   public StringSetOptionHandler (
       CmdLineParser parser, OptionDef option, Setter<? super Supplier<ImmutableSet<String>>> setter)

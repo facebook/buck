@@ -159,12 +159,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       TimeZone timeZone) {
     super(console, clock, locale, executionEnvironment);
     this.locale = locale;
-    this.formatTimeFunction = new Function<Long, String>(){
-        @Override
-        public String apply(Long elapsedTimeMs) {
-          return formatElapsedTime(elapsedTimeMs);
-        }
-    };
+    this.formatTimeFunction = this::formatElapsedTime;
     this.webServer = webServer;
     this.threadsToRunningTestSummaryEvent = new ConcurrentHashMap<>(
         executionEnvironment.getAvailableCores());
@@ -200,15 +195,12 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
    */
   public void startRenderScheduler(long renderInterval, TimeUnit timeUnit) {
     LOG.debug("Starting render scheduler (interval %d ms)", timeUnit.toMillis(renderInterval));
-    renderScheduler.scheduleAtFixedRate(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          SuperConsoleEventBusListener.this.render();
-        } catch (Error | RuntimeException e) {
-          LOG.error(e, "Rendering exception");
-          throw e;
-        }
+    renderScheduler.scheduleAtFixedRate(() -> {
+      try {
+        SuperConsoleEventBusListener.this.render();
+      } catch (Error | RuntimeException e) {
+        LOG.error(e, "Rendering exception");
+        throw e;
       }
     }, /* initialDelay */ renderInterval, /* period */ renderInterval, timeUnit);
   }

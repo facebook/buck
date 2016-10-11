@@ -21,11 +21,9 @@ import com.facebook.buck.cli.SlbBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.unit.SizeUnit;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -165,12 +163,7 @@ public class ArtifactCacheBuckConfig {
 
   public boolean hasAtLeastOneWriteableCache() {
     return FluentIterable.from(getHttpCaches()).anyMatch(
-        new Predicate<HttpCacheEntry>() {
-          @Override
-          public boolean apply(HttpCacheEntry input) {
-            return input.getCacheReadMode().equals(ArtifactCacheBuckConfig.CacheReadMode.readwrite);
-          }
-        });
+        input -> input.getCacheReadMode().equals(CacheReadMode.readwrite));
   }
 
   public String getHostToReportToRemoteCacheServer() {
@@ -189,17 +182,14 @@ public class ArtifactCacheBuckConfig {
   public ImmutableSet<ArtifactCacheMode> getArtifactCacheModes() {
     return FluentIterable.from(getArtifactCacheModesRaw())
         .transform(
-            new Function<String, ArtifactCacheMode>() {
-              @Override
-              public ArtifactCacheMode apply(String input) {
-                try {
-                  return ArtifactCacheMode.valueOf(input);
-                } catch (IllegalArgumentException e) {
-                  throw new HumanReadableException(
-                      "Unusable %s.mode: '%s'",
-                      CACHE_SECTION_NAME,
-                      input);
-                }
+            input -> {
+              try {
+                return ArtifactCacheMode.valueOf(input);
+              } catch (IllegalArgumentException e) {
+                throw new HumanReadableException(
+                    "Unusable %s.mode: '%s'",
+                    CACHE_SECTION_NAME,
+                    input);
               }
             })
         .toSet();
@@ -263,24 +253,14 @@ public class ArtifactCacheBuckConfig {
     return buckConfig.getValue(CACHE_SECTION_NAME, TWO_LEVEL_CACHING_MIN_SIZE_FIELD_NAME)
         .or(buckConfig.getValue(CACHE_SECTION_NAME, TWO_LEVEL_CACHING_THRESHOLD_FIELD_NAME))
         .transform(
-            new Function<String, Long>() {
-              @Override
-              public Long apply(String input) {
-                return SizeUnit.parseBytes(input);
-              }
-            })
+            SizeUnit::parseBytes)
         .or(TWO_LEVEL_CACHING_MIN_SIZE_DEFAULT);
   }
 
   public Optional<Long> getTwoLevelCachingMaximumSize() {
     return buckConfig.getValue(CACHE_SECTION_NAME, TWO_LEVEL_CACHING_MAX_SIZE_FIELD_NAME)
         .transform(
-            new Function<String, Long>() {
-              @Override
-              public Long apply(String input) {
-                return SizeUnit.parseBytes(input);
-              }
-            });
+            SizeUnit::parseBytes);
   }
 
   private CacheReadMode getDirCacheReadMode() {
@@ -297,12 +277,7 @@ public class ArtifactCacheBuckConfig {
 
   private Optional<Long> getCacheDirMaxSizeBytes() {
     return buckConfig.getValue(CACHE_SECTION_NAME, "dir_max_size").transform(
-        new Function<String, Long>() {
-          @Override
-          public Long apply(String input) {
-            return SizeUnit.parseBytes(input);
-          }
-        });
+        SizeUnit::parseBytes);
   }
 
   private boolean getServingLocalCacheEnabled() {

@@ -61,11 +61,8 @@ public class FakeTestRule extends AbstractBuildRule implements TestRule {
         Optional.absent(),
         false, // runTestSeparately
         ImmutableList.of(),
-        new Callable<TestResults>() {
-          @Override
-          public TestResults call() {
-            throw new UnsupportedOperationException("interpretTestResults() not implemented");
-          }
+        () -> {
+          throw new UnsupportedOperationException("interpretTestResults() not implemented");
         });
   }
 

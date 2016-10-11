@@ -17,7 +17,6 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.util.Escaper;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 
@@ -37,12 +36,7 @@ public class Shell {
   public static String shellQuoteJoin(Iterable<String> items, String sep) {
     return Joiner.on(sep).join(
         FluentIterable.from(items)
-          .transform(new Function<String, String>() {
-                       @Override
-                       public String apply(String input) {
-                         return Escaper.escapeAsBashString(input);
-                       }
-                     }));
+          .transform(Escaper::escapeAsBashString));
   }
 
 }

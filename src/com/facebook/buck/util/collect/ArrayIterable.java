@@ -60,14 +60,11 @@ public class ArrayIterable<T> implements Iterable<T> {
       // ImmutableList instead.
       return ImmutableList.of();
     } else if (endIndex - startIndex == 1) {
-      return new Iterable<T>() {
-        @Override
-        public Iterator<T> iterator() {
-          // This always looks up the element in the array in case the user modifies the contents of
-          // the array outside of this method. That would probably be a bad thing for the user to
-          // do, but this ensures that the behavior is consistent with ArrayIterable.
-          return Iterators.singletonIterator(array[startIndex]);
-        }
+      return () -> {
+        // This always looks up the element in the array in case the user modifies the contents of
+        // the array outside of this method. That would probably be a bad thing for the user to
+        // do, but this ensures that the behavior is consistent with ArrayIterable.
+        return Iterators.singletonIterator(array[startIndex]);
       };
     } else {
       return new ArrayIterable<T>(array, startIndex, endIndex);

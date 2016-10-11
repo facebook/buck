@@ -19,7 +19,6 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuildTarget;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetGraph;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetNode;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -143,12 +142,7 @@ public class DistBuildTargetGraphCodec {
           buildFilePath,
           target,
           rawNode,
-          new Function<PerfEventId, SimplePerfEvent.Scope>() {
-            @Override
-            public SimplePerfEvent.Scope apply(PerfEventId input) {
-              return SimplePerfEvent.scope(Optional.absent(), input);
-            }
-          });
+          input -> SimplePerfEvent.scope(Optional.absent(), input));
       targetNodeIndexBuilder.put(targetNode.getBuildTarget(), targetNode);
     }
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex = targetNodeIndexBuilder.build();

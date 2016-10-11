@@ -82,14 +82,11 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule, Has
       Optional<Long> testRuleTimeoutMs) {
     super(params, resolver);
     this.env = Suppliers.memoize(
-        new Supplier<ImmutableMap<String, String>>() {
-          @Override
-          public ImmutableMap<String, String> get() {
-            ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-            builder.putAll(toolEnv);
-            builder.putAll(env.get());
-            return builder.build();
-          }
+        () -> {
+          ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+          builder.putAll(toolEnv);
+          builder.putAll(env.get());
+          return builder.build();
         });
     this.args = Suppliers.memoize(args);
     this.resources = resources;
@@ -172,27 +169,24 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule, Has
       final ExecutionContext executionContext,
       boolean isUsingTestSelectors,
       final boolean isDryRun) {
-    return new Callable<TestResults>() {
-      @Override
-      public TestResults call() throws Exception {
-        ImmutableList.Builder<TestCaseSummary> summaries = ImmutableList.builder();
-        if (!isDryRun) {
-          ImmutableList<TestResultSummary> resultSummaries =
-              parseResults(
-                  getPathToTestExitCode(),
-                  getPathToTestOutput(),
-                  getPathToTestResults());
-          TestCaseSummary summary = new TestCaseSummary(
-              getBuildTarget().getFullyQualifiedName(),
-              resultSummaries);
-          summaries.add(summary);
-        }
-        return TestResults.of(
-            getBuildTarget(),
-            summaries.build(),
-            contacts,
-            FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
+    return () -> {
+      ImmutableList.Builder<TestCaseSummary> summaries = ImmutableList.builder();
+      if (!isDryRun) {
+        ImmutableList<TestResultSummary> resultSummaries =
+            parseResults(
+                getPathToTestExitCode(),
+                getPathToTestOutput(),
+                getPathToTestResults());
+        TestCaseSummary summary = new TestCaseSummary(
+            getBuildTarget().getFullyQualifiedName(),
+            resultSummaries);
+        summaries.add(summary);
       }
+      return TestResults.of(
+          getBuildTarget(),
+          summaries.build(),
+          contacts,
+          FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
     };
   }
 

@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -53,12 +52,7 @@ public class AppleResources {
                 AppleBuildRules.RecursiveDependenciesMode.COPYING,
                 ImmutableSet.of(AppleResourceDescription.TYPE)))
         .transform(
-            new Function<TargetNode<?>, AppleResourceDescription.Arg>() {
-              @Override
-              public AppleResourceDescription.Arg apply(TargetNode<?> input) {
-                return (AppleResourceDescription.Arg) input.getConstructorArg();
-              }
-            })
+            input -> (AppleResourceDescription.Arg) input.getConstructorArg())
         .toSet();
   }
 

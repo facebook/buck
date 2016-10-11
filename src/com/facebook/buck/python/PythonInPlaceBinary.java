@@ -117,30 +117,25 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
     final String relativeLinkTreeRootStr =
         Escaper.escapeAsPythonString(relativeLinkTreeRoot.toString());
     final Linker ld = cxxPlatform.getLd().resolve(resolver);
-    return new Supplier<String>() {
-      @Override
-      public String get() {
-        return new ST(getRunInplaceResource())
-            .add("PYTHON", pythonPlatform.getEnvironment().getPythonPath())
-            .add("MAIN_MODULE", Escaper.escapeAsPythonString(mainModule))
-            .add("MODULES_DIR", relativeLinkTreeRootStr)
-            .add(
-                "NATIVE_LIBS_ENV_VAR",
-                Escaper.escapeAsPythonString(ld.searchPathEnvVar()))
-            .add(
-                "NATIVE_LIBS_DIR",
-                components.getNativeLibraries().isEmpty() ?
-                    "None" :
-                    relativeLinkTreeRootStr)
-            .add(
-                "NATIVE_LIBS_PRELOAD_ENV_VAR",
-                Escaper.escapeAsPythonString(ld.preloadEnvVar()))
-            .add(
-                "NATIVE_LIBS_PRELOAD",
-                Escaper.escapeAsPythonString(Joiner.on(':').join(preloadLibraries)))
-            .render();
-      }
-    };
+    return () -> new ST(getRunInplaceResource())
+        .add("PYTHON", pythonPlatform.getEnvironment().getPythonPath())
+        .add("MAIN_MODULE", Escaper.escapeAsPythonString(mainModule))
+        .add("MODULES_DIR", relativeLinkTreeRootStr)
+        .add(
+            "NATIVE_LIBS_ENV_VAR",
+            Escaper.escapeAsPythonString(ld.searchPathEnvVar()))
+        .add(
+            "NATIVE_LIBS_DIR",
+            components.getNativeLibraries().isEmpty() ?
+                "None" :
+                relativeLinkTreeRootStr)
+        .add(
+            "NATIVE_LIBS_PRELOAD_ENV_VAR",
+            Escaper.escapeAsPythonString(ld.preloadEnvVar()))
+        .add(
+            "NATIVE_LIBS_PRELOAD",
+            Escaper.escapeAsPythonString(Joiner.on(':').join(preloadLibraries)))
+        .render();
   }
 
   @Override

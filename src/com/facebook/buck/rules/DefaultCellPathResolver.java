@@ -21,7 +21,6 @@ import com.facebook.buck.config.Configs;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -50,13 +49,10 @@ public class DefaultCellPathResolver implements CellPathResolver {
       ImmutableMap<String, String> repositoriesSection) {
     this.root = root;
     this.cellPaths = ImmutableMap.copyOf(
-        Maps.transformValues(repositoriesSection, new Function<String, Path>() {
-          @Override
-          public Path apply(String input) {
-            return root.resolve(MorePaths.expandHomeDir(root.getFileSystem().getPath(input)))
-                .normalize();
-          }
-        }));
+        Maps.transformValues(
+            repositoriesSection,
+            input -> root.resolve(MorePaths.expandHomeDir(root.getFileSystem().getPath(input)))
+                .normalize()));
   }
 
   public DefaultCellPathResolver(Path root, Config config) {

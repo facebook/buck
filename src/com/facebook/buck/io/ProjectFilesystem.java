@@ -211,18 +211,8 @@ public class ProjectFilesystem {
     }
     this.projectRoot = MorePaths.normalize(root);
     this.delegate = delegate;
-    this.pathAbsolutifier = new Function<Path, Path>() {
-      @Override
-      public Path apply(Path path) {
-        return resolve(path);
-      }
-    };
-    this.pathRelativizer = new Function<Path, Path>() {
-      @Override
-      public Path apply(Path input) {
-        return projectRoot.relativize(input);
-      }
-    };
+    this.pathAbsolutifier = this::resolve;
+    this.pathRelativizer = projectRoot::relativize;
     this.ignoreValidityOfPaths = false;
     this.blackListedPaths = FluentIterable.from(blackListedPaths)
         .append(
@@ -237,24 +227,16 @@ public class ProjectFilesystem {
     this.buckPaths = buckPaths;
 
     this.blackListedDirectories = FluentIterable.from(this.blackListedPaths)
-        .filter(new Predicate<PathOrGlobMatcher>() {
-          @Override
-          public boolean apply(PathOrGlobMatcher matcher) {
-            return matcher.getType() == PathOrGlobMatcher.Type.PATH;
+        .filter(matcher -> matcher.getType() == PathOrGlobMatcher.Type.PATH)
+        .transform(matcher -> {
+          Path path = matcher.getPath();
+          ImmutableSet<Path> filtered = MorePaths.filterForSubpaths(
+              ImmutableSet.of(path),
+              root);
+          if (filtered.isEmpty()) {
+            return path;
           }
-        })
-        .transform(new Function<PathOrGlobMatcher, Path>() {
-          @Override
-          public Path apply(PathOrGlobMatcher matcher) {
-            Path path = matcher.getPath();
-            ImmutableSet<Path> filtered = MorePaths.filterForSubpaths(
-                ImmutableSet.of(path),
-                root);
-            if (filtered.isEmpty()) {
-              return path;
-            }
-            return Iterables.getOnlyElement(filtered);
-          }
+          return Iterables.getOnlyElement(filtered);
         })
         // TODO(#10068334) So we claim to ignore this path to preserve existing behaviour, but we
         // really don't end up ignoring it in reality (see extractIgnorePaths).
@@ -263,24 +245,16 @@ public class ProjectFilesystem {
         .append(
             Iterables.filter(
                 this.blackListedPaths,
-                new Predicate<PathOrGlobMatcher>() {
-                  @Override
-                  public boolean apply(PathOrGlobMatcher input) {
-                    return input.getType() == PathOrGlobMatcher.Type.GLOB;
-                  }
-                }))
+                input -> input.getType() == PathOrGlobMatcher.Type.GLOB))
         .toSet();
-    this.tmpDir = Suppliers.memoize(new Supplier<Path>() {
-      @Override
-      public Path get() {
-        Path relativeTmpDir = ProjectFilesystem.this.buckPaths.getTmpDir();
-        try {
-          mkdirs(relativeTmpDir);
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
-        return relativeTmpDir;
+    this.tmpDir = Suppliers.memoize(() -> {
+      Path relativeTmpDir = ProjectFilesystem.this.buckPaths.getTmpDir();
+      try {
+        mkdirs(relativeTmpDir);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
       }
+      return relativeTmpDir;
     });
   }
 
@@ -639,12 +613,7 @@ public class ProjectFilesystem {
     Collection<Path> paths = getDirectoryContents(pathRelativeToProjectRoot);
 
     File[] result = new File[paths.size()];
-    return Collections2.transform(paths, new Function<Path, File>() {
-      @Override
-      public File apply(Path input) {
-        return input.toFile();
-      }
-    }).toArray(result);
+    return Collections2.transform(paths, Path::toFile).toArray(result);
   }
 
   public ImmutableCollection<Path> getDirectoryContents(Path pathToUse)
@@ -652,19 +621,9 @@ public class ProjectFilesystem {
     Path path = getPathForRelativePath(pathToUse);
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
       return FluentIterable.from(stream)
-          .filter(new Predicate<Path>() {
-            @Override
-            public boolean apply(Path input) {
-              return !isIgnored(pathRelativizer.apply(input));
-            }
-          })
+          .filter(input -> !isIgnored(pathRelativizer.apply(input)))
           .transform(
-              new Function<Path, Path>() {
-                @Override
-                public Path apply(Path absolutePath) {
-                  return MorePaths.relativize(projectRoot, absolutePath);
-                }
-              })
+              absolutePath -> MorePaths.relativize(projectRoot, absolutePath))
           .toList();
     }
   }
@@ -676,23 +635,13 @@ public class ProjectFilesystem {
       return ImmutableList.copyOf(
           Iterators.transform(
               Iterators.forEnumeration(zip.entries()),
-              new Function<ZipEntry, Path>() {
-                @Override
-                public Path apply(ZipEntry input) {
-                  return Paths.get(input.getName());
-                }
-              }));
+              (Function<ZipEntry, Path>) input -> Paths.get(input.getName())));
     }
   }
 
   @VisibleForTesting
   protected PathListing.PathModifiedTimeFetcher getLastModifiedTimeFetcher() {
-    return new PathListing.PathModifiedTimeFetcher() {
-      @Override
-      public FileTime getLastModifiedTime(Path path) throws IOException {
-        return FileTime.fromMillis(ProjectFilesystem.this.getLastModifiedTime(path));
-      }
-    };
+    return path -> FileTime.fromMillis(ProjectFilesystem.this.getLastModifiedTime(path));
   }
 
   /**

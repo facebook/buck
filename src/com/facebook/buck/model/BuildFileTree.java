@@ -61,12 +61,7 @@ public abstract class BuildFileTree {
   protected static Collection<Path> collectBasePaths(Iterable<? extends BuildTarget> targets) {
 
     return FluentIterable.from(targets).transform(
-        new Function<BuildTarget, Path>() {
-          @Override
-          public Path apply(BuildTarget input) {
-            return input.getBasePath();
-          }
-        })
+        (Function<BuildTarget, Path>) AbstractBuildTarget::getBasePath)
         .toSet();
   }
 }

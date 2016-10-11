@@ -127,12 +127,7 @@ public class AuditRulesCommand extends AbstractCommand {
 
         // Format and print the rules from the raw data, filtered by type.
         final ImmutableSet<String> types = getTypes();
-        Predicate<String> includeType = new Predicate<String>() {
-          @Override
-          public boolean apply(String type) {
-            return types.isEmpty() || types.contains(type);
-          }
-        };
+        Predicate<String> includeType = type -> types.isEmpty() || types.contains(type);
         printRulesToStdout(params, rawRules, includeType);
       }
     } catch (BuildFileParseException e) {
@@ -151,17 +146,14 @@ public class AuditRulesCommand extends AbstractCommand {
       CommandRunnerParams params,
       List<Map<String, Object>> rawRules,
       final Predicate<String> includeType) throws IOException {
-    final PrintStream stdOut = params.getConsole().getStdOut();
-
     Iterable<Map<String, Object>> filteredRules = FluentIterable
         .from(rawRules)
-        .filter(new Predicate<Map<String, Object>>() {
-          @Override
-          public boolean apply(Map<String, Object> rawRule) {
-            String type = (String) rawRule.get(BuckPyFunction.TYPE_PROPERTY_NAME);
-            return includeType.apply(type);
-          }
+        .filter(rawRule -> {
+          String type = (String) rawRule.get(BuckPyFunction.TYPE_PROPERTY_NAME);
+          return includeType.apply(type);
         });
+
+    PrintStream stdOut = params.getConsole().getStdOut();
 
     if (json) {
       Map<String, Object> rulesKeyedByName = new HashMap<>();

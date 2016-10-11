@@ -148,30 +148,27 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   }
 
   private static final SuggestBuildRules.JarResolver JAR_RESOLVER =
-      new SuggestBuildRules.JarResolver() {
-    @Override
-    public ImmutableSet<String> resolve(Path classPath) {
-      ImmutableSet.Builder<String> topLevelSymbolsBuilder = ImmutableSet.builder();
-      try {
-        ClassLoader loader = URLClassLoader.newInstance(
-            new URL[]{classPath.toUri().toURL()},
-          /* parent */ null);
+      classPath -> {
+        ImmutableSet.Builder<String> topLevelSymbolsBuilder = ImmutableSet.builder();
+        try {
+          ClassLoader loader = URLClassLoader.newInstance(
+              new URL[]{classPath.toUri().toURL()},
+            /* parent */ null);
 
-        // For every class contained in that jar, check to see if the package name
-        // (e.g. com.facebook.foo), the simple name (e.g. ImmutableSet) or the name
-        // (e.g com.google.common.collect.ImmutableSet) is one of the missing symbols.
-        for (ClassPath.ClassInfo classInfo : ClassPath.from(loader).getTopLevelClasses()) {
-          topLevelSymbolsBuilder.add(classInfo.getPackageName(),
-              classInfo.getSimpleName(),
-              classInfo.getName());
+          // For every class contained in that jar, check to see if the package name
+          // (e.g. com.facebook.foo), the simple name (e.g. ImmutableSet) or the name
+          // (e.g com.google.common.collect.ImmutableSet) is one of the missing symbols.
+          for (ClassPath.ClassInfo classInfo : ClassPath.from(loader).getTopLevelClasses()) {
+            topLevelSymbolsBuilder.add(classInfo.getPackageName(),
+                classInfo.getSimpleName(),
+                classInfo.getName());
+          }
+        } catch (IOException e) {
+          // Since this simply is a heuristic, return an empty set if we fail to load a jar.
+          return topLevelSymbolsBuilder.build();
         }
-      } catch (IOException e) {
-        // Since this simply is a heuristic, return an empty set if we fail to load a jar.
         return topLevelSymbolsBuilder.build();
-      }
-      return topLevelSymbolsBuilder.build();
-    }
-  };
+      };
 
   public DefaultJavaLibrary(
       final BuildRuleParams params,
@@ -205,12 +202,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         abiJar,
         trackClassUsage,
         new JarArchiveDependencySupplier(
-            Suppliers.memoize(new Supplier<ImmutableSortedSet<SourcePath>>() {
-              @Override
-              public ImmutableSortedSet<SourcePath> get() {
-                return JavaLibraryRules.getAbiInputs(params.getDeps());
-              }
-            }),
+            Suppliers.memoize(() -> JavaLibraryRules.getAbiInputs(params.getDeps())),
             params.getProjectFilesystem()),
         additionalClasspathEntries,
         compileStepFactory,
@@ -242,12 +234,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSortedSet<BuildTarget> tests,
       ImmutableSet<Pattern> classesToRemoveFromJar) {
     super(
-        params.appendExtraDeps(new Supplier<Iterable<? extends BuildRule>>() {
-              @Override
-              public Iterable<? extends BuildRule> get() {
-                return resolver.filterBuildRuleInputs(abiClasspath.get());
-              }
-            }),
+        params.appendExtraDeps(() -> resolver.filterBuildRuleInputs(abiClasspath.get())),
         resolver);
     this.compileStepFactory = compileStepFactory;
 
@@ -288,34 +275,19 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     }
 
     this.outputClasspathEntriesSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSet<Path>>() {
-          @Override
-          public ImmutableSet<Path> get() {
-            return JavaLibraryClasspathProvider.getOutputClasspathJars(
-                DefaultJavaLibrary.this,
-                getResolver(),
-                sourcePathForOutputJar());
-          }
-        });
+        Suppliers.memoize(() -> JavaLibraryClasspathProvider.getOutputClasspathJars(
+            DefaultJavaLibrary.this,
+            getResolver(),
+            sourcePathForOutputJar()));
 
     this.transitiveClasspathsSupplier =
-        Suppliers.memoize(new Supplier<ImmutableSet<Path>>() {
-          @Override
-          public ImmutableSet<Path> get() {
-            return JavaLibraryClasspathProvider.getClasspathsFromLibraries(
-                getTransitiveClasspathDeps());
-          }
-        });
+        Suppliers.memoize(() -> JavaLibraryClasspathProvider.getClasspathsFromLibraries(
+            getTransitiveClasspathDeps()));
 
     this.transitiveClasspathDepsSupplier =
         Suppliers.memoize(
-            new Supplier<ImmutableSet<JavaLibrary>>() {
-              @Override
-              public ImmutableSet<JavaLibrary> get() {
-                return JavaLibraryClasspathProvider.getTransitiveClasspathDeps(
-                    DefaultJavaLibrary.this);
-              }
-            });
+            () -> JavaLibraryClasspathProvider.getTransitiveClasspathDeps(
+                DefaultJavaLibrary.this));
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
     this.generatedSourceFolder = generatedSourceFolder;
@@ -467,19 +439,14 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         .filter(Predicates.notNull())
         .toSet();
 
-    final ProjectFilesystem projectFilesystem = getProjectFilesystem();
+    ProjectFilesystem projectFilesystem = getProjectFilesystem(); // NOPMD confused by lambda
     Iterable<Path> declaredClasspaths = declaredClasspathDeps.transformAndConcat(
         new Function<JavaLibrary, Iterable<Path>>() {
           @Override
           public Iterable<Path> apply(JavaLibrary input) {
             return input.getOutputClasspaths();
           }
-        }).transform(new Function<Path, Path>() {
-      @Override
-      public Path apply(Path input) {
-        return projectFilesystem.resolve(input);
-      }
-    });
+        }).transform(projectFilesystem::resolve);
     // Only override the bootclasspath if this rule is supposed to compile Android code.
     ImmutableSortedSet<Path> declared = ImmutableSortedSet.<Path>naturalOrder()
         .addAll(declaredClasspaths)

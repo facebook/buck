@@ -16,7 +16,6 @@
 
 package com.facebook.buck.step;
 
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -51,23 +50,13 @@ public class CompositeStep implements Step, Iterable<Step> {
   @Override
   public String getDescription(final ExecutionContext context) {
     return Joiner.on(" && ").join(Iterables.transform(steps,
-        new Function<Step, String>() {
-          @Override
-          public String apply(Step step) {
-            return step.getDescription(context);
-          }
-    }));
+        step -> step.getDescription(context)));
   }
 
   @Override
   public String getShortName() {
     return Joiner.on("_&&_").join(Iterables.transform(steps,
-        new Function<Step, String>() {
-      @Override
-      public String apply(Step step) {
-        return step.getShortName();
-      }
-    }));
+        Step::getShortName));
   }
 
   @Override

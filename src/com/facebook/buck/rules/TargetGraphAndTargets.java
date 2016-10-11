@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Function;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -148,12 +147,7 @@ public class TargetGraphAndTargets {
     return FluentIterable
         .from(projectGraph.getNodes())
         .filter(
-            new Predicate<TargetNode<?>>() {
-              @Override
-              public boolean apply(TargetNode<?> node) {
-                return associatedTargetNodePredicate.apply(node, subgraph);
-              }
-            })
+            node -> associatedTargetNodePredicate.apply(node, subgraph))
         .toSet();
   }
 }

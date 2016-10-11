@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -63,12 +62,7 @@ public class ProjectConfig extends NoopBuildRule {
     this.srcRule = srcRule;
     if (srcRoots != null) {
       this.srcSourceRoots = ImmutableList.copyOf(Iterables.transform(srcRoots,
-          new Function<String, SourceRoot>() {
-        @Override
-        public SourceRoot apply(String srcRoot) {
-          return new SourceRoot(srcRoot);
-        }
-      }));
+          SourceRoot::new));
     } else {
       this.srcSourceRoots = null;
     }
@@ -76,12 +70,7 @@ public class ProjectConfig extends NoopBuildRule {
     this.testRule = testRule;
     if (testRoots != null) {
       this.testsSourceRoots = ImmutableList.copyOf(Iterables.transform(testRoots,
-          new Function<String, SourceRoot>() {
-        @Override
-        public SourceRoot apply(String testRoot) {
-          return new SourceRoot(testRoot);
-        }
-      }));
+          SourceRoot::new));
     } else {
       this.testsSourceRoots = null;
     }

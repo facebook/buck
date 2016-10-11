@@ -288,12 +288,7 @@ public class AndroidBinaryTest {
       throws Exception {
     Iterable<Class<?>> filteredObservedCommands = FluentIterable
         .from(steps)
-        .transform(new Function<Step, Class<?>>() {
-          @Override
-          public Class<?> apply(Step command) {
-            return command.getClass();
-          }
-        })
+        .transform((Function<Step, Class<?>>) Step::getClass)
         .filter(Predicates.in(Sets.newHashSet(expectedCommands)));
     MoreAsserts.assertIterablesEquals(expectedCommands, filteredObservedCommands);
   }

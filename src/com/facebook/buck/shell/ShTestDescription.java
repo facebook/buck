@@ -18,7 +18,6 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -40,7 +39,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -106,15 +104,10 @@ public class ShTestDescription implements
                 toArg));
     return new ShTest(
         params.appendExtraDeps(
-            new Supplier<Iterable<? extends BuildRule>>() {
-              @Override
-              public Iterable<? extends BuildRule> get() {
-                return FluentIterable.from(testArgs)
-                    .append(testEnv.values())
-                    .transformAndConcat(
-                        com.facebook.buck.rules.args.Arg.getDepsFunction(pathResolver));
-              }
-            }),
+            () -> FluentIterable.from(testArgs)
+                .append(testEnv.values())
+                .transformAndConcat(
+                    com.facebook.buck.rules.args.Arg.getDepsFunction(pathResolver))),
         pathResolver,
         args.test,
         testArgs,

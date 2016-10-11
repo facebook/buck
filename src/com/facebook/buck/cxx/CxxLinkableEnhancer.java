@@ -20,7 +20,6 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -36,7 +35,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -109,15 +107,10 @@ public class CxxLinkableEnhancer {
         // dependencies.
         params.copyWithChanges(
             target,
-            new Supplier<ImmutableSortedSet<BuildRule>>() {
-              @Override
-              public ImmutableSortedSet<BuildRule> get() {
-                return FluentIterable.from(allArgs)
-                    .transformAndConcat(Arg.getDepsFunction(resolver))
-                    .append(linker.getDeps(resolver))
-                    .toSortedSet(Ordering.natural());
-              }
-            },
+            () -> FluentIterable.from(allArgs)
+                .transformAndConcat(Arg.getDepsFunction(resolver))
+                .append(linker.getDeps(resolver))
+                .toSortedSet(Ordering.natural()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         resolver,
         linker,

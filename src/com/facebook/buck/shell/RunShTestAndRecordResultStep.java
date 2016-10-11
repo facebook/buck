@@ -135,12 +135,9 @@ public class RunShTestAndRecordResultStep implements Step {
         protected Optional<Function<Process, Void>> getTimeoutHandler(
             final ExecutionContext context) {
           return Optional.of(
-              new Function<Process, Void>() {
-                @Override
-                public Void apply(Process process) {
-                  timedOut = true;
-                  return null;
-                }
+              process -> {
+                timedOut = true;
+                return null;
               });
         }
 

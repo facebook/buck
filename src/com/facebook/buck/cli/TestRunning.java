@@ -58,7 +58,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -459,12 +458,9 @@ public class TestRunning {
       }
     }
 
-    boolean failures = Iterables.any(completedResults, new Predicate<TestResults>() {
-      @Override
-      public boolean apply(TestResults results) {
-        LOG.debug("Checking result %s for failure", results);
-        return !results.isSuccess();
-      }
+    boolean failures = Iterables.any(completedResults, results1 -> {
+      LOG.debug("Checking result %s for failure", results1);
+      return !results1.isSuccess();
     });
 
     return failures ? TEST_FAILURES_EXIT_CODE : 0;
@@ -563,20 +559,17 @@ public class TestRunning {
     if (isTestRunRequired) {
       return originalCallable;
     }
-    return new Callable<TestResults>() {
-      @Override
-      public TestResults call() throws Exception {
-        TestResults originalTestResults = originalCallable.call();
-        ImmutableList<TestCaseSummary> cachedTestResults = FluentIterable
-            .from(originalTestResults.getTestCases())
-            .transform(TestCaseSummary.TO_CACHED_TRANSFORMATION)
-            .toList();
-        return TestResults.of(
-            originalTestResults.getBuildTarget(),
-            cachedTestResults,
-            originalTestResults.getContacts(),
-            originalTestResults.getLabels());
-      }
+    return () -> {
+      TestResults originalTestResults = originalCallable.call();
+      ImmutableList<TestCaseSummary> cachedTestResults = FluentIterable
+          .from(originalTestResults.getTestCases())
+          .transform(TestCaseSummary.TO_CACHED_TRANSFORMATION)
+          .toList();
+      return TestResults.of(
+          originalTestResults.getBuildTarget(),
+          cachedTestResults,
+          originalTestResults.getContacts(),
+          originalTestResults.getLabels());
     };
   }
 

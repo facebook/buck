@@ -248,20 +248,15 @@ public class PrebuiltCxxLibrary
         builder.addAllFrameworks(frameworks);
         final Iterable<SourcePath> includePaths = Iterables.transform(
             includeDirs,
-            new Function<String, SourcePath>() {
-              @Override
-              public SourcePath apply(String input) {
-                return PrebuiltCxxLibraryDescription.getApplicableSourcePath(
-                    params.getBuildTarget(),
-                    params.getCellRoots(),
-                    params.getProjectFilesystem(),
-                    ruleResolver,
-                    cxxPlatform,
-                    input,
-                    Optional.absent()
-                );
-              }
-            });
+            input -> PrebuiltCxxLibraryDescription.getApplicableSourcePath(
+                params.getBuildTarget(),
+                params.getCellRoots(),
+                params.getProjectFilesystem(),
+                ruleResolver,
+                cxxPlatform,
+                input,
+                Optional.absent()
+            ));
         for (SourcePath includePath : includePaths) {
           builder.addIncludes(CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, includePath));
         }

@@ -37,7 +37,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -174,12 +173,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     ImmutableSet<APKModule> apkModules =
       FluentIterable
           .from(apkModuleGraph.getAPKModules())
-          .filter(new Predicate<APKModule>() {
-            @Override
-            public boolean apply(APKModule input) {
-              return !input.isRootModule();
-            }
-          })
+          .filter(input -> !input.isRootModule())
           .append(apkModuleGraph.getRootAPKModule())
           .toSet();
 

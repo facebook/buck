@@ -93,11 +93,8 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
     return new DefaultParserTargetNodeFactory(
         marshaller,
         Optional.absent(),
-        new TargetNodeListener<TargetNode<?>>() {
-          @Override
-          public void onCreate(Path buildFile, TargetNode<?> node) throws IOException {
-            // No-op.
-          }
+        (buildFile, node) -> {
+          // No-op.
         },
         targetNodeFactory);
   }

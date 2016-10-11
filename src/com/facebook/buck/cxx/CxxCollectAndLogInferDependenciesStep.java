@@ -20,7 +20,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -91,12 +90,7 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
             .toString());
     accumulator.addAll(
         FluentIterable.from(analysisRule.getCaptureRules()).transform(
-            new Function<CxxInferCapture, String>() {
-              @Override
-              public String apply(CxxInferCapture captureRule) {
-                return processCaptureRule(captureRule);
-              }
-            }
+            this::processCaptureRule
         ));
   }
 

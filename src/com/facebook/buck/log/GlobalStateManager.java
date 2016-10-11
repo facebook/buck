@@ -106,33 +106,30 @@ public class GlobalStateManager {
     ReferenceCountedWriter newWriter = defaultWriter.newReference();
     putReferenceCountedWriter(commandId, newWriter);
 
-    return new Closeable() {
-      @Override
-      public void close() throws IOException {
+    return () -> {
 
-        // Tear down the LogFileHandler state.
-        removeReferenceCountedWriter(commandId);
+      // Tear down the LogFileHandler state.
+      removeReferenceCountedWriter(commandId);
 
-        // Tear down the ConsoleHandler state.
-        commandIdToConsoleHandlerWriter.put(
-            commandId,
-            ConsoleHandler.utf8OutputStreamWriter(consoleHandlerOriginalStream));
-        commandIdToConsoleHandlerLevel.remove(commandId);
+      // Tear down the ConsoleHandler state.
+      commandIdToConsoleHandlerWriter.put(
+          commandId,
+          ConsoleHandler.utf8OutputStreamWriter(consoleHandlerOriginalStream));
+      commandIdToConsoleHandlerLevel.remove(commandId);
 
-        // Tear down the shared state.
-        // NOTE: Avoid iterator in case there's a concurrent change to this map.
-        List<Long> allKeys = Lists.newArrayList(threadIdToCommandId.keySet());
-        for (Long threadId : allKeys) {
-          if (commandId.equals(threadIdToCommandId.get(threadId))) {
-            threadIdToCommandId.remove(threadId);
-          }
+      // Tear down the shared state.
+      // NOTE: Avoid iterator in case there's a concurrent change to this map.
+      List<Long> allKeys = Lists.newArrayList(threadIdToCommandId.keySet());
+      for (Long threadId1 : allKeys) {
+        if (commandId.equals(threadIdToCommandId.get(threadId1))) {
+          threadIdToCommandId.remove(threadId1);
         }
+      }
 
-        try {
-          LOG_FILE_DIR_CLEANER.clean(info.getLogDirectoryPath().getParent());
-        } catch (IOException e) {
-          LOG.info(e, "It's possible another concurrent buck command removed the file.");
-        }
+      try {
+        LOG_FILE_DIR_CLEANER.clean(info.getLogDirectoryPath().getParent());
+      } catch (IOException e) {
+        LOG.info(e, "It's possible another concurrent buck command removed the file.");
       }
     };
   }
@@ -222,12 +219,7 @@ public class GlobalStateManager {
   }
 
   public ThreadIdToCommandIdMapper getThreadIdToCommandIdMapper() {
-    return new ThreadIdToCommandIdMapper() {
-      @Override
-      public String threadIdToCommandId(long threadId) {
-        return threadIdToCommandId.get(threadId);
-      }
-    };
+    return threadIdToCommandId::get;
   }
 
   /**

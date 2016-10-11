@@ -55,7 +55,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -70,7 +69,6 @@ import java.nio.channels.Channels;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -411,12 +409,7 @@ public class TestCommand extends BuildCommand {
               pool.getExecutor(),
               ImmutableList.of(
                   TargetNodePredicateSpec.of(
-                      new Predicate<TargetNode<?>>() {
-                        @Override
-                        public boolean apply(TargetNode<?> input) {
-                          return input.getType().isTestRule();
-                        }
-                      },
+                      input -> input.getType().isTestRule(),
                       BuildFileSpec.fromRecursivePath(Paths.get(""), params.getCell().getRoot()))),
               ignoreBuckAutodepsFiles,
               parserConfig.getDefaultFlavorsMode()).getTargetGraph();
@@ -585,13 +578,8 @@ public class TestCommand extends BuildCommand {
 
     ImmutableSortedSet.Builder<TestRule> builder =
         ImmutableSortedSet.orderedBy(
-            new Comparator<TestRule>() {
-              @Override
-              public int compare(TestRule o1, TestRule o2) {
-                return o1.getBuildTarget().getFullyQualifiedName().compareTo(
-                    o2.getBuildTarget().getFullyQualifiedName());
-              }
-            });
+            (o1, o2) -> o1.getBuildTarget().getFullyQualifiedName().compareTo(
+                o2.getBuildTarget().getFullyQualifiedName()));
 
     for (TestRule rule : testRules) {
       boolean explicitArgument = explicitBuildTargets.contains(rule.getBuildTarget());

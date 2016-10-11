@@ -135,7 +135,6 @@ import com.google.common.reflect.ClassPath;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ServiceManager;
-import com.martiansoftware.nailgun.NGClientListener;
 import com.martiansoftware.nailgun.NGContext;
 import com.martiansoftware.nailgun.NGServer;
 import com.sun.jna.LastErrorException;
@@ -420,27 +419,24 @@ public final class Main {
     }
 
     private void watchClient(final NGContext context) {
-      context.addClientListener(new NGClientListener() {
-        @Override
-        public void clientDisconnected() throws InterruptedException {
-          if (isSessionLeader && commandSemaphoreNgClient.orNull() == context) {
-            LOG.info("killing background processes on client disconnection");
-            // Process no longer wants work done on its behalf.
-            BgProcessKiller.killBgProcesses();
-          }
+      context.addClientListener(() -> {
+        if (isSessionLeader && commandSemaphoreNgClient.orNull() == context) {
+          LOG.info("killing background processes on client disconnection");
+          // Process no longer wants work done on its behalf.
+          BgProcessKiller.killBgProcesses();
+        }
 
-          // Synchronize on parser object so that the main command processing thread is not
-          // interrupted mid way through a Parser cache update by the Thread.interrupt() call
-          // triggered by System.exit(). The Parser cache will be reused by subsequent commands
-          // so needs to be left in a consistent state even if the current command is interrupted
-          // due to a client disconnection.
-          synchronized (parser) {
-            LOG.info("Client disconnected.");
-            // Client should no longer be connected, but printing helps detect false disconnections.
-            context.err.println("Client disconnected.");
+        // Synchronize on parser object so that the main command processing thread is not
+        // interrupted mid way through a Parser cache update by the Thread.interrupt() call
+        // triggered by System.exit(). The Parser cache will be reused by subsequent commands
+        // so needs to be left in a consistent state even if the current command is interrupted
+        // due to a client disconnection.
+        synchronized (parser) {
+          LOG.info("Client disconnected.");
+          // Client should no longer be connected, but printing helps detect false disconnections.
+          context.err.println("Client disconnected.");
 
-            throw new InterruptedException("Client disconnected.");
-          }
+          throw new InterruptedException("Client disconnected.");
         }
       });
     }
@@ -1716,18 +1712,15 @@ public final class Main {
     // (We do this because the default is to just print to stderr and not exit the JVM,
     // which is not safe in a multithreaded environment if the thread held a lock or
     // resource which other threads need.)
-    Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-      @Override
-      public void uncaughtException(Thread t, Throwable e) {
-        LOG.error(e, "Uncaught exception from thread %s", t);
-        if (context.isPresent()) {
-          // Shut down the Nailgun server and make sure it stops trapping System.exit().
-          //
-          // We pass false for exitVM because otherwise Nailgun exits with code 0.
-          context.get().getNGServer().shutdown(/* exitVM */ false);
-        }
-        NON_REENTRANT_SYSTEM_EXIT.shutdownSoon(FAIL_EXIT_CODE);
+    Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+      LOG.error(e, "Uncaught exception from thread %s", t);
+      if (context.isPresent()) {
+        // Shut down the Nailgun server and make sure it stops trapping System.exit().
+        //
+        // We pass false for exitVM because otherwise Nailgun exits with code 0.
+        context.get().getNGServer().shutdown(/* exitVM */ false);
       }
+      NON_REENTRANT_SYSTEM_EXIT.shutdownSoon(FAIL_EXIT_CODE);
     });
   }
 

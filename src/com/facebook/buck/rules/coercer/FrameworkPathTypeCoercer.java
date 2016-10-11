@@ -22,7 +22,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -110,12 +109,7 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
               Joiner.on(", ").join(
                   Iterables.transform(
                       ImmutableList.copyOf(PBXReference.SourceTree.values()),
-                      new Function<PBXReference.SourceTree, String>() {
-                        @Override
-                        public String apply(PBXReference.SourceTree input) {
-                          return "$" + input.toString();
-                        }
-                      })));
+                      input -> "$" + input.toString())));
         }
       } else {
         return FrameworkPath.ofSourcePath(

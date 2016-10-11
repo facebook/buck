@@ -105,15 +105,12 @@ class ProguardTranslatorFactory {
     }
     final Map<String, String> map = builder.build();
 
-    return new Function<String, String>() {
-      @Override
-      public String apply(String input) {
-        String mapped = map.get(input);
-        if (mapped != null) {
-          return mapped;
-        } else {
-          return input;
-        }
+    return input -> {
+      String mapped = map.get(input);
+      if (mapped != null) {
+        return mapped;
+      } else {
+        return input;
       }
     };
   }

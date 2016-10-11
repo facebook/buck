@@ -344,18 +344,13 @@ public class PythonTestDescription implements
 
     // Supplier which expands macros in the passed in test environment.
     Supplier<ImmutableMap<String, String>> testEnv =
-        new Supplier<ImmutableMap<String, String>>() {
-          @Override
-          public ImmutableMap<String, String> get() {
-            return ImmutableMap.copyOf(
-                Maps.transformValues(
-                    args.env.or(ImmutableMap.of()),
-                    MACRO_HANDLER.getExpander(
-                        params.getBuildTarget(),
-                        params.getCellRoots(),
-                        resolver)));
-          }
-        };
+        () -> ImmutableMap.copyOf(
+            Maps.transformValues(
+                args.env.or(ImmutableMap.of()),
+                MACRO_HANDLER.getExpander(
+                    params.getBuildTarget(),
+                    params.getCellRoots(),
+                    resolver)));
 
     // Generate and return the python test rule, which depends on the python binary rule above.
     return new PythonTest(

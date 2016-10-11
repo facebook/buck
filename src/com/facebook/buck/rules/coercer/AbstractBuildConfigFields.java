@@ -83,19 +83,16 @@ abstract class AbstractBuildConfigFields implements Iterable<Field> {
       "long",
       "short");
 
-  private static final Function<String, Field> TRANSFORM = new Function<String, Field>() {
-    @Override
-    public Field apply(String input) {
-      Matcher matcher = VARIABLE_DEFINITION_PATTERN.matcher(input);
-      if (matcher.matches()) {
-        return BuildConfigFields.Field.builder()
-            .setType(matcher.group("type"))
-            .setName(matcher.group("name"))
-            .setValue(matcher.group("value"))
-            .build();
-      } else {
-        throw new HumanReadableException("Not a valid BuildConfig variable declaration: %s", input);
-      }
+  private static final Function<String, Field> TRANSFORM = input -> {
+    Matcher matcher = VARIABLE_DEFINITION_PATTERN.matcher(input);
+    if (matcher.matches()) {
+      return Field.builder()
+          .setType(matcher.group("type"))
+          .setName(matcher.group("name"))
+          .setValue(matcher.group("value"))
+          .build();
+    } else {
+      throw new HumanReadableException("Not a valid BuildConfig variable declaration: %s", input);
     }
   };
 
@@ -118,12 +115,7 @@ abstract class AbstractBuildConfigFields implements Iterable<Field> {
   public static BuildConfigFields fromFields(Iterable<Field> fields) {
     ImmutableMap<String, Field> entries = FluentIterable
         .from(fields)
-        .uniqueIndex(new Function<Field, String>() {
-          @Override
-          public String apply(Field field) {
-            return field.getName();
-          }
-        });
+        .uniqueIndex(Field::getName);
     return BuildConfigFields.builder()
         .putAllNameToField(entries)
         .build();

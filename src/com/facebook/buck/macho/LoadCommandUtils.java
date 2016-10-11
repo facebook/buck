@@ -105,14 +105,11 @@ public class LoadCommandUtils {
     enumerateLoadCommandsInFile(
         buffer,
         nulTerminatedCharsetDecoder,
-        new Function<LoadCommand, Boolean>() {
-          @Override
-          public Boolean apply(LoadCommand input) {
-            if (type.isInstance(input)) {
-              results.add((T) input);
-            }
-            return true;
+        input -> {
+          if (type.isInstance(input)) {
+            results.add((T) input);
           }
+          return true;
         });
     return ImmutableList.copyOf(results);
   }

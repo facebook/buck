@@ -65,12 +65,7 @@ final class PathRelativizer {
   }
 
   public Function<Path, Path> outputDirToRootRelative() {
-    return new Function<Path, Path>() {
-      @Override
-      public Path apply(Path input) {
-        return outputDirToRootRelative(input);
-      }
-    };
+    return this::outputDirToRootRelative;
   }
 
   /**

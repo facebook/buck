@@ -28,13 +28,10 @@ public class NonReentrantSystemExitDemo {
         throw new RuntimeException("haha!");
       }
     });
-    Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-      @Override
-      public void uncaughtException(Thread t, Throwable e) {
-        // Uncommenting the next line will cause the test to hang.
-        // System.exit(1);
-        nonReentrantSystemExit.shutdownSoon(0);
-      }
+    Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+      // Uncommenting the next line will cause the test to hang.
+      // System.exit(1);
+      nonReentrantSystemExit.shutdownSoon(0);
     });
     System.exit(0);
   }

@@ -55,12 +55,7 @@ public class JavaSymbolsRuleTest {
   public TemporaryPaths tmp = new TemporaryPaths();
 
   private static final Function<JsonNode, String> GET_STRING_LITERAL_VALUE_FROM_JSON_NODE =
-      new Function<JsonNode, String>() {
-        @Override
-        public String apply(JsonNode node) {
-          return ((TextNode) node).textValue();
-        }
-      };
+      node -> ((TextNode) node).textValue();
 
   @Test
   public void ensureJsonFilesGetWritten() throws IOException, InterruptedException {

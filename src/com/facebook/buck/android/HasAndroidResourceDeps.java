@@ -29,40 +29,28 @@ import javax.annotation.Nullable;
 /**
  * Indicates that this class may have android resources that should be packaged into an APK.
  */
+@SuppressWarnings("checkstyle:ConstantName") // checkstyle doesn't handle lambdas correctly.
 public interface HasAndroidResourceDeps extends HasBuildTarget {
 
   Function<Iterable<HasAndroidResourceDeps>, Sha1HashCode> ABI_HASHER =
-      new Function<Iterable<HasAndroidResourceDeps>, Sha1HashCode>() {
-        @Override
-        public Sha1HashCode apply(Iterable<HasAndroidResourceDeps> deps) {
-          Hasher hasher = Hashing.sha1().newHasher();
-          for (HasAndroidResourceDeps dep : deps) {
-            hasher.putUnencodedChars(dep.getPathToTextSymbolsFile().toString());
-            // Avoid collisions by marking end of path explicitly.
-            hasher.putChar('\0');
-            hasher.putUnencodedChars(dep.getTextSymbolsAbiKey().getHash());
-            hasher.putUnencodedChars(dep.getRDotJavaPackage());
-            hasher.putChar('\0');
-          }
-          return Sha1HashCode.fromHashCode(hasher.hash());
+      deps -> {
+        Hasher hasher = Hashing.sha1().newHasher();
+        for (HasAndroidResourceDeps dep : deps) {
+          hasher.putUnencodedChars(dep.getPathToTextSymbolsFile().toString());
+          // Avoid collisions by marking end of path explicitly.
+          hasher.putChar('\0');
+          hasher.putUnencodedChars(dep.getTextSymbolsAbiKey().getHash());
+          hasher.putUnencodedChars(dep.getRDotJavaPackage());
+          hasher.putChar('\0');
         }
+        return Sha1HashCode.fromHashCode(hasher.hash());
       };
 
   Function<HasAndroidResourceDeps, String> TO_R_DOT_JAVA_PACKAGE =
-      new Function<HasAndroidResourceDeps, String>() {
-        @Override
-        public String apply(HasAndroidResourceDeps input) {
-          return input.getRDotJavaPackage();
-        }
-      };
+      HasAndroidResourceDeps::getRDotJavaPackage;
 
   Predicate<HasAndroidResourceDeps> NON_EMPTY_RESOURCE =
-      new Predicate<HasAndroidResourceDeps>() {
-        @Override
-        public boolean apply(HasAndroidResourceDeps input) {
-          return input.getRes() != null;
-        }
-      };
+      input -> input.getRes() != null;
 
   Function<HasAndroidResourceDeps, SourcePath> GET_RES_SYMBOLS_TXT =
       new Function<HasAndroidResourceDeps, SourcePath>() {

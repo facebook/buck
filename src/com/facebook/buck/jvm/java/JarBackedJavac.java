@@ -41,14 +41,11 @@ import javax.tools.JavaCompiler;
 
 public class JarBackedJavac extends Jsr199Javac {
 
-  private static final Function<Path, URL> PATH_TO_URL = new Function<Path, URL>() {
-    @Override
-    public URL apply(Path p) {
-      try {
-        return p.toUri().toURL();
-      } catch (MalformedURLException e) {
-        throw new RuntimeException(e);
-      }
+  private static final Function<Path, URL> PATH_TO_URL = p -> {
+    try {
+      return p.toUri().toURL();
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
     }
   };
 

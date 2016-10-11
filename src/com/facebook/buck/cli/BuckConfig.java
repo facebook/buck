@@ -54,7 +54,6 @@ import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -235,12 +234,7 @@ public class BuckConfig {
           FluentIterable
               .from(rawPaths.get())
               .transform(
-                  new Function<String, Path>() {
-                    @Override
-                    public Path apply(String input) {
-                      return convertPath(input, true);
-                    }
-                  })
+                  input -> convertPath(input, true))
               .toList();
         return Optional.of(paths);
     }
@@ -286,15 +280,12 @@ public class BuckConfig {
     ImmutableList<BuildTarget> targets = ImmutableList.copyOf(FluentIterable
         .from(targetsToForce)
         .transform(
-            new Function<String, BuildTarget>() {
-              @Override
-              public BuildTarget apply(String input) {
-                String expandedAlias = getBuildTargetForAliasAsString(input);
-                if (expandedAlias != null) {
-                  input = expandedAlias;
-                }
-                return getBuildTargetForFullyQualifiedTarget(input);
+            input -> {
+              String expandedAlias = getBuildTargetForAliasAsString(input);
+              if (expandedAlias != null) {
+                input = expandedAlias;
               }
+              return getBuildTargetForFullyQualifiedTarget(input);
             }));
     return targets;
   }

@@ -29,12 +29,7 @@ import java.nio.file.Path;
 public class SourcePaths {
 
   public static final Function<BuildTargetSourcePath, BuildTarget> TO_BUILD_TARGET =
-      new Function<BuildTargetSourcePath, BuildTarget>() {
-        @Override
-        public BuildTarget apply(BuildTargetSourcePath input) {
-          return input.getTarget();
-        }
-      };
+      BuildTargetSourcePath::getTarget;
 
   /** Utility class: do not instantiate. */
   private SourcePaths() {}
@@ -48,31 +43,16 @@ public class SourcePaths {
   }
 
   public static Function<Path, SourcePath> toSourcePath(final ProjectFilesystem projectFilesystem) {
-    return new Function<Path, SourcePath>() {
-      @Override
-      public SourcePath apply(Path input) {
-        return new PathSourcePath(projectFilesystem, input);
-      }
-    };
+    return input -> new PathSourcePath(projectFilesystem, input);
   }
 
   public static Function<BuildRule, SourcePath> getToBuildTargetSourcePath() {
-    return new Function<BuildRule, SourcePath>() {
-      @Override
-      public SourcePath apply(BuildRule input) {
-        return new BuildTargetSourcePath(input.getBuildTarget());
-      }
-    };
+    return input -> new BuildTargetSourcePath(input.getBuildTarget());
   }
 
   public static Function<Path, SourcePath> getToBuildTargetSourcePath(
       final BuildTarget target) {
-    return new Function<Path, SourcePath>() {
-      @Override
-      public SourcePath apply(Path input) {
-        return new BuildTargetSourcePath(target, input);
-      }
-    };
+    return input -> new BuildTargetSourcePath(target, input);
   }
 
 }

@@ -51,12 +51,7 @@ public class BuildThreadStateRendererTest {
 
   private static final Ansi ANSI = Ansi.withoutTty();
   private static final Function<Long, String> FORMAT_TIME_FUNCTION =
-      new Function<Long, String>() {
-        @Override
-        public String apply(Long timeMs) {
-          return String.format(Locale.US, "%.1fs", timeMs / 1000.0);
-        }
-      };
+      timeMs -> String.format(Locale.US, "%.1fs", timeMs / 1000.0);
   private static final SourcePathResolver PATH_RESOLVER =
       new SourcePathResolver(
           new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));

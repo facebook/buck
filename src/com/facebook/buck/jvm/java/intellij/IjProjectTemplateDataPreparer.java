@@ -24,7 +24,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -122,12 +121,7 @@ public class IjProjectTemplateDataPreparer {
         }
         Optional<Path> firstJavaFile = FluentIterable.from(folder.getInputs())
             .filter(
-                new Predicate<Path>() {
-                  @Override
-                  public boolean apply(Path input) {
-                    return input.getFileName().toString().endsWith(".java");
-                  }
-                })
+                input -> input.getFileName().toString().endsWith(".java"))
             .first();
         if (firstJavaFile.isPresent()) {
           builder.add(firstJavaFile.get());
@@ -353,19 +347,16 @@ public class IjProjectTemplateDataPreparer {
     return FluentIterable.from(modulesToBeWritten)
         .filter(IjModule.class)
         .transform(
-            new Function<IjModule, ModuleIndexEntry>() {
-              @Override
-              public ModuleIndexEntry apply(IjModule module) {
-                Path moduleOutputFilePath = module.getModuleImlFilePath();
-                String fileUrl = toProjectDirRelativeString(moduleOutputFilePath);
-                // The root project module cannot belong to any group.
-                String group = (module.getModuleBasePath().toString().isEmpty()) ? null : "modules";
-                return  ModuleIndexEntry.builder()
-                    .setFileUrl(fileUrl)
-                    .setFilePath(moduleOutputFilePath)
-                    .setGroup(group)
-                    .build();
-              }
+            module -> {
+              Path moduleOutputFilePath = module.getModuleImlFilePath();
+              String fileUrl = toProjectDirRelativeString(moduleOutputFilePath);
+              // The root project module cannot belong to any group.
+              String group = (module.getModuleBasePath().toString().isEmpty()) ? null : "modules";
+              return  ModuleIndexEntry.builder()
+                  .setFileUrl(fileUrl)
+                  .setFilePath(moduleOutputFilePath)
+                  .setGroup(group)
+                  .build();
             })
         .toSortedSet(Ordering.natural());
   }

@@ -26,7 +26,6 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.XmlDomParser;
-import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -390,11 +389,8 @@ public class CompileStringsStepTest extends EasyMockSupport {
         new FakeProjectFilesystem(),
         ImmutableList.of(),
         createMock(Path.class),
-        new Function<String, Path>() {
-          @Override
-          public Path apply(String locale) {
-            throw new UnsupportedOperationException();
-          }
+        locale -> {
+          throw new UnsupportedOperationException();
         });
   }
 
@@ -422,12 +418,7 @@ public class CompileStringsStepTest extends EasyMockSupport {
         fileSystem,
         stringFiles,
         rDotJavaSrcDir,
-        new Function<String, Path>() {
-          @Override
-          public Path apply(String input) {
-            return destinationDir.resolve(input + PackageStringAssets.STRING_ASSET_FILE_EXTENSION);
-          }
-        });
+        input -> destinationDir.resolve(input + PackageStringAssets.STRING_ASSET_FILE_EXTENSION));
     assertEquals(0, step.execute(context).getExitCode());
     Map<String, byte[]> fileContentsMap = fileSystem.getFileContents();
     assertEquals("Incorrect number of string files written.", 4, fileContentsMap.size());

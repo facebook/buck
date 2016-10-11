@@ -23,7 +23,6 @@ import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.Optionals;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -61,12 +60,7 @@ public abstract class ParsingJavaPackageFinder {
     for (Path path : FluentIterable.from(filesToParse).toSortedSet(new PathComponentCountOrder())) {
       Optional<String> packageNameFromSource = Optionals.bind(
           projectFilesystem.readFileIfItExists(path),
-          new Function<String, Optional<String>>() {
-            @Override
-            public Optional<String> apply(String input) {
-              return javaFileParser.getPackageNameFromSource(input);
-            }
-          });
+          javaFileParser::getPackageNameFromSource);
       if (packageNameFromSource.isPresent()) {
         Path javaPackagePath = findPackageFolderWithJavaPackage(packageNameFromSource.get());
         packagePathCache.insert(path, javaPackagePath);

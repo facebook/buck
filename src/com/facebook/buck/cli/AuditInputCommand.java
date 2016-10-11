@@ -30,7 +30,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
@@ -94,15 +93,10 @@ public class AuditInputCommand extends AbstractCommand {
 
     ImmutableSet<BuildTarget> targets = FluentIterable
         .from(getArgumentsFormattedAsBuildTargets(params.getBuckConfig()))
-        .transform(new Function<String, BuildTarget>() {
-                     @Override
-                     public BuildTarget apply(String input) {
-                       return BuildTargetParser.INSTANCE.parse(
-                           input,
-                           BuildTargetPatternParser.fullyQualified(),
-                           params.getCell().getCellPathResolver());
-                     }
-                   })
+        .transform(input -> BuildTargetParser.INSTANCE.parse(
+            input,
+            BuildTargetPatternParser.fullyQualified(),
+            params.getCell().getCellPathResolver()))
         .toSet();
 
     LOG.debug("Getting input for targets: %s", targets);

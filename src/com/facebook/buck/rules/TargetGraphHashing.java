@@ -21,7 +21,6 @@ import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal.CycleException;
-import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.hashing.PathHashing;
 import com.facebook.buck.hashing.StringHashing;
@@ -40,7 +39,6 @@ import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ForkJoinPool;
@@ -87,12 +85,7 @@ public class TargetGraphHashing {
 
       AcyclicDepthFirstPostOrderTraversal<TargetNode<?>> traversal =
           new AcyclicDepthFirstPostOrderTraversal<>(
-              new GraphTraversable<TargetNode<?>>() {
-                @Override
-                public Iterator<TargetNode<?>> findChildren(TargetNode<?> node) {
-                  return targetGraph.getAll(node.getDeps()).iterator();
-                }
-              });
+              node -> targetGraph.getAll(node.getDeps()).iterator());
 
       final Map<BuildTarget, ForkJoinTask<HashCode>> buildTargetHashes = new HashMap<>();
       Queue<ForkJoinTask<HashCode>> tasksToSchedule = new ArrayDeque<>();
@@ -113,12 +106,7 @@ public class TargetGraphHashing {
       // Wait for all scheduled tasks to complete
       return ImmutableMap.copyOf(Maps.transformEntries(
           buildTargetHashes,
-          new Maps.EntryTransformer<BuildTarget, ForkJoinTask<HashCode>, HashCode>() {
-            @Override
-            public HashCode transformEntry(BuildTarget key, ForkJoinTask<HashCode> value) {
-              return value.join();
-            }
-          }));
+          (key, value) -> value.join()));
     }
   }
 

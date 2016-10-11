@@ -29,36 +29,16 @@ import java.util.Objects;
 public class PathOrGlobMatcher {
 
   private static final Predicate<PathOrGlobMatcher> IS_PATH =
-      new Predicate<PathOrGlobMatcher>() {
-        @Override
-        public boolean apply(PathOrGlobMatcher input) {
-          return input.getType() == Type.PATH;
-        }
-      };
+      input -> input.getType() == Type.PATH;
 
   private static final Function<PathOrGlobMatcher, Path> TO_PATH =
-      new Function<PathOrGlobMatcher, Path>() {
-        @Override
-        public Path apply(PathOrGlobMatcher input) {
-          return input.getPath();
-        }
-      };
+      PathOrGlobMatcher::getPath;
 
   private static final Function<Path, PathOrGlobMatcher> TO_PATH_MATCHER =
-      new Function<Path, PathOrGlobMatcher>() {
-        @Override
-        public PathOrGlobMatcher apply(Path input) {
-          return new PathOrGlobMatcher(input);
-        }
-      };
+      PathOrGlobMatcher::new;
 
   private static final Function<PathOrGlobMatcher, String> TO_PATH_OR_GLOB =
-      new Function<PathOrGlobMatcher, String>() {
-        @Override
-        public String apply(PathOrGlobMatcher input) {
-          return input.getPathOrGlob();
-        }
-      };
+      PathOrGlobMatcher::getPathOrGlob;
 
   public enum Type {
     PATH,

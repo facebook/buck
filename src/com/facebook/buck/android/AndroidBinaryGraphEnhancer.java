@@ -45,7 +45,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -520,12 +519,7 @@ public class AndroidBinaryGraphEnhancer {
                 .addAll(packageableCollection.getClasspathEntriesToDex())
                 .addAll(
                     FluentIterable.from(additionalJavaLibraries)
-                    .transform(new Function<BuildRule, SourcePath>() {
-                      @Override
-                      public SourcePath apply(BuildRule rule) {
-                        return new BuildTargetSourcePath(rule.getBuildTarget());
-                      }
-                    }).toList())
+                    .transform(rule -> new BuildTargetSourcePath(rule.getBuildTarget())).toList())
                 .build())
         .setFinalDeps(enhancedDeps.build())
         .setAPKModuleGraph(apkModuleGraph)
@@ -633,12 +627,7 @@ public class AndroidBinaryGraphEnhancer {
       AndroidPackageableCollection packageableCollection) {
     Iterable<BuildTarget> additionalJavaLibraryTargets =
         FluentIterable.from(additionalJavaLibrariesToDex).transform(
-            new Function<BuildRule, BuildTarget>() {
-              @Override
-              public BuildTarget apply(BuildRule input) {
-                return input.getBuildTarget();
-              }
-            });
+            BuildRule::getBuildTarget);
     ImmutableMultimap.Builder<APKModule, DexProducedFromJavaLibrary> preDexDeps =
         ImmutableMultimap.builder();
     for (BuildTarget buildTarget : Iterables.concat(
@@ -734,13 +723,10 @@ public class AndroidBinaryGraphEnhancer {
   private ImmutableList<HasAndroidResourceDeps> getTargetsAsResourceDeps(
       Collection<BuildTarget> targets) {
     return FluentIterable.from(getTargetsAsRules(targets))
-        .transform(new Function<BuildRule, HasAndroidResourceDeps>() {
-                     @Override
-                     public HasAndroidResourceDeps apply(BuildRule input) {
-                       Preconditions.checkState(input instanceof HasAndroidResourceDeps);
-                       return (HasAndroidResourceDeps) input;
-                     }
-                   })
+        .transform(input -> {
+          Preconditions.checkState(input instanceof HasAndroidResourceDeps);
+          return (HasAndroidResourceDeps) input;
+        })
         .toList();
   }
 }

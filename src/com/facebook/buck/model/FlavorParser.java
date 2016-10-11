@@ -17,7 +17,6 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.log.Logger;
-import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -48,20 +47,17 @@ public class FlavorParser {
                 .omitEmptyStrings()
                 .trimResults()
                 .split(flavorString),
-            new Function<String, String>() {
-                @Override
-                public String apply(String flavor) {
-                  String mapped = DEPRECATED_FLAVORS.get(flavor);
-                  if (mapped != null) {
-                    // Show a warning the first time a deprecated flavor is used.
-                    if (deprecatedFlavorWarningShown.add(flavor)) {
-                      LOG.warn("Flavor %s is deprecated; use %s instead.", flavor, mapped);
-                    }
-                    return mapped;
-                  } else {
-                    return flavor;
-                  }
+            flavor -> {
+              String mapped = DEPRECATED_FLAVORS.get(flavor);
+              if (mapped != null) {
+                // Show a warning the first time a deprecated flavor is used.
+                if (deprecatedFlavorWarningShown.add(flavor)) {
+                  LOG.warn("Flavor %s is deprecated; use %s instead.", flavor, mapped);
                 }
+                return mapped;
+              } else {
+                return flavor;
+              }
             });
   }
 }

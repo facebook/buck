@@ -26,7 +26,6 @@ import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -146,20 +145,10 @@ public class GoPlatformFlavorDomain {
 
     Optional<Map.Entry<String, Platform>> osValue = FluentIterable
         .from(goOsValues.entrySet())
-        .firstMatch(new Predicate<Map.Entry<String, Platform>>() {
-          @Override
-          public boolean apply(Map.Entry<String, Platform> input) {
-            return input.getValue() == platform;
-          }
-        });
+        .firstMatch(input -> input.getValue() == platform);
     Optional<Map.Entry<String, Architecture>> archValue = FluentIterable
         .from(goArchValues.entrySet())
-        .firstMatch(new Predicate<Map.Entry<String, Architecture>>() {
-          @Override
-          public boolean apply(Map.Entry<String, Architecture> input) {
-            return input.getValue() == architecture;
-          }
-        });
+        .firstMatch(input -> input.getValue() == architecture);
 
     if (!osValue.isPresent() || !archValue.isPresent()) {
       return Optional.absent();

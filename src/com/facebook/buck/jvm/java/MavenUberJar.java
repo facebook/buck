@@ -28,7 +28,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -238,12 +237,7 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
         Preconditions.checkState(root instanceof HasClasspathEntries);
         candidates.addAll(FluentIterable
             .from(((HasClasspathEntries) root).getTransitiveClasspathDeps())
-            .filter(new Predicate<JavaLibrary>() {
-              @Override
-              public boolean apply(JavaLibrary buildRule) {
-                return !root.equals(buildRule);
-              }
-            }));
+            .filter(buildRule -> !root.equals(buildRule)));
       }
       ImmutableSortedSet.Builder<JavaLibrary> removals = ImmutableSortedSet.naturalOrder();
       for (JavaLibrary javaLibrary : candidates.build()) {

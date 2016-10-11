@@ -121,12 +121,7 @@ public class DistBuildSlaveExecutor {
       //              thrift structs.
       FluentIterable<BuildTarget> allTargets = FluentIterable.from(
           Preconditions.checkNotNull(targetGraph).getNodes())
-          .transform(new Function<TargetNode<?>, BuildTarget>() {
-            @Override
-            public BuildTarget apply(TargetNode<?> input) {
-              return input.getBuildTarget();
-            }
-          });
+          .transform(TargetNode::getBuildTarget);
 
       return build.executeAndPrintFailuresToEventBus(
           allTargets,

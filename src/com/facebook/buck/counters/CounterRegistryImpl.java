@@ -55,12 +55,7 @@ public class CounterRegistryImpl implements CounterRegistry {
     this.counters = Sets.newLinkedHashSet();
     this.eventBus = eventBus;
     flushCountersFuture = service.scheduleAtFixedRate(
-        new Runnable() {
-          @Override
-          public void run() {
-            flushCounters();
-          }
-        },
+        this::flushCounters,
       /* initialDelay */ firstFlushIntervalMillis,
       /* period */ flushIntervalMillis,
       /* unit */ TimeUnit.MILLISECONDS);

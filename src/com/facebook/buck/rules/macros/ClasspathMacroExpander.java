@@ -28,7 +28,6 @@ import com.facebook.buck.rules.SourcePaths;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -115,12 +114,7 @@ public class ClasspathMacroExpander
             getHasClasspathEntries(resolve(resolver, input))
                 .getTransitiveClasspathDeps())
         .filter(
-            new Predicate<JavaLibrary>() {
-              @Override
-              public boolean apply(JavaLibrary input) {
-                return input.getPathToOutput() != null;
-              }
-            })
+            input1 -> input1.getPathToOutput() != null)
         .transform(SourcePaths.getToBuildTargetSourcePath())
         .toSortedSet(Ordering.natural());
   }

@@ -25,13 +25,7 @@ import java.nio.file.Path;
  */
 public class SourceFolder extends InclusiveFolder {
 
-  public static final IJFolderFactory FACTORY = new IJFolderFactory() {
-    @Override
-    public IjFolder create(
-        Path path, boolean wantsPrefix, ImmutableSortedSet<Path> inputs) {
-      return new SourceFolder(path, wantsPrefix, inputs);
-    }
-  };
+  public static final IJFolderFactory FACTORY = SourceFolder::new;
 
   SourceFolder(Path path, boolean wantsPackagePrefix, ImmutableSortedSet<Path> inputs) {
     super(path, wantsPackagePrefix, inputs);

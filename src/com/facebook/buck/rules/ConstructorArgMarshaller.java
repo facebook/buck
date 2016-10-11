@@ -32,7 +32,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -129,14 +128,11 @@ public class ConstructorArgMarshaller {
 
     if (paramInfo.isDep()) {
       paramInfo.traverse(
-          new ParamInfo.Traversal() {
-            @Override
-            public void traverse(Object object) {
-              if (!(object instanceof BuildTarget)) {
-                return;
-              }
-              declaredDeps.add((BuildTarget) object);
+          object -> {
+            if (!(object instanceof BuildTarget)) {
+              return;
             }
+            declaredDeps.add((BuildTarget) object);
           },
           dto);
 
@@ -165,21 +161,18 @@ public class ConstructorArgMarshaller {
   ImmutableSet<ParamInfo> getAllParamInfo(Object dto) {
     final Class<?> argClass = dto.getClass();
     try {
-      return coercedTypes.get(argClass, new Callable<ImmutableSet<ParamInfo>>() {
-            @Override
-            public ImmutableSet<ParamInfo> call() {
-              ImmutableSet.Builder<ParamInfo> allInfo = ImmutableSet.builder();
+      return coercedTypes.get(argClass, () -> {
+        ImmutableSet.Builder<ParamInfo> allInfo = ImmutableSet.builder();
 
-              for (Field field : argClass.getFields()) {
-                if (Modifier.isFinal(field.getModifiers())) {
-                  continue;
-                }
-                allInfo.add(new ParamInfo(typeCoercerFactory, field));
-              }
+        for (Field field : argClass.getFields()) {
+          if (Modifier.isFinal(field.getModifiers())) {
+            continue;
+          }
+          allInfo.add(new ParamInfo(typeCoercerFactory, field));
+        }
 
-              return allInfo.build();
-            }
-          });
+        return allInfo.build();
+      });
     } catch (ExecutionException e) {
       // This gets thrown if we saw an error when loading the value. Nothing sane to do here, and
       // we (previously, before using a cache), simply allowed a RuntimeException to bubble up.

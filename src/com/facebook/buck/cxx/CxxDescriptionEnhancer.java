@@ -704,12 +704,9 @@ public class CxxDescriptionEnhancer {
     ImmutableList<SourcePathArg> objectArgs =
         FluentIterable
             .from(SourcePathArg.from(sourcePathResolver, objects.values()))
-            .transform(new Function<Arg, SourcePathArg>() {
-              @Override
-              public SourcePathArg apply(Arg input) {
-                Preconditions.checkArgument(input instanceof SourcePathArg);
-                return (SourcePathArg) input;
-              }
+            .transform(input -> {
+              Preconditions.checkArgument(input instanceof SourcePathArg);
+              return (SourcePathArg) input;
             })
             .toList();
     argsBuilder.addAll(FileListableLinkerInputArg.from(objectArgs));

@@ -35,22 +35,14 @@ import java.util.Map;
 public abstract class Arg implements RuleKeyAppendable {
 
   private static final Function<Arg, ImmutableList<String>> STRINGIFY_LIST =
-      new Function<Arg, ImmutableList<String>>() {
-        @Override
-        public ImmutableList<String> apply(Arg input) {
-          ImmutableList.Builder<String> builder = ImmutableList.builder();
-          input.appendToCommandLine(builder);
-          return builder.build();
-        }
+      input -> {
+        ImmutableList.Builder<String> builder = ImmutableList.builder();
+        input.appendToCommandLine(builder);
+        return builder.build();
       };
 
   private static final Function<Arg, ImmutableCollection<SourcePath>> GET_INPUTS =
-      new Function<Arg, ImmutableCollection<SourcePath>>() {
-        @Override
-        public ImmutableCollection<SourcePath> apply(Arg arg) {
-          return arg.getInputs();
-        }
-      };
+      Arg::getInputs;
 
   /**
    * @return any {@link BuildRule}s that need to be built before this argument can be used.
@@ -83,12 +75,7 @@ public abstract class Arg implements RuleKeyAppendable {
 
   public static Function<Arg, ImmutableCollection<BuildRule>> getDepsFunction(
       final SourcePathResolver resolver) {
-    return new Function<Arg, ImmutableCollection<BuildRule>>() {
-      @Override
-      public ImmutableCollection<BuildRule> apply(Arg arg) {
-        return arg.getDeps(resolver);
-      }
-    };
+    return arg -> arg.getDeps(resolver);
   }
 
   public static Function<Arg, ImmutableCollection<SourcePath>> getInputsFunction() {

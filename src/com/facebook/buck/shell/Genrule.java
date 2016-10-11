@@ -42,7 +42,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -269,12 +268,7 @@ public class Genrule extends AbstractBuildRule
     return arg
         .transform(Arg.stringListFunction())
         .transform(
-            new Function<ImmutableList<String>, String>() {
-              @Override
-              public String apply(ImmutableList<String> input) {
-                return Joiner.on(' ').join(input);
-              }
-            });
+            input -> Joiner.on(' ').join(input));
   }
 
   @VisibleForTesting
@@ -337,18 +331,15 @@ public class Genrule extends AbstractBuildRule
   private static Optional<WorkerJobParams> convertToWorkerJobParams(Optional<Arg> arg) {
     return arg
         .transform(
-            new Function<Arg, WorkerJobParams>() {
-              @Override
-              public WorkerJobParams apply(Arg arg) {
-                WorkerMacroArg workerMacroArg = (WorkerMacroArg) arg;
-                return WorkerJobParams.of(
-                    workerMacroArg.getTempDir(),
-                    workerMacroArg.getStartupCommand(),
-                    workerMacroArg.getStartupArgs(),
-                    workerMacroArg.getEnvironment(),
-                    workerMacroArg.getJobArgs(),
-                    workerMacroArg.getMaxWorkers());
-              }
+            arg1 -> {
+              WorkerMacroArg workerMacroArg = (WorkerMacroArg) arg1;
+              return WorkerJobParams.of(
+                  workerMacroArg.getTempDir(),
+                  workerMacroArg.getStartupCommand(),
+                  workerMacroArg.getStartupArgs(),
+                  workerMacroArg.getEnvironment(),
+                  workerMacroArg.getJobArgs(),
+                  workerMacroArg.getMaxWorkers());
             });
   }
 

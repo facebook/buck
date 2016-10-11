@@ -24,7 +24,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -105,12 +104,7 @@ public class AppleConfig {
         "extra_toolchain_paths");
     return ImmutableList.copyOf(Lists.transform(
         extraPathsStrings,
-        new Function<String, Path>() {
-            @Override
-            public Path apply(String string) {
-                return Paths.get(string);
-            }
-        }));
+        string -> Paths.get(string)));
   }
 
   public ImmutableList<Path> getExtraPlatformPaths() {
@@ -119,12 +113,7 @@ public class AppleConfig {
         "extra_platform_paths");
     return ImmutableList.copyOf(Lists.transform(
         extraPathsStrings,
-        new Function<String, Path>() {
-            @Override
-            public Path apply(String string) {
-                return Paths.get(string);
-            }
-        }));
+        string -> Paths.get(string)));
   }
 
   public ImmutableMap<AppleSdk, AppleSdkPaths> getAppleSdkPaths(ProcessExecutor processExecutor) {

@@ -16,7 +16,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxFlags;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
@@ -33,7 +32,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -70,15 +68,10 @@ public class PrebuiltAppleFrameworkDescription implements
         args.framework,
         args.frameworks.or(ImmutableSortedSet.of()),
         args.supportedPlatformsRegex,
-        new Function<CxxPlatform, ImmutableList<String>>() {
-          @Override
-          public ImmutableList<String> apply(CxxPlatform input) {
-            return CxxFlags.getFlags(
-                args.exportedLinkerFlags,
-                args.exportedPlatformLinkerFlags,
-                input);
-          }
-        }
+        input -> CxxFlags.getFlags(
+            args.exportedLinkerFlags,
+            args.exportedPlatformLinkerFlags,
+            input)
     );
   }
 

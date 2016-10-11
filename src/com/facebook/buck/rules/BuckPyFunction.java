@@ -56,16 +56,11 @@ public class BuckPyFunction {
   public static final String BUCK_PY_FUNCTION_TEMPLATE = "BuckPyFunction.stg";
 
   private static final Supplier<STGroup> buckPyFunctionTemplate = Suppliers.memoize(
-      new Supplier<STGroup>() {
-        @Override
-        public STGroup get() {
-          return new STGroupFile(
-              Resources.getResource(BuckPyFunction.class, BUCK_PY_FUNCTION_TEMPLATE),
-              "UTF-8",
-              '<',
-              '>');
-        }
-      }
+      () -> new STGroupFile(
+          Resources.getResource(BuckPyFunction.class, BUCK_PY_FUNCTION_TEMPLATE),
+          "UTF-8",
+          '<',
+          '>')
   );
 
   private final ConstructorArgMarshaller argMarshaller;

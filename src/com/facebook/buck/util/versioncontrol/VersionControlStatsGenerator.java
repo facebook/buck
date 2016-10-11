@@ -43,17 +43,14 @@ public class VersionControlStatsGenerator {
 
   public void generateStatsAsync() {
     executorService.submit(
-        new Runnable() {
-          @Override
-          public void run() {
-            try {
-              generateStats();
-            } catch (InterruptedException e) {
-              LOG.warn(e, "Failed to generate VC stats due to being interrupted. Skipping..");
-              Thread.currentThread().interrupt(); // Re-set interrupt flag
-            } catch (VersionControlCommandFailedException e) {
-              LOG.warn(e, "Failed to generate VC stats due to exception. Skipping..");
-            }
+        () -> {
+          try {
+            generateStats();
+          } catch (InterruptedException e) {
+            LOG.warn(e, "Failed to generate VC stats due to being interrupted. Skipping..");
+            Thread.currentThread().interrupt(); // Re-set interrupt flag
+          } catch (VersionControlCommandFailedException e) {
+            LOG.warn(e, "Failed to generate VC stats due to exception. Skipping..");
           }
         });
   }

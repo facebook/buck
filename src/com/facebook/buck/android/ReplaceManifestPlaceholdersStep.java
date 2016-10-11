@@ -21,7 +21,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -81,12 +80,7 @@ public class ReplaceManifestPlaceholdersStep implements Step {
   @VisibleForTesting
   static String replacePlaceholders(String content, ImmutableMap<String, String> placeholders) {
     Iterable<String> escaped = Iterables.transform(
-        placeholders.keySet(), new Function<String, String>() {
-          @Override
-          public String apply(String input) {
-            return Pattern.quote(input);
-          }
-        });
+        placeholders.keySet(), Pattern::quote);
 
     Joiner joiner = Joiner.on("|");
     String patternString = Pattern.quote("${") + "(" + joiner.join(escaped) + ")" +

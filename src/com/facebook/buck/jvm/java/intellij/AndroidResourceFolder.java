@@ -25,13 +25,8 @@ import java.nio.file.Path;
  */
 public class AndroidResourceFolder extends SelfMergingOnlyFolder {
 
-  public static final IJFolderFactory FACTORY = new IJFolderFactory() {
-    @Override
-    public IjFolder create(
-        Path path, boolean wantsPrefix, ImmutableSortedSet<Path> inputs) {
-      return new AndroidResourceFolder(path, inputs);
-    }
-  };
+  public static final IJFolderFactory FACTORY =
+      (path, wantsPrefix, inputs) -> new AndroidResourceFolder(path, inputs);
 
   AndroidResourceFolder(Path path, ImmutableSortedSet<Path> inputs) {
     super(path, true, inputs);

@@ -40,7 +40,6 @@ import com.facebook.buck.util.network.ScribeLogger;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -151,12 +150,7 @@ public class OfflineScribeLoggerTest {
     Path[] expectedLogPaths = FluentIterable
         .from(ImmutableList.copyOf(ids))
         .transform(
-            new Function<String, Path>() {
-              @Override
-              public Path apply(String id) {
-                return filesystem.resolve(logDir.resolve(LOGFILE_PREFIX + id + LOGFILE_SUFFIX));
-              }
-            })
+            id -> filesystem.resolve(logDir.resolve(LOGFILE_PREFIX + id + LOGFILE_SUFFIX)))
         .toArray(Path.class);
 
     ImmutableSortedSet<Path> logs =

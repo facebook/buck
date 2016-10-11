@@ -82,12 +82,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
 
   private static final ObjectMapper MAPPER = ObjectMappers.newDefaultInstance();
   private static final Function<String, HashCode> TO_HASHCODE =
-      new Function<String, HashCode>() {
-        @Override
-        public HashCode apply(String input) {
-          return HashCode.fromString(input);
-        }
-      };
+      HashCode::fromString;
 
   @VisibleForTesting
   static final String LINEAR_ALLOC_KEY_ON_DISK_METADATA = "linearalloc";

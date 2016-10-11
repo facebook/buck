@@ -83,12 +83,7 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
     return getDelegate()
         .getValue("build", "allow_empty_globs")
         .transform(
-            new Function<String, Boolean>() {
-              @Override
-              public Boolean apply(String input) {
-                return Boolean.parseBoolean(input);
-              }
-            })
+            Boolean::parseBoolean)
         .or(DEFAULT_ALLOW_EMPTY_GLOBS);
   }
 

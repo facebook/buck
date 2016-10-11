@@ -33,7 +33,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -168,11 +167,6 @@ class GroovycStep implements Step {
   }
 
   private boolean shouldCrossCompile() {
-    return any(sourceFilePaths, new Predicate<Path>() {
-      @Override
-      public boolean apply(Path input) {
-        return input.toString().endsWith(".java");
-      }
-    });
+    return any(sourceFilePaths, input -> input.toString().endsWith(".java"));
   }
 }

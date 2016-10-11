@@ -219,12 +219,7 @@ public class NativeRelinker {
       TargetCpuType cpuType,
       SourcePath source,
       ImmutableList<RelinkerRule> relinkerDeps) {
-    Function<RelinkerRule, SourcePath> getSymbolsNeeded = new Function<RelinkerRule, SourcePath>() {
-      @Override
-      public SourcePath apply(RelinkerRule rule) {
-        return rule.getSymbolsNeededPath();
-      }
-    };
+    Function<RelinkerRule, SourcePath> getSymbolsNeeded = RelinkerRule::getSymbolsNeededPath;
     String libname = resolver.getAbsolutePath(source).getFileName().toString();
     BuildRuleParams relinkerParams = buildRuleParams
         .withFlavor(ImmutableFlavor.of("xdso-dce"))

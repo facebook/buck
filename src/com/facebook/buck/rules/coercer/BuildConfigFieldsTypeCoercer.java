@@ -49,16 +49,13 @@ public class BuildConfigFieldsTypeCoercer extends LeafTypeCoercer<BuildConfigFie
     }
 
     List<?> list = (List<?>) object;
-    List<String> values = FluentIterable.from(list).transform(new Function<Object, String> () {
-      @Override
-      public String apply(Object input) {
-        if (input instanceof String) {
-          return (String) input;
-        } else {
-          throw new HumanReadableException(
-              "Expected string for build config values but was: %s",
-              input);
-        }
+    List<String> values = FluentIterable.from(list).transform((Function<Object, String>) input -> {
+      if (input instanceof String) {
+        return (String) input;
+      } else {
+        throw new HumanReadableException(
+            "Expected string for build config values but was: %s",
+            input);
       }
     }).toList();
     return BuildConfigFields.fromFieldDeclarations(values);

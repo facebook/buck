@@ -35,11 +35,9 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.FakeClock;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -429,20 +427,10 @@ public class IjProjectDataPreparerTest {
   private static ImmutableSet<Path> distillExcludeFolders(ImmutableSet<IjFolder> folders) {
     Preconditions.checkArgument(!FluentIterable.from(folders)
             .anyMatch(
-                new Predicate<IjFolder>() {
-                  @Override
-                  public boolean apply(IjFolder input) {
-                    return !(input instanceof ExcludeFolder);
-                  }
-                }));
+                input -> !(input instanceof ExcludeFolder)));
     return FluentIterable.from(folders)
         .uniqueIndex(
-            new Function<IjFolder, Path>() {
-              @Override
-              public Path apply(IjFolder input) {
-                return input.getPath();
-              }
-            })
+            IjFolder::getPath)
         .keySet();
   }
 }

@@ -129,18 +129,15 @@ public class TargetNodeFactory {
 
     try {
       info.traverse(
-          new ParamInfo.Traversal() {
-            @Override
-            public void traverse(Object object) {
-              if (object instanceof PathSourcePath) {
-                pathsBuilder.add(((PathSourcePath) object).getRelativePath());
-              } else if (object instanceof BuildTargetSourcePath) {
-                depsBuilder.add(((BuildTargetSourcePath) object).getTarget());
-              } else if (object instanceof Path) {
-                pathsBuilder.add((Path) object);
-              } else if (object instanceof BuildTarget) {
-                depsBuilder.add((BuildTarget) object);
-              }
+          object -> {
+            if (object instanceof PathSourcePath) {
+              pathsBuilder.add(((PathSourcePath) object).getRelativePath());
+            } else if (object instanceof BuildTargetSourcePath) {
+              depsBuilder.add(((BuildTargetSourcePath) object).getTarget());
+            } else if (object instanceof Path) {
+              pathsBuilder.add((Path) object);
+            } else if (object instanceof BuildTarget) {
+              depsBuilder.add((BuildTarget) object);
             }
           },
           constructorArg);

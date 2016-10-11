@@ -31,7 +31,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -150,13 +149,8 @@ abstract class RustCompile extends AbstractBuildRule {
     ImmutableList<Path> candidates = ImmutableList.copyOf(
         FluentIterable.from(getResolver().deprecatedAllPaths(srcs))
             .filter(
-                new Predicate<Path>() {
-                  @Override
-                  public boolean apply(Path path) {
-                    return path.endsWith(getDefaultSource()) ||
-                        path.endsWith(String.format("%s.rs", getBuildTarget().getShortName()));
-                  }
-                }));
+                path -> path.endsWith(getDefaultSource()) ||
+                    path.endsWith(String.format("%s.rs", getBuildTarget().getShortName()))));
     if (candidates.size() != 1) {
       throw new HumanReadableException(
           "srcs of %s must contain either %s or %s.rs!",

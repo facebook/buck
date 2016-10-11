@@ -131,12 +131,9 @@ class ProjectBuildFileParserPool implements AutoCloseable {
 
     pendingWork.add(futureWork);
     futureWork.addListener(
-        new Runnable() {
-          @Override
-          public void run() {
-            synchronized (ProjectBuildFileParserPool.this) {
-              pendingWork.remove(futureWork);
-            }
+        () -> {
+          synchronized (ProjectBuildFileParserPool.this) {
+            pendingWork.remove(futureWork);
           }
         },
         executorService);

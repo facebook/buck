@@ -31,7 +31,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -74,12 +73,7 @@ public class TargetNodeTest {
     ImmutableSet<BuildTarget> depsTargets = FluentIterable
         .from(depsStrings)
         .transform(
-            new Function<String, BuildTarget>() {
-               @Override
-               public BuildTarget apply(String input) {
-                 return BuildTargetFactory.newInstance(input);
-               }
-            })
+            BuildTargetFactory::newInstance)
         .toSet();
     ImmutableMap<String, Object> rawNode = ImmutableMap.of(
         "deps", depsStrings,

@@ -29,7 +29,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -157,12 +156,7 @@ public class PublishCommand extends BuildCommand {
                 FluentIterable
                     .from(deployResult.getArtifacts())
                     .transform(
-                        new Function<Artifact, String>() {
-                          @Override
-                          public String apply(Artifact input) {
-                            return artifactToString(input);
-                          }
-                        })));
+                        PublishCommand::artifactToString)));
     params.getConsole().getStdOut().println("\nDeployRequest:\n" + deployResult.getRequest());
   }
 
@@ -183,31 +177,23 @@ public class PublishCommand extends BuildCommand {
           .addAll(FluentIterable
               .from(specs)
               .filter(
-                  new Predicate<TargetNodeSpec>() {
-                    @Override
-                    public boolean apply(TargetNodeSpec input) {
-                      if (!(input instanceof BuildTargetSpec)) {
-                        throw new IllegalArgumentException(
-                            "Targets must be explicitly defined when using " +
-                                INCLUDE_SOURCE_LONG_ARG);
-                      }
-                      return !((BuildTargetSpec) input)
-                          .getBuildTarget()
-                          .getFlavors()
-                          .contains(JavaLibrary.SRC_JAR);
+                  input -> {
+                    if (!(input instanceof BuildTargetSpec)) {
+                      throw new IllegalArgumentException(
+                          "Targets must be explicitly defined when using " +
+                              INCLUDE_SOURCE_LONG_ARG);
                     }
+                    return !((BuildTargetSpec) input)
+                        .getBuildTarget()
+                        .getFlavors()
+                        .contains(JavaLibrary.SRC_JAR);
                   })
               .transform(
-                  new Function<TargetNodeSpec, BuildTargetSpec>() {
-                    @Override
-                    public BuildTargetSpec apply(TargetNodeSpec input) {
-                      return BuildTargetSpec.of(
-                          ((BuildTargetSpec) input)
-                              .getBuildTarget()
-                              .withFlavors(JavaLibrary.SRC_JAR),
-                          input.getBuildFileSpec());
-                    }
-                  }))
+                  input -> BuildTargetSpec.of(
+                      ((BuildTargetSpec) input)
+                          .getBuildTarget()
+                          .withFlavors(JavaLibrary.SRC_JAR),
+                      input.getBuildFileSpec())))
           .build();
     }
 

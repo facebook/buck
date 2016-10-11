@@ -23,8 +23,6 @@ import com.google.common.collect.Maps;
 
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
-import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
-import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
 import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
 import org.eclipse.jetty.websocket.servlet.WebSocketServlet;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
@@ -51,12 +49,7 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
     // however, that requires DispatchSocket to have a no-arg constructor. That does not work for
     // us because we would like all WebSockets created by this factory to have a reference to this
     // parent class. This is why we override the default WebSocketCreator for the factory.
-    WebSocketCreator wrapperCreator = new WebSocketCreator() {
-      @Override
-      public Object createWebSocket(ServletUpgradeRequest req, ServletUpgradeResponse resp) {
-        return new MyWebSocket();
-      }
-    };
+    WebSocketCreator wrapperCreator = (req, resp) -> new MyWebSocket();
     factory.setCreator(wrapperCreator);
   }
 

@@ -28,12 +28,7 @@ import java.nio.file.Path;
 public class HashedFileTool implements Tool {
 
   public static final Function<Path, HashedFileTool> FROM_PATH =
-      new Function<Path, HashedFileTool>() {
-        @Override
-        public HashedFileTool apply(Path input) {
-          return new HashedFileTool(input);
-        }
-      };
+      HashedFileTool::new;
 
   private final Path path;
 

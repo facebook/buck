@@ -73,12 +73,7 @@ public class ListeningMultiSemaphoreTest {
     assertThat(array.getAvailableResources(), Matchers.equalTo(amountsOfCpu(4)));
 
     final AtomicBoolean f2HasBeenReleased = new AtomicBoolean(false);
-    f2.addListener(new Runnable() {
-      @Override
-      public void run() {
-        f2HasBeenReleased.set(true);
-      }
-    }, MoreExecutors.newDirectExecutorService());
+    f2.addListener(() -> f2HasBeenReleased.set(true), MoreExecutors.newDirectExecutorService());
 
     array.release(amountsOfCpu(3));
     assertThat(f2HasBeenReleased.get(), Matchers.equalTo(true));
@@ -106,12 +101,9 @@ public class ListeningMultiSemaphoreTest {
     assertThat(array.getAvailableResources(), Matchers.equalTo(amountsOfCpu(2)));
     toBeCancelled.cancel(true);
     final AtomicBoolean toBeCancelledIsReleased = new AtomicBoolean(false);
-    toBeCancelled.addListener(new Runnable() {
-      @Override
-      public void run() {
-        toBeCancelledIsReleased.set(toBeCancelled.isCancelled());
-      }
-    }, MoreExecutors.newDirectExecutorService());
+    toBeCancelled.addListener(() -> toBeCancelledIsReleased.set(
+        toBeCancelled.isCancelled()),
+        MoreExecutors.newDirectExecutorService());
 
     // this should be released, because previous future is cancelled,
     // so resources should become free
@@ -122,12 +114,9 @@ public class ListeningMultiSemaphoreTest {
     assertThat(array.getAvailableResources(), Matchers.equalTo(amountsOfCpu(2)));
     // this should happen
     final AtomicBoolean toBeReleaseAfterCancellationIsReleased = new AtomicBoolean(false);
-    toBeReleaseAfterCancellation.addListener(new Runnable() {
-      @Override
-      public void run() {
-        toBeReleaseAfterCancellationIsReleased.set(toBeReleaseAfterCancellation.isCancelled());
-      }
-    }, MoreExecutors.newDirectExecutorService());
+    toBeReleaseAfterCancellation.addListener(() -> toBeReleaseAfterCancellationIsReleased.set(
+        toBeReleaseAfterCancellation.isCancelled()),
+        MoreExecutors.newDirectExecutorService());
 
 
     // release resources acquired by f1

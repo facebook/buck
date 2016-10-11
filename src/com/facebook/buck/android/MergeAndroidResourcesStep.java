@@ -29,7 +29,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -137,13 +136,7 @@ public class MergeAndroidResourcesStep implements Step {
   public ImmutableSortedSet<Path> getRDotJavaFiles() {
     return FluentIterable.from(androidResourceDeps)
         .transform(HasAndroidResourceDeps.TO_R_DOT_JAVA_PACKAGE)
-        .transform(
-            new Function<String, Path>() {
-              @Override
-              public Path apply(String input) {
-                return getPathToRDotJava(input);
-              }
-            })
+        .transform(this::getPathToRDotJava)
         .toSortedSet(natural());
   }
 
@@ -193,12 +186,7 @@ public class MergeAndroidResourcesStep implements Step {
       uberRDotTxtIds = Optional.of(FluentIterable.from(
           RDotTxtEntry.readResources(filesystem, uberRDotTxt.get()))
           .toMap(
-              new Function<RDotTxtEntry, String>() {
-                @Override
-                public String apply(RDotTxtEntry input) {
-                  return input.idValue;
-                }
-              }));
+              input -> input.idValue));
     } else {
       uberRDotTxtIds = Optional.absent();
     }
