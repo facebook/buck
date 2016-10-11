@@ -328,6 +328,10 @@ public class Build implements Closeable {
     return "BUILD FAILED: " + thrown.getMessage();
   }
 
+  private String getFailureMessageWithClassName(Throwable thrown) {
+    return "BUILD FAILED: " + thrown.getClass().getName() + " " + thrown.getMessage();
+  }
+
   public int executeAndPrintFailuresToEventBus(
       Iterable<? extends HasBuildTarget> targetsish,
       boolean isKeepGoing,
@@ -370,7 +374,7 @@ public class Build implements Closeable {
       }
     } catch (IOException e) {
       LOG.debug(e, "Got an exception during the build.");
-      eventBus.post(ConsoleEvent.severe(getFailureMessage(e)));
+      eventBus.post(ConsoleEvent.severe(getFailureMessageWithClassName(e)));
       exitCode = 1;
     } catch (StepFailedException e) {
       LOG.debug(e, "Got an exception during the build.");
