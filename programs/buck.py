@@ -10,7 +10,9 @@ from buck_tool import BuckToolException, RestartBuck, install_signal_handlers
 from buck_project import BuckProject, NoBuckConfigFoundException
 from pynailgun.ng import NailgunException
 from tracing import Tracing
-from subprocutils import propagate_failure
+from subprocutils import check_output, propagate_failure
+from sys import platform as os_platform
+import time
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -23,6 +25,21 @@ def main(argv):
         if java_home:
             pathsep = os.pathsep
             os.environ["PATH"] = os.path.join(java_home, 'bin') + pathsep + path
+        elif os_platform == 'darwin':
+            WARNING = '\033[93m'
+            ENDC = '\033[0m'
+            print(
+                WARNING +
+                "::: JAVA_HOME environment variable not set, Buck will not work correctly." + ENDC,
+                file=sys.stderr)
+            print("::: Available Java homes:", file=sys.stderr)
+            check_output(['/usr/libexec/java_home', '-V'])
+            print(
+                WARNING +
+                "::: Continuing anyway in 120 seconds, but Buck will not work correctly." + ENDC,
+                file=sys.stderr)
+            time.sleep(120)
+
 
         tracing_dir = None
         build_id = str(uuid.uuid4())
