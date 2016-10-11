@@ -1786,8 +1786,7 @@ public final class Main {
     IntByReference master = new IntByReference();
     IntByReference slave = new IntByReference();
 
-    int success = openPtyLibrary.openpty(master, slave, Pointer.NULL, Pointer.NULL, Pointer.NULL);
-    if (success != 0) {
+    if (openPtyLibrary.openpty(master, slave, Pointer.NULL, Pointer.NULL, Pointer.NULL) != 0) {
       throw new RuntimeException("Failed to open pty");
     }
 
@@ -1797,11 +1796,10 @@ public final class Main {
     markFdCloseOnExec(slave.getValue());
 
     // Make the pty our controlling terminal; works because we disconnected above with setsid.
-    success = Libc.INSTANCE.ioctl(
+    if (Libc.INSTANCE.ioctl(
         slave.getValue(),
         Pointer.createConstant(Libc.Constants.rTIOCSCTTY),
-        0);
-    if (success == -1) {
+        0) == -1) {
       throw new RuntimeException("Failed to set pty");
     }
 
