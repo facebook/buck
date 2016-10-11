@@ -282,7 +282,9 @@ class NativeLibraryMergeEnhancer {
       graph.addNode(constituents);
       for (NativeLinkable constituentLinkable : constituents.getLinkables()) {
         // For each dep of each constituent of each merged lib...
-        for (NativeLinkable dep : constituentLinkable.getNativeLinkableDeps(null)) {
+        for (NativeLinkable dep : Iterables.concat(
+            constituentLinkable.getNativeLinkableDeps(null),
+            constituentLinkable.getNativeLinkableExportedDeps(null))) {
           // If that dep is in a different merged lib, add a dependency.
           MergedNativeLibraryConstituents mergedDep =
               Preconditions.checkNotNull(linkableMembership.get(dep));
