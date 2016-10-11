@@ -50,6 +50,7 @@ cxx_library(
     ':static_for_C',
     ':prebuilt_for_C',
   ],
+  visibility = ['PUBLIC'],
 )
 
 cxx_library(

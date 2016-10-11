@@ -26,8 +26,8 @@ import com.facebook.buck.cxx.NativeLinkTarget;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.cxx.PrebuiltCxxLibrary;
-import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal;
-import com.facebook.buck.graph.GraphTraversable;
+import com.facebook.buck.graph.MutableDirectedGraph;
+import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
@@ -49,6 +49,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -59,6 +60,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
@@ -68,6 +70,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -274,57 +277,59 @@ class NativeLibraryMergeEnhancer {
   private static Iterable<MergedNativeLibraryConstituents> getOrderedMergedConstituents(
       BuildRuleParams buildRuleParams,
       final Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership) {
-
-    // Merged libs that are not depended on by any other merged lib
-    // will be the roots of our traversal.
-    // Start with all merged libs as possible roots.
-    HashSet<MergedNativeLibraryConstituents> possibleRoots =
-        new HashSet<>(linkableMembership.values());
-
-    for (Map.Entry<NativeLinkable, MergedNativeLibraryConstituents> entry :
-        linkableMembership.entrySet()) {
-      for (NativeLinkable constituentLinkable : entry.getValue().getLinkables()) {
+    MutableDirectedGraph<MergedNativeLibraryConstituents> graph = new MutableDirectedGraph<>();
+    for (MergedNativeLibraryConstituents constituents : linkableMembership.values()) {
+      graph.addNode(constituents);
+      for (NativeLinkable constituentLinkable : constituents.getLinkables()) {
         // For each dep of each constituent of each merged lib...
         for (NativeLinkable dep : constituentLinkable.getNativeLinkableDeps(null)) {
-          // If that dep is in a different merged lib, the latter is not a root.
-          MergedNativeLibraryConstituents mergedDep = linkableMembership.get(dep);
-          if (mergedDep != entry.getValue()) {
-            possibleRoots.remove(mergedDep);
+          // If that dep is in a different merged lib, add a dependency.
+          MergedNativeLibraryConstituents mergedDep =
+              Preconditions.checkNotNull(linkableMembership.get(dep));
+          if (mergedDep != constituents) {
+            graph.addEdge(constituents, mergedDep);
           }
         }
       }
     }
 
-    Iterable<MergedNativeLibraryConstituents> ordered;
-    try {
-      ordered = new AcyclicDepthFirstPostOrderTraversal<>(
-          (GraphTraversable<MergedNativeLibraryConstituents>) node -> {
-            ImmutableSet.Builder<MergedNativeLibraryConstituents> depBuilder =
-                ImmutableSet.builder();
-            for (NativeLinkable linkable : node.getLinkables()) {
-              // Ideally, we would sort the deps to get consistent traversal order,
-              // but in practice they are already SortedSets, so it's not necessary.
-              for (NativeLinkable dep : Iterables.concat(
-                  linkable.getNativeLinkableDeps(null),
-                  linkable.getNativeLinkableExportedDeps(null))) {
-                MergedNativeLibraryConstituents mappedDep =
-                    linkableMembership.get(dep);
-                // Merging can result in a native library "depending on itself",
-                // which is a cycle.  Just drop these unnecessary deps.
-                if (mappedDep != node) {
-                  depBuilder.add(mappedDep);
-                }
-              }
-            }
-            return depBuilder.build().iterator();
-          }).traverse(possibleRoots);
-    } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
+    // Check for cycles in the merged dependency graph.
+    // If any are found, spent a lot of effort building an error message
+    // that actually shows the dependency cycle.
+    for (ImmutableSet<MergedNativeLibraryConstituents> fullCycle : graph.findCycles()) {
+      HashSet<MergedNativeLibraryConstituents> partialCycle = new LinkedHashSet<>();
+      MergedNativeLibraryConstituents item = fullCycle.iterator().next();
+      while (true) {
+        if (partialCycle.contains(item)) {
+          break;
+        }
+        partialCycle.add(item);
+        item = Sets.intersection(
+            ImmutableSet.copyOf(graph.getOutgoingNodesFor(item)),
+            fullCycle
+        ).iterator().next();
+      }
+
+      StringBuilder cycleString = new StringBuilder().append("[ ");
+      boolean foundStart = false;
+      for (MergedNativeLibraryConstituents member : partialCycle) {
+        if (member == item) {
+          foundStart = true;
+        }
+        if (foundStart) {
+          cycleString.append(member);
+          cycleString.append(" -> ");
+        }
+      }
+      cycleString.append(item);
+      cycleString.append(" ]");
       throw new RuntimeException(
           "Dependency cycle detected when merging native libs for " +
-              buildRuleParams.getBuildTarget(),
-          e);
+              buildRuleParams.getBuildTarget() +
+              ": " + cycleString);
     }
-    return ordered;
+
+    return TopologicalSort.sort(graph, Predicates.<MergedNativeLibraryConstituents>alwaysTrue());
   }
 
   /**
@@ -407,7 +412,8 @@ class NativeLibraryMergeEnhancer {
    */
   @Value.Immutable
   @BuckStyleImmutable
-  abstract static class AbstractMergedNativeLibraryConstituents {
+  abstract static class AbstractMergedNativeLibraryConstituents
+      implements Comparable<AbstractMergedNativeLibraryConstituents> {
     public abstract Optional<String> getSoname();
 
     public abstract ImmutableSet<NativeLinkable> getLinkables();
@@ -426,6 +432,11 @@ class NativeLibraryMergeEnhancer {
         return "merge:" + getSoname().get();
       }
       return "no-merge:" + getLinkables().iterator().next().getBuildTarget();
+    }
+
+    @Override
+    public int compareTo(AbstractMergedNativeLibraryConstituents other) {
+      return toString().compareTo(other.toString());
     }
   }
 
