@@ -18,8 +18,10 @@ package com.facebook.buck.jvm.java.intellij;
 
 import static com.facebook.buck.testutil.MoreAsserts.assertListEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidBinary;
 import com.facebook.buck.android.AndroidBinaryBuilder;
@@ -306,8 +308,8 @@ public class ProjectTest {
             new SourceFolder("file://$MODULE_DIR$/src-gen", false /* isTestSource */),
             SerializableModule.SourceFolder.GEN),
         androidLibraryModule.sourceFolders);
-    assertEquals(Boolean.TRUE, androidLibraryModule.hasAndroidFacet);
-    assertEquals(Boolean.TRUE, androidLibraryModule.isAndroidLibraryProject);
+    assertTrue(androidLibraryModule.hasAndroidFacet);
+    assertTrue(androidLibraryModule.isAndroidLibraryProject);
     assertEquals(null, androidLibraryModule.proguardConfigPath);
     assertEquals(null, androidLibraryModule.resFolder);
 
@@ -352,8 +354,8 @@ public class ProjectTest {
     assertListEquals(
         ImmutableList.of(SerializableModule.SourceFolder.GEN),
         androidBinaryModuleNoDx.sourceFolders);
-    assertEquals(Boolean.TRUE, androidBinaryModuleNoDx.hasAndroidFacet);
-    assertEquals(Boolean.FALSE, androidBinaryModuleNoDx.isAndroidLibraryProject);
+    assertTrue(androidBinaryModuleNoDx.hasAndroidFacet);
+    assertFalse(androidBinaryModuleNoDx.isAndroidLibraryProject);
     assertEquals(null, androidBinaryModuleNoDx.proguardConfigPath);
     assertEquals(null, androidBinaryModuleNoDx.resFolder);
     assertEquals(Paths.get("../keystore/debug.keystore"), androidBinaryModuleNoDx.keystorePath);
@@ -385,8 +387,8 @@ public class ProjectTest {
     assertListEquals(
         ImmutableList.of(SerializableModule.SourceFolder.GEN),
         androidBinaryModuleEmptyNoDx.sourceFolders);
-    assertEquals(Boolean.TRUE, androidBinaryModuleEmptyNoDx.hasAndroidFacet);
-    assertEquals(Boolean.FALSE, androidBinaryModuleEmptyNoDx.isAndroidLibraryProject);
+    assertTrue(androidBinaryModuleEmptyNoDx.hasAndroidFacet);
+    assertFalse(androidBinaryModuleEmptyNoDx.isAndroidLibraryProject);
     assertEquals(null, androidBinaryModuleEmptyNoDx.proguardConfigPath);
     assertEquals(null, androidBinaryModuleEmptyNoDx.resFolder);
     assertEquals(
