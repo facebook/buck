@@ -80,6 +80,7 @@ import javax.annotation.Nullable;
 public class TestCommand extends BuildCommand {
 
   public static final String USE_RESULTS_CACHE = "use_results_cache";
+  public static final String RERUN_ONLY_FAILING = "rerun_only_failing";
 
   private static final Logger LOG = Logger.get(TestCommand.class);
 
@@ -114,6 +115,10 @@ public class TestCommand extends BuildCommand {
   @Option(name = "--no-results-cache", usage = "Whether to use cached test results.")
   @Nullable
   private Boolean isResultsCacheDisabled = null;
+
+  @Option(name = "--only-failing", usage = "Don't re-run tests that are cached as passed.")
+  @Nullable
+  private Boolean isOnlyFailing = null;
 
   @Option(name = "--build-filtered", usage = "Whether to build filtered out tests.")
   @Nullable
@@ -185,13 +190,23 @@ public class TestCommand extends BuildCommand {
     return isCodeCoverageEnabled;
   }
 
-  public boolean isResultsCacheEnabled(BuckConfig buckConfig) {
+  public TestRunningOptions.TestResultCacheMode getResultsCacheMode(BuckConfig buckConfig) {
     // The option is negative (--no-X) but we prefer to reason about positives, in the code.
     if (isResultsCacheDisabled == null) {
       boolean isUseResultsCache = buckConfig.getBooleanValue("test", USE_RESULTS_CACHE, true);
       isResultsCacheDisabled = !isUseResultsCache;
     }
-    return !isResultsCacheDisabled;
+    if (isOnlyFailing == null) {
+      isOnlyFailing = buckConfig.getBooleanValue("test", RERUN_ONLY_FAILING, false);
+    }
+
+    if (isResultsCacheDisabled) {
+      return TestRunningOptions.TestResultCacheMode.DISABLED;
+    }
+    if (isOnlyFailing) {
+      return TestRunningOptions.TestResultCacheMode.ENABLED_IF_PASSED;
+    }
+    return TestRunningOptions.TestResultCacheMode.ENABLED;
   }
 
   @Override
@@ -253,7 +268,7 @@ public class TestCommand extends BuildCommand {
         .setRunAllTests(isRunAllTests())
         .setTestSelectorList(testSelectorOptions.getTestSelectorList())
         .setShouldExplainTestSelectorList(testSelectorOptions.shouldExplain())
-        .setResultsCacheEnabled(isResultsCacheEnabled(params.getBuckConfig()))
+        .setTestResultCacheMode(getResultsCacheMode(params.getBuckConfig()))
         .setDryRun(isDryRun)
         .setShufflingTests(isShufflingTests)
         .setPathToXmlTestOutput(Optional.fromNullable(pathToXmlTestOutput))

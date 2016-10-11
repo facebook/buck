@@ -32,6 +32,32 @@ contains a <code>tests = ['...']</code> field to specify its tests.</p>
 {/call}
 
 {call buck.param}
+  {param name: 'no-results-cache' /}
+  {param desc}
+  Disables caching results for tests between runs. If specified, all tests will
+  be run regardless of previous results.
+
+  <p>
+  Buck normally caches test results. This means unless you change the test code
+  (or any transitive dependency) buck will not re-run the test. This flag
+  disables the caching entirely and always runs the specified tests.
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'only-failing' /}
+  {param desc}
+  If specified, this runs only tests that aren't cached passed. This is similar to
+  {sp}<code>--no-results-cache</code> but still attempts to use cached results for
+  tests that passed. If the tests or any transitive dependencies change, they are
+  re-run regardless of cached status.
+
+  <p>
+  This can be useful in CI to re-run flaky tests.
+  {/param}
+{/call}
+
+{call buck.param}
   {param name: 'code-coverage' /}
   {param desc}
   Collects code coverage information while running tests.  Currently, this only
@@ -184,7 +210,7 @@ contains a <code>tests = ['...']</code> field to specify its tests.</p>
 
     Currently this only support Apple(ios/osx) tests.
 
-    <pre>buck test --test-runner-env FOO=BAR --test-runner-env BAZ=QUUX //some:target</pre>
+    <pre>buck test --test-runner-env FOO=BAR --test-runner-env BAZ=QUUX "//some:target"</pre>
   {/param}
 {/call}
 
