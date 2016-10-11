@@ -747,8 +747,10 @@ class NativeLibraryMergeEnhancer {
         return ImmutableMap.of();
       }
 
-      if (canUseOriginal) {
-        return constituents.getLinkables().iterator().next().getSharedLibraries(cxxPlatform);
+      ImmutableMap<String, SourcePath> originalSharedLibraries =
+          constituents.getLinkables().iterator().next().getSharedLibraries(cxxPlatform);
+      if (canUseOriginal || originalSharedLibraries.isEmpty()) {
+        return originalSharedLibraries;
       }
 
       String soname = getSoname(cxxPlatform);
