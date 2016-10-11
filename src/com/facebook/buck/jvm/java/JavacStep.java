@@ -76,6 +76,9 @@ public class JavacStep implements Step {
 
   private final Javac javac;
 
+  private static final Pattern IS_WARNING =
+      Pattern.compile(":\\s*warning:", Pattern.CASE_INSENSITIVE);
+
   private static final Pattern IMPORT_FAILURE =
       Pattern.compile("import ([\\w\\.\\*]*);");
 
@@ -236,6 +239,9 @@ public class JavacStep implements Step {
     Iterable<String> lines = Splitter.on(LINE_SEPARATOR).split(output);
     ImmutableSortedSet.Builder<String> failedImports = ImmutableSortedSet.naturalOrder();
     for (String line : lines) {
+      if (IS_WARNING.matcher(line).find()) {
+        continue;
+      }
       for (Pattern missingImportPattern : MISSING_IMPORT_PATTERNS) {
         Matcher lineMatch = missingImportPattern.matcher(line);
         if (lineMatch.matches()) {
