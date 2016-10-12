@@ -55,7 +55,7 @@ public class AndroidLibraryIntegrationTest {
   }
 
   @Test()
-  public void testAndroidKotlinBraryDoesNotUseTransitiveResources() throws IOException {
+  public void testAndroidKotlinBinaryDoesNotUseTransitiveResources() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     KotlinTestAssumptions.assumeCompilerAvailable();
     ProcessResult result =
