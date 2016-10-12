@@ -26,6 +26,7 @@ import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -336,6 +337,7 @@ public class Watchman implements AutoCloseable {
       return Optional.absent();
     }
     if (exitCode != 0) {
+      LOG.debug("Watchman's stderr: %s", new String(stderr.toByteArray(), Charsets.UTF_8));
       LOG.error("Error %d executing %s", exitCode, Joiner.on(" ").join(args));
       return Optional.absent();
     }
