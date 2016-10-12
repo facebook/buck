@@ -24,7 +24,8 @@ import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
-import com.facebook.buck.event.TraceEventLogger;
+import com.facebook.buck.event.PerfEventId;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ExopackageInfo;
@@ -229,7 +230,7 @@ public class ExopackageInstaller {
       final boolean installViaSd = false;
 
       if (shouldAppBeInstalled()) {
-        try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "install_exo_apk")) {
+        try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "install_exo_apk")) {
           boolean success = adbHelper.installApkOnDevice(device, apk, installViaSd, false);
           if (!success) {
             return false;
@@ -246,7 +247,7 @@ public class ExopackageInstaller {
       }
 
       // TODO(dreiss): Make this work on Gingerbread.
-      try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "kill_app")) {
+      try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "kill_app")) {
         AdbHelper.executeCommandWithErrorChecking(device, "am force-stop " + packageName);
       }
 
@@ -373,10 +374,10 @@ public class ExopackageInstaller {
     }
 
     private Optional<PackageInfo> getPackageInfo(final String packageName) throws Exception {
-      try (TraceEventLogger ignored = TraceEventLogger.start(
+      try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(
           eventBus,
-          "get_package_info",
-          ImmutableMap.of("package", packageName))) {
+          PerfEventId.of("get_package_info"),
+          "package", packageName)) {
 
         /* "dumpsys package <package>" produces output that looks like
 
@@ -423,13 +424,13 @@ public class ExopackageInstaller {
     }
 
     private void uninstallAgent() throws InstallException {
-      try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "uninstall_old_agent")) {
+      try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "uninstall_old_agent")) {
         device.uninstallPackage(AgentUtil.AGENT_PACKAGE_NAME);
       }
     }
 
     private Optional<PackageInfo> installAgentApk() throws Exception {
-      try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "install_agent_apk")) {
+      try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "install_agent_apk")) {
         String apkFileName = System.getProperty("buck.android_agent_path");
         if (apkFileName == null) {
           throw new RuntimeException("Android agent apk path not specified in properties");
@@ -471,7 +472,7 @@ public class ExopackageInstaller {
     }
 
     private String getInstalledAppSignature(final String packagePath) throws Exception {
-      try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "get_app_signature")) {
+      try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "get_app_signature")) {
         String command = getAgentCommand() + "get-signature " + packagePath;
         LOG.debug("Executing %s", command);
         String output = AdbHelper.executeCommandWithErrorChecking(device, command);
@@ -514,7 +515,7 @@ public class ExopackageInstaller {
         String dirname,
         Pattern filePattern,
         ImmutableSet<String> requiredHashes) throws Exception {
-      try (TraceEventLogger ignored = TraceEventLogger.start(eventBus, "prepare_" + dirname)) {
+      try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "prepare_" + dirname)) {
         String dirPath = dataRoot.resolve(dirname).toString();
         mkDirP(dirPath);
 
@@ -545,8 +546,8 @@ public class ExopackageInstaller {
         String metadataFileContents,
         String filenameFormat,
         Path destinationDirRelativeToDataRoot) throws Exception {
-      try (TraceEventLogger ignored1 =
-               TraceEventLogger.start(eventBus, "multi_install_" + filesType)) {
+      try (SimplePerfEvent.Scope ignored1 =
+               SimplePerfEvent.scope(eventBus, "multi_install_" + filesType)) {
         device.createForward(agentPort, agentPort);
         try {
           for (Map.Entry<String, Path> entry : filesToInstallByHash.entrySet()) {
@@ -554,13 +555,13 @@ public class ExopackageInstaller {
                 String.format(filenameFormat, entry.getKey()));
             Path source = entry.getValue();
 
-            try (TraceEventLogger ignored2 =
-                     TraceEventLogger.start(eventBus, "install_" + filesType)) {
+            try (SimplePerfEvent.Scope ignored2 =
+                     SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
               installFile(device, agentPort, destination, source);
             }
           }
-          try (TraceEventLogger ignored3 =
-                   TraceEventLogger.start(eventBus, "install_" + filesType + "_metadata")) {
+          try (SimplePerfEvent.Scope ignored3 =
+                   SimplePerfEvent.scope(eventBus, "install_" + filesType + "_metadata")) {
             try (NamedTemporaryFile temp = new NamedTemporaryFile("metadata", "tmp")) {
               com.google.common.io.Files.write(
                   metadataFileContents.getBytes(Charsets.UTF_8),

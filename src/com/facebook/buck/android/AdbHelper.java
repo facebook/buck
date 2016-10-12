@@ -32,8 +32,8 @@ import com.facebook.buck.annotations.SuppressForbidden;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StartActivityEvent;
-import com.facebook.buck.event.TraceEventLogger;
 import com.facebook.buck.event.UninstallEvent;
 import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.rules.ExopackageInfo;
@@ -322,7 +322,7 @@ public class AdbHelper {
       boolean quiet) throws InterruptedException {
     List<IDevice> devices;
 
-    try (TraceEventLogger ignored = TraceEventLogger.start(buckEventBus, "set_up_adb_call")) {
+    try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(buckEventBus, "set_up_adb_call")) {
       devices = getDevices(quiet);
       if (devices.size() == 0) {
         return false;
