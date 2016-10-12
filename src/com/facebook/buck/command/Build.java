@@ -43,7 +43,6 @@ import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
-import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.timing.Clock;
@@ -233,7 +232,7 @@ public class Build implements Closeable {
   public BuildExecutionResult executeBuild(
       Iterable<? extends HasBuildTarget> targetish,
       boolean isKeepGoing)
-      throws IOException, StepFailedException, ExecutionException, InterruptedException {
+      throws IOException, ExecutionException, InterruptedException {
     BuildId buildId = executionContext.getBuildId();
     buildContext = ImmutableBuildContext.builder()
         .setActionGraph(actionGraph)
@@ -376,10 +375,6 @@ public class Build implements Closeable {
       LOG.debug(e, "Got an exception during the build.");
       eventBus.post(ConsoleEvent.severe(getFailureMessageWithClassName(e)));
       exitCode = 1;
-    } catch (StepFailedException e) {
-      LOG.debug(e, "Got an exception during the build.");
-      eventBus.post(ConsoleEvent.severe(getFailureMessage(e)));
-      exitCode = e.getExitCode();
     } catch (ExecutionException e) {
       LOG.debug(e, "Got an exception during the build.");
       // This is likely a checked exception that was caught while building a build rule.
