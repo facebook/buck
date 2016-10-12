@@ -28,7 +28,6 @@ import com.facebook.buck.event.CompilerPluginDurationEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StartActivityEvent;
-import com.facebook.buck.event.TraceEvent;
 import com.facebook.buck.event.UninstallEvent;
 import com.facebook.buck.io.PathListing;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -700,15 +699,6 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         builder.build(),
         event
     );
-  }
-
-  @Subscribe
-  public void traceEvent(TraceEvent event) {
-    writeChromeTraceEvent("buck",
-        event.getEventName(),
-        event.getPhase(),
-        event.getProperties(),
-        event);
   }
 
   @Subscribe
