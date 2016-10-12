@@ -36,11 +36,6 @@ public final class BuildRuleFactoryParams {
     return filesystem;
   }
 
-  public boolean isSameTarget(BuildRuleFactoryParams other) {
-    return target.equals(other.target) &&
-        filesystem.equals(other.filesystem);
-  }
-
   public BuildRuleFactoryParams withFlavors(Iterable<Flavor> flavors) {
     return new BuildRuleFactoryParams(
         filesystem,
