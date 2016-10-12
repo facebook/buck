@@ -137,7 +137,8 @@ public class TestCommand extends BuildCommand {
 
   @Option(
       name = "--dry-run",
-      usage = "Print tests that match the given command line options, but don't run them.")
+      usage = "Deprecated option.",
+      hidden = true)
   private boolean isDryRun;
 
   @Option(

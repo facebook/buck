@@ -153,15 +153,6 @@ contains a <code>tests = ['...']</code> field to specify its tests.</p>
 {/call}
 
 {call buck.param}
-  {param name: 'dry-run' /}
-  {param desc}
-  Print the test rules that will be matched by command line arguments such as
-  {sp}<code>--include</code> and <code>--exclude</code>, but exit before
-  building or running tests.
-  {/param}
-{/call}
-
-{call buck.param}
   {param name: 'num-threads' /}
   {param desc}
   The number of threads that buck should use when executing the
@@ -210,7 +201,9 @@ contains a <code>tests = ['...']</code> field to specify its tests.</p>
 
     Currently this only support Apple(ios/osx) tests.
 
-    <pre>buck test --test-runner-env FOO=BAR --test-runner-env BAZ=QUUX "//some:target"</pre>
+    <pre>
+    {literal}buck test --test-runner-env FOO=BAR --test-runner-env BAZ=QUUX //some:target{/literal}
+    </pre>
   {/param}
 {/call}
 
