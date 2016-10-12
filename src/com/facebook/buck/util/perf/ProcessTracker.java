@@ -72,7 +72,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
 
   private void registerProcess(Object process, ProcessExecutorParams params) {
     Long pid = ProcessHelper.getPid(process);
-    LOG.info("registerProcess: pid: %s, cmd: %s", pid, params.getCommand());
+    LOG.verbose("registerProcess: pid: %s, cmd: %s", pid, params.getCommand());
     if (pid == null) {
       return;
     }
@@ -84,7 +84,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
   }
 
   private void refreshProcessesInfo() {
-    LOG.info("refreshProcessesInfo: processes before: %d", processesInfo.size());
+    LOG.verbose("refreshProcessesInfo: processes before: %d", processesInfo.size());
     Iterator<Map.Entry<Long, ProcessInfo>> it;
     for (it = processesInfo.entrySet().iterator(); it.hasNext(); ) {
       Map.Entry<Long, ProcessInfo> entry = it.next();
@@ -98,7 +98,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
         it.remove();
       }
     }
-    LOG.info("refreshProcessesInfo: processes after: %d", processesInfo.size());
+    LOG.verbose("refreshProcessesInfo: processes after: %d", processesInfo.size());
   }
 
   @Override
@@ -109,7 +109,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
           invocationInfo.getCommandId());
       refreshProcessesInfo();
     } catch (Exception e) {
-      LOG.error(e);
+      LOG.warn(e, "Failed to refresh process info.");
       throw e;
     }
   }
@@ -148,7 +148,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
       if (isClosed.getAndSet(true)) {
         return;
       }
-      LOG.info("Process resource consumption: %s\n%s", params.getCommand(), resourceConsumption);
+      LOG.verbose("Process resource consumption: %s\n%s", params.getCommand(), resourceConsumption);
       eventBus.post(new ProcessResourceConsumptionEvent(params, resourceConsumption));
     }
   }
