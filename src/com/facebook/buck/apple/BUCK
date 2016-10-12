@@ -1,3 +1,6 @@
+with allow_unsafe_import():
+    from sys import platform as os_platform
+
 PLATFORM_SRCS = [
   'AbstractAppleCxxPlatform.java',
   'AbstractApplePlatform.java',
@@ -37,7 +40,7 @@ java_immutables_library(
   tests = [
     '//test/com/facebook/buck/apple:apple',
     '//test/com/facebook/buck/apple:apple_test_integration',
-  ],
+  ] if os_platform == 'darwin' else [],
   deps = [
     '//src/com/facebook/buck/android:packageable',
   ],
