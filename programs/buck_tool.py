@@ -142,7 +142,8 @@ class BuckTool(object):
                     print(
                         WARNING +
                         "::: Select a Java home version 1.8 or higher by setting the JAVA_HOME " +
-                        "environment variable to point to one" + ENDC,
+                        "environment variable to point to one, and prepending the bin directory " +
+                        "in it to your PATH." + ENDC,
                         file=sys.stderr)
                 return 1
 

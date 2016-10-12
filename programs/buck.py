@@ -18,12 +18,6 @@ THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 def main(argv):
     install_signal_handlers()
     try:
-        java_home = os.getenv("JAVA_HOME", "")
-        path = os.getenv("PATH", "")
-        if java_home:
-            pathsep = os.pathsep
-            os.environ["PATH"] = os.path.join(java_home, 'bin') + pathsep + path
-
         tracing_dir = None
         build_id = str(uuid.uuid4())
         with Tracing("main"):
