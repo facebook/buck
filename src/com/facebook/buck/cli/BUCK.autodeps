@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 1e1cb7dc34635b3c98297254a877b6182b2a8df8 #@#
+#@# GENERATED FILE: DO NOT MODIFY c078ef417e51d64c1910335a7608d07ca20cd03f #@#
 {
   "cli" : {
     "deps" : [
@@ -65,6 +65,7 @@
       "//src/com/facebook/buck/util/shutdown:shutdown",
       "//src/com/facebook/buck/util/versioncontrol:impl",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+      "//src/com/facebook/buck/zip:unzip",
       "//third-party/java/aosp:aosp",
       "//third-party/java/immutables:processor",
       "//third-party/java/jackson:jackson-core",
