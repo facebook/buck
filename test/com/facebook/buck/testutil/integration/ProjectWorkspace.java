@@ -45,6 +45,7 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.CellProvider;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.testutil.TestConsole;
@@ -610,7 +611,7 @@ public class ProjectWorkspace {
         env,
         Optional.absent(),
         Optional.absent());
-    return Cell.createRootCell(
+    return CellProvider.createForLocalBuild(
         filesystem,
         Watchman.NULL_WATCHMAN,
         new BuckConfig(
@@ -624,7 +625,7 @@ public class ProjectWorkspace {
         new KnownBuildRuleTypesFactory(
             new ProcessExecutor(console),
             directoryResolver),
-        new WatchmanDiagnosticCache());
+        new WatchmanDiagnosticCache()).getCellByPath(filesystem.getRootPath());
   }
 
   public BuildTarget newBuildTarget(String fullyQualifiedName)

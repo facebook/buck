@@ -73,6 +73,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.CellProvider;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.KnownBuildRuleTypes;
@@ -877,13 +878,13 @@ public final class Main {
 
         WatchmanDiagnosticCache watchmanDiagnosticCache = new WatchmanDiagnosticCache();
 
-        Cell rootCell = Cell.createRootCell(
+        Cell rootCell = CellProvider.createForLocalBuild(
             filesystem,
             watchman,
             buckConfig,
             command.getConfigOverrides(),
             factory,
-            watchmanDiagnosticCache);
+            watchmanDiagnosticCache).getCellByPath(filesystem.getRootPath());
 
         int exitCode;
         ImmutableList<BuckEventListener> eventListeners = ImmutableList.of();

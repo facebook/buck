@@ -26,6 +26,7 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.OrderedStringMapEntry;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.CellProvider;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -33,7 +34,6 @@ import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -115,12 +115,15 @@ public class DistBuildState {
       cellIndex.put(remoteCellEntry.getKey(), cellRoot);
     }
 
-    LoadingCache<Path, Cell> cellLoader = rootCell.createCellLoaderForDistributedBuild(
-        cellConfigs.build(),
-        cellFilesystems.build(),
-        rootCell.getWatchmanDiagnosticCache());
+    CellProvider cellProvider =
+        CellProvider.createForDistributedBuild(
+            cellConfigs.build(),
+            cellFilesystems.build(),
+            rootCell.getKnownBuildRuleTypesFactory(),
+            rootCell.getWatchmanDiagnosticCache());
 
-    return ImmutableBiMap.copyOf(Maps.transformValues(cellIndex.build(), cellLoader));
+    return ImmutableBiMap.copyOf(
+        Maps.transformValues(cellIndex.build(), cellProvider::getCellByPath));
   }
 
   private static Config createConfig(BuildJobStateBuckConfig remoteBuckConfig) {

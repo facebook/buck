@@ -96,13 +96,13 @@ public class TestCellBuilder {
         androidDirectoryResolver);
 
     if (parserFactory == null) {
-      return Cell.createRootCell(
+      return CellProvider.createForLocalBuild(
           filesystem,
           watchman,
           config,
           cellConfig,
           typesFactory,
-          new WatchmanDiagnosticCache());
+          new WatchmanDiagnosticCache()).getCellByPath(filesystem.getRootPath());
     }
 
     // The constructor for `Cell` is private, and it's in such a central location I don't really
