@@ -430,8 +430,7 @@ public class CachingBuildEngine implements BuildEngine {
       final OnDiskBuildInfo onDiskBuildInfo,
       final BuildInfoRecorder buildInfoRecorder,
       final BuildableContext buildableContext,
-      final ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks)
-      throws InterruptedException {
+      final ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks) {
 
     // If we've already seen a failure, exit early.
     if (!context.isKeepGoing() && firstFailure != null) {
@@ -512,8 +511,7 @@ public class CachingBuildEngine implements BuildEngine {
   private ListenableFuture<BuildResult> processBuildRule(
       final BuildRule rule,
       final BuildContext context,
-      ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks)
-      throws InterruptedException, ExecutionException {
+      ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks) {
 
     final RuleKeyFactories keyFactories =
         ruleKeyFactories.getUnchecked(rule.getProjectFilesystem());
@@ -1099,7 +1097,7 @@ public class CachingBuildEngine implements BuildEngine {
       final BuildInfoRecorder buildInfoRecorder,
       final ArtifactCache artifactCache,
       final ProjectFilesystem filesystem,
-      final BuildContext buildContext) throws InterruptedException {
+      final BuildContext buildContext) {
 
     if (!rule.isCacheable()) {
       return CacheResult.ignored();
@@ -1208,8 +1206,7 @@ public class CachingBuildEngine implements BuildEngine {
       final RuleKey ruleKey,
       final LazyPath lazyZipPath,
       final ArtifactCache artifactCache,
-      final BuildInfoRecorder buildInfoRecorder
-  ) throws InterruptedException {
+      final BuildInfoRecorder buildInfoRecorder) {
     return buildInfoRecorder.fetchArtifactForBuildable(ruleKey, lazyZipPath, artifactCache);
   }
 
@@ -1387,7 +1384,7 @@ public class CachingBuildEngine implements BuildEngine {
       ImmutableSet<SourcePath> inputs,
       Pair<RuleKey, ImmutableSet<SourcePath>> manifestKey,
       ArtifactCache cache)
-      throws IOException, InterruptedException {
+      throws IOException {
 
     Preconditions.checkState(useManifestCaching(rule));
 
@@ -1458,7 +1455,7 @@ public class CachingBuildEngine implements BuildEngine {
       final BuildRule rule,
       final BuildContext context,
       final BuildInfoRecorder buildInfoRecorder)
-      throws IOException, InterruptedException {
+      throws IOException {
     if (!useManifestCaching(rule)) {
       return Optional.absent();
     }
@@ -1548,7 +1545,7 @@ public class CachingBuildEngine implements BuildEngine {
       final BuildContext context,
       final OnDiskBuildInfo onDiskBuildInfo,
       BuildInfoRecorder buildInfoRecorder,
-      final RuleKeyFactories ruleKeyFactory) throws InterruptedException {
+      final RuleKeyFactories ruleKeyFactory) {
     if (!(rule instanceof SupportsInputBasedRuleKey)) {
       return Optional.absent();
     }

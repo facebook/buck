@@ -28,7 +28,7 @@ public class ConsumeAllOptionsHandler extends OptionHandler<String> {
   public ConsumeAllOptionsHandler(
       CmdLineParser parser,
       OptionDef option,
-      Setter<? super String> setter) throws CmdLineException {
+      Setter<? super String> setter) {
     super(parser, option, setter);
   }
 

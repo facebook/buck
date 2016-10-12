@@ -359,7 +359,7 @@ abstract class GoDescriptors {
   private static SymlinkTree makeSymlinkTree(
       BuildRuleParams params,
       SourcePathResolver pathResolver,
-      ImmutableSet<GoLinkable> linkables) throws NoSuchBuildTargetException {
+      ImmutableSet<GoLinkable> linkables) {
     ImmutableMap.Builder<Path, SourcePath> treeMapBuilder = ImmutableMap.builder();
     for (GoLinkable linkable : linkables) {
       for (Map.Entry<Path, SourcePath> linkInput : linkable.getGoLinkInput().entrySet()) {

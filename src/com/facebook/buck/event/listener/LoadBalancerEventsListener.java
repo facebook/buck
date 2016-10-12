@@ -126,7 +126,7 @@ public class LoadBalancerEventsListener implements BuckEventListener {
   }
 
   @Override
-  public void outputTrace(BuildId buildId) throws InterruptedException {
+  public void outputTrace(BuildId buildId) {
     // Nothing to do.
   }
 

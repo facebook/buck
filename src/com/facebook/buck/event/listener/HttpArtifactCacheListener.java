@@ -51,7 +51,7 @@ public class HttpArtifactCacheListener implements BuckEventListener {
   }
 
   @Override
-  public void outputTrace(final BuildId buildId) throws InterruptedException {
+  public void outputTrace(final BuildId buildId) {
     logger.close();
   }
 

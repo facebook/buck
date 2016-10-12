@@ -23,7 +23,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;
 
@@ -41,7 +40,7 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
    * {@link ProjectFilesystem} root.
    */
   @Subscribe
-  public synchronized void onFileSystemChange(WatchEvent<?> event) throws IOException {
+  public synchronized void onFileSystemChange(WatchEvent<?> event) {
     if (WatchEvents.isPathChangeEvent(event)) {
       // Path event, remove the path from the cache as it has been changed, added or deleted.
       final Path path = ((Path) event.context()).normalize();

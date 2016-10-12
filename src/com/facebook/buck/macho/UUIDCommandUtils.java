@@ -17,7 +17,6 @@ package com.facebook.buck.macho;
 
 import com.google.common.base.Preconditions;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.UUID;
@@ -49,8 +48,7 @@ public class UUIDCommandUtils {
     buffer.put(uuidBuffer);
   }
 
-  public static void updateUuidCommand(ByteBuffer buffer, UUIDCommand old, UUIDCommand updated)
-      throws IOException {
+  public static void updateUuidCommand(ByteBuffer buffer, UUIDCommand old, UUIDCommand updated) {
     Preconditions.checkArgument(
         old.getLoadCommandCommonFields().getOffsetInBinary() ==
             updated.getLoadCommandCommonFields().getOffsetInBinary());

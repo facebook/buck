@@ -25,8 +25,7 @@ import java.nio.charset.StandardCharsets;
 public class MachOAbsolutifyObjectPathsCommand extends MachOAbstractCommand {
 
   @Override
-  protected int invokeWithParams(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  protected int invokeWithParams(CommandRunnerParams params) throws IOException {
     try (RandomAccessFile file = new RandomAccessFile(getOutput().toFile(), "rw")) {
       NulTerminatedCharsetDecoder decoder =
           new NulTerminatedCharsetDecoder(StandardCharsets.UTF_8.newDecoder());

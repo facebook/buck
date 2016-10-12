@@ -234,7 +234,7 @@ public class DalvikStatsTool {
    * @return the estimate
    */
   @VisibleForTesting
-  static Stats getEstimateInternal(ClassReader classReader) throws IOException {
+  static Stats getEstimateInternal(ClassReader classReader) {
     // SKIP_FRAMES was required to avoid an exception in ClassReader when running on proguard
     // output. We don't need to visit frames so this isn't an issue.
     StatsClassVisitor statsVisitor = new StatsClassVisitor(PENALTIES);

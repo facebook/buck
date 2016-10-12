@@ -93,7 +93,7 @@ public class ArtifactCaches {
       BuckEventBus buckEventBus,
       ProjectFilesystem projectFilesystem,
       Optional<String> wifiSsid,
-      ListeningExecutorService httpWriteExecutorService) throws InterruptedException {
+      ListeningExecutorService httpWriteExecutorService) {
     ArtifactCacheConnectEvent.Started started = ArtifactCacheConnectEvent.started();
     buckEventBus.post(started);
     ArtifactCache artifactCache = newInstanceInternal(
@@ -128,7 +128,7 @@ public class ArtifactCaches {
       BuckEventBus buckEventBus,
       ProjectFilesystem projectFilesystem,
       Optional<String> wifiSsid,
-      ListeningExecutorService httpWriteExecutorService) throws InterruptedException {
+      ListeningExecutorService httpWriteExecutorService) {
     ImmutableSet<ArtifactCacheBuckConfig.ArtifactCacheMode> modes =
         buckConfig.getArtifactCacheModes();
     if (modes.isEmpty()) {
@@ -366,7 +366,7 @@ public class ArtifactCaches {
 
     public ProgressResponseBody(
         ResponseBody responseBody,
-        BuckEventBus buckEventBus) throws IOException {
+        BuckEventBus buckEventBus) {
       this.responseBody = responseBody;
       this.buckEventBus = buckEventBus;
       this.bufferedSource = Okio.buffer(source(responseBody.source()));

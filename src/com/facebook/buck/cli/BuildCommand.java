@@ -429,7 +429,7 @@ public class BuildCommand extends AbstractCommand {
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
       ActionGraphAndResolver actionGraphAndResolver,
       final WeightedListeningExecutorService executorService)
-      throws IOException, InterruptedException, ActionGraphCreationException {
+      throws IOException, InterruptedException {
     ProjectFilesystem filesystem = params.getCell().getFilesystem();
 
     DistBuildTypeCoercerFactory typeCoercerFactory =
@@ -452,7 +452,7 @@ public class BuildCommand extends AbstractCommand {
                   false /* enableProfiling */,
                   executorService,
                   input);
-            } catch (BuildFileParseException | InterruptedException e) {
+            } catch (BuildFileParseException e) {
               throw new RuntimeException(e);
             }
           }
@@ -591,7 +591,7 @@ public class BuildCommand extends AbstractCommand {
   private ActionGraphAndResolver createActionGraphAndResolver(
       CommandRunnerParams params,
       TargetGraphAndBuildTargets targetGraphAndBuildTargets)
-      throws IOException, InterruptedException, ActionGraphCreationException {
+      throws ActionGraphCreationException {
     buildTargets = targetGraphAndBuildTargets.getBuildTargets();
     buildTargetsHaveBeenCalculated = true;
     ActionGraphAndResolver actionGraphAndResolver = Preconditions.checkNotNull(

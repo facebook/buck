@@ -19,8 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.IOException;
-
 import javax.tools.StandardJavaFileManager;
 
 public interface ClassUsageFileWriter {
@@ -28,5 +26,5 @@ public interface ClassUsageFileWriter {
 
   void writeFile(
       ProjectFilesystem filesystem,
-      ObjectMapper objectMapper) throws IOException;
+      ObjectMapper objectMapper);
 }

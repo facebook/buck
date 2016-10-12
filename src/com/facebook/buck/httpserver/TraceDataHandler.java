@@ -64,8 +64,7 @@ class TraceDataHandler extends AbstractHandler {
     }
   }
 
-  private void doGet(Request baseRequest, HttpServletResponse response)
-      throws ServletException, IOException {
+  private void doGet(Request baseRequest, HttpServletResponse response) throws IOException {
     String path = baseRequest.getPathInfo();
     Matcher matcher = ID_PATTERN.matcher(path);
 

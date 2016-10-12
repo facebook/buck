@@ -114,14 +114,14 @@ public class NumberFormatter {
   /**
    * @see NumberFormat#parse(String, ParsePosition)
    */
-  public Number parse(Locale locale, String source, ParsePosition pos) throws ParseException {
+  public Number parse(Locale locale, String source, ParsePosition pos) {
     return getFormatter(locale).parse(source, pos);
   }
 
   /**
    * @see NumberFormat#parseObject(String, ParsePosition)
    */
-  public Object parseObject(Locale locale, String source, ParsePosition pos) throws ParseException {
+  public Object parseObject(Locale locale, String source, ParsePosition pos) {
     return getFormatter(locale).parseObject(source, pos);
   }
 }

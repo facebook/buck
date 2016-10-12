@@ -26,7 +26,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -248,7 +247,7 @@ public class JvmLibraryArgInterpreterTest {
           ImmutableSet.builder(),
           ImmutableSet.builder(),
           ImmutableMap.of());
-    } catch (ConstructorArgMarshalException | NoSuchBuildTargetException error) {
+    } catch (ConstructorArgMarshalException error) {
       throw Throwables.propagate(error);
     }
   }

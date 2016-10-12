@@ -65,7 +65,7 @@ public class DistBuildService implements Closeable {
   public ListenableFuture<Void> uploadTargetGraph(
       final BuildJobState buildJobStateArg,
       final BuildId buildId,
-      ListeningExecutorService executorService) throws IOException {
+      ListeningExecutorService executorService) {
     // TODO(shivanker): We shouldn't be doing this. Fix after we stop reading all files into memory.
     final BuildJobState buildJobState = buildJobStateArg.deepCopy();
     return executorService.submit(new Callable<Void>() {
@@ -98,7 +98,7 @@ public class DistBuildService implements Closeable {
 
   public ListenableFuture<Void> uploadMissingFiles(
       final List<BuildJobStateFileHashes> fileHashes,
-      ListeningExecutorService executorService) throws IOException {
+      ListeningExecutorService executorService) {
     return executorService.submit(new Callable<Void>() {
       @Override
       public Void call() throws IOException {

@@ -21,7 +21,6 @@ import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Formatter;
@@ -63,7 +62,7 @@ public class MemoryHandler extends Handler {
    *        defines the <tt>formatter</tt> for log records.
    * </ul>
    */
-  public MemoryHandler() throws IOException {
+  public MemoryHandler() {
     this(
         getLogLevelProperty(),
         getBufferSizeProperty(),

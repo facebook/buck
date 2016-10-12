@@ -37,7 +37,7 @@ public class JUnitMain {
     // Launcher class.
   }
 
-  public static void main(String[] args) throws Throwable {
+  public static void main(String[] args) {
     // Ensure that both junit and hamcrest are on the classpath
     CheckDependency.isPresent("junit", "org.junit.Test");
     CheckDependency.isPresent("hamcrest", "org.hamcrest.Description");

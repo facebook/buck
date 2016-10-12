@@ -83,7 +83,7 @@ public class FakeQueryEnvironment implements QueryEnvironment {
 
   @Override
   public ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets)
-      throws InterruptedException, QueryException {
+      throws QueryException {
     throw new QueryException("Method not implemented in FakeQueryEnvironment");
   }
 

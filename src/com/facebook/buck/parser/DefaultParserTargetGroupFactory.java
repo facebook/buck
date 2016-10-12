@@ -119,8 +119,6 @@ public class DefaultParserTargetGroupFactory implements ParserTargetNodeFactory<
             factoryParams.target);
         return node;
       }
-    } catch (NoSuchBuildTargetException e) {
-      throw new HumanReadableException(e);
     } catch (ConstructorArgMarshalException e) {
       throw new HumanReadableException("%s: %s", target, e.getMessage());
     }

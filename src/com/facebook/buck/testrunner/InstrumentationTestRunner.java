@@ -63,7 +63,7 @@ public class InstrumentationTestRunner {
     this.extraInstrumentationArguments = extraInstrumentationArguments;
   }
 
-  public static InstrumentationTestRunner fromArgs(String... args) throws Throwable {
+  public static InstrumentationTestRunner fromArgs(String... args) {
     File outputDirectory = null;
     String adbExecutablePath = null;
     String apkUnderTestPath = null;

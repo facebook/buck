@@ -48,7 +48,7 @@ public class TestRuleKeyFileHelper {
    * Creates a file in the test's output directory and writes the rule key file in it.
    * @return A {@link Step} that writes the rule key for the test to it's output directory
    */
-  public Step createRuleKeyInDirStep(TestRule testRule) throws IOException {
+  public Step createRuleKeyInDirStep(TestRule testRule) {
     RuleKey ruleKey = buildEngine.getRuleKey(testRule.getBuildTarget());
     return new WriteFileStep(
         ((BuildRule) testRule).getProjectFilesystem(),

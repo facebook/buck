@@ -63,7 +63,7 @@ public abstract class DistBuildFactory {
       BuildJobState jobState,
       CommandRunnerParams params,
       WeightedListeningExecutorService executorService,
-      DistBuildService service) throws IOException, InterruptedException {
+      DistBuildService service) throws IOException {
     DistBuildState state = DistBuildState.load(jobState, params.getCell());
     DistBuildSlaveExecutor executor = new DistBuildSlaveExecutor(
         DistBuildExecutorArgs.builder()

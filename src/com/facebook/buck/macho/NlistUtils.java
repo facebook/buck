@@ -81,8 +81,7 @@ public class NlistUtils {
       ByteBuffer buffer,
       Nlist original,
       Nlist updated,
-      boolean is64Bit)
-      throws IOException {
+      boolean is64Bit) {
     Preconditions.checkArgument(original.getOffsetInBinary() == updated.getOffsetInBinary());
     buffer.position(updated.getOffsetInBinary());
     writeNlistToBuffer(updated, buffer, is64Bit);

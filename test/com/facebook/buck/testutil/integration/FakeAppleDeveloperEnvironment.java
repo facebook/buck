@@ -26,7 +26,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -70,14 +69,9 @@ public class FakeAppleDeveloperEnvironment {
 
   public static boolean hasDeviceCurrentlyConnected(Path pathToHelper)
       throws InterruptedException {
-    try {
-      AppleDeviceHelper helper = new AppleDeviceHelper(
-          new ProcessExecutor(new TestConsole()),
-          pathToHelper);
-      return (helper.getConnectedDevices().size() > 0);
-    } catch (IOException e) {
-      LOG.warn("Could not execute " + pathToHelper + ": " + e.getMessage());
-      return false;
-    }
+    AppleDeviceHelper helper = new AppleDeviceHelper(
+        new ProcessExecutor(new TestConsole()),
+        pathToHelper);
+    return (helper.getConnectedDevices().size() > 0);
   }
 }

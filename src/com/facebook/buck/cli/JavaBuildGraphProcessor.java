@@ -79,7 +79,7 @@ final class JavaBuildGraphProcessor {
     void process(
         TargetGraph graph,
         JavaDepsFinder javaDepsFinder,
-        WeightedListeningExecutorService executorService) throws ExitCodeException, IOException;
+        WeightedListeningExecutorService executorService);
   }
 
   /**

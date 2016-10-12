@@ -203,7 +203,7 @@ public class PrebuiltAppleFramework
 
   private NativeLinkableInput getNativeLinkableInputUncached(
       CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+      Linker.LinkableDepType type) {
     if (!isPlatformSupported(cxxPlatform)) {
       return NativeLinkableInput.of();
     }

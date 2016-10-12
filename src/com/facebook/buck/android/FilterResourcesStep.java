@@ -162,7 +162,7 @@ public class FilterResourcesStep implements Step {
 
   @VisibleForTesting
   Predicate<Path> getFilteringPredicate(
-      ExecutionContext context) throws IOException, InterruptedException {
+      ExecutionContext context) throws IOException {
     List<Predicate<Path>> pathPredicates = Lists.newArrayList();
 
     if (filterByDensity) {
@@ -325,7 +325,7 @@ public class FilterResourcesStep implements Step {
   }
 
   public interface ImageScaler {
-    boolean isAvailable(ExecutionContext context) throws IOException, InterruptedException;
+    boolean isAvailable(ExecutionContext context);
     void scale(double factor, Path source, Path destination, ExecutionContext context)
         throws IOException, InterruptedException;
   }
@@ -344,7 +344,7 @@ public class FilterResourcesStep implements Step {
     }
 
     @Override
-    public boolean isAvailable(ExecutionContext context) throws IOException, InterruptedException {
+    public boolean isAvailable(ExecutionContext context) {
       return new ExecutableFinder().getOptionalExecutable(
           Paths.get("convert"),
           context.getEnvironment()).isPresent();

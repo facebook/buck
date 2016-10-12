@@ -84,8 +84,7 @@ public class DistBuildState {
     return jobState;
   }
 
-  public static DistBuildState load(BuildJobState jobState, Cell rootCell)
-      throws IOException, InterruptedException {
+  public static DistBuildState load(BuildJobState jobState, Cell rootCell) throws IOException {
     return new DistBuildState(jobState, createCells(jobState, rootCell));
   }
 
@@ -94,7 +93,7 @@ public class DistBuildState {
   }
 
   private static ImmutableBiMap<Integer, Cell> createCells(BuildJobState remoteState, Cell rootCell)
-      throws IOException, InterruptedException {
+      throws IOException {
     ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
 
     ImmutableMap.Builder<Path, BuckConfig> cellConfigs = ImmutableMap.builder();
@@ -177,8 +176,7 @@ public class DistBuildState {
     return Preconditions.checkNotNull(cells.get(DistBuildCellIndexer.ROOT_CELL_INDEX));
   }
 
-  public TargetGraph createTargetGraph(DistBuildTargetGraphCodec codec)
-      throws IOException, InterruptedException {
+  public TargetGraph createTargetGraph(DistBuildTargetGraphCodec codec) throws IOException {
     return codec.createTargetGraph(
         remoteState.getTargetGraph(),
         Functions.forMap(cells));

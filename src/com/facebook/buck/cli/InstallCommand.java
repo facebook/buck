@@ -387,7 +387,7 @@ public class InstallCommand extends BuildCommand {
       AppleBundle appleBundle,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor)
-      throws IOException, InterruptedException, NoSuchBuildTargetException {
+      throws IOException, NoSuchBuildTargetException {
     // TODO(bhamiltoncx): This should be shared with the build and passed down.
     AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
 

@@ -286,7 +286,7 @@ public class DistributedBuildStateTest {
              /* enableProfiling */ false,
              MoreExecutors.listeningDecorator(MoreExecutors.newDirectExecutorService()),
              input);
-       } catch (BuildFileParseException | InterruptedException e) {
+       } catch (BuildFileParseException e) {
          throw new RuntimeException(e);
        }
      };

@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.query.QueryBuildTarget;
-import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -46,8 +45,7 @@ public class QueryTargetAccessor {
 
   public static <T> ImmutableSet<QueryTarget> getTargetsInAttribute(
       TargetNode<T> node,
-      String attribute)
-      throws QueryException {
+      String attribute) {
     try {
       final ImmutableSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
       Field field = node.getConstructorArg().getClass().getField(attribute);
@@ -77,8 +75,7 @@ public class QueryTargetAccessor {
   public static <T> ImmutableSet<Object> filterAttributeContents(
       TargetNode<T> node,
       String attribute,
-      final Predicate<Object> predicate)
-      throws QueryException {
+      final Predicate<Object> predicate) {
     try {
       final ImmutableSet.Builder<Object> builder = ImmutableSet.builder();
       Field field = node.getConstructorArg().getClass().getField(attribute);

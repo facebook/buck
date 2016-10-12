@@ -17,7 +17,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.FileAttributesScrubber;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 /**
@@ -26,7 +25,7 @@ import java.nio.file.Path;
 public class FileLastModifiedDateContentsScrubber implements FileAttributesScrubber {
 
   @Override
-  public void scrubFileWithPath(Path path) throws IOException {
+  public void scrubFileWithPath(Path path) {
     path.toFile().setLastModified(
         (long) ObjectFileCommonModificationDate.COMMON_MODIFICATION_TIME_STAMP * 1000);
   }

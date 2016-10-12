@@ -70,7 +70,7 @@ public class AutodepsCommand extends AbstractCommand {
       WeightedListeningExecutorService executorService,
       TargetGraph graph,
       JavaDepsFinder javaDepsFinder,
-      Console console) throws IOException {
+      Console console) {
     DepsForBuildFiles depsForBuildFiles = javaDepsFinder.findDepsForBuildFiles(graph, console);
 
     // Now that the dependencies have been computed, write out the BUCK.autodeps files.

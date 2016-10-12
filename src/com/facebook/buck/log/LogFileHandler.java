@@ -40,13 +40,12 @@ public class LogFileHandler extends Handler {
 
   private final LogFileHandlerState state;
 
-  public LogFileHandler() throws IOException, SecurityException {
+  public LogFileHandler() throws SecurityException {
     this(GlobalStateManager.singleton().getLogFileHandlerState(), new LogFormatter());
   }
 
   @VisibleForTesting
-  LogFileHandler(LogFileHandlerState state, LogFormatter formatter)
-      throws IOException, SecurityException {
+  LogFileHandler(LogFileHandlerState state, LogFormatter formatter) throws SecurityException {
     this.state = state;
     setFormatter(formatter);
   }

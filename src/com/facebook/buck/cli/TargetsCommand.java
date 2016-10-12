@@ -273,7 +273,7 @@ public class TargetsCommand extends AbstractCommand {
    *         {@code --assume-modified-files} or {@code --assume-no-modified-files} is used,
    *         absent otherwise.
    */
-  public ImmutableSet<Path> getTargetHashModifiedPaths() throws IOException {
+  public ImmutableSet<Path> getTargetHashModifiedPaths() {
     return FluentIterable.from(targetHashModifiedPaths.get())
         .transform(MorePaths.TO_PATH)
         .toSet();
@@ -407,7 +407,7 @@ public class TargetsCommand extends AbstractCommand {
       CommandRunnerParams params,
       ListeningExecutorService executor,
       SortedMap<String, TargetNode<?>> matchingNodes)
-      throws IOException, InterruptedException, BuildFileParseException {
+      throws BuildFileParseException {
     if (shouldUseJsonFormat()) {
       printJsonForTargets(
           params,
@@ -674,7 +674,7 @@ public class TargetsCommand extends AbstractCommand {
       Iterable<TargetNode<?>> targetNodes,
       ImmutableMap<BuildTarget, ShowOptions> showRulesResult,
       ImmutableSet<String> outputAttributes)
-      throws BuildFileParseException, IOException, InterruptedException {
+      throws BuildFileParseException {
     PatternsMatcher attributesPatternsMatcher = new PatternsMatcher(outputAttributes);
 
     // Print the JSON representation of the build node for the specified target(s).

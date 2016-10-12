@@ -688,7 +688,7 @@ public class ExopackageInstaller {
   private ImmutableMap<String, Path> getRequiredLibrariesForAbi(
       ImmutableMultimap<String, Path> allLibraries,
       String abi,
-      ImmutableSet<String> ignoreLibraries) throws IOException {
+      ImmutableSet<String> ignoreLibraries) {
     return filterLibrariesForAbi(
         exopackageInfo.getNativeLibsInfo().get().getDirectory(),
         allLibraries,

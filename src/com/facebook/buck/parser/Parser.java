@@ -114,7 +114,7 @@ public class Parser {
   static ImmutableSet<Map<String, Object>> getRawTargetNodes(
       PerBuildState state,
       Cell cell,
-      Path buildFile) throws InterruptedException, BuildFileParseException {
+      Path buildFile) throws BuildFileParseException {
     Preconditions.checkState(buildFile.isAbsolute());
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
     return state.getAllRawNodes(cell, buildFile);
@@ -173,7 +173,7 @@ public class Parser {
   public SortedMap<String, Object> getRawTargetNode(
       PerBuildState state,
       Cell cell,
-      TargetNode<?> targetNode) throws InterruptedException, BuildFileParseException {
+      TargetNode<?> targetNode) throws BuildFileParseException {
     try {
 
       Cell owningCell = cell.getCell(targetNode.getBuildTarget());
@@ -207,7 +207,7 @@ public class Parser {
       Cell cell,
       boolean enableProfiling,
       ListeningExecutorService executor,
-      TargetNode<?> targetNode) throws InterruptedException, BuildFileParseException {
+      TargetNode<?> targetNode) throws BuildFileParseException {
 
     try (
         PerBuildState state =
@@ -655,7 +655,7 @@ public class Parser {
   }
 
   @Subscribe
-  public void onFileSystemChange(WatchEvent<?> event) throws InterruptedException {
+  public void onFileSystemChange(WatchEvent<?> event) {
     LOG.debug(
         "Parser watched event %s %s",
         event.kind(),

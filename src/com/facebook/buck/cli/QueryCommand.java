@@ -248,7 +248,7 @@ public class QueryCommand extends AbstractCommand {
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       Set<QueryTarget> queryResult)
-      throws IOException, QueryException, InterruptedException {
+      throws IOException, QueryException {
     Dot.writeSubgraphOutput(
         env.getTargetGraph(),
         "result_graph",
@@ -261,7 +261,7 @@ public class QueryCommand extends AbstractCommand {
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       Set<QueryTarget> queryResult)
-      throws InterruptedException, IOException, QueryException {
+      throws QueryException {
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes.get());
     SortedMap<String, SortedMap<String, Object>> result = Maps.newTreeMap();
     for (QueryTarget target : queryResult) {

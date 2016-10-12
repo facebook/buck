@@ -88,7 +88,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Cell;
@@ -541,7 +540,7 @@ public class ProjectGenerator {
     }
   }
 
-  private void generateBuildWithBuckTarget(TargetNode<?> targetNode) throws IOException {
+  private void generateBuildWithBuckTarget(TargetNode<?> targetNode) {
     final BuildTarget buildTarget = targetNode.getBuildTarget();
 
     String buckTargetProductName = getXcodeTargetName(buildTarget) + BUILD_WITH_BUCK_POSTFIX;
@@ -825,11 +824,7 @@ public class ProjectGenerator {
         .setPreBuildRunScriptPhases(ImmutableList.of(scriptPhase));
 
     NewNativeTargetProjectMutator.Result targetBuilderResult;
-    try {
-      targetBuilderResult = mutator.buildTargetAndAddToProject(project);
-    } catch (NoSuchBuildTargetException e) {
-      throw new HumanReadableException(e);
-    }
+    targetBuilderResult = mutator.buildTargetAndAddToProject(project);
 
     BuildTarget compilerTarget =
         HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget);
@@ -1238,11 +1233,7 @@ public class ProjectGenerator {
     }
 
     NewNativeTargetProjectMutator.Result targetBuilderResult;
-    try {
-      targetBuilderResult = mutator.buildTargetAndAddToProject(project);
-    } catch (NoSuchBuildTargetException e) {
-      throw new HumanReadableException(e);
-    }
+    targetBuilderResult = mutator.buildTargetAndAddToProject(project);
     PBXGroup targetGroup = targetBuilderResult.targetGroup;
 
     SourceTreePath buckFilePath = new SourceTreePath(
@@ -1718,11 +1709,7 @@ public class ProjectGenerator {
     mutator.setFrameworks(frameworksBuilder.build());
 
     NewNativeTargetProjectMutator.Result result;
-    try {
-      result = mutator.buildTargetAndAddToProject(project);
-    } catch (NoSuchBuildTargetException e) {
-      throw new HumanReadableException(e);
-    }
+    result = mutator.buildTargetAndAddToProject(project);
 
     ImmutableMap.Builder<String, String> overrideBuildSettingsBuilder =
         ImmutableMap.<String, String>builder()

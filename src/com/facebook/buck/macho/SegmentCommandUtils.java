@@ -87,7 +87,7 @@ public class SegmentCommandUtils {
   public static void updateSegmentCommand(
       ByteBuffer buffer,
       SegmentCommand old,
-      SegmentCommand updated) throws IOException {
+      SegmentCommand updated) {
     Preconditions.checkArgument(
         old.getLoadCommandCommonFields().getOffsetInBinary() ==
             updated.getLoadCommandCommonFields().getOffsetInBinary());

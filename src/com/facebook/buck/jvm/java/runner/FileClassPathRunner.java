@@ -97,7 +97,7 @@ public class FileClassPathRunner {
 
   // @VisibileForTesting
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  static List<Path> getClasspathFiles(URL[] urls) throws IOException {
+  static List<Path> getClasspathFiles(URL[] urls) {
     List<Path> paths = new LinkedList<>();
 
     for (URL url : urls) {

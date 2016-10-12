@@ -65,7 +65,7 @@ public class DefaultCellPathResolver implements CellPathResolver {
    * @return MultiMap of Path to cell name. The map will contain multiple names for a path if
    *         that cell is reachable through different paths from the current cell.
    */
-  public ImmutableMap<RelativeCellName, Path> getTransitivePathMapping() throws IOException {
+  public ImmutableMap<RelativeCellName, Path> getTransitivePathMapping() {
     ImmutableMap.Builder<RelativeCellName, Path> builder = ImmutableMap.builder();
     builder.put(RelativeCellName.of(ImmutableList.of()), root);
 

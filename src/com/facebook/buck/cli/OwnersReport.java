@@ -19,7 +19,6 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildFileTree;
-import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
@@ -92,7 +91,7 @@ final class OwnersReport {
       BuildFileTree buildFileTree,
       ListeningExecutorService executor,
       Iterable<String> arguments)
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
+      throws IOException, BuildFileParseException {
     ProjectFilesystem cellFilesystem = params.getCell().getFilesystem();
     final Path rootPath = cellFilesystem.getRootPath();
     Preconditions.checkState(rootPath.isAbsolute());

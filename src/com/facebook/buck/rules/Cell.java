@@ -209,8 +209,7 @@ public class Cell {
   public LoadingCache<Path, Cell> createCellLoaderForDistributedBuild(
       final ImmutableMap<Path, BuckConfig> cellConfigs,
       final ImmutableMap<Path, ProjectFilesystem> cellFilesystems,
-      final WatchmanDiagnosticCache watchmanDiagnosticCache
-  ) throws InterruptedException, IOException {
+      final WatchmanDiagnosticCache watchmanDiagnosticCache) {
 
     final AtomicReference<LoadingCache<Path, Cell>> cacheReference = new AtomicReference<>();
     CacheLoader<Path, Cell> loader = new CacheLoader<Path, Cell>() {

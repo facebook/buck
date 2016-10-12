@@ -215,7 +215,7 @@ public class Resolver {
   private Map.Entry<Path, Prebuilt> downloadArtifact(
       final Artifact artifactToDownload,
       TraversableGraph<Artifact> graph)
-      throws IOException, ArtifactResolutionException, InvalidVersionSpecificationException {
+      throws IOException, ArtifactResolutionException {
     String projectName = getProjectName(artifactToDownload);
     Path project = buckRepoRoot.resolve(buckThirdPartyRelativePath).resolve(projectName);
     Files.createDirectories(project);

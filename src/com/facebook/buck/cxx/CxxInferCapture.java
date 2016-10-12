@@ -173,7 +173,7 @@ public class CxxInferCapture
   }
 
   @Override
-  public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() throws IOException {
+  public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
     return preprocessorDelegate.getPossibleInputSourcePaths();
   }
 

@@ -87,7 +87,7 @@ public class AutodepsWriter {
       String buildFileName,
       ObjectMapper mapper,
       ListeningExecutorService executorService,
-      int numThreads) throws IOException, ExecutionException {
+      int numThreads) throws ExecutionException {
     Preconditions.checkArgument(numThreads > 0, "Must be at least one thread available");
 
     // We are going to divide the work into N groups, where N is the size of the thread pool.

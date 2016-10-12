@@ -57,7 +57,7 @@ class Inis {
 
   }
 
-  private static void validateIni(Ini ini) throws IOException {
+  private static void validateIni(Ini ini) {
     // Verify that no section has the same key specified more than once.
     for (String sectionName : ini.keySet()) {
       Profile.Section section = ini.get(sectionName);

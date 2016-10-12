@@ -182,8 +182,7 @@ public class LuaBinaryDescription implements
       String mainModule,
       Optional<Path> relativeModulesDir,
       Optional<Path> relativePythonModulesDir,
-      Optional<Path> relativeNativeLibsDir)
-      throws NoSuchBuildTargetException {
+      Optional<Path> relativeNativeLibsDir) {
     switch (starterType) {
       case PURE:
         if (relativeNativeLibsDir.isPresent()) {
@@ -240,8 +239,7 @@ public class LuaBinaryDescription implements
       Optional<BuildTarget> nativeStarterLibrary,
       String mainModule,
       LuaConfig.PackageStyle packageStyle,
-      boolean mayHaveNativeCode)
-      throws NoSuchBuildTargetException {
+      boolean mayHaveNativeCode) {
 
     Path output = getOutputPath(baseParams.getBuildTarget(), baseParams.getProjectFilesystem());
     StarterType starterType = getStarterType(mayHaveNativeCode);
@@ -585,8 +583,7 @@ public class LuaBinaryDescription implements
       final SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       final SourcePath starter,
-      final LuaPackageComponents components)
-      throws NoSuchBuildTargetException {
+      final LuaPackageComponents components) {
     final List<SourcePath> extraInputs = new ArrayList<>();
 
     final SymlinkTree modulesLinkTree =
@@ -698,8 +695,7 @@ public class LuaBinaryDescription implements
       final SourcePathResolver pathResolver,
       SourcePath starter,
       String mainModule,
-      final LuaPackageComponents components)
-      throws NoSuchBuildTargetException {
+      final LuaPackageComponents components) {
     Path output = getOutputPath(params.getBuildTarget(), params.getProjectFilesystem());
 
     Tool lua = luaConfig.getLua(resolver);
@@ -741,8 +737,7 @@ public class LuaBinaryDescription implements
       String mainModule,
       SourcePath starter,
       final LuaPackageComponents components,
-      LuaConfig.PackageStyle packageStyle)
-      throws NoSuchBuildTargetException {
+      LuaConfig.PackageStyle packageStyle) {
     switch (packageStyle) {
       case STANDALONE:
         return getStandaloneBinary(

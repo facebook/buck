@@ -60,8 +60,7 @@ public class VersionUniverseVersionSelector implements VersionSelector {
   }
 
   @VisibleForTesting
-  protected Optional<Map.Entry<String, VersionUniverse>> getVersionUniverse(TargetNode<?> root)
-      throws VersionException {
+  protected Optional<Map.Entry<String, VersionUniverse>> getVersionUniverse(TargetNode<?> root) {
     Optional<String> universeName = getVersionUniverseName(root);
     if (!universeName.isPresent() && !universes.isEmpty()) {
       return Optional.of(Iterables.get(universes.entrySet(), 0));

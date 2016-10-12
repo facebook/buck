@@ -108,7 +108,6 @@ public abstract class MachOAbstractCommand extends AbstractCommand {
   /**
    * The override point for subclasses.
    */
-  protected abstract int invokeWithParams(CommandRunnerParams params)
-      throws IOException, InterruptedException;
+  protected abstract int invokeWithParams(CommandRunnerParams params) throws IOException;
 
 }

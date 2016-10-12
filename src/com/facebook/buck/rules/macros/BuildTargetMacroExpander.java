@@ -104,8 +104,7 @@ public abstract class BuildTargetMacroExpander extends AbstractMacroExpander<Bui
   public ImmutableList<BuildTarget> extractParseTimeDepsFrom(
       BuildTarget target,
       CellPathResolver cellNames,
-      BuildTarget input)
-      throws MacroException {
+      BuildTarget input) {
     return ImmutableList.of(input);
   }
 

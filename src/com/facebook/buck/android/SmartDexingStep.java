@@ -197,7 +197,7 @@ public class SmartDexingStep implements Step {
   }
 
   private void runDxCommands(ExecutionContext context, Multimap<Path, Path> outputToInputs)
-      throws StepFailedException, IOException, InterruptedException {
+      throws StepFailedException, InterruptedException {
     DefaultStepRunner stepRunner = new DefaultStepRunner(context);
     // Invoke dx commands in parallel for maximum thread utilization.  In testing, dx revealed
     // itself to be CPU (and not I/O) bound making it a good candidate for parallelization.
@@ -259,7 +259,7 @@ public class SmartDexingStep implements Step {
    */
   private List<Step> generateDxCommands(
       ProjectFilesystem filesystem,
-      Multimap<Path, Path> outputToInputs) throws IOException {
+      Multimap<Path, Path> outputToInputs) {
     ImmutableList.Builder<DxPseudoRule> pseudoRules = ImmutableList.builder();
 
     ImmutableMap<Path, Sha1HashCode> dexInputHashes = dexInputHashesProvider.getDexInputHashes();
@@ -336,7 +336,7 @@ public class SmartDexingStep implements Step {
     }
 
     @VisibleForTesting
-    String hashInputs() throws IOException {
+    String hashInputs() {
       Hasher hasher = Hashing.sha1().newHasher();
       for (Path src : srcs) {
         Preconditions.checkState(
@@ -350,7 +350,7 @@ public class SmartDexingStep implements Step {
       return hasher.hash().toString();
     }
 
-    public boolean checkIsCached() throws IOException {
+    public boolean checkIsCached() {
       newInputsHash = hashInputs();
 
       if (!filesystem.exists(outputHashPath) ||

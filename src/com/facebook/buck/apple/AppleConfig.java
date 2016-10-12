@@ -180,7 +180,7 @@ public class AppleConfig {
    */
   public Supplier<Optional<String>> getXcodeBuildVersionSupplier(
       final Path developerPath,
-      final ProcessExecutor processExecutor) throws IOException {
+      final ProcessExecutor processExecutor) {
     Supplier<Optional<String>> supplier = xcodeVersionCache.get(developerPath);
     if (supplier != null) {
       return supplier;

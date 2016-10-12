@@ -39,7 +39,7 @@ public class OkHttpResponseWrapper implements HttpResponse {
   }
 
   @Override
-  public InputStream getBody() throws IOException {
+  public InputStream getBody() {
     return response.body().byteStream();
   }
 

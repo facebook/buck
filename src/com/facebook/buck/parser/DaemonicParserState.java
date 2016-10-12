@@ -401,7 +401,7 @@ class DaemonicParserState {
     }
   }
 
-  public void invalidateBasedOn(WatchEvent<?> event) throws InterruptedException {
+  public void invalidateBasedOn(WatchEvent<?> event) {
     if (!WatchEvents.isPathChangeEvent(event)) {
       // Non-path change event, likely an overflow due to many change events: invalidate everything.
       LOG.debug("Received non-path change event %s, assuming overflow and checking caches.", event);

@@ -37,7 +37,7 @@ public class LoadCommandUtils {
    */
   public static LoadCommand createLoadCommandFromBuffer(
       ByteBuffer buffer,
-      NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder) throws IOException {
+      NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder) {
     int position = buffer.position();
     UnsignedInteger cmd = UnsignedInteger.fromIntBits(buffer.getInt());
     buffer.position(position);
@@ -68,7 +68,7 @@ public class LoadCommandUtils {
   public static void enumerateLoadCommandsInFile(
       ByteBuffer buffer,
       NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder,
-      Function<LoadCommand, Boolean> callback) throws IOException {
+      Function<LoadCommand, Boolean> callback) {
     MachoHeader header = MachoHeaderUtils.createFromBuffer(buffer);
     int firstCommandOffset = MachoHeaderUtils.getHeaderSize(header);
     int relativeCommandOffset = 0;
@@ -100,7 +100,7 @@ public class LoadCommandUtils {
   public static <T extends LoadCommand> ImmutableList<T> findLoadCommandsWithClass(
       ByteBuffer buffer,
       NulTerminatedCharsetDecoder nulTerminatedCharsetDecoder,
-      final Class<T> type) throws IOException {
+      final Class<T> type) {
     final List<T> results = new ArrayList<>();
     enumerateLoadCommandsInFile(
         buffer,

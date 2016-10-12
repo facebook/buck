@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
@@ -86,7 +85,7 @@ public class ConstructorArgMarshaller {
       Object dto,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableSet.Builder<VisibilityPattern> visibilityPatterns,
-      Map<String, ?> instance) throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+      Map<String, ?> instance) throws ConstructorArgMarshalException {
     for (ParamInfo info : getAllParamInfo(dto)) {
       try {
         info.setFromParams(cellRoots, filesystem, params, dto, instance);
@@ -145,7 +144,7 @@ public class ConstructorArgMarshaller {
       CellPathResolver cellNames,
       ImmutableSet.Builder<VisibilityPattern> visibilityPatterns,
       Map<String, ?> instance,
-      BuildTarget target) throws NoSuchBuildTargetException {
+      BuildTarget target) {
     Object value = instance.get("visibility");
     if (value != null) {
       if (!(value instanceof List)) {

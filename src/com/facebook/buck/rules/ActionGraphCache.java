@@ -239,7 +239,7 @@ public class ActionGraphCache {
   }
 
   @Subscribe
-  public void invalidateBasedOn(WatchEvent<?> event) throws InterruptedException {
+  public void invalidateBasedOn(WatchEvent<?> event) {
     // We invalidate in every case except a modify event.
     if (event.kind() != StandardWatchEventKinds.ENTRY_MODIFY) {
       LOG.info("ActionGraphCache invalidation due to Watchman event %s.", event);

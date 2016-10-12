@@ -253,11 +253,7 @@ public abstract class Jsr199Javac implements Javac {
     }
 
     if (isSuccess) {
-      try {
-        usedClassesFileWriter.writeFile(filesystem, context.getObjectMapper());
-      } catch (IOException e) {
-        throw new HumanReadableException(e, "Failed to write the used classes file.");
-      }
+      usedClassesFileWriter.writeFile(filesystem, context.getObjectMapper());
       return 0;
     } else {
       if (context.getVerbosity().shouldPrintStandardInformation()) {

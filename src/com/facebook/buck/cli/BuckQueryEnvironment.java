@@ -151,7 +151,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   TargetNode<?> getNode(QueryTarget target)
-      throws QueryException, InterruptedException {
+      throws QueryException {
     Preconditions.checkState(target instanceof QueryBuildTarget);
     ListeningExecutorService executor = null;
     try {
@@ -186,7 +186,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   public ImmutableSet<TargetNode<?>> getNodesFromQueryTargets(Iterable<QueryTarget> input)
-      throws QueryException, InterruptedException {
+      throws QueryException {
     ImmutableSet.Builder<TargetNode<?>> builder = ImmutableSet.builder();
     for (QueryTarget target : input) {
       builder.add(getNode(target));
@@ -281,7 +281,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   @Override
   public ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets)
-      throws InterruptedException, QueryException {
+      throws QueryException {
     final Cell rootCell = params.getCell();
     final ProjectFilesystem cellFilesystem = params.getCell().getFilesystem();
     final Path rootPath = cellFilesystem.getRootPath();
@@ -330,7 +330,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
           executor,
           files);
       return getTargetsFromBuildTargetsContainer(report.owners.keySet());
-    } catch (BuildFileParseException | BuildTargetException | IOException e) {
+    } catch (BuildFileParseException | IOException e) {
       throw new QueryException(e, "Could not parse build targets.\n%s", e.getMessage());
     }
   }

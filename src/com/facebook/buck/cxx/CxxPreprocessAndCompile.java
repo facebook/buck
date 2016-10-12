@@ -339,7 +339,7 @@ public class CxxPreprocessAndCompile
   }
 
   @Override
-  public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() throws IOException {
+  public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
     if (preprocessDelegate.isPresent()) {
       return preprocessDelegate.get().getPossibleInputSourcePaths();
     }

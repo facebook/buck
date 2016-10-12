@@ -19,7 +19,6 @@ package com.facebook.buck.slb;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
-import okhttp3.Request;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.TSerializer;
@@ -32,6 +31,8 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
+import okhttp3.Request;
 
 public class ThriftOverHttpServiceTest {
 
@@ -104,7 +105,7 @@ public class ThriftOverHttpServiceTest {
       }
 
       @Override
-      public InputStream getBody() throws IOException {
+      public InputStream getBody() {
         return new ByteArrayInputStream(responseBuffer);
       }
 

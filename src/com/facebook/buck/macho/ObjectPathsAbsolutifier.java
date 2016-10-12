@@ -102,8 +102,7 @@ public class ObjectPathsAbsolutifier {
     updateLinkeditSegment(updatedCodeSignatureCommand);
   }
 
-  private Optional<Pair<LinkEditDataCommand, ByteBuffer>> getCodeSignatureDataToRelocate()
-      throws IOException {
+  private Optional<Pair<LinkEditDataCommand, ByteBuffer>> getCodeSignatureDataToRelocate() {
 
     buffer.position(0);
     ImmutableList<SymTabCommand> symTabCommands = LoadCommandUtils.findLoadCommandsWithClass(
@@ -163,7 +162,7 @@ public class ObjectPathsAbsolutifier {
             ByteBuffer.wrap(contents).order(buffer.order())));
   }
 
-  private void updateBinaryUuid() throws IOException {
+  private void updateBinaryUuid() {
     buffer.position(0);
     ImmutableList<UUIDCommand> commands = LoadCommandUtils.findLoadCommandsWithClass(
         buffer,
@@ -173,23 +172,19 @@ public class ObjectPathsAbsolutifier {
         commands.size() == 1,
         "Found %d UUIDCommands, expected 1", commands.size());
 
-    try {
-      UUIDCommand uuidCommand = commands.get(0);
-      UUIDCommand updatedCommand = uuidCommand.withUuid(UUID.randomUUID());
-      UUIDCommandUtils.updateUuidCommand(
-          buffer,
-          uuidCommand,
-          updatedCommand);
-    } catch (IOException e) {
-      LOG.error(e, "Unable to update UUID");
-    }
+    UUIDCommand uuidCommand = commands.get(0);
+    UUIDCommand updatedCommand = uuidCommand.withUuid(UUID.randomUUID());
+    UUIDCommandUtils.updateUuidCommand(
+        buffer,
+        uuidCommand,
+        updatedCommand);
   }
 
   private int updateStringTableContents(final MachoMagicInfo magicInfo) throws IOException {
     return processSymTabCommand(magicInfo, getSymTabCommand());
   }
 
-  private SymTabCommand getSymTabCommand() throws IOException {
+  private SymTabCommand getSymTabCommand() {
     buffer.position(0);
     ImmutableList<SymTabCommand> commands = LoadCommandUtils.findLoadCommandsWithClass(
         buffer,
@@ -201,9 +196,7 @@ public class ObjectPathsAbsolutifier {
     return commands.get(0);
   }
 
-  private void updateLinkeditSegment(
-      Optional<LinkEditDataCommand> updatedCodeSignatureCommand)
-      throws IOException {
+  private void updateLinkeditSegment(Optional<LinkEditDataCommand> updatedCodeSignatureCommand) {
     buffer.position(0);
     ImmutableList<SegmentCommand> commands = LoadCommandUtils.findLoadCommandsWithClass(
         buffer,
@@ -261,8 +254,7 @@ public class ObjectPathsAbsolutifier {
 
   private void processLinkeditSegmentCommand(
       SegmentCommand original,
-      Optional<LinkEditDataCommand> updatedCodeSignatureCommand)
-      throws IOException {
+      Optional<LinkEditDataCommand> updatedCodeSignatureCommand) {
     SymTabCommand symTabCommand = getSymTabCommand();
     int fileSize = symTabCommand.getStroff().intValue() + symTabCommand.getStrsize().intValue();
     if (updatedCodeSignatureCommand.isPresent()) {
@@ -541,7 +533,7 @@ public class ObjectPathsAbsolutifier {
       MachoMagicInfo magicInfo,
       Nlist nlist,
       Path path,
-      UnsignedInteger newEntryLocation) throws IOException {
+      UnsignedInteger newEntryLocation) {
     Nlist updatedNlist = nlist.withN_strx(newEntryLocation);
     // only object source files need to have a timestamp as their values
     if (nlist.getN_type().equals(Stab.N_OSO) && path.toFile().isFile()) {

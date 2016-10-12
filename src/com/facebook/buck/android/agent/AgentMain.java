@@ -51,7 +51,7 @@ public class AgentMain {
 
   private static final Logger LOG = Logger.getLogger(AgentMain.class.getName());
 
-  public static void main(String args[]) throws IOException {
+  public static void main(String args[]) {
     if (args.length == 0) {
       LOG.severe("No command specified");
       System.exit(1);

@@ -144,7 +144,7 @@ public class BuildInfoRecorder {
     return builder.toString();
   }
 
-  private ImmutableMap<String, String> getBuildMetadata() throws IOException {
+  private ImmutableMap<String, String> getBuildMetadata() {
     return ImmutableMap.<String, String>builder()
         .put(
             BuildInfo.METADATA_KEY_FOR_ADDITIONAL_INFO,
@@ -259,7 +259,7 @@ public class BuildInfoRecorder {
     return ImmutableSortedSet.copyOf(pathsToOutputs);
   }
 
-  public ImmutableSortedSet<Path> getRecordedPaths() throws IOException {
+  public ImmutableSortedSet<Path> getRecordedPaths() {
     return ImmutableSortedSet.<Path>naturalOrder()
         .addAll(getRecordedMetadataFiles())
         .addAll(pathsToOutputs)
@@ -290,8 +290,7 @@ public class BuildInfoRecorder {
   public void performUploadToArtifactCache(
       final ImmutableSet<RuleKey> ruleKeys,
       ArtifactCache artifactCache,
-      final BuckEventBus eventBus)
-      throws InterruptedException {
+      final BuckEventBus eventBus) {
 
     // Skip all of this if caching is disabled. Although artifactCache.store() will be a noop,
     // building up the zip is wasted I/O.
@@ -364,8 +363,7 @@ public class BuildInfoRecorder {
   public CacheResult fetchArtifactForBuildable(
       RuleKey ruleKey,
       LazyPath outputFile,
-      ArtifactCache artifactCache)
-      throws InterruptedException {
+      ArtifactCache artifactCache) {
     try {
       return artifactCache.fetch(ruleKey, outputFile);
     } catch (Throwable t) {

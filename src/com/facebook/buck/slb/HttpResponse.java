@@ -36,7 +36,7 @@ public interface HttpResponse extends Closeable {
    * @return Stream with the response body.
    * @throws IOException
    */
-  InputStream getBody() throws IOException;
+  InputStream getBody();
 
   /**
    * @return The full URL of the request that generated this response.

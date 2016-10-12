@@ -1537,8 +1537,7 @@ public class CachingBuildEngineTest {
             }
 
             @Override
-            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths()
-                throws IOException {
+            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
               return Optional.absent();
             }
 
@@ -1620,8 +1619,7 @@ public class CachingBuildEngineTest {
                   });
             }
             @Override
-            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths()
-                throws IOException {
+            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
               return Optional.absent();
             }
             @Override
@@ -1692,8 +1690,7 @@ public class CachingBuildEngineTest {
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
             @Override
-            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths()
-                throws IOException {
+            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
               return Optional.absent();
             }
             @Override
@@ -1767,8 +1764,7 @@ public class CachingBuildEngineTest {
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
             @Override
-            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths()
-                throws IOException {
+            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
               return Optional.of(inputsBefore);
             }
             @Override
@@ -1854,8 +1850,7 @@ public class CachingBuildEngineTest {
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
             @Override
-            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths()
-                throws IOException {
+            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
               return Optional.absent();
             }
             @Override
@@ -1933,8 +1928,7 @@ public class CachingBuildEngineTest {
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
             @Override
-            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths()
-                throws IOException {
+            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
               return Optional.absent();
             }
             @Override
@@ -2071,8 +2065,7 @@ public class CachingBuildEngineTest {
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
             @Override
-            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths()
-                throws IOException {
+            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
               return Optional.of(ImmutableSet.of(path));
             }
             @Override
@@ -2176,8 +2169,7 @@ public class CachingBuildEngineTest {
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
             @Override
-            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths()
-                throws IOException {
+            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
               return Optional.absent();
             }
             @Override
@@ -2294,8 +2286,7 @@ public class CachingBuildEngineTest {
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
             @Override
-            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths()
-                throws IOException {
+            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
               return Optional.absent();
             }
             @Override
@@ -2404,8 +2395,7 @@ public class CachingBuildEngineTest {
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
             @Override
-            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths()
-                throws IOException {
+            public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
               return Optional.absent();
             }
             @Override
@@ -2652,7 +2642,7 @@ public class CachingBuildEngineTest {
       }
 
       @Override
-      public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() throws IOException {
+      public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
         return Optional.absent();
       }
 

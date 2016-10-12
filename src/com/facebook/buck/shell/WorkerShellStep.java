@@ -94,8 +94,7 @@ public class WorkerShellStep implements Step {
   /**
    * Returns an existing WorkerProcessPool for the given key if one exists, else creates a new one.
    */
-  private WorkerProcessPool getWorkerProcessPoolForKey(String key, final ExecutionContext context)
-      throws IOException, InterruptedException {
+  private WorkerProcessPool getWorkerProcessPoolForKey(String key, final ExecutionContext context) {
 
     WorkerJobParams paramsToUse = getWorkerJobParamsToUse(context.getPlatform());
     ConcurrentMap<String, WorkerProcessPool> processPoolMap = context.getWorkerProcessPools();

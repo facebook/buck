@@ -362,7 +362,7 @@ public class IjProjectTemplateDataPreparer {
   }
 
 
-  public Map<String, Object> getAndroidProperties(IjModule module)  throws IOException {
+  public Map<String, Object> getAndroidProperties(IjModule module) {
     Map<String, Object> androidProperties = new HashMap<>();
     Optional<IjModuleAndroidFacet> androidFacetOptional = module.getAndroidFacet();
 

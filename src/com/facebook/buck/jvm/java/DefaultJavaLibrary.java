@@ -629,7 +629,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   }
 
   @Override
-  public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() throws IOException {
+  public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
     return Optional.of(abiClasspath.getArchiveMembers(getResolver()));
   }
 

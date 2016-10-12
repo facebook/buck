@@ -173,7 +173,7 @@ public class PerBuildState implements AutoCloseable {
   }
 
   public ImmutableSet<Map<String, Object>> getAllRawNodes(Cell cell, Path buildFile)
-      throws InterruptedException, BuildFileParseException {
+      throws BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
     // The raw nodes are just plain JSON blobs, and so we don't need to check for symlinks

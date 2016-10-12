@@ -345,8 +345,7 @@ public class CxxGenruleDescription
      * input for the given rules.
      */
     private PreprocessorFlags getPreprocessorFlags(
-        Iterable<CxxPreprocessorInput> transitivePreprocessorInput)
-        throws MacroException {
+        Iterable<CxxPreprocessorInput> transitivePreprocessorInput) {
       PreprocessorFlags.Builder ppFlagsBuilder = PreprocessorFlags.builder();
       ExplicitCxxToolFlags.Builder toolFlagsBuilder = CxxToolFlags.explicitBuilder();
       toolFlagsBuilder.setPlatformFlags(

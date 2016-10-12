@@ -64,7 +64,7 @@ public class DistBuildTargetGraphCodec {
 
   public BuildJobStateTargetGraph dump(
       Collection<TargetNode<?>> targetNodes,
-      Function<Path, Integer> cellIndexer) throws InterruptedException {
+      Function<Path, Integer> cellIndexer) {
     BuildJobStateTargetGraph result = new BuildJobStateTargetGraph();
 
     for (TargetNode<?> targetNode : targetNodes) {
@@ -121,7 +121,7 @@ public class DistBuildTargetGraphCodec {
 
   public TargetGraph createTargetGraph(
       BuildJobStateTargetGraph remoteTargetGraph,
-      Function<Integer, Cell> cellLookup) throws IOException, InterruptedException {
+      Function<Integer, Cell> cellLookup) throws IOException {
 
     ImmutableMap.Builder<BuildTarget, TargetNode<?>> targetNodeIndexBuilder =
         ImmutableMap.builder();

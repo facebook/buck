@@ -24,8 +24,7 @@ import java.nio.charset.StandardCharsets;
 public class MachOFixCompDirCommand extends MachOAbstractCommand {
 
   @Override
-  protected int invokeWithParams(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  protected int invokeWithParams(CommandRunnerParams params) throws IOException {
     NulTerminatedCharsetDecoder decoder = new NulTerminatedCharsetDecoder(
         StandardCharsets.UTF_8.newDecoder());
     CompDirReplacer.replaceCompDirInFile(

@@ -50,7 +50,6 @@ import com.facebook.buck.js.ReactNativeBundle;
 import com.facebook.buck.js.ReactNativeLibraryArgs;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetNode;
@@ -269,8 +268,7 @@ class NewNativeTargetProjectMutator {
     return this;
   }
 
-  public Result buildTargetAndAddToProject(PBXProject project)
-      throws NoSuchBuildTargetException {
+  public Result buildTargetAndAddToProject(PBXProject project) {
     PBXNativeTarget target = new PBXNativeTarget(targetName);
 
     PBXGroup targetGroup = project.getMainGroup().getOrCreateDescendantGroupByPath(targetGroupPath);

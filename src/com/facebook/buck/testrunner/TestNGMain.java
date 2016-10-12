@@ -37,7 +37,7 @@ public class TestNGMain {
     // Launcher class.
   }
 
-  public static void main(String[] args) throws Throwable {
+  public static void main(String[] args) {
     // Ensure that both testng and hamcrest are on the classpath
     CheckDependency.isPresent("testng", "org.testng.TestNG");
     CheckDependency.isPresent("hamcrest", "org.hamcrest.Description");

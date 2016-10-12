@@ -138,7 +138,7 @@ public class HttpArtifactCacheUploadListener implements BuckEventListener {
   }
 
   @Override
-  public synchronized void outputTrace(BuildId buildId) throws InterruptedException {
+  public synchronized void outputTrace(BuildId buildId) {
     if (!hasCounterBeenSent && artifactCount > 0) {
       hasCounterBeenSent = true;
       CounterSnapshot snapshot = generateCounterSnapshot()

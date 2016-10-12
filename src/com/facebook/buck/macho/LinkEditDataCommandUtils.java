@@ -18,7 +18,6 @@ package com.facebook.buck.macho;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.UnsignedInteger;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class LinkEditDataCommandUtils {
@@ -41,8 +40,7 @@ public class LinkEditDataCommandUtils {
   public static void updateLinkEditDataCommand(
       ByteBuffer buffer,
       LinkEditDataCommand old,
-      LinkEditDataCommand updated)
-      throws IOException {
+      LinkEditDataCommand updated) {
     Preconditions.checkArgument(
         old.getLoadCommandCommonFields().getOffsetInBinary() ==
             updated.getLoadCommandCommonFields().getOffsetInBinary());

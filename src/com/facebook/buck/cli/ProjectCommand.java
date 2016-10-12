@@ -796,13 +796,9 @@ public class ProjectCommand extends BuildCommand {
 
         List<String> additionalInitialTargets = ImmutableList.of();
         if (shouldProcessAnnotations()) {
-          try {
-            additionalInitialTargets = getAnnotationProcessingTargets(
-                projectGraph,
-                passedInTargetsSet);
-          } catch (BuildTargetException | BuildFileParseException e) {
-            throw new HumanReadableException(e);
-          }
+          additionalInitialTargets = getAnnotationProcessingTargets(
+              projectGraph,
+              passedInTargetsSet);
         }
 
         // Build initial targets.
@@ -849,8 +845,7 @@ public class ProjectCommand extends BuildCommand {
 
   ImmutableList<String> getAnnotationProcessingTargets(
       TargetGraph projectGraph,
-      ImmutableSet<BuildTarget> passedInTargetsSet)
-      throws BuildTargetException, BuildFileParseException, IOException, InterruptedException {
+      ImmutableSet<BuildTarget> passedInTargetsSet) {
     ImmutableSet<BuildTarget> buildTargets;
     if (!passedInTargetsSet.isEmpty()) {
       buildTargets = passedInTargetsSet;

@@ -132,7 +132,7 @@ public class DistBuildSlaveExecutor {
     }
   }
 
-  private TargetGraph createTargetGraph() throws IOException, InterruptedException {
+  private TargetGraph createTargetGraph() throws IOException {
     if (targetGraph != null) {
       return targetGraph;
     }
@@ -144,8 +144,7 @@ public class DistBuildSlaveExecutor {
     return targetGraph;
   }
 
-  private ActionGraphAndResolver createActionGraphAndResolver()
-      throws IOException, InterruptedException {
+  private ActionGraphAndResolver createActionGraphAndResolver() throws IOException {
     if (actionGraphAndResolver != null) {
       return actionGraphAndResolver;
     }
@@ -160,8 +159,7 @@ public class DistBuildSlaveExecutor {
     return actionGraphAndResolver;
   }
 
-  private DistBuildCachingEngineDelegate createBuildEngineDelegate()
-      throws IOException, InterruptedException {
+  private DistBuildCachingEngineDelegate createBuildEngineDelegate() throws IOException {
     if (cachingBuildEngineDelegate != null) {
       return cachingBuildEngineDelegate;
     }
@@ -223,7 +221,7 @@ public class DistBuildSlaveExecutor {
                       /* enableProfiling */ false,
                   args.getExecutorService(),
                   input);
-            } catch (BuildFileParseException | InterruptedException e) {
+            } catch (BuildFileParseException e) {
               throw new RuntimeException(e);
             }
           }

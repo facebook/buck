@@ -69,7 +69,7 @@ public class FatJarMain {
   /**
    * @return a command to start a new JVM process to execute the given main class.
    */
-  private static List<String> getCommand(Path jar, String[] args) throws Exception {
+  private static List<String> getCommand(Path jar, String[] args) {
     List<String> cmd = new ArrayList<String>();
 
     // Look for the Java binary given in an alternate location if given,

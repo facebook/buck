@@ -61,7 +61,7 @@ public class SymTabCommandUtils {
       ByteBuffer buffer,
       SymTabCommand command,
       int index,
-      boolean is64Bit) throws IOException {
+      boolean is64Bit) {
     final int nlistSizeInBytes = NlistUtils.getSizeInBytes(is64Bit);
     final int offset = command.getSymoff().intValue() + index * nlistSizeInBytes;
     buffer.position(offset);
@@ -176,7 +176,7 @@ public class SymTabCommandUtils {
   public static SymTabCommand updateSymTabCommand(
       ByteBuffer buffer,
       SymTabCommand command,
-      String newEntryContents) throws IOException {
+      String newEntryContents) {
     SymTabCommand updatedCommand = getUpdatedSymTabCommandWithNewEntryContents(
         command,
         newEntryContents);
@@ -204,7 +204,7 @@ public class SymTabCommandUtils {
   public static UnsignedInteger insertNewStringTableEntry(
       ByteBuffer buffer,
       SymTabCommand command,
-      String newEntryContents) throws IOException {
+      String newEntryContents) {
     buffer.position(command.getStroff().intValue() + command.getStrsize().intValue());
     buffer.put(newEntryContents.getBytes(StandardCharsets.UTF_8));
     buffer.put(NUL_BYTE);
@@ -221,7 +221,7 @@ public class SymTabCommandUtils {
   private static void writeCommand(
       ByteBuffer buffer,
       SymTabCommand command,
-      SymTabCommand updatedCommand) throws IOException {
+      SymTabCommand updatedCommand) {
     Preconditions.checkArgument(
         command.getLoadCommandCommonFields().getOffsetInBinary() ==
             updatedCommand.getLoadCommandCommonFields().getOffsetInBinary());

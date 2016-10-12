@@ -82,8 +82,7 @@ public class FilterResourcesStepTest {
         FilterResourcesStep.DefaultDrawableFinder.getInstance(),
         new ImageScaler() {
           @Override
-          public boolean isAvailable(
-              ExecutionContext context) throws IOException, InterruptedException {
+          public boolean isAvailable(ExecutionContext context) {
             return true;
           }
 

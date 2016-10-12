@@ -31,7 +31,7 @@ public class MachoMagicInfoUtils {
    * @return MachoMagicInfo object.
    * @throws IOException
    */
-  public static MachoMagicInfo getMachMagicInfo(ByteBuffer buffer) throws IOException {
+  public static MachoMagicInfo getMachMagicInfo(ByteBuffer buffer) {
     ByteOrder order = buffer.order();
     UnsignedInteger magic = UnsignedInteger.fromIntBits(
         buffer.order(ByteOrder.BIG_ENDIAN).getInt());

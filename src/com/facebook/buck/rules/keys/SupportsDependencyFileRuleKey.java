@@ -39,7 +39,7 @@ public interface SupportsDependencyFileRuleKey extends BuildRule {
    * TODO(jkeljo): This is only optional because I added it for Java and didn't have the time to go
    * back and figure out how to implement it for C++.
    */
-  Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() throws IOException;
+  Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths();
 
   ImmutableList<SourcePath> getInputsAfterBuildingLocally() throws IOException;
 

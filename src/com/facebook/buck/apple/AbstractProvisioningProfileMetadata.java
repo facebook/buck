@@ -87,7 +87,7 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
    * Prefix is always a ten-character alphanumeric sequence.
    * Bundle ID may be a fully-qualified name or a wildcard ending in *.
    */
-  public static Pair<String, String> splitAppID(String appID) throws RuntimeException {
+  public static Pair<String, String> splitAppID(String appID) {
     Matcher matcher = BUNDLE_ID_PATTERN.matcher(appID);
     if (matcher.find()) {
       String prefix = matcher.group(1);

@@ -200,7 +200,7 @@ public class DirArtifactCache implements ArtifactCache {
     return Futures.immediateFuture(null);
   }
 
-  private Path getPathToTempFolder() throws IOException {
+  private Path getPathToTempFolder() {
     return cacheDir.resolve("tmp");
   }
 

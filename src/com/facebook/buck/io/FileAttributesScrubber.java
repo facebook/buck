@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.io;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 /**
@@ -27,5 +26,5 @@ public interface FileAttributesScrubber extends FileScrubber {
    * (modification date, creation date, etc.)
    * WARNING: You should not delete, rename or move the file, as the the behaviour is undefined.
    */
-  void scrubFileWithPath(Path path) throws IOException;
+  void scrubFileWithPath(Path path);
 }

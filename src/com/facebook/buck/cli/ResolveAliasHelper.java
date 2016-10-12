@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetNode;
@@ -27,7 +26,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -49,8 +47,7 @@ public class ResolveAliasHelper {
       CommandRunnerParams params,
       ListeningExecutorService executor,
       boolean enableProfiling,
-      List<String> aliases)
-      throws IOException, InterruptedException {
+      List<String> aliases) {
 
     List<String> resolvedAliases = Lists.newArrayList();
     for (String alias : aliases) {
@@ -90,15 +87,9 @@ public class ResolveAliasHelper {
       ListeningExecutorService executor,
       boolean enableProfiling,
       String target,
-      Parser parser)
-      throws IOException, InterruptedException {
+      Parser parser) {
 
-    BuildTarget buildTarget;
-    try {
-      buildTarget = getBuildTargetForFullyQualifiedTarget(params.getBuckConfig(), target);
-    } catch (NoSuchBuildTargetException e) {
-      return null;
-    }
+    BuildTarget buildTarget = getBuildTargetForFullyQualifiedTarget(params.getBuckConfig(), target);
 
     Cell owningCell = params.getCell().getCell(buildTarget);
     Path buildFile;
@@ -139,8 +130,7 @@ public class ResolveAliasHelper {
   /** @return the build target identified by the specified full path or {@code null}. */
   private static BuildTarget getBuildTargetForFullyQualifiedTarget(
       BuckConfig buckConfig,
-      String target)
-      throws NoSuchBuildTargetException {
+      String target) {
     return buckConfig.getBuildTargetForFullyQualifiedTarget(target);
   }
 }

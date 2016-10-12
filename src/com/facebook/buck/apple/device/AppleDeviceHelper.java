@@ -58,8 +58,7 @@ public class AppleDeviceHelper {
    * @throws IOException
    * @throws InterruptedException
    */
-  public ImmutableMap<String, String> getConnectedDevices() throws IOException,
-      InterruptedException {
+  public ImmutableMap<String, String> getConnectedDevices() {
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
             .setCommand(

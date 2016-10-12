@@ -175,15 +175,11 @@ public class AppleCxxPlatforms {
       // Get the Xcode build version as reported by `xcodebuild -version`.  This is
       // different than the build number in the Info.plist, sigh.
       if (processExecutor.isPresent()) {
-        try {
-          xcodeBuildVersion = appleConfig
-              .getXcodeBuildVersionSupplier(developerPath.get(), processExecutor.get())
-              .get();
-          platformBuilder.setXcodeBuildVersion(xcodeBuildVersion);
-          LOG.debug("Xcode build version is: " + xcodeBuildVersion.or("<absent>"));
-        } catch (IOException e) {
-          LOG.debug("Error in getting Xcode build version");
-        }
+        xcodeBuildVersion = appleConfig
+            .getXcodeBuildVersionSupplier(developerPath.get(), processExecutor.get())
+            .get();
+        platformBuilder.setXcodeBuildVersion(xcodeBuildVersion);
+        LOG.debug("Xcode build version is: " + xcodeBuildVersion.or("<absent>"));
       }
     }
 

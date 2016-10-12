@@ -199,7 +199,7 @@ public class ReactNativeBundle
   }
 
   @Override
-  public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() throws IOException {
+  public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
     return Optional.of(srcs);
   }
 

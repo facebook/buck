@@ -313,8 +313,7 @@ public final class Main {
     public Daemon(
         Cell cell,
         ObjectMapper objectMapper,
-        Optional<WebServer> webServerToReuse)
-        throws IOException, InterruptedException {
+        Optional<WebServer> webServerToReuse) {
       this.cell = cell;
       this.hashCache = new WatchedFileHashCache(cell.getFilesystem());
       this.buckOutHashCache =
@@ -516,7 +515,7 @@ public final class Main {
   static Daemon getDaemon(
       Cell cell,
       ObjectMapper objectMapper)
-      throws IOException, InterruptedException {
+      throws IOException {
     Path rootPath = cell.getFilesystem().getRootPath();
     Optional<WebServer> webServer = Optional.absent();
     if (daemon == null) {
@@ -571,7 +570,7 @@ public final class Main {
       boolean isDaemon,
       Cell rootCell,
       ObjectMapper objectMapper)
-      throws IOException, InterruptedException {
+      throws IOException {
     if (isDaemon) {
       return getDaemon(rootCell, objectMapper).getBroadcastEventListener();
     }
@@ -1260,8 +1259,7 @@ public final class Main {
   private void flushEventListeners(
       Console console,
       BuildId buildId,
-      ImmutableList<BuckEventListener> eventListeners)
-      throws InterruptedException {
+      ImmutableList<BuckEventListener> eventListeners) {
     for (BuckEventListener eventListener : eventListeners) {
       try {
         eventListener.outputTrace(buildId);
@@ -1309,7 +1307,7 @@ public final class Main {
       Path projectRoot,
       ImmutableMap<String, String> clientEnvironment,
       Console console,
-      Clock clock) throws InterruptedException, IOException {
+      Clock clock) throws InterruptedException {
     Watchman watchman;
     if (context.isPresent() || parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN) {
       watchman = Watchman.build(
@@ -1507,14 +1505,12 @@ public final class Main {
     return daemon.getParser();
   }
 
-  private FileHashCache getFileHashCacheFromDaemon(Cell cell)
-      throws IOException, InterruptedException {
+  private FileHashCache getFileHashCacheFromDaemon(Cell cell) throws IOException {
     Daemon daemon = getDaemon(cell, objectMapper);
     return daemon.getFileHashCache();
   }
 
-  private FileHashCache getBuckOutFileHashCacheFromDaemon(Cell cell)
-      throws IOException, InterruptedException {
+  private FileHashCache getBuckOutFileHashCacheFromDaemon(Cell cell) throws IOException {
     Daemon daemon = getDaemon(cell, objectMapper);
     return daemon.getBuckOutHashCache();
   }
@@ -1522,7 +1518,7 @@ public final class Main {
   private Optional<WebServer> getWebServerIfDaemon(
       Optional<NGContext> context,
       Cell cell)
-      throws IOException, InterruptedException {
+      throws IOException {
     if (context.isPresent()) {
       Daemon daemon = getDaemon(cell, objectMapper);
       return daemon.getWebServer();
@@ -1595,7 +1591,7 @@ public final class Main {
       AbstractConsoleEventBusListener consoleEventBusListener,
       KnownBuildRuleTypes knownBuildRuleTypes,
       ImmutableMap<String, String> environment,
-      CounterRegistry counterRegistry) throws InterruptedException {
+      CounterRegistry counterRegistry) {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
             .add(new JavaUtilsLoggingBuildListener())

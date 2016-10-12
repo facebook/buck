@@ -62,7 +62,7 @@ public class CompDirReplacer {
   private void processThinBinary(
       final MachoMagicInfo magicInfo,
       final String oldCompDir,
-      final String updatedCompDir) throws IOException {
+      final String updatedCompDir) {
     buffer.position(0);
     ImmutableList<SegmentCommand> segmentCommands =
         LoadCommandUtils.findLoadCommandsWithClass(

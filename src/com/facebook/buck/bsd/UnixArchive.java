@@ -63,7 +63,7 @@ public class UnixArchive {
     this.nulTerminatedCharsetDecoder = nulTerminatedCharsetDecoder;
   }
 
-  public static boolean checkHeader(ByteBuffer byteBuffer) throws IOException {
+  public static boolean checkHeader(ByteBuffer byteBuffer) {
     byte[] header = new byte[EXPECTED_GLOBAL_HEADER.length];
     byteBuffer.get(header, 0, header.length);
     return Arrays.equals(EXPECTED_GLOBAL_HEADER, header);

@@ -45,7 +45,7 @@ public class LoadBalancedHttpResponse extends OkHttpResponseWrapper {
   }
 
   @Override
-  public InputStream getBody() throws IOException {
+  public InputStream getBody() {
     return new LoadBalancedInputStream(getResponse().body().byteStream());
   }
 

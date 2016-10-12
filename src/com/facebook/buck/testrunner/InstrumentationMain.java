@@ -22,7 +22,7 @@ public class InstrumentationMain {
     // Launcher class.
   }
 
-  public static void main(String[] args) throws Throwable {
+  public static void main(String[] args) {
     try {
       InstrumentationTestRunner
           .fromArgs(args)
