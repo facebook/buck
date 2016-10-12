@@ -43,6 +43,7 @@ import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.timing.Clock;
@@ -58,6 +59,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -340,57 +342,60 @@ public class Build implements Closeable {
     int exitCode;
 
     try {
-      BuildExecutionResult buildExecutionResult = executeBuild(
-          targetsish,
-          isKeepGoing);
+      try {
+        BuildExecutionResult buildExecutionResult = executeBuild(
+            targetsish,
+            isKeepGoing);
 
-      BuildReport buildReport = new BuildReport(buildExecutionResult);
+        BuildReport buildReport = new BuildReport(buildExecutionResult);
 
-      if (isKeepGoing) {
-        String buildReportText = buildReport.generateForConsole(console);
-        // Remove trailing newline from build report.
-        buildReportText = buildReportText.substring(0, buildReportText.length() - 1);
-        eventBus.post(ConsoleEvent.info(buildReportText));
-        exitCode = buildExecutionResult.getFailures().isEmpty() ? 0 : 1;
-        if (exitCode != 0) {
-          eventBus.post(ConsoleEvent.severe("Not all rules succeeded."));
+        if (isKeepGoing) {
+          String buildReportText = buildReport.generateForConsole(console);
+          // Remove trailing newline from build report.
+          buildReportText = buildReportText.substring(0, buildReportText.length() - 1);
+          eventBus.post(ConsoleEvent.info(buildReportText));
+          exitCode = buildExecutionResult.getFailures().isEmpty() ? 0 : 1;
+          if (exitCode != 0) {
+            eventBus.post(ConsoleEvent.severe("Not all rules succeeded."));
 
+          }
+        } else {
+          exitCode = 0;
         }
-      } else {
-        exitCode = 0;
-      }
 
-      if (pathToBuildReport.isPresent()) {
-        // Note that pathToBuildReport is an absolute path that may exist outside of the project
-        // root, so it is not appropriate to use ProjectFilesystem to write the output.
-        String jsonBuildReport = buildReport.generateJsonBuildReport();
-        try {
-          Files.write(jsonBuildReport, pathToBuildReport.get().toFile(), Charsets.UTF_8);
-        } catch (IOException e) {
-          eventBus.post(ThrowableConsoleEvent.create(e, "Failed writing report"));
-          exitCode = 1;
+        if (pathToBuildReport.isPresent()) {
+          // Note that pathToBuildReport is an absolute path that may exist outside of the project
+          // root, so it is not appropriate to use ProjectFilesystem to write the output.
+          String jsonBuildReport = buildReport.generateJsonBuildReport();
+          try {
+            Files.write(jsonBuildReport, pathToBuildReport.get().toFile(), Charsets.UTF_8);
+          } catch (IOException e) {
+            eventBus.post(ThrowableConsoleEvent.create(e, "Failed writing report"));
+            exitCode = 1;
+          }
         }
+      } catch (ExecutionException e) {
+        // This is likely a checked exception that was caught while building a build rule.
+        Throwable cause = e.getCause();
+        Throwables.propagateIfInstanceOf(cause, IOException.class);
+        Throwables.propagateIfInstanceOf(cause, StepFailedException.class);
+        Throwables.propagateIfInstanceOf(cause, InterruptedException.class);
+        Throwables.propagateIfInstanceOf(cause, HumanReadableException.class);
+        if (cause instanceof ExceptionWithHumanReadableMessage) {
+          throw new HumanReadableException((ExceptionWithHumanReadableMessage) cause);
+        }
+
+        LOG.debug(e, "Got an exception during the build.");
+        throw Throwables.propagate(e);
       }
     } catch (IOException e) {
       LOG.debug(e, "Got an exception during the build.");
       eventBus.post(ConsoleEvent.severe(getFailureMessageWithClassName(e)));
       exitCode = 1;
-    } catch (ExecutionException e) {
+    } catch (StepFailedException e) {
       LOG.debug(e, "Got an exception during the build.");
-      // This is likely a checked exception that was caught while building a build rule.
-      Throwable cause = e.getCause();
-      if (cause instanceof HumanReadableException) {
-        throw ((HumanReadableException) cause);
-      } else if (cause instanceof ExceptionWithHumanReadableMessage) {
-        throw new HumanReadableException((ExceptionWithHumanReadableMessage) cause);
-      } else {
-        if (cause instanceof RuntimeException) {
-          eventBus.post(ThrowableConsoleEvent.create(cause, getFailureMessage(cause)));
-        } else {
-          eventBus.post(ConsoleEvent.severe(getFailureMessage(cause)));
-        }
-        exitCode = 1;
-      }
+      eventBus.post(ConsoleEvent.severe(getFailureMessage(e)));
+      exitCode = 1;
     }
 
     return exitCode;
