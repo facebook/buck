@@ -103,7 +103,7 @@ public class BuckConfig {
           "build", ImmutableSet.of("threads", "load_limit"),
           "cache", ImmutableSet.of("dir", "dir_mode", "http_mode", "http_url", "mode"),
           "client", ImmutableSet.of("id"),
-          "project", ImmutableSet.of("ide_prompt")
+          "project", ImmutableSet.of("ide_prompt", "xcode_focus_disable_build_with_buck")
   );
 
   private final CellPathResolver cellPathResolver;
