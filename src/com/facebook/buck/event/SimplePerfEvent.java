@@ -253,6 +253,13 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
   }
 
   /**
+   * Convenience wrapper for {@link SimplePerfEvent#scope(BuckEventBus, PerfEventId, ImmutableMap)}.
+   */
+  public static Scope scope(BuckEventBus bus, String perfEventName) {
+    return scope(bus, PerfEventId.of(perfEventName), ImmutableMap.<String, Object>of());
+  }
+
+  /**
    * Like {@link SimplePerfEvent#scope(BuckEventBus, PerfEventId, ImmutableMap)}, but doesn't post
    * the events if the duration of the scope is below a certain threshold.
    * NOTE: The events are buffered before being posted. The longer they are buffered, the more
