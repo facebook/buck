@@ -527,18 +527,25 @@ public class DaemonIntegrationTest {
   }
 
   @Test
-  public void whenAndroidDirectoryResolverChangesParserInvalidated()
+  public void whenAndroidNdkVersionChangesParserInvalidated()
       throws IOException, InterruptedException {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
 
+    BuckConfig buckConfig1 = FakeBuckConfig.builder()
+        .setSections(ImmutableMap.of(
+            "ndk",
+            ImmutableMap.of("ndk_version", "something")))
+        .build();
+
+    BuckConfig buckConfig2 = FakeBuckConfig.builder()
+        .setSections(ImmutableMap.of(
+            "ndk",
+            ImmutableMap.of("ndk_version", "different")))
+        .build();
+
     Object daemon = Main.getDaemon(
         new TestCellBuilder()
-            .setAndroidDirectoryResolver(
-                new FakeAndroidDirectoryResolver(
-                    Optional.absent(),
-                    Optional.absent(),
-                    Optional.absent(),
-                    Optional.of("something")))
+            .setBuckConfig(buckConfig1)
             .setFilesystem(filesystem)
             .build(),
         ObjectMappers.newDefaultInstance());
@@ -547,12 +554,7 @@ public class DaemonIntegrationTest {
         "Daemon should be replaced when not equal.", daemon,
         Main.getDaemon(
             new TestCellBuilder()
-                .setAndroidDirectoryResolver(
-                    new FakeAndroidDirectoryResolver(
-                        Optional.absent(),
-                        Optional.absent(),
-                        Optional.absent(),
-                        Optional.of("different")))
+                .setBuckConfig(buckConfig2)
                 .setFilesystem(filesystem)
                 .build(),
             ObjectMappers.newDefaultInstance()));
