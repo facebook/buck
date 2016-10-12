@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rage;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.util.CapturingPrintStream;
@@ -24,6 +25,8 @@ import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
+import org.hamcrest.junit.ExpectedException;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.BufferedReader;
@@ -32,6 +35,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class UserInputTest {
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
+
   @Test
   public void testAsk() throws Exception {
     String cannedAnswer = "answer";
@@ -45,6 +52,15 @@ public class UserInputTest {
         outputStream.getContentsAsString(Charsets.UTF_8),
         Matchers.containsString(questionString));
     assertThat(response, Matchers.equalTo(cannedAnswer));
+  }
+
+  @Test
+  public void parseOne() {
+    assertEquals(UserInput.parseOne("3").intValue(), 3);
+    assertEquals(UserInput.parseOne("0").intValue(), 0);
+
+    expectedException.expect(IllegalArgumentException.class);
+    UserInput.parseOne("");
   }
 
   @Test
@@ -73,6 +89,18 @@ public class UserInputTest {
         UserInput.parseRange("0-3"),
         Matchers.contains(0, 1, 2, 3)
     );
+  }
+
+  @Test
+  public void parseOneInteractive() throws Exception {
+    Fixture fixture = new Fixture("1");
+    assertThat(
+        fixture.getUserInput().selectRange(
+            "selectrangequery",
+            ImmutableList.of("a", "b", "c"),
+            Functions.identity()),
+        Matchers.contains("b"));
+
   }
 
   @Test

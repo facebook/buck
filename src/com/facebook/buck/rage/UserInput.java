@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 public class UserInput {
   private static final Pattern RANGE_OR_NUMBER =
       Pattern.compile("((?<rangelo>\\d+)\\s*\\-\\s*(?<rangehi>\\d+))|(?<num>\\d+)");
+  private static final Pattern NUMBER = Pattern.compile("(?<num>\\d+)");
 
   private final PrintStream output;
   private final BufferedReader reader;
@@ -70,6 +71,12 @@ public class UserInput {
     }
   }
 
+  public static Integer parseOne(String input) {
+    Matcher matcher = NUMBER.matcher(input);
+    Preconditions.checkArgument(matcher.matches(), "Malformed entry %s.", input);
+    return Integer.parseInt(input);
+  }
+
   public static ImmutableSet<Integer> parseRange(String input) {
     ImmutableSet.Builder<Integer> result = ImmutableSet.builder();
     String[] elements = input.split("[, ]+");
@@ -97,6 +104,39 @@ public class UserInput {
       }
     }
     return result.build();
+  }
+
+  public <T> T selectOne(
+      String prompt,
+      List<T> entries,
+      Function<T, String> entryFormatter) throws IOException {
+    Preconditions.checkArgument(entries.size() > 0);
+
+    output.println();
+    output.println(prompt);
+    output.println();
+    for (int i = 0; i < entries.size(); i++) {
+      output.printf("[%d]. %s.\n", i, entryFormatter.apply(entries.get(i)));
+    }
+
+    Integer index = 0;
+    try {
+      String response = ask("(input individual number, for example 1 or 2)");
+      if (response.trim().isEmpty()) {
+        index = 0;
+      } else {
+        index = parseOne(response);
+      }
+
+      Preconditions.checkArgument(
+          index >= 0 && index < entries.size(),
+          "Index %s out of bounds.",
+          index);
+      return entries.get(index);
+    } catch (IllegalArgumentException e) {
+      output.printf("Illegal range %s.\n", e.getMessage());
+    }
+    return entries.get(index);
   }
 
   public <T> ImmutableSet<T> selectRange(
