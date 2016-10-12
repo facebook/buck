@@ -33,9 +33,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteSource;
-import okhttp3.MediaType;
-import okhttp3.Request;
-import okhttp3.RequestBody;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,6 +40,9 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import okio.BufferedSink;
 
 /**
@@ -122,18 +122,15 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         }
 
         ArtifactMetadata metadata = fetchResponse.getMetadata();
-        if (!metadata.isSetArtifactPayloadCrc32()) {
-          String msg = "Fetched artifact is missing the CRC32 hash.";
-          LOG.error(msg);
-          return CacheResult.error(name, msg);
-        }
-
-        if (!readResult.getCrc32Hash()
-            .equals(fetchResponse.getMetadata().getArtifactPayloadCrc32())) {
+        if (!metadata.isSetArtifactPayloadMd5()) {
+          String msg = "Fetched artifact is missing the MD5 hash.";
+          LOG.warn(msg);
+        } else if (!readResult.getMd5Hash()
+            .equals(fetchResponse.getMetadata().getArtifactPayloadMd5())) {
           String msg = String.format(
-              "The artifact fetched from cache is corrupted. ExpectedCRC32=[%s] ActualCRC32=[%s]",
-              fetchResponse.getMetadata().getArtifactPayloadCrc32(),
-              readResult.getCrc32Hash());
+              "The artifact fetched from cache is corrupted. ExpectedMD5=[%s] ActualMD5=[%s]",
+              fetchResponse.getMetadata().getArtifactPayloadMd5(),
+              readResult.getMd5Hash());
           LOG.error(msg);
           return CacheResult.error(name, msg);
         }
@@ -196,7 +193,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
               artifactSizeBytes);
         }
 
-        eventBuilder.setArtifactContentHash(storeRequest.getMetadata().artifactPayloadCrc32);
+        eventBuilder.setArtifactContentHash(storeRequest.getMetadata().artifactPayloadMd5);
         eventBuilder.setArtifactSizeBytes(artifactSizeBytes);
         eventBuilder.setWasUploadSuccessful(response.getThriftData().isWasSuccessful());
       }
@@ -229,7 +226,9 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         })));
 
     metadata.setMetadata(info.getMetadata());
-    metadata.setArtifactPayloadCrc32(ThriftArtifactCacheProtocol.computeCrc32(file));
+    // TODO(ruibm): Keep this temporarily for backwards compatibility.
+    metadata.setArtifactPayloadCrc32(ThriftArtifactCacheProtocol.computeCrc32Hash(file));
+    metadata.setArtifactPayloadMd5(ThriftArtifactCacheProtocol.computeMd5Hash(file));
     metadata.setRepository(repository);
     metadata.setScheduleType(scheduleType);
 

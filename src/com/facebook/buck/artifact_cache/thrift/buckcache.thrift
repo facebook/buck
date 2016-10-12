@@ -25,8 +25,9 @@ struct ArtifactMetadata {
   2: optional map<string, string> metadata;
   3: optional string buildTarget;
   4: optional string repository;
-  5: optional string artifactPayloadCrc32;
+  5: optional string artifactPayloadCrc32;  // DEPRECATED: Will be removed soon.
   6: optional string scheduleType;
+  7: optional string artifactPayloadMd5;
 }
 
 struct BuckCacheStoreRequest {

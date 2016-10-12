@@ -48,7 +48,8 @@ public class ThriftArtifactCacheProtocol {
 
   private static final Logger LOG = Logger.get(ThriftArtifactCacheProtocol.class);
 
-  private static final HashFunction HASH_FUNCTION = Hashing.crc32();
+  private static final HashFunction MD5_HASH_FUNCTION = Hashing.md5();
+  private static final HashFunction CRC32_HASH_FUNCTION = Hashing.crc32();
 
   private ThriftArtifactCacheProtocol() {
     // Not instantiable.
@@ -67,10 +68,19 @@ public class ThriftArtifactCacheProtocol {
     return new Response(protocol, responseStream);
   }
 
-  public static String computeCrc32(ByteSource source) throws IOException {
+  public static String computeMd5Hash(ByteSource source) throws IOException {
+    return computeHash(source, MD5_HASH_FUNCTION);
+  }
+
+  public static String computeCrc32Hash(ByteSource source) throws IOException {
+    return computeHash(source, CRC32_HASH_FUNCTION);
+  }
+
+  private static String computeHash(ByteSource source, HashFunction hashFunction)
+      throws IOException {
     try (InputStream inputStream = source.openStream();
          HashingOutputStream outputStream =
-             new HashingOutputStream(HASH_FUNCTION, new OutputStream() {
+             new HashingOutputStream(hashFunction, new OutputStream() {
                @Override
                public void write(int b) throws IOException {
                  // Do nothing.
@@ -174,7 +184,7 @@ public class ThriftArtifactCacheProtocol {
 
       long payloadSizeBytes = thriftData.getPayloads().get(nextPayloadToBeRead).getSizeBytes();
       try (HashingOutputStream wrappedOutputStream =
-               new HashingOutputStream(HASH_FUNCTION, outStream)) {
+               new HashingOutputStream(MD5_HASH_FUNCTION, outStream)) {
         MoreStreams.copyExactly(responseStream, wrappedOutputStream, payloadSizeBytes);
         ++nextPayloadToBeRead;
         return new ReadPayloadInfo(payloadSizeBytes, wrappedOutputStream.hash().toString());
@@ -189,19 +199,19 @@ public class ThriftArtifactCacheProtocol {
 
     public static class ReadPayloadInfo {
       private final long bytesRead;
-      private final String crc32Hash;
+      private final String md5Hash;
 
-      public ReadPayloadInfo(long bytesRead, String crc32Hash) {
+      public ReadPayloadInfo(long bytesRead, String md5Hash) {
         this.bytesRead = bytesRead;
-        this.crc32Hash = crc32Hash;
+        this.md5Hash = md5Hash;
       }
 
       public long getBytesRead() {
         return bytesRead;
       }
 
-      public String getCrc32Hash() {
-        return crc32Hash;
+      public String getMd5Hash() {
+        return md5Hash;
       }
     }
   }
