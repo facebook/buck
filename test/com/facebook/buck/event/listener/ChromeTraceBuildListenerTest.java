@@ -32,8 +32,8 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.ChromeTraceEvent;
 import com.facebook.buck.event.CompilerPluginDurationEvent;
-import com.facebook.buck.event.TraceEvent;
-import com.facebook.buck.event.TraceEventLogger;
+import com.facebook.buck.event.PerfEventId;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingEvent;
 import com.facebook.buck.jvm.java.tracing.JavacPhaseEvent;
@@ -292,12 +292,15 @@ public class ChromeTraceBuildListenerTest {
             Optional.absent(),
             Optional.absent()));
 
-    try (TraceEventLogger ignored = TraceEventLogger.start(
-        eventBus, "planning", ImmutableMap.of("nefarious", "true")
-    )) {
-      eventBus.post(new TraceEvent("scheming", ChromeTraceEvent.Phase.BEGIN));
-      eventBus.post(new TraceEvent("scheming", ChromeTraceEvent.Phase.END,
-          ImmutableMap.of("success", "false")));
+    try (final SimplePerfEvent.Scope scope1 = SimplePerfEvent.scope(
+        eventBus,
+        PerfEventId.of("planning"),
+        ImmutableMap.<String, Object>of("nefarious", "true"))) {
+      try (final SimplePerfEvent.Scope scope2 = SimplePerfEvent.scope(
+          eventBus,
+          PerfEventId.of("scheming"))) {
+        scope2.appendFinishedInfo("success", "false");
+      }
     }
 
     eventBus.post(BuildEvent.finished(buildEventStarted, 0));
