@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
+import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 

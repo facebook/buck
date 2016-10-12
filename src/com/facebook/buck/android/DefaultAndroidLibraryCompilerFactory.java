@@ -16,8 +16,10 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.AndroidLibraryDescription.JvmLanguage;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 
 public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompilerFactory {
@@ -32,7 +34,23 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
   }
 
   @Override
-  public AndroidLibraryCompiler getCompiler(AndroidLibraryDescription.JvmLanguage language) {
+  public AndroidLibraryCompiler getCompiler(AndroidLibraryDescription.Arg args) {
+    if (args.language.isPresent()) {
+      return selectCompilerFromLanguage(args.language.get());
+    }
+    JvmLanguage language = JvmLanguage.JAVA;
+    for (SourcePath sourcePath : args.srcs.get()) {
+      String path = sourcePath.toString();
+      if (path.endsWith(KotlinBuckConfig.EXTENSION)) {
+        language = JvmLanguage.KOTLIN;
+      } else if (path.endsWith(ScalaBuckConfig.EXTENSION)) {
+        language = JvmLanguage.SCALA;
+      }
+    }
+    return selectCompilerFromLanguage(language);
+  }
+
+  private AndroidLibraryCompiler selectCompilerFromLanguage(JvmLanguage language) {
     switch (language) {
       case JAVA: return new JavaAndroidLibraryCompiler();
       case SCALA: return new ScalaAndroidLibraryCompiler(scalaConfig);

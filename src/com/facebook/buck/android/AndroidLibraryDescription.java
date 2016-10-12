@@ -136,8 +136,7 @@ public class AndroidLibraryDescription
 
       BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
-      AndroidLibraryCompiler compiler =
-          compilerFactory.getCompiler(args.language.or(JvmLanguage.JAVA));
+      AndroidLibraryCompiler compiler = compilerFactory.getCompiler(args);
 
       ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps.get());
 
@@ -208,7 +207,7 @@ public class AndroidLibraryDescription
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg) {
-    return compilerFactory.getCompiler(constructorArg.language.or(JvmLanguage.JAVA))
+    return compilerFactory.getCompiler(constructorArg)
         .findDepsForTargetFromConstructorArgs(buildTarget, cellRoots, constructorArg);
   }
 

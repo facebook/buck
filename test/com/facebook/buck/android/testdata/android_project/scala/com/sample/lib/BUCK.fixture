@@ -13,6 +13,19 @@ android_library(
 )
 
 android_library(
+  name = 'lib_no_language_arg',
+  srcs = glob(['*.scala']),
+  deps = [
+    '//res/com/sample/title:title',
+    '//res/com/sample/top:top',
+    '//res/com/sample/asset_only:asset_only',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+android_library(
   name = 'lib_using_transitive_empty_res',
   srcs = glob(['*.scala']),
   language = 'SCALA',
