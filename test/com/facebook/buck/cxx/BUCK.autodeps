@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 2104168cd5a8c53eb055778420bf8e07d1f6d667 #@#
+#@# GENERATED FILE: DO NOT MODIFY 950627f965b9d8dce8024c6e152c252e91aed544 #@#
 {
   "cxx" : {
     "deps" : [
@@ -50,8 +50,7 @@
       "//third-party/java/ini4j:ini4j",
       "//third-party/java/jackson:jackson-core",
       "//third-party/java/jackson:jackson-databind",
-      "//third-party/java/junit:junit",
-      "//third-party/java/nailgun:nailgun"
+      "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]
   },

@@ -1,5 +1,14 @@
-standard_java_library(
+java_library(
+  name = 'fs',
+  srcs = glob(['*.java']),
   tests = [
     '//test/com/facebook/buck/step/fs:fs',
+  ],
+  exported_deps = [
+    "//third-party/java/stringtemplate:stringtemplate",
+  ],
+  autodeps = True,
+  visibility = [
+    'PUBLIC',
   ],
 )

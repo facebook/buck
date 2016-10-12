@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY a89713194670cd7923ff25c8601cb97941314e29 #@#
+#@# GENERATED FILE: DO NOT MODIFY e9fe42ca06d36bc63bc7eaef1fb3be6a58a7eb40 #@#
 {
   "crosscell" : {
     "deps" : [
@@ -24,8 +24,7 @@
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/ini4j:ini4j",
-      "//third-party/java/junit:junit",
-      "//third-party/java/nailgun:nailgun"
+      "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]
   }

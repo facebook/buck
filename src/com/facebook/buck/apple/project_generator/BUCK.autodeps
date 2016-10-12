@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 916ce977fb58d3735ff7b01a50fb50dd17bce688 #@#
+#@# GENERATED FILE: DO NOT MODIFY 375abf5ca3166778405628c0800342327f33cdae #@#
 {
   "project_generator" : {
     "deps" : [
@@ -25,7 +25,6 @@
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
-      "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:types",
       "//src/com/facebook/buck/rules/coercer:coercer",

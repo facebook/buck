@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY ab17ad50ef2d8a5ff24611b4e15e21ba0c8ae69d #@#
+#@# GENERATED FILE: DO NOT MODIFY 4c5bb2154f692b9f6c4eda677f1e286dc05d39af #@#
 {
   "FakeBuckConfig" : {
     "deps" : [
@@ -90,8 +90,7 @@
       "//third-party/java/jackson:jackson-core",
       "//third-party/java/jackson:jackson-databind",
       "//third-party/java/jsr:jsr305",
-      "//third-party/java/junit:junit",
-      "//third-party/java/nailgun:nailgun"
+      "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]
   },

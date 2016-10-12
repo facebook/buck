@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 103772d6873c440d95d4f5f570b2b0af4cc9c06b #@#
+#@# GENERATED FILE: DO NOT MODIFY 6e94ce6b06407034fb4b54482493c6308140c486 #@#
 {
   "rules" : {
     "deps" : [
@@ -10,8 +10,7 @@
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
-      "//third-party/java/jackson:jackson-databind",
-      "//third-party/java/stringtemplate:stringtemplate"
+      "//third-party/java/jackson:jackson-databind"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/model:model",

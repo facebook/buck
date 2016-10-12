@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 82a7f7f762a1a819ccd2d4d0ccd9181cedba961c #@#
+#@# GENERATED FILE: DO NOT MODIFY b6593e454f6f86a4a96803c3e97d49dde6e40c07 #@#
 {
   "fakepackagefinder" : {
     "deps" : [ ],
@@ -19,7 +19,6 @@
   },
   "java" : {
     "deps" : [
-      "//src/com/facebook/buck/android:rules",
       "//src/com/facebook/buck/android:utils",
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
       "//src/com/facebook/buck/cli:cli",

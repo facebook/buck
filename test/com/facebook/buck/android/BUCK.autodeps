@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 0520abdb284648642fcd1f8e8bfc31a5966efcff #@#
+#@# GENERATED FILE: DO NOT MODIFY 1a6ae63bda238b15d5b666625c131d8ada3b4ba8 #@#
 {
   "aar-integration" : {
     "deps" : [
@@ -73,6 +73,7 @@
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/util:constants",
+      "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/sha1:sha1",
@@ -114,7 +115,6 @@
       "//test/com/facebook/buck/step:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
-      "//third-party/java/asm:asm",
       "//third-party/java/easymock:easymock",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
@@ -172,7 +172,6 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",
-      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules/args:args",

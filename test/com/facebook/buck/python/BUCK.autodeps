@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 097239442a6d6e23e5181780483bbf644e30a743 #@#
+#@# GENERATED FILE: DO NOT MODIFY 24eaaf98f574882a3afb357c0c8964225abc1602 #@#
 {
   "builders" : {
     "deps" : [
@@ -62,8 +62,7 @@
       "//test/com/facebook/buck/util:testutil",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
-      "//third-party/java/junit:junit",
-      "//third-party/java/nailgun:nailgun"
+      "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]
   },

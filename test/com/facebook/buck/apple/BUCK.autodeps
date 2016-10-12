@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY c10749f6b79459367db22edda98004572330d14c #@#
+#@# GENERATED FILE: DO NOT MODIFY 5f74f6d89078277875f408fea7c42971746b0670 #@#
 {
   "apple" : {
     "deps" : [
@@ -77,6 +77,7 @@
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/cxx:testutil",
       "//test/com/facebook/buck/testutil:testutil",
+      "//test/com/facebook/buck/util:testutil",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/jsr:jsr305",
       "//third-party/java/junit:junit",
@@ -96,7 +97,6 @@
       "//src/com/facebook/buck/util:io",
       "//test/com/facebook/buck/rules:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
-      "//test/com/facebook/buck/util:testutil",
       "//third-party/java/guava:guava"
     ]
   }

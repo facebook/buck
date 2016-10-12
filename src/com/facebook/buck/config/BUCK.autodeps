@@ -1,14 +1,14 @@
-#@# GENERATED FILE: DO NOT MODIFY 101a0b23e560c43c6e6c9faeebd9ad68b726a86e #@#
+#@# GENERATED FILE: DO NOT MODIFY 73d3096f07396e6c24a5765ea281d409f09fb758 #@#
 {
   "config" : {
     "deps" : [
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/model:macros",
       "//src/com/facebook/buck/util:exceptions",
       "//third-party/java/immutables:processor",
       "//third-party/java/ini4j:ini4j"
     ],
     "exported_deps" : [
-      "//src/com/facebook/buck/model:macros",
       "//src/com/facebook/buck/rules:relative_cell_name",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava"

@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 3908a353ddb52a1b16cdae7fe1293b9f1b1866e1 #@#
+#@# GENERATED FILE: DO NOT MODIFY a2a829ff893cead3bf0d298025afc474aa689371 #@#
 {
   "model" : {
     "deps" : [
@@ -16,7 +16,6 @@
       "//test/com/facebook/buck/testutil/integration:integration",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
-      "//third-party/java/jsr:jsr305",
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]

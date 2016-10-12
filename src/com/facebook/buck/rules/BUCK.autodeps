@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 447c4cdf33ec2a4b284f810fb2a02dc38c938342 #@#
+#@# GENERATED FILE: DO NOT MODIFY 3111e04ceb19ba6c9039e93736f7cc5be15591ef #@#
 {
   "action_graph_cache" : {
     "deps" : [
@@ -30,7 +30,8 @@
     "deps" : [
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/log:api",
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:processor",
+      "//third-party/java/stringtemplate:stringtemplate"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/android:utils",
@@ -58,8 +59,7 @@
       "//third-party/java/jackson:jackson-annotations",
       "//third-party/java/jackson:jackson-core",
       "//third-party/java/jackson:jackson-databind",
-      "//third-party/java/jsr:jsr305",
-      "//third-party/java/stringtemplate:stringtemplate"
+      "//third-party/java/jsr:jsr305"
     ]
   },
   "caching_build_engine_delegates" : {
@@ -127,8 +127,7 @@
       "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/zip:unzip",
-      "//third-party/java/immutables:processor",
-      "//third-party/java/stringtemplate:stringtemplate"
+      "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
@@ -172,6 +171,7 @@
     "deps" : [
       "//src/com/facebook/buck/android:rules",
       "//src/com/facebook/buck/android:steps",
+      "//src/com/facebook/buck/apple:platform",
       "//src/com/facebook/buck/apple:rules",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/d:d",
@@ -215,7 +215,6 @@
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/android:utils",
-      "//src/com/facebook/buck/apple:platform",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/cxx:platform",

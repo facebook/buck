@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY b2a76be9ebc5676f5adec601d9d542a888d5b358 #@#
+#@# GENERATED FILE: DO NOT MODIFY 7beb4e96d03779633cf4beb6b878cfb26fd18a6d #@#
 {
   "listener" : {
     "deps" : [
@@ -14,7 +14,6 @@
       "//src/com/facebook/buck/event/listener:BroadcastEventListener",
       "//src/com/facebook/buck/event/listener:CacheRateStatsKeeper",
       "//src/com/facebook/buck/event/listener:listener",
-      "//src/com/facebook/buck/httpserver:httpserver",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/json:json",
       "//src/com/facebook/buck/jvm/java:support",
@@ -70,7 +69,6 @@
   "testutil" : {
     "deps" : [
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
-      "//src/com/facebook/buck/rules:rule_key",
       "//test/com/facebook/buck/event:testutil"
     ],
     "exported_deps" : [
