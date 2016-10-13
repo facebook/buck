@@ -239,7 +239,7 @@ public class HaskellLibraryDescriptionTest {
     assertThat(
         FluentIterable.from(staticInput.getArgs())
             .transformAndConcat(Arg.getDepsFunction(new SourcePathResolver(resolver)))
-            .transform(HasBuildTarget.TO_TARGET)
+            .transform(HasBuildTarget::getBuildTarget)
             .toList(),
         Matchers.hasItem(
             HaskellDescriptionUtils.getCompileBuildTarget(

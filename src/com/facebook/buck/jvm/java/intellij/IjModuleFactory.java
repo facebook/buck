@@ -347,7 +347,7 @@ public class IjModuleFactory {
 
 
     ImmutableSet<BuildTarget> moduleBuildTargets = FluentIterable.from(targetNodes)
-        .transform(HasBuildTarget.TO_TARGET)
+        .transform(HasBuildTarget::getBuildTarget)
         .toSet();
 
     ModuleBuildContext context = new ModuleBuildContext(moduleBuildTargets);

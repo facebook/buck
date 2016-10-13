@@ -696,7 +696,7 @@ public class AndroidBinaryGraphEnhancer {
                 FluentIterable.from(
                     packageableCollection.getResourceDetails()
                         .getResourcesWithEmptyResButNonEmptyAssetsDir())
-                    .transform(HasBuildTarget.TO_TARGET)
+                    .transform(HasBuildTarget::getBuildTarget)
                     .toList()));
     Optional<BuildRule> manifestRule = resolver.getRule(manifest);
     if (manifestRule.isPresent()) {

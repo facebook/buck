@@ -3782,7 +3782,7 @@ public class ProjectGeneratorTest {
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
     ProjectGenerator projectGenerator = new ProjectGenerator(
         targetGraph,
-        FluentIterable.from(nodes).transform(HasBuildTarget.TO_TARGET).toSet(),
+        FluentIterable.from(nodes).transform(HasBuildTarget::getBuildTarget).toSet(),
         projectCell,
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
@@ -3888,7 +3888,7 @@ public class ProjectGeneratorTest {
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
     ProjectGenerator projectGenerator = new ProjectGenerator(
         targetGraph,
-        FluentIterable.from(nodes).transform(HasBuildTarget.TO_TARGET).toSet(),
+        FluentIterable.from(nodes).transform(HasBuildTarget::getBuildTarget).toSet(),
         projectCell,
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
@@ -3969,7 +3969,7 @@ public class ProjectGeneratorTest {
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
     ProjectGenerator projectGenerator = new ProjectGenerator(
         targetGraph,
-        FluentIterable.from(nodes).transform(HasBuildTarget.TO_TARGET).toSet(),
+        FluentIterable.from(nodes).transform(HasBuildTarget::getBuildTarget).toSet(),
         projectCell,
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
@@ -4635,7 +4635,7 @@ public class ProjectGeneratorTest {
       Function<? super TargetNode<?>, SourcePathResolver> sourcePathResolverForNode) {
     ImmutableSet<BuildTarget> initialBuildTargets = FluentIterable
         .from(nodes)
-        .transform(HasBuildTarget.TO_TARGET)
+        .transform(HasBuildTarget::getBuildTarget)
         .toSet();
 
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes));

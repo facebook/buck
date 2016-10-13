@@ -266,7 +266,7 @@ public class CxxLibraryDescriptionTest {
             cxxSourceRuleFactory.createCompileBuildTarget("test/bar.cpp"),
             cxxSourceRuleFactory.createCompileBuildTarget(genSourceName)),
         FluentIterable.from(archiveRule.getDeps())
-            .transform(HasBuildTarget.TO_TARGET)
+            .transform(HasBuildTarget::getBuildTarget)
             .toSet());
 
     // Verify that the preprocess rule for our user-provided source has correct deps setup
@@ -276,7 +276,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         Iterables.transform(
             DependencyAggregationTestUtil.getDisaggregatedDeps(preprocessRule1),
-            HasBuildTarget.TO_TARGET),
+            HasBuildTarget::getBuildTarget),
         containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
@@ -298,7 +298,7 @@ public class CxxLibraryDescriptionTest {
         ImmutableSet.of(
             preprocessRule1.getBuildTarget()),
         FluentIterable.from(compileRule1.getDeps())
-            .transform(HasBuildTarget.TO_TARGET)
+            .transform(HasBuildTarget::getBuildTarget)
             .toSet());
 
     // Verify that the preprocess rule for our genrule-generated source has correct deps setup
@@ -308,7 +308,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         Iterables.transform(
             DependencyAggregationTestUtil.getDisaggregatedDeps(preprocessRule2),
-            HasBuildTarget.TO_TARGET),
+            HasBuildTarget::getBuildTarget),
         containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,
@@ -331,7 +331,7 @@ public class CxxLibraryDescriptionTest {
         ImmutableSet.of(
             preprocessRule2.getBuildTarget()),
         FluentIterable.from(compileRule2.getDeps())
-            .transform(HasBuildTarget.TO_TARGET)
+            .transform(HasBuildTarget::getBuildTarget)
             .toSet());
   }
 
@@ -551,7 +551,7 @@ public class CxxLibraryDescriptionTest {
             cxxSourceRuleFactoryPDC.createCompileBuildTarget("test/bar.cpp"),
             cxxSourceRuleFactoryPDC.createCompileBuildTarget(genSourceName)),
         FluentIterable.from(staticRule.getDeps())
-            .transform(HasBuildTarget.TO_TARGET)
+            .transform(HasBuildTarget::getBuildTarget)
             .toSet());
 
     // Verify that the compile rule for our user-provided source has correct deps setup
@@ -562,7 +562,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         Iterables.transform(
             DependencyAggregationTestUtil.getDisaggregatedDeps(staticPreprocessRule1),
-            HasBuildTarget.TO_TARGET),
+            HasBuildTarget::getBuildTarget),
         containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
@@ -583,7 +583,7 @@ public class CxxLibraryDescriptionTest {
     assertEquals(
         ImmutableSet.of(staticPreprocessRule1.getBuildTarget()),
         FluentIterable.from(staticCompileRule1.getDeps())
-            .transform(HasBuildTarget.TO_TARGET)
+            .transform(HasBuildTarget::getBuildTarget)
             .toSet());
 
     // Verify that the compile rule for our genrule-generated source has correct deps setup
@@ -594,7 +594,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         Iterables.transform(
             DependencyAggregationTestUtil.getDisaggregatedDeps(staticPreprocessRule2),
-            HasBuildTarget.TO_TARGET),
+            HasBuildTarget::getBuildTarget),
         containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,
@@ -616,7 +616,7 @@ public class CxxLibraryDescriptionTest {
     assertEquals(
         ImmutableSet.of(staticPreprocessRule2.getBuildTarget()),
         FluentIterable.from(staticCompileRule2.getDeps())
-            .transform(HasBuildTarget.TO_TARGET)
+            .transform(HasBuildTarget::getBuildTarget)
             .toSet());
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
@@ -638,7 +638,7 @@ public class CxxLibraryDescriptionTest {
             cxxSourceRuleFactoryPIC.createCompileBuildTarget("test/bar.cpp"),
             cxxSourceRuleFactoryPIC.createCompileBuildTarget(genSourceName)),
         FluentIterable.from(sharedRule.getDeps())
-            .transform(HasBuildTarget.TO_TARGET)
+            .transform(HasBuildTarget::getBuildTarget)
             .toSet());
 
     // Verify that the compile rule for our user-provided source has correct deps setup
@@ -649,7 +649,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         Iterables.transform(
             DependencyAggregationTestUtil.getDisaggregatedDeps(sharedPreprocessRule1),
-            HasBuildTarget.TO_TARGET),
+            HasBuildTarget::getBuildTarget),
         containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
@@ -670,7 +670,7 @@ public class CxxLibraryDescriptionTest {
     assertEquals(
         ImmutableSet.of(sharedPreprocessRule1.getBuildTarget()),
         FluentIterable.from(sharedCompileRule1.getDeps())
-            .transform(HasBuildTarget.TO_TARGET)
+            .transform(HasBuildTarget::getBuildTarget)
             .toSet());
 
     // Verify that the compile rule for our genrule-generated source has correct deps setup
@@ -681,7 +681,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         Iterables.transform(
             DependencyAggregationTestUtil.getDisaggregatedDeps(sharedPreprocessRule2),
-            HasBuildTarget.TO_TARGET),
+            HasBuildTarget::getBuildTarget),
         containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,
@@ -703,7 +703,7 @@ public class CxxLibraryDescriptionTest {
     assertEquals(
         ImmutableSet.of(sharedPreprocessRule2.getBuildTarget()),
         FluentIterable.from(sharedCompileRule2.getDeps())
-            .transform(HasBuildTarget.TO_TARGET)
+            .transform(HasBuildTarget::getBuildTarget)
             .toSet());
   }
 
@@ -1244,7 +1244,7 @@ public class CxxLibraryDescriptionTest {
     CxxLibrary cxxLibrary = (CxxLibrary) cxxLibraryBuilder.build(resolver, filesystem);
     assertThat(
         FluentIterable.from(cxxLibrary.getRuntimeDeps())
-            .transform(HasBuildTarget.TO_TARGET)
+            .transform(HasBuildTarget::getBuildTarget)
             .toSet(),
         hasItem(cxxBinaryBuilder.getTarget()));
   }

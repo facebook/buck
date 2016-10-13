@@ -201,7 +201,7 @@ public class IjProject {
           private Path getRelativePathAndRecordRule(SourcePath sourcePath) {
             requiredBuildTargets.addAll(
                 sourcePathResolver.getRule(sourcePath)
-                    .transform(HasBuildTarget.TO_TARGET)
+                    .transform(HasBuildTarget::getBuildTarget)
                     .asSet());
             return sourcePathResolver.getRelativePath(sourcePath);
           }

@@ -307,7 +307,7 @@ public class LuaBinaryDescriptionTest {
             .build(resolver);
     assertThat(
         FluentIterable.from(luaBinary.getRuntimeDeps())
-            .transform(HasBuildTarget.TO_TARGET)
+            .transform(HasBuildTarget::getBuildTarget)
             .toSet(),
         Matchers.hasItem(PythonBinaryDescription.getEmptyInitTarget(luaBinary.getBuildTarget())));
   }

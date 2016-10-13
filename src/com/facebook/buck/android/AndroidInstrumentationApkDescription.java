@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaLibraryClasspathProvider.getClasspathDeps;
-import static com.facebook.buck.model.HasBuildTarget.TO_TARGET;
 
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
 import com.facebook.buck.android.AndroidBinary.PackageType;
@@ -137,7 +136,9 @@ public class AndroidInstrumentationApkDescription
         /* shouldPreDex */ false,
         primaryDexPath,
         DexSplitMode.NO_SPLIT,
-        FluentIterable.from(rulesToExcludeFromDex).transform(TO_TARGET).toSet(),
+        FluentIterable.from(rulesToExcludeFromDex)
+            .transform(HasBuildTarget::getBuildTarget)
+            .toSet(),
         resourcesToExclude,
         /* skipCrunchPngs */ false,
         args.includesVectorDrawables.or(false),

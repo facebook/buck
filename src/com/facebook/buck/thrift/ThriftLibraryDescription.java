@@ -333,7 +333,7 @@ public class ThriftLibraryDescription
                 target,
                 ImmutableList.of(enhancers),
                 FluentIterable.from(thriftDeps)
-                    .transform(HasBuildTarget.TO_TARGET)),
+                    .transform(HasBuildTarget::getBuildTarget)),
             implicitDeps));
 
     // Form the set of generated sources, so that compiler rules know what output paths to record.

@@ -20,6 +20,7 @@ import com.facebook.buck.android.AndroidPackageableCollection.ResourceDetails;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.jvm.core.HasJavaClassHashes;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
@@ -248,7 +249,7 @@ public class AndroidPackageableCollector {
     collectionBuilder.setBuildConfigs(ImmutableMap.copyOf(buildConfigs));
     final ImmutableSet<HasJavaClassHashes> javaClassProviders = javaClassHashesProviders.build();
     collectionBuilder.addAllJavaLibrariesToDex(
-        FluentIterable.from(javaClassProviders).transform(BuildTarget.TO_TARGET).toSet());
+        FluentIterable.from(javaClassProviders).transform(HasBuildTarget::getBuildTarget).toSet());
     collectionBuilder.setClassNamesToHashesSupplier(Suppliers.memoize(
         () -> {
 

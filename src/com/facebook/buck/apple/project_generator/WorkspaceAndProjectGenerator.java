@@ -259,7 +259,7 @@ public class WorkspaceAndProjectGenerator {
     ImmutableSet<BuildTarget> targetsInRequiredProjects = FluentIterable
         .from(Optional.presentInstances(schemeNameToSrcTargetNode.values()))
         .append(buildForTestNodes.values())
-        .transform(HasBuildTarget.TO_TARGET)
+        .transform(HasBuildTarget::getBuildTarget)
         .toSet();
     ImmutableMultimap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder =
         ImmutableMultimap.builder();

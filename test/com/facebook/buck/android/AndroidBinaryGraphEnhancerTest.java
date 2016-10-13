@@ -235,7 +235,7 @@ public class AndroidBinaryGraphEnhancerTest {
     assertThat(
         "There should be a #dex rule for dep1 and lib, but not dep2 because it is in the no_dx " +
             "list.  And we should depend on uber_r_dot_java",
-        Iterables.transform(dexMergeRule.getDeps(), HasBuildTarget.TO_TARGET),
+        Iterables.transform(dexMergeRule.getDeps(), HasBuildTarget::getBuildTarget),
         Matchers.allOf(
             Matchers.not(Matchers.hasItem(javaDep1BuildTarget)),
             Matchers.hasItem(javaDep1DexBuildTarget),

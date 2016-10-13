@@ -380,7 +380,7 @@ public class TargetsCommand extends AbstractCommand {
           buildRuleTypes);
 
       Iterable<BuildTarget> buildTargets = FluentIterable.from(matchingNodes.values()).transform(
-          HasBuildTarget.TO_TARGET);
+          HasBuildTarget::getBuildTarget);
 
       return TargetGraphAndBuildTargets.builder()
           .setTargetGraph(completeTargetGraphAndBuildTargets.getTargetGraph())
@@ -574,7 +574,7 @@ public class TargetsCommand extends AbstractCommand {
       BuildFileTree buildFileTree = new InMemoryBuildFileTree(
           FluentIterable
               .from(graph.getNodes())
-              .transform(HasBuildTarget.TO_TARGET)
+              .transform(HasBuildTarget::getBuildTarget)
               .toSet());
       directOwners = FluentIterable
           .from(graph.getNodes())

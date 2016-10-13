@@ -210,7 +210,7 @@ abstract class GoDescriptors {
         assemblerFlags,
         platform,
         FluentIterable.from(params.getDeclaredDeps().get())
-            .transform(HasBuildTarget.TO_TARGET));
+            .transform(HasBuildTarget::getBuildTarget));
     resolver.addToIndex(library);
 
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -222,7 +222,8 @@ abstract class GoDescriptors {
             params.getBuildTarget(),
             resolver,
             platform,
-            FluentIterable.from(params.getDeclaredDeps().get()).transform(HasBuildTarget.TO_TARGET),
+            FluentIterable.from(params.getDeclaredDeps().get())
+                .transform(HasBuildTarget::getBuildTarget),
             /* includeSelf */ false));
     resolver.addToIndex(symlinkTree);
 

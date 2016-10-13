@@ -467,7 +467,7 @@ public class LuaBinaryDescription implements
         nativeLinkableRoots.putAll(
             Maps.uniqueIndex(
                 extension.getNativeLinkTargetDeps(cxxPlatform),
-                HasBuildTarget.TO_TARGET));
+                HasBuildTarget::getBuildTarget));
       }
 
       // Add in native executable deps.
@@ -476,7 +476,7 @@ public class LuaBinaryDescription implements
         nativeLinkableRoots.putAll(
             Maps.uniqueIndex(
                 executableStarter.getNativeStarterDeps(),
-                HasBuildTarget.TO_TARGET));
+                HasBuildTarget::getBuildTarget));
       }
 
       // For regular linking, add all extensions via the package components interface and their
@@ -496,7 +496,7 @@ public class LuaBinaryDescription implements
             Maps.uniqueIndex(
                 entry.getValue().getNativeLinkTarget(pythonPlatform)
                     .getNativeLinkTargetDeps(cxxPlatform),
-                HasBuildTarget.TO_TARGET));
+                HasBuildTarget::getBuildTarget));
       }
 
       // Add shared libraries from all native linkables.

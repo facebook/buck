@@ -147,7 +147,7 @@ public class CxxBinaryDescriptionTest {
             cxxSourceRuleFactory.createCompileBuildTarget(genSourceName),
             archiveTarget),
         FluentIterable.from(rule.getDeps())
-            .transform(HasBuildTarget.TO_TARGET)
+            .transform(HasBuildTarget::getBuildTarget)
             .toSet());
 
     // Verify that the preproces rule for our user-provided source has correct deps setup
@@ -157,7 +157,7 @@ public class CxxBinaryDescriptionTest {
     assertThat(
         Iterables.transform(
             DependencyAggregationTestUtil.getDisaggregatedDeps(preprocessRule1),
-            HasBuildTarget.TO_TARGET),
+            HasBuildTarget::getBuildTarget),
         Matchers.containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
@@ -175,7 +175,7 @@ public class CxxBinaryDescriptionTest {
         ImmutableSet.of(
             preprocessRule1.getBuildTarget()),
         FluentIterable.from(compileRule1.getDeps())
-            .transform(HasBuildTarget.TO_TARGET)
+            .transform(HasBuildTarget::getBuildTarget)
             .toSet());
 
     // Verify that the preproces rule for our user-provided source has correct deps setup
@@ -185,7 +185,7 @@ public class CxxBinaryDescriptionTest {
     assertThat(
         Iterables.transform(
             DependencyAggregationTestUtil.getDisaggregatedDeps(preprocessRule2),
-            HasBuildTarget.TO_TARGET),
+            HasBuildTarget::getBuildTarget),
         Matchers.containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,
@@ -204,7 +204,7 @@ public class CxxBinaryDescriptionTest {
         ImmutableSet.of(
             preprocessRule2.getBuildTarget()),
         FluentIterable.from(compileRule2.getDeps())
-            .transform(HasBuildTarget.TO_TARGET)
+            .transform(HasBuildTarget::getBuildTarget)
             .toSet());
   }
 

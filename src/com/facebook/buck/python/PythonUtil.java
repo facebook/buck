@@ -252,7 +252,7 @@ public class PythonUtil {
             Maps.uniqueIndex(
                 entry.getValue().getNativeLinkTarget(pythonPlatform)
                     .getNativeLinkTargetDeps(cxxPlatform),
-                HasBuildTarget.TO_TARGET));
+                HasBuildTarget::getBuildTarget));
       }
 
       // Add all the native libraries.

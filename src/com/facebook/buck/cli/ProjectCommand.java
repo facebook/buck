@@ -932,7 +932,7 @@ public class ProjectCommand extends BuildCommand {
     if (passedInTargetsSet.isEmpty()) {
       targets = FluentIterable
           .from(targetGraphAndTargets.getProjectRoots())
-          .transform(HasBuildTarget.TO_TARGET)
+          .transform(HasBuildTarget::getBuildTarget)
           .toSet();
     } else {
       targets = passedInTargetsSet;
@@ -1141,7 +1141,7 @@ public class ProjectCommand extends BuildCommand {
     return FluentIterable
         .from(projectGraph.getNodes())
         .filter(rootsPredicate)
-        .transform(HasBuildTarget.TO_TARGET)
+        .transform(HasBuildTarget::getBuildTarget)
         .toSet();
   }
 
@@ -1215,7 +1215,7 @@ public class ProjectCommand extends BuildCommand {
             executor,
             Sets.union(
                 FluentIterable.from(projectGraph.getNodes())
-                    .transform(HasBuildTarget.TO_TARGET)
+                    .transform(HasBuildTarget::getBuildTarget)
                     .toSet(),
                 explicitTestTargets));
       }

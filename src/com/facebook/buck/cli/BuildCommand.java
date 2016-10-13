@@ -610,7 +610,8 @@ public class BuildCommand extends AbstractCommand {
       Iterable<BuildRule> actionGraphRules =
           Preconditions.checkNotNull(actionGraphAndResolver.getActionGraph().getNodes());
       ImmutableSet<BuildTarget> actionGraphTargets =
-          ImmutableSet.copyOf(Iterables.transform(actionGraphRules, HasBuildTarget.TO_TARGET));
+          ImmutableSet.copyOf(
+              Iterables.transform(actionGraphRules, HasBuildTarget::getBuildTarget));
       if (!actionGraphTargets.contains(explicitTarget)) {
         throw new ActionGraphCreationException(
             "Targets specified via `--just-build` must be a subset of action graph.");

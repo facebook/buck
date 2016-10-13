@@ -16,14 +16,9 @@
 
 package com.facebook.buck.model;
 
-import com.google.common.base.Function;
-
 import java.util.Comparator;
 
 public interface HasBuildTarget {
-
-  Function<HasBuildTarget, BuildTarget> TO_TARGET =
-      HasBuildTarget::getBuildTarget;
 
   Comparator<HasBuildTarget> BUILD_TARGET_COMPARATOR =
       (a, b) -> {

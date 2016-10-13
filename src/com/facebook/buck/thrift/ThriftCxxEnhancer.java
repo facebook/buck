@@ -289,7 +289,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     langArgs.exportedDeps =
         Optional.of(
             FluentIterable.from(allDeps)
-                .transform(HasBuildTarget.TO_TARGET)
+                .transform(HasBuildTarget::getBuildTarget)
                 .toSortedSet(Ordering.natural()));
 
     return cxxLibraryDescription.createBuildRule(targetGraph, langParams, resolver, langArgs);

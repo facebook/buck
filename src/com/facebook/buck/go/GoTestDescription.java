@@ -315,7 +315,7 @@ public class GoTestDescription implements
               .build(),
           platform,
           FluentIterable.from(params.getDeclaredDeps().get())
-              .transform(HasBuildTarget.TO_TARGET));
+              .transform(HasBuildTarget::getBuildTarget));
     } else {
       testLibrary = GoDescriptors.createGoCompileRule(
           params,
@@ -327,7 +327,7 @@ public class GoTestDescription implements
           args.assemblerFlags.get(),
           platform,
           FluentIterable.from(params.getDeclaredDeps().get())
-              .transform(HasBuildTarget.TO_TARGET));
+              .transform(HasBuildTarget::getBuildTarget));
     }
 
     return testLibrary;

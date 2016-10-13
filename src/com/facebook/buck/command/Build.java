@@ -50,6 +50,7 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -79,6 +80,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 
@@ -251,9 +253,13 @@ public class Build implements Closeable {
         .setShouldReportAbsolutePaths(executionContext.shouldReportAbsolutePaths())
         .build();
 
-    ImmutableSet<BuildTarget> targetsToBuild = FluentIterable.from(targetish)
-        .transform(HasBuildTarget.TO_TARGET)
-        .toSet();
+    // It is important to use this logic to determine the set of rules to build rather than
+    // build.getActionGraph().getNodesWithNoIncomingEdges() because, due to graph enhancement,
+    // there could be disconnected subgraphs in the DependencyGraph that we do not want to build.
+    ImmutableSet<BuildTarget> targetsToBuild =
+        StreamSupport.stream(targetish.spliterator(), false)
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet());
 
     // It is important to use this logic to determine the set of rules to build rather than
     // build.getActionGraph().getNodesWithNoIncomingEdges() because, due to graph enhancement,

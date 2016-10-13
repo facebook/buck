@@ -164,7 +164,7 @@ public class Omnibus {
         ImmutableMap<BuildTarget, NativeLinkable> deps =
             Maps.uniqueIndex(
                 getDeps(nativeLinkable, cxxPlatform),
-                HasBuildTarget.TO_TARGET);
+                HasBuildTarget::getBuildTarget);
         nativeLinkables.putAll(deps);
         if (nativeLinkable.getPreferredLinkage(cxxPlatform) == NativeLinkable.Linkage.SHARED) {
           excluded.add(target);
@@ -181,7 +181,7 @@ public class Omnibus {
         ImmutableMap<BuildTarget, NativeLinkable> deps =
             Maps.uniqueIndex(
                 getDeps(nativeLinkable, cxxPlatform),
-                HasBuildTarget.TO_TARGET);
+                HasBuildTarget::getBuildTarget);
         nativeLinkables.putAll(deps);
         excluded.add(target);
         return deps.keySet();
@@ -198,8 +198,9 @@ public class Omnibus {
         graphBuilder.addNode(target);
         Set<BuildTarget> keep = new LinkedHashSet<>();
         for (BuildTarget dep :
-             FluentIterable.from(getDeps(target, roots, nativeLinkables, cxxPlatform))
-                 .transform(HasBuildTarget.TO_TARGET)) {
+            Iterables.transform(
+                getDeps(target, roots, nativeLinkables, cxxPlatform),
+                HasBuildTarget::getBuildTarget)) {
           if (excluded.contains(dep)) {
             deps.add(dep);
           } else {

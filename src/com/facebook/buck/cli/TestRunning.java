@@ -155,7 +155,7 @@ public class TestRunning {
 
     final ImmutableSet<String> testTargets =
         FluentIterable.from(tests)
-            .transform(HasBuildTarget.TO_TARGET)
+            .transform(HasBuildTarget::getBuildTarget)
             .transform(Functions.toStringFunction())
             .toSet();
 

@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -245,7 +246,7 @@ public class AndroidPackageableCollectorTest {
     // Note that a topological sort for a DAG is not guaranteed to be unique, but we order nodes
     // within the same depth of the search.
     ImmutableList<BuildTarget> result = FluentIterable.from(ImmutableList.of(a, d, b, c))
-        .transform(BuildTarget.TO_TARGET)
+        .transform(HasBuildTarget::getBuildTarget)
         .toList();
 
     assertEquals(

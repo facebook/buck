@@ -138,7 +138,7 @@ public class GoLibraryDescription implements
           args.assemblerFlags.get(),
           platform.get(),
           FluentIterable.from(params.getDeclaredDeps().get())
-              .transform(HasBuildTarget.TO_TARGET)
+              .transform(HasBuildTarget::getBuildTarget)
               .append(args.exportedDeps.or(ImmutableSortedSet.of())));
     }
 

@@ -83,9 +83,9 @@ public class VersionedTargetGraphBuilderTest {
 
   private static void assertEquals(TargetGraph expected, TargetGraph actual) {
     ImmutableMap<BuildTarget, TargetNode<?>> expectedNodes =
-        Maps.uniqueIndex(expected.getNodes(), HasBuildTarget.TO_TARGET);
+        Maps.uniqueIndex(expected.getNodes(), HasBuildTarget::getBuildTarget);
     ImmutableMap<BuildTarget, TargetNode<?>> actualNodes =
-        Maps.uniqueIndex(actual.getNodes(), HasBuildTarget.TO_TARGET);
+        Maps.uniqueIndex(actual.getNodes(), HasBuildTarget::getBuildTarget);
     assertThat(actualNodes.keySet(), Matchers.equalTo(expectedNodes.keySet()));
     for (Map.Entry<BuildTarget, TargetNode<?>> ent : expectedNodes.entrySet()) {
       assertEquals(ent.getValue(), actualNodes.get(ent.getKey()));
