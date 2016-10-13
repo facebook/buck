@@ -575,6 +575,7 @@ public class AndroidBinaryIntegrationTest {
 
     ImmutableCollection<NdkCxxPlatform> platforms = NdkCxxPlatforms.getPlatforms(
         CxxPlatformUtils.DEFAULT_CONFIG,
+        filesystem,
         ndkPath.get(),
         NdkCxxPlatformCompiler.builder()
             .setType(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE)

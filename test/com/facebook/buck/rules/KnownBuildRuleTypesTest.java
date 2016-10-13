@@ -177,7 +177,7 @@ public class KnownBuildRuleTypesTest {
     ProcessExecutor processExecutor = createExecutor(javac.toString(), "fakeVersion 0.1");
     KnownBuildRuleTypes configuredBuildRuleTypes = KnownBuildRuleTypes.createBuilder(
         buckConfig,
-        processExecutor,
+        filesystem, processExecutor,
         new FakeAndroidDirectoryResolver())
         .build();
     DefaultJavaLibrary configuredRule = createJavaLibrary(configuredBuildRuleTypes);
@@ -239,13 +239,14 @@ public class KnownBuildRuleTypesTest {
   @Test
   public void createInstanceShouldReturnDifferentInstancesIfCalledWithDifferentParameters()
       throws Exception {
+    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     KnownBuildRuleTypes knownBuildRuleTypes1 = KnownBuildRuleTypes.createInstance(
         FakeBuckConfig.builder().build(),
+        filesystem,
         createExecutor(),
         new FakeAndroidDirectoryResolver());
 
     final Path javac = temporaryFolder.newExecutableFile();
-    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
         "tools", ImmutableMap.of("javac", javac.toString()));
     BuckConfig buckConfig = FakeBuckConfig
@@ -258,7 +259,7 @@ public class KnownBuildRuleTypesTest {
 
     KnownBuildRuleTypes knownBuildRuleTypes2 = KnownBuildRuleTypes.createInstance(
         buckConfig,
-        processExecutor,
+        filesystem, processExecutor,
         new FakeAndroidDirectoryResolver());
 
     assertNotEquals(knownBuildRuleTypes1, knownBuildRuleTypes2);
@@ -266,6 +267,7 @@ public class KnownBuildRuleTypesTest {
 
   @Test
   public void canSetDefaultPlatformToDefault() throws Exception {
+    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
         "cxx", ImmutableMap.of("default_platform", "default"));
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
@@ -273,12 +275,13 @@ public class KnownBuildRuleTypesTest {
     // This would throw if "default" weren't available as a platform.
     KnownBuildRuleTypes.createBuilder(
         buckConfig,
-        createExecutor(),
+        filesystem, createExecutor(),
         new FakeAndroidDirectoryResolver()).build();
   }
 
   @Test
   public void canOverrideMultipleHostPlatforms() throws Exception {
+    ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     ImmutableMap<String, ImmutableMap<String, String>> sections = ImmutableMap.of(
         "cxx#linux-x86_64", ImmutableMap.of("cache_links", "true"),
         "cxx#macosx-x86_64", ImmutableMap.of("cache_links", "true"),
@@ -289,7 +292,7 @@ public class KnownBuildRuleTypesTest {
     // only one will be practically used in a build.
     KnownBuildRuleTypes.createBuilder(
         buckConfig,
-        createExecutor(),
+        filesystem, createExecutor(),
         new FakeAndroidDirectoryResolver()).build();
   }
 

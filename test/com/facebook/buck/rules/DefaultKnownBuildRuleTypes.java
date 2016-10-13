@@ -91,7 +91,7 @@ public class DefaultKnownBuildRuleTypes {
 
     return KnownBuildRuleTypes.createInstance(
         config,
-        new FakeProcessExecutor(
+        filesystem, new FakeProcessExecutor(
             ImmutableMap.<ProcessExecutorParams, FakeProcess>builder()
                 .put(XCODE_SELECT_PARAMS, XCODE_SELECT_PROCESS)
                 .putAll(getPythonProcessMap(paths))

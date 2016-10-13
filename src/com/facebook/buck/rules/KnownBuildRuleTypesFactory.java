@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.ProcessExecutor;
 
 import java.io.IOException;
@@ -39,9 +40,12 @@ public class KnownBuildRuleTypesFactory {
     this.directoryResolver = directoryResolver;
   }
 
-  public KnownBuildRuleTypes create(BuckConfig config) throws IOException, InterruptedException {
+  public KnownBuildRuleTypes create(
+      BuckConfig config,
+      ProjectFilesystem filesystem) throws IOException, InterruptedException {
     return KnownBuildRuleTypes.createInstance(
         config,
+        filesystem,
         executor,
         directoryResolver);
   }

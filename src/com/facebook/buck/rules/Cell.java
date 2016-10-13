@@ -89,7 +89,7 @@ public class Cell {
     this.pythonInterpreter = pythonConfig.getPythonInterpreter();
 
     this.knownBuildRuleTypesFactory = knownBuildRuleTypesFactory;
-    this.knownBuildRuleTypes = knownBuildRuleTypesFactory.create(config);
+    this.knownBuildRuleTypes = knownBuildRuleTypesFactory.create(config, filesystem);
     this.cellProvider = cellProvider;
     this.watchmanDiagnosticCache = watchmanDiagnosticCache;
   }

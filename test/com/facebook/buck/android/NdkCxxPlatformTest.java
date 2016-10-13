@@ -16,8 +16,8 @@
 
 package com.facebook.buck.android;
 
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatformUtils;
@@ -29,6 +29,7 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.MoreFiles;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
@@ -198,6 +199,7 @@ public class NdkCxxPlatformTest {
   // to the NDK don't cause changes.
   @Test
   public void checkRootAndPlatformDoNotAffectRuleKeys() throws Exception {
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
 
     // Test all major compiler and runtime combinations.
     ImmutableList<Pair<NdkCxxPlatformCompiler.Type, NdkCxxPlatforms.CxxRuntime>> configs =
@@ -225,6 +227,7 @@ public class NdkCxxPlatformTest {
           ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> platforms =
               NdkCxxPlatforms.getPlatforms(
                   CxxPlatformUtils.DEFAULT_CONFIG,
+                  filesystem,
                   root,
                   NdkCxxPlatformCompiler.builder()
                       .setType(config.getFirst())

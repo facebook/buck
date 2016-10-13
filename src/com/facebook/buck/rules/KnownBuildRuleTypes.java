@@ -96,6 +96,7 @@ import com.facebook.buck.haskell.HaskellBuckConfig;
 import com.facebook.buck.haskell.HaskellLibraryDescription;
 import com.facebook.buck.haskell.PrebuiltHaskellLibraryDescription;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.AndroidReactNativeLibraryDescription;
 import com.facebook.buck.js.IosReactNativeLibraryDescription;
 import com.facebook.buck.js.ReactNativeBuckConfig;
@@ -236,10 +237,12 @@ public class KnownBuildRuleTypes {
 
   public static KnownBuildRuleTypes createInstance(
       BuckConfig config,
+      ProjectFilesystem filesystem,
       ProcessExecutor processExecutor,
       AndroidDirectoryResolver androidDirectoryResolver) throws InterruptedException, IOException {
     return createBuilder(
         config,
+        filesystem,
         processExecutor,
         androidDirectoryResolver).build();
   }
@@ -308,6 +311,7 @@ public class KnownBuildRuleTypes {
   @VisibleForTesting
   static Builder createBuilder(
       BuckConfig config,
+      ProjectFilesystem filesystem,
       ProcessExecutor processExecutor,
       AndroidDirectoryResolver androidDirectoryResolver) throws InterruptedException, IOException {
 
@@ -369,6 +373,7 @@ public class KnownBuildRuleTypes {
       ndkCxxPlatformsBuilder.putAll(
           NdkCxxPlatforms.getPlatforms(
               cxxBuckConfig,
+              filesystem,
               ndkRoot.get(),
               compiler,
               androidConfig.getNdkCxxRuntime().or(NdkCxxPlatforms.DEFAULT_CXX_RUNTIME),
