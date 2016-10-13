@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.rules.PathSourcePath;
@@ -38,6 +39,7 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
   @Override
   public AndroidLibraryCompiler getCompiler(AndroidLibraryDescription.Arg args) {
     JvmLanguage language = null;
+
     // We currently expect all non-java languages to only contain files of that extension.
     for (SourcePath sourcePath : args.srcs.get()) {
       if (sourcePath instanceof PathSourcePath) {
@@ -46,13 +48,13 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
           if (language == null) {
             language = JvmLanguage.KOTLIN;
           } else if (language != JvmLanguage.KOTLIN) {
-            throwMismatchedSourceException(KotlinBuckConfig.EXTENSION, extension);
+            throwMismatchedSourceException(language, extension);
           }
-        } else if (extension.contains(KotlinBuckConfig.EXTENSION)) {
+        } else if (extension.contains(ScalaBuckConfig.EXTENSION)) {
           if (language == null) {
             language = JvmLanguage.SCALA;
           } else if (language != JvmLanguage.SCALA) {
-            throwMismatchedSourceException(ScalaBuckConfig.EXTENSION, extension);
+            throwMismatchedSourceException(language, extension);
           }
         }
       }
@@ -74,7 +76,19 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
     }
   }
 
-  private void throwMismatchedSourceException(String previousExtension, String extension) {
+  private void throwMismatchedSourceException(JvmLanguage language, String extension) {
+    String previousExtension = "unknown";
+    switch (language) {
+      case JAVA:
+        previousExtension = JavaBuckConfig.EXTENSION;
+        break;
+      case KOTLIN:
+        previousExtension = KotlinBuckConfig.EXTENSION;
+        break;
+      case SCALA:
+        previousExtension = ScalaBuckConfig.EXTENSION;
+        break;
+    }
     throw new HumanReadableException(
         "Non-java jvm languages can only have sources of one filetype. Found .%s and .%s files",
         previousExtension,

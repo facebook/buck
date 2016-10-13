@@ -23,6 +23,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.HumanReadableException;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -51,6 +52,13 @@ public class AndroidLibraryIntegrationTest {
         workspace.runBuckBuild("//java/com/sample/lib:lib_using_transitive_empty_res");
     result.assertFailure();
     assertTrue(result.getStderr().contains("package R does not exist"));
+  }
+
+  @Test(expected = HumanReadableException.class)
+  public void testAndroidLibraryMixedSources() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    KotlinTestAssumptions.assumeCompilerAvailable();
+    workspace.runBuckBuild("//scala/com/sample/invalid:lib_with_mixed_sources");
   }
 
   @Test

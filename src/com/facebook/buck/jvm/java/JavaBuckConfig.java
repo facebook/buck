@@ -33,6 +33,7 @@ import java.util.Map;
  * A java-specific "view" of BuckConfig.
  */
 public class JavaBuckConfig {
+  public static final String EXTENSION = "java";
   // Default combined source and target level.
   public static final String TARGETED_JAVA_VERSION = "7";
   private final BuckConfig delegate;
