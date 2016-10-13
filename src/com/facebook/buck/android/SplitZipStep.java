@@ -75,38 +75,19 @@ public class SplitZipStep implements Step {
   private static final int ZIP_SIZE_HARD_LIMIT = ZIP_SIZE_SOFT_LIMIT + (2 * 1024 * 1024);
 
   // Transform Function that calls String.trim()
-  private static final Function<String, String> STRING_TRIM = new Function<String, String>() {
-    @Override
-    public String apply(String line) {
-      return line.trim();
-    }
-  };
+  private static final Function<String, String> STRING_TRIM = line -> line.trim();
 
   // Transform Function that appends ".class"
   private static final Function<String, String> APPEND_CLASS_SUFFIX =
-      new Function<String, String>() {
-        @Override
-        public String apply(String input) {
-          return input + ".class";
-        }
-      };
+      input -> input + ".class";
 
   // Predicate that rejects blank lines and lines starting with '#'.
-  private static final Predicate<String> IS_NEITHER_EMPTY_NOR_COMMENT = new Predicate<String>() {
-    @Override
-    public boolean apply(String line) {
-      return !line.isEmpty() && !(line.charAt(0) == '#');
-    }
-  };
+  private static final Predicate<String> IS_NEITHER_EMPTY_NOR_COMMENT =
+      line -> !line.isEmpty() && !(line.charAt(0) == '#');
 
   // Transform Function that calls Type.GetObjectType.
   private static final Function<String, Type> TYPE_GET_OBJECT_TYPE =
-      new Function<String, Type>() {
-        @Override
-        public Type apply(String input) {
-          return Type.getObjectType(input);
-        }
-      };
+      input -> Type.getObjectType(input);
 
   @VisibleForTesting
   static final Pattern CANARY_CLASS_FILE_PATTERN = Pattern.compile("^([\\w/$]+)\\.Canary\\.class");
@@ -293,19 +274,16 @@ public class SplitZipStep implements Step {
     final ClassNameFilter primaryDexFilter =
         ClassNameFilter.fromConfiguration(dexSplitMode.getPrimaryDexPatterns());
 
-    return new Predicate<String>() {
-      @Override
-      public boolean apply(String classFileName) {
-        // Drop the ".class" suffix and deobfuscate the class name before we apply our checks.
-        String internalClassName = Preconditions.checkNotNull(
-            deobfuscate.apply(classFileName.replaceAll("\\.class$", "")));
+    return classFileName -> {
+      // Drop the ".class" suffix and deobfuscate the class name before we apply our checks.
+      String internalClassName = Preconditions.checkNotNull(
+          deobfuscate.apply(classFileName.replaceAll("\\.class$", "")));
 
-        if (primaryDexClassNames.contains(internalClassName)) {
-          return true;
-        }
-
-        return primaryDexFilter.matches(internalClassName);
+      if (primaryDexClassNames.contains(internalClassName)) {
+        return true;
       }
+
+      return primaryDexFilter.matches(internalClassName);
     };
   }
 
@@ -516,35 +494,32 @@ public class SplitZipStep implements Step {
   public Supplier<Multimap<Path, Path>> getOutputToInputsMapSupplier(
       final Path secondaryOutputDir,
       final Path additionalOutputDir) {
-    return new Supplier<Multimap<Path, Path>>() {
-      @Override
-      public Multimap<Path, Path> get() {
-        Preconditions.checkState(outputFiles != null,
-            "SplitZipStep must complete successfully before listing its outputs.");
+    return () -> {
+      Preconditions.checkState(outputFiles != null,
+          "SplitZipStep must complete successfully before listing its outputs.");
 
-        ImmutableMultimap.Builder<Path, Path> builder = ImmutableMultimap.builder();
-        for (APKModule dexStore : outputFiles.keySet()) {
-          Path storeRoot;
-          if (dexStore.getName().equals(SECONDARY_DEX_ID)) {
-            storeRoot = secondaryOutputDir;
-          } else {
-            storeRoot = additionalOutputDir.resolve(dexStore.getName());
-          }
-          ImmutableList<Path> outputList = outputFiles.get(dexStore).asList();
-          for (int i = 0; i < outputList.size(); i++) {
-            String dexName;
-            if (dexStore.getName().equals(SECONDARY_DEX_ID)) {
-              dexName = dexSplitMode.getDexStore().fileNameForSecondary(i);
-            } else {
-              dexName = dexSplitMode.getDexStore().fileNameForSecondary(dexStore.getName(), i);
-            }
-            Path outputDexPath =
-                storeRoot.resolve(dexName);
-            builder.put(outputDexPath, outputList.get(i));
-          }
+      ImmutableMultimap.Builder<Path, Path> builder = ImmutableMultimap.builder();
+      for (APKModule dexStore : outputFiles.keySet()) {
+        Path storeRoot;
+        if (dexStore.getName().equals(SECONDARY_DEX_ID)) {
+          storeRoot = secondaryOutputDir;
+        } else {
+          storeRoot = additionalOutputDir.resolve(dexStore.getName());
         }
-        return builder.build();
+        ImmutableList<Path> outputList = outputFiles.get(dexStore).asList();
+        for (int i = 0; i < outputList.size(); i++) {
+          String dexName;
+          if (dexStore.getName().equals(SECONDARY_DEX_ID)) {
+            dexName = dexSplitMode.getDexStore().fileNameForSecondary(i);
+          } else {
+            dexName = dexSplitMode.getDexStore().fileNameForSecondary(dexStore.getName(), i);
+          }
+          Path outputDexPath =
+              storeRoot.resolve(dexName);
+          builder.put(outputDexPath, outputList.get(i));
+        }
       }
+      return builder.build();
     };
   }
 }

@@ -39,7 +39,6 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -61,7 +60,6 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
@@ -291,12 +289,7 @@ public class AppleTest
             Joiner.on(',').join(
                 Iterables.transform(
                     destinationSpecifier.get().entrySet(),
-                    new Function<Map.Entry<String, String>, String>() {
-                      @Override
-                      public String apply(Map.Entry<String, String> input) {
-                        return input.getKey() + "=" + input.getValue();
-                      }
-                    })));
+                    input -> input.getKey() + "=" + input.getValue())));
       } else {
         destinationSpecifierArg = defaultDestinationSpecifier;
       }
@@ -367,53 +360,50 @@ public class AppleTest
       final ExecutionContext executionContext,
       boolean isUsingTestSelectors,
       boolean isDryRun) {
-    return new Callable<TestResults>() {
-      @Override
-      public TestResults call() throws Exception {
-        List<TestCaseSummary> testCaseSummaries;
-        if (xctoolStdoutReader.isPresent()) {
-          // We've already run the tests with 'xctool' and parsed
-          // their output; no need to parse the same output again.
-          testCaseSummaries = xctoolStdoutReader.get().getTestCaseSummaries();
-        } else if (xctestOutputReader.isPresent()) {
-          // We've already run the tests with 'xctest' and parsed
-          // their output; no need to parse the same output again.
-          testCaseSummaries = xctestOutputReader.get().getTestCaseSummaries();
-        } else if (isUiTest()) {
-          TestCaseSummary noTestsSummary =
-                new TestCaseSummary("XCUITest runs not supported with buck test",
-                                    Collections.emptyList());
-          testCaseSummaries = Collections.singletonList(noTestsSummary);
-        } else {
-          Path resolvedOutputPath = getProjectFilesystem().resolve(testOutputPath);
-          try (BufferedReader reader =
-              Files.newBufferedReader(resolvedOutputPath, StandardCharsets.UTF_8)) {
-            if (useXctest) {
-              TestCaseSummariesBuildingXctestEventHandler xctestEventHandler =
-                  new TestCaseSummariesBuildingXctestEventHandler(NOOP_REPORTING_CALLBACK);
-              XctestOutputParsing.streamOutput(reader, xctestEventHandler);
-              testCaseSummaries = xctestEventHandler.getTestCaseSummaries();
-            } else {
-              TestCaseSummariesBuildingXctoolEventHandler xctoolEventHandler =
-                  new TestCaseSummariesBuildingXctoolEventHandler(NOOP_REPORTING_CALLBACK);
-              XctoolOutputParsing.streamOutputFromReader(reader, xctoolEventHandler);
-              testCaseSummaries = xctoolEventHandler.getTestCaseSummaries();
-            }
+    return () -> {
+      List<TestCaseSummary> testCaseSummaries;
+      if (xctoolStdoutReader.isPresent()) {
+        // We've already run the tests with 'xctool' and parsed
+        // their output; no need to parse the same output again.
+        testCaseSummaries = xctoolStdoutReader.get().getTestCaseSummaries();
+      } else if (xctestOutputReader.isPresent()) {
+        // We've already run the tests with 'xctest' and parsed
+        // their output; no need to parse the same output again.
+        testCaseSummaries = xctestOutputReader.get().getTestCaseSummaries();
+      } else if (isUiTest()) {
+        TestCaseSummary noTestsSummary =
+              new TestCaseSummary("XCUITest runs not supported with buck test",
+                                  Collections.emptyList());
+        testCaseSummaries = Collections.singletonList(noTestsSummary);
+      } else {
+        Path resolvedOutputPath = getProjectFilesystem().resolve(testOutputPath);
+        try (BufferedReader reader =
+            Files.newBufferedReader(resolvedOutputPath, StandardCharsets.UTF_8)) {
+          if (useXctest) {
+            TestCaseSummariesBuildingXctestEventHandler xctestEventHandler =
+                new TestCaseSummariesBuildingXctestEventHandler(NOOP_REPORTING_CALLBACK);
+            XctestOutputParsing.streamOutput(reader, xctestEventHandler);
+            testCaseSummaries = xctestEventHandler.getTestCaseSummaries();
+          } else {
+            TestCaseSummariesBuildingXctoolEventHandler xctoolEventHandler =
+                new TestCaseSummariesBuildingXctoolEventHandler(NOOP_REPORTING_CALLBACK);
+            XctoolOutputParsing.streamOutputFromReader(reader, xctoolEventHandler);
+            testCaseSummaries = xctoolEventHandler.getTestCaseSummaries();
           }
         }
-        TestResults.Builder testResultsBuilder = TestResults.builder()
-            .setBuildTarget(getBuildTarget())
-            .setTestCases(testCaseSummaries)
-            .setContacts(contacts)
-            .setLabels(FluentIterable.from(labels).transform(Object::toString).toSet());
-        if (getProjectFilesystem().isDirectory(testLogsPath)) {
-          for (Path testLogPath : getProjectFilesystem().getDirectoryContents(testLogsPath)) {
-            testResultsBuilder.addTestLogPaths(testLogPath);
-          }
-        }
-
-        return testResultsBuilder.build();
       }
+      TestResults.Builder testResultsBuilder = TestResults.builder()
+          .setBuildTarget(getBuildTarget())
+          .setTestCases(testCaseSummaries)
+          .setContacts(contacts)
+          .setLabels(FluentIterable.from(labels).transform(Object::toString).toSet());
+      if (getProjectFilesystem().isDirectory(testLogsPath)) {
+        for (Path testLogPath : getProjectFilesystem().getDirectoryContents(testLogsPath)) {
+          testResultsBuilder.addTestLogPaths(testLogPath);
+        }
+      }
+
+      return testResultsBuilder.build();
     };
   }
 

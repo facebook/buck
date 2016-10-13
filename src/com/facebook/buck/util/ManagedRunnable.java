@@ -40,16 +40,12 @@ public abstract class ManagedRunnable implements AutoCloseable {
   public ManagedRunnable(ExecutorService threadPool) {
     this.threadPool = threadPool;
     this.runnable =
-        new Runnable() {
-          @Override
-          @SuppressWarnings("PMD.EmptyCatchBlock")
-          public void run() {
-            try {
-              ManagedRunnable.this.run();
-            } catch (InterruptedIOException | InterruptedException e) {
-            } catch (Exception e) {
-              exception = e;
-            }
+        () -> {
+          try {
+            ManagedRunnable.this.run();
+          } catch (InterruptedIOException | InterruptedException e) { // NOPMD empty catch block
+          } catch (Exception e) {
+            exception = e;
           }
         };
   }

@@ -45,19 +45,11 @@ public class CxxLink
     extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, ProvidesLinkedBinaryDeps, OverrideScheduleRule {
 
-  private static final Predicate<BuildRule> ARCHIVE_RULES_PREDICATE = new Predicate<BuildRule>() {
-    @Override
-    public boolean apply(BuildRule input) {
-      return input instanceof Archive;
-    }
-  };
+  private static final Predicate<BuildRule> ARCHIVE_RULES_PREDICATE =
+      input -> input instanceof Archive;
 
-  private static final Predicate<BuildRule> COMPILE_RULES_PREDICATE = new Predicate<BuildRule>() {
-    @Override
-    public boolean apply(BuildRule input) {
-      return input instanceof CxxPreprocessAndCompile;
-    }
-  };
+  private static final Predicate<BuildRule> COMPILE_RULES_PREDICATE =
+      input -> input instanceof CxxPreprocessAndCompile;
 
   @AddToRuleKey
   private final Linker linker;

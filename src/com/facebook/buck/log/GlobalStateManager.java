@@ -116,12 +116,7 @@ public class GlobalStateManager {
         final ConsoleHandlerState.Writer previousWriter =
             commandIdToConsoleHandlerWriter.get(commandId);
         commandIdToConsoleHandlerWriter.put(commandId, writer);
-        return new Closeable() {
-          @Override
-          public void close() throws IOException {
-            commandIdToConsoleHandlerWriter.put(commandId, previousWriter);
-          }
-        };
+        return () -> commandIdToConsoleHandlerWriter.put(commandId, previousWriter);
       }
 
       @Override

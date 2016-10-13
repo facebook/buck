@@ -57,51 +57,38 @@ public class InferBuckConfig implements RuleKeyAppendable {
   public InferBuckConfig(final BuckConfig delegate) {
     this.delegate = delegate;
     this.clangCompiler = Suppliers.memoize(
-        new Supplier<Tool>() {
-          @Override
-          public Tool get() {
-            return HashedFileTool.FROM_PATH.apply(
-                Preconditions.checkNotNull(
-                    getPathFromConfig(delegate, "clang_compiler").orNull(),
-                    "clang_compiler path not found on the current configuration"));
-          }
-        }
+        () -> HashedFileTool.FROM_PATH.apply(
+            Preconditions.checkNotNull(
+                getPathFromConfig(delegate, "clang_compiler").orNull(),
+                "clang_compiler path not found on the current configuration"))
     );
 
     this.clangPlugin = Suppliers.memoize(
-        new Supplier<Tool>() {
-          @Override
-          public Tool get() {
-            return HashedFileTool.FROM_PATH.apply(
-                Preconditions.checkNotNull(
-                    getPathFromConfig(delegate, "clang_plugin").orNull(),
-                    "clang_plugin path not found on the current configuration"));
-          }
-        }
+        () -> HashedFileTool.FROM_PATH.apply(
+            Preconditions.checkNotNull(
+                getPathFromConfig(delegate, "clang_plugin").orNull(),
+                "clang_plugin path not found on the current configuration"))
     );
 
     this.inferVersion = Suppliers.memoize(
-        new Supplier<VersionedTool>() {
-          @Override
-          public VersionedTool get() {
-            Path topLevel = InferBuckConfig.this.getInferTopLevel();
-            ProcessExecutorParams params = ProcessExecutorParams.builder()
-                .setCommand(ImmutableList.of(topLevel.toString(), "--version"))
-                .build();
-            ProcessExecutor.Result result;
-            try  {
-              result = new ProcessExecutor(Console.createNullConsole()).launchAndExecute(params);
-              if (result.getExitCode() != 0) {
-                throw new RuntimeException(result.getMessageForUnexpectedResult("infer version"));
-              }
-            } catch (InterruptedException | IOException e) {
-              throw new RuntimeException(e);
+        () -> {
+          Path topLevel = InferBuckConfig.this.getInferTopLevel();
+          ProcessExecutorParams params = ProcessExecutorParams.builder()
+              .setCommand(ImmutableList.of(topLevel.toString(), "--version"))
+              .build();
+          ProcessExecutor.Result result;
+          try  {
+            result = new ProcessExecutor(Console.createNullConsole()).launchAndExecute(params);
+            if (result.getExitCode() != 0) {
+              throw new RuntimeException(result.getMessageForUnexpectedResult("infer version"));
             }
-            Optional<String> stderr = result.getStderr();
-            String versionOutput = stderr.or("").trim();
-            Preconditions.checkState(!Strings.isNullOrEmpty(versionOutput));
-            return VersionedTool.of(topLevel, "infer", versionOutput);
+          } catch (InterruptedException | IOException e) {
+            throw new RuntimeException(e);
           }
+          Optional<String> stderr = result.getStderr();
+          String versionOutput = stderr.or("").trim();
+          Preconditions.checkState(!Strings.isNullOrEmpty(versionOutput));
+          return VersionedTool.of(topLevel, "infer", versionOutput);
         });
   }
 

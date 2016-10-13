@@ -33,22 +33,12 @@ public class FileFinder {
   /**
    * Filter that checks that a file exists.
    */
-  public static final Function<Path, Boolean> EXISTS = new Function<Path, Boolean>() {
-    @Override
-    public Boolean apply(Path path) {
-      return Files.exists(path);
-    }
-  };
+  public static final Function<Path, Boolean> EXISTS = path -> Files.exists(path);
 
   /**
    * Filter that tests if a file is a regular file.
    */
-  public static final Function<Path, Boolean> IS_REGULAR_FILE = new Function<Path, Boolean>() {
-    @Override
-    public Boolean apply(Path path) {
-      return Files.isRegularFile(path);
-    }
-  };
+  public static final Function<Path, Boolean> IS_REGULAR_FILE = path -> Files.isRegularFile(path);
 
   /**
    * Combines prefixes, base, and suffixes to create a set of file names.

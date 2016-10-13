@@ -40,7 +40,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -78,29 +77,21 @@ public class RobolectricTest extends JavaTest {
       "buck.robolectric_manifest";
 
   private final Function<HasAndroidResourceDeps, Path> resourceDirectoryFunction =
-      new Function<HasAndroidResourceDeps, Path>() {
-    @Override
-    public Path apply(HasAndroidResourceDeps input) {
-      return Optional.fromNullable(input.getRes())
+      input -> Optional.fromNullable(input.getRes())
           .transform(getResolver().deprecatedPathFunction())
           .get();
-    }
-  };
   private final Function<DummyRDotJava, ImmutableSet<BuildRule>> resourceRulesFunction =
-      new Function<DummyRDotJava, ImmutableSet<BuildRule>>() {
-        @Override
-        public ImmutableSet<BuildRule> apply(DummyRDotJava input) {
-          ImmutableSet.Builder<BuildRule> resourceDeps = ImmutableSet.builder();
-          for (HasAndroidResourceDeps hasAndroidResourceDeps :
-              input.getAndroidResourceDeps()) {
-            SourcePath resSourcePath = hasAndroidResourceDeps.getRes();
-            if (resSourcePath == null) {
-              continue;
-            }
-            Optionals.addIfPresent(getResolver().getRule(resSourcePath), resourceDeps);
+      input -> {
+        ImmutableSet.Builder<BuildRule> resourceDeps = ImmutableSet.builder();
+        for (HasAndroidResourceDeps hasAndroidResourceDeps :
+            input.getAndroidResourceDeps()) {
+          SourcePath resSourcePath = hasAndroidResourceDeps.getRes();
+          if (resSourcePath == null) {
+            continue;
           }
-          return resourceDeps.build();
+          Optionals.addIfPresent(getResolver().getRule(resSourcePath), resourceDeps);
         }
+        return resourceDeps.build();
       };
 
   protected RobolectricTest(
@@ -180,22 +171,19 @@ public class RobolectricTest extends JavaTest {
     ImmutableList<String> resourceDirs = FluentIterable.from(resourceDeps)
         .transform(resourceDirectoryFunction)
         .filter(
-            new Predicate<Path>() {
-              @Override
-              public boolean apply(Path input) {
-                try {
-                  if (!getProjectFilesystem().isDirectory(input)) {
-                    throw new RuntimeException(
-                        String.format(
-                            "Path %s is needed to run robolectric test %s, but was not found.",
-                            input,
-                            getBuildTarget()));
-                  }
-                  return !getProjectFilesystem().getDirectoryContents(input).isEmpty();
-                } catch (IOException e) {
-                  LOG.warn(e, "Error filtering path for Robolectric resources.");
-                  return true;
+            input -> {
+              try {
+                if (!getProjectFilesystem().isDirectory(input)) {
+                  throw new RuntimeException(
+                      String.format(
+                          "Path %s is needed to run robolectric test %s, but was not found.",
+                          input,
+                          getBuildTarget()));
                 }
+                return !getProjectFilesystem().getDirectoryContents(input).isEmpty();
+              } catch (IOException e) {
+                LOG.warn(e, "Error filtering path for Robolectric resources.");
+                return true;
               }
             })
         .transform(Object::toString)

@@ -40,7 +40,6 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -57,7 +56,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -129,15 +127,10 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
             getPathToTestWorkingDirectory(),
             ImmutableMap.copyOf(
                 FluentIterable.from(resources)
-                .transform(new Function<SourcePath, Map.Entry<Path, Path>>() {
-                  @Override
-                  public Map.Entry<Path, Path> apply(SourcePath input) {
-                    return Maps.immutableEntry(
-                        getProjectFilesystem().getRootPath().getFileSystem().getPath(
-                            getResolver().getSourcePathName(getBuildTarget(), input)),
-                        getResolver().getAbsolutePath(input));
-                  }
-                }))),
+                .transform(input -> Maps.immutableEntry(
+                    getProjectFilesystem().getRootPath().getFileSystem().getPath(
+                        getResolver().getSourcePathName(getBuildTarget(), input)),
+                    getResolver().getAbsolutePath(input))))),
         new GoTestStep(
             getProjectFilesystem(),
             getPathToTestWorkingDirectory(),
@@ -220,21 +213,18 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
       ExecutionContext executionContext,
       boolean isUsingTestSelectors,
       final boolean isDryRun) {
-    return new Callable<TestResults>() {
-      @Override
-      public TestResults call() throws Exception {
-        ImmutableList<TestCaseSummary> summaries = ImmutableList.of();
-        if (!isDryRun) {
-          summaries = ImmutableList.of(new TestCaseSummary(
-              getBuildTarget().getFullyQualifiedName(),
-              parseTestResults()));
-        }
-        return TestResults.of(
-            getBuildTarget(),
-            summaries,
-            contacts,
-            FluentIterable.from(labels).transform(Object::toString).toSet());
+    return () -> {
+      ImmutableList<TestCaseSummary> summaries = ImmutableList.of();
+      if (!isDryRun) {
+        summaries = ImmutableList.of(new TestCaseSummary(
+            getBuildTarget().getFullyQualifiedName(),
+            parseTestResults()));
       }
+      return TestResults.of(
+          getBuildTarget(),
+          summaries,
+          contacts,
+          FluentIterable.from(labels).transform(Object::toString).toSet());
     };
   }
 

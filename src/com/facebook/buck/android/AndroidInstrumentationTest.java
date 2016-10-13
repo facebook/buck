@@ -230,31 +230,28 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
       final ExecutionContext context,
       final boolean isUsingTestSelectors,
       final boolean isDryRun) {
-    return new Callable<TestResults>() {
-      @Override
-      public TestResults call() throws Exception {
-        final ImmutableList.Builder<TestCaseSummary> summaries = ImmutableList.builder();
-        IDevice device;
-        AdbHelper adbHelper = AdbHelper.get(context, true);
-        try {
-          device = adbHelper.getSingleDevice();
-        } catch (InterruptedException e) {
-          device = null;
-        }
-        if (device == null) {
-          summaries.add(getTestClassAssumedSummary());
-        } else {
-          Path testResultPath = getProjectFilesystem().resolve(
-              getPathToTestOutputDirectory().resolve(TEST_RESULT_FILE));
-          summaries.addAll(
-              XmlTestResultParser.parseAndroid(testResultPath, device.getSerialNumber()));
-        }
-        return TestResults.of(
-            getBuildTarget(),
-            summaries.build(),
-            contacts,
-            FluentIterable.from(labels).transform(Object::toString).toSet());
+    return () -> {
+      final ImmutableList.Builder<TestCaseSummary> summaries = ImmutableList.builder();
+      IDevice device;
+      AdbHelper adbHelper = AdbHelper.get(context, true);
+      try {
+        device = adbHelper.getSingleDevice();
+      } catch (InterruptedException e) {
+        device = null;
       }
+      if (device == null) {
+        summaries.add(getTestClassAssumedSummary());
+      } else {
+        Path testResultPath = getProjectFilesystem().resolve(
+            getPathToTestOutputDirectory().resolve(TEST_RESULT_FILE));
+        summaries.addAll(
+            XmlTestResultParser.parseAndroid(testResultPath, device.getSerialNumber()));
+      }
+      return TestResults.of(
+          getBuildTarget(),
+          summaries.build(),
+          contacts,
+          FluentIterable.from(labels).transform(Object::toString).toSet());
     };
   }
 

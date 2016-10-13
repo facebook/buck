@@ -37,11 +37,8 @@ import javax.annotation.Nullable;
 public class DefaultRuleKeyLogger implements RuleKeyLogger {
 
   private static final Logger logger = Logger.get(RuleKeyBuilder.class);
-  private static final Scope NO_OP_SCOPE = new Scope() {
-    @Override
-    public void close() {
-      // Intentional no-op (duh!).
-    }
+  private static final Scope NO_OP_SCOPE = () -> {
+    // Intentional no-op (duh!).
   };
 
   private List<String> logElms;
@@ -66,15 +63,12 @@ public class DefaultRuleKeyLogger implements RuleKeyLogger {
     currentKey = key;
     currentKeyHasValue = false;
 
-    return new Scope() {
-      @Override
-      public void close() {
-        if (currentKeyHasValue) {
-          appendLogElement(String.format("key(%s):", currentKey));
-        }
-        currentKey = previousKey;
-        currentKeyHasValue = currentKeyHadValue;
+    return () -> {
+      if (currentKeyHasValue) {
+        appendLogElement(String.format("key(%s):", currentKey));
       }
+      currentKey = previousKey;
+      currentKeyHasValue = currentKeyHadValue;
     };
   }
 

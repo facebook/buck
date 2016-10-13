@@ -44,26 +44,11 @@ public class IJProjectCleaner {
   private static final int EXECUTOR_SHUTDOWN_TIMEOUT = 1;
   private static final TimeUnit EXECUTOR_SHUTDOWN_TIME_UNIT = TimeUnit.MINUTES;
 
-  private static final FilenameFilter IML_FILENAME_FILTER = new FilenameFilter() {
-    @Override
-    public boolean accept(File dir, String name) {
-      return name.endsWith(".iml");
-    }
-  };
+  private static final FilenameFilter IML_FILENAME_FILTER = (dir, name) -> name.endsWith(".iml");
 
-  private static final FilenameFilter XML_FILENAME_FILTER = new FilenameFilter() {
-    @Override
-    public boolean accept(File dir, String name) {
-      return name.endsWith(".xml");
-    }
-  };
+  private static final FilenameFilter XML_FILENAME_FILTER = (dir, name) -> name.endsWith(".xml");
 
-  private static final FileFilter SUBDIRECTORY_FILTER = new FileFilter() {
-    @Override
-    public boolean accept(File pathname) {
-      return pathname.isDirectory();
-    }
-  };
+  private static final FileFilter SUBDIRECTORY_FILTER = pathname -> pathname.isDirectory();
 
   private final ProjectFilesystem projectFilesystem;
 

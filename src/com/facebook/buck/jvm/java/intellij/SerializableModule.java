@@ -41,22 +41,10 @@ import javax.annotation.Nullable;
 @VisibleForTesting
 final class SerializableModule {
   @VisibleForTesting
-  static final Comparator<SourceFolder> ALPHABETIZER = new Comparator<SourceFolder>() {
-
-    @Override
-    public int compare(SourceFolder a, SourceFolder b) {
-      return a.getUrl().compareTo(b.getUrl());
-    }
-
-  };
+  static final Comparator<SourceFolder> ALPHABETIZER = (a, b) -> a.getUrl().compareTo(b.getUrl());
 
   static final Comparator<SerializableModule> BUILDTARGET_NAME_COMARATOR =
-      new Comparator<SerializableModule>() {
-        @Override
-        public int compare(SerializableModule a, SerializableModule b) {
-          return a.target.getFullyQualifiedName().compareTo(b.target.getFullyQualifiedName());
-        }
-      };
+      (a, b) -> a.target.getFullyQualifiedName().compareTo(b.target.getFullyQualifiedName());
 
   /**
    * Let intellij generate the gen directory to specific path.

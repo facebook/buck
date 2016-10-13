@@ -64,26 +64,20 @@ public class ProjectBuildFileParserPoolTest {
     try (ProjectBuildFileParserPool parserPool =
         new ProjectBuildFileParserPool(
             maxParsers,
-            new Function<Cell, ProjectBuildFileParser>() {
-              @Override
-              public ProjectBuildFileParser apply(Cell input) {
-                createCount.incrementAndGet();
-                return createMockParser(
-                    new IAnswer<ImmutableList<Map<String, Object>>>() {
-                      @Override
-                      public ImmutableList<Map<String, Object>> answer() throws Throwable {
-                        createParserLatch.countDown();
-                        boolean didntTimeout = false;
-                        try {
-                          didntTimeout = createParserLatch.await(1, TimeUnit.SECONDS);
-                        } catch (InterruptedException e) {
-                          Throwables.propagate(e);
-                        }
-                        assertThat(didntTimeout, Matchers.equalTo(true));
-                        return ImmutableList.of();
-                      }
-                    });
-              }
+            input -> {
+              createCount.incrementAndGet();
+              return createMockParser(
+                  () -> {
+                    createParserLatch.countDown();
+                    boolean didntTimeout = false;
+                    try {
+                      didntTimeout = createParserLatch.await(1, TimeUnit.SECONDS);
+                    } catch (InterruptedException e) {
+                      Throwables.propagate(e);
+                    }
+                    assertThat(didntTimeout, Matchers.equalTo(true));
+                    return ImmutableList.of();
+                  });
             })) {
 
       Futures.allAsList(scheduleWork(cell, parserPool, executorService, numRequests)).get();
@@ -125,41 +119,35 @@ public class ProjectBuildFileParserPoolTest {
     try (ProjectBuildFileParserPool parserPool =
         new ProjectBuildFileParserPool(
             parsersCount,
-            new Function<Cell, ProjectBuildFileParser>() {
-              @Override
-              public ProjectBuildFileParser apply(Cell input) {
-                parserCount.incrementAndGet();
+            input -> {
+              parserCount.incrementAndGet();
 
-                final ProjectBuildFileParser parser =
-                    EasyMock.createMock(ProjectBuildFileParser.class);
-                try {
-                  EasyMock.expect(parser.getAllRulesAndMetaRules(EasyMock.anyObject(Path.class)))
-                      .andAnswer(
-                          new IAnswer<ImmutableList<Map<String, Object>>>() {
-                            @Override
-                            public ImmutableList<Map<String, Object>> answer() throws Throwable {
-                              createParserLatch.countDown();
-                              createParserLatch.await();
+              final ProjectBuildFileParser parser =
+                  EasyMock.createMock(ProjectBuildFileParser.class);
+              try {
+                EasyMock.expect(parser.getAllRulesAndMetaRules(EasyMock.anyObject(Path.class)))
+                    .andAnswer(
+                        () -> {
+                          createParserLatch.countDown();
+                          createParserLatch.await();
 
-                              return ImmutableList.of();
-                            }
-                          })
-                      .anyTimes();
-                  parser.close();
-                  EasyMock.expectLastCall().andAnswer(
-                      new IAnswer<Void>() {
-                        @Override
-                        public Void answer() throws Throwable {
-                          parserCount.decrementAndGet();
-                          return null;
-                        }
-                      });
-                } catch (Exception e) {
-                  Throwables.propagate(e);
-                }
-                EasyMock.replay(parser);
-                return parser;
+                          return ImmutableList.of();
+                        })
+                    .anyTimes();
+                parser.close();
+                EasyMock.expectLastCall().andAnswer(
+                    new IAnswer<Void>() {
+                      @Override
+                      public Void answer() throws Throwable {
+                        parserCount.decrementAndGet();
+                        return null;
+                      }
+                    });
+              } catch (Exception e) {
+                Throwables.propagate(e);
               }
+              EasyMock.replay(parser);
+              return parser;
             })) {
 
       Futures.allAsList(scheduleWork(cell, parserPool, executorService, parsersCount * 2)).get();
@@ -188,25 +176,19 @@ public class ProjectBuildFileParserPoolTest {
     try (ProjectBuildFileParserPool parserPool =
              new ProjectBuildFileParserPool(
                  parsersCount,
-                 new Function<Cell, ProjectBuildFileParser>() {
-                   @Override
-                   public ProjectBuildFileParser apply(Cell input) {
-                     final AtomicInteger sleepCallCount = new AtomicInteger(0);
-                     return createMockParser(
-                         new IAnswer<ImmutableList<Map<String, Object>>>() {
-                           @Override
-                           public ImmutableList<Map<String, Object>> answer() throws Throwable {
-                             int numCalls = sleepCallCount.incrementAndGet();
-                             Preconditions.checkState(numCalls == 1);
-                             try {
-                               Thread.sleep(10);
-                             } finally {
-                               sleepCallCount.decrementAndGet();
-                             }
-                             return ImmutableList.of();
-                           }
-                         });
-                   }
+                 input -> {
+                   final AtomicInteger sleepCallCount = new AtomicInteger(0);
+                   return createMockParser(
+                       () -> {
+                         int numCalls = sleepCallCount.incrementAndGet();
+                         Preconditions.checkState(numCalls == 1);
+                         try {
+                           Thread.sleep(10);
+                         } finally {
+                           sleepCallCount.decrementAndGet();
+                         }
+                         return ImmutableList.of();
+                       });
                  })) {
 
       Futures.allAsList(scheduleWork(cell, parserPool, executorService, 142)).get();
@@ -228,13 +210,10 @@ public class ProjectBuildFileParserPoolTest {
              new ProjectBuildFileParserPool(
                  /* maxParsers */ 1,
                  createMockParserFactory(
-                     new IAnswer<ImmutableList<Map<String, Object>>>() {
-                       @Override
-                       public ImmutableList<Map<String, Object>> answer() throws Throwable {
-                         waitTillCanceled.await();
-                         waitTillAllWorkIsDone.countDown();
-                         return ImmutableList.of();
-                       }
+                     () -> {
+                       waitTillCanceled.await();
+                       waitTillAllWorkIsDone.countDown();
+                       return ImmutableList.of();
                      }))) {
 
       ImmutableSet<ListenableFuture<?>> futures =
@@ -267,13 +246,10 @@ public class ProjectBuildFileParserPoolTest {
              new ProjectBuildFileParserPool(
                  /* maxParsers */ 1,
                  createMockParserFactory(
-                     new IAnswer<ImmutableList<Map<String, Object>>>() {
-                       @Override
-                       public ImmutableList<Map<String, Object>> answer() throws Throwable {
-                         firstJobRunning.countDown();
-                         waitTillClosed.await();
-                         return ImmutableList.of();
-                       }
+                     () -> {
+                       firstJobRunning.countDown();
+                       waitTillClosed.await();
+                       return ImmutableList.of();
                      }))) {
 
       futures = scheduleWork(cell, parserPool, executorService, 5);
@@ -319,14 +295,11 @@ public class ProjectBuildFileParserPoolTest {
              new ProjectBuildFileParserPool(
                  /* maxParsers */ 2,
                  createMockParserFactory(
-                     new IAnswer<ImmutableList<Map<String, Object>>>() {
-                       @Override
-                       public ImmutableList<Map<String, Object>> answer() throws Throwable {
-                         if (throwWhileParsing.get()) {
-                           throw new Exception(exceptionMessage);
-                         }
-                         return ImmutableList.of();
+                     () -> {
+                       if (throwWhileParsing.get()) {
+                         throw new Exception(exceptionMessage);
                        }
+                       return ImmutableList.of();
                      }))) {
 
       ImmutableSet<ListenableFuture<?>> failedWork =
@@ -376,21 +349,15 @@ public class ProjectBuildFileParserPoolTest {
 
   private Function<Cell, ProjectBuildFileParser> createMockParserFactory(
       final IAnswer<ImmutableList<Map<String, Object>>> parseFn) {
-    return new Function<Cell, ProjectBuildFileParser>() {
-      @Override
-      public ProjectBuildFileParser apply(Cell input) {
-        final AssertScopeExclusiveAccess exclusiveAccess =
-            new AssertScopeExclusiveAccess();
-        return createMockParser(
-            new IAnswer<ImmutableList<Map<String, Object>>>() {
-              @Override
-              public ImmutableList<Map<String, Object>> answer() throws Throwable {
-                try (AssertScopeExclusiveAccess.Scope scope = exclusiveAccess.scope()) {
-                  return parseFn.answer();
-                }
-              }
-            });
-      }
+    return input -> {
+      final AssertScopeExclusiveAccess exclusiveAccess =
+          new AssertScopeExclusiveAccess();
+      return createMockParser(
+          () -> {
+            try (AssertScopeExclusiveAccess.Scope scope = exclusiveAccess.scope()) {
+              return parseFn.answer();
+            }
+          });
     };
   }
 }

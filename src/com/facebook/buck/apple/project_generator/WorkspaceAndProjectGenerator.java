@@ -49,7 +49,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -75,7 +74,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -289,12 +287,7 @@ public class WorkspaceAndProjectGenerator {
         ungroupedTests,
         targetToProjectPathMapBuilder.build(),
         synthesizedCombinedTestTargets,
-        new Function<TargetNode<?>, Collection<PBXTarget>>() {
-          @Override
-          public Collection<PBXTarget> apply(TargetNode<?> input) {
-            return buildTargetToTarget.get(input.getBuildTarget());
-          }
-        },
+        input -> buildTargetToTarget.get(input.getBuildTarget()),
         getTargetNodeToPBXTargetTransformFunction(buildTargetToTarget, buildWithBuck));
 
     return workspaceGenerator.writeWorkspace();
@@ -339,33 +332,30 @@ public class WorkspaceAndProjectGenerator {
   private static Function<BuildTarget, PBXTarget> getTargetNodeToPBXTargetTransformFunction(
       final Multimap<BuildTarget, PBXTarget> buildTargetToTarget,
       final boolean buildWithBuck) {
-    return new Function<BuildTarget, PBXTarget>() {
-      @Override
-      public PBXTarget apply(BuildTarget input) {
-        ImmutableList<PBXTarget> targets = ImmutableList.copyOf(buildTargetToTarget.get(input));
-        if (targets.size() == 1) {
-          return targets.get(0);
-        }
-        // The only reason why a build target would map to more than one project target is if
-        // there are two project targets: one is the usual one, the other is a target that just
-        // shells out to Buck.
-        Preconditions.checkState(targets.size() == 2);
-        PBXTarget first = targets.get(0);
-        PBXTarget second = targets.get(1);
-        Preconditions.checkState(
-            first.getName().endsWith(ProjectGenerator.BUILD_WITH_BUCK_POSTFIX) ^
-                second.getName().endsWith(ProjectGenerator.BUILD_WITH_BUCK_POSTFIX));
-        PBXTarget buildWithBuckTarget;
-        PBXTarget buildWithXcodeTarget;
-        if (first.getName().endsWith(ProjectGenerator.BUILD_WITH_BUCK_POSTFIX)) {
-          buildWithBuckTarget = first;
-          buildWithXcodeTarget = second;
-        } else {
-          buildWithXcodeTarget = first;
-          buildWithBuckTarget = second;
-        }
-        return buildWithBuck ? buildWithBuckTarget : buildWithXcodeTarget;
+    return input -> {
+      ImmutableList<PBXTarget> targets = ImmutableList.copyOf(buildTargetToTarget.get(input));
+      if (targets.size() == 1) {
+        return targets.get(0);
       }
+      // The only reason why a build target would map to more than one project target is if
+      // there are two project targets: one is the usual one, the other is a target that just
+      // shells out to Buck.
+      Preconditions.checkState(targets.size() == 2);
+      PBXTarget first = targets.get(0);
+      PBXTarget second = targets.get(1);
+      Preconditions.checkState(
+          first.getName().endsWith(ProjectGenerator.BUILD_WITH_BUCK_POSTFIX) ^
+              second.getName().endsWith(ProjectGenerator.BUILD_WITH_BUCK_POSTFIX));
+      PBXTarget buildWithBuckTarget;
+      PBXTarget buildWithXcodeTarget;
+      if (first.getName().endsWith(ProjectGenerator.BUILD_WITH_BUCK_POSTFIX)) {
+        buildWithBuckTarget = first;
+        buildWithXcodeTarget = second;
+      } else {
+        buildWithXcodeTarget = first;
+        buildWithBuckTarget = second;
+      }
+      return buildWithBuck ? buildWithBuckTarget : buildWithXcodeTarget;
     };
   }
 
@@ -410,23 +400,20 @@ public class WorkspaceAndProjectGenerator {
 
         projectGeneratorFutures.add(
             listeningExecutorService.submit(
-                new Callable<GenerationResult>() {
-                  @Override
-                  public GenerationResult call() throws Exception {
-                    GenerationResult result = generateProjectForDirectory(
-                          projectGenerators,
-                          targetToBuildWithBuck,
-                          projectCell,
-                          projectDirectory,
-                          rules);
-                    // convert the projectPath to relative to the target cell here
-                    result = GenerationResult.of(
-                        relativeTargetCell.resolve(result.getProjectPath()),
-                        result.getRequiredBuildTargets(),
-                        result.getBuildTargetToGeneratedTargetMap(),
-                        result.getBuildableCombinedTestTargets());
-                    return result;
-                  }
+                () -> {
+                  GenerationResult result = generateProjectForDirectory(
+                        projectGenerators,
+                        targetToBuildWithBuck,
+                        projectCell,
+                        projectDirectory,
+                        rules);
+                  // convert the projectPath to relative to the target cell here
+                  result = GenerationResult.of(
+                      relativeTargetCell.resolve(result.getProjectPath()),
+                      result.getRequiredBuildTargets(),
+                      result.getBuildTargetToGeneratedTargetMap(),
+                      result.getBuildableCombinedTestTargets());
+                  return result;
                 }));
       }
     }
@@ -437,13 +424,10 @@ public class WorkspaceAndProjectGenerator {
     if (!groupedTests.isEmpty()) {
       projectGeneratorFutures.add(
           listeningExecutorService.submit(
-              new Callable<GenerationResult>() {
-                @Override
-                public GenerationResult call() throws Exception {
-                  GenerationResult result = generateCombinedProjectForTests(groupedTests);
-                  combinedTestTargets.set(result.getBuildableCombinedTestTargets());
-                  return result;
-                }
+              () -> {
+                GenerationResult result = generateCombinedProjectForTests(groupedTests);
+                combinedTestTargets.set(result.getBuildableCombinedTestTargets());
+                return result;
               }
           )
       );
@@ -559,14 +543,9 @@ public class WorkspaceAndProjectGenerator {
             projectGeneratorOptions,
             Optionals.bind(
                 targetToBuildWithBuck,
-                new Function<BuildTarget, Optional<BuildTarget>>() {
-                  @Override
-                  public Optional<BuildTarget> apply(BuildTarget input) {
-                    return rules.contains(input)
-                        ? Optional.of(input)
-                        : Optional.absent();
-                  }
-                }),
+                input -> rules.contains(input)
+                    ? Optional.of(input)
+                    : Optional.absent()),
             buildWithBuckFlags,
             focusModules,
             executableFinder,
@@ -910,13 +889,8 @@ public class WorkspaceAndProjectGenerator {
             })
         .append(nodes)
         .filter(
-            new Predicate<TargetNode<?>>() {
-              @Override
-              public boolean apply(TargetNode<?> input) {
-                return !excludes.contains(input) &&
-                    AppleBuildRules.isXcodeTargetBuildRuleType(input.getType());
-              }
-            })
+            input -> !excludes.contains(input) &&
+                AppleBuildRules.isXcodeTargetBuildRuleType(input.getType()))
         .toSet();
   }
 

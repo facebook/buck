@@ -405,66 +405,61 @@ public class JavaTest
       final boolean isUsingTestSelectors,
       final boolean isDryRun) {
     final ImmutableSet<String> contacts = getContacts();
-    return new Callable<TestResults>() {
-
-      @Override
-      public TestResults call() throws Exception {
-        // It is possible that this rule was not responsible for running any tests because all tests
-        // were run by its deps. In this case, return an empty TestResults.
-        Set<String> testClassNames = getClassNamesForSources();
-        if (testClassNames.isEmpty()) {
-          return TestResults.of(
-              getBuildTarget(),
-              ImmutableList.of(),
-              contacts,
-              FluentIterable.from(labels).transform(Object::toString).toSet());
-        }
-
-        List<TestCaseSummary> summaries = Lists.newArrayListWithCapacity(testClassNames.size());
-        for (String testClass : testClassNames) {
-          String testSelectorSuffix = "";
-          if (isUsingTestSelectors) {
-            testSelectorSuffix += ".test_selectors";
-          }
-          if (isDryRun) {
-            testSelectorSuffix += ".dry_run";
-          }
-          String path = String.format("%s%s.xml", testClass, testSelectorSuffix);
-          Path testResultFile = getProjectFilesystem().getPathForRelativePath(
-              getPathToTestOutputDirectory().resolve(path));
-          if (!isUsingTestSelectors && !Files.isRegularFile(testResultFile)) {
-            String message;
-            for (JUnitStep junit: Preconditions.checkNotNull(junits)) {
-              if (junit.hasTimedOut()) {
-                message = "test timed out before generating results file";
-              } else {
-                message = "test exited before generating results file";
-              }
-              summaries.add(
-                  getTestClassFailedSummary(
-                      testClass,
-                      message,
-                      testRuleTimeoutMs.or(0L)));
-            }
-          // Not having a test result file at all (which only happens when we are using test
-          // selectors) is interpreted as meaning a test didn't run at all, so we'll completely
-          // ignore it.  This is another result of the fact that JUnit is the only thing that can
-          // definitively say whether or not a class should be run.  It's not possible, for example,
-          // to filter testClassNames here at the buck end.
-          } else if (Files.isRegularFile(testResultFile)) {
-            summaries.add(XmlTestResultParser.parse(testResultFile));
-          }
-        }
-
-        return TestResults.builder()
-            .setBuildTarget(getBuildTarget())
-            .setTestCases(summaries)
-            .setContacts(contacts)
-            .setLabels(FluentIterable.from(labels).transform(Object::toString).toSet())
-            .addTestLogPaths(getProjectFilesystem().resolve(pathToTestLogs))
-            .build();
+    return () -> {
+      // It is possible that this rule was not responsible for running any tests because all tests
+      // were run by its deps. In this case, return an empty TestResults.
+      Set<String> testClassNames = getClassNamesForSources();
+      if (testClassNames.isEmpty()) {
+        return TestResults.of(
+            getBuildTarget(),
+            ImmutableList.of(),
+            contacts,
+            FluentIterable.from(labels).transform(Object::toString).toSet());
       }
 
+      List<TestCaseSummary> summaries = Lists.newArrayListWithCapacity(testClassNames.size());
+      for (String testClass : testClassNames) {
+        String testSelectorSuffix = "";
+        if (isUsingTestSelectors) {
+          testSelectorSuffix += ".test_selectors";
+        }
+        if (isDryRun) {
+          testSelectorSuffix += ".dry_run";
+        }
+        String path = String.format("%s%s.xml", testClass, testSelectorSuffix);
+        Path testResultFile = getProjectFilesystem().getPathForRelativePath(
+            getPathToTestOutputDirectory().resolve(path));
+        if (!isUsingTestSelectors && !Files.isRegularFile(testResultFile)) {
+          String message;
+          for (JUnitStep junit: Preconditions.checkNotNull(junits)) {
+            if (junit.hasTimedOut()) {
+              message = "test timed out before generating results file";
+            } else {
+              message = "test exited before generating results file";
+            }
+            summaries.add(
+                getTestClassFailedSummary(
+                    testClass,
+                    message,
+                    testRuleTimeoutMs.or(0L)));
+          }
+        // Not having a test result file at all (which only happens when we are using test
+        // selectors) is interpreted as meaning a test didn't run at all, so we'll completely
+        // ignore it.  This is another result of the fact that JUnit is the only thing that can
+        // definitively say whether or not a class should be run.  It's not possible, for example,
+        // to filter testClassNames here at the buck end.
+        } else if (Files.isRegularFile(testResultFile)) {
+          summaries.add(XmlTestResultParser.parse(testResultFile));
+        }
+      }
+
+      return TestResults.builder()
+          .setBuildTarget(getBuildTarget())
+          .setTestCases(summaries)
+          .setContacts(contacts)
+          .setLabels(FluentIterable.from(labels).transform(Object::toString).toSet())
+          .addTestLogPaths(getProjectFilesystem().resolve(pathToTestLogs))
+          .build();
     };
   }
 

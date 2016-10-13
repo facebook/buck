@@ -30,7 +30,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
@@ -65,61 +64,47 @@ public class GoBuckConfig {
     this.delegate = delegate;
 
     goRootSupplier = Suppliers.memoize(
-        new Supplier<Path>() {
-          @Override
-          public Path get() {
-            Optional<Path> configValue = delegate.getPath(SECTION, "root");
-            if (configValue.isPresent()) {
-              return configValue.get();
-            }
-
-            return Paths.get(getGoEnvFromTool(processExecutor, "GOROOT"));
+        () -> {
+          Optional<Path> configValue = delegate.getPath(SECTION, "root");
+          if (configValue.isPresent()) {
+            return configValue.get();
           }
+
+          return Paths.get(getGoEnvFromTool(processExecutor, "GOROOT"));
         });
 
     goToolDirSupplier = Suppliers.memoize(
-        new Supplier<Path>() {
-          @Override
-          public Path get() {
-            return Paths.get(getGoEnvFromTool(processExecutor, "GOTOOLDIR"));
-          }
-        });
+        () -> Paths.get(getGoEnvFromTool(processExecutor, "GOTOOLDIR")));
 
-    platformFlavorDomain = Suppliers.memoize(new Supplier<GoPlatformFlavorDomain>() {
-      @Override
-      public GoPlatformFlavorDomain get() {
-        // TODO(mikekap): Allow adding goos/goarch values from config.
-        return new GoPlatformFlavorDomain(
-            delegate.getPlatform(),
-            delegate.getArchitecture(),
-            cxxPlatforms);
-      }
+    platformFlavorDomain = Suppliers.memoize(() -> {
+      // TODO(mikekap): Allow adding goos/goarch values from config.
+      return new GoPlatformFlavorDomain(
+          delegate.getPlatform(),
+          delegate.getArchitecture(),
+          cxxPlatforms);
     });
 
-    defaultPlatform = Suppliers.memoize(new Supplier<GoPlatform>() {
-      @Override
-      public GoPlatform get() {
-        Optional<String> configValue = delegate.getValue(SECTION, "default_platform");
-        Optional<GoPlatform> platform;
-        if (configValue.isPresent()) {
-          platform = platformFlavorDomain.get().getValue(
-              ImmutableFlavor.of(configValue.get()));
-          if (!platform.isPresent()) {
-            throw new HumanReadableException(
-                "Bad go platform value for %s.default_platform = %s", SECTION, configValue);
-          }
-        } else {
-          platform = platformFlavorDomain.get().getValue(
-              delegate.getPlatform(), delegate.getArchitecture());
-          if (!platform.isPresent()) {
-            throw new HumanReadableException(
-                "Couldn't determine default go platform for %s %s",
-                delegate.getPlatform(), delegate.getArchitecture());
-          }
+    defaultPlatform = Suppliers.memoize(() -> {
+      Optional<String> configValue = delegate.getValue(SECTION, "default_platform");
+      Optional<GoPlatform> platform;
+      if (configValue.isPresent()) {
+        platform = platformFlavorDomain.get().getValue(
+            ImmutableFlavor.of(configValue.get()));
+        if (!platform.isPresent()) {
+          throw new HumanReadableException(
+              "Bad go platform value for %s.default_platform = %s", SECTION, configValue);
         }
-
-        return platform.get();
+      } else {
+        platform = platformFlavorDomain.get().getValue(
+            delegate.getPlatform(), delegate.getArchitecture());
+        if (!platform.isPresent()) {
+          throw new HumanReadableException(
+              "Couldn't determine default go platform for %s %s",
+              delegate.getPlatform(), delegate.getArchitecture());
+        }
       }
+
+      return platform.get();
     });
   }
 
@@ -212,12 +197,7 @@ public class GoBuckConfig {
   private String getGoEnvFromTool(ProcessExecutor processExecutor, String env) {
     Path goTool = getGoToolPath();
     Optional<Map<String, String>> goRootEnv = delegate.getPath(SECTION, "root").transform(
-        new Function<Path, Map<String, String>>() {
-          @Override
-          public Map<String, String> apply(Path input) {
-            return ImmutableMap.of("GOROOT", input.toString());
-          }
-        });
+        input -> ImmutableMap.of("GOROOT", input.toString()));
     try {
       ProcessExecutor.Result goToolResult = processExecutor.launchAndExecute(
           ProcessExecutorParams.builder().addCommand(
