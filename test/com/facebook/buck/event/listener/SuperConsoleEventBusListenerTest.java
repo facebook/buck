@@ -119,6 +119,7 @@ public class SuperConsoleEventBusListenerTest {
       "[+] DOWNLOADING... (0.00 B/S, TOTAL: 0.00 B, 0 Artifacts)";
   private static final String FINISHED_DOWNLOAD_STRING =
       "[-] DOWNLOADING... (0.00 B/S AVG, TOTAL: 0.00 B, 0 Artifacts)";
+  private static final String SEVERE_MESSAGE = "This is a sample severe message.";
 
   private static final TestResultSummaryVerbosity noisySummaryVerbosity =
       TestResultSummaryVerbosity.of(true, true);
@@ -401,7 +402,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ConsoleEvent.severe("I've made a huge mistake."),
+            ConsoleEvent.severe(SEVERE_MESSAGE),
             1500L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -413,7 +414,7 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             FINISHED_DOWNLOAD_STRING,
             buildingLine),
-        ImmutableList.of("I've made a huge mistake."));
+        ImmutableList.of(SEVERE_MESSAGE));
 
     InstallEvent.Started installEventStarted = InstallEvent.started(fakeTarget);
     eventBus.postWithoutConfiguring(
@@ -935,7 +936,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ConsoleEvent.severe("I've made a huge mistake."),
+            ConsoleEvent.severe(SEVERE_MESSAGE),
             1700L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -953,7 +954,7 @@ public class SuperConsoleEventBusListenerTest {
             FINISHED_DOWNLOAD_STRING,
             distbuildLine,
             buildingLine),
-        ImmutableList.of("I've made a huge mistake."));
+        ImmutableList.of(SEVERE_MESSAGE));
   }
 
   @Test

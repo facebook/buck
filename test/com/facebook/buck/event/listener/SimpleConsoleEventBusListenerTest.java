@@ -68,6 +68,7 @@ import java.util.concurrent.TimeUnit;
 public class SimpleConsoleEventBusListenerTest {
   private static final String TARGET_ONE = "TARGET_ONE";
   private static final String TARGET_TWO = "TARGET_TWO";
+  private static final String SEVERE_MESSAGE = "This is a sample severe message.";
 
   private FileSystem vfs;
   private Path logPath;
@@ -180,12 +181,12 @@ public class SimpleConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ConsoleEvent.severe("I've made a huge mistake."),
+            ConsoleEvent.severe(SEVERE_MESSAGE),
             1500L,
             TimeUnit.MILLISECONDS,
             threadId));
 
-    expectedOutput += "I've made a huge mistake.\n";
+    expectedOutput += SEVERE_MESSAGE + "\n";
     assertOutput(expectedOutput, console);
 
     InstallEvent.Started installEventStarted = configureTestEventAtTime(
