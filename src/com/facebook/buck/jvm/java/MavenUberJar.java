@@ -139,7 +139,7 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
 
   @Override
   public Optional<Path> getPomTemplate() {
-    return mavenPomTemplate.transform(getResolver().getAbsolutePathFunction());
+    return mavenPomTemplate.transform(getResolver()::getAbsolutePath);
   }
 
   @Override
@@ -203,7 +203,7 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
 
     @Override
     public Optional<Path> getPomTemplate() {
-      return mavenPomTemplate.transform(getResolver().getAbsolutePathFunction());
+      return mavenPomTemplate.transform(getResolver()::getAbsolutePath);
     }
 
     @Override

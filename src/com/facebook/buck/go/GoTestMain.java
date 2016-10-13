@@ -75,7 +75,7 @@ public class GoTestMain extends AbstractBuildRule {
             /* coverageVariables */ ImmutableMap.of(),
             testPackage,
             FluentIterable.from(testSources)
-                .transform(getResolver().getAbsolutePathFunction())
+                .transform(getResolver()::getAbsolutePath)
                 .toList(),
             output
         )

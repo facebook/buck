@@ -520,7 +520,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           postprocessClassesCommands,
           ImmutableSortedSet.of(outputDirectory),
           /* mainClass */ Optional.absent(),
-          manifestFile.transform(getResolver().getAbsolutePathFunction()),
+          manifestFile.transform(getResolver()::getAbsolutePath),
           outputJar.get(),
           usedClassesFileWriter,
           /* output params */
@@ -543,7 +543,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
                 output,
                 ImmutableSortedSet.of(outputDirectory),
                 /* mainClass */ null,
-                manifestFile.transform(getResolver().getAbsolutePathFunction()).orNull(),
+                manifestFile.transform(getResolver()::getAbsolutePath).orNull(),
                 true,
                 classesToRemoveFromJar));
       }

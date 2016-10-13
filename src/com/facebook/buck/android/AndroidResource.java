@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RecordFileSha1Step;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -350,10 +351,9 @@ public class AndroidResource extends AbstractBuildRule
       buildableContext.recordArtifact(Preconditions.checkNotNull(pathToRDotJavaPackageFile));
     }
 
-    ImmutableSet<Path> pathsToSymbolsOfDeps =
-        FluentIterable.from(symbolsOfDeps.get())
-            .transform(getResolver().getAbsolutePathFunction())
-            .toSet();
+    ImmutableSet<Path> pathsToSymbolsOfDeps = symbolsOfDeps.get().stream()
+        .map(getResolver()::getAbsolutePath)
+        .collect(MoreCollectors.toImmutableSet());
 
     steps.add(
         new MiniAapt(

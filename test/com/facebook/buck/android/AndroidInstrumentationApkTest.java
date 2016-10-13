@@ -142,7 +142,7 @@ public class AndroidInstrumentationApkTest {
                 "%s.jar")),
         FluentIterable
             .from(androidBinary.getAndroidPackageableCollection().getClasspathEntriesToDex())
-            .transform(pathResolver.deprecatedPathFunction())
+            .transform(pathResolver::deprecatedGetPath)
             .toSet());
     assertEquals(
         "//apps:instrumentation should have one JAR file to dex.",
@@ -156,7 +156,7 @@ public class AndroidInstrumentationApkTest {
                 androidInstrumentationApk
                     .getAndroidPackageableCollection()
                     .getClasspathEntriesToDex())
-            .transform(pathResolver.deprecatedPathFunction())
+            .transform(pathResolver::deprecatedGetPath)
             .toSet());
   }
 }

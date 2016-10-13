@@ -108,7 +108,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
         ImmutableSortedSet.copyOf(
             Iterables.transform(
                 assetCatalogDirs,
-                getResolver().getAbsolutePathFunction()));
+                getResolver()::getAbsolutePath));
     stepsBuilder.add(
         new ActoolStep(
             getProjectFilesystem().getRootPath(),

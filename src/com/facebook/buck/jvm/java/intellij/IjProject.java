@@ -147,7 +147,7 @@ public class IjProject {
           public Optional<Path> getLibraryAndroidManifestPath(
               TargetNode<AndroidLibraryDescription.Arg> targetNode) {
             Optional<SourcePath> manifestPath = targetNode.getConstructorArg().manifest;
-            return manifestPath.transform(sourcePathResolver.getAbsolutePathFunction())
+            return manifestPath.transform(sourcePathResolver::getAbsolutePath)
                 .or(intellijConfig.getAndroidManifest());
           }
 

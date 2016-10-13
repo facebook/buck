@@ -60,7 +60,7 @@ public class AppleDescriptionsTest {
             "prefix/a_file.h", new FakeSourcePath("different/path/to/a_file.h"),
             "prefix/file.h", new FakeSourcePath("file.h")),
         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
-            resolver.deprecatedPathFunction(),
+            resolver::deprecatedGetPath,
             Paths.get("prefix"),
             SourceList.ofUnnamedSources(
                 ImmutableSortedSet.of(
@@ -82,7 +82,7 @@ public class AppleDescriptionsTest {
             "a_file.h", new FakeSourcePath("different/path/to/a_file.h"),
             "file.h", new FakeSourcePath("file.h")),
         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-            resolver.deprecatedPathFunction(),
+            resolver::deprecatedGetPath,
             SourceList.ofUnnamedSources(
                 ImmutableSortedSet.of(
                     new FakeSourcePath("path/to/some_file.h"),
@@ -104,7 +104,7 @@ public class AppleDescriptionsTest {
     assertEquals(
         headerMap,
         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
-            resolver.deprecatedPathFunction(),
+            resolver::deprecatedGetPath,
             Paths.get("prefix"),
             SourceList.ofNamedSources(headerMap)));
   }
@@ -122,7 +122,7 @@ public class AppleDescriptionsTest {
     assertEquals(
         ImmutableMap.of(),
         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-            resolver.deprecatedPathFunction(),
+            resolver::deprecatedGetPath,
             SourceList.ofNamedSources(headerMap)));
   }
 
@@ -139,7 +139,7 @@ public class AppleDescriptionsTest {
             "prefix/file.h", new FakeSourcePath("file.h")),
         AppleDescriptions.convertToFlatCxxHeaders(
             Paths.get("prefix"),
-            resolver.deprecatedPathFunction(),
+            resolver::deprecatedGetPath,
             ImmutableSet.of(
                 new FakeSourcePath("path/to/some_file.h"),
                 new FakeSourcePath("path/to/another_file.h"),
@@ -160,7 +160,7 @@ public class AppleDescriptionsTest {
             "file.h", new FakeSourcePath("file.h")),
         AppleDescriptions.convertToFlatCxxHeaders(
             Paths.get(""),
-            resolver.deprecatedPathFunction(),
+            resolver::deprecatedGetPath,
             ImmutableSet.of(
                 new FakeSourcePath("path/to/some_file.h"),
                 new FakeSourcePath("path/to/another_file.h"),

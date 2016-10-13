@@ -222,12 +222,12 @@ public class AppleDescriptions {
         ImmutableSortedMap.<String, SourcePath>naturalOrder()
             .putAll(
                 convertAppleHeadersToPublicCxxHeaders(
-                    resolver.deprecatedPathFunction(),
+                    resolver::deprecatedGetPath,
                     headerPathPrefix,
                     arg))
             .putAll(
                 convertAppleHeadersToPrivateCxxHeaders(
-                    resolver.deprecatedPathFunction(),
+                    resolver::deprecatedGetPath,
                     headerPathPrefix,
                     arg))
             .build();
@@ -294,7 +294,7 @@ public class AppleDescriptions {
     output.headers = Optional.of(
         SourceList.ofNamedSources(
             convertAppleHeadersToPrivateCxxHeaders(
-                resolver.deprecatedPathFunction(),
+                resolver::deprecatedGetPath,
                 headerPathPrefix,
                 arg)));
     output.exportedDeps = arg.exportedDeps;
@@ -302,7 +302,7 @@ public class AppleDescriptions {
     output.exportedHeaders = Optional.of(
         SourceList.ofNamedSources(
             convertAppleHeadersToPublicCxxHeaders(
-                resolver.deprecatedPathFunction(),
+                resolver::deprecatedGetPath,
                 headerPathPrefix,
                 arg)));
     output.exportedPlatformHeaders = arg.exportedPlatformHeaders;

@@ -55,6 +55,7 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.XzStep;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipScrubberStep;
@@ -498,7 +499,7 @@ public class AndroidBinary
         nativeLibraryDirectoriesBuilder.build(),
         zipFiles.build(),
         FluentIterable.from(packageableCollection.getPathsToThirdPartyJars())
-            .transform(getResolver().deprecatedPathFunction())
+            .transform(getResolver()::deprecatedGetPath)
             .toSet(),
         getResolver().getAbsolutePath(keystore.getPathToStore()),
         getResolver().getAbsolutePath(keystore.getPathToPropertiesFile()),
@@ -694,7 +695,7 @@ public class AndroidBinary
     ImmutableSet<Path> classpathEntriesToDex =
         FluentIterable
             .from(enhancementResult.getClasspathEntriesToDex())
-            .transform(getResolver().deprecatedPathFunction())
+            .transform(getResolver()::deprecatedGetPath)
             .append(Collections.singleton(
                 // Note: Need that call to Collections.singleton because
                 // unfortunately Path implements Iterable<Path>.
@@ -703,15 +704,16 @@ public class AndroidBinary
 
     ImmutableMultimap.Builder<APKModule, Path> additionalDexStoreToJarPathMapBuilder =
         ImmutableMultimap.builder();
-    additionalDexStoreToJarPathMapBuilder.putAll(FluentIterable
-        .from(enhancementResult
+    additionalDexStoreToJarPathMapBuilder.putAll(
+        enhancementResult
             .getPackageableCollection()
             .getModuleMappedClasspathEntriesToDex()
-            .entries())
-        .transform(input -> new AbstractMap.SimpleEntry<>(
-            input.getKey(),
-            getResolver().deprecatedPathFunction().apply(input.getValue())))
-        .toSet());
+            .entries()
+            .stream()
+            .map(input -> new AbstractMap.SimpleEntry<>(
+                input.getKey(),
+                getResolver().deprecatedGetPath(input.getValue())))
+            .collect(MoreCollectors.toImmutableSet()));
     ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap =
         additionalDexStoreToJarPathMapBuilder.build();
 
@@ -1057,12 +1059,12 @@ public class AndroidBinary
           proguardMappingFile,
           dexSplitMode,
           dexSplitMode.getPrimaryDexScenarioFile()
-              .transform(getResolver().deprecatedPathFunction()),
-          dexSplitMode.getPrimaryDexClassesFile().transform(getResolver().deprecatedPathFunction()),
+              .transform(getResolver()::deprecatedGetPath),
+          dexSplitMode.getPrimaryDexClassesFile().transform(getResolver()::deprecatedGetPath),
           dexSplitMode.getSecondaryDexHeadClassesFile()
-              .transform(getResolver().deprecatedPathFunction()),
+              .transform(getResolver()::deprecatedGetPath),
           dexSplitMode.getSecondaryDexTailClassesFile()
-              .transform(getResolver().deprecatedPathFunction()),
+              .transform(getResolver()::deprecatedGetPath),
           additionalDexStoreToJarPathMap,
           enhancementResult.getAPKModuleGraph(),
           zipSplitReportDir);

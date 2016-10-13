@@ -185,7 +185,7 @@ public class Genrule extends AbstractBuildRule
         "SRCS",
         Joiner.on(' ').join(
             FluentIterable.from(srcs)
-                .transform(getResolver().getAbsolutePathFunction())
+                .transform(getResolver()::getAbsolutePath)
                 .transform(Object::toString)));
     environmentVariablesBuilder.put("OUT", getAbsoluteOutputFilePath());
 

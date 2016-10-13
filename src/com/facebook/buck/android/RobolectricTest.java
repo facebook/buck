@@ -78,7 +78,7 @@ public class RobolectricTest extends JavaTest {
 
   private final Function<HasAndroidResourceDeps, Path> resourceDirectoryFunction =
       input -> Optional.fromNullable(input.getRes())
-          .transform(getResolver().deprecatedPathFunction())
+          .transform(getResolver()::deprecatedGetPath)
           .get();
   private final Function<DummyRDotJava, ImmutableSet<BuildRule>> resourceRulesFunction =
       input -> {

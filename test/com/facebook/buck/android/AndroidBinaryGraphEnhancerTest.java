@@ -334,7 +334,7 @@ public class AndroidBinaryGraphEnhancerTest {
                 .resolve(enhancedBuildConfigTarget.getShortNameAndFlavorPostfix() + ".jar")),
         FluentIterable
             .from(result.getClasspathEntriesToDex())
-            .transform(pathResolver.deprecatedPathFunction())
+            .transform(pathResolver::deprecatedGetPath)
         .toSet());
     BuildRule enhancedBuildConfigRule = ruleResolver.getRule(enhancedBuildConfigTarget);
     assertTrue(enhancedBuildConfigRule instanceof AndroidBuildConfigJavaLibrary);

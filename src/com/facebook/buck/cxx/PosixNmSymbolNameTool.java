@@ -141,7 +141,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
                   .add("-u")
                   .addAll(
                       FluentIterable.from(inputs)
-                          .transform(getResolver().getAbsolutePathFunction())
+                          .transform(getResolver()::getAbsolutePath)
                           .transform(Object::toString))
                   .build(),
               nm.getEnvironment(getResolver())) {

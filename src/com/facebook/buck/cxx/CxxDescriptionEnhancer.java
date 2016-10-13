@@ -527,7 +527,7 @@ public class CxxDescriptionEnhancer {
       public Path apply(FrameworkPath input) {
         Function<FrameworkPath, Path> convertToPath =
             FrameworkPath.getUnexpandedSearchPathFunction(
-                resolver.getAbsolutePathFunction(),
+                resolver::getAbsolutePath,
                 Functions.identity());
         String pathAsString = convertToPath.apply(input).toString();
         return Paths.get(translateMacrosFn.apply(pathAsString));

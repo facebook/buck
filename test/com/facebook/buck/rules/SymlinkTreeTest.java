@@ -334,7 +334,7 @@ public class SymlinkTreeTest {
         resolvedDuplicates.inverse(),
         Matchers.equalTo(
             FluentIterable.from(sourcePaths)
-            .uniqueIndex(resolver.getRelativePathFunction())));
+            .uniqueIndex(resolver::getRelativePath)));
   }
 
   @Rule

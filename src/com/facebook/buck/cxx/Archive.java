@@ -181,7 +181,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
             archiver.getArchiveOptions(contents == Contents.THIN),
             output,
             FluentIterable.from(inputs)
-                .transform(getResolver().getRelativePathFunction())
+                .transform(getResolver()::getRelativePath)
                 .toList(),
             archiver));
 

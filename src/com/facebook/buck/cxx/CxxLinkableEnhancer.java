@@ -256,7 +256,7 @@ public class CxxLinkableEnhancer {
       public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
         for (FrameworkPath frameworkPath : frameworkPaths) {
           String libName = MorePaths.stripPathPrefixAndExtension(
-              frameworkPath.getFileName(resolver.getAbsolutePathFunction()),
+              frameworkPath.getFileName(resolver::getAbsolutePath),
               "lib");
           // libraries set can contain path-qualified libraries, or just library
           // search paths.
@@ -312,7 +312,7 @@ public class CxxLinkableEnhancer {
       public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
         for (FrameworkPath frameworkPath : frameworkPaths) {
           builder.add("-framework");
-          builder.add(frameworkPath.getName(resolver.getAbsolutePathFunction()));
+          builder.add(frameworkPath.getName(resolver::getAbsolutePath));
         }
       }
     };

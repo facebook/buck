@@ -140,7 +140,7 @@ public class AndroidPackageableCollectorTest {
             ruleResolver.getRule(jsr305Target).getPathToOutput(),
             ruleResolver.getRule(libraryRuleTarget).getPathToOutput()),
         FluentIterable.from(packageableCollection.getClasspathEntriesToDex())
-            .transform(pathResolver.deprecatedPathFunction())
+            .transform(pathResolver::deprecatedGetPath)
             .toSet());
     assertEquals(
         "Because guava was passed to no_dx, it should not be treated as a third-party JAR whose " +
@@ -153,7 +153,7 @@ public class AndroidPackageableCollectorTest {
             "substantial regression in the startup time for the fb4a app.",
         ImmutableSet.of(ruleResolver.getRule(jsr305Target).getPathToOutput()),
         FluentIterable.from(packageableCollection.getPathsToThirdPartyJars())
-            .transform(pathResolver.deprecatedPathFunction())
+            .transform(pathResolver::deprecatedGetPath)
             .toSet());
     assertEquals(
         "Because assets directory was passed an AndroidResourceRule it should be added to the " +
@@ -332,7 +332,7 @@ public class AndroidPackageableCollectorTest {
                     "lib__%s__output/")
                 .resolve(androidLibraryTarget.getShortNameAndFlavorPostfix() + ".jar")),
         FluentIterable.from(packageableCollection.getClasspathEntriesToDex())
-            .transform(pathResolver.deprecatedPathFunction())
+            .transform(pathResolver::deprecatedGetPath)
             .toSet());
   }
 }

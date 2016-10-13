@@ -421,7 +421,7 @@ public class Project {
         module.resFolder =
             createRelativeResourcesPath(
                 Optional.fromNullable(androidResource.getRes())
-                    .transform(resolver.getAbsolutePathFunction())
+                    .transform(resolver::getAbsolutePath)
                     .transform(projectFilesystem.getRelativizer())
                     .orNull(),
                 target);
@@ -763,7 +763,7 @@ public class Project {
             Sets.intersection(
                 noDxJars,
                 FluentIterable.from(packageableCollection.getClasspathEntriesToDex())
-                    .transform(resolver.getAbsolutePathFunction())
+                    .transform(resolver::getAbsolutePath)
                     .transform(projectFilesystem.getRelativizer())
                     .toSet()));
       } else {
@@ -1040,7 +1040,7 @@ public class Project {
           projectFilesystem.getRelativizer().apply(binaryJarAbsolutePath)
       );
       String sourceJar = prebuiltJar.getSourceJar()
-          .transform(resolver.getAbsolutePathFunction())
+          .transform(resolver::getAbsolutePath)
           .transform(projectFilesystem.getRelativizer())
           .transform(MorePaths::pathWithUnixSeparators)
           .orNull();

@@ -110,7 +110,7 @@ public class OCamlLink extends AbstractBuildRule {
             depInput,
             cDepInput,
             FluentIterable.from(inputs)
-                .transform(getResolver().getAbsolutePathFunction())
+                .transform(getResolver()::getAbsolutePath)
                 .toList(),
             isLibrary,
             isBytecode)

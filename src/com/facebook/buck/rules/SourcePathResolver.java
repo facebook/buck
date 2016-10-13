@@ -55,13 +55,9 @@ public class SourcePathResolver {
     return getPathPrivateImpl(sourcePath);
   }
 
-  public Function<SourcePath, Path> deprecatedPathFunction() {
-    return this::deprecatedGetPath;
-  }
-
   public ImmutableList<Path> deprecatedAllPaths(Iterable<? extends SourcePath> sourcePaths) {
     // Maintain ordering and duplication if necessary.
-    return FluentIterable.from(sourcePaths).transform(deprecatedPathFunction()).toList();
+    return FluentIterable.from(sourcePaths).transform(this::deprecatedGetPath).toList();
   }
 
   public <T> ImmutableMap<T, Path> getMappedPaths(Map<T, SourcePath> sourcePathMap) {
@@ -126,13 +122,9 @@ public class SourcePathResolver {
     return ArchiveMemberPath.of(archiveRelativePath, archiveMemberSourcePath.getMemberPath());
   }
 
-  public Function<SourcePath, Path> getAbsolutePathFunction() {
-    return this::getAbsolutePath;
-  }
-
   public ImmutableList<Path> getAllAbsolutePaths(Iterable<? extends SourcePath> sourcePaths) {
     // Maintain ordering and duplication if necessary.
-    return FluentIterable.from(sourcePaths).transform(getAbsolutePathFunction()).toList();
+    return FluentIterable.from(sourcePaths).transform(this::getAbsolutePath).toList();
   }
 
   /**
@@ -151,10 +143,6 @@ public class SourcePathResolver {
         sourcePath);
 
     return toReturn;
-  }
-
-  public Function<SourcePath, Path> getRelativePathFunction() {
-    return this::getRelativePath;
   }
 
   /**

@@ -110,7 +110,7 @@ abstract class AbstractPreprocessorFlags {
         MoreIterables.zipAndConcat(
             Iterables.cycle("-include"),
             FluentIterable.from(getPrefixHeader().asSet())
-                .transform(resolver.getAbsolutePathFunction())
+                .transform(resolver::getAbsolutePath)
                 .transform(Object::toString)));
     builder.addAllRuleFlags(
         CxxHeaders.getArgs(getIncludes(), resolver, Optional.of(pathShortener), preprocessor));

@@ -209,7 +209,7 @@ public class ReactNativeBundle
 
     // Use the generated depfile to determinate which sources ended up being used.
     ImmutableMap<Path, SourcePath> pathToSourceMap =
-        Maps.uniqueIndex(srcs, getResolver().getAbsolutePathFunction());
+        Maps.uniqueIndex(srcs, getResolver()::getAbsolutePath);
     Path depFile = getPathToDepFile(getBuildTarget(), getProjectFilesystem());
     for (String line : getProjectFilesystem().readLines(depFile)) {
       Path path = getProjectFilesystem().getRootPath().getFileSystem().getPath(line);

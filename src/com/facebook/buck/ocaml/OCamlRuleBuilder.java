@@ -316,7 +316,7 @@ public class OCamlRuleBuilder {
           linkerFlags,
           FluentIterable.from(srcs)
               .transform(OCamlSource::getSource)
-              .transform(pathResolver.getAbsolutePathFunction())
+              .transform(pathResolver::getAbsolutePath)
               .filter(OCamlUtil.ext(OCamlCompilables.OCAML_C))
               .transform(ocamlContext.toCOutput())
               .transform(SourcePaths.getToBuildTargetSourcePath(compileParams.getBuildTarget()))

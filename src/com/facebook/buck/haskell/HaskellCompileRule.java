@@ -312,12 +312,12 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
                 .add("-stubdir", getProjectFilesystem().resolve(getStubDir()).toString())
                 .add("-i" + Joiner.on(':').join(
                     FluentIterable.from(includes)
-                        .transform(getResolver().getAbsolutePathFunction())
+                        .transform(getResolver()::getAbsolutePath)
                         .transform(Object::toString)))
                 .addAll(getPackageArgs())
                 .addAll(
                     FluentIterable.from(sources.getSourcePaths())
-                        .transform(getResolver().getAbsolutePathFunction())
+                        .transform(getResolver()::getAbsolutePath)
                         .transform(Object::toString))
                 .build();
           }
