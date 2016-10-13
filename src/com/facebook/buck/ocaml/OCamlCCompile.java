@@ -54,4 +54,10 @@ public class OCamlCCompile extends AbstractBuildRule {
   public Path getPathToOutput() {
     return args.output;
   }
+
+  @Override
+  public boolean isCacheable() {
+    // Intermediate OCaml rules are not cacheable because the compiler is not deterministic.
+    return false;
+  }
 }

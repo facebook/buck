@@ -92,4 +92,9 @@ public class OCamlBuild extends AbstractBuildRule {
     return bytecodeOnly ? ocamlContext.getBytecodeOutput() : ocamlContext.getNativeOutput();
   }
 
+  @Override
+  public boolean isCacheable() {
+    // Intermediate OCaml rules are not cacheable because the compiler is not deterministic.
+    return false;
+  }
 }
