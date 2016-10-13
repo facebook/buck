@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.ApplePlatform;
+import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -32,6 +33,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 
 public class SwiftOSXBinaryIntegrationTest {
 
@@ -133,6 +135,13 @@ public class SwiftOSXBinaryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "swift_calls_complex_objc", tmp);
     workspace.setUp();
+
+    workspace.copyRecursively(
+        TestDataHelper.getTestDataDirectory(AppleTestBuilder.class).resolve("fbxctest"),
+        Paths.get("fbxctest"));
+    workspace.writeContentsToPath(
+        "[apple]\n  xctool_path = fbxctest/bin/fbxctest\n",
+        ".buckconfig.local");
 
     ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand(
         "test", ":SwiftCallsComplexObjC#macosx-x86_64");
