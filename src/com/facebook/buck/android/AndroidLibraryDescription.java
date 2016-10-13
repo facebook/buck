@@ -58,12 +58,6 @@ public class AndroidLibraryDescription
   private static final Flavor DUMMY_R_DOT_JAVA_FLAVOR =
       AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR;
 
-  public enum JvmLanguage {
-    JAVA,
-    KOTLIN,
-    SCALA,
-  }
-
   private final JavacOptions defaultOptions;
   private final AndroidLibraryCompilerFactory compilerFactory;
 
@@ -216,7 +210,6 @@ public class AndroidLibraryDescription
     public Optional<SourcePath> manifest;
     public Optional<String> resourceUnionPackage;
     public Optional<String> finalRName;
-    public Optional<JvmLanguage> language;
   }
 }
 

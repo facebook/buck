@@ -27,7 +27,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class KotlinBuckConfig {
-  public static final String EXTENSION = ".kt";
+  public static final String EXTENSION = "kt";
 
   private static final Path DEFAULT_KOTLIN_COMPILER = Paths.get("kotlinc");
 

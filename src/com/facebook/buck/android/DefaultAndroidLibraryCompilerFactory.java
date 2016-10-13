@@ -16,11 +16,12 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.AndroidLibraryDescription.JvmLanguage;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.HumanReadableException;
+
+import com.google.common.io.Files;
 
 public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompilerFactory {
 
@@ -35,27 +36,19 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
 
   @Override
   public AndroidLibraryCompiler getCompiler(AndroidLibraryDescription.Arg args) {
-    if (args.language.isPresent()) {
-      return selectCompilerFromLanguage(args.language.get());
-    }
-    JvmLanguage language = JvmLanguage.JAVA;
+    // We currently expect all non-java languages to only contain files of that extension.
     for (SourcePath sourcePath : args.srcs.get()) {
-      String path = sourcePath.toString();
-      if (path.endsWith(KotlinBuckConfig.EXTENSION)) {
-        language = JvmLanguage.KOTLIN;
-      } else if (path.endsWith(ScalaBuckConfig.EXTENSION)) {
-        language = JvmLanguage.SCALA;
+      if (sourcePath instanceof PathSourcePath) {
+        String extension = Files.getFileExtension(sourcePath.toString()).toLowerCase();
+        if (extension.contains(KotlinBuckConfig.EXTENSION)) {
+          return new KotlinAndroidLibraryCompiler(kotlinBuckConfig);
+        } else if (extension.contains(ScalaBuckConfig.EXTENSION)) {
+          return new ScalaAndroidLibraryCompiler(scalaConfig);
+        }
       }
     }
-    return selectCompilerFromLanguage(language);
+
+    return new JavaAndroidLibraryCompiler();
   }
 
-  private AndroidLibraryCompiler selectCompilerFromLanguage(JvmLanguage language) {
-    switch (language) {
-      case JAVA: return new JavaAndroidLibraryCompiler();
-      case SCALA: return new ScalaAndroidLibraryCompiler(scalaConfig);
-      case KOTLIN: return new KotlinAndroidLibraryCompiler(kotlinBuckConfig);
-    }
-    throw new HumanReadableException("Unsupported `language` parameter value: %s", language);
-  }
 }
