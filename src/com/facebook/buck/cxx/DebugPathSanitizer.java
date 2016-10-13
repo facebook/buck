@@ -89,6 +89,27 @@ public class DebugPathSanitizer {
     this.other = other;
   }
 
+
+  public Map<String, String> getCompilationEnvironment(
+      Path workingDir,
+      boolean shouldSanitize) {
+    // A forced compilation directory is set in the constructor.  Now, we can't actually force
+    // the compiler to embed this into the binary -- all we can do set the PWD environment to
+    // variations of the actual current working directory (e.g. /actual/dir or
+    // /actual/dir////).  This adjustment serves two purposes:
+    //
+    //   1) it makes the compiler's current-directory line directive output agree with its cwd,
+    //      given by getProjectDirectoryRoot.  (If PWD and cwd are different names for the same
+    //      directory, the compiler prefers PWD, but we expect cwd for DebugPathSanitizer.)
+    //
+    //   2) in the case where we're using post-linkd debug path replacement, we reserve room
+    //      to expand the path later.
+    return ImmutableMap.of(
+        "PWD", shouldSanitize ?
+            getExpandedPath(workingDir) :
+            workingDir.toString());
+  }
+
   /**
    * @return the given path as a string, expanded using {@code separator} to fulfill the required
    *     {@code pathSize}.

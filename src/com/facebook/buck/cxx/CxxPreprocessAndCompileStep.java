@@ -134,25 +134,11 @@ public class CxxPreprocessAndCompileStep implements Step {
       ExecutionContext context,
       Map<String, String> additionalEnvironment) {
     Map<String, String> env = new HashMap<>(context.getEnvironment());
-    // A forced compilation directory is set in the constructor.  Now, we can't actually force
-    // the compiler to embed this into the binary -- all we can do set the PWD environment to
-    // variations of the actual current working directory (e.g. /actual/dir or
-    // /actual/dir////).  This adjustment serves two purposes:
-    //
-    //   1) it makes the compiler's current-directory line directive output agree with its cwd,
-    //      given by getProjectDirectoryRoot.  (If PWD and cwd are different names for the same
-    //      directory, the compiler prefers PWD, but we expect cwd for DebugPathSanitizer.)
-    //
-    //   2) in the case where we're using post-linkd debug path replacement, we reserve room
-    //      to expand the path later.
-    //
-    env.put(
-        "PWD",
-        // We only need to expand the working directory if compiling, as we override it in the
-        // preprocessed otherwise.
-        shouldSanitizeOutputBinary() ?
-            sanitizer.getExpandedPath(filesystem.getRootPath().toAbsolutePath()) :
-            filesystem.getRootPath().toAbsolutePath().toString());
+
+    env.putAll(
+        sanitizer.getCompilationEnvironment(
+            filesystem.getRootPath().toAbsolutePath(),
+            shouldSanitizeOutputBinary()));
 
     // Set `TMPDIR` to `scratchDir` so the compiler/preprocessor uses this dir for it's temp and
     // intermediate files.
