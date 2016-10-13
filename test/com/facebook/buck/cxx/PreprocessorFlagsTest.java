@@ -146,7 +146,7 @@ public class PreprocessorFlagsTest {
 
       class TestData {
         public RuleKey generate(String prefix) {
-          DebugPathSanitizer sanitizer = new DebugPathSanitizer(
+          DebugPathSanitizer sanitizer = new MungingDebugPathSanitizer(
               10,
               File.separatorChar,
               Paths.get("PWD"),

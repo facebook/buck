@@ -77,7 +77,7 @@ public class CxxCompileStepIntegrationTest {
     ImmutableList.Builder<String> compilerArguments = ImmutableList.builder();
     compilerArguments.add("-g");
 
-    DebugPathSanitizer sanitizer = new DebugPathSanitizer(
+    DebugPathSanitizer sanitizer = new MungingDebugPathSanitizer(
         200,
         File.separatorChar,
         compDir,

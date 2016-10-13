@@ -20,13 +20,13 @@ import com.facebook.buck.cxx.CompilerProvider;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxToolProvider;
-import com.facebook.buck.cxx.DebugPathSanitizer;
 import com.facebook.buck.cxx.DefaultLinkerProvider;
 import com.facebook.buck.cxx.GnuArchiver;
 import com.facebook.buck.cxx.GnuLinker;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.LinkerProvider;
 import com.facebook.buck.cxx.PosixNmSymbolNameTool;
+import com.facebook.buck.cxx.MungingDebugPathSanitizer;
 import com.facebook.buck.cxx.PreprocessorProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.model.Flavor;
@@ -486,7 +486,7 @@ public class NdkCxxPlatforms {
             getGccTool(toolchainPaths, "ranlib", version, executableFinder))
         // NDK builds are cross compiled, so the header is the same regardless of the host platform.
         .setDebugPathSanitizer(
-            new DebugPathSanitizer(
+            new MungingDebugPathSanitizer(
                 config.getDebugPathSanitizerLimit(),
                 File.separatorChar,
                 Paths.get("."),

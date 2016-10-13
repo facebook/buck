@@ -107,7 +107,7 @@ public class CxxPlatforms {
         .setObjectFileExtension(objectFileExtension)
         .setDebugPathSanitizer(
             debugPathSanitizer.or(
-                new DebugPathSanitizer(
+                new MungingDebugPathSanitizer(
                     config.getDebugPathSanitizerLimit(),
                     File.separatorChar,
                     Paths.get("."),

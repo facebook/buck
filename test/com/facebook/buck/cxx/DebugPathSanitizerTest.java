@@ -33,7 +33,7 @@ public class DebugPathSanitizerTest {
 
   @Before
   public void setUp() {
-    debugPathSanitizer = new DebugPathSanitizer(
+    debugPathSanitizer = new MungingDebugPathSanitizer(
         40,
         '/',
         Paths.get("."),

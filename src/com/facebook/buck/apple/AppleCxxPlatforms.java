@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.CxxToolProvider;
 import com.facebook.buck.cxx.DebugPathSanitizer;
+import com.facebook.buck.cxx.MungingDebugPathSanitizer;
 import com.facebook.buck.cxx.DefaultLinkerProvider;
 import com.facebook.buck.cxx.LinkerProvider;
 import com.facebook.buck.cxx.Linkers;
@@ -286,7 +287,7 @@ public class AppleCxxPlatforms {
       sanitizerPaths.put(sdkPaths.getDeveloperPath().get(), Paths.get("APPLE_DEVELOPER_DIR"));
     }
 
-    DebugPathSanitizer debugPathSanitizer = new DebugPathSanitizer(
+    DebugPathSanitizer debugPathSanitizer = new MungingDebugPathSanitizer(
         config.getDebugPathSanitizerLimit(),
         File.separatorChar,
         Paths.get("."),

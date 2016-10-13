@@ -67,7 +67,7 @@ public class CxxErrorTransformerFactoryTest {
     Path compilationDirectory = Paths.get("compDir");
     Path sanitizedDir = Paths.get("hello");
     Path unsanitizedDir = Paths.get("buck-out/foo#bar");
-    DebugPathSanitizer sanitizer = new DebugPathSanitizer(
+    DebugPathSanitizer sanitizer = new MungingDebugPathSanitizer(
         unsanitizedDir.toString().length(),
         File.separatorChar,
         compilationDirectory,

@@ -23,6 +23,7 @@ import static org.junit.Assume.assumeTrue;
 import static com.facebook.buck.cxx.CxxFlavorSanitizer.sanitize;
 
 import com.facebook.buck.cxx.DebugPathSanitizer;
+import com.facebook.buck.cxx.MungingDebugPathSanitizer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -112,7 +113,7 @@ public class CompDirReplacerIntegrationTest {
         filesystem.getBuckPaths().getScratchDir().resolve(Paths.get("unsanitized.main.c.o")));
 
     // this was stolen from the implementation detail of AppleCxxPlatforms
-    DebugPathSanitizer sanitizer = new DebugPathSanitizer(
+    DebugPathSanitizer sanitizer = new MungingDebugPathSanitizer(
         250,
         File.separatorChar,
         Paths.get("."),

@@ -27,6 +27,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.CodeSigning;
 import com.facebook.buck.cxx.DebugPathSanitizer;
+import com.facebook.buck.cxx.MungingDebugPathSanitizer;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -74,7 +75,7 @@ public class ObjectPathsAbsolutifierIntegrationTest {
 
   private DebugPathSanitizer getDebugPathSanitizer() {
     // this was stolen from the implementation detail of AppleCxxPlatforms
-    return new DebugPathSanitizer(
+    return new MungingDebugPathSanitizer(
         250,
         File.separatorChar,
         Paths.get("."),

@@ -162,7 +162,7 @@ public class PrecompiledHeaderFeatureTest {
         public CxxPrecompiledHeader generate(Path from) {
           CxxSourceRuleFactory factory = preconfiguredSourceRuleFactoryBuilder()
               .setCxxPlatform(PLATFORM_SUPPORTING_PCH.withDebugPathSanitizer(
-                  new DebugPathSanitizer(
+                  new MungingDebugPathSanitizer(
                       250,
                       File.separatorChar,
                       Paths.get("."),

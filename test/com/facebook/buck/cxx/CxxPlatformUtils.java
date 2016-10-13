@@ -49,7 +49,7 @@ public class CxxPlatformUtils {
 
   @VisibleForTesting
   static final DebugPathSanitizer DEFAULT_DEBUG_PATH_SANITIZER =
-      new DebugPathSanitizer(
+      new MungingDebugPathSanitizer(
           250,
           File.separatorChar,
           Paths.get("."),

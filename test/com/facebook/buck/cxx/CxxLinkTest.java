@@ -162,13 +162,13 @@ public class CxxLinkTest {
     // Set up a map to sanitize the differences in the flags.
     int pathSize = 10;
     DebugPathSanitizer sanitizer1 =
-        new DebugPathSanitizer(
+        new MungingDebugPathSanitizer(
             pathSize,
             File.separatorChar,
             Paths.get("PWD"),
             ImmutableBiMap.of(Paths.get("something"), Paths.get("A")));
     DebugPathSanitizer sanitizer2 =
-        new DebugPathSanitizer(
+        new MungingDebugPathSanitizer(
             pathSize,
             File.separatorChar,
             Paths.get("PWD"),

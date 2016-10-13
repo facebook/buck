@@ -50,7 +50,7 @@ public class CxxPreprocessorOutputTransformerFactoryTest {
     normalizerBuilder.addHeader(new FakeSourcePath("hello/////world.h"), original);
     HeaderPathNormalizer normalizer = normalizerBuilder.build();
 
-    DebugPathSanitizer sanitizer = new DebugPathSanitizer(
+    DebugPathSanitizer sanitizer = new MungingDebugPathSanitizer(
         9,
         File.separatorChar,
         Paths.get("PWD"),
