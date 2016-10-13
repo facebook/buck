@@ -92,6 +92,12 @@ public class IjModuleFactory {
     Path getAndroidManifestPath(TargetNode<AndroidBinaryDescription.Arg> targetNode);
 
     /**
+     * @param targetNode node describing the Android library to get the manifest of.
+     * @return path on disk to the AndroidManifest.
+     */
+    Optional<Path> getLibraryAndroidManifestPath(TargetNode<AndroidLibraryDescription.Arg> targetNode);
+
+    /**
      * @param targetNode node describing the Android binary to get the Proguard config of.
      * @return path on disk to the proguard config.
      */
@@ -624,9 +630,14 @@ public class IjModuleFactory {
       if (dummyRDotJavaClassPath.isPresent()) {
         context.addExtraClassPathDependency(dummyRDotJavaClassPath.get());
       }
-      context.getOrCreateAndroidFacetBuilder()
-          .setAutogenerateSources(autogenerateAndroidFacetSources)
-          .setAndroidLibrary(true);
+
+      IjModuleAndroidFacet.Builder builder = context.getOrCreateAndroidFacetBuilder();
+      Optional<Path> manifestPath = moduleFactoryResolver.getLibraryAndroidManifestPath(target);
+      if (manifestPath.isPresent()) {
+        builder.setManifestPath(manifestPath.get());
+      }
+      builder.setAutogenerateSources(autogenerateAndroidFacetSources);
+      builder.setAndroidLibrary(true);
     }
   }
 
