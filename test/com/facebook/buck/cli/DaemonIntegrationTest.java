@@ -93,6 +93,7 @@ public class DaemonIntegrationTest {
     // In case root_restrict_files is enabled in /etc/watchmanconfig, assume
     // this is one of the entries so it doesn't give up.
     tmp.newFolder(".git");
+    tmp.newFile(".arcconfig");
     Watchman watchman = Watchman.build(
         tmp.getRoot(),
         getWatchmanEnv(),
