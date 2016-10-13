@@ -23,7 +23,6 @@ import com.facebook.buck.graph.AcyclicDepthFirstPostOrderTraversal.CycleExceptio
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.hashing.FilePathHashLoader;
 import com.facebook.buck.io.BuckPaths;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildFileTree;
@@ -275,7 +274,7 @@ public class TargetsCommand extends AbstractCommand {
    */
   public ImmutableSet<Path> getTargetHashModifiedPaths() {
     return FluentIterable.from(targetHashModifiedPaths.get())
-        .transform(MorePaths.TO_PATH)
+        .transform(Paths::get)
         .toSet();
   }
 

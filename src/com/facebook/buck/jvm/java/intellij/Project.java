@@ -1042,7 +1042,7 @@ public class Project {
       String sourceJar = prebuiltJar.getSourceJar()
           .transform(resolver.getAbsolutePathFunction())
           .transform(projectFilesystem.getRelativizer())
-          .transform(MorePaths.UNIX_PATH)
+          .transform(MorePaths::pathWithUnixSeparators)
           .orNull();
       String javadocUrl = prebuiltJar.getJavadocUrl().orNull();
       libraries.add(new SerializablePrebuiltJarRule(name, binaryJar, sourceJar, javadocUrl));

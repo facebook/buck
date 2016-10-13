@@ -19,7 +19,6 @@ package com.facebook.buck.go;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -157,7 +156,7 @@ public class GoBuckConfig {
     if (vendorPaths.isPresent()) {
       return FluentIterable
           .from(vendorPaths.get())
-          .transform(MorePaths.TO_PATH).toList();
+          .transform(Paths::get).toList();
     }
     return ImmutableList.of();
   }

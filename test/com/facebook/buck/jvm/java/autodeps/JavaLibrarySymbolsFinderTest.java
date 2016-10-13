@@ -26,7 +26,6 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -57,6 +56,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class JavaLibrarySymbolsFinderTest {
   @Rule
@@ -80,7 +80,7 @@ public class JavaLibrarySymbolsFinderTest {
     ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.<SourcePath>naturalOrder()
         .addAll(
             FluentIterable.from(ImmutableSet.of("Example1.java", "Example2.java"))
-                .transform(MorePaths.TO_PATH)
+                .transform(Paths::get)
                 .transform(SourcePaths.toSourcePath(projectFilesystem))
         )
         .add(new BuildTargetSourcePath(BuildTargetFactory.newInstance("//foo:bar")))
@@ -110,7 +110,7 @@ public class JavaLibrarySymbolsFinderTest {
     final ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot());
 
     Function<String, SourcePath> convert =
-        src -> SourcePaths.toSourcePath(projectFilesystem).apply(MorePaths.TO_PATH.apply(src));
+        src -> SourcePaths.toSourcePath(projectFilesystem).apply(Paths.get(src));
     SourcePath example1 = convert.apply("Example1.java");
     SourcePath example2 = convert.apply("Example2.java");
     final BuildTarget fakeBuildTarget = BuildTargetFactory.newInstance("//foo:GenEx.java");

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -334,7 +333,7 @@ public class PrebuiltCxxLibraryDescription implements
           params.getBuildTarget());
     }
     return CxxPreprocessables.resolveHeaderMap(
-        args.headerNamespace.transform(MorePaths.TO_PATH)
+        args.headerNamespace.transform(Paths::get)
             .or(params.getBuildTarget().getBasePath()),
         headers.build());
   }

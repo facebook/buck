@@ -25,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -33,6 +32,7 @@ import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.SortedSet;
 
 import javax.annotation.Nullable;
@@ -66,7 +66,7 @@ final class SerializableModule {
   @Nullable
   @JsonProperty("moduleGenPath")
   public String getModuleGenPath() {
-    return Optional.fromNullable(moduleGenPath).transform(MorePaths.UNIX_PATH).orNull();
+    return Optional.ofNullable(moduleGenPath).map(MorePaths::pathWithUnixSeparators).orElse(null);
   }
 
   @Nullable
@@ -74,7 +74,9 @@ final class SerializableModule {
   @Nullable
   @JsonProperty("moduleRJavaPath")
   public String getModuleRJavaPath() {
-    return Optional.fromNullable(moduleRJavaPath).transform(MorePaths.UNIX_PATH).orNull();
+    return Optional.ofNullable(moduleRJavaPath)
+        .map(MorePaths::pathWithUnixSeparators)
+        .orElse(null);
   }
 
   @Nullable
@@ -86,7 +88,9 @@ final class SerializableModule {
   @Nullable
   @JsonProperty("pathToImlFile")
   public String getPathToImlFile() {
-    return Optional.fromNullable(pathToImlFile).transform(MorePaths.UNIX_PATH).orNull();
+    return Optional.ofNullable(pathToImlFile)
+        .map(MorePaths::pathWithUnixSeparators)
+        .orElse(null);
   }
 
   @JsonProperty
@@ -114,7 +118,9 @@ final class SerializableModule {
   @Nullable
   @JsonProperty("proguardConfigPath")
   public String getProguardConfigPath() {
-    return Optional.fromNullable(proguardConfigPath).transform(MorePaths.UNIX_PATH).orNull();
+    return Optional.ofNullable(proguardConfigPath)
+        .map(MorePaths::pathWithUnixSeparators)
+        .orElse(null);
   }
 
   @Nullable
@@ -122,14 +128,18 @@ final class SerializableModule {
   @Nullable
   @JsonProperty("resFolder")
   public String getResFolder() {
-    return Optional.fromNullable(resFolder).transform(MorePaths.UNIX_PATH).orNull();
+    return Optional.ofNullable(resFolder)
+        .map(MorePaths::pathWithUnixSeparators)
+        .orElse(null);
   }
 
   @Nullable
   Path assetFolder;
   @JsonProperty("assetFolder")
   public String getAssetFolder() {
-    return Optional.fromNullable(assetFolder).transform(MorePaths.UNIX_PATH).orNull();
+    return Optional.ofNullable(assetFolder)
+        .map(MorePaths::pathWithUnixSeparators)
+        .orElse(null);
   }
 
   @Nullable
@@ -137,7 +147,9 @@ final class SerializableModule {
   @Nullable
   @JsonProperty("keystorePath")
   public String getKeystorePath() {
-    return Optional.fromNullable(keystorePath).transform(MorePaths.UNIX_PATH).orNull();
+    return Optional.ofNullable(keystorePath)
+        .map(MorePaths::pathWithUnixSeparators)
+        .orElse(null);
   }
 
   @Nullable
@@ -145,7 +157,9 @@ final class SerializableModule {
   @Nullable
   @JsonProperty("androidManifest")
   public String getAndroidManifest() {
-    return Optional.fromNullable(androidManifest).transform(MorePaths.UNIX_PATH).orNull();
+    return Optional.ofNullable(androidManifest)
+        .map(MorePaths::pathWithUnixSeparators)
+        .orElse(null);
   }
 
   @Nullable
@@ -153,7 +167,9 @@ final class SerializableModule {
   @Nullable
   @JsonProperty("nativeLibs")
   public String getNativeLibs() {
-    return Optional.fromNullable(nativeLibs).transform(MorePaths.UNIX_PATH).orNull();
+    return Optional.ofNullable(nativeLibs)
+        .map(MorePaths::pathWithUnixSeparators)
+        .orElse(null);
   }
 
   @Nullable
@@ -172,7 +188,7 @@ final class SerializableModule {
   @Nullable
   @JsonProperty("binaryPath")
   public String getBinaryPath() {
-    return Optional.fromNullable(binaryPath).transform(MorePaths.UNIX_PATH).orNull();
+    return Optional.ofNullable(binaryPath).map(MorePaths::pathWithUnixSeparators).orElse(null);
   }
 
   // In IntelliJ, options in an .iml file that correspond to file paths should be relative to the

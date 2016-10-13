@@ -17,7 +17,6 @@
 package com.facebook.buck.ocaml;
 
 import com.facebook.buck.cxx.CxxPreprocessorInput;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -32,6 +31,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * A step that preprocesses, compiles, and assembles OCaml sources.
@@ -417,7 +417,7 @@ public class OCamlBuildStep implements Step {
     OCamlDependencyGraphGenerator graphGenerator = new OCamlDependencyGraphGenerator();
     return
         FluentIterable.from(graphGenerator.generate(depOutput))
-            .transform(MorePaths.TO_PATH)
+            .transform(Paths::get)
             // The output of generate needs to be filtered as .cmo dependencies
             // are generated as both .ml and .re files.
             .filter(mlInput::contains)

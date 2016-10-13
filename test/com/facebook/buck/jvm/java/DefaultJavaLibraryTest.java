@@ -33,7 +33,6 @@ import com.facebook.buck.android.AndroidPlatformTarget;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.HashingDeterministicJarWriter;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
@@ -1054,7 +1053,7 @@ public class DefaultJavaLibraryTest {
       ImmutableList<String> postprocessClassesCommands) {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     ImmutableSortedSet<SourcePath> srcsAsPaths = FluentIterable.from(srcs)
-        .transform(MorePaths.TO_PATH)
+        .transform(Paths::get)
         .transform(SourcePaths.toSourcePath(projectFilesystem))
         .toSortedSet(Ordering.natural());
 

@@ -23,7 +23,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
@@ -58,10 +57,6 @@ public class ExecutableFinder {
           ".vbs",
           ".wsf",
           ".wsh");
-  // Avoid using MorePaths.TO_PATH because of circular deps in this package
-  private static final Function<String, Path> TO_PATH = path -> Paths.get(path);
-
-  private static final Function<Path, Boolean> IS_EXECUTABLE = ExecutableFinder::isExecutable;
 
   private final Platform platform;
 
@@ -119,7 +114,7 @@ public class ExecutableFinder {
             suggestedExecutable.toString(),
             ImmutableSet.copyOf(fileSuffixes)),
         path,
-        IS_EXECUTABLE);
+        ExecutableFinder::isExecutable);
     LOG.debug("Executable '%s' mapped to '%s'", suggestedExecutable, executable);
 
     return executable;
@@ -163,7 +158,7 @@ public class ExecutableFinder {
       pathEnv = pathEnv.trim();
       paths.addAll(
           FluentIterable.from(Splitter.on(pathSeparator).omitEmptyStrings().split(pathEnv))
-              .transform(TO_PATH));
+              .transform(Paths::get));
     }
 
     if (platform == Platform.MACOS) {
@@ -172,7 +167,7 @@ public class ExecutableFinder {
         try {
           paths.addAll(
               FluentIterable.from(Files.readAllLines(osXPaths, Charset.defaultCharset()))
-                  .transform(TO_PATH));
+                  .transform(Paths::get));
         } catch (IOException e) {
           LOG.warn("Unable to read mac-specific paths. Skipping");
         }

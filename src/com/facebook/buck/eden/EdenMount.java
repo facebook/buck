@@ -16,7 +16,6 @@
 
 package com.facebook.buck.eden;
 
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.EdenService;
@@ -30,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -100,7 +100,7 @@ public class EdenMount {
       throw new RuntimeException(e);
     }
 
-    return FluentIterable.from(bindMounts).transform(MorePaths.TO_PATH).toList();
+    return FluentIterable.from(bindMounts).transform(Paths::get).toList();
   }
 
   /**

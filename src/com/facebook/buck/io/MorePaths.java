@@ -44,10 +44,6 @@ public class MorePaths {
   /** Utility class: do not instantiate. */
   private MorePaths() {}
 
-  public static final Function<String, Path> TO_PATH = path -> Paths.get(path);
-
-  public static final Function<Path, String> UNIX_PATH = MorePaths::pathWithUnixSeparators;
-
   private static final Path EMPTY_PATH = Paths.get("");
 
   public static String pathWithUnixSeparators(String path) {
@@ -171,7 +167,7 @@ public class MorePaths {
   public static ImmutableSortedSet<Path> asPaths(Iterable<String> paths) {
     ImmutableSortedSet.Builder<Path> builder = ImmutableSortedSet.naturalOrder();
     for (String path : paths) {
-      builder.add(TO_PATH.apply(path));
+      builder.add(Paths.get(path));
     }
     return builder.build();
   }

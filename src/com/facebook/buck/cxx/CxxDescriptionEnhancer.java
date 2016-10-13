@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.JsonConcatenate;
 import com.facebook.buck.log.Logger;
@@ -229,7 +228,7 @@ public class CxxDescriptionEnhancer {
       }
     }
     return CxxPreprocessables.resolveHeaderMap(
-        args.headerNamespace.transform(MorePaths.TO_PATH)
+        args.headerNamespace.transform(Paths::get)
             .or(buildTarget.getBasePath()),
         headers.build());
   }
@@ -262,7 +261,7 @@ public class CxxDescriptionEnhancer {
       }
     }
     return CxxPreprocessables.resolveHeaderMap(
-        args.headerNamespace.transform(MorePaths.TO_PATH)
+        args.headerNamespace.transform(Paths::get)
             .or(buildTarget.getBasePath()),
         headers.build());
   }

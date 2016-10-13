@@ -16,7 +16,6 @@
 
 package com.facebook.buck.go;
 
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -46,6 +45,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
+import java.nio.file.Paths;
 import java.util.List;
 
 public class GoLibraryDescription implements
@@ -94,7 +94,7 @@ public class GoLibraryDescription implements
               GoLinkable.builder()
                   .setGoLinkInput(
                       ImmutableMap.of(
-                          args.packageName.transform(MorePaths.TO_PATH)
+                          args.packageName.transform(Paths::get)
                               .or(goBuckConfig.getDefaultPackageName(buildTarget)),
                           output))
                   .setExportedDeps(args.exportedDeps.or(ImmutableSortedSet.of()))
@@ -131,7 +131,7 @@ public class GoLibraryDescription implements
           params,
           resolver,
           goBuckConfig,
-          args.packageName.transform(MorePaths.TO_PATH)
+          args.packageName.transform(Paths::get)
               .or(goBuckConfig.getDefaultPackageName(params.getBuildTarget())),
           args.srcs.or(ImmutableSortedSet.of()),
           args.compilerFlags.or(ImmutableList.of()),

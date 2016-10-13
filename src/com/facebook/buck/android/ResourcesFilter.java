@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -236,11 +235,11 @@ public class ResourcesFilter extends AbstractBuildRule
   public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
     ImmutableList<Path> resDirectories =
         FluentIterable.from(onDiskBuildInfo.getValues(RES_DIRECTORIES_KEY).get())
-            .transform(MorePaths.TO_PATH)
+            .transform(Paths::get)
             .toList();
     ImmutableList<Path> stringFiles =
         FluentIterable.from(onDiskBuildInfo.getValues(STRING_FILES_KEY).get())
-            .transform(MorePaths.TO_PATH)
+            .transform(Paths::get)
             .toList();
 
     return new BuildOutput(resDirectories, stringFiles);

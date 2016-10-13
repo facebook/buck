@@ -18,10 +18,10 @@ package com.facebook.buck.jvm.java.intellij;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Resources;
 
@@ -167,10 +167,17 @@ public class IjProjectWriter {
 
     ST contents = getST(StringTemplateFile.LIBRARY_TEMPLATE);
     contents.add("name", library.getName());
-    contents.add("binaryJar", library.getBinaryJar().transform(MorePaths.UNIX_PATH).orNull());
-    contents.add("classPaths",
-        FluentIterable.from(library.getClassPaths()).transform(MorePaths.UNIX_PATH).toSet());
-    contents.add("sourceJar", library.getSourceJar().transform(MorePaths.UNIX_PATH).orNull());
+    contents.add(
+        "binaryJar",
+        library.getBinaryJar().transform(MorePaths::pathWithUnixSeparators).orNull());
+    contents.add(
+        "classPaths",
+        library.getClassPaths().stream()
+            .map(MorePaths::pathWithUnixSeparators)
+            .collect(MoreCollectors.toImmutableSet()));
+    contents.add(
+        "sourceJar",
+        library.getSourceJar().transform(MorePaths::pathWithUnixSeparators).orNull());
     contents.add("javadocUrl", library.getJavadocUrl().orNull());
     //TODO(marcinkosiba): support res and assets for aar.
 

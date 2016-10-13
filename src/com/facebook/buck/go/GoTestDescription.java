@@ -18,7 +18,6 @@ package com.facebook.buck.go;
 
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -256,7 +255,7 @@ public class GoTestDescription implements
             target, args.library.get());
       }
 
-      return libraryArg.get().packageName.transform(MorePaths.TO_PATH).or(
+      return libraryArg.get().packageName.transform(Paths::get).or(
           goBuckConfig.getDefaultPackageName(args.library.get()));
     } else if (args.packageName.isPresent()) {
       return Paths.get(args.packageName.get());

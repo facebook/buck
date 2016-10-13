@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java.autodeps;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -48,6 +47,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class JavaSymbolsRuleTest {
@@ -69,7 +69,7 @@ public class JavaSymbolsRuleTest {
     ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.<SourcePath>naturalOrder()
         .addAll(
             FluentIterable.from(ImmutableSet.of("Example1.java", "Example2.java"))
-                .transform(MorePaths.TO_PATH)
+                .transform(Paths::get)
                 .transform(SourcePaths.toSourcePath(projectFilesystem))
         )
         .add(new BuildTargetSourcePath(BuildTargetFactory.newInstance("//foo:bar")))

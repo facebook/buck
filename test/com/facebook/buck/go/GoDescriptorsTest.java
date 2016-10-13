@@ -35,9 +35,9 @@ public class GoDescriptorsTest {
     return ImmutableMap.copyOf(FluentIterable.from(
         GoDescriptors.getPackageImportMap(
             ImmutableList.copyOf(
-              FluentIterable.from(globalVendorPath).transform(MorePaths.TO_PATH)),
+              FluentIterable.from(globalVendorPath).transform(Paths::get)),
             Paths.get(basePackage),
-            FluentIterable.from(packages).transform(MorePaths.TO_PATH)).entrySet())
+            FluentIterable.from(packages).transform(Paths::get)).entrySet())
         .transform(input -> Maps.immutableEntry(
             MorePaths.pathWithUnixSeparators(input.getKey()),
             MorePaths.pathWithUnixSeparators(input.getValue()))));

@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.PreDexMerge.BuildOutput;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -56,6 +55,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -444,7 +444,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
     return new BuildOutput(
         primaryDexHash.orNull(),
         FluentIterable.from(onDiskBuildInfo.getValues(SECONDARY_DEX_DIRECTORIES_KEY).get())
-            .transform(MorePaths.TO_PATH)
+            .transform(Paths::get)
             .toSet());
   }
 
