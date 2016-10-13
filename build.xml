@@ -760,6 +760,7 @@
       <ruleset>buck</ruleset>
       <fileset dir="${src.dir}">
         <include name="**/*.java"/>
+        <exclude name="com/facebook/buck/intellij/ideabuck/gen/**"/>
       </fileset>
       <fileset dir="${test.dir}">
         <include name="**/*.java"/>
@@ -815,6 +816,7 @@
     <checkstyle config="checkstyle.xml" maxWarnings="0">
       <fileset dir="${src.dir}">
         <include name="**/*.java"/>
+        <exclude name="com/facebook/buck/intellij/ideabuck/gen/**"/>
       </fileset>
       <fileset dir="${test.dir}">
         <include name="**/*.java"/>
