@@ -1,0 +1,97 @@
+/*
+ * Copyright 2016-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.cxx;
+
+import static org.junit.Assert.assertThat;
+
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.Javac;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
+
+import org.hamcrest.Matchers;
+import org.junit.Test;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Optional;
+
+public class CxxWriteArgsToFileStepTest {
+
+  @Test
+  public void cxxWriteArgsToFilePassesLinkerOptionsViaArgFile()
+      throws IOException, InterruptedException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    Path fileListPath = projectFilesystem.getRootPath().resolve(
+        "/tmp/cxxWriteArgsToFilePassesLinkerOptionsViaArgFile.txt");
+
+    runTestForArgFilePathAndOutputPath(
+        fileListPath,
+        Optional.empty(),
+        ImmutableList.of(new StringArg("-dummy"), new StringArg("\"")),
+        ImmutableList.of("-dummy", "\""));
+  }
+
+  @Test
+  public void cxxWriteArgsToFileCreatesDirectoriesIfNeeded()
+      throws IOException, InterruptedException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    Path fileListPath = projectFilesystem.getRootPath().resolve(
+        "/tmp/unexisting_parent_folder/filelist.txt");
+
+    runTestForArgFilePathAndOutputPath(
+        fileListPath,
+        Optional.of(Javac.ARGFILES_ESCAPER),
+        ImmutableList.of(new StringArg("-dummy"), new StringArg("\"")),
+        ImmutableList.of("-dummy", "\"\\\"\""));
+  }
+
+  private void runTestForArgFilePathAndOutputPath(
+      Path argFilePath,
+      Optional<Function<String, String>> escaper,
+      ImmutableList<Arg> inputArgs,
+      ImmutableList<String> expectedArgFileContents) throws IOException, InterruptedException {
+    ExecutionContext context = TestExecutionContext.newInstance();
+
+    // Create our CxxWriteArgsToFileStep to test.
+    CxxWriteArgsToFileStep step = new CxxWriteArgsToFileStep(
+        argFilePath,
+        inputArgs,
+        escaper);
+
+    step.execute(context);
+
+    assertThat(Files.exists(argFilePath), Matchers.equalTo(true));
+
+    checkContentsOfFile(argFilePath, expectedArgFileContents);
+    Files.deleteIfExists(argFilePath);
+  }
+
+  private void checkContentsOfFile(Path file, ImmutableList<String> contents) throws IOException {
+    List<String> fileContents = Files.readAllLines(file, StandardCharsets.UTF_8);
+    assertThat(fileContents, Matchers.equalTo(contents));
+  }
+
+}
