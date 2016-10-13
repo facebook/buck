@@ -10,7 +10,6 @@ android_library(
 
 android_resource(
     name='manifest',
-    manifest='src/main/AndroidManifest.xml',
     deps=['//libA:manifest'],
     visibility=['PUBLIC'],
 )

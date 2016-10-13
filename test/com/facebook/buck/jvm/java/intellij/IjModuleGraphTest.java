@@ -24,6 +24,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryBuilder;
+import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResourceBuilder;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.cli.BuckConfig;
@@ -815,6 +816,12 @@ public class IjModuleGraphTest {
           @Override
           public Path getAndroidManifestPath(TargetNode<AndroidBinaryDescription.Arg> targetNode) {
             return Paths.get("TestAndroidManifest.xml");
+          }
+
+          @Override
+          public Optional<Path> getLibraryAndroidManifestPath(
+              TargetNode<AndroidLibraryDescription.Arg> targetNode) {
+            return Optional.absent();
           }
 
           @Override
