@@ -26,7 +26,6 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -99,7 +98,7 @@ public class ClasspathMacroExpander
                   }
                 })
             .filter(Predicates.notNull())
-            .transform(Functions.toStringFunction())
+            .transform(Object::toString)
             .toSortedSet(Ordering.natural()));
   }
 

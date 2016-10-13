@@ -44,7 +44,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -190,7 +189,7 @@ public class Parser {
           toReturn.put(
               "buck.direct_dependencies",
               FluentIterable.from(targetNode.getDeps())
-                  .transform(Functions.toStringFunction())
+                  .transform(Object::toString)
                   .toList());
           return toReturn;
         }

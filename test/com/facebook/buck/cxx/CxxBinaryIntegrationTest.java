@@ -44,7 +44,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
@@ -265,7 +264,7 @@ public class CxxBinaryIntegrationTest {
                         .contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR) &&
                     !target.getFlavors()
                         .contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)))
-            .transform(Functions.toStringFunction())
+            .transform(Object::toString)
             // Filter out any rules that are explicitly built locally.
             .filter(Predicates.not(Predicates.in(locallyBuiltTargets)))
             .toSet();

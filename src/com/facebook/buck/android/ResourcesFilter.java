@@ -32,7 +32,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -167,12 +166,12 @@ public class ResourcesFilter extends AbstractBuildRule
         buildableContext.addMetadata(
             RES_DIRECTORIES_KEY,
             FluentIterable.from(filteredResDirectories)
-                .transform(Functions.toStringFunction())
+                .transform(Object::toString)
                 .toList());
         buildableContext.addMetadata(
             STRING_FILES_KEY,
             FluentIterable.from(stringFilesBuilder.build())
-                .transform(Functions.toStringFunction())
+                .transform(Object::toString)
                 .toList());
         return StepExecutionResult.SUCCESS;
       }

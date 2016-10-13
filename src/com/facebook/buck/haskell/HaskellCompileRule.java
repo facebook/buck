@@ -313,12 +313,12 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
                 .add("-i" + Joiner.on(':').join(
                     FluentIterable.from(includes)
                         .transform(getResolver().getAbsolutePathFunction())
-                        .transform(Functions.toStringFunction())))
+                        .transform(Object::toString)))
                 .addAll(getPackageArgs())
                 .addAll(
                     FluentIterable.from(sources.getSourcePaths())
                         .transform(getResolver().getAbsolutePathFunction())
-                        .transform(Functions.toStringFunction()))
+                        .transform(Object::toString))
                 .build();
           }
 

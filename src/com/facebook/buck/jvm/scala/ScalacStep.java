@@ -22,7 +22,6 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -90,7 +89,7 @@ public class ScalacStep extends ShellStep {
     }
     commandBuilder.addAll(
         FluentIterable.from(sourceFilePaths)
-            .transform(Functions.toStringFunction()));
+            .transform(Object::toString));
 
     return commandBuilder.build();
   }

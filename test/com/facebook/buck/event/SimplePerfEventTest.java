@@ -19,7 +19,6 @@ package com.facebook.buck.event;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.timing.SettableFakeClock;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -45,7 +44,7 @@ public class SimplePerfEventTest {
     assertThat(perfEvent.getEventId(), Matchers.equalTo(id));
     assertThat(perfEvent.getEventType(), Matchers.equalTo(type));
     assertThat(
-        Maps.transformValues(perfEvent.getEventInfo(), Functions.toStringFunction()),
+        Maps.transformValues(perfEvent.getEventInfo(), Object::toString),
         Matchers.equalTo((Map<String, String>) info));
   }
 

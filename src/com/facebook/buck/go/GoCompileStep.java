@@ -18,7 +18,6 @@ package com.facebook.buck.go;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -97,7 +96,7 @@ public class GoCompileStep extends ShellStep {
       commandBuilder.add("-complete");
     }
 
-    commandBuilder.addAll(FluentIterable.from(srcs).transform(Functions.toStringFunction()));
+    commandBuilder.addAll(FluentIterable.from(srcs).transform(Object::toString));
 
     return commandBuilder.build();
   }

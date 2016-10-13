@@ -24,7 +24,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
@@ -152,7 +151,7 @@ abstract class AbstractFrameworkPath implements
     sink.setReflectively("sourcePath", getSourcePath());
     sink.setReflectively(
         "sourceTree",
-        getSourceTreePath().transform(Functions.toStringFunction()));
+        getSourceTreePath().transform(Object::toString));
   }
 
   public static FrameworkPath ofSourceTreePath(SourceTreePath sourceTreePath) {

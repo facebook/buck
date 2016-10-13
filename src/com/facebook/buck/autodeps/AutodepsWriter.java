@@ -23,7 +23,6 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Charsets;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -172,7 +171,7 @@ public class AutodepsWriter {
           for (DependencyType type : DependencyType.values()) {
             Iterable<BuildTarget> depsAsBuildTargets = depsForRule.depsForDependencyType(type);
             Iterable<String> depsAsStrings = FluentIterable.from(depsAsBuildTargets)
-                .transform(Functions.toStringFunction());
+                .transform(Object::toString);
             deps.put(type.name().toLowerCase(), depsAsStrings);
           }
           depsForBuildFile.put(depsForRule.getShortName(), deps);

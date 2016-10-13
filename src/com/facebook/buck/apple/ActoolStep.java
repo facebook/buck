@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -99,7 +98,7 @@ class ActoolStep extends ShellStep {
       commandBuilder.add("--launch-image", launchImage.get());
     }
 
-    commandBuilder.addAll(Iterables.transform(assetCatalogDirs, Functions.toStringFunction()));
+    commandBuilder.addAll(Iterables.transform(assetCatalogDirs, Object::toString));
 
     return commandBuilder.build();
   }

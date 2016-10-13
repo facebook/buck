@@ -33,7 +33,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -206,7 +205,7 @@ public class ExternalJavac implements Javac {
     try {
       filesystem.writeLinesToPath(
           FluentIterable.from(expandedSources)
-              .transform(Functions.toStringFunction())
+              .transform(Object::toString)
               .transform(ARGFILES_ESCAPER),
           pathToSrcsList);
       command.add("@" + pathToSrcsList);

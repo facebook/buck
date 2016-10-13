@@ -41,7 +41,6 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -172,7 +171,7 @@ public class PythonTest
           getBuildTarget(),
           summaries.build(),
           contacts,
-          FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
+          FluentIterable.from(labels).transform(Object::toString).toSet());
     };
   }
 

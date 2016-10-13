@@ -40,7 +40,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -189,7 +188,7 @@ public class RageCommandIntegrationTest {
     assertThat(defectReport.getExtraInfo(), Matchers.equalTo(Optional.of("Extra\n")));
     assertThat(
         FluentIterable.from(defectReport.getIncludedPaths())
-            .transform(Functions.toStringFunction()),
+            .transform(Object::toString),
         Matchers.hasItem(Matchers.endsWith("extra.txt")));
   }
 

@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -238,7 +237,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
       public Builder setRuleKeys(Iterable<RuleKey> ruleKeys) {
         // Make sure we expand any lazy evaluation Iterators so Json serialization works correctly.
         List<String> keysAsStrings = FluentIterable.from(ruleKeys)
-            .transform(Functions.toStringFunction())
+            .transform(Object::toString)
             .toList();
         data.put("rule_keys", keysAsStrings);
         return this;

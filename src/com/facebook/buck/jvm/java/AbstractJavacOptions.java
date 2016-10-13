@@ -28,7 +28,6 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -198,7 +197,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
           Joiner.on(File.pathSeparator).join(
               FluentIterable.from(getAnnotationProcessingParams().getSearchPathElements())
                   .transform(pathRelativizer)
-                  .transform(Functions.toStringFunction())));
+                  .transform(Object::toString)));
 
       // Specify names of processors.
       if (!getAnnotationProcessingParams().getNames().isEmpty()) {

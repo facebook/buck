@@ -37,13 +37,11 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MakeExecutableStep;
 import com.facebook.buck.step.fs.StringTemplateStep;
 import com.facebook.buck.util.Escaper;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -105,7 +103,7 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
 
               ImmutableList<String> resourceStrings = FluentIterable
                   .from(getResolver().deprecatedAllPaths(resources))
-                  .transform(Functions.toStringFunction())
+                  .transform(Object::toString)
                   .transform(Escaper.BASH_ESCAPER)
                   .toList();
 

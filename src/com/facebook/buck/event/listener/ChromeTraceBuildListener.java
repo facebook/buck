@@ -49,15 +49,14 @@ import com.facebook.buck.util.BestCompressionGZIPOutputStream;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProcessResourceConsumption;
-import com.facebook.buck.util.perf.ProcessTracker;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.perf.PerfStatsTracking;
+import com.facebook.buck.util.perf.ProcessTracker;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
@@ -318,7 +317,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         ImmutableMap.of(
             "cache_result", finished.getCacheResult().toString().toLowerCase(),
             "success_type",
-            finished.getSuccessType().transform(Functions.toStringFunction()).or("failed")
+            finished.getSuccessType().transform(Object::toString).or("failed")
         ),
         finished);
   }
@@ -409,7 +408,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
           CONVERTED_EVENT_ID_CACHE.get(perfEvent.getEventId().getValue().intern()),
           phase,
           ImmutableMap.copyOf(
-              Maps.transformValues(perfEvent.getEventInfo(), Functions.toStringFunction())),
+              Maps.transformValues(perfEvent.getEventInfo(), Object::toString)),
           perfEvent);
     } catch (ExecutionException e) {
       LOG.warn("Unable to log perf event " + perfEvent, e);
@@ -540,7 +539,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     ImmutableMap.Builder<String, String> argumentsBuilder = ImmutableMap.<String, String>builder()
         .put("success", Boolean.toString(finished.isSuccess()))
         .put("rule_key", Joiner.on(", ").join(finished.getRuleKeys()));
-    Optionals.putIfPresent(finished.getCacheResult().transform(Functions.toStringFunction()),
+    Optionals.putIfPresent(finished.getCacheResult().transform(Object::toString),
         "cache_result",
         argumentsBuilder);
 

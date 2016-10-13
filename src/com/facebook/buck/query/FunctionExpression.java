@@ -33,7 +33,6 @@ package com.facebook.buck.query;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -72,7 +71,7 @@ public class FunctionExpression extends QueryExpression {
   @Override
   public String toString() {
     return function.getName() +
-        "(" + Joiner.on(", ").join(Iterables.transform(args, Functions.toStringFunction())) + ")";
+        "(" + Joiner.on(", ").join(Iterables.transform(args, Object::toString)) + ")";
   }
 
   @Override

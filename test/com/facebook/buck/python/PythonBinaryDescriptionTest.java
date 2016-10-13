@@ -18,17 +18,16 @@ package com.facebook.buck.python;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cxx.NativeLinkStrategy;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxPlatformUtils;
+import com.facebook.buck.cxx.NativeLinkStrategy;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -39,6 +38,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -57,7 +57,6 @@ import com.facebook.buck.shell.ShBinaryBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -433,7 +432,7 @@ public class PythonBinaryDescriptionTest {
     assertThat(
         Iterables.transform(
             binary.getComponents().getNativeLibraries().keySet(),
-            Functions.toStringFunction()),
+            Object::toString),
         Matchers.containsInAnyOrder("libomnibus.so", "libcxx.so"));
   }
 
@@ -484,7 +483,7 @@ public class PythonBinaryDescriptionTest {
     assertThat(
         Iterables.transform(
             binary.getComponents().getNativeLibraries().keySet(),
-            Functions.toStringFunction()),
+            Object::toString),
         Matchers.containsInAnyOrder("libtransitive_dep.so", "libdep.so", "libcxx.so"));
   }
 
@@ -538,7 +537,7 @@ public class PythonBinaryDescriptionTest {
     assertThat(
         Iterables.transform(
             binary.getComponents().getModules().keySet(),
-            Functions.toStringFunction()),
+            Object::toString),
         Matchers.containsInAnyOrder(MorePaths.pathWithPlatformSeparators("hello/extension.so")));
   }
 
@@ -590,7 +589,7 @@ public class PythonBinaryDescriptionTest {
     assertThat(
         Iterables.transform(
             binary.getComponents().getNativeLibraries().keySet(),
-            Functions.toStringFunction()),
+            Object::toString),
         Matchers.hasItem("libtransitive_cxx.so"));
   }
 
@@ -843,7 +842,7 @@ public class PythonBinaryDescriptionTest {
     assertThat(
         Iterables.transform(
             binary.getComponents().getNativeLibraries().keySet(),
-            Functions.toStringFunction()),
+            Object::toString),
         Matchers.containsInAnyOrder(
             "libomnibus.so",
             "libcxx.so",

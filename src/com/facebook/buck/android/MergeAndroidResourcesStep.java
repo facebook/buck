@@ -29,7 +29,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -395,7 +394,7 @@ public class MergeAndroidResourcesStep implements Step {
   public String getDescription(ExecutionContext context) {
     ImmutableList<String> resources =
         FluentIterable.from(androidResourceDeps)
-            .transform(Functions.toStringFunction())
+            .transform(Object::toString)
             .toSortedList(natural());
     return getShortName() + " " + Joiner.on(' ').join(resources);
   }

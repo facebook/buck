@@ -24,7 +24,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.CommandSplitter;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -160,7 +159,7 @@ public class ArchiveStep implements Step {
         .addAll(archiverFlags)
         .addAll(archiverExtraFlags)
         .addAll(archiver.outputArgs(output.toString()))
-        .addAll(Iterables.transform(inputs, Functions.toStringFunction()));
+        .addAll(Iterables.transform(inputs, Object::toString));
     return Joiner.on(' ').join(command.build());
   }
 

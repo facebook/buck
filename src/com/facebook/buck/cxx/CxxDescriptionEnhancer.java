@@ -479,7 +479,7 @@ public class CxxDescriptionEnhancer {
             ImmutableList.builder()
                 .addAll(
                     FluentIterable.from(target.getBasePath())
-                        .transform(Functions.toStringFunction())
+                        .transform(Object::toString)
                         .filter(Predicates.not(Predicates.equalTo(""))))
                 .add(
                     target

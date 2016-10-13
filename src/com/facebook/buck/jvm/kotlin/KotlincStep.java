@@ -17,7 +17,6 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import static com.google.common.base.Functions.toStringFunction;
 import static com.google.common.collect.Iterables.transform;
 
 import com.facebook.buck.io.ProjectFilesystem;
@@ -73,7 +72,7 @@ public class KotlincStep extends ShellStep {
         .addAll(kotlinc.getCommandPrefix(resolver));
 
     String classpath =
-        Joiner.on(File.pathSeparator).join(transform(declaredClassPathEntries, toStringFunction()));
+        Joiner.on(File.pathSeparator).join(transform(declaredClassPathEntries, Object::toString));
     command
         .add(INCLUDE_RUNTIME_FLAG)
         .add(CLASSPATH_FLAG)
@@ -83,7 +82,7 @@ public class KotlincStep extends ShellStep {
 
     command
         .addAll(extraArguments)
-        .addAll(transform(sourceFilePaths, toStringFunction()));
+        .addAll(transform(sourceFilePaths, Object::toString));
     return command.build();
   }
 }

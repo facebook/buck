@@ -64,7 +64,6 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -166,7 +165,7 @@ public class ApkGenruleTest {
         ImmutableSet.of(apkTarget.toString()),
         FluentIterable
             .from(apkGenrule.getDeps())
-            .transform(Functions.toStringFunction())
+            .transform(Object::toString)
             .toSet());
     BuildContext buildContext = ImmutableBuildContext.builder()
         .setActionGraph(EasyMock.createMock(ActionGraph.class))

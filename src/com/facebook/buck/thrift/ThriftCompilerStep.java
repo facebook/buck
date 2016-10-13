@@ -20,7 +20,6 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
@@ -67,7 +66,7 @@ public class ThriftCompilerStep extends ShellStep {
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-I"),
-                Iterables.transform(includes, Functions.toStringFunction())))
+                Iterables.transform(includes, Object::toString)))
         .add("-o", outputDir.toString())
         .add(input.toString())
         .build();

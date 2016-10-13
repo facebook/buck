@@ -64,7 +64,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -348,11 +347,11 @@ public class LuaBinaryDescription implements
           builder.putAllPythonModules(
               MoreMaps.transformKeys(
                   components.getModules(),
-                  Functions.toStringFunction()));
+                  Object::toString));
           builder.putAllNativeLibraries(
               MoreMaps.transformKeys(
                   components.getNativeLibraries(),
-                  Functions.toStringFunction()));
+                  Object::toString));
           if (components.hasNativeCode(cxxPlatform)) {
             for (BuildRule dep : rule.getDeps()) {
               if (dep instanceof NativeLinkable) {
@@ -487,11 +486,11 @@ public class LuaBinaryDescription implements
         builder.putAllPythonModules(
             MoreMaps.transformKeys(
                 components.getModules(),
-                Functions.toStringFunction()));
+                Object::toString));
         builder.putAllNativeLibraries(
             MoreMaps.transformKeys(
                 components.getNativeLibraries(),
-                Functions.toStringFunction()));
+                Object::toString));
         nativeLinkableRoots.putAll(
             Maps.uniqueIndex(
                 entry.getValue().getNativeLinkTarget(pythonPlatform)
@@ -613,7 +612,7 @@ public class LuaBinaryDescription implements
                       MorePaths.toPathFn(
                           params.getProjectFilesystem().getRootPath().getFileSystem())),
                   emptyInit),
-              Functions.toStringFunction());
+              Object::toString);
       final SymlinkTree symlinkTree =
           resolver.addToIndex(
               createSymlinkTree(

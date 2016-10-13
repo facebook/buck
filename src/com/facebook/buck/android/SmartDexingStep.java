@@ -17,7 +17,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
@@ -28,11 +27,11 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.fs.XzStep;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipCompressionLevel;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -247,7 +246,7 @@ public class SmartDexingStep implements Step {
       b.append(output.toString());
       b.append("-in ");
       Joiner.on(':').appendTo(b,
-          Iterables.transform(outputToInputs.get(output), Functions.toStringFunction()));
+          Iterables.transform(outputToInputs.get(output), Object::toString));
     }
 
     return b.toString();

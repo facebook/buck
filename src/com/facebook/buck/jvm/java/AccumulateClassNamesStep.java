@@ -25,7 +25,6 @@ import com.facebook.buck.jvm.java.classes.FileLikes;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -116,7 +115,7 @@ public class AccumulateClassNamesStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     String sourceString = pathToJarOrClassesDirectory
-        .transform(Functions.toStringFunction())
+        .transform(Object::toString)
         .or("null");
     return String.format("get_class_names %s > %s",
         sourceString,

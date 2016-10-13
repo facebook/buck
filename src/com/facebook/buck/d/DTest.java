@@ -38,7 +38,6 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -200,7 +199,7 @@ public class DTest extends AbstractBuildRule implements
                     ImmutableList.of(summary))
             ),
             contacts,
-            FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
+            FluentIterable.from(labels).transform(Object::toString).toSet());
       }
     };
   }

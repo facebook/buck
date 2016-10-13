@@ -54,7 +54,6 @@ import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -418,7 +417,7 @@ public class JavaTest
               getBuildTarget(),
               ImmutableList.of(),
               contacts,
-              FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
+              FluentIterable.from(labels).transform(Object::toString).toSet());
         }
 
         List<TestCaseSummary> summaries = Lists.newArrayListWithCapacity(testClassNames.size());
@@ -461,7 +460,7 @@ public class JavaTest
             .setBuildTarget(getBuildTarget())
             .setTestCases(summaries)
             .setContacts(contacts)
-            .setLabels(FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet())
+            .setLabels(FluentIterable.from(labels).transform(Object::toString).toSet())
             .addTestLogPaths(getProjectFilesystem().resolve(pathToTestLogs))
             .build();
       }
@@ -678,7 +677,7 @@ public class JavaTest
                     .addAll(getBootClasspathEntries(context))
                     .build();
                 getProjectFilesystem().writeLinesToPath(
-                    Iterables.transform(classpathEntries, Functions.toStringFunction()),
+                    Iterables.transform(classpathEntries, Object::toString),
                     getClassPathFile());
                 return StepExecutionResult.SUCCESS;
               }

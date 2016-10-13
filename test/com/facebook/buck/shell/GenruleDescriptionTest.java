@@ -41,7 +41,6 @@ import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
-import com.google.common.base.Functions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -103,7 +102,7 @@ public class GenruleDescriptionTest {
             "//bin:executable",
             "//foo:arg"),
         FluentIterable.from(targetNode.getExtraDeps())
-            .transform(Functions.toStringFunction())
+            .transform(Object::toString)
             .toSet());
   }
 

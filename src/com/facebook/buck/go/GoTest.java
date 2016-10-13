@@ -41,7 +41,6 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
@@ -234,7 +233,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
             getBuildTarget(),
             summaries,
             contacts,
-            FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
+            FluentIterable.from(labels).transform(Object::toString).toSet());
       }
     };
   }

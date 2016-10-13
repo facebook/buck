@@ -111,7 +111,7 @@ abstract class AbstractPreprocessorFlags {
             Iterables.cycle("-include"),
             FluentIterable.from(getPrefixHeader().asSet())
                 .transform(resolver.getAbsolutePathFunction())
-                .transform(Functions.toStringFunction())));
+                .transform(Object::toString)));
     builder.addAllRuleFlags(
         CxxHeaders.getArgs(getIncludes(), resolver, Optional.of(pathShortener), preprocessor));
     builder.addAllRuleFlags(
@@ -119,13 +119,13 @@ abstract class AbstractPreprocessorFlags {
             preprocessor,
             Iterables.transform(
                 getSystemIncludePaths(),
-                Functions.compose(Functions.toStringFunction(), pathShortener))));
+                Functions.compose(Object::toString, pathShortener))));
     builder.addAllRuleFlags(
         MoreIterables.zipAndConcat(
             Iterables.cycle("-F"),
             FluentIterable.from(getFrameworkPaths())
                 .transform(frameworkPathTransformer)
-                .transform(Functions.toStringFunction())
+                .transform(Object::toString)
                 .toSortedSet(Ordering.natural())));
     return builder.build();
   }

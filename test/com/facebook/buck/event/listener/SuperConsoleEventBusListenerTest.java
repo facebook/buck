@@ -19,15 +19,15 @@ import static com.facebook.buck.event.TestEventConfigerator.configureTestEventAt
 import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreFinished;
 import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreScheduled;
 import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreStarted;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.createParsingMessage;
 import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_BUNNY;
 import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_SNAIL;
 import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.EMOJI_WHALE;
 import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.NEW_DAEMON_INSTANCE_MSG;
+import static com.facebook.buck.event.listener.SuperConsoleEventBusListener.createParsingMessage;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
@@ -82,7 +82,6 @@ import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.unit.SizeUnit;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -156,7 +155,7 @@ public class SuperConsoleEventBusListenerTest {
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     BuildTarget cachedTarget = BuildTargetFactory.newInstance("//chicken:dance");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget, cachedTarget);
-    Iterable<String> buildArgs = Iterables.transform(buildTargets, Functions.toStringFunction());
+    Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
     FakeBuildRule fakeRule = new FakeBuildRule(
         fakeTarget,
         pathResolver,
@@ -531,7 +530,7 @@ public class SuperConsoleEventBusListenerTest {
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     BuildTarget cachedTarget = BuildTargetFactory.newInstance("//chicken:dance");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget, cachedTarget);
-    Iterable<String> buildArgs = Iterables.transform(buildTargets, Functions.toStringFunction());
+    Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
     FakeBuildRule fakeRule = new FakeBuildRule(
         fakeTarget,
         pathResolver,
@@ -715,7 +714,7 @@ public class SuperConsoleEventBusListenerTest {
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     BuildTarget cachedTarget = BuildTargetFactory.newInstance("//chicken:dance");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget, cachedTarget);
-    Iterable<String> buildArgs = Iterables.transform(buildTargets, Functions.toStringFunction());
+    Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
 
     ProgressEstimator e = new ProgressEstimator(
         getStorageForTest(),
@@ -969,7 +968,7 @@ public class SuperConsoleEventBusListenerTest {
 
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
     ImmutableSet<BuildTarget> testTargets = ImmutableSet.of(testTarget);
-    Iterable<String> testArgs = Iterables.transform(testTargets, Functions.toStringFunction());
+    Iterable<String> testArgs = Iterables.transform(testTargets, Object::toString);
     FakeBuildRule testBuildRule = new FakeBuildRule(
         testTarget,
         pathResolver,
@@ -1256,7 +1255,7 @@ public class SuperConsoleEventBusListenerTest {
 
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
     ImmutableSet<BuildTarget> testTargets = ImmutableSet.of(testTarget);
-    Iterable<String> testArgs = Iterables.transform(testTargets, Functions.toStringFunction());
+    Iterable<String> testArgs = Iterables.transform(testTargets, Object::toString);
     FakeBuildRule testBuildRule = new FakeBuildRule(
         testTarget,
         pathResolver,
@@ -1546,7 +1545,7 @@ public class SuperConsoleEventBusListenerTest {
 
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
     ImmutableSet<BuildTarget> testTargets = ImmutableSet.of(testTarget);
-    Iterable<String> testArgs = Iterables.transform(testTargets, Functions.toStringFunction());
+    Iterable<String> testArgs = Iterables.transform(testTargets, Object::toString);
     FakeBuildRule testBuildRule = new FakeBuildRule(
         testTarget,
         pathResolver,
@@ -1865,7 +1864,7 @@ public class SuperConsoleEventBusListenerTest {
 
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget);
-    Iterable<String> buildArgs = Iterables.transform(buildTargets, Functions.toStringFunction());
+    Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
     FakeBuildRule fakeRule = new FakeBuildRule(
         fakeTarget,
         pathResolver,
@@ -2345,7 +2344,7 @@ public class SuperConsoleEventBusListenerTest {
 
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget);
-    Iterable<String> buildArgs = Iterables.transform(buildTargets, Functions.toStringFunction());
+    Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
 
     // Do a full parse and action graph cycle before the build event starts
     // This sequencing occurs when running `buck project`

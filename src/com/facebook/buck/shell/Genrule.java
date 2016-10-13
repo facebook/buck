@@ -42,7 +42,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -187,7 +186,7 @@ public class Genrule extends AbstractBuildRule
         Joiner.on(' ').join(
             FluentIterable.from(srcs)
                 .transform(getResolver().getAbsolutePathFunction())
-                .transform(Functions.toStringFunction())));
+                .transform(Object::toString)));
     environmentVariablesBuilder.put("OUT", getAbsoluteOutputFilePath());
 
     final Set<String> depFiles = Sets.newHashSet();

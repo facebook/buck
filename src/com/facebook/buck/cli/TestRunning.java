@@ -55,7 +55,6 @@ import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -156,7 +155,7 @@ public class TestRunning {
     final ImmutableSet<String> testTargets =
         FluentIterable.from(tests)
             .transform(HasBuildTarget::getBuildTarget)
-            .transform(Functions.toStringFunction())
+            .transform(Object::toString)
             .toSet();
 
     final int totalNumberOfTests = Iterables.size(tests);
@@ -548,7 +547,7 @@ public class TestRunning {
                                 "")))),
                 testRule.getContacts(),
                 FluentIterable.from(
-                    testRule.getLabels()).transform(Functions.toStringFunction()).toSet());
+                    testRule.getLabels()).transform(Object::toString).toSet());
         TestResults newTestResults = postTestResults(testResults);
         transformedTestResults.set(newTestResults);
       }

@@ -18,7 +18,6 @@ package com.facebook.buck.slb;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.Pair;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -106,7 +105,7 @@ public class ServerHealthManager {
         throw new NoHealthyServersException(String.format(
             "No servers available. Too many errors reported by all servers in the pool: [%s]",
             Joiner.on(", ").join(FluentIterable.from(servers.keySet()).transform(
-                Functions.toStringFunction()))));
+                Object::toString))));
       }
 
       Collections.sort(serverLatencies, LATENCY_COMPARATOR);

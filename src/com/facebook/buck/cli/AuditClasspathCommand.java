@@ -33,7 +33,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
@@ -209,7 +208,7 @@ public class AuditClasspathCommand extends AbstractCommand {
           target.getFullyQualifiedName(),
           Iterables.transform(
               hasClasspathEntries.getTransitiveClasspaths(),
-              Functions.toStringFunction()));
+              Object::toString));
     }
 
     // Note: using `asMap` here ensures that the keys are sorted

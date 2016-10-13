@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
@@ -40,12 +39,12 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -179,7 +178,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
         buildableContext.addMetadata(
             CLASSNAMES_TO_HASHES,
             context.getObjectMapper().writeValueAsString(
-                Maps.transformValues(classNamesToHashes, Functions.toStringFunction())));
+                Maps.transformValues(classNamesToHashes, Object::toString)));
 
         return StepExecutionResult.SUCCESS;
       }

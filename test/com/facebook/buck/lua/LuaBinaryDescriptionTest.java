@@ -27,6 +27,7 @@ import com.facebook.buck.cxx.NativeLinkStrategy;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -37,10 +38,9 @@ import com.facebook.buck.python.PythonLibrary;
 import com.facebook.buck.python.PythonLibraryBuilder;
 import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonVersion;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.SymlinkTree;
@@ -50,7 +50,6 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -349,7 +348,7 @@ public class LuaBinaryDescriptionTest {
     assertThat(
         Iterables.transform(
             binary.getComponents().getNativeLibraries().keySet(),
-            Functions.toStringFunction()),
+            Object::toString),
         Matchers.containsInAnyOrder("libomnibus.so", "libcxx.so"));
   }
 
@@ -390,7 +389,7 @@ public class LuaBinaryDescriptionTest {
     assertThat(
         Iterables.transform(
             binary.getComponents().getNativeLibraries().keySet(),
-            Functions.toStringFunction()),
+            Object::toString),
         Matchers.containsInAnyOrder("libtransitive_dep.so", "libdep.so", "libcxx.so"));
   }
 
@@ -440,7 +439,7 @@ public class LuaBinaryDescriptionTest {
     assertThat(
         Iterables.transform(
             binary.getComponents().getNativeLibraries().keySet(),
-            Functions.toStringFunction()),
+            Object::toString),
         Matchers.containsInAnyOrder("libomnibus.so", "libcxx.so"));
   }
 
@@ -488,7 +487,7 @@ public class LuaBinaryDescriptionTest {
     assertThat(
         Iterables.transform(
             binary.getComponents().getPythonModules().keySet(),
-            Functions.toStringFunction()),
+            Object::toString),
         Matchers.hasItem(MorePaths.pathWithPlatformSeparators("hello/extension.so")));
   }
 

@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -263,7 +262,7 @@ public class DalvikStatsToolTest {
       Set<?> references,
       String... methods) {
     Set<String> actual = Sets.newHashSet(
-        Iterables.transform(references, Functions.toStringFunction()));
+        Iterables.transform(references, Object::toString));
     Set<String> expected = Sets.newHashSet(methods);
 
     Set<String> onlyInActual = Sets.difference(actual, expected);

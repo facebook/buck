@@ -48,7 +48,6 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.unit.SizeUnit;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -88,7 +87,7 @@ public class SimpleConsoleEventBusListenerTest {
 
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget);
-    Iterable<String> buildArgs = Iterables.transform(buildTargets, Functions.toStringFunction());
+    Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
     FakeBuildRule fakeRule = new FakeBuildRule(
         fakeTarget,
         new SourcePathResolver(
@@ -238,7 +237,7 @@ public class SimpleConsoleEventBusListenerTest {
 
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget);
-    Iterable<String> buildArgs = Iterables.transform(buildTargets, Functions.toStringFunction());
+    Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
 
     SimpleConsoleEventBusListener listener =
         new SimpleConsoleEventBusListener(console,

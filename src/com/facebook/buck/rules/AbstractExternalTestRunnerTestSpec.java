@@ -23,7 +23,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializable;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
-import com.google.common.base.Functions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -104,7 +103,7 @@ abstract class AbstractExternalTestRunnerTestSpec implements JsonSerializable {
     jsonGenerator.writeObjectField(
         "labels",
         FluentIterable.from(getLabels())
-            .transform(Functions.toStringFunction())
+            .transform(Object::toString)
             .toList());
     jsonGenerator.writeObjectField("contacts", getContacts());
     jsonGenerator.writeEndObject();

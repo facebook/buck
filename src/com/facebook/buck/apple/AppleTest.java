@@ -40,7 +40,6 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -406,7 +405,7 @@ public class AppleTest
             .setBuildTarget(getBuildTarget())
             .setTestCases(testCaseSummaries)
             .setContacts(contacts)
-            .setLabels(FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
+            .setLabels(FluentIterable.from(labels).transform(Object::toString).toSet());
         if (getProjectFilesystem().isDirectory(testLogsPath)) {
           for (Path testLogPath : getProjectFilesystem().getDirectoryContents(testLogsPath)) {
             testResultsBuilder.addTestLogPaths(testLogPath);

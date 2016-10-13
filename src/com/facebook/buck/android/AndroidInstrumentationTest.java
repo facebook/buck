@@ -44,7 +44,6 @@ import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PackagedResource;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -254,7 +253,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
             getBuildTarget(),
             summaries.build(),
             contacts,
-            FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
+            FluentIterable.from(labels).transform(Object::toString).toSet());
       }
     };
   }

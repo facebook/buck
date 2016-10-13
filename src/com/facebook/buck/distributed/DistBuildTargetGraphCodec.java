@@ -32,7 +32,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -95,7 +94,7 @@ public class DistBuildTargetGraphCodec {
     }
     remoteTarget.setFlavors(
         FluentIterable.from(buildTarget.getFlavors())
-            .transform(Functions.toStringFunction())
+            .transform(Object::toString)
             .toSet());
     return remoteTarget;
   }

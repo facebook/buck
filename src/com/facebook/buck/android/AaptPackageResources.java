@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.RecordFileSha1Step;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.ManifestEntries;
@@ -40,8 +39,8 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -208,7 +207,7 @@ public class AaptPackageResources extends AbstractBuildRule
     buildableContext.addMetadata(
         FILTERED_RESOURCE_DIRS_KEY,
         FluentIterable.from(filteredResourcesProvider.getResDirectories())
-            .transform(Functions.toStringFunction())
+            .transform(Object::toString)
             .toSortedList(Ordering.natural()));
 
     buildableContext.recordArtifact(getAndroidManifestXml());

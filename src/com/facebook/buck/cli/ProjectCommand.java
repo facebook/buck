@@ -73,7 +73,6 @@ import com.facebook.buck.util.ProcessManager;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.Charsets;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -694,7 +693,7 @@ public class ProjectCommand extends BuildCommand {
       boolean disableCaching)
       throws IOException, InterruptedException {
     BuildCommand buildCommand = new BuildCommand(FluentIterable.from(targets)
-        .transform(Functions.toStringFunction())
+        .transform(Object::toString)
         .toList());
     buildCommand.setKeepGoing(true);
     buildCommand.setArtifactCacheDisabled(disableCaching);
@@ -856,7 +855,7 @@ public class ProjectCommand extends BuildCommand {
     }
     return FluentIterable
         .from(buildTargets)
-        .transform(Functions.toStringFunction())
+        .transform(Object::toString)
         .toList();
   }
 
@@ -897,7 +896,7 @@ public class ProjectCommand extends BuildCommand {
         getCombineTestBundles());
     if (!requiredBuildTargets.isEmpty()) {
       BuildCommand buildCommand = new BuildCommand(FluentIterable.from(requiredBuildTargets)
-          .transform(Functions.toStringFunction())
+          .transform(Object::toString)
           .toList());
       exitCode = buildCommand.runWithoutHelp(params);
     }

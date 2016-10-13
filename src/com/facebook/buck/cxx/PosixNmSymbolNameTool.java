@@ -37,7 +37,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Charsets;
-import com.google.common.base.Functions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -143,7 +142,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
                   .addAll(
                       FluentIterable.from(inputs)
                           .transform(getResolver().getAbsolutePathFunction())
-                          .transform(Functions.toStringFunction()))
+                          .transform(Object::toString))
                   .build(),
               nm.getEnvironment(getResolver())) {
             @Override

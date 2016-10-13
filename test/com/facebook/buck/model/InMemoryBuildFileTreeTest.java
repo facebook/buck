@@ -19,7 +19,6 @@ package com.facebook.buck.model;
 import static com.facebook.buck.io.MorePaths.pathWithPlatformSeparators;
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.base.Functions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 
@@ -66,6 +65,6 @@ public class InMemoryBuildFileTreeTest {
 
     assertEquals(
         expectedChildren,
-        FluentIterable.from(children).transform(Functions.toStringFunction()).toSet());
+        FluentIterable.from(children).transform(Object::toString).toSet());
   }
 }

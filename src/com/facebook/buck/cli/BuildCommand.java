@@ -22,11 +22,11 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.distributed.BuckVersionUtil;
 import com.facebook.buck.distributed.BuildJobStateSerializer;
+import com.facebook.buck.distributed.DistBuildCellIndexer;
+import com.facebook.buck.distributed.DistBuildClientExecutor;
+import com.facebook.buck.distributed.DistBuildFileHashes;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildState;
-import com.facebook.buck.distributed.DistBuildClientExecutor;
-import com.facebook.buck.distributed.DistBuildCellIndexer;
-import com.facebook.buck.distributed.DistBuildFileHashes;
 import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
 import com.facebook.buck.distributed.DistBuildTypeCoercerFactory;
 import com.facebook.buck.distributed.thrift.BuckVersion;
@@ -73,7 +73,6 @@ import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -544,7 +543,7 @@ public class BuildCommand extends AbstractCommand {
             rule.getFullyQualifiedName(),
             showRuleKey ? " " + ruleKeyBuilderFactory.get().build(rule).toString() : "",
             showOutput || showFullOutput ?
-                " " + outputPath.transform(Functions.toStringFunction()).or("")
+                " " + outputPath.transform(Object::toString).or("")
                 : "");
       } catch (NoSuchBuildTargetException e) {
         throw new HumanReadableException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));

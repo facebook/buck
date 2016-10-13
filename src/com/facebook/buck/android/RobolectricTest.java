@@ -37,7 +37,6 @@ import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -199,7 +198,7 @@ public class RobolectricTest extends JavaTest {
                 }
               }
             })
-        .transform(Functions.toStringFunction())
+        .transform(Object::toString)
         .toList();
     String resourceDirectories = Joiner.on(File.pathSeparator).join(resourceDirs);
 

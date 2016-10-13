@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.groovy;
 
-import static com.google.common.base.Functions.toStringFunction;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.transform;
 
@@ -108,7 +107,7 @@ class GroovycStep implements Step {
     command.addAll(groovyc.getCommandPrefix(resolver));
 
     String classpath =
-        Joiner.on(File.pathSeparator).join(transform(declaredClasspathEntries, toStringFunction()));
+        Joiner.on(File.pathSeparator).join(transform(declaredClasspathEntries, Object::toString));
     command
         .add("-cp")
         .add(classpath.isEmpty() ? "''" : classpath)
@@ -126,7 +125,7 @@ class GroovycStep implements Step {
   private void writePathToSourcesList(Iterable<Path> expandedSources) throws IOException {
     filesystem.writeLinesToPath(
         FluentIterable.from(expandedSources)
-            .transform(toStringFunction())
+            .transform(Object::toString)
             .transform(Javac.ARGFILES_ESCAPER),
         pathToSrcsList);
   }

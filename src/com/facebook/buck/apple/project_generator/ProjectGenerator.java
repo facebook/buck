@@ -109,7 +109,6 @@ import com.facebook.buck.util.PackagedResource;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -569,7 +568,7 @@ public class ProjectGenerator {
         .getOrCreateDescendantGroupByPath(
             FluentIterable
                 .from(buildTarget.getBasePath())
-                .transform(Functions.toStringFunction())
+                .transform(Object::toString)
                 .toList())
         .getOrCreateChildGroupByName(getXcodeTargetName(buildTarget));
     for (String configurationName : configs.keySet()) {
@@ -1187,7 +1186,7 @@ public class ProjectGenerator {
       mutator.setTargetGroupPath(
           FluentIterable
               .from(buildTarget.getBasePath())
-              .transform(Functions.toStringFunction())
+              .transform(Object::toString)
               .toList());
     }
 
@@ -2615,7 +2614,7 @@ public class ProjectGenerator {
         return FluentIterable
             .from(pathSetExtractor.apply(input.getConstructorArg()))
             .transform(toSearchPath)
-            .transform(Functions.toStringFunction());
+            .transform(Object::toString);
       }
     };
   }

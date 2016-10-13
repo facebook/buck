@@ -22,7 +22,6 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Functions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -73,7 +72,7 @@ abstract class AbstractGlobArg extends Arg {
     builder.addAll(
         FluentIterable.from(paths)
             .transform(filesystem.getAbsolutifier())
-            .transform(Functions.toStringFunction()));
+            .transform(Object::toString));
   }
 
   @Override

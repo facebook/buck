@@ -28,15 +28,14 @@ import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -185,7 +184,7 @@ public class BuckConfigTest {
         "//java/com/example:bar");
     ImmutableList<String> result = ImmutableList.copyOf(FluentIterable
             .from(config.getBuildTargetList("section", "some_list"))
-            .transform(Functions.toStringFunction()));
+            .transform(Object::toString));
     assertThat(result, Matchers.equalTo(expected));
   }
 

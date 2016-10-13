@@ -61,7 +61,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -189,7 +188,7 @@ public class ChromeTraceBuildListenerTest {
     UUID stepUuid = UUID.randomUUID();
 
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(target);
-    Iterable<String> buildArgs = Iterables.transform(buildTargets, Functions.toStringFunction());
+    Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock, buildId);
     eventBus.register(listener);

@@ -20,7 +20,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.MoreIterables;
-import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -119,7 +118,7 @@ public class OCamlLinkStep extends ShellStep {
         .add("-o", output.toString())
         .addAll(flags)
         .addAll(ocamlInput)
-        .addAll(FluentIterable.from(input).transform(Functions.toStringFunction()))
+        .addAll(FluentIterable.from(input).transform(Object::toString))
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-cclib"),
