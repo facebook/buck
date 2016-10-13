@@ -1,7 +1,7 @@
 prebuilt_jar(
   name = 'oshi-core',
-  binary_jar = 'oshi-core-3.2.jar',
-  source_jar = 'oshi-core-3.2-sources.jar',
+  binary_jar = 'oshi-core-3.3-SNAPSHOT.jar',
+  source_jar = 'oshi-core-3.3-SNAPSHOT-sources.jar',
   deps = [
     '//third-party/java/jna:jna',
   ],

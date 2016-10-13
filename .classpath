@@ -58,7 +58,7 @@
 	<classpathentry kind="lib" path="third-party/java/objenesis/objenesis-1.2.jar"/>
 	<classpathentry kind="lib" path="third-party/java/okhttp/okhttp-3.3.0.jar"/>
 	<classpathentry kind="lib" path="third-party/java/okio/okio-1.8.0.jar"/>
-	<classpathentry kind="lib" path="third-party/java/oshi/oshi-core-3.2.jar" sourcepath="third-party/java/oshi/oshi-core-3.2-sources.jar"/>
+	<classpathentry kind="lib" path="third-party/java/oshi/oshi-core-3.3-SNAPSHOT.jar" sourcepath="third-party/java/oshi/oshi-core-3.3-SNAPSHOT-sources.jar"/>
 	<classpathentry kind="lib" path="third-party/java/servlet-api/javax.servlet-api-3.1.0.jar"/>
 	<classpathentry kind="lib" path="third-party/java/stringtemplate/ST-4.0.8.jar"/>
 	<classpathentry kind="lib" path="third-party/java/testng/testng-6.8.jar"/>

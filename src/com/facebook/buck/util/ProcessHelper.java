@@ -65,9 +65,9 @@ public abstract class ProcessHelper {
           .setCpuUser(process.getUserTime())
           .setCpuSys(process.getKernelTime())
           .setCpuTotal(process.getUserTime() + process.getKernelTime())
-          .setIoBytesRead(0)    // not implemented
-          .setIoBytesWritten(0) // not implemented
-          .setIoTotal(0)        // not implemented
+          .setIoBytesRead(process.getBytesRead())
+          .setIoBytesWritten(process.getBytesWritten())
+          .setIoTotal(process.getBytesRead() + process.getBytesWritten())
           .build();
     } catch (Exception ex) {
       // do nothing
