@@ -47,9 +47,13 @@ public class PublicAnnouncementManager {
   private static final Logger LOG = Logger.get(PublicAnnouncementManager.class);
 
   @VisibleForTesting
-  static final String HEADER_MSG = "::: Public Announcements :::";
+  static final ImmutableList<String> HEADER_MSG = ImmutableList.of(
+      "**------------------------**",
+      "**- Public Announcements -**",
+      "**------------------------**");
+
   @VisibleForTesting
-  static final String ANNOUNCEMENT_TEMPLATE = "::: Issue: %s Solution: %s";
+  static final String ANNOUNCEMENT_TEMPLATE = "** %s %s";
 
   private Clock clock;
   private ExecutionEnvironment executionEnvironment;
@@ -116,7 +120,7 @@ public class PublicAnnouncementManager {
         LOG.info("Public announcements fetched successfully.");
         if (!announcements.isEmpty()) {
           ImmutableList.Builder<String> finalMessages = ImmutableList.builder();
-          finalMessages.add(HEADER_MSG);
+          finalMessages.addAll(HEADER_MSG);
           for (Announcement announcement : announcements) {
             finalMessages.add(String.format(
                 ANNOUNCEMENT_TEMPLATE,

@@ -155,9 +155,9 @@ public class PublicAnnouncementManagerIntegrationTest {
       manager.getAndPostAnnouncements();
 
       ImmutableList<String> announcements = listener.getPublicAnnouncements();
-      assertSame("Header and 1 message", announcements.size(), 2);
-      assertTrue(announcements.get(0).equals(PublicAnnouncementManager.HEADER_MSG));
-      assertTrue(announcements.get(1).equals(
+      assertSame("Header and 1 message", announcements.size(), 4);
+      assertTrue(announcements.subList(0, 3).equals(PublicAnnouncementManager.HEADER_MSG));
+      assertTrue(announcements.get(3).equals(
           String.format(PublicAnnouncementManager.ANNOUNCEMENT_TEMPLATE, ERROR_MSG, SOLUTION_MSG)));
     }
   }
