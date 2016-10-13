@@ -99,28 +99,7 @@ public class RageCommand extends AbstractCommand {
     }
 
     Optional<DefectSubmitResult> defectSubmitResult = report.collectAndSubmitResult();
-    if (!defectSubmitResult.isPresent()) {
-      stdOut.println("No logs of interesting commands were found. Check if buck-out/log contains " +
-          "commands except buck launch & buck rage.");
-      return 0;
-    }
-
-    String reportLocation = defectSubmitResult.get().getReportSubmitLocation();
-    if (defectSubmitResult.get().getUploadSuccess().isPresent()) {
-      if (defectSubmitResult.get().getUploadSuccess().get()) {
-        stdOut.printf(
-            "Uploading report to %s\n%s",
-            reportLocation,
-            defectSubmitResult.get().getReportSubmitMessage().get());
-      } else {
-        stdOut.printf(
-            "%s\nReport saved at %s\n",
-            defectSubmitResult.get().getReportSubmitErrorMessage().get(),
-            reportLocation);
-      }
-    } else {
-      stdOut.printf("Report saved at %s\n", reportLocation);
-    }
+    report.presentDefectSubmitResult(defectSubmitResult);
 
     return 0;
   }

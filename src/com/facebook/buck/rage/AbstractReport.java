@@ -70,8 +70,10 @@ public abstract class AbstractReport {
   }
 
   protected abstract ImmutableSet<BuildLogEntry> promptForBuildSelection() throws IOException;
+
   protected abstract Optional<SourceControlInfo> getSourceControlInfo()
       throws IOException, InterruptedException;
+
   protected abstract Optional<UserReport> getUserReport() throws IOException;
 
   public final Optional<DefectSubmitResult> collectAndSubmitResult()
@@ -137,6 +139,31 @@ public abstract class AbstractReport {
 
     output.println("Writing report, please wait..");
     return Optional.of(defectReporter.submitReport(defectReport));
+  }
+
+  public void presentDefectSubmitResult(Optional<DefectSubmitResult> defectSubmitResult) {
+    if (!defectSubmitResult.isPresent()) {
+      output.println("No logs of interesting commands were found. Check if buck-out/log contains " +
+          "commands except buck launch & buck rage.");
+      return;
+    }
+
+    String reportLocation = defectSubmitResult.get().getReportSubmitLocation();
+    if (defectSubmitResult.get().getUploadSuccess().isPresent()) {
+      if (defectSubmitResult.get().getUploadSuccess().get()) {
+        output.printf(
+            "Uploading report to %s\n%s",
+            reportLocation,
+            defectSubmitResult.get().getReportSubmitMessage().get());
+      } else {
+        output.printf(
+            "%s\nReport saved at %s\n",
+            defectSubmitResult.get().getReportSubmitErrorMessage().get(),
+            reportLocation);
+      }
+    } else {
+      output.printf("Report saved at %s\n", reportLocation);
+    }
   }
 
   @Value.Immutable
