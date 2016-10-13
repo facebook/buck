@@ -17,6 +17,7 @@
 package com.facebook.buck.rage;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
 import com.google.common.base.Optional;
@@ -26,22 +27,25 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 /**
- * Responsible for gathering logs and other interesting information from buck without user
- * interaction.
+ * Responsible for gathering logs and other interesting information from buck when part of the
+ * information is already available when calling the constructor.
  */
-public class AutomatedReport extends AbstractReport {
-  private final BuildLogHelper buildLogHelper;
-  private final Optional<VcsInfoCollector> vcsInfoCollector;
-  private final PrintStream output;
+public class PopulatedReport extends AbstractReport {
 
-  public AutomatedReport(
+  private static final Logger LOG = Logger.get(PopulatedReport.class);
+
+  private final Optional<VcsInfoCollector> vcsInfoCollector;
+  private final ImmutableSet<BuildLogEntry> buildLogEntries;
+
+  public PopulatedReport(
       DefectReporter defectReporter,
       ProjectFilesystem filesystem,
       PrintStream output,
       BuildEnvironmentDescription buildEnvironmentDescription,
       Optional<VcsInfoCollector> vcsInfoCollector,
       RageConfig rageConfig,
-      ExtraInfoCollector extraInfoCollector) {
+      ExtraInfoCollector extraInfoCollector,
+      ImmutableSet<BuildLogEntry> buildLogEntries) {
     super(filesystem,
         defectReporter,
         buildEnvironmentDescription,
@@ -49,24 +53,23 @@ public class AutomatedReport extends AbstractReport {
         rageConfig,
         extraInfoCollector);
     this.vcsInfoCollector = vcsInfoCollector;
-    this.buildLogHelper = new BuildLogHelper(filesystem);
-    this.output = output;
+    this.buildLogEntries = buildLogEntries;
   }
 
   @Override
   public ImmutableSet<BuildLogEntry> promptForBuildSelection() throws IOException {
-    return ImmutableSet.copyOf(buildLogHelper.getBuildLogs());
+    return buildLogEntries;
   }
 
   @Override
-  public Optional<SourceControlInfo> getSourceControlInfo()
+  protected Optional<SourceControlInfo> getSourceControlInfo()
       throws IOException, InterruptedException {
     try {
       if (vcsInfoCollector.isPresent()) {
         return Optional.of(vcsInfoCollector.get().gatherScmInformation());
       }
     } catch (VersionControlCommandFailedException e) {
-      output.printf("Failed to get source control information: %s, proceeding regardless.\n", e);
+      LOG.warn("Failed to get source control information: %s, proceeding regardless.\n", e);
     }
     return Optional.absent();
   }

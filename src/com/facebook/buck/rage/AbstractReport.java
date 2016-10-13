@@ -44,6 +44,7 @@ import java.nio.file.Paths;
  * Base class for gathering logs and other interesting information from buck.
  */
 public abstract class AbstractReport {
+
   private static final Logger LOG = Logger.get(AbstractReport.class);
 
   private final ProjectFilesystem filesystem;
@@ -76,8 +77,8 @@ public abstract class AbstractReport {
   public final Optional<DefectSubmitResult> collectAndSubmitResult()
       throws IOException, InterruptedException {
 
-    ImmutableSet<BuildLogEntry> highlightedBuilds = promptForBuildSelection();
-    if (highlightedBuilds.isEmpty()) {
+    ImmutableSet<BuildLogEntry> selectedBuilds = promptForBuildSelection();
+    if (selectedBuilds.isEmpty()) {
       return Optional.absent();
     }
 
@@ -100,7 +101,7 @@ public abstract class AbstractReport {
     UserLocalConfiguration userLocalConfiguration =
         UserLocalConfiguration.of(isNoBuckCheckPresent(), getLocalConfigs());
 
-    ImmutableSet<Path> includedPaths = FluentIterable.from(highlightedBuilds)
+    ImmutableSet<Path> includedPaths = FluentIterable.from(selectedBuilds)
         .transformAndConcat(
             new Function<BuildLogEntry, Iterable<Path>>() {
               @Override
@@ -113,13 +114,13 @@ public abstract class AbstractReport {
             })
         .append(extraInfoPaths)
         .append(userLocalConfiguration.getLocalConfigsContents().keySet())
-        .append(getTracePathsOfBuilds(highlightedBuilds))
+        .append(getTracePathsOfBuilds(selectedBuilds))
         .toSet();
 
     DefectReport defectReport = DefectReport.builder()
         .setUserReport(userReport)
         .setHighlightedBuildIds(
-            FluentIterable.from(highlightedBuilds)
+            FluentIterable.from(selectedBuilds)
                 .transformAndConcat(
                     new Function<BuildLogEntry, Iterable<BuildId>>() {
                       @Override

@@ -67,7 +67,7 @@ public class InteractiveReport extends AbstractReport {
   }
 
   @Override
-  protected ImmutableSet<BuildLogEntry> promptForBuildSelection() throws IOException {
+  public ImmutableSet<BuildLogEntry> promptForBuildSelection() throws IOException {
     ImmutableList<BuildLogEntry> buildLogs = buildLogHelper.getBuildLogs();
 
     // Commands with unknown args and buck rage should be excluded.

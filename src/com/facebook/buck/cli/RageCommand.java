@@ -121,6 +121,7 @@ public class RageCommand extends AbstractCommand {
     } else {
       stdOut.printf("Report saved at %s\n", reportLocation);
     }
+
     return 0;
   }
 
