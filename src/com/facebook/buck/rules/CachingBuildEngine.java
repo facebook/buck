@@ -45,6 +45,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -62,7 +63,6 @@ import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -602,10 +602,10 @@ public class CachingBuildEngine implements BuildEngine {
             // TODO(#9117006): We don't support a way to serlialize `SourcePath`s to the cache,
             // so need to use DependencyFileEntry's instead and recover them on deserialization.
             ImmutableList<String> inputStrings =
-                FluentIterable.from(inputs)
-                    .transform(DependencyFileEntry.fromSourcePathFunction(pathResolver))
-                    .transform(MoreFunctions.toJsonFunction(objectMapper))
-                    .toList();
+                inputs.stream()
+                .map(inputString -> DependencyFileEntry.fromSourcePath(inputString, pathResolver))
+                .map(MoreFunctions.toJsonFunction(objectMapper))
+                .collect(MoreCollectors.toImmutableList());
             buildInfoRecorder.addMetadata(
                 BuildInfo.METADATA_KEY_FOR_DEP_FILE,
                 inputStrings);
@@ -692,9 +692,9 @@ public class CachingBuildEngine implements BuildEngine {
               rule.getBuildTarget().toString());
           buildInfoRecorder.addMetadata(
               BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS,
-              FluentIterable.from(buildInfoRecorder.getRecordedPaths())
-                  .transform(Functions.toStringFunction())
-                  .toList());
+              buildInfoRecorder.getRecordedPaths().stream()
+                  .map(Object::toString)
+                  .collect(MoreCollectors.toImmutableList()));
           if (success.shouldWriteRecordedMetadataToDiskAfterBuilding()) {
             try {
               boolean clearExistingMetadata = success.shouldClearAndOverwriteMetadataOnDisk();
@@ -1340,10 +1340,9 @@ public class CachingBuildEngine implements BuildEngine {
 
     // Build the dep-file rule key.  If any inputs are no longer on disk, this means something
     // changed and a dep-file based rule key can't be calculated.
-    ImmutableList<DependencyFileEntry> inputs =
-        FluentIterable.from(depFile.get()).transform(MoreFunctions.fromJsonFunction(
-            objectMapper,
-            DependencyFileEntry.class)).toList();
+    ImmutableList<DependencyFileEntry> inputs = depFile.get().stream()
+        .map(MoreFunctions.fromJsonFunction(objectMapper, DependencyFileEntry.class))
+        .collect(MoreCollectors.toImmutableList());
 
     try {
       return this.ruleKeyFactories.getUnchecked(rule.getProjectFilesystem())

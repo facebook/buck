@@ -21,7 +21,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
@@ -29,7 +28,6 @@ import org.immutables.value.Value;
 
 import java.nio.file.Path;
 
-import javax.annotation.Nullable;
 
 @BuckStyleImmutable
 @JsonSerialize
@@ -63,20 +61,5 @@ abstract class AbstractDependencyFileEntry {
     }
 
     return builder.build();
-  }
-
-  public static Function<SourcePath, DependencyFileEntry> fromSourcePathFunction(
-      final SourcePathResolver resolver) {
-    return new Function<SourcePath, DependencyFileEntry>() {
-      @Nullable
-      @Override
-      public DependencyFileEntry apply(@Nullable SourcePath input) {
-        if (input == null) {
-          return null;
-        }
-
-        return fromSourcePath(input, resolver);
-      }
-    };
   }
 }
