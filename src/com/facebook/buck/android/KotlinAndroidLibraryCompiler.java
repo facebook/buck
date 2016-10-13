@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -41,7 +41,9 @@ public class KotlinAndroidLibraryCompiler extends AndroidLibraryCompiler {
 
   @Override
   public CompileToJarStepFactory compileToJar(
-      AndroidLibraryDescription.Arg args, JavacOptions javacOptions, BuildRuleResolver resolver) {
+      AndroidLibraryDescription.Arg args,
+      JavacOptions javacOptions,
+      BuildRuleResolver resolver) {
     return new KotlincToJarStepFactory(
         kotlinBuckConfig.getKotlinCompiler().get(),
         ImmutableList.of(),
@@ -50,7 +52,8 @@ public class KotlinAndroidLibraryCompiler extends AndroidLibraryCompiler {
 
   @Override
   public Iterable<BuildRule> getExtraDeps(
-      AndroidLibraryDescription.Arg args, BuildRuleResolver resolver) {
+      AndroidLibraryDescription.Arg args,
+      BuildRuleResolver resolver) {
     return kotlinBuckConfig.getKotlinCompiler().get()
         .getDeps(new SourcePathResolver(resolver));
   }
