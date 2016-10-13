@@ -42,12 +42,7 @@ import java.util.regex.Pattern;
 public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFactory {
 
   public static final Function<BuildContext, Iterable<Path>> EMPTY_EXTRA_CLASSPATH =
-      new Function<BuildContext, Iterable<Path>>() {
-        @Override
-        public Iterable<Path> apply(BuildContext input) {
-          return ImmutableList.of();
-        }
-      };
+      input -> ImmutableList.of();
 
   @Override
   public void createCompileToJarStep(
