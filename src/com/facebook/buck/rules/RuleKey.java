@@ -16,9 +16,7 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Function;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.hash.HashCode;
 
 import javax.annotation.Nullable;
@@ -63,14 +61,6 @@ public class RuleKey {
   public String toString() {
     return getHashCode().toString();
   }
-
-  /**
-   * Takes a string and uses it to construct a {@link RuleKey}.
-   * <p>
-   * Is likely particularly useful with {@link Optional#transform(Function)}.
-   */
-  public static final Function<String, RuleKey> TO_RULE_KEY =
-      RuleKey::new;
 
   @Override
   public boolean equals(@Nullable Object obj) {

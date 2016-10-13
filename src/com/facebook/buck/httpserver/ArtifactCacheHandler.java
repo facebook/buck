@@ -100,7 +100,7 @@ public class ArtifactCacheHandler extends AbstractHandler {
       return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
     }
 
-    RuleKey ruleKey = RuleKey.TO_RULE_KEY.apply(pathElements[3]);
+    RuleKey ruleKey = new RuleKey(pathElements[3]);
 
     Path temp = null;
     try {

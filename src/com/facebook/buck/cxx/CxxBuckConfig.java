@@ -283,7 +283,7 @@ public class CxxBuckConfig {
     return ImmutableMap.copyOf(
         Maps.transformValues(
             delegate.getEntriesForSection("defaults." + type.getName()),
-            Flavor.TO_FLAVOR));
+            ImmutableFlavor::of));
   }
 
   public int getDebugPathSanitizerLimit() {

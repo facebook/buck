@@ -24,17 +24,18 @@ import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.MoreCollectors;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -42,6 +43,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Saves and loads the {@link TargetNode}s needed for the build.
@@ -93,9 +95,9 @@ public class DistBuildTargetGraphCodec {
       remoteTarget.setCellName(buildTarget.getCell().get());
     }
     remoteTarget.setFlavors(
-        FluentIterable.from(buildTarget.getFlavors())
-            .transform(Object::toString)
-            .toSet());
+        buildTarget.getFlavors().stream()
+            .map(Object::toString)
+            .collect(Collectors.toSet()));
     return remoteTarget;
   }
 
@@ -108,9 +110,9 @@ public class DistBuildTargetGraphCodec {
         .setCell(Optional.fromNullable(remoteTarget.getCellName()))
         .build();
 
-    ImmutableSet<Flavor> flavors = FluentIterable.from(remoteTarget.flavors)
-        .transform(Flavor.TO_FLAVOR)
-        .toSet();
+    ImmutableSet<Flavor> flavors = remoteTarget.flavors.stream()
+        .map(ImmutableFlavor::of)
+        .collect(MoreCollectors.toImmutableSet());
 
     return BuildTarget.builder()
         .setUnflavoredBuildTarget(unflavoredBuildTarget)

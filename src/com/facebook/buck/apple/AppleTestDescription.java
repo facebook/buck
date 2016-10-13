@@ -56,7 +56,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.zip.UnzipStep;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -231,8 +230,8 @@ public class AppleTestDescription implements
         params,
         resolver,
         args,
-        testHostInfo.transform(TestHostInfo.GET_TEST_HOST_APP_BINARY_SOURCE_PATH_FUNCTION),
-        testHostInfo.transform(TestHostInfo.GET_BLACKLIST_FUNCTION)
+        testHostInfo.transform(TestHostInfo::getTestHostAppBinarySourcePath),
+        testHostInfo.transform(TestHostInfo::getBlacklist)
             .or(ImmutableSet.of()),
         libraryTarget);
     if (!createBundle || SwiftLibraryDescription.isSwiftTarget(libraryTarget)) {
@@ -288,7 +287,7 @@ public class AppleTestDescription implements
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         sourcePathResolver,
         bundle,
-        testHostInfo.transform(TestHostInfo.GET_TEST_HOST_APP_FUNCTION),
+        testHostInfo.transform(TestHostInfo::getTestHostApp),
         args.contacts.get(),
         args.labels.get(),
         args.getRunTestSeparately(),
@@ -461,14 +460,6 @@ public class AppleTestDescription implements
      */
     ImmutableSet<BuildTarget> getBlacklist();
 
-    Function<TestHostInfo, AppleBundle> GET_TEST_HOST_APP_FUNCTION =
-        TestHostInfo::getTestHostApp;
-
-    Function<TestHostInfo, SourcePath> GET_TEST_HOST_APP_BINARY_SOURCE_PATH_FUNCTION =
-        TestHostInfo::getTestHostAppBinarySourcePath;
-
-    Function<TestHostInfo, ImmutableSet<BuildTarget>> GET_BLACKLIST_FUNCTION =
-        TestHostInfo::getBlacklist;
   }
 
   @SuppressFieldNotInitialized

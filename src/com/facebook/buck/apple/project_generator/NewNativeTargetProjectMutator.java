@@ -636,7 +636,7 @@ class NewNativeTargetProjectMutator {
             .addAll(
                 FluentIterable.from(arg.srcs.get())
                     .transform(sourcePathResolver)
-                    .transform(pathRelativizer.outputDirToRootRelative())
+                    .transform(pathRelativizer::outputDirToRootRelative)
                     .transform(Object::toString)
                     .toSet());
         shellScriptBuildPhase.getOutputPaths().addAll(arg.outputs.get());

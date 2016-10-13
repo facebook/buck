@@ -2511,7 +2511,7 @@ public class ProjectGenerator {
     final Function<FrameworkPath, Path> toSearchPath = FrameworkPath
         .getUnexpandedSearchPathFunction(
             sourcePathResolver,
-            pathRelativizer.outputDirToRootRelative());
+            pathRelativizer::outputDirToRootRelative);
 
     return input -> FluentIterable
         .from(pathSetExtractor.apply(input.getConstructorArg()))

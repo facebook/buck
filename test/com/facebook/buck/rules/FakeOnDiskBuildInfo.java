@@ -49,7 +49,7 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Override
   public Optional<RuleKey> getRuleKey(String key) {
-    return getValue(key).transform(RuleKey.TO_RULE_KEY);
+    return getValue(key).transform(RuleKey::new);
   }
 
   /** @return this */

@@ -28,9 +28,6 @@ import java.nio.file.Path;
  */
 public class SourcePaths {
 
-  public static final Function<BuildTargetSourcePath, BuildTarget> TO_BUILD_TARGET =
-      BuildTargetSourcePath::getTarget;
-
   /** Utility class: do not instantiate. */
   private SourcePaths() {}
 
@@ -39,7 +36,7 @@ public class SourcePaths {
     return FluentIterable
         .from(sourcePaths)
         .filter(BuildTargetSourcePath.class)
-        .transform(TO_BUILD_TARGET);
+        .transform(BuildTargetSourcePath::getTarget);
   }
 
   public static Function<Path, SourcePath> toSourcePath(final ProjectFilesystem projectFilesystem) {

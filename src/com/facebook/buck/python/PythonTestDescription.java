@@ -182,7 +182,7 @@ public class PythonTestDescription implements
         .getValue(params.getBuildTarget())
         .or(pythonPlatforms.getValue(
             args.platform
-                .transform(Flavor.TO_FLAVOR)
+                .<Flavor>transform(ImmutableFlavor::of)
                 .or(pythonPlatforms.getFlavors().iterator().next())));
     CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);

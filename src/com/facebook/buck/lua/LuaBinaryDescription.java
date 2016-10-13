@@ -775,7 +775,7 @@ public class LuaBinaryDescription implements
         pythonPlatforms.getValue(params.getBuildTarget())
             .or(pythonPlatforms.getValue(
                 args.pythonPlatform
-                    .transform(Flavor.TO_FLAVOR)
+                    .<Flavor>transform(ImmutableFlavor::of)
                     .or(pythonPlatforms.getFlavors().iterator().next())));
     LuaBinaryPackageComponents components =
         getPackageComponentsFromDeps(

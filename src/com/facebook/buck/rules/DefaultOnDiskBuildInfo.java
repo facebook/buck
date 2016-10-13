@@ -152,7 +152,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   @Override
   public Optional<RuleKey> getRuleKey(String key) {
     try {
-      return getValue(key).transform(RuleKey.TO_RULE_KEY);
+      return getValue(key).transform(RuleKey::new);
     } catch (IllegalArgumentException ignored) {
       return Optional.absent();
     }

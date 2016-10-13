@@ -16,7 +16,6 @@
 
 package com.facebook.buck.model;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 
 import org.immutables.value.Value;
@@ -27,9 +26,6 @@ import java.util.regex.Pattern;
 public abstract class Flavor implements Comparable<Flavor> {
 
   private static final Pattern INVALID_FLAVOR_CHARACTERS = Pattern.compile("[^-a-zA-Z0-9_\\.]");
-
-  public static final Function<String, Flavor> TO_FLAVOR =
-      ImmutableFlavor::of;
 
   public static String replaceInvalidCharacters(String name) {
     return INVALID_FLAVOR_CHARACTERS.matcher(name).replaceAll("_");

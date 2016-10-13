@@ -116,13 +116,13 @@ public class OCamlRuleBuilder {
       ImmutableList<String> argFlags,
       final ImmutableList<String> linkerFlags) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    boolean noYaccOrLexSources = FluentIterable.from(srcs).transform(OCamlSource.TO_SOURCE_PATH)
+    boolean noYaccOrLexSources = FluentIterable.from(srcs).transform(OCamlSource::getSource)
         .filter(OCamlUtil.sourcePathExt(
                   pathResolver,
                   OCamlCompilables.OCAML_MLL,
                   OCamlCompilables.OCAML_MLY))
         .isEmpty();
-    boolean noGeneratedSources = FluentIterable.from(srcs).transform(OCamlSource.TO_SOURCE_PATH)
+    boolean noGeneratedSources = FluentIterable.from(srcs).transform(OCamlSource::getSource)
         .filter(BuildTargetSourcePath.class)
         .isEmpty();
     if (noYaccOrLexSources && noGeneratedSources) {
@@ -315,7 +315,7 @@ public class OCamlRuleBuilder {
           compileParams,
           linkerFlags,
           FluentIterable.from(srcs)
-              .transform(OCamlSource.TO_SOURCE_PATH)
+              .transform(OCamlSource::getSource)
               .transform(pathResolver.getAbsolutePathFunction())
               .filter(OCamlUtil.ext(OCamlCompilables.OCAML_C))
               .transform(ocamlContext.toCOutput())

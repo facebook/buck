@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
 
 import org.immutables.value.Value;
 
@@ -28,7 +27,6 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractOCamlSource {
-  public static final Function<OCamlSource, SourcePath> TO_SOURCE_PATH = OCamlSource::getSource;
 
   @Value.Parameter
   public abstract String getName();
