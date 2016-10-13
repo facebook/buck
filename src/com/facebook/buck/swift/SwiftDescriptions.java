@@ -60,28 +60,18 @@ class SwiftDescriptions {
       final A args,
       BuildTarget buildTarget) {
     output.srcs = args.srcs.transform(
-        new Function<ImmutableSortedSet<SourceWithFlags>, ImmutableSortedSet<SourcePath>>() {
-          @Override
-          public ImmutableSortedSet<SourcePath> apply(ImmutableSortedSet<SourceWithFlags> input) {
-            return filterSwiftSources(sourcePathResolver, args.srcs.get());
-          }
-        });
+        input -> filterSwiftSources(sourcePathResolver, args.srcs.get()));
     output.exportedHeaders = args.exportedHeaders.transform(
-        new Function<SourceList, ImmutableMap<Path, SourcePath>>() {
-          @Override
-          public ImmutableMap<Path, SourcePath> apply(SourceList input) {
-            return FluentIterable.from(input.getPaths())
-                .uniqueIndex(new Function<SourcePath, Path>() {
-                  @Override
-                  public Path apply(SourcePath input) {
-                    if (input instanceof PathSourcePath) {
-                      return ((PathSourcePath)input).getRelativePath();
-                    }
-                    return null;
-                  }
-                });
-          }
-        }
+         input -> FluentIterable.from(input.getPaths())
+            .uniqueIndex(new Function<SourcePath, Path>() {
+              @Override
+              public Path apply(SourcePath input) {
+                if (input instanceof PathSourcePath) {
+                  return ((PathSourcePath)input).getRelativePath();
+                }
+                return null;
+              }
+            })
     );
     output.compilerFlags = args.compilerFlags;
     output.frameworks = args.frameworks;
