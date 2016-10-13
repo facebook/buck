@@ -429,7 +429,11 @@ public class NdkCxxPlatforms {
     Host host = Preconditions.checkNotNull(BUILD_PLATFORMS.get(platform));
 
     NdkCxxToolchainPaths toolchainPaths = new NdkCxxToolchainPaths(
-        ndkRoot, targetConfiguration, host.toString(), strictToolchainPaths);
+        ndkRoot,
+        targetConfiguration,
+        host.toString(),
+        cxxRuntime,
+        strictToolchainPaths);
     // Sanitized paths will have magic placeholders for parts of the paths that
     // are machine/host-specific. See comments on ANDROID_NDK_ROOT and
     // BUILD_HOST_SUBST above.
@@ -479,7 +483,7 @@ public class NdkCxxPlatforms {
         .setCxx(cxx)
         .addAllCxxflags(getCxxflagsInternal(targetConfiguration, toolchainPaths))
         .setCxxpp(cxxpp)
-        .addAllCxxppflags(getCxxppflags(targetConfiguration, toolchainPaths, cxxRuntime))
+        .addAllCxxppflags(getCxxppflags(targetConfiguration, toolchainPaths))
         .setLd(
             new DefaultLinkerProvider(
                 LinkerProvider.Type.GNU,
@@ -487,7 +491,6 @@ public class NdkCxxPlatforms {
                     getCcLinkTool(
                         targetConfiguration,
                         toolchainPaths,
-                        cxxRuntime,
                         compilerType.getCxx(),
                         version,
                         executableFinder))))
@@ -545,7 +548,7 @@ public class NdkCxxPlatforms {
         .setCxxPlatform(cxxPlatform)
         .setCxxRuntime(cxxRuntime)
         .setCxxSharedRuntimePath(
-            toolchainPaths.getCxxRuntimeLibsDirectory(cxxRuntime)
+            toolchainPaths.getCxxRuntimeLibsDirectory()
                 .resolve(cxxRuntime.getSoname()))
         .setObjdump(
             getGccTool(toolchainPaths, "objdump", version, executableFinder))
@@ -609,19 +612,18 @@ public class NdkCxxPlatforms {
 
   private static ImmutableList<String> getCxxRuntimeIncludeFlags(
       NdkCxxPlatformTargetConfiguration targetConfiguration,
-      NdkCxxToolchainPaths toolchainPaths,
-      CxxRuntime cxxRuntime) {
+      NdkCxxToolchainPaths toolchainPaths) {
     ImmutableList.Builder<String> flags = ImmutableList.builder();
-    switch (cxxRuntime) {
+    switch (toolchainPaths.getCxxRuntime()) {
       case GNUSTL:
         flags.add(
             "-isystem",
-            toolchainPaths.getCxxRuntimeDirectory(cxxRuntime)
+            toolchainPaths.getCxxRuntimeDirectory()
                 .resolve("include")
                 .toString());
         flags.add(
             "-isystem",
-            toolchainPaths.getCxxRuntimeDirectory(cxxRuntime)
+            toolchainPaths.getCxxRuntimeDirectory()
                 .resolve("libs")
                 .resolve(targetConfiguration.getTargetArchAbi().toString())
                 .resolve("include")
@@ -630,13 +632,13 @@ public class NdkCxxPlatforms {
       case LIBCXX:
         flags.add(
             "-isystem",
-            toolchainPaths.getCxxRuntimeDirectory(cxxRuntime)
+            toolchainPaths.getCxxRuntimeDirectory()
                 .resolve("libcxx")
                 .resolve("include")
                 .toString());
         flags.add(
             "-isystem",
-            toolchainPaths.getCxxRuntimeDirectory(cxxRuntime)
+            toolchainPaths.getCxxRuntimeDirectory()
                 .getParent()
                 .resolve("llvm-libc++abi")
                 .resolve("libcxxabi")
@@ -655,7 +657,7 @@ public class NdkCxxPlatforms {
       default:
         flags.add(
             "-isystem",
-            toolchainPaths.getCxxRuntimeDirectory(cxxRuntime)
+            toolchainPaths.getCxxRuntimeDirectory()
                 .resolve("include")
                 .toString());
     }
@@ -665,7 +667,6 @@ public class NdkCxxPlatforms {
   private static Linker getCcLinkTool(
       NdkCxxPlatformTargetConfiguration targetConfiguration,
       NdkCxxToolchainPaths toolchainPaths,
-      CxxRuntime cxxRuntime,
       String tool,
       String version,
       ExecutableFinder executableFinder) {
@@ -691,7 +692,7 @@ public class NdkCxxPlatforms {
 
     // Add the path to the C/C++ runtime libraries.
     flags.add(
-        "-L" + toolchainPaths.getCxxRuntimeLibsDirectory(cxxRuntime).toString());
+        "-L" + toolchainPaths.getCxxRuntimeLibsDirectory().toString());
 
     return new GnuLinker(
         VersionedTool.builder()
@@ -833,10 +834,9 @@ public class NdkCxxPlatforms {
 
   private static ImmutableList<String> getCxxppflags(
       NdkCxxPlatformTargetConfiguration targetConfiguration,
-      NdkCxxToolchainPaths toolchainPaths,
-      CxxRuntime cxxRuntime) {
+      NdkCxxToolchainPaths toolchainPaths) {
     ImmutableList.Builder<String> flags = ImmutableList.builder();
-    flags.addAll(getCxxRuntimeIncludeFlags(targetConfiguration, toolchainPaths, cxxRuntime));
+    flags.addAll(getCxxRuntimeIncludeFlags(targetConfiguration, toolchainPaths));
     flags.addAll(getCommonIncludes(toolchainPaths));
     flags.addAll(getCommonPreprocessorFlags());
     flags.addAll(getCommonFlags(targetConfiguration, toolchainPaths));
@@ -1061,6 +1061,7 @@ public class NdkCxxPlatforms {
     private String ndkVersion;
     private NdkCxxPlatformTargetConfiguration targetConfiguration;
     private String hostName;
+    private CxxRuntime cxxRuntime;
     private Map<String, Path> cachedPaths;
     private boolean strict;
     private int ndkMajorVersion;
@@ -1069,21 +1070,30 @@ public class NdkCxxPlatforms {
         Path ndkRoot,
         NdkCxxPlatformTargetConfiguration targetConfiguration,
         String hostName,
+        CxxRuntime cxxRuntime,
         boolean strict) {
-      this(ndkRoot, readVersion(ndkRoot), targetConfiguration, hostName, strict);
+      this(
+          ndkRoot,
+          readVersion(ndkRoot),
+          targetConfiguration,
+          hostName,
+          cxxRuntime,
+          strict);
     }
 
-    NdkCxxToolchainPaths(
+    private NdkCxxToolchainPaths(
         Path ndkRoot,
         String ndkVersion,
         NdkCxxPlatformTargetConfiguration targetConfiguration,
         String hostName,
+        CxxRuntime cxxRuntime,
         boolean strict) {
       this.cachedPaths = new HashMap<>();
       this.strict = strict;
 
       this.targetConfiguration = targetConfiguration;
       this.hostName = hostName;
+      this.cxxRuntime = cxxRuntime;
       this.ndkRoot = ndkRoot;
       this.ndkVersion = ndkVersion;
       this.ndkMajorVersion = getNdkMajorVersion(ndkVersion);
@@ -1099,6 +1109,7 @@ public class NdkCxxPlatforms {
           ndkVersion,
           targetConfiguration,
           BUILD_HOST_SUBST,
+          cxxRuntime,
           false);
     }
 
@@ -1208,7 +1219,7 @@ public class NdkCxxPlatforms {
       return processPathPattern(getNdkGccToolRoot(), "{toolchain_target}/bin");
     }
 
-    private Path getCxxRuntimeDirectory(CxxRuntime cxxRuntime) {
+    private Path getCxxRuntimeDirectory() {
       if (cxxRuntime == CxxRuntime.GNUSTL) {
         return processPathPattern(
             "sources/cxx-stl/" + cxxRuntime.getName() + "/{gcc_compiler_version}");
@@ -1219,8 +1230,8 @@ public class NdkCxxPlatforms {
 
     }
 
-    private Path getCxxRuntimeLibsDirectory(CxxRuntime cxxRuntime) {
-      return processPathPattern(getCxxRuntimeDirectory(cxxRuntime), "libs/{target_arch_abi}");
+    private Path getCxxRuntimeLibsDirectory() {
+      return processPathPattern(getCxxRuntimeDirectory(), "libs/{target_arch_abi}");
     }
 
     Path getToolPath(String tool) {
@@ -1233,6 +1244,10 @@ public class NdkCxxPlatforms {
 
     public Path getNdkRoot() {
       return ndkRoot;
+    }
+
+    public CxxRuntime getCxxRuntime() {
+      return cxxRuntime;
     }
   }
 }
