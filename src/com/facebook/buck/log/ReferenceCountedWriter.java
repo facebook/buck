@@ -38,7 +38,9 @@ public class ReferenceCountedWriter extends Writer {
   }
 
   public ReferenceCountedWriter newReference() {
-    counter.incrementAndGet();
+    if (getAndIncrementIfNotZero(counter) == 0) {
+      throw new RuntimeException("ReferenceCountedWriter is closed!");
+    }
     return new ReferenceCountedWriter(counter, innerWriter);
   }
 
@@ -110,6 +112,19 @@ public class ReferenceCountedWriter extends Writer {
     if (currentCount == 0) {
       innerWriter.flush();
       innerWriter.close();
+    }
+  }
+
+  private static int getAndIncrementIfNotZero(AtomicInteger counter) {
+    for (;;) {
+      int current = counter.get();
+      if (current == 0) {
+        return current;
+      }
+      int next = current + 1;
+      if (counter.compareAndSet(current, next)) {
+        return current;
+      }
     }
   }
 }

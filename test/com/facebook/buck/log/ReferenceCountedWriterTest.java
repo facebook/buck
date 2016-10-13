@@ -18,12 +18,17 @@ package com.facebook.buck.log;
 
 import org.easymock.EasyMock;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
 public class ReferenceCountedWriterTest {
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   private OutputStreamWriter mockWriter;
 
@@ -71,5 +76,14 @@ public class ReferenceCountedWriterTest {
     ref.close();
     ref.close();
     EasyMock.verify(mockWriter);
+  }
+
+  @Test
+  public void testNewReferenceAfterBeingClosed() throws Exception {
+    ReferenceCountedWriter ref = new ReferenceCountedWriter(mockWriter);
+    ref.close();
+    expectedException.expect(RuntimeException.class);
+    expectedException.expectMessage("ReferenceCountedWriter is closed!");
+    ref.newReference();
   }
 }

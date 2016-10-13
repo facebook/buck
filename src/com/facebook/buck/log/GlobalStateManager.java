@@ -66,10 +66,11 @@ public class GlobalStateManager {
     this.commandIdToConsoleHandlerLevel = new ConcurrentHashMap<>();
     this.commandIdToLogFileHandlerWriter = new ConcurrentHashMap<>();
 
-    rotateDefaultLogFileWriter(
+    ReferenceCountedWriter defaultWriter = rotateDefaultLogFileWriter(
         InvocationInfo.of(new BuildId(), "launch",
             LogConfigSetup.DEFAULT_SETUP.getLogDir())
             .getLogFilePath());
+    putReferenceCountedWriter(DEFAULT_LOG_FILE_WRITER_KEY, defaultWriter);
   }
 
   public LoggerIsMappedToThreadScope setupLoggers(
@@ -77,10 +78,15 @@ public class GlobalStateManager {
       OutputStream consoleHandlerStream,
       final OutputStream consoleHandlerOriginalStream,
       final Verbosity consoleHandlerVerbosity) {
-    ReferenceCountedWriter defaultWriter = rotateDefaultLogFileWriter(info.getLogFilePath());
-
     final long threadId = Thread.currentThread().getId();
     final String commandId = info.getCommandId();
+
+    ReferenceCountedWriter defaultWriter = rotateDefaultLogFileWriter(info.getLogFilePath());
+    ReferenceCountedWriter newWriter = defaultWriter.newReference();
+    // Put defaultWriter to map only after newWriter has been created. Otherwise defaultWriter may
+    // get closed before newWriter was created due to concurrency.
+    putReferenceCountedWriter(DEFAULT_LOG_FILE_WRITER_KEY, defaultWriter);
+    putReferenceCountedWriter(commandId, newWriter);
 
     // Setup the shared state.
     threadIdToCommandId.putIfAbsent(threadId, commandId);
@@ -103,9 +109,6 @@ public class GlobalStateManager {
           "Failed to created 'per command log directory': [%s]",
           logDirectory.toAbsolutePath());
     }
-
-    ReferenceCountedWriter newWriter = defaultWriter.newReference();
-    putReferenceCountedWriter(commandId, newWriter);
 
     return new LoggerIsMappedToThreadScope() {
       @Override
@@ -189,9 +192,7 @@ public class GlobalStateManager {
   private ReferenceCountedWriter rotateDefaultLogFileWriter(Path logFilePath) {
     try {
       Files.createDirectories(logFilePath.getParent());
-      ReferenceCountedWriter newWriter = newReferenceCountedWriter(logFilePath.toString());
-      putReferenceCountedWriter(DEFAULT_LOG_FILE_WRITER_KEY, newWriter);
-      return newWriter;
+      return newReferenceCountedWriter(logFilePath.toString());
     } catch (FileNotFoundException e) {
       throw new RuntimeException(String.format("Could not create file [%s].", logFilePath), e);
     } catch (IOException e) {
