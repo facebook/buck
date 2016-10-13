@@ -1,4 +1,7 @@
 kotlin_test(
-  name = 'test',
+  name = ':test',
+  deps = [
+    '//:junit',
+    '//:kotlin-runtime',
+  ],
 )
-

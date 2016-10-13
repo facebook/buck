@@ -4,7 +4,8 @@ kotlin_test(
     'PassingUnitTest.kt',
   ],
   deps = [
-    ':junit',
+    '//:junit',
+    '//:kotlin-runtime',
   ],
 )
 
@@ -14,11 +15,7 @@ kotlin_test(
     'FailingUnitTest.kt',
   ],
   deps = [
-    ':junit',
+    '//:junit',
+    '//:kotlin-runtime',
   ],
-)
-
-prebuilt_jar(
-  name = 'junit',
-  binary_jar = 'junit-4.11.jar',
 )
