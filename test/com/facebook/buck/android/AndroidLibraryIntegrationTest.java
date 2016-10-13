@@ -54,7 +54,7 @@ public class AndroidLibraryIntegrationTest {
     assertTrue(result.getStderr().contains("package R does not exist"));
   }
 
-  @Test()
+  @Test
   public void testAndroidKotlinBinaryDoesNotUseTransitiveResources() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     KotlinTestAssumptions.assumeCompilerAvailable();
