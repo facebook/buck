@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY c9a06044ccac3d1356249ab06a01f82874510b5d #@#
+#@# GENERATED FILE: DO NOT MODIFY 444a1e5b8a1bf425e53f588a7d4f8a29dd4c3b28 #@#
 {
   "apkmodule" : {
     "deps" : [
@@ -103,6 +103,7 @@
       "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/jvm/java:steps",
       "//src/com/facebook/buck/jvm/java:support",
+      "//src/com/facebook/buck/jvm/kotlin:kotlin",
       "//src/com/facebook/buck/jvm/scala:scala",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",

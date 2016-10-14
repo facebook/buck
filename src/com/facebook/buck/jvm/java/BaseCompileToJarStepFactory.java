@@ -25,6 +25,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -39,6 +40,9 @@ import java.util.regex.Pattern;
  * Provides a base implementation for post compile steps.
  */
 public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFactory {
+
+  public static final Function<BuildContext, Iterable<Path>> EMPTY_EXTRA_CLASSPATH =
+      input -> ImmutableList.of();
 
   @Override
   public void createCompileToJarStep(

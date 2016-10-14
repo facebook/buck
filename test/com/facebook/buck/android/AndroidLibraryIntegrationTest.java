@@ -18,9 +18,10 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.jvm.kotlin.KotlinTestAssumptions;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 
@@ -52,6 +53,26 @@ public class AndroidLibraryIntegrationTest {
     result.assertFailure();
     assertTrue(result.getStderr().contains("package R does not exist"));
   }
+
+  @Test
+  public void testAndroidKotlinBinaryDoesNotUseTransitiveResources() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    KotlinTestAssumptions.assumeCompilerAvailable();
+    ProcessResult result =
+        workspace.runBuckBuild("//kotlin/com/sample/lib:lib_using_transitive_empty_res");
+    result.assertFailure();
+    assertTrue(result.getStderr().contains("unresolved reference: R"));
+  }
+
+  @Test
+  public void testAndroidKotlinLibraryCompilation() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    KotlinTestAssumptions.assumeCompilerAvailable();
+    ProcessResult result =
+        workspace.runBuckBuild("//kotlin/com/sample/lib:lib_depending_on_main_lib");
+    result.assertSuccess();
+  }
+
 
   @Test(timeout = (3 * 60 * 1000))
   public void testAndroidScalaLibraryDoesNotUseTransitiveResources() throws IOException {

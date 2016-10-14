@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 1a6ae63bda238b15d5b666625c131d8ada3b4ba8 #@#
+#@# GENERATED FILE: DO NOT MODIFY 14f910b9e77e6d8c55a0f25dc04706f07c5baa02 #@#
 {
   "aar-integration" : {
     "deps" : [
@@ -79,6 +79,7 @@
       "//src/com/facebook/buck/util/sha1:sha1",
       "//test/com/facebook/buck/android:testutil",
       "//test/com/facebook/buck/artifact_cache:testutil",
+      "//test/com/facebook/buck/jvm/kotlin:testutil",
       "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",

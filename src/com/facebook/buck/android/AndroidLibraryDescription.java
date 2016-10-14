@@ -60,7 +60,8 @@ public class AndroidLibraryDescription
 
   public enum JvmLanguage {
     JAVA,
-    SCALA
+    KOTLIN,
+    SCALA,
   }
 
   private final JavacOptions defaultOptions;

@@ -16,15 +16,19 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 
 public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompilerFactory {
 
   private final ScalaBuckConfig scalaConfig;
+  private final KotlinBuckConfig kotlinBuckConfig;
 
-  public DefaultAndroidLibraryCompilerFactory(ScalaBuckConfig scalaConfig) {
+  public DefaultAndroidLibraryCompilerFactory(
+      ScalaBuckConfig scalaConfig, KotlinBuckConfig kotlinBuckConfig) {
     this.scalaConfig = scalaConfig;
+    this.kotlinBuckConfig = kotlinBuckConfig;
   }
 
   @Override
@@ -32,6 +36,7 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
     switch (language) {
       case JAVA: return new JavaAndroidLibraryCompiler();
       case SCALA: return new ScalaAndroidLibraryCompiler(scalaConfig);
+      case KOTLIN: return new KotlinAndroidLibraryCompiler(kotlinBuckConfig);
     }
     throw new HumanReadableException("Unsupported `language` parameter value: %s", language);
   }
