@@ -231,6 +231,8 @@ public class Cell {
         parserConfig.getWatchmanGlobSanityCheck() == ParserConfig.WatchmanGlobSanityCheck.STAT;
     boolean watchmanUseGlobGenerator = watchman.getCapabilities().contains(
         Watchman.Capability.GLOB_GENERATOR);
+    boolean useMercurialGlob =
+        parserConfig.getGlobHandler() == ParserConfig.GlobHandler.MERCURIAL;
 
     return new DefaultProjectBuildFileParserFactory(
         ProjectBuildFileParserOptions.builder()
@@ -247,6 +249,7 @@ public class Cell {
             .setWatchmanUseGlobGenerator(watchmanUseGlobGenerator)
             .setWatchman(watchman)
             .setWatchmanQueryTimeoutMs(parserConfig.getWatchmanQueryTimeoutMs())
+            .setUseMercurialGlob(useMercurialGlob)
             .setRawConfig(getBuckConfig().getRawConfigForParser())
             .setEnableBuildFileSandboxing(parserConfig.getEnableBuildFileSandboxing())
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())

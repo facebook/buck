@@ -1,9 +1,11 @@
 from buck import (
     BuildFileContext,
     LazyBuildEnvPartial,
+    _load_manifest_trie,
     flatten_dicts,
     format_watchman_query_params,
     glob_internal,
+    glob_mercurial_manifest,
     path_component_contains_dot,
     subdir_glob,
 )
@@ -243,7 +245,7 @@ class TestBuckSubdirGlobMixin(object):
     def test_subdir_glob(self):
         build_env = BuildFileContext(
             self.fake_path(''), None, None, None, None, [], None, None, None, None, None, False,
-            False)
+            False, False)
         search_base = self.fake_path(
             'foo',
             glob_results={
@@ -266,7 +268,7 @@ class TestBuckSubdirGlobMixin(object):
     def test_subdir_glob_with_prefix(self):
         build_env = BuildFileContext(
             self.fake_path(''), None, None, None, None, [], None, None, None, None, None, False,
-            False)
+            False, False)
         search_base = self.fake_path(
             'foo',
             glob_results={
@@ -309,6 +311,158 @@ class TestBuckWindows(TestBuckGlobMixin, TestBuckSubdirGlobMixin, unittest.TestC
             for key, value in expected.items():
                 fixed_expected.update({key.replace('/', '\\'): value.replace('/', '\\')})
         self.assertEqual(fixed_expected, actual)
+
+
+# Mercurial manifest / status globbing tests
+class FakeStatus(object):
+    def __init__(self, removed=None, deleted=None, added=None, unknown=None):
+        self.removed = removed or []
+        self.deleted = deleted or []
+        self.added = added or []
+        self.unknown = unknown or []
+
+
+class TestMercurialManifestGlob(TestBuckGlobMixin, unittest.TestCase):
+    fake_status = None
+    fake_manifest = None
+
+    def setUp(self):
+        # clear the memoization cache for _load_manifest_trie
+        _load_manifest_trie._cache.clear()
+
+    def status(self, removed=None, deleted=None, added=None, unknown=None):
+        class StatusContext(object):
+            def __init__(self, test):
+                self.test = test
+
+            def __enter__(self):
+                _load_manifest_trie._cache.clear()
+                self.orig_status = self.test.fake_status
+                self.test.fake_status = FakeStatus(
+                    removed, deleted, added, unknown)
+
+            def __exit__(self, *exc):
+                self.test.fake_status = self.orig_status
+
+        return StatusContext(self)
+
+    def fake_path(self, *args, **kwargs):
+        fp = fake_path(FakePosixPath, *args, **kwargs)
+        # produce a mercurial manifest from the test data
+        self.fake_manifest = [
+            './' + str(p) for paths in fp.glob_results.values() for p in paths]
+        return fp
+
+    def assertGlobMatches(self, expected, actual):
+        self.assertEqual(expected, actual)
+
+    def do_glob(self, includes, excludes, project_root_relative_excludes,
+                include_dotfiles, search_base, project_root):
+        repo_info = (
+            project_root,
+            self.fake_manifest or [],
+            self.fake_status or FakeStatus()
+        )
+        return glob_mercurial_manifest(
+            includes, excludes, project_root_relative_excludes,
+            include_dotfiles, search_base, project_root, repo_info)
+
+    def test_status_added(self):
+        search_base = self.fake_path(
+            'foo',
+            glob_results={'*.java': ['A.java', 'B.java']})
+        self.assertGlobMatches(
+            ['A.java', 'B.java'],
+            self.do_glob(
+                includes=['*.java'],
+                excludes=[],
+                project_root_relative_excludes=[],
+                include_dotfiles=False,
+                search_base=search_base,
+                project_root='.'))
+        with self.status(added=['./foo/C.java']):
+            self.assertGlobMatches(
+                ['A.java', 'B.java', 'C.java'],
+                self.do_glob(
+                    includes=['*.java'],
+                    excludes=[],
+                    project_root_relative_excludes=[],
+                    include_dotfiles=False,
+                    search_base=search_base,
+                    project_root='.'))
+
+    def test_status_deleted(self):
+        search_base = self.fake_path(
+            'foo',
+            glob_results={'*.java': ['A.java', 'B.java']})
+        self.assertGlobMatches(
+            ['A.java', 'B.java'],
+            self.do_glob(
+                includes=['*.java'],
+                excludes=[],
+                project_root_relative_excludes=[],
+                include_dotfiles=False,
+                search_base=search_base,
+                project_root='.'))
+        with self.status(deleted=['./foo/A.java']):
+            self.assertGlobMatches(
+                ['B.java'],
+                self.do_glob(
+                    includes=['*.java'],
+                    excludes=[],
+                    project_root_relative_excludes=[],
+                    include_dotfiles=False,
+                    search_base=search_base,
+                    project_root='.'))
+
+    def test_status_unknown(self):
+        search_base = self.fake_path(
+            'foo',
+            glob_results={'*.java': ['A.java', 'B.java']})
+        self.assertGlobMatches(
+            ['A.java', 'B.java'],
+            self.do_glob(
+                includes=['*.java'],
+                excludes=[],
+                project_root_relative_excludes=[],
+                include_dotfiles=False,
+                search_base=search_base,
+                project_root='.'))
+        with self.status(unknown=['./foo/C.java']):
+            self.assertGlobMatches(
+                ['A.java', 'B.java', 'C.java'],
+                self.do_glob(
+                    includes=['*.java'],
+                    excludes=[],
+                    project_root_relative_excludes=[],
+                    include_dotfiles=False,
+                    search_base=search_base,
+                    project_root='.'))
+
+    def test_status_removed(self):
+        search_base = self.fake_path(
+            'foo',
+            glob_results={'*.java': ['A.java', 'B.java']})
+        self.assertGlobMatches(
+            ['A.java', 'B.java'],
+            self.do_glob(
+                includes=['*.java'],
+                excludes=[],
+                project_root_relative_excludes=[],
+                include_dotfiles=False,
+                search_base=search_base,
+                project_root='.'))
+        with self.status(removed=['./foo/A.java']):
+            self.assertGlobMatches(
+                ['B.java'],
+                self.do_glob(
+                    includes=['*.java'],
+                    excludes=[],
+                    project_root_relative_excludes=[],
+                    include_dotfiles=False,
+                    search_base=search_base,
+                    project_root='.'))
+
 
 
 class TestBuck(unittest.TestCase):

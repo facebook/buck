@@ -271,6 +271,10 @@ public class ProjectBuildFileParser implements AutoCloseable {
           options.getWatchmanQueryTimeoutMs().get().toString());
     }
 
+    if (options.getUseMercurialGlob()) {
+      argBuilder.add("--use_mercurial_glob");
+    }
+
     if (options.getEnableBuildFileSandboxing()) {
       argBuilder.add("--enable_build_file_sandboxing");
     }

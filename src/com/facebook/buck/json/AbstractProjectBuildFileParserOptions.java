@@ -62,6 +62,11 @@ abstract class AbstractProjectBuildFileParserOptions {
     return Watchman.NULL_WATCHMAN;
   }
 
+  @Value.Default
+  public boolean getUseMercurialGlob() {
+    return false;
+  }
+
   abstract Optional<Long> getWatchmanQueryTimeoutMs();
   abstract boolean getEnableBuildFileSandboxing();
   abstract List<String> getBuildFileImportWhitelist();

@@ -107,6 +107,7 @@ class BuckTest(unittest.TestCase):
             self.watchman_error,
             False,              # watchman_glob_stat_results
             False,              # watchman_use_glob_generator
+            False,              # use_mercurial_glob
             self.enable_build_file_sandboxing,
             self.project_import_whitelist,
             includes or [],

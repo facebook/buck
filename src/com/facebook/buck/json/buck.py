@@ -6,7 +6,7 @@ import __future__
 
 import contextlib
 from collections import namedtuple
-from pathlib import Path, PureWindowsPath, PurePath
+from pathlib import _Accessor, Path, PureWindowsPath, PurePath, PosixPath
 from pywatchman import bser
 from contextlib import contextmanager
 import copy
@@ -16,6 +16,7 @@ import functools
 import hashlib
 import imp
 import inspect
+import itertools
 import json
 import optparse
 import os
@@ -26,6 +27,13 @@ import subprocess
 import sys
 import traceback
 import types
+
+try:
+    # Python 2.6, 2.7, use iterator filter from Python 3
+    from future_builtins import filter
+except ImportError:
+    # use standard filter (Python 3, Python < 2.6)
+    pass
 
 # When build files are executed, the functions in this file tagged with
 # @provide_for_build will be provided in the build file's local symbol table.
@@ -79,7 +87,7 @@ class BuildFileContext(object):
     def __init__(self, project_root, base_path, dirname, autodeps, allow_empty_globs, ignore_paths,
                  watchman_client, watchman_watch_root, watchman_project_prefix,
                  sync_cookie_state, watchman_error, watchman_glob_stat_results,
-                 watchman_use_glob_generator):
+                 watchman_use_glob_generator, use_mercurial_glob):
         self.globals = {}
         self.includes = set()
         self.used_configs = {}
@@ -97,6 +105,7 @@ class BuildFileContext(object):
         self.watchman_error = watchman_error
         self.watchman_glob_stat_results = watchman_glob_stat_results
         self.watchman_use_glob_generator = watchman_use_glob_generator
+        self.use_mercurial_glob = use_mercurial_glob
         self.diagnostics = set()
         self.rules = {}
 
@@ -237,6 +246,7 @@ def memoized(deepcopy=True, keyfunc=None):
                 value = copy.deepcopy(value)
             return value
 
+        wrapped._cache = cache
         return wrapped
 
     return decorator
@@ -254,9 +264,17 @@ def glob(includes, excludes=None, include_dotfiles=False, build_env=None, search
     assert not isinstance(excludes, basestring), \
         "The excludes argument must be a list of strings."
 
+    if search_base is None:
+        search_base = Path(build_env.dirname)
+    mercurial_repo_info = load_mercurial_repo_info(build_env, search_base, allow_safe_import)
+
     results = None
     if not includes:
         results = []
+    elif mercurial_repo_info is not None:
+        results = glob_mercurial_manifest(
+            includes, excludes, build_env.ignore_paths, include_dotfiles, search_base,
+            build_env.project_root, mercurial_repo_info)
     elif build_env.watchman_client:
         try:
             results = glob_watchman(
@@ -284,9 +302,6 @@ def glob(includes, excludes=None, include_dotfiles=False, build_env=None, search
             build_env.watchman_client = None
 
     if results is None:
-        if search_base is None:
-            search_base = Path(build_env.dirname)
-
         results = glob_internal(
             includes,
             excludes,
@@ -368,6 +383,151 @@ def subdir_glob(glob_specs, excludes=None, prefix=None, build_env=None, search_b
                                allow_safe_import=allow_safe_import))
 
     return merge_maps(*results)
+
+
+def load_mercurial_repo_info(build_env, search_base, allow_safe_import):
+    if not build_env.use_mercurial_glob:
+        return
+    for parent in itertools.chain((search_base,), search_base.parents):
+        if parent.joinpath('.hg').is_dir():
+            break
+    else:
+        # No parent found
+        return
+    return _load_mercurial_repo_info_for_root(build_env, parent, allow_safe_import)
+
+
+@memoized(deepcopy=False, keyfunc=lambda build_env, hgroot, *a: str(hgroot))
+def _load_mercurial_repo_info_for_root(build_env, hgroot, allow_safe_import):
+    os.environ['HGPLAIN'] = ''  # any output should be plain
+    with allow_safe_import():
+        # Mercurial imports extensions when creating the UI and accessing a new repository.
+        ui_ = ui.ui()
+        ui_.fout = DiagnosticsFileObject(build_env.diagnostics)
+        ui_.ferr = DiagnosticsFileObject(build_env.diagnostics)
+        ui_.quiet = True
+        repo = hg.repository(ui_, str(hgroot))
+    manifest = repo['.'].manifest()
+    status = repo.status(unknown=True)
+    return (repo.root, manifest, status)
+
+
+@memoized(
+    deepcopy=False,
+    keyfunc=lambda repo_info, project_root: (repo_info[0], project_root))
+def _load_manifest_trie(repo_info, project_root):
+    return ManifestTrie.from_repo(repo_info, project_root)
+
+
+def glob_mercurial_manifest(
+        includes, excludes, project_root_relative_excludes, include_dotfiles,
+        search_base, project_root, repo_info):
+    # pull file information from the mercurial manifest; this doesn't require
+    # any filesystem access beyond access to the mercurial repository itself.
+
+    trie = _load_manifest_trie(repo_info, project_root)
+    try:
+        for p in search_base.relative_to(project_root).parts:
+            trie = trie.traverse(p)
+    except KeyError:
+        # no such path in the manifest, short-circuit
+        return []
+    return glob_internal(
+        includes, excludes, project_root_relative_excludes, include_dotfiles,
+        ManifestPath(search_base, manifest_trie=trie), project_root)
+
+
+class DiagnosticsFileObject(object):
+    def __init__(self, diagnostics):
+        self.diagnostics = diagnostics
+
+    def write(self, value):
+        self.diagnostics.add(Diagnostic(
+            message=value, level='warning', source='mercurial'))
+
+    def flush(self):
+        pass
+
+
+class ManifestTrie(object):
+    """Basic trie implementation from a hg repository manifest and working copy status
+
+    Lazily parses path strings of children as the trie is traversed.
+
+    """
+    @classmethod
+    def from_repo(cls, repo_info, project_root):
+        entries = {}
+        hgroot, manifest, status = repo_info
+        base_path = os.path.relpath(project_root, hgroot)
+        if base_path:
+            base_path += '/'
+        removed = set(status.removed).union(status.deleted)
+        entries = (
+            path[len(base_path):]
+            for path in itertools.chain(manifest, status.added, status.unknown)
+            if path.startswith(base_path) and path not in removed)
+        return cls(entries)
+
+    def __init__(self, entries):
+        parsed = {}
+        for path in filter(None, entries):
+            parent, _, remainder = path.partition('/')
+            parsed.setdefault(parent, []).append(remainder)
+        self._entries = parsed or None  # None is a leaf node
+
+    def listdir(self):
+        return list(self._entries)
+
+    def is_dir(self):
+        return self._entries is not None
+
+    def traverse(self, name):
+        entry = self._entries[name]
+        if not isinstance(entry, type(self)):
+            self._entries[name] = entry = type(self)(entry)
+        return entry
+
+
+class ManifestAccessor(_Accessor):
+    def listdir(self, path):
+        return path._manifest_trie.listdir()
+
+
+class ManifestPath(PosixPath):
+    """Minimal Path implementation sourced from a manifest"""
+    __slots__ = ('_manifest_trie',)
+
+    def __new__(cls, *args, **kwargs):
+        self = cls._from_parts(args, init=False)
+        self._init()
+        self._manifest_trie = kwargs.pop('manifest_trie', None)
+        return self
+
+    def _init(self):
+        self._accessor = ManifestAccessor()
+
+    def _make_child_relpath(self, part):
+        child = super(ManifestPath, self)._make_child_relpath(part)
+        try:
+            child._manifest_trie = self._manifest_trie.traverse(part)
+        except KeyError:
+            child._manifest_trie = None
+        return child
+
+    def is_dir(self):
+        return self._manifest_trie.is_dir()
+
+    def is_file(self):
+        return not self.is_dir()
+
+    def exists(self):
+        return self._manifest_trie is not None
+
+    def relative_to(self, *other):
+        # produce a PosixPath object again
+        result = super(PosixPath, self).relative_to(*other)
+        return PosixPath._from_parsed_parts(result._drv, result._root, result._parts)
 
 
 COLLAPSE_SLASHES = re.compile(r'/+')
@@ -573,7 +733,7 @@ class BuildFileProcessor(object):
     def __init__(self, project_root, cell_roots, build_file_name,
                  allow_empty_globs, ignore_buck_autodeps_files,
                  watchman_client, watchman_error, watchman_glob_stat_results,
-                 watchman_use_glob_generator, enable_build_file_sandboxing,
+                 watchman_use_glob_generator, use_mercurial_glob, enable_build_file_sandboxing,
                  project_import_whitelist=None, implicit_includes=None,
                  extra_funcs=None, configs=None, env_vars=None,
                  ignore_paths=None):
@@ -604,6 +764,7 @@ class BuildFileProcessor(object):
         self._watchman_error = watchman_error
         self._watchman_glob_stat_results = watchman_glob_stat_results
         self._watchman_use_glob_generator = watchman_use_glob_generator
+        self._use_mercurial_glob = use_mercurial_glob
         self._configs = configs
         self._env_vars = env_vars
         self._ignore_paths = ignore_paths
@@ -1234,7 +1395,8 @@ class BuildFileProcessor(object):
             self._sync_cookie_state,
             self._watchman_error,
             self._watchman_glob_stat_results,
-            self._watchman_use_glob_generator)
+            self._watchman_use_glob_generator,
+            self._use_mercurial_glob)
 
         # If the .autodeps file has been successfully parsed, then treat it as if it were
         # a file loaded via include_defs() in that a change to the .autodeps file should
@@ -1547,6 +1709,11 @@ def main():
         dest='watchman_query_timeout_ms',
         help='Maximum time in milliseconds to wait for watchman query to respond.')
     parser.add_option(
+        '--use_mercurial_glob',
+        action='store_true',
+        dest='use_mercurial_glob',
+        help='Use the mercurial manifest to get lists of files instead of globbing from disk.')
+    parser.add_option(
         '--include',
         action='append',
         dest='include')
@@ -1593,6 +1760,7 @@ def main():
 
     watchman_client = None
     watchman_error = None
+    use_mercurial_glob = False
     if options.use_watchman_glob:
         import pywatchman
         client_args = {}
@@ -1607,6 +1775,20 @@ def main():
             client_args['transport'] = 'local'
         watchman_client = pywatchman.client(**client_args)
         watchman_error = pywatchman.WatchmanError
+    elif options.use_mercurial_glob:
+        # mercurial libraries
+        try:
+            global ui, hg
+            from mercurial import ui, hg
+            use_mercurial_glob = True
+        except ImportError:
+            d = Diagnostic(
+                message=format_traceback_and_exception(),
+                level='warning',
+                source='mercurial'
+            )
+            to_parent.write(encode_result([], [d], None))
+            to_parent.flush()
 
     configs = {}
     if options.config is not None:
@@ -1630,6 +1812,7 @@ def main():
         watchman_error,
         options.watchman_glob_stat_results,
         options.watchman_use_glob_generator,
+        use_mercurial_glob,
         options.enable_build_file_sandboxing,
         project_import_whitelist=options.build_file_import_whitelist or [],
         implicit_includes=options.include or [],

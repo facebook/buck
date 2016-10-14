@@ -48,6 +48,7 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   public enum GlobHandler {
     PYTHON,
     WATCHMAN,
+    MERCURIAL,
     ;
   }
 
