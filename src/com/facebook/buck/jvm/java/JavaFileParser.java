@@ -764,8 +764,12 @@ public class JavaFileParser {
           // simple types. As such, we use this imperfect heuristic to filter out "T" from being
           // added. Note that this will erroneously exclude "URI". In practice, this should
           // generally be OK. For example, assuming "URI" is also imported, then at least it will
-          // end up in the set of required symbols.
-          if (!CharMatcher.JAVA_UPPER_CASE.matchesAllOf(simpleName)) {
+          // end up in the set of required symbols. To this end, we perform a second check for
+          // "all caps" types to see if there is a corresponding import and if it should be exported
+          // rather than simply required.
+          if (!CharMatcher.JAVA_UPPER_CASE.matchesAllOf(simpleName) ||
+              (dependencyType == DependencyType.EXPORTED &&
+                  simpleImportedTypes.containsKey(simpleName))) {
             addSimpleTypeName(simpleTypeName, dependencyType);
           }
         } else if (type.isArrayType()) {

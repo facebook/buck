@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY a20a662ae564beb315696015671bf1f535419590 #@#
+#@# GENERATED FILE: DO NOT MODIFY 37868c2533a2d54d5dcc6e5f9f02300c1438ff80 #@#
 {
   "intellij" : {
     "deps" : [
@@ -15,8 +15,7 @@
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/sha1:sha1",
-      "//third-party/java/immutables:processor",
-      "//third-party/java/stringtemplate:stringtemplate"
+      "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/android:rules",
@@ -34,7 +33,8 @@
       "//third-party/java/guava:guava",
       "//third-party/java/jackson:jackson-annotations",
       "//third-party/java/jackson:jackson-databind",
-      "//third-party/java/jsr:jsr305"
+      "//third-party/java/jsr:jsr305",
+      "//third-party/java/stringtemplate:stringtemplate"
     ]
   }
 }

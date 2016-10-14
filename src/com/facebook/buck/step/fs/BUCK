@@ -2,7 +2,4 @@ standard_java_library(
   tests = [
     '//test/com/facebook/buck/step/fs:fs',
   ],
-  exported_deps = [
-    "//third-party/java/stringtemplate:stringtemplate",
-  ],
 )

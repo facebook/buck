@@ -790,4 +790,34 @@ public class JavaFileParserTest {
         ImmutableSortedSet.of("com.example.interfaces.IExample"),
         features.exportedSymbols);
   }
+
+  private static final String EXPORTED_TYPES_WITH_CLASS_THAT_LOOKS_LIKE_A_GENERIC =
+      Joiner.on('\n').join(
+          "package com.example;",
+          "",
+          "import com.google.common.base.Function;",
+          "import org.stringtemplate.v4.ST;",
+          "",
+          "public class Example {",
+          "  public StringTemplateStep(Function<ST, ST> configure) {}",
+          "}"
+      );
+
+  /** This is a case that we ran into in Buck's own source code. */
+  @Test
+  public void testExtractingExportedTypesWithClassThatLooksLikeAGeneric()
+      throws IOException {
+    JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
+    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
+        EXPORTED_TYPES_WITH_CLASS_THAT_LOOKS_LIKE_A_GENERIC);
+    assertEquals(
+        ImmutableSortedSet.of(),
+        features.requiredSymbols);
+    assertEquals(
+        ImmutableSortedSet.of("com.example.Example"),
+        features.providedSymbols);
+    assertEquals(
+        ImmutableSortedSet.of("com.google.common.base.Function", "org.stringtemplate.v4.ST"),
+        features.exportedSymbols);
+  }
 }
