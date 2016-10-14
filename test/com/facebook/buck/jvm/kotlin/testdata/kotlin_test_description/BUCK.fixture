@@ -5,6 +5,7 @@ prebuilt_jar(
     ':hamcrest-core',
     ':hamcrest-library',
   ],
+  visibility = [ 'PUBLIC' ],
 )
 
 prebuilt_jar(
@@ -19,5 +20,6 @@ prebuilt_jar(
 
 prebuilt_jar(
   name = 'kotlin-runtime',
-  binary_jar = 'kotlin-runtime-1.0.4.jar'
+  binary_jar = 'kotlin-runtime-1.0.4.jar',
+  visibility = [ 'PUBLIC' ],
 )
