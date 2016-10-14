@@ -22,14 +22,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
-import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.artifact_cache.NoopArtifactCache;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -49,16 +41,11 @@ import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hashing;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
@@ -71,7 +58,6 @@ import java.nio.file.Paths;
  * Reports targets that own a specified list of files.
  */
 public class OwnersReportTest {
-  private TestConsole console;
 
   public static class FakeDescription implements Description<FakeDescription.FakeArg> {
 
@@ -189,34 +175,6 @@ public class OwnersReportTest {
     }
   }
 
-  private BuckConfig buckConfig;
-
-  @Before
-  public void setUp() {
-    console = new TestConsole();
-    buckConfig = FakeBuckConfig.builder().build();
-  }
-
-  private CommandRunnerParams createOwnersReportRunnerParams(ProjectFilesystem filesystem)
-      throws IOException, InterruptedException {
-    ArtifactCache artifactCache = new NoopArtifactCache();
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
-    AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
-    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
-    return CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
-        console,
-        cell,
-        androidDirectoryResolver,
-        artifactCache,
-        eventBus,
-        buckConfig,
-        Platform.detect(),
-        ImmutableMap.copyOf(System.getenv()),
-        new FakeJavaPackageFinder(),
-        ObjectMappers.newDefaultInstance(),
-        Optional.absent());
-  }
-
   @Test
   public void verifyPathsThatAreNotFilesAreCorrectlyReported()
       throws CmdLineException, IOException, InterruptedException {
@@ -227,6 +185,7 @@ public class OwnersReportTest {
       }
     };
 
+
     // Inputs that should be treated as "non-files", i.e. as directories
     ImmutableSet<String> inputs = ImmutableSet.of(
         "java/somefolder/badfolder",
@@ -236,9 +195,9 @@ public class OwnersReportTest {
     BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.of());
 
-    CommandRunnerParams params = createOwnersReportRunnerParams(filesystem);
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
     OwnersReport report = OwnersReport.generateOwnersReport(
-        params,
+        cell,
         targetNode,
         inputs);
     assertTrue(report.owners.isEmpty());
@@ -267,11 +226,8 @@ public class OwnersReportTest {
     BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.of());
 
-    CommandRunnerParams params = createOwnersReportRunnerParams(filesystem);
-    OwnersReport report = OwnersReport.generateOwnersReport(
-        params,
-        targetNode,
-        inputs);
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
+    OwnersReport report = OwnersReport.generateOwnersReport(cell, targetNode, inputs);
     assertTrue(report.owners.isEmpty());
     assertTrue(report.nonFileInputs.isEmpty());
     assertTrue(report.inputsWithNoOwners.isEmpty());
@@ -298,9 +254,9 @@ public class OwnersReportTest {
     BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(target, ImmutableSet.of());
 
-    CommandRunnerParams params = createOwnersReportRunnerParams(filesystem);
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
     OwnersReport report = OwnersReport.generateOwnersReport(
-        params,
+        cell,
         targetNode,
         inputs);
     assertTrue(report.owners.isEmpty());
@@ -330,9 +286,9 @@ public class OwnersReportTest {
         target,
         ImmutableSet.of(Paths.get("java/somefolder")));
 
-    CommandRunnerParams params = createOwnersReportRunnerParams(filesystem);
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
     OwnersReport report = OwnersReport.generateOwnersReport(
-        params,
+        cell,
         targetNode,
         inputs);
     assertTrue(report.owners.containsKey(targetNode));
@@ -365,11 +321,8 @@ public class OwnersReportTest {
     BuildTarget target = BuildTargetFactory.newInstance("//base:name");
     TargetNode<?> targetNode = createTargetNode(target, inputPaths);
 
-    CommandRunnerParams params = createOwnersReportRunnerParams(filesystem);
-    OwnersReport report = OwnersReport.generateOwnersReport(
-        params,
-        targetNode,
-        inputs);
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
+    OwnersReport report = OwnersReport.generateOwnersReport(cell, targetNode, inputs);
     assertTrue(report.nonFileInputs.isEmpty());
     assertTrue(report.nonExistentInputs.isEmpty());
     assertTrue(report.inputsWithNoOwners.isEmpty());
@@ -404,12 +357,12 @@ public class OwnersReportTest {
     TargetNode<?> targetNode1 = createTargetNode(target1, inputPaths);
     TargetNode<?> targetNode2 = createTargetNode(target2, inputPaths);
 
-    CommandRunnerParams params = createOwnersReportRunnerParams(filesystem);
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
     OwnersReport report = OwnersReport.emptyReport();
     report = report.updatedWith(
-        OwnersReport.generateOwnersReport(params, targetNode1, inputs));
+        OwnersReport.generateOwnersReport(cell, targetNode1, inputs));
     report = report.updatedWith(
-        OwnersReport.generateOwnersReport(params, targetNode2, inputs));
+        OwnersReport.generateOwnersReport(cell, targetNode2, inputs));
 
     assertTrue(report.nonFileInputs.isEmpty());
     assertTrue(report.nonExistentInputs.isEmpty());

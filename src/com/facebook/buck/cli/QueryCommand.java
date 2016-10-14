@@ -122,7 +122,7 @@ public class QueryCommand extends AbstractCommand {
                  SpeculativeParsing.of(true),
                  /* ignoreBuckAutodepsFiles */ false)) {
       BuckQueryEnvironment env =
-          new BuckQueryEnvironment(params, parserState, getEnableParserProfiling());
+          BuckQueryEnvironment.from(params, parserState, getEnableParserProfiling());
       ListeningExecutorService executor = pool.getExecutor();
       return formatAndRunQuery(params, env, executor);
     } catch (Exception e) {

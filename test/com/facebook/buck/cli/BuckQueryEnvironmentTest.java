@@ -20,27 +20,27 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
-import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -81,30 +81,30 @@ public class BuckQueryEnvironmentTest {
         .build();
 
     TestConsole console = new TestConsole();
-    CommandRunnerParams params = CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
-        console,
-        cell,
-        new FakeAndroidDirectoryResolver(),
-        new NoopArtifactCache(),
-        BuckEventBusFactory.newInstance(),
-        FakeBuckConfig.builder().build(),
-        Platform.detect(),
-        ImmutableMap.copyOf(System.getenv()),
-        new FakeJavaPackageFinder(),
-        ObjectMappers.newDefaultInstance(),
-        Optional.absent());
+    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
+        ObjectMappers.newDefaultInstance());
+    Parser parser = new Parser(
+        new BroadcastEventListener(),
+        cell.getBuckConfig().getView(ParserConfig.class),
+        typeCoercerFactory, new ConstructorArgMarshaller(typeCoercerFactory));
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     parserState =
         new PerBuildState(
-            params.getParser(),
-            params.getBuckEventBus(),
+            parser,
+            eventBus,
             executor,
-            params.getCell(),
+            cell,
             /* enableProfiling */ false,
             SpeculativeParsing.of(true),
             /* ignoreBuckAutodepsFiles */ false);
 
+    TargetPatternEvaluator targetPatternEvaluator = new TargetPatternEvaluator(
+        cell, FakeBuckConfig.builder().build(), parser, eventBus, /* enableProfiling */ false
+    );
+    OwnersReport.Builder ownersReportBuilder =
+        OwnersReport.builder(cell, parser, eventBus, console);
     buckQueryEnvironment =
-        new BuckQueryEnvironment(params, parserState, /* enableProfiling */ false);
+        BuckQueryEnvironment.from(cell, ownersReportBuilder, parserState, targetPatternEvaluator);
     cellRoot = workspace.getDestPath();
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
   }

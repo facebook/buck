@@ -16,17 +16,20 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
+import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
@@ -45,19 +48,30 @@ import java.util.Map;
 public class TargetPatternEvaluator {
   private static final Logger LOG = Logger.get(TargetPatternEvaluator.class);
 
+  private final Parser parser;
+  private final BuckEventBus eventBus;
   private final boolean enableProfiling;
-  private final CommandRunnerParams params;
   private final Path projectRoot;
   private final CommandLineTargetNodeSpecParser targetNodeSpecParser;
+  private final BuckConfig buckConfig;
+  private final Cell rootCell;
 
   private Map<String, ImmutableSet<QueryTarget>> resolvedTargets = new HashMap<>();
 
-  public TargetPatternEvaluator(CommandRunnerParams params, boolean enableProfiling) {
+  public TargetPatternEvaluator(
+      Cell rootCell,
+      BuckConfig buckConfig,
+      Parser parser,
+      BuckEventBus eventBus,
+      boolean enableProfiling) {
+    this.rootCell = rootCell;
+    this.parser = parser;
+    this.eventBus = eventBus;
     this.enableProfiling = enableProfiling;
-    this.params = params;
-    this.projectRoot = params.getCell().getFilesystem().getRootPath();
+    this.buckConfig = buckConfig;
+    this.projectRoot = rootCell.getFilesystem().getRootPath();
     this.targetNodeSpecParser = new CommandLineTargetNodeSpecParser(
-        params.getBuckConfig(),
+        buckConfig,
         new BuildTargetPatternTargetNodeParser());
   }
 
@@ -86,7 +100,7 @@ public class TargetPatternEvaluator {
       }
 
       // Check if this is an alias.
-      BuildTarget alias = params.getBuckConfig().getBuildTargetForAlias(pattern).getFirst();
+      BuildTarget alias = buckConfig.getBuildTargetForAlias(pattern).getFirst();
       if (alias != null) {
         unresolved.put(alias.getFullyQualifiedName(), pattern);
       } else {
@@ -133,12 +147,12 @@ public class TargetPatternEvaluator {
     // The returned list of nodes maintains the spec list ordering.
     List<TargetNodeSpec> specs = new ArrayList<>();
     for (String pattern : patterns) {
-      specs.add(targetNodeSpecParser.parse(params.getCell().getCellPathResolver(), pattern));
+      specs.add(targetNodeSpecParser.parse(rootCell.getCellPathResolver(), pattern));
     }
     ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
-        params.getParser().resolveTargetSpecs(
-            params.getBuckEventBus(),
-            params.getCell(),
+        parser.resolveTargetSpecs(
+            eventBus,
+            rootCell,
             enableProfiling,
             executor,
             specs,

@@ -74,7 +74,7 @@ public class AuditOwnerCommand extends AbstractCommand {
                  SpeculativeParsing.of(true),
                  /* ignoreBuckAutodepsFiles */ false)) {
       BuckQueryEnvironment env =
-          new BuckQueryEnvironment(params, parserState, getEnableParserProfiling());
+          BuckQueryEnvironment.from(params, parserState, getEnableParserProfiling());
       return QueryCommand.runMultipleQuery(
           params,
           env,

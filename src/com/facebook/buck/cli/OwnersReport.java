@@ -15,11 +15,15 @@
  */
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.model.BuildFileTree;
+import com.facebook.buck.parser.Parser;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.Console;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -86,71 +90,9 @@ final class OwnersReport {
         .relativePathsUnderProjectRoot;
   }
 
-  static OwnersReport buildOwnersReport(
-      CommandRunnerParams params,
-      BuildFileTree buildFileTree,
-      ListeningExecutorService executor,
-      Iterable<String> arguments)
-      throws IOException, BuildFileParseException {
-    ProjectFilesystem cellFilesystem = params.getCell().getFilesystem();
-    final Path rootPath = cellFilesystem.getRootPath();
-    Preconditions.checkState(rootPath.isAbsolute());
-    Map<Path, ImmutableSet<TargetNode<?>>> targetNodes = Maps.newHashMap();
-    OwnersReport report = emptyReport();
-
-    for (Path filePath : getArgumentsAsPaths(rootPath, arguments)) {
-      Optional<Path> basePath = buildFileTree.getBasePathOfAncestorTarget(filePath);
-      if (!basePath.isPresent()) {
-        report = report.updatedWith(
-            new OwnersReport(
-                ImmutableSetMultimap.of(),
-                /* inputWithNoOwners */ ImmutableSet.of(filePath),
-                Sets.newHashSet(),
-                Sets.newHashSet()));
-        continue;
-      }
-
-      Path buckFile = cellFilesystem.resolve(basePath.get())
-          .resolve(params.getCell().getBuildFileName());
-      Preconditions.checkState(cellFilesystem.exists(buckFile));
-
-      // Parse buck files and load target nodes.
-      if (!targetNodes.containsKey(buckFile)) {
-        try {
-          targetNodes.put(
-              buckFile,
-              params.getParser().getAllTargetNodes(
-                  params.getBuckEventBus(),
-                  params.getCell(),
-                  /* enable profiling */ false,
-                  executor,
-                  buckFile));
-        } catch (BuildFileParseException e) {
-          Path targetBasePath = MorePaths.relativize(rootPath, rootPath.resolve(basePath.get()));
-          String targetBaseName = "//" + MorePaths.pathWithUnixSeparators(targetBasePath);
-
-          params
-              .getConsole()
-              .getStdErr()
-              .format("Could not parse build targets for %s", targetBaseName);
-          throw e;
-        }
-      }
-
-      for (TargetNode<?> targetNode : targetNodes.get(buckFile)) {
-        report = report.updatedWith(
-            generateOwnersReport(
-                params,
-                targetNode,
-                ImmutableList.of(filePath.toString())));
-      }
-    }
-    return report;
-  }
-
   @VisibleForTesting
   static OwnersReport generateOwnersReport(
-      CommandRunnerParams params,
+      Cell rootCell,
       TargetNode<?> targetNode,
       Iterable<String> filePaths) {
 
@@ -160,7 +102,7 @@ final class OwnersReport {
     Set<String> nonFileInputs = Sets.newHashSet();
 
     for (String filePath : filePaths) {
-      File file = params.getCell().getFilesystem().getFileForRelativePath(filePath);
+      File file = rootCell.getFilesystem().getFileForRelativePath(filePath);
       if (!file.exists()) {
         nonExistentInputs.add(filePath);
       } else if (!file.isFile()) {
@@ -188,4 +130,87 @@ final class OwnersReport {
     return new OwnersReport(owners, inputsWithNoOwners, nonExistentInputs, nonFileInputs);
   }
 
+  static Builder builder(Cell rootCell,
+      Parser parser,
+      BuckEventBus eventBus,
+      Console console) {
+    return new Builder(rootCell, parser, eventBus, console);
+  }
+
+  static final class Builder {
+    private final Cell rootCell;
+    private final Parser parser;
+    private final BuckEventBus eventBus;
+    private final Console console;
+
+    private Builder(Cell rootCell,
+        Parser parser,
+        BuckEventBus eventBus,
+        Console console) {
+
+      this.rootCell = rootCell;
+      this.parser = parser;
+      this.eventBus = eventBus;
+      this.console = console;
+    }
+
+    OwnersReport build(BuildFileTree buildFileTree,
+        ListeningExecutorService executor,
+        Iterable<String> arguments)
+        throws IOException, BuildFileParseException {
+      ProjectFilesystem cellFilesystem = rootCell.getFilesystem();
+      final Path rootPath = cellFilesystem.getRootPath();
+      Preconditions.checkState(rootPath.isAbsolute());
+      Map<Path, ImmutableSet<TargetNode<?>>> targetNodes = Maps.newHashMap();
+      OwnersReport report = emptyReport();
+
+      for (Path filePath : getArgumentsAsPaths(rootPath, arguments)) {
+        Optional<Path> basePath = buildFileTree.getBasePathOfAncestorTarget(filePath);
+        if (!basePath.isPresent()) {
+          report = report.updatedWith(
+              new OwnersReport(
+                  ImmutableSetMultimap.of(),
+                /* inputWithNoOwners */ ImmutableSet.of(filePath),
+                  Sets.newHashSet(),
+                  Sets.newHashSet()));
+          continue;
+        }
+
+        Path buckFile = cellFilesystem.resolve(basePath.get())
+            .resolve(rootCell.getBuildFileName());
+        Preconditions.checkState(cellFilesystem.exists(buckFile));
+
+        // Parse buck files and load target nodes.
+        if (!targetNodes.containsKey(buckFile)) {
+          try {
+            targetNodes.put(
+                buckFile,
+                parser.getAllTargetNodes(
+                    eventBus,
+                    rootCell,
+                  /* enable profiling */ false,
+                    executor,
+                    buckFile));
+          } catch (BuildFileParseException e) {
+            Path targetBasePath = MorePaths.relativize(rootPath, rootPath.resolve(basePath.get()));
+            String targetBaseName = "//" + MorePaths.pathWithUnixSeparators(targetBasePath);
+
+            console
+                .getStdErr()
+                .format("Could not parse build targets for %s", targetBaseName);
+            throw e;
+          }
+        }
+
+        for (TargetNode<?> targetNode : targetNodes.get(buckFile)) {
+          report = report.updatedWith(
+              generateOwnersReport(
+                  rootCell,
+                  targetNode,
+                  ImmutableList.of(filePath.toString())));
+        }
+      }
+      return report;
+    }
+  }
 }
