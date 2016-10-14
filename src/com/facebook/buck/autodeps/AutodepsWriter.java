@@ -78,12 +78,14 @@ public class AutodepsWriter {
    *     {@code .autodeps} files.
    * @param buildFileName In practice, this should be derived from
    *     {@link com.facebook.buck.rules.Cell#getBuildFileName()}
+   * @param includeSignature Whether to insert a signature for the contents of the file.
    * @param mapper To aid in JSON serialization.
    * @return the number of files that were written.
    */
   public static int write(
       DepsForBuildFiles depsForBuildFiles,
       String buildFileName,
+      boolean includeSignature,
       ObjectMapper mapper,
       ListeningExecutorService executorService,
       int numThreads) throws ExecutionException {
@@ -128,6 +130,7 @@ public class AutodepsWriter {
       ListenableFuture<Integer> future = executorService.submit(new AutodepsCallable(
           work,
           autodepsFileName,
+          includeSignature,
           mapper
       ));
       futures.add(future);
@@ -146,14 +149,17 @@ public class AutodepsWriter {
   private static class AutodepsCallable implements Callable<Integer> {
     private final ImmutableList<DepsForBuildFiles.BuildFileWithDeps> buildFilesWithDeps;
     private final String autodepsFileName;
+    private final boolean includeSignature;
     private final ObjectMapper mapper;
 
     AutodepsCallable(
         ImmutableList<DepsForBuildFiles.BuildFileWithDeps> buildFilesWithDeps,
         String autodepsFileName,
+        boolean includeSignature,
         ObjectMapper mapper) {
       this.buildFilesWithDeps = buildFilesWithDeps;
       this.autodepsFileName = autodepsFileName;
+      this.includeSignature = includeSignature;
       this.mapper = mapper;
     }
 
@@ -177,7 +183,7 @@ public class AutodepsWriter {
           depsForBuildFile.put(depsForRule.getShortName(), deps);
         }
 
-        if (writeSignedFile(depsForBuildFile, generatedFile, mapper)) {
+        if (writeSignedFile(depsForBuildFile, includeSignature, generatedFile, mapper)) {
           numWritten++;
         }
       }
@@ -189,27 +195,34 @@ public class AutodepsWriter {
   /**
    * Writes the file only if the contents are different to avoid creating noise for Watchman/buckd.
    * @param deps Keys must be sorted so the output is generated consistently.
+   * @param includeSignature Whether to insert a signature for the contents of the file.
    * @param generatedFile Where to write the generated output.
    * @param mapper To aid in JSON serialization.
    * @return whether the file was written
    */
   private static boolean writeSignedFile(
       SortedMap<String, SortedMap<String, Iterable<String>>> deps,
+      boolean includeSignature,
       Path generatedFile,
       ObjectMapper mapper) throws IOException {
     try (ByteArrayOutputStream bytes = new ByteArrayOutputStream();
          HashingOutputStream hashingOutputStream =
              new HashingOutputStream(Hashing.sha1(), bytes)) {
       ObjectWriter jsonWriter = mapper.writer(PRETTY_PRINTER.get());
-      jsonWriter.writeValue(hashingOutputStream, deps);
+      jsonWriter.writeValue(includeSignature ? hashingOutputStream : bytes, deps);
 
       // Flush a trailing newline through the HashingOutputStream so it is included both the
       // output and the signature calculation.
       hashingOutputStream.write('\n');
 
-      HashCode hash = hashingOutputStream.hash();
       String serializedJson = bytes.toString(Charsets.UTF_8.name());
-      String contentsToWrite = String.format(AUTODEPS_CONTENTS_FORMAT_STRING, hash, serializedJson);
+      String contentsToWrite;
+      if (includeSignature) {
+        HashCode hash = hashingOutputStream.hash();
+        contentsToWrite = String.format(AUTODEPS_CONTENTS_FORMAT_STRING, hash, serializedJson);
+      } else {
+        contentsToWrite = serializedJson;
+      }
 
       // Do not write file unless the contents have changed. Writing the file will cause the daemon
       // to indiscriminately invalidate any cached build rules for the associated build file.

@@ -49,8 +49,6 @@ except ImportError:
 
 BUILD_FUNCTIONS = []
 
-VERIFY_AUTODEPS_SIGNATURE = True
-
 # Wait this many seconds on recv() or send() in the pywatchman client
 # if not otherwise specified in .buckconfig
 DEFAULT_WATCHMAN_QUERY_TIMEOUT = 5.0
@@ -1454,20 +1452,22 @@ class BuildFileProcessor(object):
                 contents = stream.read()
 
         match = GENDEPS_SIGNATURE.match(signature_line)
-        if not match:
-            raise InvalidSignatureError(
-                'Could not extract signature from {0}'.format(autodeps_file))
+        if match:
+            signature = match.group(1)
+            hash = hashlib.new('sha1')
+            hash.update(contents)
+            sha1 = hash.hexdigest()
 
-        signature = match.group(1)
-        hash = hashlib.new('sha1')
-        hash.update(contents)
-        sha1 = hash.hexdigest()
-
-        if (not VERIFY_AUTODEPS_SIGNATURE) or sha1 == signature:
-            return json.loads(contents)
+            if sha1 == signature:
+                return json.loads(contents)
+            else:
+                raise InvalidSignatureError(
+                    'Signature did not match contents in {0}'.format(autodeps_file))
         else:
-            raise InvalidSignatureError(
-                'Signature did not match contents in {0}'.format(autodeps_file))
+            # In this case, signature_line does not contain a signature, but the first line of
+            # JSON, so we prepend it back to the rest of the contents before parsing it.
+            return json.loads(signature_line + contents)
+
 
     def process(self, watch_root, project_prefix, path, diagnostics):
         """

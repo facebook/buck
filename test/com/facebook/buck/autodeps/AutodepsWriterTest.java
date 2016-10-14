@@ -82,6 +82,7 @@ public class AutodepsWriterTest {
     int numWritten = AutodepsWriter.write(
         depsForBuildFiles,
         /* buildFileName */ "BUCK",
+        /* includeSignature */ true,
         ObjectMappers.newDefaultInstance(),
         MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
         /* numThreads */ 1);

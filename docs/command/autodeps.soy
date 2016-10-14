@@ -252,6 +252,39 @@ to <code>deps</code> for required symbols and to <code>exported_deps</code> for 
 The results are cleaned up such that <code>deps</code> and <code>exported_deps</code> are
 disjoint sets for each build rule.
 
+<h2 id="signing">Signing</h2>
+
+<p>
+By default, <code>BUCK.autodeps</code> files contain a signature line at the top like the following:
+
+<pre>#@# GENERATED FILE: DO NOT MODIFY c9a06044ccac3d1356249ab06a01f82874510b5d #@#</pre>
+
+<p>
+The signature in this line must match the SHA-1 of the contents of the rest of the file. If not,
+an error will be raised when parsing the corresponding <code>BUCK</code> file.
+
+<p>
+The purpose of the signature is to help ensure that the <code>BUCK.autodeps</code> is produced by
+running <code>buck autodeps</code> rather than someone mangling it by hand. The problem with
+manually fixing a <code>BUCK.autodeps</code> is that those changes will be blown away by the next
+person who runs <code>BUCK.autodeps</code>, which may introduce an issue that is difficult to debug.
+
+<p>
+Nevertheless, some teams dislike the signatures because the friction they introduce [with regards to
+merge conflicts when using source control] may not outweigh the benefits of the barrier they present
+to hand-editing the files. Therefore, it is possible to disable this behavior in your{sp}
+<code>.buckconfig</code> file:
+
+{literal}<pre class="prettyprint lang-java">
+[autodeps]
+    include_signature = false
+</pre>{/literal}
+
+<p>
+When this option is set, the signature line will not be inserted when <code>buck autodeps</code> is
+run and the build file parser will not check for the signature line when reading{sp}
+<code>BUCK.autodeps</code> files.
+
 <h2 id="troubleshooting">Troubleshooting</h2>
 
 When <code>buck autodeps</code> does not generate the correct dependencies,
