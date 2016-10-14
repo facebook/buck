@@ -150,7 +150,11 @@ def standard_java_library(
     immutable_types = None,
     tests = None,
     resources = None,
-    deps = None, # May need to include things `buck autodeps` misses for Java 8.
+
+    # May need to include things `buck autodeps` misses for Java 8.
+    deps = None,
+    exported_deps = None,
+
     provided_deps = None,
     visibility = None,
 ):
@@ -161,6 +165,7 @@ def standard_java_library(
       srcs = glob(['*.java']),
       autodeps = True,
       deps = deps,
+      exported_deps = exported_deps,
       visibility = [
         'PUBLIC',
       ],
@@ -193,6 +198,7 @@ def standard_java_library(
         tests = tests,
         autodeps = True,
         deps = deps or [],
+        exported_deps = exported_deps or [],
         provided_deps = provided_deps,
         visibility = visibility,
         **kwargs
