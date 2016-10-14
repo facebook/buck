@@ -12,6 +12,7 @@
     ideabuck = //src/com/facebook/buck/intellij/ideabuck:ideabuck
     maven-importer = //src/com/facebook/buck/maven:resolver
 [autodeps]
+   include_signature = false
    java-package-mappings = com.google.caliper => //third-party/java/caliper:caliper
 [buildfile]
     includes = //DEFS
