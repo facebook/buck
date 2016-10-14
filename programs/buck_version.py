@@ -44,7 +44,7 @@ def is_git(dirpath):
     output = check_output(
         ['git', 'rev-parse', '--is-inside-work-tree'],
         cwd=dirpath)
-    return output == 'true'
+    return output.strip() == 'true'
 
 
 def is_dirty(dirpath):
