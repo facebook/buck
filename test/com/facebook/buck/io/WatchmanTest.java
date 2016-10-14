@@ -57,7 +57,8 @@ public class WatchmanTest {
               "cmd-watch-project",
               "wildmatch",
               "wildmatch_multislash",
-              "glob_generator")));
+              "glob_generator",
+              "clock-sync-timeout")));
   private static final Function<Path, Optional<WatchmanClient>> NULL_WATCHMAN_CONNECTOR =
       path -> Optional.absent();
 
@@ -267,12 +268,14 @@ public class WatchmanTest {
                     "version",
                     "3.8.0",
                     "capabilities",
-                    ImmutableMap.of(
-                        "term-dirname", true,
-                        "cmd-watch-project", false,
-                        "wildmatch", false,
-                        "wildmatch_multislash", false,
-                        "glob_generator", false)),
+                    ImmutableMap.<String, Boolean>builder()
+                        .put("term-dirname", true)
+                        .put("cmd-watch-project", false)
+                        .put("wildmatch", false)
+                        .put("wildmatch_multislash", false)
+                        .put("glob_generator", false)
+                        .put("clock-sync-timeout", false)
+                        .build()),
                 ImmutableList.of("watch-project", root),
                 ImmutableMap.of("version", "3.8.0", "watch", root))),
         Paths.get(root),
@@ -312,12 +315,14 @@ public class WatchmanTest {
                     "version",
                     "3.8.0",
                     "capabilities",
-                    ImmutableMap.of(
-                        "term-dirname", true,
-                        "cmd-watch-project", true,
-                        "wildmatch", true,
-                        "wildmatch_multislash", true,
-                        "glob_generator", false)),
+                    ImmutableMap.<String, Boolean>builder()
+                        .put("term-dirname", true)
+                        .put("cmd-watch-project", true)
+                        .put("wildmatch", true)
+                        .put("wildmatch_multislash", true)
+                        .put("glob_generator", false)
+                        .put("clock-sync-timeout", false)
+                        .build()),
                 ImmutableList.of("watch-project", root),
                 ImmutableMap.of("version", "3.8.0", "watch", root))),
         Paths.get(root),
@@ -334,5 +339,127 @@ public class WatchmanTest {
             Watchman.Capability.WILDMATCH_GLOB,
             Watchman.Capability.WILDMATCH_MULTISLASH),
         watchman.getCapabilities());
+
+    assertEquals(
+        Optional.absent(),
+        watchman.getClockId());
+  }
+
+  @Test
+  public void capabilitiesDetectedForVersion47AndLater()
+      throws InterruptedException, IOException {
+    SettableFakeClock clock = new SettableFakeClock(0, 0);
+    FakeListeningProcessExecutor executor = new FakeListeningProcessExecutor(
+        ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
+            .putAll(
+                ProcessExecutorParams.ofCommand(exe, "--output-encoding=bser", "get-sockname"),
+                FakeListeningProcessState.ofStdoutBytes(
+                    bserSerialized(
+                        ImmutableMap.of(
+                            "version", "4.7.0",
+                            "sockname", "/path/to/sock"))),
+                FakeListeningProcessState.ofExit(0))
+            .build(),
+        clock);
+    Watchman watchman = Watchman.build(
+        executor,
+        fakeWatchmanConnector(
+            Paths.get("/path/to/sock"),
+            0,
+            ImmutableMap.of(
+                VERSION_QUERY,
+                ImmutableMap.of(
+                    "version",
+                    "4.7.0",
+                    "capabilities",
+                    ImmutableMap.<String, Boolean>builder()
+                        .put("term-dirname", true)
+                        .put("cmd-watch-project", true)
+                        .put("wildmatch", true)
+                        .put("wildmatch_multislash", true)
+                        .put("glob_generator", true)
+                        .put("clock-sync-timeout", true)
+                        .build()),
+                ImmutableList.of("watch-project", root),
+                ImmutableMap.of("version", "4.7.0", "watch", root),
+                ImmutableList.of(
+                    "clock",
+                    root,
+                    ImmutableMap.of("sync_timeout", 100)),
+                ImmutableMap.of("version", "4.7.0", "clock", "c:0:0:1"))),
+        Paths.get(root),
+        env,
+        finder,
+        new TestConsole(),
+        clock,
+        Optional.<Long>absent());
+
+    assertEquals(
+        ImmutableSet.of(
+            Watchman.Capability.DIRNAME,
+            Watchman.Capability.SUPPORTS_PROJECT_WATCH,
+            Watchman.Capability.WILDMATCH_GLOB,
+            Watchman.Capability.WILDMATCH_MULTISLASH,
+            Watchman.Capability.GLOB_GENERATOR,
+            Watchman.Capability.CLOCK_SYNC_TIMEOUT),
+        watchman.getCapabilities());
+
+    assertEquals(
+        Optional.of("c:0:0:1"),
+        watchman.getClockId());
+  }
+
+  @Test
+  public void emptyClockQueryShouldReturnNullClock()
+      throws InterruptedException, IOException {
+    SettableFakeClock clock = new SettableFakeClock(0, 0);
+    FakeListeningProcessExecutor executor = new FakeListeningProcessExecutor(
+        ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
+            .putAll(
+                ProcessExecutorParams.ofCommand(exe, "--output-encoding=bser", "get-sockname"),
+                FakeListeningProcessState.ofStdoutBytes(
+                    bserSerialized(
+                        ImmutableMap.of(
+                            "version", "4.7.0",
+                            "sockname", "/path/to/sock"))),
+                FakeListeningProcessState.ofExit(0))
+            .build(),
+        clock);
+    Watchman watchman = Watchman.build(
+        executor,
+        fakeWatchmanConnector(
+            Paths.get("/path/to/sock"),
+            0,
+            ImmutableMap.of(
+                VERSION_QUERY,
+                ImmutableMap.of(
+                    "version",
+                    "4.7.0",
+                    "capabilities",
+                    ImmutableMap.<String, Boolean>builder()
+                        .put("term-dirname", true)
+                        .put("cmd-watch-project", true)
+                        .put("wildmatch", true)
+                        .put("wildmatch_multislash", true)
+                        .put("glob_generator", true)
+                        .put("clock-sync-timeout", true)
+                        .build()),
+                ImmutableList.of("watch-project", root),
+                ImmutableMap.of("version", "4.7.0", "watch", root),
+                ImmutableList.of(
+                    "clock",
+                    root,
+                    ImmutableMap.of("sync_timeout", 100)),
+                ImmutableMap.<String, Object>of())),
+        Paths.get(root),
+        env,
+        finder,
+        new TestConsole(),
+        clock,
+        Optional.<Long>absent());
+
+    assertEquals(
+        Optional.absent(),
+        watchman.getClockId());
   }
 }

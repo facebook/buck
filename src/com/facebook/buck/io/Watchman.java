@@ -30,6 +30,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -50,22 +51,27 @@ public class Watchman implements AutoCloseable {
     SUPPORTS_PROJECT_WATCH,
     WILDMATCH_GLOB,
     WILDMATCH_MULTISLASH,
-    GLOB_GENERATOR
+    GLOB_GENERATOR,
+    CLOCK_SYNC_TIMEOUT
   }
 
+  public static final String NULL_CLOCK = "c:0:0";
+
+  private static final int WATCHMAN_CLOCK_SYNC_TIMEOUT = 100;
   private static final ImmutableSet<String> REQUIRED_CAPABILITIES =
       ImmutableSet.of(
           "cmd-watch-project"
       );
 
   private static final ImmutableMap<String, Capability> ALL_CAPABILITIES =
-      ImmutableMap.of(
-          "term-dirname", Capability.DIRNAME,
-          "cmd-watch-project", Capability.SUPPORTS_PROJECT_WATCH,
-          "wildmatch", Capability.WILDMATCH_GLOB,
-          "wildmatch_multislash", Capability.WILDMATCH_MULTISLASH,
-          "glob_generator", Capability.GLOB_GENERATOR
-      );
+      ImmutableMap.<String, Capability>builder()
+          .put("term-dirname", Capability.DIRNAME)
+          .put("cmd-watch-project", Capability.SUPPORTS_PROJECT_WATCH)
+          .put("wildmatch", Capability.WILDMATCH_GLOB)
+          .put("wildmatch_multislash", Capability.WILDMATCH_MULTISLASH)
+          .put("glob_generator", Capability.GLOB_GENERATOR)
+          .put("clock-sync-timeout", Capability.CLOCK_SYNC_TIMEOUT)
+          .build();
 
   private static final Logger LOG = Logger.get(Watchman.class);
 
@@ -80,6 +86,7 @@ public class Watchman implements AutoCloseable {
       ImmutableSet.of(),
       Optional.absent(),
       Optional.absent(),
+      Optional.absent(),
       0);
 
   private final Optional<String> projectName;
@@ -88,6 +95,7 @@ public class Watchman implements AutoCloseable {
   private final Optional<Path> socketPath;
   private final Optional<WatchmanClient> watchmanClient;
   private final long commandTimeoutMillis;
+  private final Optional<String> initialClockId;
 
   public static Watchman build(
       Path rootPath,
@@ -197,6 +205,18 @@ public class Watchman implements AutoCloseable {
           remainingTimeNanos,
           "watch-project",
           absoluteRootPath.toString());
+
+      // TODO(mzlee): There is a bug in watchman (that will be fixed
+      // in a later watchman release) where watch-project returns
+      // before the crawl is finished which causes the next
+      // interaction to block. Calling watch-project a second time
+      // properly attributes where we are spending time.
+      long secondWatchStartTimeNanos = clock.nanoTime();
+      remainingTimeNanos -= (secondWatchStartTimeNanos - watchStartTimeNanos);
+      result = watchmanClient.get().queryWithTimeout(
+          remainingTimeNanos,
+          "watch-project",
+          absoluteRootPath.toString());
       LOG.info(
           "Took %d ms to add root %s",
           TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - watchStartTimeNanos),
@@ -225,10 +245,35 @@ public class Watchman implements AutoCloseable {
         return NULL_WATCHMAN;
       }
 
+      Optional<String> initialClock = Optional.absent();
+      if (capabilities.contains(Capability.CLOCK_SYNC_TIMEOUT)) {
+        long clockStartTimeNanos = clock.nanoTime();
+        remainingTimeNanos -= (clockStartTimeNanos - secondWatchStartTimeNanos);
+        result = watchmanClient.get().queryWithTimeout(
+            remainingTimeNanos,
+            ImmutableList.of(
+                "clock",
+                Optional.fromNullable((String) map.get("watch")).or(absoluteRootPath.toString()),
+                ImmutableMap.of("sync_timeout", WATCHMAN_CLOCK_SYNC_TIMEOUT)).toArray());
+        if (result.isPresent()) {
+          Map<String, ? extends Object> clockResult = result.get();
+          initialClock = Optional.fromNullable((String) clockResult.get("clock"));
+          LOG.info(
+              "Took %d ms to query for initial clock id %s",
+              TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - clockStartTimeNanos),
+              initialClock);
+        } else {
+          LOG.warn(
+              "Took %d ms but could not get an initial clock id. Falling back to a named cursor",
+              TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - clockStartTimeNanos));
+        }
+      }
+
       return new Watchman(
           Optional.fromNullable((String) map.get("relative_path")),
           Optional.fromNullable((String) map.get("watch")),
           capabilities,
+          initialClock,
           Optional.of(socketPath),
           watchmanClient,
           timeoutMillis);
@@ -384,12 +429,14 @@ public class Watchman implements AutoCloseable {
       Optional<String> projectName,
       Optional<String> watchRoot,
       ImmutableSet<Capability> capabilities,
+      Optional<String> initialClockId,
       Optional<Path> socketPath,
       Optional<WatchmanClient> watchmanClient,
       long commandTimeoutMillis) {
     this.projectName = projectName;
     this.watchRoot = watchRoot;
     this.capabilities = capabilities;
+    this.initialClockId = initialClockId;
     this.socketPath = socketPath;
     this.watchmanClient = watchmanClient;
     this.commandTimeoutMillis = commandTimeoutMillis;
@@ -405,6 +452,10 @@ public class Watchman implements AutoCloseable {
 
   public ImmutableSet<Capability> getCapabilities() {
     return capabilities;
+  }
+
+  public Optional<String> getClockId() {
+    return initialClockId;
   }
 
   public boolean hasWildmatchGlob() {

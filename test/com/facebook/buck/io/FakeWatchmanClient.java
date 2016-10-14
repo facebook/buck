@@ -54,7 +54,11 @@ public class FakeWatchmanClient implements WatchmanClient {
       Object... query) throws InterruptedException, IOException {
     Map<String, ? extends Object> result = queryResults.get(Arrays.asList(query));
     if (result == null) {
-      throw new RuntimeException(String.format("Could not find results for query %s", query));
+      throw new RuntimeException(
+          String.format(
+              "Could not find results for query %s in %s",
+              Arrays.asList(query),
+              queryResults.keySet()));
     }
     if (queryElapsedTimeNanos > timeoutNanos) {
       return Optional.absent();
