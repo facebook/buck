@@ -27,6 +27,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -64,10 +65,8 @@ class SwiftDescriptions {
             .uniqueIndex(new Function<SourcePath, Path>() {
               @Override
               public Path apply(SourcePath input) {
-                if (input instanceof PathSourcePath) {
-                  return ((PathSourcePath)input).getRelativePath();
-                }
-                return null;
+                Preconditions.checkArgument(input instanceof PathSourcePath)
+                return ((PathSourcePath) input).getRelativePath();
               }
             })
     );
