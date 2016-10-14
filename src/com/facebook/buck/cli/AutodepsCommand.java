@@ -79,7 +79,7 @@ public class AutodepsCommand extends AbstractCommand {
       numWritten = AutodepsWriter.write(
           depsForBuildFiles,
           cell.getBuildFileName(),
-          params.getBuckConfig().getBooleanValue("autodeps", "include_signature", true),
+          params.getBuckConfig().getIncludeAutodepsSignature(),
           params.getObjectMapper(),
           executorService,
           concurrencyLimit.threadLimit);

@@ -89,6 +89,7 @@ public class MissingSymbolsHandler {
             .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
             .setIgnorePaths(projectFilesystem.getIgnorePaths())
             .setBuildFileName(parserConfig.getBuildFileName())
+            .setAutodepsFilesHaveSignatures(config.getIncludeAutodepsSignature())
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
             .setDescriptions(descriptions)
             .setEnableBuildFileSandboxing(parserConfig.getEnableBuildFileSandboxing())

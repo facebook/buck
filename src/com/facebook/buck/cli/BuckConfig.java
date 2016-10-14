@@ -1072,4 +1072,8 @@ public class BuckConfig {
             BuckConfig.RESOURCES_SECTION_HEADER,
             "max_network_io_resource").or(estimated.getNetworkIO()));
   }
+
+  public boolean getIncludeAutodepsSignature() {
+    return getBooleanValue("autodeps", "include_signature", true);
+  }
 }

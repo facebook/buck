@@ -103,6 +103,7 @@ class BuckTest(unittest.TestCase):
             self.build_file_name,
             self.allow_empty_globs,
             False,              # ignore_buck_autodeps_files
+            False,              # no_autodeps_signatures
             self.watchman_client,
             self.watchman_error,
             False,              # watchman_glob_stat_results

@@ -293,6 +293,10 @@ public class ProjectBuildFileParser implements AutoCloseable {
 
     argBuilder.add("--build_file_name", options.getBuildFileName());
 
+    if (!options.getAutodepsFilesHaveSignatures()) {
+      argBuilder.add("--no_autodeps_signatures");
+    }
+
     // Tell the parser not to print exceptions to stderr.
     argBuilder.add("--quiet");
 

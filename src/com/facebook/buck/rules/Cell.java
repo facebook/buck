@@ -242,6 +242,7 @@ public class Cell {
             .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
             .setIgnorePaths(filesystem.getIgnorePaths())
             .setBuildFileName(getBuildFileName())
+            .setAutodepsFilesHaveSignatures(config.getIncludeAutodepsSignature())
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
             .setDescriptions(getAllDescriptions())
             .setUseWatchmanGlob(useWatchmanGlob)

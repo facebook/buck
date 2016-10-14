@@ -729,7 +729,7 @@ GENDEPS_SIGNATURE = re.compile(r'^#@# GENERATED FILE: DO NOT MODIFY ([a-f0-9]{40
 
 class BuildFileProcessor(object):
     def __init__(self, project_root, cell_roots, build_file_name,
-                 allow_empty_globs, ignore_buck_autodeps_files,
+                 allow_empty_globs, ignore_buck_autodeps_files, no_autodeps_signatures,
                  watchman_client, watchman_error, watchman_glob_stat_results,
                  watchman_use_glob_generator, use_mercurial_glob, enable_build_file_sandboxing,
                  project_import_whitelist=None, implicit_includes=None,
@@ -757,6 +757,7 @@ class BuildFileProcessor(object):
         self._implicit_includes = implicit_includes
         self._allow_empty_globs = allow_empty_globs
         self._ignore_buck_autodeps_files = ignore_buck_autodeps_files
+        self._no_autodeps_signatures = no_autodeps_signatures
         self._enable_build_file_sandboxing = enable_build_file_sandboxing
         self._watchman_client = watchman_client
         self._watchman_error = watchman_error
@@ -1446,27 +1447,31 @@ class BuildFileProcessor(object):
         :param autodeps_file: Absolute path to the expected .autodeps file.
         :raises InvalidSignatureError:
         """
-        with self._wrap_file_access(wrap=False):
-            with open(autodeps_file, 'r') as stream:
-                signature_line = stream.readline()
-                contents = stream.read()
-
-        match = GENDEPS_SIGNATURE.match(signature_line)
-        if match:
-            signature = match.group(1)
-            hash = hashlib.new('sha1')
-            hash.update(contents)
-            sha1 = hash.hexdigest()
-
-            if sha1 == signature:
-                return json.loads(contents)
-            else:
-                raise InvalidSignatureError(
-                    'Signature did not match contents in {0}'.format(autodeps_file))
+        if self._no_autodeps_signatures:
+            with self._wrap_file_access(wrap=False):
+                with open(autodeps_file, 'r') as stream:
+                    return json.load(stream)
         else:
-            # In this case, signature_line does not contain a signature, but the first line of
-            # JSON, so we prepend it back to the rest of the contents before parsing it.
-            return json.loads(signature_line + contents)
+            with self._wrap_file_access(wrap=False):
+                with open(autodeps_file, 'r') as stream:
+                    signature_line = stream.readline()
+                    contents = stream.read()
+
+            match = GENDEPS_SIGNATURE.match(signature_line)
+            if match:
+                signature = match.group(1)
+                hash = hashlib.new('sha1')
+                hash.update(contents)
+                sha1 = hash.hexdigest()
+
+                if sha1 == signature:
+                    return json.loads(contents)
+                else:
+                    raise InvalidSignatureError(
+                        'Signature did not match contents in {0}'.format(autodeps_file))
+            else:
+                raise InvalidSignatureError('{0} did not contain an autodeps signature'.
+                                            format(autodeps_file))
 
 
     def process(self, watch_root, project_prefix, path, diagnostics):
@@ -1731,7 +1736,12 @@ def main():
     parser.add_option(
         '--ignore_buck_autodeps_files',
         action='store_true',
-        help='Profile every buck file execution')
+        help='do not consider .autodeps files when parsing rules')
+    parser.add_option(
+        '--no_autodeps_signatures',
+        action='store_true',
+        dest='no_autodeps_signatures',
+        help='.autodeps files are not expected to contain signatures')
     parser.add_option(
         '--profile',
         action='store_true',
@@ -1808,6 +1818,7 @@ def main():
         options.build_file_name,
         options.allow_empty_globs,
         options.ignore_buck_autodeps_files,
+        options.no_autodeps_signatures,
         watchman_client,
         watchman_error,
         options.watchman_glob_stat_results,
