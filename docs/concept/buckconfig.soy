@@ -1585,6 +1585,24 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'intellij' /}
+  {param name: 'android_module_sdk_type' /}
+  {param example_value: 'Android SDK' /}
+  {param description}
+    Default Android SDK type for android modules.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'intellij' /}
+  {param name: 'android_module_sdk_name' /}
+  {param example_value: 'Android API 23 Platform' /}
+  {param description}
+    Default Android SDK name for android modules.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'intellij' /}
   {param name: 'language_level' /}
   {param example_value: 'JDK_1_7' /}
   {param description}
