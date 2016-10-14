@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY 51fe7e2afc5c55be1aa3d294c84ee5d99bb2cd38 #@#
+#@# GENERATED FILE: DO NOT MODIFY be04901181399f8a22e7ba8cbe4d436efcc6eb52 #@#
 {
   "distributed" : {
     "deps" : [
@@ -12,6 +12,7 @@
       "//src/com/facebook/buck/rules:default_cell_path_resolver",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:util",
       "//third-party/java/immutables:processor",
       "//third-party/java/jackson:jackson-core"
     ],

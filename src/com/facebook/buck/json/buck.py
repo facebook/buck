@@ -49,7 +49,7 @@ except ImportError:
 
 BUILD_FUNCTIONS = []
 
-VERIFY_AUTODEPS_SIGNATURE = False
+VERIFY_AUTODEPS_SIGNATURE = True
 
 # Wait this many seconds on recv() or send() in the pywatchman client
 # if not otherwise specified in .buckconfig

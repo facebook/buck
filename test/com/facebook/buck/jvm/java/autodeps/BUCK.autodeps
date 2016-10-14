@@ -1,8 +1,7 @@
-#@# GENERATED FILE: DO NOT MODIFY a95b1c9c563a655138538881e7b01360b19cfa96 #@#
+#@# GENERATED FILE: DO NOT MODIFY 3db6e9d3353007131c13cfbd728766b4653754c0 #@#
 {
   "autodeps" : {
     "deps" : [
-      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/java:autodeps",
       "//src/com/facebook/buck/jvm/java:support",

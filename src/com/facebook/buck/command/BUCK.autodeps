@@ -1,4 +1,4 @@
-#@# GENERATED FILE: DO NOT MODIFY bf0a7178e5e2e8d6cc4ee1b39773a59e6c94b024 #@#
+#@# GENERATED FILE: DO NOT MODIFY c9e05de11b5e24cf5ae02abd8ee5f533bc55cbdc #@#
 {
   "command" : {
     "deps" : [
@@ -12,6 +12,7 @@
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:object_mapper",
+      "//src/com/facebook/buck/util:util",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
