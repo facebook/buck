@@ -21,7 +21,6 @@ import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpResponse;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.ByteSource;
 
 import java.io.DataInputStream;
@@ -37,7 +36,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okio.BufferedSink;
 
-public class HttpArtifactCache extends AbstractNetworkCache {
+public final class HttpArtifactCache extends AbstractNetworkCache {
 
   public static final MediaType OCTET_STREAM_CONTENT_TYPE =
       MediaType.parse("application/octet-stream");
@@ -62,7 +61,7 @@ public class HttpArtifactCache extends AbstractNetworkCache {
     Request.Builder requestBuilder =
         new Request.Builder()
             .get();
-    try (HttpResponse response = fetchCall(
+    try (HttpResponse response = fetchClient.makeRequest(
         "/artifacts/key/" + ruleKey.toString(),
         requestBuilder)) {
       eventBuilder.setResponseSizeBytes(response.contentLength());
@@ -172,7 +171,7 @@ public class HttpArtifactCache extends AbstractNetworkCache {
         });
 
     // Dispatch the store operation and verify it succeeded.
-    try (HttpResponse response = storeCall(builder)) {
+    try (HttpResponse response = storeClient.makeRequest("/artifacts/key", builder)) {
       final boolean requestFailed = response.code() != HttpURLConnection.HTTP_ACCEPTED;
       if (requestFailed) {
         reportFailure(
@@ -184,15 +183,5 @@ public class HttpArtifactCache extends AbstractNetworkCache {
 
       eventBuilder.setWasUploadSuccessful(!requestFailed);
     }
-  }
-
-  @VisibleForTesting
-  protected HttpResponse fetchCall(String path, Request.Builder requestBuilder) throws IOException {
-    return fetchClient.makeRequest(path, requestBuilder);
-  }
-
-  @VisibleForTesting
-  protected HttpResponse storeCall(Request.Builder requestBuilder) throws IOException {
-    return storeClient.makeRequest("/artifacts/key", requestBuilder);
   }
 }
