@@ -38,6 +38,7 @@ import org.hamcrest.CoreMatchers;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -97,5 +98,19 @@ public class SwiftTestIOSIntegrationTest {
     assertThat(
         workspace.runCommand("otool", "-l", binaryOutput.toString()).getStdout().get(),
         containsString("@loader_path/Frameworks"));
+  }
+
+  @Test
+  public void swiftCallingComplexObjCRunsAndPrintsMessageOnOSX() throws IOException {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX),
+        is(true));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "swift_calls_complex_objc", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand(
+        "build", ":SwiftCallsComplexObjC#iphonesimulator-x86_64");
+    runResult.assertSuccess();
   }
 }
