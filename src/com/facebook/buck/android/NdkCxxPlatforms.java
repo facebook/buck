@@ -383,13 +383,20 @@ public class NdkCxxPlatforms {
             .putCompilerFlags(
                 NdkCxxPlatformCompiler.Type.GCC,
                 ImmutableList.<String>builder()
-                    .add("-finline-limit=64", "-Os")
+                    .add("-O2")
+                    .add("-fomit-frame-pointer")
+                    .add("-fstrict-aliasing")
+                    .add("-funswitch-loops")
+                    .add("-finline-limit=300")
                     .addAll(arm64ArchFlags)
                     .build())
             .putCompilerFlags(
                 NdkCxxPlatformCompiler.Type.CLANG,
                 ImmutableList.<String>builder()
-                    .add("-target", "aarch64-none-linux-android", "-Os")
+                    .add("-target", "aarch64-none-linux-android")
+                    .add("-O2")
+                    .add("-fomit-frame-pointer")
+                    .add("-fstrict-aliasing")
                     .addAll(arm64ArchFlags)
                     .build())
             .putLinkerFlags(
