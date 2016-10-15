@@ -46,12 +46,12 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.BuildFileSpec;
-import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
+import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
@@ -67,6 +67,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ProcessManager;
 import com.google.common.annotations.VisibleForTesting;
@@ -103,6 +104,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -528,6 +530,7 @@ public class ProjectCommand extends BuildCommand {
           case XCODE:
             result = runXcodeProjectGenerator(
                 params,
+                pool.getExecutor(),
                 targetGraphAndTargets,
                 passedInTargetsSet);
             break;
@@ -877,6 +880,7 @@ public class ProjectCommand extends BuildCommand {
    */
   int runXcodeProjectGenerator(
       final CommandRunnerParams params,
+      ListeningExecutorService executor,
       final TargetGraphAndTargets targetGraphAndTargets,
       ImmutableSet<BuildTarget> passedInTargetsSet)
       throws IOException, InterruptedException {
@@ -902,7 +906,7 @@ public class ProjectCommand extends BuildCommand {
         passedInTargetsSet,
         options,
         super.getOptions(),
-        getFocusModules(params),
+        getFocusModules(targetGraphAndTargets, params, executor),
         new HashMap<Path, ProjectGenerator>(),
         getCombinedProject(),
         shouldBuildWithBuck,
@@ -1024,21 +1028,55 @@ public class ProjectCommand extends BuildCommand {
     return requiredBuildTargetsBuilder.build();
   }
 
-  private ImmutableList<BuildTarget> getFocusModules(CommandRunnerParams params) {
+  private ImmutableList<BuildTarget> getFocusModules(
+      final TargetGraphAndTargets targetGraphAndTargets,
+      CommandRunnerParams params,
+      ListeningExecutorService executor)
+      throws IOException, InterruptedException {
     if (modulesToFocusOn == null) {
       return ImmutableList.of();
     }
-    ImmutableList.Builder<BuildTarget> builder = ImmutableList.builder();
 
-    for (String fullyQualifiedName : modulesToFocusOn.split("\\s+")) {
-      BuildTarget target = BuildTargetParser.INSTANCE.parse(
-          fullyQualifiedName,
-          BuildTargetPatternParser.fullyQualified(),
-          params.getCell().getCellPathResolver());
-      builder.add(target);
+    Iterable<String> patterns = Splitter.onPattern("\\s+").split(modulesToFocusOn);
+    // Parse patterns with the following syntax:
+    // https://buckbuild.com/concept/build_target_pattern.html
+    ImmutableList<TargetNodeSpec> specs =
+        parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), patterns);
+
+    // Resolve the list of targets matching the patterns.
+    ImmutableSet<BuildTarget> passedInTargetsSet;
+    ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
+    try {
+      passedInTargetsSet = params.getParser().resolveTargetSpecs(
+              params.getBuckEventBus(),
+              params.getCell(),
+              getEnableParserProfiling(),
+              executor,
+              specs,
+              SpeculativeParsing.of(false),
+              parserConfig.getDefaultFlavorsMode()).stream()
+          .flatMap(Collection::stream)
+          .collect(MoreCollectors.toImmutableSet());
+    } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
+      params.getBuckEventBus().post(ConsoleEvent.severe(
+          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      return ImmutableList.of();
     }
+    LOG.debug("Selected targets: %s", passedInTargetsSet.toString());
 
-    return builder.build();
+    // Build the set of unflavored targets in the target graph.
+    ImmutableSet<UnflavoredBuildTarget> validUnflavoredTargets =
+      targetGraphAndTargets.getTargetGraph().getNodes().stream()
+        .map(node -> node.getBuildTarget().getUnflavoredBuildTarget())
+        .collect(MoreCollectors.toImmutableSet());
+
+    // Match the targets resolved using the patterns wit the valid of valid targets.
+    ImmutableList<BuildTarget> result = passedInTargetsSet.stream()
+      .filter(target -> validUnflavoredTargets.contains(target.getUnflavoredBuildTarget()))
+      .collect(MoreCollectors.toImmutableList());
+
+    LOG.debug("Focused targets: %s", result.toString());
+    return result;
   }
 
   public static ImmutableSet<ProjectGenerator.Option> buildWorkspaceGeneratorOptions(

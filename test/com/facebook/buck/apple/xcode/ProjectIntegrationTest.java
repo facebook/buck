@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple.xcode;
 
+import com.facebook.buck.apple.ApplePlatform;
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -360,6 +362,53 @@ public class ProjectIntegrationTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "project",
         "--with-tests",
+        "//Apps:workspace");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
+
+  @Test
+  public void testBuckProjectFocus()
+      throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(
+        AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "project_focus",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--config",
+        "project.xcode_focus_disable_build_with_buck=true",
+        "--build-with-buck",
+        "--focus",
+        "//Libraries/Dep1:Dep1_1#iphonesimulator-x86_64 //Libraries/Dep2:Dep2",
+        "//Apps:TestApp#iphonesimulator-x86_64");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
+
+  @Test
+  public void testBuckProjectFocusPattern()
+      throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "project_focus_pattern",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--config",
+        "project.xcode_focus_disable_build_with_buck=true",
+        "--build-with-buck",
+        "--focus",
+        "//Libraries/Dep1:",
         "//Apps:workspace");
     result.assertSuccess();
 

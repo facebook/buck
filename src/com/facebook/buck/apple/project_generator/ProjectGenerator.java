@@ -88,6 +88,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Cell;
@@ -1476,12 +1477,14 @@ public class ProjectGenerator {
       return true;
     }
 
-    if (targetToBuildWithBuck.isPresent() && buildTarget.equals(targetToBuildWithBuck.get())) {
+    UnflavoredBuildTarget unflavoredTarget = buildTarget.getUnflavoredBuildTarget();
+    if (targetToBuildWithBuck.isPresent() &&
+        unflavoredTarget.equals(targetToBuildWithBuck.get().getUnflavoredBuildTarget())) {
       return true;
     }
 
     for (BuildTarget target : focusModules) {
-      if (buildTarget.equals(target)) {
+      if (unflavoredTarget.equals(target.getUnflavoredBuildTarget())) {
         return true;
       }
     }
