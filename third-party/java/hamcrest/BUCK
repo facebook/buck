@@ -9,6 +9,7 @@ java_library(
     'LICENSE.txt',
   ],
   visibility = [
+    '//src/com/facebook/buck/intellij/...',
     '//test/...',
     '//third-party/java/junit:junit',
   ],
@@ -21,6 +22,7 @@ prebuilt_jar(
     'LICENSE.txt',
   ],
   visibility = [
+    '//src/com/facebook/buck/intellij/...',
     '//test/...',
     '//third-party/java/junit:junit',
   ],
@@ -36,6 +38,7 @@ prebuilt_jar(
     'LICENSE.txt',
   ],
   visibility = [
+    '//src/com/facebook/buck/intellij/...',
     '//test/...',
     '//third-party/java/junit:junit',
   ],

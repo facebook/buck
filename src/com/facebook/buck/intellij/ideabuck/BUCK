@@ -1,8 +1,7 @@
 genrule(
   name = 'generate_bnf',
   out = '.',
-  cmd = '$(exe //third-party/java/grammar-kit:grammar-kit) $OUT ' \
-    'src/com/facebook/buck/intellij/ideabuck/lang/Buck.bnf $OUT',
+  cmd = '$(exe //third-party/java/grammar-kit:grammar-kit) $OUT $SRCS',
   srcs = [
     'src/com/facebook/buck/intellij/ideabuck/lang/Buck.bnf',
   ],
@@ -56,8 +55,8 @@ java_library(
       'src/icons/*.java',
     ]
   ),
-  source = '1.7',
-  target = '1.7',
+  source = '1.8',
+  target = '1.8',
   provided_deps = [
     '//third-party/java/intellij:intellij-plugin-sdk',
   ],
@@ -98,3 +97,19 @@ java_binary(
     ':resources',
   ],
 )
+
+java_test(
+  name = 'tests',
+  srcs = glob(['tests/unit/**/*.java']),
+  target = '1.8',
+  deps = [
+    ':ideabuck-lib',
+    ':resources',
+    '//src/com/facebook/buck/event/external:external_lib',
+    '//third-party/java/easymock:easymock',
+    '//third-party/java/guava:guava',
+    '//third-party/java/junit:junit',
+    '//third-party/java/intellij:intellij-plugin-sdk',
+  ],
+)
+

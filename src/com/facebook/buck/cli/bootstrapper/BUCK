@@ -33,6 +33,7 @@ java_library(
   ],
   visibility = [
     '//test/...',
+    '//src/com/facebook/buck/intellij/...',
     '//third-party/java/aosp:tests',
   ],
 )

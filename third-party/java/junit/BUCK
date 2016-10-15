@@ -11,6 +11,7 @@ prebuilt_jar(
   ],
   visibility = [
     '//src/com/facebook/buck/testrunner:junit',
+    '//src/com/facebook/buck/intellij/...',
     '//test/...',
     '//third-party/java/aosp/...',
   ],

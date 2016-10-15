@@ -9,6 +9,7 @@ prebuilt_jar(
     'LICENSE',
   ],
   visibility = [
+    '//src/com/facebook/buck/intellij/...',
     '//test/...',
   ],
 )

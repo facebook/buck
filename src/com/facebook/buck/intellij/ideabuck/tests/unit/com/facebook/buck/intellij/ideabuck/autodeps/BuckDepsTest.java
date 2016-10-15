@@ -19,7 +19,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import com.google.monitoring.runtime.instrumentation.common.com.google.common.base.Joiner;
+import com.google.common.base.Joiner;
 
 import org.junit.Test;
 
