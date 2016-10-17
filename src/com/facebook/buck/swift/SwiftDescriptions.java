@@ -16,6 +16,8 @@
 
 package com.facebook.buck.swift;
 
+import static com.facebook.buck.cxx.NativeLinkable.Linkage.STATIC;
+import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPANION_FLAVOR;
 import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_EXTENSION;
 
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -71,7 +73,9 @@ class SwiftDescriptions {
         args.moduleName.map(Optional::of).orElse(Optional.of(buildTarget.getShortName()));
     output.enableObjcInterop = Optional.of(true);
     output.bridgingHeader = args.bridgingHeader;
-    output.preferredLinkage = args.preferredLinkage;
+
+    boolean isCompanionTarget = buildTarget.getFlavors().contains(SWIFT_COMPANION_FLAVOR);
+    output.preferredLinkage = isCompanionTarget ? Optional.of(STATIC) : args.preferredLinkage;
   }
 
 }
