@@ -124,4 +124,5 @@ public class SwiftOSXBinaryIntegrationTest {
         runResult.getStdout(),
         containsString("Hello ObjC\n"));
   }
+
 }
