@@ -265,7 +265,13 @@ class SwiftLibrary
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
-    return transitiveCxxPreprocessorInputCache.getUnchecked(
-        ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
+    if (getBuildTarget().getFlavors().contains(SWIFT_COMPANION_FLAVOR)) {
+      return ImmutableMap.of(
+          getBuildTarget(),
+          getCxxPreprocessorInput(cxxPlatform, headerVisibility));
+    } else {
+      return transitiveCxxPreprocessorInputCache.getUnchecked(
+          ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
+    }
   }
 }

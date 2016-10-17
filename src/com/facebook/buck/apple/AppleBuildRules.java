@@ -122,8 +122,8 @@ public final class AppleBuildRules {
         types);
 
     GraphTraversable<TargetNode<?>> graphTraversable = node -> {
-      if (!isXcodeTargetBuildRuleType(node.getType())
-          || SwiftLibraryDescription.isSwiftTarget(node.getBuildTarget())) {
+      if (!isXcodeTargetBuildRuleType(node.getType()) ||
+          SwiftLibraryDescription.isSwiftTarget(node.getBuildTarget())) {
         return Collections.emptyIterator();
       }
 
