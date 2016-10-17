@@ -240,6 +240,10 @@ public class AppleLibraryDescription implements
       if (isSwiftTarget(params.getBuildTarget())) {
         return swiftCompanionBuildRule.get();
       } else {
+        args.exportedDeps = ImmutableSortedSet.<BuildTarget>naturalOrder()
+            .addAll(args.exportedDeps)
+            .add(swiftCompanionBuildRule.get().getBuildTarget())
+            .build();
         params = params.appendExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
       }
     }

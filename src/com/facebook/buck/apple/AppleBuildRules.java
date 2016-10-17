@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -121,7 +122,8 @@ public final class AppleBuildRules {
         types);
 
     GraphTraversable<TargetNode<?>> graphTraversable = node -> {
-      if (!isXcodeTargetBuildRuleType(node.getType())) {
+      if (!isXcodeTargetBuildRuleType(node.getType())
+          || SwiftLibraryDescription.isSwiftTarget(node.getBuildTarget())) {
         return Collections.emptyIterator();
       }
 

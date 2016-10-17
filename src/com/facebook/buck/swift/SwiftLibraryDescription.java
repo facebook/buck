@@ -18,6 +18,7 @@ package com.facebook.buck.swift;
 
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
@@ -45,10 +46,12 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -61,6 +64,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 public class SwiftLibraryDescription implements
@@ -149,6 +153,12 @@ public class SwiftLibraryDescription implements
     Optional<Map.Entry<Flavor, CxxPlatform>> platform = cxxPlatformFlavorDomain.getFlavorAndValue(
         buildTarget);
     final ImmutableSortedSet<Flavor> buildFlavors = buildTarget.getFlavors();
+    ImmutableSortedSet<BuildRule> filteredExtraDeps =
+        FluentIterable.from(params.getExtraDeps().get())
+            .filter(input -> !input.getBuildTarget().getUnflavoredBuildTarget()
+                .equals(buildTarget.getUnflavoredBuildTarget()))
+            .toSortedSet(Ordering.natural());
+    params = params.copyWithExtraDeps(Suppliers.ofInstance(filteredExtraDeps));
 
     if (!buildFlavors.contains(SWIFT_COMPANION_FLAVOR) && platform.isPresent()) {
       final CxxPlatform cxxPlatform = platform.get().getValue();
@@ -191,17 +201,32 @@ public class SwiftLibraryDescription implements
 
       // All swift-compile rules of swift-lib deps are required since we need their swiftmodules
       // during compilation.
+      final Function<BuildRule, BuildRule> requireSwiftCompile = input -> {
+        try {
+          Preconditions.checkArgument(input instanceof SwiftLibrary);
+          return ((SwiftLibrary) input).requireSwiftCompileRule(cxxPlatform.getFlavor());
+        } catch (NoSuchBuildTargetException e) {
+          throw new HumanReadableException(e,
+              "Could not find SwiftCompile with target %s", buildTarget);
+        }
+      };
+      params = params.appendExtraDeps(
+          params.getDeps().stream()
+              .filter(SwiftLibrary.class::isInstance)
+              .map(requireSwiftCompile)
+              .collect(MoreCollectors.toImmutableSet()));
+
       params = params.appendExtraDeps(
           FluentIterable.from(params.getDeps())
-              .filter(SwiftLibrary.class)
-              .transform((Function<SwiftLibrary, BuildRule>) input -> {
-                try {
-                  return input.requireSwiftCompileRule(cxxPlatform.getFlavor());
-                } catch (NoSuchBuildTargetException e) {
-                  throw new HumanReadableException(e,
-                      "Could not find SwiftCompile with target %s", buildTarget);
-                }
+              .filter(CxxLibrary.class)
+              .transform(input -> {
+                BuildTarget companionTarget = input.getBuildTarget().withAppendedFlavors(
+                    SWIFT_COMPANION_FLAVOR);
+                return resolver.getRuleOptional(companionTarget)
+                    .map(requireSwiftCompile);
               })
+              .filter(Optional::isPresent)
+              .transform(Optional::get)
               .toSortedSet(Ordering.natural()));
 
       UnflavoredBuildTarget unflavoredBuildTarget =
