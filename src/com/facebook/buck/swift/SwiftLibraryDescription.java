@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
@@ -31,6 +32,7 @@ import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
@@ -50,6 +52,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
@@ -200,6 +203,24 @@ public class SwiftLibraryDescription implements
                 }
               })
               .toSortedSet(Ordering.natural()));
+
+      if (args.headersSearchPath.isPresent()) {
+        UnflavoredBuildTarget unflavoredBuildTarget =
+            params.getBuildTarget().getUnflavoredBuildTarget();
+
+        for (HeaderVisibility headerVisibility : HeaderVisibility.values()) {
+          // unflavoredBuildTarget because #headers can collide with any other flavor
+          // from the same domain.
+          CxxDescriptionEnhancer.requireHeaderSymlinkTree(
+              params.copyWithBuildTarget(BuildTarget.builder(unflavoredBuildTarget).build()),
+              resolver,
+              new SourcePathResolver(resolver),
+              cxxPlatform,
+              args.headersSearchPath.get(),
+              headerVisibility);
+        }
+      }
+
       return new SwiftCompile(
           cxxPlatform,
           swiftBuckConfig,
@@ -325,6 +346,7 @@ public class SwiftLibraryDescription implements
     public Optional<SourcePath> bridgingHeader;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<NativeLinkable.Linkage> preferredLinkage;
+    public Optional<ImmutableMap<Path, SourcePath>> headersSearchPath;
   }
 
 }

@@ -21,10 +21,13 @@ import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_EXTENSION;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -54,6 +57,13 @@ class SwiftDescriptions {
       BuildTarget buildTarget) {
     output.srcs = args.srcs.transform(
         input -> filterSwiftSources(sourcePathResolver, args.srcs.get()));
+    output.headersSearchPath = args.exportedHeaders.transform(
+         input -> FluentIterable.from(input.getPaths())
+            .uniqueIndex(path -> {
+              Preconditions.checkArgument(path instanceof PathSourcePath);
+              return ((PathSourcePath) path).getRelativePath();
+            })
+    );
     output.compilerFlags = args.compilerFlags;
     output.frameworks = args.frameworks;
     output.libraries = args.libraries;

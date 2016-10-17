@@ -105,6 +105,7 @@ public class SwiftLibraryIntegrationTest {
     args.libraries = Optional.of(ImmutableSortedSet.<FrameworkPath>of());
     args.enableObjcInterop = Optional.absent();
     args.supportedPlatformsRegex = Optional.absent();
+    args.headersSearchPath = Optional.absent();
 
     SwiftCompile buildRule = (SwiftCompile) FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION
         .createBuildRule(TargetGraph.EMPTY, params, resolver, args);

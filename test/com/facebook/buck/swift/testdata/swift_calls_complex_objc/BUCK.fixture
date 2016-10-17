@@ -1,0 +1,21 @@
+apple_test(
+  name = 'SwiftCallsComplexObjC',
+  visibility = ['PUBLIC'],
+  info_plist = 'Info.plist',
+  info_plist_substitutions = {
+    'PRODUCT_BUNDLE_IDENTIFIER': 'com.facebook.BridgingTest',
+  },
+  bridging_header = 'Foo-Bridging-Header.h',
+  exported_headers = glob([
+    '*.h',
+    '**/*.h',
+  ]),
+  srcs = glob([
+    '**/*.m',
+    '**/*.swift',
+  ]),
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+    '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework',
+  ],
+)
