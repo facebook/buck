@@ -265,16 +265,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   ImmutableList<String> createRenderLinesAtTime(long currentTimeMillis) {
     ImmutableList.Builder<String> lines = ImmutableList.builder();
 
-    // print latest distributed build debug info lines
+    // Print latest distributed build debug info lines
     if (buildStarted != null && buildStarted.isDistributedBuild()) {
       getDistBuildDebugInfo(lines);
-    }
-
-    // Add public announcements
-    if (!publicAnnouncements.isEmpty()) {
-      for (String announcement : publicAnnouncements) {
-        lines.add(console.getAnsi().asInformationText(announcement));
-      }
     }
 
     // If we have not yet started processing the BUCK files, show parse times

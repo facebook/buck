@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event.listener;
 
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuckConfig;
@@ -131,9 +131,10 @@ public class PublicAnnouncementManagerIntegrationTest {
           ))
           .build();
 
+      TestConsole console = new TestConsole();
       SuperConsoleEventBusListener listener = new SuperConsoleEventBusListener(
           new SuperConsoleConfig(FakeBuckConfig.builder().build()),
-          new TestConsole(),
+          console,
           clock,
         /* verbosity */ TestResultSummaryVerbosity.of(false, false),
           executionEnvironment,
@@ -154,11 +155,14 @@ public class PublicAnnouncementManagerIntegrationTest {
 
       manager.getAndPostAnnouncements();
 
-      ImmutableList<String> announcements = listener.getPublicAnnouncements();
-      assertSame("Header and 1 message", announcements.size(), 4);
-      assertTrue(announcements.subList(0, 3).equals(PublicAnnouncementManager.HEADER_MSG));
-      assertTrue(announcements.get(3).equals(
-          String.format(PublicAnnouncementManager.ANNOUNCEMENT_TEMPLATE, ERROR_MSG, SOLUTION_MSG)));
+      Optional<String> announcements = listener.getPublicAnnouncements();
+      assertEquals(
+          "The header and the message",
+          announcements.get(),
+          "**------------------------**\n" +
+              "**- Public Announcements -**\n" +
+              "**------------------------**\n" +
+              "** This is the error message. This is the solution message.");
     }
   }
 }

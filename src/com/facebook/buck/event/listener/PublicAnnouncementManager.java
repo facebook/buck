@@ -47,13 +47,11 @@ public class PublicAnnouncementManager {
   private static final Logger LOG = Logger.get(PublicAnnouncementManager.class);
 
   @VisibleForTesting
-  static final ImmutableList<String> HEADER_MSG = ImmutableList.of(
-      "**------------------------**",
-      "**- Public Announcements -**",
-      "**------------------------**");
+  static final String HEADER_MSG =
+      "**------------------------**\n**- Public Announcements -**\n**------------------------**";
 
   @VisibleForTesting
-  static final String ANNOUNCEMENT_TEMPLATE = "** %s %s";
+  static final String ANNOUNCEMENT_TEMPLATE = "\n** %s %s";
 
   private Clock clock;
   private ExecutionEnvironment executionEnvironment;
@@ -119,15 +117,15 @@ public class PublicAnnouncementManager {
       public void onSuccess(ImmutableList<Announcement> announcements) {
         LOG.info("Public announcements fetched successfully.");
         if (!announcements.isEmpty()) {
-          ImmutableList.Builder<String> finalMessages = ImmutableList.builder();
-          finalMessages.addAll(HEADER_MSG);
-          for (Announcement announcement : announcements) {
-            finalMessages.add(String.format(
-                ANNOUNCEMENT_TEMPLATE,
-                announcement.getErrorMessage(),
-                announcement.getSolutionMessage()));
+          String announcement = HEADER_MSG;
+          for (Announcement entry : announcements) {
+            announcement = announcement.concat(
+                String.format(
+                    ANNOUNCEMENT_TEMPLATE,
+                    entry.getErrorMessage(),
+                    entry.getSolutionMessage()));
           }
-          consoleEventBusListener.setPublicAnnouncements(finalMessages.build());
+          consoleEventBusListener.setPublicAnnouncements(eventBus, Optional.of(announcement));
         }
       }
 

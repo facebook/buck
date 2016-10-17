@@ -21,6 +21,7 @@ import com.facebook.buck.cli.CommandEvent;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEvent;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventKey;
@@ -130,7 +131,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected volatile HttpArtifactCacheEvent.Shutdown httpShutdownEvent;
 
   protected volatile Optional<Integer> ruleCount = Optional.absent();
-  protected ImmutableList<String> publicAnnouncements = ImmutableList.of();
+  protected Optional<String> publicAnnouncements = Optional.absent();
 
   protected final AtomicInteger numRulesCompleted = new AtomicInteger();
 
@@ -182,16 +183,12 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   @VisibleForTesting
-  ImmutableList<String> getPublicAnnouncements() {
+  Optional<String> getPublicAnnouncements() {
     return publicAnnouncements;
   }
 
   public void setProgressEstimator(ProgressEstimator estimator) {
     progressEstimator = Optional.of(estimator);
-  }
-
-  public void setPublicAnnouncements(ImmutableList<String> announcements) {
-    this.publicAnnouncements = announcements;
   }
 
   protected String formatElapsedTime(long elapsedTimeMs) {
@@ -225,6 +222,15 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       return progressEstimator.get().getEstimatedProgressOfProcessingBuckFiles();
     } else {
       return Optional.absent();
+    }
+  }
+
+  public void setPublicAnnouncements(BuckEventBus eventBus, Optional<String> announcements) {
+    this.publicAnnouncements = announcements;
+    if (announcements.isPresent()) {
+      eventBus.post(ConsoleEvent.createForMessageWithAnsiEscapeCodes(
+          Level.INFO,
+          ansi.asInformationText(announcements.get())));
     }
   }
 

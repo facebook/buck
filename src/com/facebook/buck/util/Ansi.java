@@ -160,6 +160,10 @@ public final class Ansi {
     stream.println(asHighlightedFailureText(text));
   }
 
+  public void printlnInformationText(PrintStream stream, String text) {
+    stream.println(asInformationText(text));
+  }
+
   public String asHighlightedStatusText(SeverityLevel level, String text) {
     switch (level) {
       case OK:
