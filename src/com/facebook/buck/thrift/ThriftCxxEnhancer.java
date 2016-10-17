@@ -116,7 +116,9 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
 
     if (fatal) {
       final String[] suffixes = new String[] {
-        "", "_enum", "_union", "_struct", "_constant", "_service"
+        "", "_enum", "_union", "_struct",
+        "_constant", "_service",
+        "_types", "_all"
       };
 
       for (String suffix : suffixes) {
@@ -328,8 +330,18 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
       implicitDeps.add(thriftBuckConfig.getCppAyncDep());
     }
 
-    if (options.contains("fatal")) {
-      implicitDeps.add(thriftBuckConfig.getCpp2FatalDep());
+    if (cpp2) {
+      boolean flagLeanMeanMetaMachine = options.contains("lean_mean_meta_machine");
+      if (options.contains("lean_mean_meta_machine")) {
+        implicitDeps.add(thriftBuckConfig.getCpp2LeanMeanMetaMachineDep());
+      }
+
+      boolean flagReflection = flagLeanMeanMetaMachine ||
+        options.contains("fatal") ||
+        options.contains("reflection");
+      if (flagReflection) {
+        implicitDeps.add(thriftBuckConfig.getCpp2ReflectionDep());
+      }
     }
 
     return implicitDeps.build();
