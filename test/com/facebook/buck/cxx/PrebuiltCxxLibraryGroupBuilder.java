@@ -71,6 +71,12 @@ public class PrebuiltCxxLibraryGroupBuilder
     return this;
   }
 
+  public PrebuiltCxxLibraryGroupBuilder setProvidedSharedLibs(
+      ImmutableMap<String, SourcePath> args) {
+    arg.providedSharedLibs = Optional.of(args);
+    return this;
+  }
+
   public PrebuiltCxxLibraryGroupBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
     arg.deps = Optional.of(deps);
     return this;

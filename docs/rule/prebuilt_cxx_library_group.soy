@@ -92,6 +92,15 @@ be handled together in a single rule, perhaps using special link-line constructi
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'provided_shared_libs' /}
+  {{param default: '{}' /}}
+  {param desc}
+    The map of system-provided shared library names to paths used when using the shared link style.
+    The <code>shared_link</code> parameter should refer to these libs using their library name.
+  {/param}
+{/call}
+
 {call cxx_common.exported_deps_arg /}
 
 {/param} // close args
@@ -130,8 +139,10 @@ prebuilt_cxx_library_group(
     '$(rel-lib libb.so)',
   ],
   shared_libs = {
-    'liba.a': 'lib/liba.so',
-    'libb.a': 'lib/libb.so',
+    'liba.so': 'lib/liba.so',
+  },
+  provided_shared_libs = {
+    'libb.so': 'lib/libb.so',
   },
 )
 </pre>{/literal}

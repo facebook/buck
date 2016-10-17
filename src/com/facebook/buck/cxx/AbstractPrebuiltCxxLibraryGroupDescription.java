@@ -283,7 +283,10 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
                 getSharedLinkArgs(
                     getBuildTarget(),
                     pathResolver,
-                    args.sharedLibs.or(ImmutableMap.of()),
+                    ImmutableMap.<String, SourcePath>builder()
+                        .putAll(args.sharedLibs.or(ImmutableMap.of()))
+                        .putAll(args.providedSharedLibs.or(ImmutableMap.of()))
+                        .build(),
                     args.sharedLink.or(ImmutableList.of())));
             break;
         }
@@ -349,6 +352,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
      * Libraries references in the shared link args above.
      */
     public Optional<ImmutableMap<String, SourcePath>> sharedLibs;
+    public Optional<ImmutableMap<String, SourcePath>> providedSharedLibs;
 
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;

@@ -177,4 +177,33 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         Matchers.contains(dep));
   }
 
+  @Test
+  public void providedSharedLibs() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    BuildTarget target = BuildTargetFactory.newInstance("//:lib");
+    SourcePath lib1 = new FakeSourcePath("dir/lib1.so");
+    SourcePath lib2 = new FakeSourcePath("dir/lib2.so");
+    NativeLinkable lib =
+        (NativeLinkable) new PrebuiltCxxLibraryGroupBuilder(target)
+            .setSharedLink(ImmutableList.of("$(lib lib1.so)", "$(lib lib2.so)"))
+            .setSharedLibs(ImmutableMap.of("lib1.so", lib1))
+            .setProvidedSharedLibs(ImmutableMap.of("lib2.so", lib2))
+            .build(resolver);
+    assertThat(
+        lib.getNativeLinkableInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            Linker.LinkableDepType.SHARED),
+        Matchers.equalTo(
+            NativeLinkableInput.builder()
+                .addArgs(
+                    new SourcePathArg(pathResolver, lib1),
+                    new SourcePathArg(pathResolver, lib2))
+                .build()));
+    assertThat(
+        lib.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.equalTo(ImmutableMap.of("lib1.so", lib1)));
+  }
+
 }
