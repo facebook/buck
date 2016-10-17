@@ -43,8 +43,8 @@ public class DistBuildConfig {
   }
 
   public long getFrontendRequestTimeoutMillis() {
-    return buckConfig.getLong(STAMPEDE_SECTION, FRONTEND_REQUEST_TIMEOUT_MILLIS)
-        .or(DEFAULT_DEFAULT_REQUEST_TIMEOUT_MILLIS);
+    return buckConfig.getLong(STAMPEDE_SECTION, FRONTEND_REQUEST_TIMEOUT_MILLIS).orElse(
+        DEFAULT_DEFAULT_REQUEST_TIMEOUT_MILLIS);
   }
 
   public OkHttpClient createOkHttpClient() {

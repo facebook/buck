@@ -16,11 +16,12 @@
 package com.facebook.buck.macho;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.UnsignedInteger;
 
 import org.immutables.value.Value;
+
+import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleTuple

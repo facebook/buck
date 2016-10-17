@@ -17,7 +17,8 @@
 package com.facebook.buck.jvm.java.intellij;
 
 import com.facebook.buck.rules.TargetNode;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 /**
  * Interface for building {@link IjLibrary} objects from {@link TargetNode}s.

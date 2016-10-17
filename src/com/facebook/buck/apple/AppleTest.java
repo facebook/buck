@@ -39,8 +39,8 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.OptionalCompat;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
@@ -60,6 +60,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
@@ -207,8 +208,8 @@ public class AppleTest
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.testOutputPath = getPathToTestOutputDirectory().resolve("test-output.json");
     this.testLogsPath = getPathToTestOutputDirectory().resolve("logs");
-    this.xctoolStdoutReader = Optional.absent();
-    this.xctestOutputReader = Optional.absent();
+    this.xctoolStdoutReader = Optional.empty();
+    this.xctestOutputReader = Optional.empty();
     this.xcodeDeveloperDirSupplier = xcodeDeveloperDirSupplier;
     this.testLogDirectoryEnvironmentVariable = testLogDirectoryEnvironmentVariable;
     this.testLogLevelEnvironmentVariable = testLogLevelEnvironmentVariable;
@@ -255,7 +256,7 @@ public class AppleTest
     Path resolvedTestOutputPath = getProjectFilesystem().resolve(
         testOutputPath);
 
-    Optional<Path> testHostAppPath = Optional.absent();
+    Optional<Path> testHostAppPath = Optional.empty();
     if (testHostApp.isPresent()) {
       Path resolvedTestHostAppDirectory = getProjectFilesystem().resolve(
           Preconditions.checkNotNull(testHostApp.get().getPathToOutput()));
@@ -429,8 +430,8 @@ public class AppleTest
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
         .add(testBundle)
-        .addAll(getResolver().filterBuildRuleInputs(xctool.asSet()))
-        .addAll(testHostApp.asSet())
+        .addAll(getResolver().filterBuildRuleInputs(OptionalCompat.asSet(xctool)))
+        .addAll(OptionalCompat.asSet(testHostApp))
         .build();
   }
 

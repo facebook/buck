@@ -60,7 +60,6 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -79,6 +78,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 
 import javax.annotation.Nullable;
@@ -290,8 +290,8 @@ public class ProjectTest {
             SerializableDependentModule.newSourceFolder(),
             guavaAsProvidedDep,
             SerializableDependentModule.newStandardJdk(
-                Optional.absent(),
-                Optional.absent())),
+                Optional.empty(),
+                Optional.empty())),
         javaLibraryModule.getDependencies());
 
     // Check the values of the module that corresponds to the android_library.
@@ -555,8 +555,8 @@ public class ProjectTest {
                 guava.getBuildTarget(),
                 "buck_out_gen_third_party_java_guava___guava___guava_jar"),
             SerializableDependentModule.newStandardJdk(
-                Optional.absent(),
-                Optional.absent())),
+                Optional.empty(),
+                Optional.empty())),
         comExampleBaseModule.getDependencies());
   }
 
@@ -626,8 +626,8 @@ public class ProjectTest {
             SerializableDependentModule.newModule(
                 supportV4.getBuildTarget(), "module_java_com_android_support_v4"),
             SerializableDependentModule.newStandardJdk(
-                Optional.absent(),
-                Optional.absent())),
+                Optional.empty(),
+                Optional.empty())),
         robolectricModule.getDependencies());
   }
 
@@ -808,9 +808,9 @@ public class ProjectTest {
                 ruleResolver.getBuildRules(),
                 HasBuildTarget::getBuildTarget)),
         projectFilesystem,
-        /* pathToDefaultAndroidManifest */ Optional.absent(),
+        /* pathToDefaultAndroidManifest */ Optional.empty(),
         intellijConfig,
-        /* pathToPostProcessScript */ Optional.absent(),
+        /* pathToPostProcessScript */ Optional.empty(),
         BuckTestConstant.PYTHON_INTERPRETER,
         ObjectMappers.newDefaultInstance(),
         true);

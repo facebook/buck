@@ -16,13 +16,13 @@
 
 package com.facebook.buck.cxx.elf;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public class Elf {
 
@@ -82,7 +82,7 @@ public class Elf {
         return Optional.of(section);
       }
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   /**

@@ -24,7 +24,6 @@ import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -35,6 +34,7 @@ import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 
 public class SourcePathResolver {
 
@@ -180,7 +180,7 @@ public class SourcePathResolver {
    */
   public Optional<BuildRule> getRule(SourcePath sourcePath) {
     if (!(sourcePath instanceof BuildTargetSourcePath)) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of(ruleResolver.getRule(((BuildTargetSourcePath) sourcePath).getTarget()));
   }

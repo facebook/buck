@@ -27,7 +27,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -42,6 +41,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class PreDexedFilesSorterTest {
   @Rule
@@ -59,7 +59,7 @@ public class PreDexedFilesSorterTest {
     moduleGraph = new APKModuleGraph(
         TargetGraph.EMPTY,
         BuildTargetFactory.newInstance("//fakeTarget:yes"),
-        Optional.absent());
+        Optional.empty());
     extraModule = APKModule.builder().setName("extra").build();
   }
 
@@ -226,7 +226,7 @@ public class PreDexedFilesSorterTest {
     }
 
     PreDexedFilesSorter sorter = new PreDexedFilesSorter(
-        Optional.absent(),
+        Optional.empty(),
         inputDexes.build(),
         ImmutableSet.of(PRIMARY_DEX_PATTERN),
         moduleGraph,

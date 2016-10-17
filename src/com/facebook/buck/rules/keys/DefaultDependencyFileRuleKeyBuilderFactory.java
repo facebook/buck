@@ -24,13 +24,13 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
+import java.util.Optional;
 
 /**
  * A variant of {@link InputBasedRuleKeyBuilderFactory} which ignores inputs when calculating the
@@ -114,7 +114,7 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
       if (ruleKey.isPresent()) {
         return Optional.of(new Pair<>(ruleKey.get(), depFileInputs));
       } else {
-        return Optional.absent();
+        return Optional.empty();
       }
     }
   }
@@ -189,7 +189,7 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
       if (ruleKey.isPresent()) {
         return Optional.of(new Pair<>(ruleKey.get(), depFileSourcePathsBuilder.build()));
       } else {
-        return Optional.absent();
+        return Optional.empty();
       }
     }
 

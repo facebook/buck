@@ -37,7 +37,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.MockClassLoader;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -57,6 +56,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.lang.model.SourceVersion;
@@ -126,9 +126,9 @@ public class Jsr199JavacIntegrationTest {
         ImmutableSet.of(),
         SOURCE_PATHS,
         pathToSrcsList,
-        Optional.absent(),
+        Optional.empty(),
         NoOpClassUsageFileWriter.instance(),
-        Optional.absent());
+        Optional.empty());
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
     assertTrue(Files.exists(pathToSrcsList));
@@ -163,9 +163,9 @@ public class Jsr199JavacIntegrationTest {
         ImmutableSet.of(),
         SOURCE_PATHS,
         pathToSrcsList,
-        Optional.absent(),
+        Optional.empty(),
         NoOpClassUsageFileWriter.instance(),
-        Optional.absent());
+        Optional.empty());
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
     assertTrue(Files.exists(pathToSrcsList));
@@ -256,9 +256,9 @@ public class Jsr199JavacIntegrationTest {
           ImmutableSet.of(),
           SOURCE_PATHS,
           pathToSrcsList,
-          Optional.absent(),
+          Optional.empty(),
           NoOpClassUsageFileWriter.instance(),
-          Optional.absent());
+          Optional.empty());
       fail("Did not expect compilation to succeed");
     } catch (UnsupportedOperationException ex) {
       if (ex.toString().contains("abcdef")) {
@@ -287,8 +287,8 @@ public class Jsr199JavacIntegrationTest {
     Path pathToOutputDirectory = Paths.get("out");
     tmp.newFolder(pathToOutputDirectory.toString());
 
-    Optional<SourcePath> jar = javacJar.transform(
-        SourcePaths.toSourcePath(new FakeProjectFilesystem()));
+    Optional<SourcePath> jar = javacJar.map(
+        SourcePaths.toSourcePath(new FakeProjectFilesystem())::apply);
     if (jar.isPresent()) {
       return new JarBackedJavac("com.sun.tools.javac.api.JavacTool", ImmutableSet.of(jar.get()));
     }
@@ -297,7 +297,7 @@ public class Jsr199JavacIntegrationTest {
   }
 
   private Jsr199Javac createJavac(boolean withSyntaxError) throws IOException {
-    return createJavac(withSyntaxError, Optional.absent());
+    return createJavac(withSyntaxError, Optional.empty());
   }
 
   private ProjectFilesystem createProjectFilesystem() {

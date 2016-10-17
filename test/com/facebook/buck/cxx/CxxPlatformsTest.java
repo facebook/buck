@@ -30,7 +30,6 @@ import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -39,6 +38,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.Optional;
 
 /**
  * Unit tests for {@link CxxPlatforms}.

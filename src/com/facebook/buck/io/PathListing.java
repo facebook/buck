@@ -17,7 +17,6 @@
 package com.facebook.buck.io;
 
 import com.google.common.base.Functions;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -29,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
+import java.util.Optional;
 
 /**
  * Utility class to list files which match a pattern, applying ordering
@@ -72,8 +72,8 @@ public class PathListing {
         globPattern,
         pathModifiedTimeFetcher,
         FilterMode.INCLUDE,
-        Optional.absent(),
-        Optional.absent());
+        Optional.empty(),
+        Optional.empty());
   }
 
   /**

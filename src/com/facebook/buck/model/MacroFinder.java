@@ -16,11 +16,12 @@
 
 package com.facebook.buck.model;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.UnmodifiableIterator;
+
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -50,7 +51,7 @@ public class MacroFinder {
       }
       return Optional.of(result);
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public String replace(ImmutableMap<String, MacroReplacer> replacers, String blob)

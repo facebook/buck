@@ -18,7 +18,8 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 public class SuperConsoleConfig {
 
@@ -32,17 +33,17 @@ public class SuperConsoleConfig {
   }
 
   public int getThreadLineLimit() {
-    return getPositiveInt(SECTION_NAME, "thread_line_limit").or(DEFAULT_THREAD_LINE_LIMIT);
+    return getPositiveInt(SECTION_NAME, "thread_line_limit").orElse(DEFAULT_THREAD_LINE_LIMIT);
   }
 
   public int getThreadLineLimitOnWarning() {
-    return getPositiveInt(SECTION_NAME, "thread_line_limit_on_warning")
-        .or(getThreadLineLimit());
+    return getPositiveInt(
+        SECTION_NAME,
+        "thread_line_limit_on_warning").orElse(getThreadLineLimit());
   }
 
   public int getThreadLineLimitOnError() {
-    return getPositiveInt(SECTION_NAME, "thread_line_limit_on_error")
-        .or(getThreadLineLimit());
+    return getPositiveInt(SECTION_NAME, "thread_line_limit_on_error").orElse(getThreadLineLimit());
   }
 
   public boolean shouldAlwaysSortThreadsByTime() {
@@ -52,7 +53,7 @@ public class SuperConsoleConfig {
   private Optional<Integer> getPositiveInt(String sectionName, String propertyName) {
     Optional<Long> optional = delegate.getLong(sectionName, propertyName);
     if (!optional.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     long value = optional.get();
     if (value <= 0 || value > Integer.MAX_VALUE) {

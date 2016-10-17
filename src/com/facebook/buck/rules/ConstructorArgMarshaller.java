@@ -21,7 +21,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableSet;
@@ -31,6 +30,7 @@ import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -71,7 +71,7 @@ public class ConstructorArgMarshaller {
    * </ul>
    *
    * Any property that is marked as being an {@link Optional} field will be set to a default value
-   * if none is set. This is typically {@link Optional#absent()}, but in the case of collections is
+   * if none is set. This is typically {@link Optional#empty()}, but in the case of collections is
    * an empty collection.
    * @param params The parameters to be used to populate the {@code dto} instance.
    * @param dto The constructor dto to be populated.

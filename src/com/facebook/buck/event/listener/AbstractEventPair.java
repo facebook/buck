@@ -17,9 +17,10 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
+
+import java.util.Optional;
 
 /**
  *  Utility class to help match up start and end events

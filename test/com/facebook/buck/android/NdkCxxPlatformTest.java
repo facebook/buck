@@ -47,7 +47,6 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -63,6 +62,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 
 public class NdkCxxPlatformTest {
 
@@ -168,12 +168,12 @@ public class NdkCxxPlatformTest {
           pathResolver,
           target,
           Linker.LinkType.EXECUTABLE,
-          Optional.absent(),
+          Optional.empty(),
           Paths.get("output"),
           Linker.LinkableDepType.SHARED,
           ImmutableList.of(),
-          Optional.absent(),
-          Optional.absent(),
+          Optional.empty(),
+          Optional.empty(),
           ImmutableSet.of(),
           NativeLinkableInput.builder()
               .setArgs(SourcePathArg.from(pathResolver, new FakeSourcePath("input.o")))

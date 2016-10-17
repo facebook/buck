@@ -26,12 +26,12 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.OnDiskBuildInfo;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.google.common.base.Optional;
+import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -42,6 +42,7 @@ import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Common utilities for working with {@link JavaLibrary} objects.
@@ -62,7 +63,7 @@ public class JavaLibraryRules {
     steps.add(
         new AccumulateClassNamesStep(
             javaLibrary.getProjectFilesystem(),
-            Optional.fromNullable(javaLibrary.getPathToOutput()),
+            Optional.ofNullable(javaLibrary.getPathToOutput()),
             pathToClassHashes));
     buildableContext.recordArtifact(pathToClassHashes);
   }
@@ -124,7 +125,7 @@ public class JavaLibraryRules {
         ImmutableSortedSet.naturalOrder();
     for (BuildRule dep : inputs) {
       if (dep instanceof HasJavaAbi) {
-        abiRules.addAll(((HasJavaAbi) dep).getAbiJar().asSet());
+        abiRules.addAll(OptionalCompat.asSet(((HasJavaAbi) dep).getAbiJar()));
       }
     }
     return abiRules.build();

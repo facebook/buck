@@ -17,13 +17,13 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -106,7 +106,7 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
   @SuppressWarnings("immutables")
   @Value.Default
   public Optional<Path> getStubBinaryPath() {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Value.Default

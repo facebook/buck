@@ -27,7 +27,6 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -38,6 +37,7 @@ import com.google.common.collect.Maps;
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Contains platform independent settings for C/C++ rules.
@@ -97,8 +97,7 @@ public class CxxBuckConfig {
    * gtest tests should use by default (if no other main is given).
    */
   public BuildTarget getGtestDefaultTestMainDep() {
-    return delegate.getBuildTarget(cxxSection, "gtest_default_test_main_dep")
-        .or(getGtestDep());
+    return delegate.getBuildTarget(cxxSection, "gtest_default_test_main_dep").orElse(getGtestDep());
   }
 
   /**
@@ -124,7 +123,7 @@ public class CxxBuckConfig {
       String field) {
     Optional<String> value = delegate.getValue(cxxSection, field);
     if (!value.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     ImmutableList.Builder<String> split = ImmutableList.builder();
     if (!value.get().trim().isEmpty()) {
@@ -157,7 +156,7 @@ public class CxxBuckConfig {
     Optional<Platform> archiverPlatform = delegate
         .getEnum(cxxSection, "archiver_platform", Platform.class);
     if (!archiverPlatform.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     Archiver result;
     switch (archiverPlatform.get()) {
@@ -183,7 +182,9 @@ public class CxxBuckConfig {
    * @return the maximum size in bytes of test output to report in test results.
    */
   public long getMaximumTestOutputSize() {
-    return delegate.getLong(cxxSection, "max_test_output_size").or(DEFAULT_MAX_TEST_OUTPUT_SIZE);
+    return delegate.getLong(
+        cxxSection,
+        "max_test_output_size").orElse(DEFAULT_MAX_TEST_OUTPUT_SIZE);
   }
 
   private Optional<CxxToolProviderParams> getCxxToolProviderParams(
@@ -191,13 +192,15 @@ public class CxxBuckConfig {
       Optional<CxxToolProvider.Type> defaultType) {
     Optional<String> value = delegate.getValue(cxxSection, field);
     if (!value.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     String source = String.format("[%s] %s", cxxSection, field);
     Optional<BuildTarget> target = delegate.getMaybeBuildTarget(cxxSection, field);
     Optional<CxxToolProvider.Type> type =
-        delegate.getEnum(cxxSection, field + "_type", CxxToolProvider.Type.class)
-            .or(defaultType);
+        delegate.getEnum(
+            cxxSection,
+            field + "_type",
+            CxxToolProvider.Type.class).map(Optional::of).orElse(defaultType);
     if (type.isPresent() && type.get() == CxxToolProvider.Type.DEFAULT) {
       type = Optional.of(CxxToolProvider.Type.GCC);
     }
@@ -206,7 +209,7 @@ public class CxxBuckConfig {
           CxxToolProviderParams.builder()
               .setSource(source)
               .setBuildTarget(target.get())
-              .setType(type.or(CxxToolProvider.Type.GCC))
+              .setType(type.orElse(CxxToolProvider.Type.GCC))
               .build());
     } else {
       return Optional.of(
@@ -219,10 +222,10 @@ public class CxxBuckConfig {
   }
 
   public Optional<PreprocessorProvider> getPreprocessorProvider(String field) {
-    Optional<CxxToolProvider.Type> defaultType = Optional.absent();
+    Optional<CxxToolProvider.Type> defaultType = Optional.empty();
     Optional<CxxToolProviderParams> params = getCxxToolProviderParams(field, defaultType);
     if (!params.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of(params.get().getPreprocessorProvider());
   }
@@ -230,9 +233,9 @@ public class CxxBuckConfig {
   public Optional<CompilerProvider> getCompilerProvider(String field) {
     Optional<CxxToolProviderParams> params = getCxxToolProviderParams(
         field,
-        Optional.absent());
+        Optional.empty());
     if (!params.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of(params.get().getCompilerProvider());
   }
@@ -242,19 +245,19 @@ public class CxxBuckConfig {
       LinkerProvider.Type defaultType) {
     Optional<ToolProvider> toolProvider = delegate.getToolProvider(cxxSection, field);
     if (!toolProvider.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     Optional<LinkerProvider.Type> type =
         delegate.getEnum(cxxSection, "linker_platform", LinkerProvider.Type.class);
     return Optional.of(
-        new DefaultLinkerProvider(type.or(defaultType), toolProvider.get()));
+        new DefaultLinkerProvider(type.orElse(defaultType), toolProvider.get()));
   }
 
   public HeaderVerification getHeaderVerification() {
     return HeaderVerification.builder()
         .setMode(
-            delegate.getEnum(cxxSection, "untracked_headers", HeaderVerification.Mode.class)
-                .or(HeaderVerification.Mode.IGNORE))
+            delegate.getEnum(cxxSection, "untracked_headers", HeaderVerification.Mode.class).orElse(
+                HeaderVerification.Mode.IGNORE))
         .addAllWhitelist(delegate.getListWithoutComments(cxxSection, "untracked_headers_whitelist"))
         .build();
   }
@@ -262,7 +265,7 @@ public class CxxBuckConfig {
   public Optional<RuleScheduleInfo> getLinkScheduleInfo() {
     Optional<Long> linkWeight = delegate.getLong(cxxSection, "link_weight");
     if (!linkWeight.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of(
         RuleScheduleInfo.builder()
@@ -279,8 +282,10 @@ public class CxxBuckConfig {
   }
 
   public Archive.Contents getArchiveContents() {
-    return delegate.getEnum(cxxSection, "archive_contents", Archive.Contents.class)
-        .or(Archive.Contents.NORMAL);
+    return delegate.getEnum(
+        cxxSection,
+        "archive_contents",
+        Archive.Contents.class).orElse(Archive.Contents.NORMAL);
   }
 
   public ImmutableMap<String, Flavor> getDefaultFlavorsForRuleType(BuildRuleType type) {
@@ -291,7 +296,7 @@ public class CxxBuckConfig {
   }
 
   public int getDebugPathSanitizerLimit() {
-    return delegate.getInteger(cxxSection, "debug_path_sanitizer_limit").or(250);
+    return delegate.getInteger(cxxSection, "debug_path_sanitizer_limit").orElse(250);
   }
 
   @Value.Immutable

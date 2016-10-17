@@ -35,7 +35,6 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -48,6 +47,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class ExternalJavac implements Javac {
 
@@ -79,7 +79,7 @@ public class ExternalJavac implements Javac {
             throw new RuntimeException(e);
           }
           Optional<String> stderr = result.getStderr();
-          String output = stderr.or("").trim();
+          String output = stderr.orElse("").trim();
           if (Strings.isNullOrEmpty(output)) {
             return DEFAULT_VERSION;
           } else {

@@ -26,10 +26,10 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.hash.HashCode;
 
 import java.net.URI;
+import java.util.Optional;
 
 public class RemoteFileDescription implements Description<RemoteFileDescription.Arg> {
 
@@ -67,7 +67,7 @@ public class RemoteFileDescription implements Description<RemoteFileDescription.
           params.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName());
     }
 
-    String out = args.out.or(params.getBuildTarget().getShortNameAndFlavorPostfix());
+    String out = args.out.orElse(params.getBuildTarget().getShortNameAndFlavorPostfix());
 
     return new RemoteFile(
         params,

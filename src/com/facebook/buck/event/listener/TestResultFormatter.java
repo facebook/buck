@@ -28,7 +28,6 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
@@ -36,13 +35,14 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Files;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.TimeZone;
 
 public class TestResultFormatter {
@@ -160,7 +160,7 @@ public class TestResultFormatter {
               locale,
               addTo,
               testLogPath,
-              summaryVerbosity.getMaxDebugLogLines().or(DEFAULT_MAX_LOG_LINES));
+              summaryVerbosity.getMaxDebugLogLines().orElse(DEFAULT_MAX_LOG_LINES));
         }
       }
     }

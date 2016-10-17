@@ -18,7 +18,8 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -37,7 +38,7 @@ public class WorkerToolBuilder extends AbstractNodeBuilder<WorkerToolDescription
   }
 
   public WorkerToolBuilder setArgs(@Nullable String args) {
-    arg.args = Optional.fromNullable(args);
+    arg.args = Optional.ofNullable(args);
     return this;
   }
 

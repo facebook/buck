@@ -19,7 +19,6 @@ package com.facebook.buck.model;
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.BuckConstant;
-import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -32,6 +31,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
+import java.util.Optional;
 
 /**
  * Class to allow looking up parents and children of build files.
@@ -163,7 +163,7 @@ public class FilesystemBackedBuildFileTree extends BuildFileTree {
     }
 
     // filePath does not fall under any build file
-    return Optional.absent();
+    return Optional.empty();
   }
 
   /**

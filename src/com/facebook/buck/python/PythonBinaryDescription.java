@@ -45,8 +45,8 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.OptionalCompat;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -58,6 +58,7 @@ import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public class PythonBinaryDescription implements
@@ -201,7 +202,7 @@ public class PythonBinaryDescription implements
         mainModule,
         components,
         pythonPlatform.getEnvironment(),
-        extension.or(pythonBuckConfig.getPexExtension()),
+        extension.orElse(pythonBuckConfig.getPexExtension()),
         preloadLibraries);
   }
 
@@ -248,8 +249,8 @@ public class PythonBinaryDescription implements
             pythonPlatform,
             pexTool,
             buildArgs,
-            pythonBuckConfig.getPexExecutor(resolver).or(pythonPlatform.getEnvironment()),
-            extension.or(pythonBuckConfig.getPexExtension()),
+            pythonBuckConfig.getPexExecutor(resolver).orElse(pythonPlatform.getEnvironment()),
+            extension.orElse(pythonBuckConfig.getPexExtension()),
             pythonPlatform.getEnvironment(),
             mainModule,
             components,
@@ -307,13 +308,13 @@ public class PythonBinaryDescription implements
         /* zipSafe */ args.zipSafe);
     // Extract the platforms from the flavor, falling back to the default platforms if none are
     // found.
-    PythonPlatform pythonPlatform = pythonPlatforms
-        .getValue(params.getBuildTarget())
-        .or(pythonPlatforms.getValue(
-            args.platform
-                .<Flavor>transform(ImmutableFlavor::of)
-                .or(pythonPlatforms.getFlavors().iterator().next())));
-    CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
+    PythonPlatform pythonPlatform =
+        pythonPlatforms.getValue(params.getBuildTarget()).orElse(
+            pythonPlatforms.getValue(
+                args.platform.<Flavor>map(ImmutableFlavor::of).orElse(
+                    pythonPlatforms.getFlavors().iterator().next())));
+    CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).orElse(
+        defaultCxxPlatform);
     PythonPackageComponents allPackageComponents =
         PythonUtil.getAllComponents(
             params,
@@ -343,7 +344,7 @@ public class PythonBinaryDescription implements
         args.extension,
         allPackageComponents,
         args.buildArgs,
-        args.packageStyle.or(pythonBuckConfig.getPackageStyle()),
+        args.packageStyle.orElse(pythonBuckConfig.getPackageStyle()),
         PythonUtil.getPreloadNames(
             resolver,
             cxxPlatform,
@@ -360,12 +361,12 @@ public class PythonBinaryDescription implements
     // We need to use the C/C++ linker for native libs handling, so add in the C/C++ linker to
     // parse time deps.
     targets.addAll(
-        cxxPlatforms.getValue(buildTarget).or(defaultCxxPlatform).getLd().getParseTimeDeps());
+        cxxPlatforms.getValue(buildTarget).orElse(defaultCxxPlatform).getLd().getParseTimeDeps());
 
-    if (constructorArg.packageStyle.or(pythonBuckConfig.getPackageStyle()) ==
+    if (constructorArg.packageStyle.orElse(pythonBuckConfig.getPackageStyle()) ==
         PythonBuckConfig.PackageStyle.STANDALONE) {
-      targets.addAll(pythonBuckConfig.getPexTarget().asSet());
-      targets.addAll(pythonBuckConfig.getPexExecutorTarget().asSet());
+      targets.addAll(OptionalCompat.asSet(pythonBuckConfig.getPexTarget()));
+      targets.addAll(OptionalCompat.asSet(pythonBuckConfig.getPexExecutorTarget()));
     }
 
     return targets.build();

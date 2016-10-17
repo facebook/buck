@@ -44,7 +44,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -65,6 +64,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -329,7 +329,7 @@ public class ParsePipelineTest {
 
     @Override
     public synchronized Optional<V> lookupComputedNode(Cell cell, K key) {
-      return Optional.fromNullable(nodeMap.get(key));
+      return Optional.ofNullable(nodeMap.get(key));
     }
 
     @Override

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.event.listener;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
@@ -26,7 +26,6 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.network.BatchingLogger;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 
@@ -34,6 +33,8 @@ import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Optional;
 
 public class HttpArtifactCacheEventListenerTest {
 
@@ -55,7 +56,7 @@ public class HttpArtifactCacheEventListenerTest {
     EasyMock.expect(
         logger.log(
             EasyMock.capture(logLineCapture)))
-        .andReturn(Optional.absent())
+        .andReturn(Optional.empty())
         .once();
     EasyMock.expect(logger.close())
         .andReturn(null)

@@ -30,10 +30,10 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class ExportFileDescription implements
     Description<ExportFileDescription.Arg>,
@@ -59,7 +59,7 @@ public class ExportFileDescription implements
       A args) {
     BuildTarget target = params.getBuildTarget();
 
-    Mode mode = args.mode.or(ExportFileDescription.Mode.COPY);
+    Mode mode = args.mode.orElse(Mode.COPY);
 
     String name;
     if (args.out.isPresent()) {

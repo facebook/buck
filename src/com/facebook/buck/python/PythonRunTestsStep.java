@@ -28,7 +28,6 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -37,6 +36,7 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.EnumSet;
+import java.util.Optional;
 
 public class PythonRunTestsStep implements Step {
   private static final CharMatcher PYTHON_RE_REGULAR_CHARACTERS = CharMatcher.anyOf(
@@ -111,7 +111,7 @@ public class PythonRunTestsStep implements Step {
     ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(
         params,
         EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
-        Optional.absent(),
+        Optional.empty(),
         testRuleTimeoutMs,
         Optional.of(timeoutHandler));
 

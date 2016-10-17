@@ -45,7 +45,6 @@ import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -60,6 +59,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -99,7 +99,7 @@ public class DaemonIntegrationTest {
         getWatchmanEnv(),
         new TestConsole(),
         new FakeClock(0),
-        Optional.absent());
+        Optional.empty());
 
     // We assume watchman has been installed and configured properly on the system, and that setting
     // up the watch is successful.

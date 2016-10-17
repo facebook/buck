@@ -19,13 +19,13 @@ package com.facebook.buck.cli;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.util.Console;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 
 public class ServerStatusCommand extends AbstractCommand {
 
@@ -65,7 +65,7 @@ public class ServerStatusCommand extends AbstractCommand {
       int port = -1;
       Optional<WebServer> webServer = params.getWebServer();
       if (webServer.isPresent()) {
-        port = webServer.get().getPort().or(port);
+        port = webServer.get().getPort().orElse(port);
       }
 
       builder.put("http.port", port);

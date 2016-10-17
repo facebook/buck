@@ -35,7 +35,6 @@ import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -49,6 +48,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class AndroidResourceFilterIntegrationTest {
@@ -70,11 +70,11 @@ public class AndroidResourceFilterIntegrationTest {
     AndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         filesystem.getRootPath().getFileSystem(),
         ImmutableMap.copyOf(System.getenv()),
-        Optional.absent(),
-        Optional.absent());
+        Optional.empty(),
+        Optional.empty());
     pathToAapt = AndroidPlatformTarget.getDefaultPlatformTarget(
         resolver,
-        Optional.absent()).getAaptExecutable();
+        Optional.empty()).getAaptExecutable();
     String buildToolsVersion = pathToAapt.getParent().getFileName().toString();
     isBuildToolsNew = new VersionStringComparator().compare(buildToolsVersion, "21") >= 0;
   }
@@ -207,7 +207,7 @@ public class AndroidResourceFilterIntegrationTest {
     Path cachedFile = DirArtifactCacheTestUtil.getPathForRuleKey(
         cache,
         new RuleKey(androidBinaryRuleKey.getHash()),
-        Optional.absent());
+        Optional.empty());
     Files.delete(workspace.resolve(cachedFile));
 
     workspace.runBuckCommand("clean").assertSuccess();
@@ -293,7 +293,7 @@ public class AndroidResourceFilterIntegrationTest {
         apkFile.toAbsolutePath().toString());
     assertEquals(0, result.getExitCode());
     return FluentIterable.from(
-        Splitter.on('\n').split(result.getStdout().or(""))).filter(
+        Splitter.on('\n').split(result.getStdout().orElse(""))).filter(
         input -> pattern.matcher(input).matches()).size();
   }
 }

@@ -17,13 +17,13 @@
 package com.facebook.buck.file;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.google.common.base.Optional;
 
 import java.io.IOException;
 import java.net.PasswordAuthentication;
 import java.net.Proxy;
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class RemoteMavenDownloader implements Downloader {
 

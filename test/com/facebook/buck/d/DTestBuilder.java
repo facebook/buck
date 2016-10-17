@@ -22,8 +22,9 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
 
 public class DTestBuilder extends AbstractNodeBuilder<DTestDescription.Arg> {
 
@@ -36,7 +37,7 @@ public class DTestBuilder extends AbstractNodeBuilder<DTestDescription.Arg> {
             dBuckConfig,
             CxxPlatformUtils.DEFAULT_CONFIG,
             defaultCxxPlatform,
-            Optional.absent()),
+            Optional.empty()),
         target);
   }
 

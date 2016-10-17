@@ -33,7 +33,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -47,6 +46,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class CxxCompileStepIntegrationTest {
 
@@ -97,13 +97,13 @@ public class CxxCompileStepIntegrationTest {
                     compilerCommandPrefix,
                     preprocessorArguments.build(),
                     ImmutableMap.of(),
-                    Optional.absent())),
+                    Optional.empty())),
             Optional.of(
                 new CxxPreprocessAndCompileStep.ToolCommand(
                     compilerCommandPrefix,
                     compilerArguments.build(),
                     ImmutableMap.of(),
-                    Optional.absent())),
+                    Optional.empty())),
             HeaderPathNormalizer.empty(pathResolver),
             sanitizer,
             CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
@@ -137,8 +137,8 @@ public class CxxCompileStepIntegrationTest {
 
   @Test
   public void updateCompilationDir() throws Exception {
-    assertCompDir(Paths.get("."), Optional.absent());
-    assertCompDir(Paths.get("blah"), Optional.absent());
+    assertCompDir(Paths.get("."), Optional.empty());
+    assertCompDir(Paths.get("blah"), Optional.empty());
   }
 
   @Test
@@ -180,13 +180,13 @@ public class CxxCompileStepIntegrationTest {
                     compilerCommandPrefix,
                     preprocessorArguments.build(),
                     ImmutableMap.of(),
-                    Optional.absent())),
+                    Optional.empty())),
             Optional.of(
                 new CxxPreprocessAndCompileStep.ToolCommand(
                     compilerCommandPrefix,
                     compilerArguments.build(),
                     ImmutableMap.of(),
-                    Optional.absent())),
+                    Optional.empty())),
             HeaderPathNormalizer.empty(pathResolver),
             CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER,
             CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),

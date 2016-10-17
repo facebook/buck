@@ -53,7 +53,6 @@ import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -72,6 +71,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -272,8 +272,8 @@ public class TestCommand extends BuildCommand {
         .setTestResultCacheMode(getResultsCacheMode(params.getBuckConfig()))
         .setDryRun(isDryRun)
         .setShufflingTests(isShufflingTests)
-        .setPathToXmlTestOutput(Optional.fromNullable(pathToXmlTestOutput))
-        .setPathToJavaAgent(Optional.fromNullable(pathToJavaAgent))
+        .setPathToXmlTestOutput(Optional.ofNullable(pathToXmlTestOutput))
+        .setPathToJavaAgent(Optional.ofNullable(pathToJavaAgent))
         .setCoverageReportFormat(coverageReportFormat)
         .setCoverageReportTitle(coverageReportTitle)
         .setEnvironmentOverrides(environmentOverrides);
@@ -505,7 +505,7 @@ public class TestCommand extends BuildCommand {
               new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
               pool.getExecutor(),
               new DefaultStepRunner(),
-              getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
+              getBuildEngineMode().orElse(params.getBuckConfig().getBuildEngineMode()),
               params.getBuckConfig().getBuildDepFiles(),
               params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
               params.getBuckConfig().getBuildArtifactCacheSizeLimit(),

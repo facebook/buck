@@ -23,13 +23,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -39,7 +39,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -50,6 +49,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class JavaSourceJarTest {
 
@@ -63,7 +63,7 @@ public class JavaSourceJarTest {
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
         ImmutableSortedSet.of(),
-        Optional.absent());
+        Optional.empty());
 
     Path output = rule.getPathToOutput();
 
@@ -92,7 +92,7 @@ public class JavaSourceJarTest {
         new FakeBuildRuleParamsBuilder("//example:target").build(),
         pathResolver,
         ImmutableSortedSet.of(fileBased, ruleBased),
-        Optional.absent());
+        Optional.empty());
 
     BuildContext buildContext = FakeBuildContext.newBuilder()
         .setActionGraph(new ActionGraph(ImmutableList.of()))

@@ -2,7 +2,6 @@
   "timing" : {
     "deps" : [
       "//src/com/facebook/buck/util:tristate",
-      "//third-party/java/guava:guava",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [

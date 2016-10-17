@@ -56,9 +56,9 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.util.OptionalCompat;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -70,6 +70,7 @@ import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 
 public class CxxPythonExtensionDescription implements
     Description<CxxPythonExtensionDescription.Arg>,
@@ -276,7 +277,7 @@ public class CxxPythonExtensionDescription implements
         FluentIterable.from(params.getDeps())
             .filter(NativeLinkable.class),
         args.cxxRuntimeType,
-        Optional.absent(),
+        Optional.empty(),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
           .setArgs(getExtensionArgs(params, ruleResolver, pathResolver, cxxPlatform, args))
@@ -406,7 +407,7 @@ public class CxxPythonExtensionDescription implements
 
           @Override
           public Optional<Path> getNativeLinkTargetOutputPath(CxxPlatform cxxPlatform) {
-            return Optional.absent();
+            return Optional.empty();
           }
 
         };
@@ -436,7 +437,7 @@ public class CxxPythonExtensionDescription implements
     deps.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));
 
     for (PythonPlatform pythonPlatform : pythonPlatforms.getValues()) {
-      deps.addAll(pythonPlatform.getCxxLibrary().asSet());
+      deps.addAll(OptionalCompat.asSet(pythonPlatform.getCxxLibrary()));
     }
 
     return deps.build();

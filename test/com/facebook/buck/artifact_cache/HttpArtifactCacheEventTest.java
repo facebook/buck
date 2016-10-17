@@ -24,7 +24,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Functions;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -32,6 +31,7 @@ import com.google.common.collect.Iterables;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public class HttpArtifactCacheEventTest {
 

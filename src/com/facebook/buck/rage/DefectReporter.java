@@ -19,13 +19,13 @@ package com.facebook.buck.rage;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Interface around the 'backend' of submitting a defect report.

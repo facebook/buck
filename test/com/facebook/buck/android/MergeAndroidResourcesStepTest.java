@@ -23,18 +23,17 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.android.MergeAndroidResourcesStep.DuplicateResourceException;
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
@@ -51,6 +50,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 
@@ -85,7 +85,7 @@ public class MergeAndroidResourcesStepTest {
     SortedSetMultimap<String, RDotTxtEntry> packageNameToResources =
         MergeAndroidResourcesStep.sortSymbols(
             entriesBuilder.buildFilePathToPackageNameSet(),
-            Optional.absent(),
+            Optional.empty(),
             ImmutableMap.of(),
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             entriesBuilder.getProjectFilesystem());
@@ -143,7 +143,7 @@ public class MergeAndroidResourcesStepTest {
     );
     MergeAndroidResourcesStep.sortSymbols(
         entriesBuilder.buildFilePathToPackageNameSet(),
-        Optional.absent(),
+        Optional.empty(),
         ImmutableMap.of(
             Paths.get("a-R.txt"),
             (HasAndroidResourceDeps) AndroidResourceRuleBuilder.newBuilder()
@@ -202,8 +202,8 @@ public class MergeAndroidResourcesStepTest {
         ImmutableList.of(res),
         Paths.get("output"),
         /* forceFinalResourceIds */ false,
-        /* unionPackage */ Optional.absent(),
-        /* rName */ Optional.absent());
+        /* unionPackage */ Optional.empty(),
+        /* rName */ Optional.empty());
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
@@ -264,8 +264,8 @@ public class MergeAndroidResourcesStepTest {
         Paths.get("output"),
         /* forceFinalResourceIds */ true,
         /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-        /* unionPackage */ Optional.absent(),
-        /* rName */ Optional.absent());
+        /* unionPackage */ Optional.empty(),
+        /* rName */ Optional.empty());
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
@@ -340,8 +340,8 @@ public class MergeAndroidResourcesStepTest {
         Paths.get("output"),
         /* forceFinalResourceIds */ true,
         /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-        /* unionPackage */ Optional.absent(),
-        /* rName */ Optional.absent());
+        /* unionPackage */ Optional.empty(),
+        /* rName */ Optional.empty());
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 
@@ -413,7 +413,7 @@ public class MergeAndroidResourcesStepTest {
         Paths.get("output"),
         /* forceFinalResourceIds */ false,
         Optional.of("res1"),
-        /* rName */ Optional.absent());
+        /* rName */ Optional.empty());
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 

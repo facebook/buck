@@ -16,7 +16,6 @@
 
 package com.facebook.buck.maven;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -25,9 +24,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.eclipse.aether.deployment.DeploymentException;
@@ -38,6 +37,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class PublisherTest {
 
@@ -55,7 +55,7 @@ public class PublisherTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     publisher = new Publisher(
         filesystem,
-        /* remoteRepoUrl */ Optional.absent(),
+        /* remoteRepoUrl */ Optional.empty(),
         /* dryRun */ true);
 
     ruleResolver = new BuildRuleResolver(

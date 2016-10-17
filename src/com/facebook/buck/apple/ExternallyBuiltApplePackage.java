@@ -26,13 +26,13 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Rule for generating an apple package via external script.
@@ -50,8 +50,8 @@ public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppen
         resolver,
         ImmutableList.of(bundle),
         Optional.of(packageConfigAndPlatformInfo.getExpandedArg()),
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         params.getBuildTarget().getShortName() + "." +
             packageConfigAndPlatformInfo.getConfig().getExtension());
     this.packageConfigAndPlatformInfo = packageConfigAndPlatformInfo;

@@ -23,7 +23,6 @@ import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.VersionStringComparator;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -45,6 +44,7 @@ import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -85,7 +85,7 @@ public class AppleSdkDiscovery {
       AppleConfig appleConfig)
       throws IOException {
     Optional<AppleToolchain> defaultToolchain =
-        Optional.fromNullable(xcodeToolchains.get(DEFAULT_TOOLCHAIN_ID));
+        Optional.ofNullable(xcodeToolchains.get(DEFAULT_TOOLCHAIN_ID));
 
     ImmutableMap.Builder<AppleSdk, AppleSdkPaths> appleSdkPathsBuilder = ImmutableMap.builder();
 

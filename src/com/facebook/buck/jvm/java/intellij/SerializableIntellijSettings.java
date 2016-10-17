@@ -43,10 +43,10 @@ public class SerializableIntellijSettings {
   public static SerializableIntellijSettings createSerializableIntellijSettings(
       IntellijConfig intellijConfig) {
     return new SerializableIntellijSettings(
-        intellijConfig.getLanguageLevel().orNull(),
-        intellijConfig.getJdkName().orNull(),
-        intellijConfig.getJdkType().orNull(),
-        intellijConfig.getOutputUrl().orNull());
+        intellijConfig.getLanguageLevel().orElse(null),
+        intellijConfig.getJdkName().orElse(null),
+        intellijConfig.getJdkType().orElse(null),
+        intellijConfig.getOutputUrl().orElse(null));
   }
 
   @Override

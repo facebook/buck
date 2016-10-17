@@ -1,6 +1,8 @@
 {
   "framework_path_arg" : {
-    "deps" : [ ],
+    "deps" : [
+      "//src/com/facebook/buck/util:util"
+    ],
     "exported_deps" : [
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules/args:args",

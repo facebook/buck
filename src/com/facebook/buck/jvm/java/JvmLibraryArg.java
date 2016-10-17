@@ -23,12 +23,12 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 @SuppressFieldNotInitialized
@@ -68,7 +68,7 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
     for (String processorParam : annotationProcessorParams) {
       builder.addParameter(processorParam);
     }
-    builder.setProcessOnly(annotationProcessorOnly.or(Boolean.FALSE));
+    builder.setProcessOnly(annotationProcessorOnly.orElse(Boolean.FALSE));
 
     return builder.build();
   }

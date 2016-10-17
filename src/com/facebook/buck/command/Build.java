@@ -55,7 +55,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
@@ -77,6 +76,7 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.StreamSupport;
@@ -317,7 +317,7 @@ public class Build implements Closeable {
     Preconditions.checkState(rulesToBuild.size() == results.size());
     for (int i = 0, len = rulesToBuild.size(); i < len; i++) {
       BuildRule rule = rulesToBuild.get(i);
-      resultBuilder.put(rule, Optional.fromNullable(results.get(i)));
+      resultBuilder.put(rule, Optional.ofNullable(results.get(i)));
     }
 
     return BuildExecutionResult.builder()
@@ -411,7 +411,7 @@ public class Build implements Closeable {
 
     /**
      * @return Keys are build rules built during this invocation of Buck. Values reflect
-     * the success of each build rule, if it succeeded. ({@link Optional#absent()} represents a
+     * the success of each build rule, if it succeeded. ({@link Optional#empty()} represents a
      * failed build rule.)
      */
     public abstract Map<BuildRule, Optional<BuildResult>> getResults();

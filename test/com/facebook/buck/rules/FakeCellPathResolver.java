@@ -16,10 +16,10 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 

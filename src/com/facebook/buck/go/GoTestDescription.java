@@ -42,7 +42,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -54,6 +53,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 public class GoTestDescription implements
     Description<GoTestDescription.Arg>,
@@ -134,7 +134,7 @@ public class GoTestDescription implements
           deps,
           /* includeSelf */ true)));
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -169,7 +169,7 @@ public class GoTestDescription implements
       final BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
     GoPlatform platform = goBuckConfig.getPlatformFlavorDomain().getValue(params.getBuildTarget())
-        .or(goBuckConfig.getDefaultPlatform());
+        .orElse(goBuckConfig.getDefaultPlatform());
 
     if (params.getBuildTarget().getFlavors().contains(TEST_LIBRARY_FLAVOR)) {
       return createTestLibrary(
@@ -195,8 +195,8 @@ public class GoTestDescription implements
         testMain,
         args.labels,
         args.contacts,
-        args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
-        args.runTestSeparately.or(false),
+        args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        args.runTestSeparately.orElse(false),
         args.resources);
   }
 
@@ -255,8 +255,8 @@ public class GoTestDescription implements
             target, args.library.get());
       }
 
-      return libraryArg.get().packageName.transform(Paths::get).or(
-          goBuckConfig.getDefaultPackageName(args.library.get()));
+      return libraryArg.get().packageName.map(Paths::get).orElse(goBuckConfig.getDefaultPackageName(
+          args.library.get()));
     } else if (args.packageName.isPresent()) {
       return Paths.get(args.packageName.get());
     } else {
@@ -343,7 +343,7 @@ public class GoTestDescription implements
     // Add the C/C++ linker parse time deps.
     GoPlatform goPlatform =
         goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget)
-            .or(goBuckConfig.getDefaultPlatform());
+            .orElse(goBuckConfig.getDefaultPlatform());
     Optional<CxxPlatform> cxxPlatform = goPlatform.getCxxPlatform();
     if (cxxPlatform.isPresent()) {
       targets.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform.get()));

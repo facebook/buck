@@ -18,13 +18,13 @@ package com.facebook.buck.jvm.java.intellij;
 
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Represents a prebuilt library (.jar or .aar) as seen by IntelliJ.

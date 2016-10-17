@@ -439,7 +439,7 @@ public class AppleBundleIntegrationTest {
     ProcessExecutor.Result result = workspace.runCommand(
         "nm",
         binaryPath.toString());
-    return result.getStdout().or("");
+    return result.getStdout().orElse("");
   }
 
   @Test

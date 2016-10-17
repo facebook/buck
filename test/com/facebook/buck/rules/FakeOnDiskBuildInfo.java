@@ -17,8 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -27,16 +25,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
-
-  /**
-   * Takes a string and uses it to construct a {@link Sha1HashCode}.
-   * <p>
-   * Is likely particularly useful with {@link Optional#transform(Function)}.
-   */
-  private static final Function<String, Sha1HashCode> TO_SHA1 =
-      Sha1HashCode::of;
 
   private Map<String, String> metadata = Maps.newHashMap();
   private Map<String, ImmutableList<String>> metadataValues = Maps.newHashMap();
@@ -49,7 +40,7 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Override
   public Optional<RuleKey> getRuleKey(String key) {
-    return getValue(key).transform(RuleKey::new);
+    return getValue(key).map(RuleKey::new);
   }
 
   /** @return this */
@@ -65,27 +56,27 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Override
   public Optional<String> getValue(String key) {
-    return Optional.fromNullable(metadata.get(key));
+    return Optional.ofNullable(metadata.get(key));
   }
 
   @Override
   public Optional<ImmutableList<String>> getValues(String key) {
-    return Optional.fromNullable(metadataValues.get(key));
+    return Optional.ofNullable(metadataValues.get(key));
   }
 
   @Override
   public ImmutableList<String> getValuesOrThrow(String key) {
-    return Optional.fromNullable(metadataValues.get(key)).get();
+    return Optional.ofNullable(metadataValues.get(key)).get();
   }
 
   @Override
   public Optional<ImmutableMap<String, String>> getMap(String key) {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override
   public Optional<Sha1HashCode> getHash(String key) {
-    return getValue(key).transform(TO_SHA1);
+    return getValue(key).map(Sha1HashCode::of);
   }
 
   @Override

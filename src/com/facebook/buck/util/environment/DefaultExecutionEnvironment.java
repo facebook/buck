@@ -16,12 +16,12 @@
 package com.facebook.buck.util.environment;
 
 import com.facebook.buck.util.network.hostname.HostnameFetching;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.sun.management.OperatingSystemMXBean;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.util.Optional;
 import java.util.Properties;
 
 public class DefaultExecutionEnvironment implements ExecutionEnvironment {
@@ -83,7 +83,7 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
     if (ENABLE_OBJC) {
       return MacWifiSsidFinder.findCurrentSsid();
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override

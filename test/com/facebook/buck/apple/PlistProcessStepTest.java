@@ -19,20 +19,19 @@ package com.facebook.buck.apple;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
+import com.dd.plist.NSArray;
+import com.dd.plist.NSDictionary;
+import com.dd.plist.NSString;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
-import com.dd.plist.NSArray;
-import com.dd.plist.NSDictionary;
-import com.dd.plist.NSString;
-
-import java.nio.file.Paths;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
 
 public class PlistProcessStepTest {
 
@@ -47,7 +46,7 @@ public class PlistProcessStepTest {
     PlistProcessStep plistProcessStep = new PlistProcessStep(
         projectFilesystem,
         INPUT_PATH,
-        Optional.absent(),
+        Optional.empty(),
         OUTPUT_PATH,
         ImmutableMap.of(),
         ImmutableMap.of(),
@@ -71,7 +70,7 @@ public class PlistProcessStepTest {
     PlistProcessStep plistProcessStep = new PlistProcessStep(
         projectFilesystem,
         INPUT_PATH,
-        Optional.absent(),
+        Optional.empty(),
         OUTPUT_PATH,
         ImmutableMap.of(),
         ImmutableMap.of(
@@ -102,7 +101,7 @@ public class PlistProcessStepTest {
     PlistProcessStep plistProcessStep = new PlistProcessStep(
         projectFilesystem,
         INPUT_PATH,
-        Optional.absent(),
+        Optional.empty(),
         OUTPUT_PATH,
         ImmutableMap.of(
             "Key1", new NSString("OverrideValue")),
@@ -132,7 +131,7 @@ public class PlistProcessStepTest {
     PlistProcessStep plistProcessStep = new PlistProcessStep(
         projectFilesystem,
         INPUT_PATH,
-        Optional.absent(),
+        Optional.empty(),
         OUTPUT_PATH,
         ImmutableMap.of(),
         ImmutableMap.of(

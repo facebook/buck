@@ -24,7 +24,6 @@ import static org.junit.Assert.assertFalse;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -34,6 +33,7 @@ import org.junit.Test;
 
 import java.nio.file.Paths;
 import java.util.Date;
+import java.util.Optional;
 
 public class ProvisioningProfileStoreTest {
   private static ProvisioningProfileMetadata makeTestMetadata(
@@ -82,7 +82,7 @@ public class ProvisioningProfileStoreTest {
         ProvisioningProfileStore.MATCH_ANY_ENTITLEMENT,
         ProvisioningProfileStore.MATCH_ANY_IDENTITY);
 
-    assertThat(actual, is(equalTo(Optional.<ProvisioningProfileMetadata>absent())));
+    assertThat(actual, is(equalTo(Optional.empty())));
   }
 
   @Test

@@ -35,7 +35,6 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -50,6 +49,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class PythonPackagedBinaryTest {
 
@@ -85,7 +85,7 @@ public class PythonPackagedBinaryTest {
             ImmutableMap.of(),
             ImmutableMap.of(),
             ImmutableSet.of(),
-            Optional.absent()),
+            Optional.empty()),
         ImmutableSortedSet.of(),
         ImmutableSortedSet.of(),
         /* cache */ true);

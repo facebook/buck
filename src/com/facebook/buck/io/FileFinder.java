@@ -17,11 +17,11 @@
 package com.facebook.buck.io;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -80,7 +80,7 @@ public class FileFinder {
    * Tries to find a file with a specific name in a search path.
    * @param name file name to look for.
    * @param searchPath directories to search.
-   * @return if found: the path to the file. if not found, Optional.absent().
+   * @return if found: the path to the file. if not found, Optional.empty().
    */
   public static Optional<Path> getOptionalFile(
       String name,
@@ -93,7 +93,7 @@ public class FileFinder {
    * @param name file name to look for.
    * @param searchPath directories to search.
    * @param filter additional check that discovered paths must pass to be eligible.
-   * @return if found: the path to the file. if not found, Optional.absent().
+   * @return if found: the path to the file. if not found, Optional.empty().
    */
   public static Optional<Path> getOptionalFile(
       String name,
@@ -109,7 +109,7 @@ public class FileFinder {
    * Tries to find a file with one of a number of possible names in a search path.
    * @param possibleNames file names to look for.
    * @param searchPath directories to search.
-   * @return if found: the path to the file. if not found, Optional.absent().
+   * @return if found: the path to the file. if not found, Optional.empty().
    */
   public static Optional<Path> getOptionalFile(
       Set<String> possibleNames,
@@ -122,7 +122,7 @@ public class FileFinder {
    * @param possibleNames file names to look for.
    * @param searchPath directories to search.
    * @param filter additional check that discovered paths must pass to be eligible.
-   * @return if found: the path to the file. if not found, Optional.absent().
+   * @return if found: the path to the file. if not found, Optional.empty().
    */
   public static Optional<Path> getOptionalFile(
       Set<String> possibleNames,
@@ -138,7 +138,7 @@ public class FileFinder {
       }
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   /**

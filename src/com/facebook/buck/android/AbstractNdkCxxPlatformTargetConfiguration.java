@@ -17,11 +17,12 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
+
+import java.util.Optional;
 
 /**
  * A container for all configuration settings needed to define a build target.
@@ -44,15 +45,15 @@ abstract class AbstractNdkCxxPlatformTargetConfiguration {
   ImmutableMap<NdkCxxPlatformCompiler.Type, ImmutableList<String>> getLinkerFlags();
 
   public ImmutableList<String> getAssemblerFlags(NdkCxxPlatformCompiler.Type type) {
-    return Optional.fromNullable(getAssemblerFlags().get(type)).or(ImmutableList.of());
+    return Optional.ofNullable(getAssemblerFlags().get(type)).orElse(ImmutableList.of());
   }
 
   public ImmutableList<String> getCompilerFlags(NdkCxxPlatformCompiler.Type type) {
-    return Optional.fromNullable(getCompilerFlags().get(type)).or(ImmutableList.of());
+    return Optional.ofNullable(getCompilerFlags().get(type)).orElse(ImmutableList.of());
   }
 
   public ImmutableList<String> getLinkerFlags(NdkCxxPlatformCompiler.Type type) {
-    return Optional.fromNullable(getLinkerFlags().get(type)).or(ImmutableList.of());
+    return Optional.ofNullable(getLinkerFlags().get(type)).orElse(ImmutableList.of());
   }
 
 }

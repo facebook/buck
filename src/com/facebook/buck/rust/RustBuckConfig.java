@@ -17,9 +17,9 @@
 package com.facebook.buck.rust;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.io.ExecutableFinder;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 
@@ -36,7 +36,7 @@ public class RustBuckConfig {
   }
 
   Supplier<Tool> getRustCompiler() {
-    Path compilerPath = delegate.getPath("rust", "compiler").or(DEFAULT_RUSTC_COMPILER);
+    Path compilerPath = delegate.getPath("rust", "compiler").orElse(DEFAULT_RUSTC_COMPILER);
 
     Path compiler = new ExecutableFinder().getExecutable(compilerPath, delegate.getEnvironment());
 

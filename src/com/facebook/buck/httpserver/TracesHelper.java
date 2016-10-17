@@ -19,7 +19,6 @@ package com.facebook.buck.httpserver;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -43,6 +42,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -116,7 +116,7 @@ public class TracesHelper {
    * Parses a trace file and returns the command that the user executed to create the trace.
    * <p>
    * This method tries to be reasonably tolerant of changes to the .trace file schema, returning
-   * {@link Optional#absent()} if it does not find the fields in the JSON that it expects.
+   * {@link Optional#empty()} if it does not find the fields in the JSON that it expects.
    */
   TraceAttributes getTraceAttributesFor(Path pathToTrace) throws IOException {
     long lastModifiedTime = projectFilesystem.getLastModifiedTime(pathToTrace);
@@ -147,17 +147,17 @@ public class TracesHelper {
       }
 
       // Oh well, we tried.
-      return Optional.absent();
+      return Optional.empty();
     } catch (IOException e) {
       logger.error(e);
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
   private static Optional<String> tryToFindCommand(JsonObject json) {
     JsonElement nameEl = json.get("name");
     if (nameEl == null || !nameEl.isJsonPrimitive()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     JsonElement argsEl = json.get("args");
@@ -165,7 +165,7 @@ public class TracesHelper {
         !argsEl.isJsonObject() ||
         argsEl.getAsJsonObject().get("command_args") == null ||
         !argsEl.getAsJsonObject().get("command_args").isJsonPrimitive()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     String name = nameEl.getAsString();

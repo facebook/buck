@@ -23,16 +23,15 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.SmartDexingStep.DxPseudoRule;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.step.CompositeStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -53,6 +52,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -86,7 +86,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
         outputFile.toPath(),
         outputHashFile,
         EnumSet.of(DxStep.Option.NO_OPTIMIZE),
-        Optional.absent());
+        Optional.empty());
     assertFalse("'dummy' is not a matching input hash", rule.checkIsCached());
 
     // Write the real hash into the output hash file and ensure that checkIsCached now
@@ -112,7 +112,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
         filesToDex,
         outputPath,
         dxOptions,
-        Optional.absent());
+        Optional.empty());
 
     assertTrue("Result should be a CompositeStep.", dxStep instanceof CompositeStep);
     List<Step> steps = ImmutableList.copyOf((CompositeStep) dxStep);
@@ -195,7 +195,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
         filesToDex,
         outputPath,
         dxOptions,
-        Optional.absent());
+        Optional.empty());
 
     String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
     assertEquals(
@@ -226,7 +226,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
         filesToDex,
         outputPath,
         dxOptions,
-        Optional.absent());
+        Optional.empty());
 
     String xmx = DxStep.XMX_OVERRIDE.isEmpty() ? "" : DxStep.XMX_OVERRIDE + " ";
     assertEquals(
@@ -259,7 +259,7 @@ public class SmartDexingStepTest extends EasyMockSupport {
         filesToDex,
         outputPath,
         dxOptions,
-        Optional.absent());
+        Optional.empty());
   }
 
   private ExecutionContext createMockedExecutionContext()

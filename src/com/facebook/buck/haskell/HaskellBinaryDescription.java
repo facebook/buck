@@ -46,7 +46,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -55,6 +54,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class HaskellBinaryDescription implements
     Description<HaskellBinaryDescription.Arg>,
@@ -107,7 +107,8 @@ public class HaskellBinaryDescription implements
       throws NoSuchBuildTargetException {
 
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
+    CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).orElse(
+        defaultCxxPlatform);
     Linker.LinkableDepType depType = getLinkStyle(params.getBuildTarget(), args);
 
     // The target to use for the link rule.
@@ -171,7 +172,7 @@ public class HaskellBinaryDescription implements
                 haskellConfig,
                 depType,
                 args.main,
-                Optional.absent(),
+                Optional.empty(),
                 args.compilerFlags,
                 HaskellSources.from(
                     params.getBuildTarget(),
@@ -225,8 +226,7 @@ public class HaskellBinaryDescription implements
         haskellConfig,
         ImmutableList.of(
             cxxPlatforms
-                .getValue(buildTarget.getFlavors())
-                .or(defaultCxxPlatform)));
+                .getValue(buildTarget.getFlavors()).orElse(defaultCxxPlatform)));
   }
 
   @Override

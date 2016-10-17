@@ -26,9 +26,10 @@ import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+
+import java.util.Optional;
 
 /**
  * Handy way to create new {@link CachingBuildEngine} instances for test purposes.
@@ -38,11 +39,11 @@ public class CachingBuildEngineFactory {
   private CachingBuildEngine.BuildMode buildMode = CachingBuildEngine.BuildMode.SHALLOW;
   private CachingBuildEngine.DepFiles depFiles = CachingBuildEngine.DepFiles.ENABLED;
   private long maxDepFileCacheEntries = 256L;
-  private Optional<Long> artifactCacheSizeLimit = Optional.absent();
+  private Optional<Long> artifactCacheSizeLimit = Optional.empty();
   private long inputFileSizeLimit = Long.MAX_VALUE;
   private ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
   private Optional<Function<? super ProjectFilesystem, CachingBuildEngine.RuleKeyFactories>>
-      ruleKeyFactoriesFunction = Optional.absent();
+      ruleKeyFactoriesFunction = Optional.empty();
   private CachingBuildEngineDelegate cachingBuildEngineDelegate;
   private WeightedListeningExecutorService executorService;
   private BuildRuleResolver buildRuleResolver;

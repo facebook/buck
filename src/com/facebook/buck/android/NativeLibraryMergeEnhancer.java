@@ -47,7 +47,6 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -73,6 +72,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -142,7 +142,7 @@ class NativeLibraryMergeEnhancer {
           buildRuleParams,
           linkableMembership);
 
-      Optional<NativeLinkable> glueLinkable = Optional.absent();
+      Optional<NativeLinkable> glueLinkable = Optional.empty();
       if (nativeLibraryMergeGlue.isPresent()) {
         BuildRule rule = ruleResolver.getRule(nativeLibraryMergeGlue.get());
         if (!(rule instanceof NativeLinkable)) {
@@ -775,8 +775,8 @@ class NativeLibraryMergeEnhancer {
             Iterables.concat(
                 getNativeLinkableDeps(cxxPlatform),
                 getNativeLinkableExportedDeps(cxxPlatform)),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             ImmutableSet.of(),
             getImmediateNativeLinkableInput(cxxPlatform));
         ruleResolver.addToIndex(rule);

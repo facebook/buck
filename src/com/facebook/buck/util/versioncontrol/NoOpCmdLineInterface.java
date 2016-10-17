@@ -16,9 +16,10 @@
 
 package com.facebook.buck.util.versioncontrol;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+
+import java.util.Optional;
 
 /***
  * This is used if the project being built doesn't use a supported VCS.
@@ -37,7 +38,7 @@ public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
 
   @Override
   public Optional<String> revisionIdOrAbsent(String name) throws InterruptedException {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override
@@ -58,7 +59,7 @@ public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
   public Optional<String> commonAncestorOrAbsent(
       String revisionOne,
       String revisionTwo) throws InterruptedException {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override

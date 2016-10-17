@@ -30,13 +30,14 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
 
 import org.junit.Test;
+
+import java.util.Optional;
 
 public class DexWithClassesTest {
 
@@ -59,7 +60,7 @@ public class DexWithClassesTest {
             /* classNamesToHashes */ ImmutableSortedMap.of(
                 "com/example/Main",
                 HashCode.fromString(Strings.repeat("cafebabe", 5))),
-            Optional.absent()));
+            Optional.empty()));
 
     DexWithClasses dexWithClasses = DexWithClasses.TO_DEX_WITH_CLASSES.apply(dexFromJavaLibrary);
     assertEquals(
@@ -85,7 +86,7 @@ public class DexWithClassesTest {
         new DexProducedFromJavaLibrary.BuildOutput(
             /* linearAllocEstimate */ 1600,
             /* classNamesToHashes */ ImmutableSortedMap.of(),
-            Optional.absent()));
+            Optional.empty()));
 
     DexWithClasses dexWithClasses = DexWithClasses.TO_DEX_WITH_CLASSES.apply(dexFromJavaLibrary);
     assertNull(

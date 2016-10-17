@@ -23,7 +23,6 @@ import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.Optionals;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
@@ -34,6 +33,7 @@ import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Finds the package for a given file by looking at its contents first.
@@ -105,7 +105,7 @@ public abstract class ParsingJavaPackageFinder {
         path = path.getParent();
       }
 
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

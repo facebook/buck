@@ -16,11 +16,12 @@
 
 package com.facebook.buck.counters;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.Optional;
 
 public class IntegerCounterTest {
 

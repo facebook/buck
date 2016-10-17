@@ -31,9 +31,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.args.StringArg;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
+import java.util.Optional;
 
 public class SystemLuaCxxLibrary implements AbstractCxxLibrary {
 
@@ -80,7 +81,7 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibrary {
 
   @Override
   public Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(CxxPlatform cxxPlatform) {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override

@@ -23,12 +23,12 @@ import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class HaskellBuckConfig implements HaskellConfig {
 
@@ -45,7 +45,7 @@ public class HaskellBuckConfig implements HaskellConfig {
   private Optional<ImmutableList<String>> getFlags(String field) {
     Optional<String> value = delegate.getValue(SECTION, field);
     if (!value.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     ImmutableList.Builder<String> split = ImmutableList.builder();
     if (!value.get().trim().isEmpty()) {
@@ -78,7 +78,7 @@ public class HaskellBuckConfig implements HaskellConfig {
 
   @Override
   public ImmutableList<String> getCompilerFlags() {
-    return getFlags("compiler_flags").or(ImmutableList.of());
+    return getFlags("compiler_flags").orElse(ImmutableList.of());
   }
 
   @Override
@@ -100,7 +100,7 @@ public class HaskellBuckConfig implements HaskellConfig {
 
   @Override
   public ImmutableList<String> getLinkerFlags() {
-    return getFlags("linker_flags").or(ImmutableList.of());
+    return getFlags("linker_flags").orElse(ImmutableList.of());
   }
 
   @VisibleForTesting

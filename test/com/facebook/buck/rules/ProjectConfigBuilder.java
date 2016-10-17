@@ -16,8 +16,9 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -32,22 +33,22 @@ public class ProjectConfigBuilder extends AbstractNodeBuilder<ProjectConfigDescr
   }
 
   public ProjectConfigBuilder setSrcRule(@Nullable BuildTarget srcRule) {
-    arg.srcTarget = Optional.fromNullable(srcRule);
+    arg.srcTarget = Optional.ofNullable(srcRule);
     return this;
   }
 
   public ProjectConfigBuilder setSrcRoots(@Nullable ImmutableList<String> srcRoots) {
-    arg.srcRoots = Optional.fromNullable(srcRoots).or(ImmutableList.of());
+    arg.srcRoots = Optional.ofNullable(srcRoots).orElse(ImmutableList.of());
     return this;
   }
 
   public ProjectConfigBuilder setTestRule(@Nullable BuildTarget testRule) {
-    arg.testTarget = Optional.fromNullable(testRule);
+    arg.testTarget = Optional.ofNullable(testRule);
     return this;
   }
 
   public ProjectConfigBuilder setTestRoots(@Nullable ImmutableList<String> testRoots) {
-    arg.testRoots = Optional.fromNullable(testRoots).or(ImmutableList.of());
+    arg.testRoots = Optional.ofNullable(testRoots).orElse(ImmutableList.of());
     return this;
   }
 }

@@ -72,7 +72,6 @@ import com.facebook.buck.util.ProcessManager;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -108,6 +107,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -330,14 +330,13 @@ public class ProjectCommand extends BuildCommand {
   }
 
   private Optional<Ide> getIdeFromBuckConfig(BuckConfig buckConfig) {
-    return buckConfig.getValue("project", "ide").transform(
-        Ide::fromString);
+    return buckConfig.getValue("project", "ide").map(Ide::fromString);
   }
 
   private ProjectTestsMode testsMode(BuckConfig buckConfig) {
     ProjectTestsMode parameterMode = ProjectTestsMode.WITH_TESTS;
 
-    ProjectCommand.Ide projectIde = getIdeFromBuckConfig(buckConfig).orNull();
+    Ide projectIde = getIdeFromBuckConfig(buckConfig).orElse(null);
     if (projectIde == Ide.XCODE) {
       parameterMode = buckConfig.xcodeProjectTestsMode();
     }
@@ -405,9 +404,10 @@ public class ProjectCommand extends BuildCommand {
       return intellijAggregationMode;
     }
     Optional<IjModuleGraph.AggregationMode> aggregationMode =
-        buckConfig.getValue("project", "intellij_aggregation_mode")
-        .transform(IjModuleGraph.AggregationMode.FROM_STRING_FUNCTION);
-    return aggregationMode.or(IjModuleGraph.AggregationMode.NONE);
+        buckConfig.getValue(
+            "project",
+            "intellij_aggregation_mode").map(IjModuleGraph.AggregationMode::fromString);
+    return aggregationMode.orElse(IjModuleGraph.AggregationMode.NONE);
   }
 
   @Override
@@ -419,7 +419,7 @@ public class ProjectCommand extends BuildCommand {
               "switch the generator previous enabled by the \"experimental\" switch will be used.");
     }
 
-    Ide projectIde = getIdeFromBuckConfig(params.getBuckConfig()).orNull();
+    Ide projectIde = getIdeFromBuckConfig(params.getBuckConfig()).orElse(null);
     boolean needsFullRecursiveParse = deprecatedIntelliJProjectGenerationEnabled &&
         projectIde != Ide.XCODE;
 
@@ -550,7 +550,7 @@ public class ProjectCommand extends BuildCommand {
     if (ide != null) {
       return ide;
     }
-    Ide projectIde = getIdeFromBuckConfig(buckConfig).orNull();
+    Ide projectIde = getIdeFromBuckConfig(buckConfig).orElse(null);
     if (projectIde == null && !passedInTargetsSet.isEmpty() && projectGraph.isPresent()) {
       Ide guessedIde = null;
       for (BuildTarget buildTarget : passedInTargetsSet) {
@@ -1139,7 +1139,7 @@ public class ProjectCommand extends BuildCommand {
     Optional<String> result;
     try (InputStreamReader stdinReader = new InputStreamReader(System.in, Charsets.UTF_8);
          BufferedReader bufferedStdinReader = new BufferedReader(stdinReader)) {
-      result = Optional.fromNullable(bufferedStdinReader.readLine());
+      result = Optional.ofNullable(bufferedStdinReader.readLine());
     }
     LOG.debug("Result of prompt: [%s]", result);
     return result.isPresent() &&
@@ -1284,11 +1284,11 @@ public class ProjectCommand extends BuildCommand {
     workspaceArgs.actionConfigNames = ImmutableMap.of();
     workspaceArgs.extraTests = ImmutableSortedSet.of();
     workspaceArgs.extraTargets = ImmutableSortedSet.of();
-    workspaceArgs.workspaceName = Optional.absent();
+    workspaceArgs.workspaceName = Optional.empty();
     workspaceArgs.extraSchemes = ImmutableSortedMap.of();
-    workspaceArgs.isRemoteRunnable = Optional.absent();
-    workspaceArgs.explicitRunnablePath = Optional.absent();
-    workspaceArgs.launchStyle = Optional.absent();
+    workspaceArgs.isRemoteRunnable = Optional.empty();
+    workspaceArgs.explicitRunnablePath = Optional.empty();
+    workspaceArgs.launchStyle = Optional.empty();
     return workspaceArgs;
   }
 

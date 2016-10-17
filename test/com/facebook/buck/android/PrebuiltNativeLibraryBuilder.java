@@ -18,10 +18,10 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -37,7 +37,7 @@ public class PrebuiltNativeLibraryBuilder
   }
 
   public PrebuiltNativeLibraryBuilder setIsAsset(@Nullable Boolean isAsset) {
-    arg.isAsset = Optional.fromNullable(isAsset);
+    arg.isAsset = Optional.ofNullable(isAsset);
     return this;
   }
 
@@ -47,7 +47,7 @@ public class PrebuiltNativeLibraryBuilder
   }
 
   public PrebuiltNativeLibraryBuilder setDeps(@Nullable ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.fromNullable(deps).or(ImmutableSortedSet.of());
+    arg.deps = Optional.ofNullable(deps).orElse(ImmutableSortedSet.of());
     return this;
   }
 }

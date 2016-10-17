@@ -21,15 +21,14 @@ import com.facebook.buck.io.unixsocket.UnixDomainSocket;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.ForwardingProcessListener;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -42,6 +41,7 @@ import java.nio.channels.Channels;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class Watchman implements AutoCloseable {
@@ -81,12 +81,12 @@ public class Watchman implements AutoCloseable {
 
   private static final Path WATCHMAN = Paths.get("watchman");
   public static final Watchman NULL_WATCHMAN = new Watchman(
-      Optional.absent(),
-      Optional.absent(),
+      Optional.empty(),
+      Optional.empty(),
       ImmutableSet.of(),
-      Optional.absent(),
-      Optional.absent(),
-      Optional.absent(),
+      Optional.empty(),
+      Optional.empty(),
+      Optional.empty(),
       0);
 
   private final Optional<String> projectName;
@@ -129,12 +129,12 @@ public class Watchman implements AutoCloseable {
       Clock clock,
       Optional<Long> commandTimeoutMillis) throws InterruptedException {
     LOG.info("Creating for: " + rootPath);
-    Optional<WatchmanClient> watchmanClient = Optional.absent();
+    Optional<WatchmanClient> watchmanClient = Optional.empty();
     try {
       Path watchmanPath = exeFinder.getExecutable(WATCHMAN, env).toAbsolutePath();
       Optional<? extends Map<String, ? extends Object>> result;
 
-      long timeoutMillis = commandTimeoutMillis.or(DEFAULT_COMMAND_TIMEOUT_MILLIS);
+      long timeoutMillis = commandTimeoutMillis.orElse(DEFAULT_COMMAND_TIMEOUT_MILLIS);
       long remainingTimeNanos = TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
       long startTimeNanos = clock.nanoTime();
       result = execute(
@@ -245,7 +245,7 @@ public class Watchman implements AutoCloseable {
         return NULL_WATCHMAN;
       }
 
-      Optional<String> initialClock = Optional.absent();
+      Optional<String> initialClock = Optional.empty();
       if (capabilities.contains(Capability.CLOCK_SYNC_TIMEOUT)) {
         long clockStartTimeNanos = clock.nanoTime();
         remainingTimeNanos -= (clockStartTimeNanos - secondWatchStartTimeNanos);
@@ -253,11 +253,11 @@ public class Watchman implements AutoCloseable {
             remainingTimeNanos,
             ImmutableList.of(
                 "clock",
-                Optional.fromNullable((String) map.get("watch")).or(absoluteRootPath.toString()),
+                Optional.ofNullable((String) map.get("watch")).orElse(absoluteRootPath.toString()),
                 ImmutableMap.of("sync_timeout", WATCHMAN_CLOCK_SYNC_TIMEOUT)).toArray());
         if (result.isPresent()) {
           Map<String, ? extends Object> clockResult = result.get();
-          initialClock = Optional.fromNullable((String) clockResult.get("clock"));
+          initialClock = Optional.ofNullable((String) clockResult.get("clock"));
           LOG.info(
               "Took %d ms to query for initial clock id %s",
               TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - clockStartTimeNanos),
@@ -270,8 +270,8 @@ public class Watchman implements AutoCloseable {
       }
 
       return new Watchman(
-          Optional.fromNullable((String) map.get("relative_path")),
-          Optional.fromNullable((String) map.get("watch")),
+          Optional.ofNullable((String) map.get("relative_path")),
+          Optional.ofNullable((String) map.get("watch")),
           capabilities,
           initialClock,
           Optional.of(socketPath),
@@ -379,12 +379,12 @@ public class Watchman implements AutoCloseable {
           "Timed out after %d ms waiting for Watchman command [%s]. Disabling Watchman.\n",
           commandTimeoutMillis,
           Joiner.on(" ").join(args));
-      return Optional.absent();
+      return Optional.empty();
     }
     if (exitCode != 0) {
       LOG.debug("Watchman's stderr: %s", new String(stderr.toByteArray(), Charsets.UTF_8));
       LOG.error("Error %d executing %s", exitCode, Joiner.on(" ").join(args));
-      return Optional.absent();
+      return Optional.empty();
     }
 
     Object response = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED)
@@ -392,7 +392,7 @@ public class Watchman implements AutoCloseable {
     LOG.debug("stdout of command: " + response);
     if (!(response instanceof Map<?, ?>)) {
       LOG.error("Unexpected response from Watchman: %s", response);
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of((Map<String, Object>) response);
   }
@@ -411,7 +411,7 @@ public class Watchman implements AutoCloseable {
                   createLocalWatchmanSocket(socketPath)));
         } catch (IOException e) {
           LOG.warn(e, "Could not connect to Watchman at path %s", socketPath);
-          return Optional.absent();
+          return Optional.empty();
         }
       }
 

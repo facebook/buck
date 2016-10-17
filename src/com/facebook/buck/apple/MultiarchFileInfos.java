@@ -29,7 +29,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -39,6 +38,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 
@@ -60,7 +60,7 @@ public class MultiarchFileInfos {
     ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
         generateThinFlavors(appleCxxPlatforms.getFlavors(), target.getFlavors());
     if (thinFlavorSets.size() <= 1) {  // Actually a thin binary
-      return Optional.absent();
+      return Optional.empty();
     }
 
     if (!Sets.intersection(target.getFlavors(), FORBIDDEN_BUILD_ACTIONS).isEmpty()) {
@@ -73,7 +73,7 @@ public class MultiarchFileInfos {
     AppleSdk sdk = null;
     for (SortedSet<Flavor> flavorSet : thinFlavorSets) {
       AppleCxxPlatform platform = Preconditions.checkNotNull(
-          appleCxxPlatforms.getValue(flavorSet).orNull());
+          appleCxxPlatforms.getValue(flavorSet).orElse(null));
       if (sdk == null) {
         sdk = platform.getAppleSdk();
         representativePlatform = platform;

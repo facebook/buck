@@ -27,7 +27,6 @@ import com.facebook.buck.rules.FakeCellPathResolver;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -39,6 +38,7 @@ import org.junit.rules.ExpectedException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class SourcePathTypeCoercerTest {
   private FakeProjectFilesystem projectFilesystem;
@@ -91,7 +91,7 @@ public class SourcePathTypeCoercerTest {
             BuildTarget.of(
                 UnflavoredBuildTarget.of(
                     projectFilesystem.getRootPath(),
-                    Optional.absent(),
+                    Optional.empty(),
                     "//",
                     "hello"),
                 ImmutableSortedSet.of())),
@@ -111,7 +111,7 @@ public class SourcePathTypeCoercerTest {
             BuildTarget.of(
                 UnflavoredBuildTarget.of(
                     projectFilesystem.getRootPath(),
-                    Optional.absent(),
+                    Optional.empty(),
                     "//",
                     "hello"),
                 ImmutableSortedSet.of())),

@@ -32,7 +32,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -46,6 +45,7 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 
 import javax.annotation.Nullable;
@@ -438,7 +438,8 @@ public class CxxPreprocessAndCompileStep implements Step {
       context.getBuckEventBus().post(
           createConsoleEvent(
               context,
-              preprocessorCommand.or(compilerCommand).get().supportsColorsInDiagnostics(),
+              preprocessorCommand.map(Optional::of).orElse(compilerCommand).get()
+                  .supportsColorsInDiagnostics(),
               exitCode == 0 ? Level.WARNING : Level.SEVERE,
               err));
     }
@@ -471,10 +472,10 @@ public class CxxPreprocessAndCompileStep implements Step {
         // error output.
         operation == Operation.COMPILE ?
             Optional.of(filesystem.getRootPath()) :
-            Optional.absent(),
+            Optional.empty(),
         context.shouldReportAbsolutePaths() ?
             Optional.of(filesystem.getAbsolutifier()) :
-            Optional.absent(),
+            Optional.empty(),
         headerPathNormalizer,
         sanitizer);
   }

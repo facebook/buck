@@ -20,13 +20,13 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class JavacErrorParserTest {
 

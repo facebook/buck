@@ -19,7 +19,6 @@ import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -35,6 +34,7 @@ import org.immutables.value.Value;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Hierarcical configuration of cell/section/key/value quadruples.
@@ -57,12 +57,10 @@ abstract class AbstractCellConfig {
    * @return The contents of the raw config with the cell-view filter
    */
   public RawConfig getForCell(RelativeCellName cellName) {
-    ImmutableMap<String, ImmutableMap<String, String>> config = Optional
-      .fromNullable(getValues().get(cellName))
-      .or(ImmutableMap.of());
-    ImmutableMap<String, ImmutableMap<String, String>> starConfig = Optional
-      .fromNullable(getValues().get(ALL_CELLS_OVERRIDE))
-      .or(ImmutableMap.of());
+    ImmutableMap<String, ImmutableMap<String, String>> config = Optional.ofNullable(getValues().get(
+        cellName)).orElse(ImmutableMap.of());
+    ImmutableMap<String, ImmutableMap<String, String>> starConfig =
+        Optional.ofNullable(getValues().get(ALL_CELLS_OVERRIDE)).orElse(ImmutableMap.of());
     return RawConfig.builder()
       .putAll(starConfig)
       .putAll(config)

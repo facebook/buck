@@ -23,7 +23,6 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.concurrent.FakeListeningExecutorService;
-import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -33,6 +32,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -53,7 +53,7 @@ public class AbstractNetworkCacheTest {
   @Test
   public void testBigArtifactIsStoredWhenMaxIsNotDefined()
       throws InterruptedException, IOException, ExecutionException {
-    testStoreCall(4, Optional.absent(), 5, 10, 100, 1000);
+    testStoreCall(4, Optional.empty(), 5, 10, 100, 1000);
   }
 
   private void testStoreCall(

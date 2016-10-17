@@ -22,9 +22,9 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 
@@ -32,6 +32,7 @@ import org.immutables.value.Value;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 /**
  * Frameworks can be specified as either a path to a file, or a path prefixed by a build setting.
@@ -66,7 +67,7 @@ abstract class AbstractFrameworkPath implements
   public abstract Optional<SourcePath> getSourcePath();
 
   public Iterable<BuildRule> getDeps(SourcePathResolver resolver) {
-    return resolver.filterBuildRuleInputs(getSourcePath().asSet());
+    return resolver.filterBuildRuleInputs(OptionalCompat.asSet(getSourcePath()));
   }
 
   public Path getFileName(Function<SourcePath, Path> resolver) {
@@ -151,20 +152,20 @@ abstract class AbstractFrameworkPath implements
     sink.setReflectively("sourcePath", getSourcePath());
     sink.setReflectively(
         "sourceTree",
-        getSourceTreePath().transform(Object::toString));
+        getSourceTreePath().map(Object::toString));
   }
 
   public static FrameworkPath ofSourceTreePath(SourceTreePath sourceTreePath) {
     return FrameworkPath.of(
         Type.SOURCE_TREE_PATH,
         Optional.of(sourceTreePath),
-        Optional.absent());
+        Optional.empty());
   }
 
   public static FrameworkPath ofSourcePath(SourcePath sourcePath) {
     return FrameworkPath.of(
         Type.SOURCE_PATH,
-        Optional.absent(),
+        Optional.empty(),
         Optional.of(sourcePath));
   }
 }

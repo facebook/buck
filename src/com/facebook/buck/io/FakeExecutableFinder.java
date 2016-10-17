@@ -16,11 +16,11 @@
 
 package com.facebook.buck.io;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class FakeExecutableFinder extends ExecutableFinder {
 
@@ -45,6 +45,6 @@ public class FakeExecutableFinder extends ExecutableFinder {
       }
     }
     System.out.println("suggestedPath = " + suggestedPath);
-    return Optional.absent();
+    return Optional.empty();
   }
 }

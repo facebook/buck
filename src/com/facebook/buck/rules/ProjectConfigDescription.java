@@ -17,8 +17,9 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+
+import java.util.Optional;
 
 public class ProjectConfigDescription implements Description<ProjectConfigDescription.Arg> {
   public static final BuildRuleType TYPE = BuildRuleType.of("project_config");
@@ -42,11 +43,11 @@ public class ProjectConfigDescription implements Description<ProjectConfigDescri
     return new ProjectConfig(
         params,
         new SourcePathResolver(resolver),
-        args.srcTarget.transform(resolver.getRuleFunction()).orNull(),
+        args.srcTarget.map(resolver::getRule).orElse(null),
         args.srcRoots,
-        args.testTarget.transform(resolver.getRuleFunction()).orNull(),
+        args.testTarget.map(resolver::getRule).orElse(null),
         args.testRoots,
-        args.isIntellijPlugin.or(false));
+        args.isIntellijPlugin.orElse(false));
   }
 
   @TargetName(name = "project_config")

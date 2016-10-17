@@ -363,8 +363,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
       bserSerializer.serializeToStream(
           ImmutableMap.of(
               "buildFile", buildFile.toString(),
-              "watchRoot", options.getWatchman().getWatchRoot().or(""),
-              "projectPrefix", options.getWatchman().getProjectPrefix().or("")),
+              "watchRoot", options.getWatchman().getWatchRoot().orElse(""),
+              "projectPrefix", options.getWatchman().getProjectPrefix().orElse("")),
           buckPyStdinWriter);
       buckPyStdinWriter.flush();
 

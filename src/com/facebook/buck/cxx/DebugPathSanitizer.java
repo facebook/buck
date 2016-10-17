@@ -16,7 +16,6 @@
 package com.facebook.buck.cxx;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
@@ -26,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Encapsulates all the logic to sanitize debug paths in native code.
@@ -75,7 +75,7 @@ public abstract class DebugPathSanitizer {
 
   public ImmutableList<String> sanitizeFlags(Iterable<String> flags) {
     return FluentIterable.from(flags)
-        .transform(sanitize(Optional.absent()))
+        .transform(sanitize(Optional.empty()))
         .toList();
   }
 

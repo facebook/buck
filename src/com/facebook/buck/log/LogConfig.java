@@ -19,7 +19,6 @@ package com.facebook.buck.log;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.PathListing;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 
@@ -34,6 +33,7 @@ import java.io.SequenceInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -167,7 +167,7 @@ public class LogConfig {
              logConfigSetup.getLogFilePrefix() + "*.log*",
              PathListing.GET_PATH_MODIFIED_TIME,
              PathListing.FilterMode.EXCLUDE,
-             Optional.absent(),
+             Optional.empty(),
              Optional.of(logConfigSetup.getMaxLogSizeBytes()))) {
       Files.deleteIfExists(path);
     }

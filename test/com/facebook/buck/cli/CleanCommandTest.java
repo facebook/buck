@@ -37,7 +37,6 @@ import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -49,6 +48,7 @@ import org.kohsuke.args4j.CmdLineException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Optional;
 
 /**
  * Unit test for {@link CleanCommand}.
@@ -124,8 +124,8 @@ public class CleanCommandTest extends EasyMockSupport {
         new FakeJavaPackageFinder(),
         ObjectMappers.newDefaultInstance(),
         new DefaultClock(),
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         FakeBuckConfig.builder().build(),
         new NullFileHashCache(),
         new HashMap<ExecutorPool, ListeningExecutorService>(),

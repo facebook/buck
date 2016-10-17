@@ -19,13 +19,14 @@ package com.facebook.buck.rules;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
+
+import java.util.Optional;
 
 /**
  * Describes a cell name relative to another cell.
@@ -43,7 +44,7 @@ abstract class AbstractRelativeCellName {
 
   public Optional<String> getLegacyName() {
     if (getComponents().isEmpty()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of(Joiner.on(CELL_NAME_COMPONENT_SEPARATOR).join(getComponents()));
   }

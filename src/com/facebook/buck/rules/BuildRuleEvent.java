@@ -22,8 +22,9 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Optional;
 import com.google.common.hash.HashCode;
+
+import java.util.Optional;
 
 /**
  * Base class for events about build rules.

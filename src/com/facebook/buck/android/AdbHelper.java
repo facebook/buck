@@ -47,7 +47,6 @@ import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.TriState;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
@@ -61,6 +60,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
@@ -573,7 +573,7 @@ public class AdbHelper {
       getBuckEventBus().post(InstallEvent.finished(
               started,
               success,
-              Optional.absent(),
+              Optional.empty(),
               Optional.of(AdbHelper.tryToExtractPackageNameFromManifest(installableApk))));
     }
 

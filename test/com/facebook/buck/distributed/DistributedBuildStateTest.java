@@ -62,7 +62,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -78,6 +77,7 @@ import org.junit.rules.ExpectedException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 
 public class DistributedBuildStateTest {
@@ -110,7 +110,7 @@ public class DistributedBuildStateTest {
     BuildJobState dump = DistBuildState.dump(
         new DistBuildCellIndexer(rootCellWhenSaving),
         emptyActionGraph(),
-        createDefaultCodec(rootCellWhenSaving, Optional.absent()),
+        createDefaultCodec(rootCellWhenSaving, Optional.empty()),
         createTargetGraph(filesystem));
 
 
@@ -205,7 +205,7 @@ public class DistributedBuildStateTest {
     BuildJobState dump = DistBuildState.dump(
         new DistBuildCellIndexer(cell),
         emptyActionGraph(),
-        createDefaultCodec(cell, Optional.absent()),
+        createDefaultCodec(cell, Optional.empty()),
         createTargetGraph(filesystem));
 
     expectedException.expect(IllegalStateException.class);
@@ -243,7 +243,7 @@ public class DistributedBuildStateTest {
     BuildJobState dump = DistBuildState.dump(
         new DistBuildCellIndexer(rootCellWhenSaving),
         emptyActionGraph(),
-        createDefaultCodec(rootCellWhenSaving, Optional.absent()),
+        createDefaultCodec(rootCellWhenSaving, Optional.empty()),
         createCrossCellTargetGraph(cell1Filesystem, cell2Filesystem));
 
     Cell rootCellWhenLoading = new TestCellBuilder()

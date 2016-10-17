@@ -20,11 +20,11 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.EnumSet;
+import java.util.Optional;
 
 
 /**
@@ -75,17 +75,17 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         EnumSet.noneOf(ExopackageMode.class),
         apkUnderTest.getMacroExpander(),
         // preprocessJavaClassBash is not supported in instrumentation
-        Optional.<String>absent(),
+        Optional.empty(),
         rulesToExcludeFromDex,
         enhancementResult,
         // reordering is not supported in instrumentation. TODO(onomatopoeia): add support
-        Optional.<Boolean>absent(),
-        Optional.<SourcePath>absent(),
-        Optional.<SourcePath>absent(),
-        Optional.<Integer>absent(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
         dxExecutorService,
-        Optional.<Boolean>absent(),
-        Optional.<Boolean>absent(),
+        Optional.empty(),
+        Optional.empty(),
         apkUnderTest.getManifestEntries(),
         apkUnderTest.getJavaRuntimeLauncher());
     this.apkUnderTest = apkUnderTest;

@@ -22,7 +22,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
@@ -36,6 +35,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -122,13 +122,11 @@ public class ArtifactCacheBuckConfig {
   }
 
   public String getRepository() {
-    return buckConfig.getValue(CACHE_SECTION_NAME, REPOSITORY)
-        .or(DEFAULT_REPOSITORY);
+    return buckConfig.getValue(CACHE_SECTION_NAME, REPOSITORY).orElse(DEFAULT_REPOSITORY);
   }
 
   public String getScheduleType() {
-    return buckConfig.getValue(CACHE_SECTION_NAME, SCHEDULE_TYPE)
-        .or(DEFAULT_SCHEDULE_TYPE);
+    return buckConfig.getValue(CACHE_SECTION_NAME, SCHEDULE_TYPE).orElse(DEFAULT_SCHEDULE_TYPE);
   }
 
   public SlbBuckConfig getSlbConfig() {
@@ -140,25 +138,27 @@ public class ArtifactCacheBuckConfig {
   }
 
   public LoadBalancingType getLoadBalancingType() {
-    return buckConfig.getEnum(CACHE_SECTION_NAME, LOAD_BALANCING_TYPE, LoadBalancingType.class)
-        .or(DEFAULT_LOAD_BALANCING_TYPE);
+    return buckConfig.getEnum(
+        CACHE_SECTION_NAME,
+        LOAD_BALANCING_TYPE,
+        LoadBalancingType.class).orElse(DEFAULT_LOAD_BALANCING_TYPE);
   }
 
   public int getHttpMaxConcurrentWrites() {
     return Integer.valueOf(
-        buckConfig.getValue(CACHE_SECTION_NAME, "http_max_concurrent_writes")
-            .or(DEFAULT_HTTP_MAX_CONCURRENT_WRITES));
+        buckConfig.getValue(CACHE_SECTION_NAME, "http_max_concurrent_writes").orElse(
+            DEFAULT_HTTP_MAX_CONCURRENT_WRITES));
   }
 
   public int getHttpWriterShutdownTimeout() {
     return Integer.valueOf(
-        buckConfig.getValue(CACHE_SECTION_NAME, "http_writer_shutdown_timeout_seconds")
-            .or(DEFAULT_HTTP_WRITE_SHUTDOWN_TIMEOUT_SECONDS));
+        buckConfig.getValue(CACHE_SECTION_NAME, "http_writer_shutdown_timeout_seconds").orElse(
+            DEFAULT_HTTP_WRITE_SHUTDOWN_TIMEOUT_SECONDS));
   }
 
   public int getMaxFetchRetries() {
-    return buckConfig.getInteger(CACHE_SECTION_NAME, HTTP_MAX_FETCH_RETRIES)
-          .or(DEFAULT_HTTP_MAX_FETCH_RETRIES);
+    return buckConfig.getInteger(CACHE_SECTION_NAME, HTTP_MAX_FETCH_RETRIES).orElse(
+        DEFAULT_HTTP_MAX_FETCH_RETRIES);
   }
 
   public boolean hasAtLeastOneWriteableCache() {
@@ -197,7 +197,7 @@ public class ArtifactCacheBuckConfig {
 
   public Optional<DirCacheEntry> getServedLocalCache() {
     if (!getServingLocalCacheEnabled()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of(getDirCache().withCacheReadMode(getServedLocalCacheReadMode()));
   }
@@ -217,7 +217,7 @@ public class ArtifactCacheBuckConfig {
     boolean implicitLegacyCache = httpCacheNames.isEmpty() &&
         getArtifactCacheModes().contains(ArtifactCacheMode.http);
     if (implicitLegacyCache || legacyCacheConfigurationFieldsPresent()) {
-      result.add(obtainEntryForName(Optional.absent()));
+      result.add(obtainEntryForName(Optional.empty()));
     }
 
     for (String cacheName : httpCacheNames) {
@@ -233,13 +233,15 @@ public class ArtifactCacheBuckConfig {
   // object and have access to the `-j` argument.  However, since that is
   // created in several places leave it here for now.
   public long getThreadPoolSize() {
-    return buckConfig.getLong(CACHE_SECTION_NAME, HTTP_THREAD_POOL_SIZE)
-        .or(DEFAULT_HTTP_THREAD_POOL_SIZE);
+    return buckConfig.getLong(CACHE_SECTION_NAME, HTTP_THREAD_POOL_SIZE).orElse(
+        DEFAULT_HTTP_THREAD_POOL_SIZE);
   }
 
   public long getThreadPoolKeepAliveDurationMillis() {
-    return buckConfig.getLong(CACHE_SECTION_NAME, HTTP_THREAD_POOL_KEEP_ALIVE_DURATION_MILLIS)
-        .or(DEFAULT_HTTP_THREAD_POOL_KEEP_ALIVE_DURATION_MILLIS);
+    return buckConfig.getLong(
+        CACHE_SECTION_NAME,
+        HTTP_THREAD_POOL_KEEP_ALIVE_DURATION_MILLIS).orElse(
+        DEFAULT_HTTP_THREAD_POOL_KEEP_ALIVE_DURATION_MILLIS);
   }
 
   public boolean getTwoLevelCachingEnabled() {
@@ -251,16 +253,15 @@ public class ArtifactCacheBuckConfig {
 
   public long getTwoLevelCachingMinimumSize() {
     return buckConfig.getValue(CACHE_SECTION_NAME, TWO_LEVEL_CACHING_MIN_SIZE_FIELD_NAME)
-        .or(buckConfig.getValue(CACHE_SECTION_NAME, TWO_LEVEL_CACHING_THRESHOLD_FIELD_NAME))
-        .transform(
-            SizeUnit::parseBytes)
-        .or(TWO_LEVEL_CACHING_MIN_SIZE_DEFAULT);
+        .map(Optional::of)
+        .orElse(buckConfig.getValue(CACHE_SECTION_NAME, TWO_LEVEL_CACHING_THRESHOLD_FIELD_NAME))
+        .map(SizeUnit::parseBytes)
+        .orElse(TWO_LEVEL_CACHING_MIN_SIZE_DEFAULT);
   }
 
   public Optional<Long> getTwoLevelCachingMaximumSize() {
-    return buckConfig.getValue(CACHE_SECTION_NAME, TWO_LEVEL_CACHING_MAX_SIZE_FIELD_NAME)
-        .transform(
-            SizeUnit::parseBytes);
+    return buckConfig.getValue(CACHE_SECTION_NAME, TWO_LEVEL_CACHING_MAX_SIZE_FIELD_NAME).map(
+        SizeUnit::parseBytes);
   }
 
   private CacheReadMode getDirCacheReadMode() {
@@ -276,8 +277,7 @@ public class ArtifactCacheBuckConfig {
   }
 
   private Optional<Long> getCacheDirMaxSizeBytes() {
-    return buckConfig.getValue(CACHE_SECTION_NAME, "dir_max_size").transform(
-        SizeUnit::parseBytes);
+    return buckConfig.getValue(CACHE_SECTION_NAME, "dir_max_size").map(SizeUnit::parseBytes);
   }
 
   private boolean getServingLocalCacheEnabled() {
@@ -292,7 +292,7 @@ public class ArtifactCacheBuckConfig {
   }
 
   private CacheReadMode getCacheReadMode(String section, String fieldName, String defaultValue) {
-    String cacheMode = buckConfig.getValue(section, fieldName).or(defaultValue);
+    String cacheMode = buckConfig.getValue(section, fieldName).orElse(defaultValue);
     final CacheReadMode result;
     try {
       result = CacheReadMode.valueOf(cacheMode);
@@ -326,18 +326,20 @@ public class ArtifactCacheBuckConfig {
   }
 
   private String getCacheErrorFormatMessage(String section, String fieldName, String defaultValue) {
-    return buckConfig.getValue(section, fieldName).or(defaultValue);
+    return buckConfig.getValue(section, fieldName).orElse(defaultValue);
   }
 
   private HttpCacheEntry obtainEntryForName(Optional<String> cacheName) {
-    final String section = Joiner.on('#').skipNulls().join(CACHE_SECTION_NAME, cacheName.orNull());
+    final String section = Joiner.on('#').skipNulls().join(
+        CACHE_SECTION_NAME,
+        cacheName.orElse(null));
 
     HttpCacheEntry.Builder builder = HttpCacheEntry.builder();
     builder.setName(cacheName);
-    builder.setUrl(buckConfig.getUrl(section, HTTP_URL_FIELD_NAME).or(DEFAULT_HTTP_URL));
+    builder.setUrl(buckConfig.getUrl(section, HTTP_URL_FIELD_NAME).orElse(DEFAULT_HTTP_URL));
     builder.setTimeoutSeconds(
-        buckConfig.getLong(section, HTTP_TIMEOUT_SECONDS_FIELD_NAME)
-            .or(DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS).intValue());
+        buckConfig.getLong(section, HTTP_TIMEOUT_SECONDS_FIELD_NAME).orElse(
+            DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS).intValue());
     builder.setReadHeaders(getCacheHeaders(section, HTTP_READ_HEADERS_FIELD_NAME));
     builder.setWriteHeaders(getCacheHeaders(section, HTTP_WRITE_HEADERS_FIELD_NAME));
     builder.setBlacklistedWifiSsids(

@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -27,14 +26,16 @@ import com.facebook.buck.python.PythonLibraryBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Optional;
 
 public class MavenUberJarTest {
 
@@ -68,7 +69,7 @@ public class MavenUberJarTest {
         javaLibraryBuilder.createBuildRuleParams(ruleResolver, filesystem),
         new SourcePathResolver(ruleResolver),
         Optional.of("com.facebook.buck.jvm.java:java:jar:42"),
-        Optional.absent());
+        Optional.empty());
     assertThat(buildRule.getDeps(), Matchers.not(Matchers.hasItem(pythonLibrary)));
   }
 }

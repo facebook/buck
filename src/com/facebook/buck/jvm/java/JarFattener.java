@@ -36,7 +36,6 @@ import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -52,6 +51,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.xml.bind.JAXBException;
@@ -178,9 +178,9 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
         getProjectFilesystem(),
         /* classpathEntries */ ImmutableSortedSet.of(),
         fatJarDir,
-        /* workingDir */ Optional.absent(),
+        /* workingDir */ Optional.empty(),
         pathToSrcsList,
-        /* suggestBuildRule */ Optional.absent(),
+        /* suggestBuildRule */ Optional.empty(),
         NoOpClassUsageFileWriter.instance(),
         steps,
         buildableContext);

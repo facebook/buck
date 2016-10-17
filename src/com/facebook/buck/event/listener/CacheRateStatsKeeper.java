@@ -25,8 +25,8 @@ import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Optional;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -48,7 +48,7 @@ public class CacheRateStatsKeeper {
   private final AtomicInteger cacheErrors = new AtomicInteger(0);
   private final AtomicInteger cacheHits = new AtomicInteger(0);
 
-  protected volatile Optional<Integer> ruleCount = Optional.absent();
+  protected volatile Optional<Integer> ruleCount = Optional.empty();
 
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
     if (finished.getStatus() != BuildRuleStatus.SUCCESS) {
@@ -87,7 +87,7 @@ public class CacheRateStatsKeeper {
         cacheMisses.get(),
         cacheErrors.get(),
         cacheHits.get(),
-        ruleCount.or(0),
+        ruleCount.orElse(0),
         updated.get());
   }
 

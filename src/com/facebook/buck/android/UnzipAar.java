@@ -42,7 +42,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.UnzipStep;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -50,6 +49,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -169,8 +169,8 @@ public class UnzipAar extends AbstractBuildRule
                 getProjectFilesystem(),
                 uberClassesJar,
                 entriesToJar,
-                /* mainClass */ Optional.absent(),
-                /* manifestFile */ Optional.absent(),
+                /* mainClass */ Optional.empty(),
+                /* manifestFile */ Optional.empty(),
                 /* mergeManifests */ true,
                 /* blacklist */ ImmutableSet.of(),
                 context);

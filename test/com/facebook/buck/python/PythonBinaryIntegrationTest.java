@@ -43,7 +43,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -60,6 +59,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Optional;
 
 @RunWith(Parameterized.class)
 public class PythonBinaryIntegrationTest {
@@ -132,7 +132,7 @@ public class PythonBinaryIntegrationTest {
     ProcessExecutor.Result result = workspace.runCommand(
         getPythonBuckConfig().getPythonInterpreter(), link.toString());
     assertThat(
-        result.getStdout().or("") + result.getStderr().or(""),
+        result.getStdout().orElse("") + result.getStderr().orElse(""),
         result.getExitCode(),
         equalTo(0));
   }
@@ -215,7 +215,7 @@ public class PythonBinaryIntegrationTest {
     String nativeLibsEnvVar =
         workspace.runBuckCommandWithEnvironmentOverridesAndContext(
             workspace.getPath(""),
-            Optional.absent(),
+            Optional.empty(),
             ImmutableMap.of(nativeLibsEnvVarName, originalNativeLibsEnvVar),
             "run",
             ":bin-with-native-libs")
@@ -230,7 +230,7 @@ public class PythonBinaryIntegrationTest {
     nativeLibsEnvVar =
         workspace.runBuckCommandWithEnvironmentOverridesAndContext(
             workspace.getPath(""),
-            Optional.absent(),
+            Optional.empty(),
             ImmutableMap.of(),
             "run",
             ":bin-with-native-libs")

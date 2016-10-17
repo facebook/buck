@@ -28,10 +28,11 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
+
+import java.util.Optional;
 
 public class WorkerToolDescriptionTest {
   @Test
@@ -67,7 +68,7 @@ public class WorkerToolDescriptionTest {
     WorkerToolDescription.Arg args = new WorkerToolDescription.Arg();
     args.env = ImmutableMap.of();
     args.exe = shBinaryRule.getBuildTarget();
-    args.args = Optional.absent();
+    args.args = Optional.empty();
     args.maxWorkers = Optional.of(maxWorkers);
 
     Description<WorkerToolDescription.Arg> workerToolDescription = new WorkerToolDescription();

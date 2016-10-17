@@ -20,11 +20,11 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Optional;
 
 /**
  * Responsible for gathering logs and other interesting information from buck when part of the
@@ -71,12 +71,12 @@ public class PopulatedReport extends AbstractReport {
     } catch (VersionControlCommandFailedException e) {
       LOG.warn("Failed to get source control information: %s, proceeding regardless.\n", e);
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override
   protected Optional<UserReport> getUserReport() throws IOException {
-    return Optional.absent();
+    return Optional.empty();
   }
 
 }

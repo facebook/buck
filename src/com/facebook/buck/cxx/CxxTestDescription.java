@@ -36,7 +36,6 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
@@ -50,6 +49,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class CxxTestDescription implements
     Description<CxxTestDescription.Arg>,
@@ -99,7 +99,7 @@ public class CxxTestDescription implements
         CxxStrip.removeStripStyleFlavorInParams(inputParams, flavoredStripStyle);
 
     Optional<CxxPlatform> platform = cxxPlatforms.getValue(params.getBuildTarget());
-    CxxPlatform cxxPlatform = platform.or(defaultCxxPlatform);
+    CxxPlatform cxxPlatform = platform.orElse(defaultCxxPlatform);
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     if (params.getBuildTarget().getFlavors()
@@ -196,7 +196,7 @@ public class CxxTestDescription implements
 
     CxxTest test;
 
-    CxxTestType type = args.framework.or(getDefaultTestType());
+    CxxTestType type = args.framework.orElse(getDefaultTestType());
     switch (type) {
       case GTEST: {
         test = new CxxGtestTest(
@@ -212,8 +212,8 @@ public class CxxTestDescription implements
             additionalDeps,
             args.labels,
             args.contacts,
-            args.runTestSeparately.or(false),
-            args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
+            args.runTestSeparately.orElse(false),
+            args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
             cxxBuckConfig.getMaximumTestOutputSize());
         break;
       }
@@ -231,8 +231,8 @@ public class CxxTestDescription implements
             additionalDeps,
             args.labels,
             args.contacts,
-            args.runTestSeparately.or(false),
-            args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs));
+            args.runTestSeparately.orElse(false),
+            args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs));
         break;
       }
       default: {
@@ -256,8 +256,7 @@ public class CxxTestDescription implements
     deps.addAll(
         CxxPlatforms.getParseTimeDeps(
             cxxPlatforms
-                .getValue(buildTarget.getFlavors())
-                .or(defaultCxxPlatform)));
+                .getValue(buildTarget.getFlavors()).orElse(defaultCxxPlatform)));
 
     // Extract parse time deps from flags, args, and environment parameters.
     Iterable<Iterable<String>> macroStrings =
@@ -279,11 +278,11 @@ public class CxxTestDescription implements
       }
     }
 
-    CxxTestType type = constructorArg.framework.or(getDefaultTestType());
+    CxxTestType type = constructorArg.framework.orElse(getDefaultTestType());
     switch (type) {
       case GTEST: {
         deps.add(cxxBuckConfig.getGtestDep());
-        boolean useDefaultTestMain = constructorArg.useDefaultTestMain.or(true);
+        boolean useDefaultTestMain = constructorArg.useDefaultTestMain.orElse(true);
         if (useDefaultTestMain) {
           deps.add(cxxBuckConfig.getGtestDefaultTestMainDep());
         }
@@ -341,13 +340,11 @@ public class CxxTestDescription implements
       final Class<U> metadataClass) throws NoSuchBuildTargetException {
     if (!metadataClass.isAssignableFrom(CxxCompilationDatabaseDependencies.class) ||
         !buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return CxxDescriptionEnhancer
-        .createCompilationDatabaseDependencies(buildTarget, cxxPlatforms, resolver, args)
-        .transform(
-            metadataClass::cast
-        );
+        .createCompilationDatabaseDependencies(buildTarget, cxxPlatforms, resolver, args).map(
+            metadataClass::cast);
   }
 
   @SuppressFieldNotInitialized

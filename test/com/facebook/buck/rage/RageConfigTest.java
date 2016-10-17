@@ -23,15 +23,15 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.log.CommandThreadFactory;
-import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.Optional;
 
 public class RageConfigTest {
 
@@ -59,7 +59,7 @@ public class RageConfigTest {
             clock,
             eventBus,
             threadFactory),
-        Matchers.equalTo(Optional.<ClientSideSlb>absent()));
+        Matchers.equalTo(Optional.empty()));
   }
 
   @Test
@@ -81,6 +81,6 @@ public class RageConfigTest {
             clock,
             eventBus,
             threadFactory),
-        Matchers.not(Matchers.equalTo(Optional.<ClientSideSlb>absent())));
+        Matchers.not(Matchers.equalTo(Optional.empty())));
   }
 }

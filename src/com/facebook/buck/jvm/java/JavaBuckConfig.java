@@ -21,13 +21,13 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * A java-specific "view" of BuckConfig.
@@ -60,8 +60,8 @@ public class JavaBuckConfig {
         "safe_annotation_processors");
 
     AbstractJavacOptions.SpoolMode spoolMode = delegate
-        .getEnum("java", "jar_spool_mode", AbstractJavacOptions.SpoolMode.class)
-        .or(AbstractJavacOptions.SpoolMode.INTERMEDIATE_TO_DISK);
+        .getEnum("java", "jar_spool_mode", AbstractJavacOptions.SpoolMode.class).orElse(
+            AbstractJavacOptions.SpoolMode.INTERMEDIATE_TO_DISK);
 
     // This is just to make it possible to turn off dep-based rulekeys in case anything goes wrong
     // and can be removed when we're sure class usage tracking and dep-based keys for Java
@@ -78,11 +78,10 @@ public class JavaBuckConfig {
 
     return JavacOptions.builderForUseInJavaBuckConfig()
         .setJavacPath(
-            getJavacPath().transform(
-                Either::ofLeft))
+            getJavacPath().map(Either::ofLeft))
         .setJavacJarPath(getJavacJarPath())
-        .setSourceLevel(sourceLevel.or(TARGETED_JAVA_VERSION))
-        .setTargetLevel(targetLevel.or(TARGETED_JAVA_VERSION))
+        .setSourceLevel(sourceLevel.orElse(TARGETED_JAVA_VERSION))
+        .setTargetLevel(targetLevel.orElse(TARGETED_JAVA_VERSION))
         .setSpoolMode(spoolMode)
         .putAllSourceToBootclasspath(bootclasspaths.build())
         .addAllExtraArguments(extraArguments)
@@ -105,7 +104,7 @@ public class JavaBuckConfig {
       }
       return Optional.of(file.toPath());
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   Optional<SourcePath> getJavacJarPath() {

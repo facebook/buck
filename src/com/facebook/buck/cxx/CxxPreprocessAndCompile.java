@@ -33,7 +33,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -41,6 +40,7 @@ import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * A build rule which preprocesses and/or compiles a C/C++ source in a single step.
@@ -107,12 +107,12 @@ public class CxxPreprocessAndCompile
         params,
         resolver,
         CxxPreprocessAndCompileStep.Operation.COMPILE,
-        Optional.absent(),
+        Optional.empty(),
         compilerDelegate,
         output,
         input,
         inputType,
-        Optional.absent(),
+        Optional.empty(),
         sanitizer);
   }
 
@@ -137,7 +137,7 @@ public class CxxPreprocessAndCompile
         output,
         input,
         inputType,
-        Optional.absent(),
+        Optional.empty(),
         sanitizer);
   }
 
@@ -210,7 +210,7 @@ public class CxxPreprocessAndCompile
               preprocessDelegate.get().getEnvironment(),
               preprocessDelegate.get().getFlagsForColorDiagnostics()));
     } else {
-      preprocessorCommand = Optional.absent();
+      preprocessorCommand = Optional.empty();
     }
 
     Optional<CxxPreprocessAndCompileStep.ToolCommand> compilerCommand;
@@ -240,7 +240,7 @@ public class CxxPreprocessAndCompile
               compilerDelegate.getEnvironment(),
               compilerDelegate.getFlagsForColorDiagnostics()));
     } else {
-      compilerCommand = Optional.absent();
+      compilerCommand = Optional.empty();
     }
 
     return new CxxPreprocessAndCompileStep(
@@ -300,7 +300,7 @@ public class CxxPreprocessAndCompile
       return makeMainStep(getProjectFilesystem().getRootPath(), false).getCommand();
     }
 
-    CxxPreprocessAndCompile preprocessRule = externalPreprocessRule.or(this);
+    CxxPreprocessAndCompile preprocessRule = externalPreprocessRule.orElse(this);
     if (!preprocessRule.preprocessDelegate.isPresent()) {
       throw new HumanReadableException(
           "Neither %s nor %s handles preprocessing.",
@@ -344,7 +344,7 @@ public class CxxPreprocessAndCompile
       return preprocessDelegate.get().getPossibleInputSourcePaths();
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override

@@ -18,8 +18,9 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+
+import java.util.Optional;
 
 /**
  * A specification used by the parser to match {@link TargetNode} objects.

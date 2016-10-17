@@ -20,7 +20,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -34,6 +33,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Optional;
 
 /**
  * Executes a {@link Process} and blocks until it is finished.
@@ -70,9 +70,9 @@ public class DefaultProcessExecutor implements ProcessExecutor {
         params,
         context,
         ImmutableSet.of(),
-        /* stdin */ Optional.absent(),
-        /* timeOutMs */ Optional.absent(),
-        /* timeOutHandler */ Optional.absent());
+        /* stdin */ Optional.empty(),
+        /* timeOutMs */ Optional.empty(),
+        /* timeOutHandler */ Optional.empty());
   }
 
   @Override
@@ -154,8 +154,8 @@ public class DefaultProcessExecutor implements ProcessExecutor {
     return new Result(
         exitCode,
         false,
-        Optional.absent(),
-        Optional.absent()
+        Optional.empty(),
+        Optional.empty()
     );
   }
 
@@ -171,8 +171,8 @@ public class DefaultProcessExecutor implements ProcessExecutor {
     return new Result(
         exitCode,
         timedOut,
-        Optional.absent(),
-        Optional.absent()
+        Optional.empty(),
+        Optional.empty()
     );
   }
 
@@ -332,7 +332,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       CapturingPrintStream capturingPrintStream = (CapturingPrintStream) printStream;
       return Optional.of(capturingPrintStream.getContentsAsString(Charsets.US_ASCII));
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

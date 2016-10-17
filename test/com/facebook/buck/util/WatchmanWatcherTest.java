@@ -41,7 +41,6 @@ import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.io.WatchmanQuery;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.timing.FakeClock;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -62,6 +61,7 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
@@ -487,7 +487,7 @@ public class WatchmanWatcherTest {
   public void watchmanQueryWithExcludePathsAddsExpressionToQuery() {
     WatchmanQuery query = WatchmanWatcher.createQuery(
         "/path/to/repo",
-        Optional.absent(),
+        Optional.empty(),
         ImmutableSet.of(
             new PathOrGlobMatcher(Paths.get("foo")),
             new PathOrGlobMatcher(Paths.get("bar/baz"))),
@@ -514,7 +514,7 @@ public class WatchmanWatcherTest {
   public void watchmanQueryWithExcludePathsAddsMatchExpressionToQueryIfDirnameNotAvailable() {
     WatchmanQuery query = WatchmanWatcher.createQuery(
         "/path/to/repo",
-        Optional.absent(),
+        Optional.empty(),
         ImmutableSet.of(
             new PathOrGlobMatcher(Paths.get("foo")),
             new PathOrGlobMatcher(Paths.get("bar/baz"))),
@@ -546,7 +546,7 @@ public class WatchmanWatcherTest {
     String watchRoot = Paths.get("/path/to/repo").toAbsolutePath().toString();
     WatchmanQuery query = WatchmanWatcher.createQuery(
         watchRoot,
-        Optional.absent(),
+        Optional.empty(),
         ImmutableSet.of(
             new PathOrGlobMatcher(Paths.get("/path/to/repo/foo").toAbsolutePath()),
             new PathOrGlobMatcher(Paths.get("/path/to/repo/bar/baz").toAbsolutePath())),
@@ -573,7 +573,7 @@ public class WatchmanWatcherTest {
   public void watchmanQueryWithExcludeGlobsAddsExpressionToQuery() {
     WatchmanQuery query = WatchmanWatcher.createQuery(
         "/path/to/repo",
-        Optional.absent(),
+        Optional.empty(),
         ImmutableSet.of(
             new PathOrGlobMatcher("*.pbxproj")),
         ImmutableSet.of(Watchman.Capability.DIRNAME));

@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
+
 public class AppleBundleDescriptionTest {
 
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();

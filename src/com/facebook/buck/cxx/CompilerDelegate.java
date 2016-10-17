@@ -20,10 +20,11 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
+
+import java.util.Optional;
 
 /**
  * Helper class for generating compiler invocations for a cxx compilation rule.
@@ -79,8 +80,8 @@ class CompilerDelegate implements RuleKeyAppendable {
     return ImmutableList.<String>builder()
         .addAll(CxxToolFlags.concat(prependedFlags, compilerFlags).getAllFlags())
         .addAll(
-            compiler.debugCompilationDirFlags(sanitizer.getCompilationDirectory())
-                .or(ImmutableList.of()))
+            compiler.debugCompilationDirFlags(sanitizer.getCompilationDirectory()).orElse(
+                ImmutableList.of()))
         .build();
   }
 

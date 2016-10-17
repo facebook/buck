@@ -29,7 +29,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.ObjectMappers;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -41,6 +40,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Optional;
 
 public class BuildInfoRecorderIntegrationTest {
   private static final String RULE_KEY = Strings.repeat("a", 40);
@@ -73,7 +73,7 @@ public class BuildInfoRecorderIntegrationTest {
                 .getPathForRuleKey(
                     artifactCache,
                     new RuleKey(RULE_KEY),
-                    Optional.absent()))
+                    Optional.empty()))
         .toFile()
         .exists());
   }

@@ -24,7 +24,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -39,6 +38,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 
@@ -67,8 +67,8 @@ public class  GenerateCodeCoverageReportStepTest {
         Paths.get(OUTPUT_DIRECTORY),
         CoverageReportFormat.HTML,
         "TitleFoo",
-        Optional.absent(),
-        Optional.absent());
+        Optional.empty(),
+        Optional.empty());
 
     context = TestExecutionContext.newInstance();
   }

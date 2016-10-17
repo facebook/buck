@@ -20,6 +20,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.util.NoSuchElementException;
+
 public class AssertScopeExclusiveAccessTest {
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
@@ -36,7 +38,7 @@ public class AssertScopeExclusiveAccessTest {
     AssertScopeExclusiveAccess singleThreadedAccess = new AssertScopeExclusiveAccess();
 
     try (AssertScopeExclusiveAccess.Scope scope = singleThreadedAccess.scope()) {
-      expectedException.expect(IllegalStateException.class);
+      expectedException.expect(NoSuchElementException.class);
       AssertScopeExclusiveAccess.Scope scope2 = singleThreadedAccess.scope();
       scope2.close();
     }

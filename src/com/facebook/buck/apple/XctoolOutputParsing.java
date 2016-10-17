@@ -20,7 +20,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.result.type.ResultType;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -31,6 +30,7 @@ import com.google.gson.JsonStreamParser;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
@@ -205,7 +205,7 @@ class XctoolOutputParsing {
       StatusEvent statusEvent) {
     if (statusEvent.message == null || statusEvent.level == null) {
       LOG.warn("Ignoring invalid status (message or level is null): %s", statusEvent);
-      return Optional.absent();
+      return Optional.empty();
     }
     Level level;
     switch (statusEvent.level) {
@@ -226,7 +226,7 @@ class XctoolOutputParsing {
         break;
       default:
         LOG.warn("Ignoring invalid status (unknown level %s)", statusEvent.level);
-        return Optional.absent();
+        return Optional.empty();
     }
     long timeMillis = (long) (statusEvent.timestamp * TimeUnit.SECONDS.toMillis(1));
     return Optional.of(TestStatusMessage.of(statusEvent.message, level, timeMillis));
@@ -283,7 +283,7 @@ class XctoolOutputParsing {
     if (endOcunitEvent.succeeded || endOcunitEvent.message == null) {
       // We only care about failures with a message. (Failures without a message always
       // happen with any random test failure.)
-      return Optional.absent();
+      return Optional.empty();
     }
 
     TestResultSummary testResultSummary = new TestResultSummary(

@@ -34,7 +34,6 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -60,6 +59,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -116,7 +116,7 @@ public class BuildInfoRecorder {
         ImmutableMap.<String, String>builder()
             .put(
                 "artifact_data",
-                Optional.fromNullable(environment.get(BUCK_CACHE_DATA_ENV_VAR)).or("null"))
+                Optional.ofNullable(environment.get(BUCK_CACHE_DATA_ENV_VAR)).orElse("null"))
             .build();
 
     this.metadataToWrite = Maps.newLinkedHashMap();

@@ -22,8 +22,9 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
 
 public class AndroidResourceRuleBuilder {
 
@@ -55,11 +56,11 @@ public class AndroidResourceRuleBuilder {
           deps,
           res,
           resSrcs,
-          Optional.absent(),
+          Optional.empty(),
           rDotJavaPackage,
           assets,
           assetsSrcs,
-          Optional.absent(),
+          Optional.empty(),
           manifest,
           hasWhitelistedStrings);
     }

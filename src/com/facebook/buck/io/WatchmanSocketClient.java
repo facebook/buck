@@ -24,7 +24,6 @@ import com.facebook.buck.bser.BserSerializer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -33,6 +32,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -130,7 +130,7 @@ class WatchmanSocketClient implements WatchmanClient, AutoCloseable {
           "Timed out after %d ms waiting for Watchman command [%s]. Disabling Watchman.\n",
           TimeUnit.NANOSECONDS.toMillis(timeoutNanos),
           query);
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -144,7 +144,7 @@ class WatchmanSocketClient implements WatchmanClient, AutoCloseable {
     Map<String, Object> responseMap = (Map<String, Object>) response;
     if (responseMap == null) {
       LOG.error("Unrecognized Watchman response: %s", response);
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of(responseMap);
   }

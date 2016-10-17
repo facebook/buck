@@ -31,7 +31,6 @@ import com.facebook.buck.util.FakeNuProcess;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.ProcessRegistry;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 import com.zaxxer.nuprocess.NuProcess;
@@ -39,6 +38,7 @@ import com.zaxxer.nuprocess.NuProcess;
 import org.junit.Test;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;

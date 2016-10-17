@@ -17,9 +17,9 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.rules.BuildRule;
-import com.google.common.base.Optional;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * A {@link BuildRule} that can have its output({@link #getPathToOutput}) published to a

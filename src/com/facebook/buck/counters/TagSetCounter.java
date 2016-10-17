@@ -16,11 +16,11 @@
 
 package com.facebook.buck.counters;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 public class TagSetCounter extends Counter {
@@ -51,7 +51,7 @@ public class TagSetCounter extends Counter {
         tagSet.clear();
         return Optional.of(snapshot.build());
       } else {
-        return Optional.absent();
+        return Optional.empty();
       }
     }
   }

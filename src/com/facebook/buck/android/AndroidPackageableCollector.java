@@ -27,7 +27,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -38,6 +37,7 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public class AndroidPackageableCollector {
@@ -68,7 +68,7 @@ public class AndroidPackageableCollector {
     this(collectionRoot,
         ImmutableSet.of(),
         ImmutableSet.of(),
-        new APKModuleGraph(TargetGraph.EMPTY, collectionRoot, Optional.absent()));
+        new APKModuleGraph(TargetGraph.EMPTY, collectionRoot, Optional.empty()));
   }
 
   /**

@@ -23,10 +23,11 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.versioncontrol.VersionControlCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
+
+import java.util.Optional;
 
 /**
  * Responsible foe getting information out of the version control system.
@@ -45,7 +46,7 @@ public class VcsInfoCollector {
   public static Optional<VcsInfoCollector> create(
       VersionControlCmdLineInterface vcCmdLineInterface) {
     if (!vcCmdLineInterface.isSupportedVersionControlSystem()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of(new VcsInfoCollector(vcCmdLineInterface));
   }
@@ -56,9 +57,9 @@ public class VcsInfoCollector {
     Optional<String> masterRevisionId = getMasterRevisionId();
     Optional<String> diffBase = masterRevisionId;
 
-    Optional<ImmutableSet<String>> filesChangedFromMasterBranchPoint = Optional.absent();
+    Optional<ImmutableSet<String>> filesChangedFromMasterBranchPoint = Optional.empty();
     ImmutableSet<String> diffBaseBookmarks = ImmutableSet.of();
-    Optional<String> producedDiff = Optional.absent();
+    Optional<String> producedDiff = Optional.empty();
 
     if (masterRevisionId.isPresent()) {
       diffBaseBookmarks = vcCmdLineInterface.trackedBookmarksOffRevisionId(
@@ -90,7 +91,7 @@ public class VcsInfoCollector {
     } catch (VersionControlCommandFailedException e) {
       LOG.info("Couldn't locate %s bookmark. Some information won't be available.", REMOTE_MASTER);
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Value.Immutable

@@ -16,8 +16,9 @@
 
 package com.facebook.buck.counters;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+
+import java.util.Optional;
 
 public class IntegerCounter extends Counter {
   private volatile long value;
@@ -52,7 +53,7 @@ public class IntegerCounter extends Counter {
         hasData = false;
         return Optional.of(snapshot.build());
       } else {
-        return Optional.absent();
+        return Optional.empty();
       }
     }
   }

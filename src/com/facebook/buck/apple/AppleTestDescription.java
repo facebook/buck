@@ -56,7 +56,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.zip.UnzipStep;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
@@ -70,6 +69,7 @@ import com.google.common.collect.Sets;
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.Set;
 
 public class AppleTestDescription implements
@@ -154,8 +154,7 @@ public class AppleTestDescription implements
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
     AppleDebugFormat debugFormat = AppleDebugFormat.FLAVOR_DOMAIN
-        .getValue(params.getBuildTarget())
-        .or(defaultDebugFormat);
+        .getValue(params.getBuildTarget()).orElse(defaultDebugFormat);
     if (params.getBuildTarget().getFlavors().contains(debugFormat.getFlavor())) {
       params = params.withoutFlavor(debugFormat.getFlavor());
     }
@@ -190,8 +189,7 @@ public class AppleTestDescription implements
       appleCxxPlatform = multiarchFileInfo.get().getRepresentativePlatform();
     } else {
       CxxPlatform cxxPlatform = cxxPlatformFlavorDomain
-          .getValue(params.getBuildTarget())
-          .or(defaultCxxPlatform);
+          .getValue(params.getBuildTarget()).orElse(defaultCxxPlatform);
       cxxPlatforms = ImmutableList.of(cxxPlatform);
       try {
         appleCxxPlatform = appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
@@ -215,7 +213,7 @@ public class AppleTestDescription implements
               libraryFlavors,
               cxxPlatforms));
     } else {
-      testHostInfo = Optional.absent();
+      testHostInfo = Optional.empty();
     }
 
     BuildTarget libraryTarget = params.getBuildTarget()
@@ -226,9 +224,8 @@ public class AppleTestDescription implements
         params,
         resolver,
         args,
-        testHostInfo.transform(TestHostInfo::getTestHostAppBinarySourcePath),
-        testHostInfo.transform(TestHostInfo::getBlacklist)
-            .or(ImmutableSet.of()),
+        testHostInfo.map(TestHostInfo::getTestHostAppBinarySourcePath),
+        testHostInfo.map(TestHostInfo::getBlacklist).orElse(ImmutableSet.of()),
         libraryTarget);
     if (!createBundle || SwiftLibraryDescription.isSwiftTarget(libraryTarget)) {
       return library;
@@ -261,7 +258,7 @@ public class AppleTestDescription implements
         provisioningProfileStore,
         library.getBuildTarget(),
         args.getExtension(),
-        Optional.absent(),
+        Optional.empty(),
         args.infoPlist,
         args.infoPlistSubstitutions,
         args.deps,
@@ -283,7 +280,7 @@ public class AppleTestDescription implements
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         sourcePathResolver,
         bundle,
-        testHostInfo.transform(TestHostInfo::getTestHostApp),
+        testHostInfo.map(TestHostInfo::getTestHostApp),
         args.contacts,
         args.labels,
         args.getRunTestSeparately(),
@@ -291,7 +288,7 @@ public class AppleTestDescription implements
         appleConfig.getTestLogDirectoryEnvironmentVariable(),
         appleConfig.getTestLogLevelEnvironmentVariable(),
         appleConfig.getTestLogLevel(),
-        args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
+        args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
         args.isUiTest());
   }
 
@@ -342,7 +339,7 @@ public class AppleTestDescription implements
       return Optional.of(
           new PathSourcePath(params.getProjectFilesystem(), appleConfig.getXctoolPath().get()));
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -492,15 +489,15 @@ public class AppleTestDescription implements
     }
 
     public boolean canGroup() {
-      return canGroup.or(false);
+      return canGroup.orElse(false);
     }
 
     public boolean getRunTestSeparately() {
-      return runTestSeparately.or(false);
+      return runTestSeparately.orElse(false);
     }
 
     public boolean isUiTest() {
-      return isUiTest.or(false);
+      return isUiTest.orElse(false);
     }
   }
 }

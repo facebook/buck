@@ -22,11 +22,12 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.MoreIterables;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+
+import java.util.Optional;
 
 public class DefaultPreprocessor implements Preprocessor {
 
@@ -38,7 +39,7 @@ public class DefaultPreprocessor implements Preprocessor {
 
   @Override
   public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override

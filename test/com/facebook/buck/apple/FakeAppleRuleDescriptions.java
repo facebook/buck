@@ -36,13 +36,13 @@ import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Paths;
+import java.util.Optional;
 
 /**
  * Utility class holding pre-made fake Apple rule descriptions for use in tests.
@@ -121,7 +121,7 @@ public class FakeAppleRuleDescriptions {
           new FakeAppleConfig(),
           EXECUTABLE_FINDER,
           Optional.of(PROCESS_EXECUTOR),
-          Optional.absent());
+          Optional.empty());
 
   public static final AppleCxxPlatform DEFAULT_IPHONEOS_X86_64_PLATFORM =
       AppleCxxPlatforms.buildWithExecutableChecker(
@@ -133,7 +133,7 @@ public class FakeAppleRuleDescriptions {
           new FakeAppleConfig(),
           EXECUTABLE_FINDER,
           Optional.of(PROCESS_EXECUTOR),
-          Optional.absent());
+          Optional.empty());
 
 
   public static final AppleCxxPlatform DEFAULT_MACOSX_X86_64_PLATFORM =
@@ -146,7 +146,7 @@ public class FakeAppleRuleDescriptions {
           new FakeAppleConfig(),
           EXECUTABLE_FINDER,
           Optional.of(PROCESS_EXECUTOR),
-          Optional.absent());
+          Optional.empty());
 
   public static final BuckConfig DEFAULT_BUCK_CONFIG = FakeBuckConfig.builder().build();
 
@@ -247,7 +247,7 @@ public class FakeAppleRuleDescriptions {
           CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(
               ImmutableList.of()),
-          Suppliers.ofInstance(Optional.absent()),
+          Suppliers.ofInstance(Optional.empty()),
           AppleDebugFormat.NONE,
           DEFAULT_TIMEOUT);
 }

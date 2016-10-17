@@ -18,10 +18,11 @@ package com.facebook.buck.rage;
 
 import com.facebook.buck.cli.SlbBuckConfig;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.immutables.value.Value;
+
+import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleImmutable

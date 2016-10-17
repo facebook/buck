@@ -17,13 +17,13 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 
 public abstract class FileContentsProviders {
   private FileContentsProviders() {
@@ -45,7 +45,7 @@ public abstract class FileContentsProviders {
         return Optional.of(new ByteArrayInputStream(contents));
       }
 
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -66,7 +66,7 @@ public abstract class FileContentsProviders {
         }
       }
 
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

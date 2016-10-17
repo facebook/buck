@@ -43,7 +43,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
@@ -60,6 +59,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -225,7 +225,7 @@ public class JavaDepsFinder {
         ImmutableSortedSet<BuildTarget> exportedDeps;
         if (node.getConstructorArg() instanceof JavaLibraryDescription.Arg) {
           JavaLibraryDescription.Arg arg = (JavaLibraryDescription.Arg) node.getConstructorArg();
-          autodeps = arg.autodeps.or(false);
+          autodeps = arg.autodeps.orElse(false);
           providedDeps = arg.providedDeps;
           exportedDeps = arg.exportedDeps;
         } else if (node.getConstructorArg() instanceof PrebuiltJarDescription.Arg) {

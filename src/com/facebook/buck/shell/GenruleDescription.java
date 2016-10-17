@@ -22,7 +22,8 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 public class GenruleDescription extends AbstractGenruleDescription<GenruleDescription.Arg> {
 
@@ -46,7 +47,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       Optional<com.facebook.buck.rules.args.Arg> cmd,
       Optional<com.facebook.buck.rules.args.Arg> bash,
       Optional<com.facebook.buck.rules.args.Arg> cmdExe) {
-    if (!args.executable.or(false)) {
+    if (!args.executable.orElse(false)) {
       return new Genrule(
           params,
           new SourcePathResolver(resolver),

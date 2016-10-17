@@ -30,7 +30,6 @@ import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.zip.ZipConstants;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -70,6 +69,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.Enumeration;
+import java.util.Optional;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -148,7 +148,7 @@ public class ProjectFilesystemTest {
 
   @Test
   public void testReadFirstLineToleratesNonExistentFile() {
-    assertEquals(Optional.absent(), filesystem.readFirstLine("foo.txt"));
+    assertEquals(Optional.empty(), filesystem.readFirstLine("foo.txt"));
   }
 
   @Test
@@ -156,7 +156,7 @@ public class ProjectFilesystemTest {
     Path emptyFile = tmp.newFile("foo.txt");
     Files.write(emptyFile, new byte[0]);
     assertTrue(Files.isRegularFile(emptyFile));
-    assertEquals(Optional.absent(), filesystem.readFirstLine("foo.txt"));
+    assertEquals(Optional.empty(), filesystem.readFirstLine("foo.txt"));
   }
 
   @Test
@@ -177,7 +177,7 @@ public class ProjectFilesystemTest {
 
   @Test
   public void getReaderIfFileExistsNoFile() throws IOException {
-    assertEquals(Optional.absent(), filesystem.getReaderIfFileExists(Paths.get("foo.txt")));
+    assertEquals(Optional.empty(), filesystem.getReaderIfFileExists(Paths.get("foo.txt")));
   }
 
   @Test

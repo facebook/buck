@@ -49,7 +49,6 @@ import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -62,6 +61,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Set;
 
 public class AppleBinaryDescription implements
@@ -223,9 +223,8 @@ public class AppleBinaryDescription implements
     BuildTarget strippedBinaryBuildTarget = unstrippedBinaryBuildTarget
         .withAppendedFlavors(
             CxxStrip.RULE_FLAVOR,
-            StripStyle.FLAVOR_DOMAIN
-                .getFlavor(params.getBuildTarget().getFlavors())
-                .or(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor()));
+            StripStyle.FLAVOR_DOMAIN.getFlavor(params.getBuildTarget().getFlavors())
+                .orElse(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor()));
     BuildRule strippedBinaryRule = createBinary(
         targetGraph,
         params.copyWithBuildTarget(strippedBinaryBuildTarget),
@@ -254,16 +253,14 @@ public class AppleBinaryDescription implements
           params.getBuildTarget().getUnflavoredBuildTarget());
     }
     AppleDebugFormat flavoredDebugFormat = AppleDebugFormat.FLAVOR_DOMAIN
-        .getValue(params.getBuildTarget())
-        .or(defaultDebugFormat);
+        .getValue(params.getBuildTarget()).orElse(defaultDebugFormat);
     if (!params.getBuildTarget().getFlavors().contains(flavoredDebugFormat.getFlavor())) {
       return resolver.requireRule(
           params.getBuildTarget().withAppendedFlavors(flavoredDebugFormat.getFlavor()));
     }
     if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
-      CxxPlatform cxxPlatform =
-          delegate.getCxxPlatforms().getValue(params.getBuildTarget())
-              .or(delegate.getDefaultCxxPlatform());
+      CxxPlatform cxxPlatform = delegate.getCxxPlatforms().getValue(params.getBuildTarget())
+          .orElse(delegate.getDefaultCxxPlatform());
       ApplePlatform applePlatform =
           platformFlavorsToAppleCxxPlatforms.getValue(cxxPlatform.getFlavor())
               .getAppleSdk()
@@ -289,7 +286,7 @@ public class AppleBinaryDescription implements
         provisioningProfileStore,
         binaryTarget,
         Either.ofLeft(AppleBundleExtension.APP),
-        Optional.absent(),
+        Optional.empty(),
         args.infoPlist.get(),
         args.infoPlistSubstitutions,
         args.deps,
@@ -387,7 +384,7 @@ public class AppleBinaryDescription implements
 
 
   private <A extends Arg> Optional<Path> getStubBinaryPath(BuildRuleParams params, A args) {
-    Optional<Path> stubBinaryPath = Optional.absent();
+    Optional<Path> stubBinaryPath = Optional.empty();
     Optional<AppleCxxPlatform> appleCxxPlatform = getAppleCxxPlatformFromParams(params);
     if (appleCxxPlatform.isPresent() && args.srcs.isEmpty()) {
       stubBinaryPath = appleCxxPlatform.get().getStubBinary();

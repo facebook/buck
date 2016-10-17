@@ -23,13 +23,13 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
 
@@ -96,7 +96,7 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
               new SourceTreePath(
                   sourceTree.get(),
                   path.subpath(1, path.getNameCount()),
-                  Optional.absent()));
+                  Optional.empty()));
         } else {
           throw new HumanReadableException(
               "Unknown SourceTree: '%s'. Should be one of: %s",

@@ -43,9 +43,9 @@ import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.OptionalCompat;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -58,6 +58,7 @@ import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Optional;
 
 public class PythonTestDescription implements
     Description<PythonTestDescription.Arg>,
@@ -179,13 +180,13 @@ public class PythonTestDescription implements
       final BuildRuleResolver resolver,
       final A args) throws HumanReadableException, NoSuchBuildTargetException {
 
-    PythonPlatform pythonPlatform = pythonPlatforms
-        .getValue(params.getBuildTarget())
-        .or(pythonPlatforms.getValue(
-            args.platform
-                .<Flavor>transform(ImmutableFlavor::of)
-                .or(pythonPlatforms.getFlavors().iterator().next())));
-    CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
+    PythonPlatform pythonPlatform =
+        pythonPlatforms.getValue(params.getBuildTarget()).orElse(
+            pythonPlatforms.getValue(
+                args.platform.<Flavor>map(ImmutableFlavor::of).orElse(
+                    pythonPlatforms.getFlavors().iterator().next())));
+    CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).orElse(
+        defaultCxxPlatform);
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
 
@@ -303,7 +304,7 @@ public class PythonTestDescription implements
             args.extension,
             allComponents,
             args.buildArgs,
-            args.packageStyle.or(pythonBuckConfig.getPackageStyle()),
+            args.packageStyle.orElse(pythonBuckConfig.getPackageStyle()),
             PythonUtil.getPreloadNames(
                 resolver,
                 cxxPlatform,
@@ -367,7 +368,7 @@ public class PythonTestDescription implements
         binary,
         args.labels,
         neededCoverageBuilder.build(),
-        args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
+        args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
         args.contacts);
   }
 
@@ -381,12 +382,12 @@ public class PythonTestDescription implements
     // We need to use the C/C++ linker for native libs handling, so add in the C/C++ linker to
     // parse time deps.
     targets.addAll(
-        cxxPlatforms.getValue(buildTarget).or(defaultCxxPlatform).getLd().getParseTimeDeps());
+        cxxPlatforms.getValue(buildTarget).orElse(defaultCxxPlatform).getLd().getParseTimeDeps());
 
-    if (constructorArg.packageStyle.or(pythonBuckConfig.getPackageStyle()) ==
+    if (constructorArg.packageStyle.orElse(pythonBuckConfig.getPackageStyle()) ==
         PythonBuckConfig.PackageStyle.STANDALONE) {
-      targets.addAll(pythonBuckConfig.getPexTarget().asSet());
-      targets.addAll(pythonBuckConfig.getPexExecutorTarget().asSet());
+      targets.addAll(OptionalCompat.asSet(pythonBuckConfig.getPexTarget()));
+      targets.addAll(OptionalCompat.asSet(pythonBuckConfig.getPexExecutorTarget()));
     }
 
     return targets.build();

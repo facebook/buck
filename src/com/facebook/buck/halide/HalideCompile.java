@@ -28,10 +28,10 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class HalideCompile extends AbstractBuildRule {
 
@@ -119,7 +119,7 @@ public class HalideCompile extends AbstractBuildRule {
   public static String fileOutputName(
       BuildTarget buildTarget,
       Optional<String> functionNameOverride) {
-    return functionNameOverride.or(buildTarget.getShortName());
+    return functionNameOverride.orElse(buildTarget.getShortName());
   }
 
 }

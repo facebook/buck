@@ -21,8 +21,8 @@ import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaSourceJar;
-import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -41,13 +41,13 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class AndroidLibraryDescription
     implements Description<AndroidLibraryDescription.Arg>, Flavored,
@@ -137,7 +137,7 @@ public class AndroidLibraryDescription
       BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
       AndroidLibraryCompiler compiler =
-          compilerFactory.getCompiler(args.language.or(JvmLanguage.JAVA));
+          compilerFactory.getCompiler(args.language.orElse(JvmLanguage.JAVA));
 
       ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
 
@@ -170,8 +170,8 @@ public class AndroidLibraryDescription
                   ResourceValidator.validateResources(
                       pathResolver,
                       params.getProjectFilesystem(), args.resources),
-                  args.proguardConfig.transform(
-                      SourcePaths.toSourcePath(params.getProjectFilesystem())),
+                  args.proguardConfig.map(
+                      SourcePaths.toSourcePath(params.getProjectFilesystem())::apply),
                   args.postprocessClassesCommands,
                   exportedDeps,
                   resolver.getAllRules(args.providedDeps),
@@ -208,7 +208,7 @@ public class AndroidLibraryDescription
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       Arg constructorArg) {
-    return compilerFactory.getCompiler(constructorArg.language.or(JvmLanguage.JAVA))
+    return compilerFactory.getCompiler(constructorArg.language.orElse(JvmLanguage.JAVA))
         .findDepsForTargetFromConstructorArgs(buildTarget, cellRoots, constructorArg);
   }
 

@@ -37,13 +37,13 @@ import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 
 import java.util.Map;
+import java.util.Optional;
 
 public class WorkerToolDescription implements Description<WorkerToolDescription.Arg>,
     ImplicitDepsInferringDescription<WorkerToolDescription.Arg> {
@@ -88,7 +88,7 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
           params.getBuildTarget(),
           params.getCellRoots(),
           resolver,
-          args.args.or(""));
+          args.args.orElse(""));
     } catch (MacroException e) {
       throw new HumanReadableException(e, "%s: %s", params.getBuildTarget(), e.getMessage());
     }

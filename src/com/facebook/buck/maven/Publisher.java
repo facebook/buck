@@ -22,7 +22,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.StandardSystemProperty;
 import com.google.common.collect.HashMultimap;
@@ -53,6 +52,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public class Publisher {
 
@@ -91,7 +91,7 @@ public class Publisher {
       Optional<URL> remoteRepoUrl,
       boolean dryRun) {
     this.localRepo = new LocalRepository(localRepoPath.toFile());
-    this.remoteRepo = AetherUtil.toRemoteRepository(remoteRepoUrl.or(MAVEN_CENTRAL));
+    this.remoteRepo = AetherUtil.toRemoteRepository(remoteRepoUrl.orElse(MAVEN_CENTRAL));
     this.locator = AetherUtil.initServiceLocator();
     this.dryRun = dryRun;
   }

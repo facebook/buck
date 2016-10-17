@@ -12,8 +12,7 @@
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
-      "//src/com/facebook/buck/util/immutables:immutables",
-      "//third-party/java/guava:guava"
+      "//src/com/facebook/buck/util/immutables:immutables"
     ]
   }
 }

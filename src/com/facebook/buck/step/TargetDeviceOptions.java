@@ -17,7 +17,8 @@
 package com.facebook.buck.step;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -67,7 +68,7 @@ public class TargetDeviceOptions {
 
   public Optional<TargetDevice> getTargetDeviceOptional() {
     if (!hasSerialNumber() && !isEmulatorsOnlyModeEnabled() && !isRealDevicesOnlyModeEnabled()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     TargetDevice device = new TargetDevice(

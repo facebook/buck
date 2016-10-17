@@ -17,12 +17,12 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
+
+import org.immutables.value.Value;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-
-import org.immutables.value.Value;
+import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleImmutable

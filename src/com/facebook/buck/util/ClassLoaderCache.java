@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
@@ -25,6 +24,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -91,7 +91,7 @@ public final class ClassLoaderCache implements AutoCloseable {
       return;
     }
 
-    Optional<IOException> caughtEx = Optional.absent();
+    Optional<IOException> caughtEx = Optional.empty();
 
     for (Map<ImmutableList<URL>, ClassLoader> cacheForParent : cache.values()) {
       for (ClassLoader cl : cacheForParent.values()) {

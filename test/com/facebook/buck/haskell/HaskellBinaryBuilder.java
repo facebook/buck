@@ -25,6 +25,7 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
+
 public class HaskellBinaryBuilder
     extends AbstractNodeBuilder<HaskellBinaryDescription.Arg> {
 

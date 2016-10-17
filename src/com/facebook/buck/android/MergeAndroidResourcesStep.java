@@ -30,7 +30,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -49,6 +48,7 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public class MergeAndroidResourcesStep implements Step {
@@ -89,7 +89,7 @@ public class MergeAndroidResourcesStep implements Step {
     this.forceFinalResourceIds = forceFinalResourceIds;
     this.bannedDuplicateResourceTypes = bannedDuplicateResourceTypes;
     this.unionPackage = unionPackage;
-    this.rName = rName.or("R");
+    this.rName = rName.orElse("R");
   }
 
   public static MergeAndroidResourcesStep createStepForDummyRDotJava(
@@ -104,7 +104,7 @@ public class MergeAndroidResourcesStep implements Step {
         filesystem,
         pathResolver,
         androidResourceDeps,
-        /* uberRDotTxt */ Optional.absent(),
+        /* uberRDotTxt */ Optional.empty(),
         outputDir,
         forceFinalResourceIds,
         /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
@@ -129,7 +129,7 @@ public class MergeAndroidResourcesStep implements Step {
         /* forceFinalResourceIds */ true,
         bannedDuplicateResourceTypes,
         unionPackage,
-        /* rName */ Optional.absent());
+        /* rName */ Optional.empty());
   }
 
   public ImmutableSortedSet<Path> getRDotJavaFiles() {
@@ -187,7 +187,7 @@ public class MergeAndroidResourcesStep implements Step {
           .toMap(
               input -> input.idValue));
     } else {
-      uberRDotTxtIds = Optional.absent();
+      uberRDotTxtIds = Optional.empty();
     }
 
     ImmutableMap<Path, String> symbolsFileToRDotJavaPackage = rDotTxtToPackage.build();

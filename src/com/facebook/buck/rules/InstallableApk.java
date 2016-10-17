@@ -16,9 +16,8 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Optional;
-
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Build rule that generates an APK that can be installed with the install command.

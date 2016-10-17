@@ -21,12 +21,12 @@ import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.ClientSideSlbConfig;
 import com.facebook.buck.timing.Clock;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 import java.net.URI;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 
 public class SlbBuckConfig {
@@ -81,7 +81,7 @@ public class SlbBuckConfig {
     ClientSideSlbConfig config = createConfig(clock, eventBus, threadFactory);
     return ClientSideSlb.isSafeToCreate(config)
         ? Optional.of(new ClientSideSlb(config))
-        : Optional.absent();
+        : Optional.empty();
   }
 
   private ClientSideSlbConfig createConfig(

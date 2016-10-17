@@ -22,12 +22,13 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import java.util.Optional;
 
 /**
  * Unit tests for {@link InfoPlistSubstitution}.
@@ -164,7 +165,7 @@ public class InfoPlistSubstitutionTest {
                 "FOO", "BAR",
                 "FOO[sdk=iphoneos]", "BARiphoneos",
                 "FOO[sdk=iphonesimulator]", "BARiphonesimulator")),
-        equalTo(Optional.<String>absent()));
+        equalTo(Optional.empty()));
   }
 
   @Test

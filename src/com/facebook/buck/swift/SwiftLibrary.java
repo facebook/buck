@@ -46,7 +46,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.google.common.base.Optional;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -54,6 +53,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -170,7 +170,7 @@ class SwiftLibrary
     ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
     BuildRule sharedLibraryBuildRule = requireSwiftLinkRule(cxxPlatform.getFlavor());
     String sharedLibrarySoname = CxxDescriptionEnhancer.getSharedLibrarySoname(
-        Optional.absent(),
+        Optional.empty(),
         sharedLibraryBuildRule.getBuildTarget(),
         cxxPlatform);
     libs.put(
@@ -239,7 +239,7 @@ class SwiftLibrary
   @Override
   public Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(
       CxxPlatform cxxPlatform) {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override

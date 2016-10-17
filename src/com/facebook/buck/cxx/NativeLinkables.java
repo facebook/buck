@@ -24,7 +24,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -37,6 +36,7 @@ import com.google.common.collect.Maps;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class NativeLinkables {
 
@@ -305,7 +305,7 @@ public class NativeLinkables {
     if (object instanceof CanProvideNativeLinkTarget) {
       return ((CanProvideNativeLinkTarget) object).getNativeLinkTarget(cxxPlatform);
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
 }

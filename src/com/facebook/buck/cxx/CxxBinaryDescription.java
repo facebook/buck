@@ -35,7 +35,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -43,6 +42,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
+import java.util.Optional;
 import java.util.Set;
 
 public class CxxBinaryDescription implements
@@ -114,8 +114,7 @@ public class CxxBinaryDescription implements
     // found.
     ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(params.getBuildTarget().getFlavors());
     CxxPlatform cxxPlatform = cxxPlatforms
-        .getValue(flavors)
-        .or(defaultCxxPlatform);
+        .getValue(flavors).orElse(defaultCxxPlatform);
     if (flavors.contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)) {
       flavors = ImmutableSet.copyOf(
           Sets.difference(
@@ -281,8 +280,7 @@ public class CxxBinaryDescription implements
     deps.addAll(
         CxxPlatforms.getParseTimeDeps(
             cxxPlatforms
-                .getValue(buildTarget.getFlavors())
-                .or(defaultCxxPlatform)));
+                .getValue(buildTarget.getFlavors()).orElse(defaultCxxPlatform)));
 
     ImmutableList<ImmutableList<String>> macroStrings =
         ImmutableList.<ImmutableList<String>>builder()
@@ -346,13 +344,11 @@ public class CxxBinaryDescription implements
       final Class<U> metadataClass) throws NoSuchBuildTargetException {
     if (!metadataClass.isAssignableFrom(CxxCompilationDatabaseDependencies.class) ||
         !buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return CxxDescriptionEnhancer
-        .createCompilationDatabaseDependencies(buildTarget, cxxPlatforms, resolver, args)
-        .transform(
-            metadataClass::cast
-        );
+        .createCompilationDatabaseDependencies(buildTarget, cxxPlatforms, resolver, args).map(
+            metadataClass::cast);
   }
 
   @Override
@@ -371,7 +367,7 @@ public class CxxBinaryDescription implements
           cxxBuckConfig.getDefaultFlavorsForRuleType(type);
 
       if (!platformFlavor.isPresent()) {
-        platformFlavor = Optional.fromNullable(
+        platformFlavor = Optional.ofNullable(
             libraryDefaults.get(CxxBuckConfig.DEFAULT_FLAVOR_PLATFORM));
       }
     }

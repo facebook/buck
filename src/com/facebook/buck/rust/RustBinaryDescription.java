@@ -29,11 +29,11 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.List;
+import java.util.Optional;
 
 public class RustBinaryDescription implements Description<RustBinaryDescription.Arg> {
 
@@ -66,13 +66,13 @@ public class RustBinaryDescription implements Description<RustBinaryDescription.
     return new RustBinary(
         params,
         new SourcePathResolver(resolver),
-        args.crate.or(params.getBuildTarget().getShortName()),
+        args.crate.orElse(params.getBuildTarget().getShortName()),
         ImmutableSortedSet.copyOf(args.srcs),
         ImmutableSortedSet.copyOf(args.features),
         ImmutableList.copyOf(args.rustcFlags),
         rustBuckConfig.getRustCompiler().get(),
         cxxPlatform,
-        args.linkStyle.or(Linker.LinkableDepType.STATIC));
+        args.linkStyle.orElse(Linker.LinkableDepType.STATIC));
   }
 
   @SuppressFieldNotInitialized

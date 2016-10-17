@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -48,6 +47,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -168,8 +168,8 @@ public class SplitZipStepTest {
         /* secondaryJarPattern */ "",
         /* additionalDexStoreJarMetaPath */ Paths.get(""),
         /* additionalDexStoreJarDir */ Paths.get(""),
-        /* proguardFullConfigFile */ Optional.absent(),
-        /* proguardMappingFile */ Optional.absent(),
+        /* proguardFullConfigFile */ Optional.empty(),
+        /* proguardMappingFile */ Optional.empty(),
         new DexSplitMode(
             /* shouldSplitDex */ true,
             ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
@@ -178,21 +178,21 @@ public class SplitZipStepTest {
             /* linearAllocHardLimit */ 4 * 1024 * 1024,
             /* primaryDexPatterns */ ImmutableSet.of("List"),
             Optional.of(new FakeSourcePath("the/manifest.txt")),
-            /* primaryDexScenarioFile */ Optional.absent(),
+            /* primaryDexScenarioFile */ Optional.empty(),
             /* isPrimaryDexScenarioOverflowAllowed */ false,
-            /* secondaryDexHeadClassesFile */ Optional.absent(),
-            /* secondaryDexTailClassesFile */ Optional.absent()),
-        Optional.absent(),
+            /* secondaryDexHeadClassesFile */ Optional.empty(),
+            /* secondaryDexTailClassesFile */ Optional.empty()),
+        Optional.empty(),
         Optional.of(Paths.get("the/manifest.txt")),
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
         new APKModuleGraph(null, null, null),
         /* pathToReportDir */ Paths.get(""));
 
     Predicate<String> requiredInPrimaryZipPredicate = splitZipStep
         .createRequiredInPrimaryZipPredicate(
-            ProguardTranslatorFactory.createForTest(Optional.absent()),
+            ProguardTranslatorFactory.createForTest(Optional.empty()),
             Suppliers.ofInstance(ImmutableList.of()));
     assertTrue(
         "com/google/common/collect/ImmutableSortedSet.class is listed in the manifest verbatim.",
@@ -269,14 +269,14 @@ public class SplitZipStepTest {
             /* linearAllocHardLimit */ 4 * 1024 * 1024,
             /* primaryDexPatterns */ ImmutableSet.of("/primary/", "x/"),
             Optional.of(new FakeSourcePath("the/manifest.txt")),
-            /* primaryDexScenarioFile */ Optional.absent(),
+            /* primaryDexScenarioFile */ Optional.empty(),
             /* isPrimaryDexScenarioOverflowAllowed */ false,
-            /* secondaryDexHeadClassesFile */ Optional.absent(),
-            /* secondaryDexTailClassesFile */ Optional.absent()),
-        Optional.absent(),
+            /* secondaryDexHeadClassesFile */ Optional.empty(),
+            /* secondaryDexTailClassesFile */ Optional.empty()),
+        Optional.empty(),
         Optional.of(Paths.get("the/manifest.txt")),
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
         new APKModuleGraph(null, null, null),
         /* pathToReportDir */ Paths.get(""));
@@ -342,15 +342,15 @@ public class SplitZipStepTest {
             /* useLinearAllocSplitDex */ true,
             /* linearAllocHardLimit */ 4 * 1024 * 1024,
             /* primaryDexPatterns */ ImmutableSet.of("primary"),
-            /* primaryDexClassesFile */ Optional.absent(),
-            /* primaryDexScenarioFile */ Optional.absent(),
+            /* primaryDexClassesFile */ Optional.empty(),
+            /* primaryDexScenarioFile */ Optional.empty(),
             /* isPrimaryDexScenarioOverflowAllowed */ false,
-            /* secondaryDexHeadClassesFile */ Optional.absent(),
-            /* secondaryDexTailClassesFile */ Optional.absent()),
-        Optional.absent(),
-        Optional.absent(),
-        Optional.absent(),
-        Optional.absent(),
+            /* secondaryDexHeadClassesFile */ Optional.empty(),
+            /* secondaryDexTailClassesFile */ Optional.empty()),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
         /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
         new APKModuleGraph(null, null, null),
         /* pathToReportDir */ Paths.get(""));

@@ -15,11 +15,11 @@
  */
 package com.facebook.buck.android;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 
 public class FakeAndroidDirectoryResolver implements AndroidDirectoryResolver {
   private final Optional<Path> androidSdkDir;
@@ -29,10 +29,10 @@ public class FakeAndroidDirectoryResolver implements AndroidDirectoryResolver {
 
   public FakeAndroidDirectoryResolver() {
     this(
-        /* androidSdkDir */ Optional.absent(),
-        /* androidBuildToolsDir */ Optional.absent(),
-        /* androidNdkDir */ Optional.absent(),
-        /* ndkVersion */ Optional.absent());
+        /* androidSdkDir */ Optional.empty(),
+        /* androidBuildToolsDir */ Optional.empty(),
+        /* androidNdkDir */ Optional.empty(),
+        /* ndkVersion */ Optional.empty());
   }
 
   public FakeAndroidDirectoryResolver(

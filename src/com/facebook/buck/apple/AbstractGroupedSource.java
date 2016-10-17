@@ -20,7 +20,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -29,6 +28,7 @@ import org.immutables.value.Value;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -127,10 +127,10 @@ abstract class AbstractGroupedSource {
     return GroupedSource.of(
         Type.SOURCE_WITH_FLAGS,
         Optional.of(sourceWithFlags),
-        Optional.absent(),
-        Optional.absent(),
-        Optional.absent(),
-        Optional.absent());
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 
   /**
@@ -139,11 +139,11 @@ abstract class AbstractGroupedSource {
   public static GroupedSource ofPublicHeader(SourcePath headerPath) {
     return GroupedSource.of(
         Type.PUBLIC_HEADER,
-        Optional.absent(),
+        Optional.empty(),
         Optional.of(headerPath),
-        Optional.absent(),
-        Optional.absent(),
-        Optional.absent());
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 
   /**
@@ -152,11 +152,11 @@ abstract class AbstractGroupedSource {
   public static GroupedSource ofPrivateHeader(SourcePath headerPath) {
     return GroupedSource.of(
         Type.PRIVATE_HEADER,
-        Optional.absent(),
+        Optional.empty(),
         Optional.of(headerPath),
-        Optional.absent(),
-        Optional.absent(),
-        Optional.absent());
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 
   /**
@@ -169,8 +169,8 @@ abstract class AbstractGroupedSource {
       Collection<GroupedSource> sourceGroup) {
     return GroupedSource.of(
         Type.SOURCE_GROUP,
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         Optional.of(sourceGroupName),
         Optional.of(sourceGroupPathRelativeToTarget),
         Optional.of((List<GroupedSource>) ImmutableList.copyOf(sourceGroup)));

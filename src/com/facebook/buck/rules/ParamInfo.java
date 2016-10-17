@@ -21,7 +21,6 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -29,6 +28,7 @@ import com.google.common.cache.LoadingCache;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -184,7 +184,7 @@ public class ParamInfo implements Comparable<ParamInfo> {
       if (defaultValue != null) {
         result = defaultValue;
       } else if (isOptional) {
-        result = Optional.absent();
+        result = Optional.empty();
       } else if (Number.class.isAssignableFrom(typeCoercer.getOutputClass())) {
         result = 0;
       } else if (Boolean.class.isAssignableFrom(typeCoercer.getOutputClass())) {

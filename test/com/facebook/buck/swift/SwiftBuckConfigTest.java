@@ -22,10 +22,11 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
 
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
+
+import java.util.Optional;
 
 public class SwiftBuckConfigTest {
 
@@ -37,7 +38,7 @@ public class SwiftBuckConfigTest {
                 "swift",
                 ImmutableMap.of("compile_flags", "-g")))
             .build());
-    assertThat(swiftBuckConfig.getFlags(), not(equalTo(Optional.<Iterable<String>>absent())));
+    assertThat(swiftBuckConfig.getFlags(), not(equalTo(Optional.empty())));
     assertThat(swiftBuckConfig.getFlags().get(), contains("-g"));
   }
 
@@ -45,7 +46,7 @@ public class SwiftBuckConfigTest {
   public void testAbsentFlags() {
     SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(
         FakeBuckConfig.builder().build());
-    assertThat(swiftBuckConfig.getFlags(), equalTo(Optional.<Iterable<String>>absent()));
+    assertThat(swiftBuckConfig.getFlags(), equalTo(Optional.empty()));
   }
 
 }

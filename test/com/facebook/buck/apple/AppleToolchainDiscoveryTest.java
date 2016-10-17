@@ -25,7 +25,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.testutil.TestLogSink;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -38,6 +37,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class AppleToolchainDiscoveryTest {
 

@@ -43,6 +43,7 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
+
 public class DBinaryDescription implements
     Description<DBinaryDescription.Arg>,
     ImplicitDepsInferringDescription<DBinaryDescription.Arg> {

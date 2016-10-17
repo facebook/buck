@@ -31,7 +31,6 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -46,6 +45,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -126,9 +126,9 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
     result = processExecutor.launchAndExecute(
         processExecutorParams,
         options,
-            /* stdin */ Optional.absent(),
-            /* timeOutMs */ Optional.absent(),
-            /* timeOutHandler */ Optional.absent());
+            /* stdin */ Optional.empty(),
+            /* timeOutMs */ Optional.empty(),
+            /* timeOutHandler */ Optional.empty());
     if (result.getExitCode() != 0) {
       throw new IOException(
           result.getMessageForResult("Invalid provisioning profile: " + profilePath));

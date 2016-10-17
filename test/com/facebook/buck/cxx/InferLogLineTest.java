@@ -22,13 +22,13 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 
 import org.hamcrest.junit.ExpectedException;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class InferLogLineTest {
 
@@ -45,7 +45,7 @@ public class InferLogLineTest {
         .setUnflavoredBuildTarget(
             UnflavoredBuildTarget.of(
                 Paths.get("/User/user/src"),
-                Optional.absent(),
+                Optional.empty(),
                 "//target",
                 "short"))
         .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
@@ -84,7 +84,7 @@ public class InferLogLineTest {
         .setUnflavoredBuildTarget(
             UnflavoredBuildTarget.of(
                 Paths.get("/User/user/src"),
-                Optional.absent(),
+                Optional.empty(),
                 "//target",
                 "short"))
         .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())

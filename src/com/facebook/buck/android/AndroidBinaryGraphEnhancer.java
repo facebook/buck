@@ -45,7 +45,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -64,6 +63,7 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class AndroidBinaryGraphEnhancer {
@@ -260,7 +260,7 @@ public class AndroidBinaryGraphEnhancer {
                   generateCodeForMergedLibraryMap.getPathToOutput())),
           /* resources */ ImmutableSet.of(),
           javacOptions.getGeneratedSourceFolderName(),
-          /* proguardConfig */ Optional.absent(),
+          /* proguardConfig */ Optional.empty(),
           /* postprocessClassesCommands */ ImmutableList.of(),
           /* exportedDeps */ ImmutableSortedSet.of(),
           /* providedDeps */ ImmutableSortedSet.of(),
@@ -275,9 +275,9 @@ public class AndroidBinaryGraphEnhancer {
               // to 6 in their .buckconfig.
               javacOptions.withSourceLevel("7").withTargetLevel("7"),
               JavacOptionsAmender.IDENTITY),
-          /* resourcesRoot */ Optional.absent(),
-          /* manifest file */ Optional.absent(),
-          /* mavenCoords */ Optional.absent(),
+          /* resourcesRoot */ Optional.empty(),
+          /* manifest file */ Optional.empty(),
+          /* mavenCoords */ Optional.empty(),
           ImmutableSortedSet.of(),
           /* classesToRemoveFromJar */ ImmutableSet.of());
       ruleResolver.addToIndex(compileMergedNativeLibMapGenCode);
@@ -357,7 +357,7 @@ public class AndroidBinaryGraphEnhancer {
     ruleResolver.addToIndex(aaptPackageResources);
     enhancedDeps.add(aaptPackageResources);
 
-    Optional<PackageStringAssets> packageStringAssets = Optional.absent();
+    Optional<PackageStringAssets> packageStringAssets = Optional.empty();
     if (resourceCompressionMode.isStoreStringsAsAssets()) {
       BuildTarget buildTargetForPackageStringAssets =
           createBuildTargetWithFlavor(PACKAGE_STRING_ASSETS_FLAVOR);
@@ -442,7 +442,7 @@ public class AndroidBinaryGraphEnhancer {
                 trimUberRDotJava.getPathToOutput())),
         /* resources */ ImmutableSet.of(),
         javacOptions.getGeneratedSourceFolderName(),
-        /* proguardConfig */ Optional.absent(),
+        /* proguardConfig */ Optional.empty(),
         /* postprocessClassesCommands */ ImmutableList.of(),
         /* exportedDeps */ ImmutableSortedSet.of(),
         /* providedDeps */ ImmutableSortedSet.of(),
@@ -455,9 +455,9 @@ public class AndroidBinaryGraphEnhancer {
             javacOptions.withSourceLevel("7").withTargetLevel("7"),
             JavacOptionsAmender.IDENTITY
         ),
-        /* resourcesRoot */ Optional.absent(),
-        /* manifest file */ Optional.absent(),
-        /* mavenCoords */ Optional.absent(),
+        /* resourcesRoot */ Optional.empty(),
+        /* manifest file */ Optional.empty(),
+        /* mavenCoords */ Optional.empty(),
         ImmutableSortedSet.of(),
         /* classesToRemoveFromJar */ ImmutableSet.of());
     ruleResolver.addToIndex(compileUberRDotJava);
@@ -471,7 +471,7 @@ public class AndroidBinaryGraphEnhancer {
         new DexProducedFromJavaLibrary(paramsForDexUberRDotJava, pathResolver, compileUberRDotJava);
     ruleResolver.addToIndex(dexUberRDotJava);
 
-    Optional<PreDexMerge> preDexMerge = Optional.absent();
+    Optional<PreDexMerge> preDexMerge = Optional.empty();
     if (shouldPreDex) {
       preDexMerge = Optional.of(createPreDexMergeRule(
               preDexedLibraries,
@@ -488,7 +488,7 @@ public class AndroidBinaryGraphEnhancer {
     enhancedDeps.addAll(
         pathResolver.filterBuildRuleInputs(packageableCollection.getPathsToThirdPartyJars()));
 
-    Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi = Optional.absent();
+    Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi = Optional.empty();
     if (!exopackageModes.isEmpty()) {
       BuildRuleParams paramsForComputeExopackageAbi = buildRuleParams.copyWithChanges(
           createBuildTargetWithFlavor(CALCULATE_ABI_FLAVOR),

@@ -18,12 +18,12 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class CxxTestBuilder extends
     AbstractCxxSourceBuilder<CxxTestDescription.Arg, CxxTestBuilder> {
@@ -38,7 +38,7 @@ public class CxxTestBuilder extends
             cxxBuckConfig,
             defaultCxxPlatform,
             cxxPlatforms,
-            /* testRuleTimeoutMs */ Optional.absent()),
+            /* testRuleTimeoutMs */ Optional.empty()),
         target);
   }
 

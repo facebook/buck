@@ -28,7 +28,6 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.TestProcessExecutorFactory;
 import com.facebook.buck.zip.Unzip;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -43,6 +42,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 
 public class HgCmdLineInterfaceIntegrationTest {
@@ -134,7 +134,7 @@ public class HgCmdLineInterfaceIntegrationTest {
     Optional<String> masterRevision = repoThreeCmdLine.revisionIdOrAbsent(MASTER_THREE_BOOKMARK);
     Optional<String> absentRevision = repoThreeCmdLine.revisionIdOrAbsent("absent_bookmark");
     assertTrue(masterRevision.get().startsWith(MASTER_THREE_ID));
-    assertEquals(absentRevision, Optional.<String>absent());
+    assertEquals(absentRevision, Optional.empty());
   }
 
   @Test
@@ -170,10 +170,11 @@ public class HgCmdLineInterfaceIntegrationTest {
 
   @Test
   public void testAbsentCommonAncestorOrAbsentWithBookmarks() throws InterruptedException {
-    assertEquals(repoThreeCmdLine.commonAncestorOrAbsent(
-        BRANCH_FROM_MASTER_THREE_BOOKMARK,
-        "absent_bookmark"),
-        Optional.<String>absent());
+    assertEquals(
+        repoThreeCmdLine.commonAncestorOrAbsent(
+            BRANCH_FROM_MASTER_THREE_BOOKMARK,
+            "absent_bookmark"),
+        Optional.empty());
   }
 
   @Test

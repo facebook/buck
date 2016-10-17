@@ -42,7 +42,6 @@ import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -57,6 +56,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 public class DummyRDotJavaTest {
 
@@ -100,7 +100,7 @@ public class DummyRDotJavaTest {
         new FakeSourcePath("abi.jar"),
         ANDROID_JAVAC_OPTIONS,
         /* forceFinalResourceIds */ false,
-        Optional.absent(),
+        Optional.empty(),
         Optional.of("R2"));
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
@@ -188,8 +188,8 @@ public class DummyRDotJavaTest {
         new FakeSourcePath("abi.jar"),
         ANDROID_JAVAC_OPTIONS,
         /* forceFinalResourceIds */ false,
-        Optional.absent(),
-        Optional.absent());
+        Optional.empty(),
+        Optional.empty());
     assertEquals(
         BuildTargets.getScratchPath(
             dummyRDotJava.getProjectFilesystem(),

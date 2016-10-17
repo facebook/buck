@@ -17,11 +17,12 @@
 package com.facebook.buck.util.network;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+
+import java.util.Optional;
 
 /**
  * Common functionality for uploading log entries in batches.
@@ -83,7 +84,7 @@ public abstract class AbstractBatchingLogger implements BatchingLogger {
     if (currentBatchSize >= minBatchSize) {
       return Optional.of(sendBatch());
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override

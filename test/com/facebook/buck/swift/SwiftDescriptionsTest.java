@@ -30,11 +30,12 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
+
+import java.util.Optional;
 
 public class SwiftDescriptionsTest {
 
@@ -56,7 +57,7 @@ public class SwiftDescriptionsTest {
         SourceWithFlags.of(new FakeSourcePath("foo/foo.cpp")),
         SourceWithFlags.of(swiftSrc));
     args.compilerFlags = ImmutableList.of();
-    args.supportedPlatformsRegex = Optional.absent();
+    args.supportedPlatformsRegex = Optional.empty();
 
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(pathResolver, output, args, buildTarget);
     assertThat(output.moduleName.get(), equalTo("bar"));

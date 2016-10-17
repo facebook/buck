@@ -19,13 +19,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Test static helper functions in {@link AbstractConsoleEventBusListener}
@@ -94,11 +94,11 @@ public class AbstractConsoleEventBusListenerTest {
     // Test overlapping ongoing events do not get measured twice
     final EventPair ongoing1 = EventPair.of(
         Optional.of(ProxyBuckEvent.of(100)),
-        Optional.absent()
+        Optional.empty()
     );
     final EventPair ongoing2 = EventPair.of(
         Optional.of(ProxyBuckEvent.of(200)),
-        Optional.absent()
+        Optional.empty()
     );
     long timeUntilNow = AbstractConsoleEventBusListener
         .getWorkingTimeFromLastStartUntilNow(ImmutableList.of(ongoing1, ongoing2), 300);
@@ -114,7 +114,7 @@ public class AbstractConsoleEventBusListenerTest {
 
     // Test that finished-only events do not count as ongoing
     final EventPair finishOnly = EventPair.of(
-        Optional.absent(),
+        Optional.empty(),
         Optional.of(ProxyBuckEvent.of(100))
     );
     timeUntilNow = AbstractConsoleEventBusListener

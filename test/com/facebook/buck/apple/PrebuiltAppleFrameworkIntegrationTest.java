@@ -84,10 +84,10 @@ public class PrebuiltAppleFrameworkIntegrationTest {
         "otool", "-L", testBinaryPath.toString());
     assertEquals(0, otoolResult.getExitCode());
     Assert.assertThat(
-        otoolResult.getStdout().or(""),
+        otoolResult.getStdout().orElse(""),
         containsString("@rpath/BuckTest.framework/BuckTest"));
     Assert.assertThat(
-        otoolResult.getStdout().or(""),
+        otoolResult.getStdout().orElse(""),
         not(containsString("BuckTest.dylib")));
   }
 

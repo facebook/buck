@@ -41,7 +41,7 @@ public class HostnameFetchingTest {
         "hostname returns success",
         result.getExitCode(),
         equalTo(0));
-    String expectedHostname = result.getStdout().or("").trim();
+    String expectedHostname = result.getStdout().orElse("").trim();
     assumeThat(
         "hostname returns non-empty string",
         expectedHostname,

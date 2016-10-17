@@ -45,7 +45,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -58,6 +57,7 @@ import com.google.common.collect.Sets;
 
 import java.io.File;
 import java.util.Map;
+import java.util.Optional;
 
 public class HaskellLibraryDescription implements
     Description<HaskellLibraryDescription.Arg>,
@@ -122,7 +122,7 @@ public class HaskellLibraryDescription implements
         cxxPlatform,
         haskellConfig,
         depType,
-        Optional.absent(),
+        Optional.empty(),
         Optional.of(getPackageInfo(params.getBuildTarget())),
         args.compilerFlags,
         HaskellSources.from(
@@ -477,7 +477,7 @@ public class HaskellLibraryDescription implements
                     args,
                     type);
             linkArgs =
-                args.linkWhole.or(false) ?
+                args.linkWhole.orElse(false) ?
                     cxxPlatform.getLd().resolve(resolver).linkWhole(archive.toArg()) :
                     ImmutableList.of(archive.toArg());
             break;
@@ -505,7 +505,7 @@ public class HaskellLibraryDescription implements
 
       @Override
       public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-        return args.preferredLinkage.or(Linkage.ANY);
+        return args.preferredLinkage.orElse(Linkage.ANY);
       }
 
       @Override
@@ -514,7 +514,7 @@ public class HaskellLibraryDescription implements
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
             CxxDescriptionEnhancer.getSharedLibrarySoname(
-                Optional.absent(),
+                Optional.empty(),
                 getBuildTarget(),
                 cxxPlatform);
         BuildRule sharedLibraryBuildRule =

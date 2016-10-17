@@ -18,17 +18,16 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidBinary.PackageType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.ManifestEntries;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -37,6 +36,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.EnumSet;
+import java.util.Optional;
 
 public class AaptPackageResourcesTest {
 
@@ -69,7 +69,7 @@ public class AaptPackageResourcesTest {
             resourcesProvider,
             ImmutableList.of(),
             ImmutableSet.of(),
-            /* resourceUnionPackage */ Optional.absent(),
+            /* resourceUnionPackage */ Optional.empty(),
             PackageType.DEBUG,
             /* shouldBuildStringSourceMap */ false,
             /* skipCrunchPngs */ false,

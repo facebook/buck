@@ -35,12 +35,12 @@ import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.util.MoreExceptions;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class FetchCommand extends BuildCommand {
 
@@ -105,7 +105,7 @@ public class FetchCommand extends BuildCommand {
               new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
               pool.getExecutor(),
               new DefaultStepRunner(),
-              getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
+              getBuildEngineMode().orElse(params.getBuckConfig().getBuildEngineMode()),
               params.getBuckConfig().getBuildDepFiles(),
               params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
               params.getBuckConfig().getBuildArtifactCacheSizeLimit(),
@@ -117,13 +117,13 @@ public class FetchCommand extends BuildCommand {
           params.getArtifactCache(),
           params.getConsole(),
           params.getBuckEventBus(),
-          Optional.absent(),
+          Optional.empty(),
           params.getPlatform(),
           params.getEnvironment(),
           params.getObjectMapper(),
           params.getClock(),
-          Optional.absent(),
-          Optional.absent(),
+          Optional.empty(),
+          Optional.empty(),
           params.getExecutors())) {
         exitCode = build.executeAndPrintFailuresToEventBus(
             buildTargets,
@@ -148,8 +148,8 @@ public class FetchCommand extends BuildCommand {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         params.getCell().getRoot().getFileSystem(),
         params.getEnvironment(),
-        Optional.absent(),
-        Optional.absent());
+        Optional.empty(),
+        Optional.empty());
 
     Optional<Path> sdkDir = resolver.getSdkOrAbsent();
 

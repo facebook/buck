@@ -345,7 +345,7 @@ public class AppleLibraryIntegrationTest {
     ProcessExecutor.Result lipoVerifyResult =
         workspace.runCommand("lipo", libraryPath.toString(), "-verify_arch", "i386", "x86_64");
     assertEquals(
-        lipoVerifyResult.getStderr().or(""),
+        lipoVerifyResult.getStderr().orElse(""),
         0,
         lipoVerifyResult.getExitCode());
     assertThat(

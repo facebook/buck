@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -37,6 +36,7 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -150,8 +150,8 @@ public class BuckBuildLog {
 
       builder.put(buildTarget, new BuildLogEntry(
               status,
-              Optional.fromNullable(successType),
-              Optional.fromNullable(cacheResult),
+              Optional.ofNullable(successType),
+              Optional.ofNullable(cacheResult),
               ruleKey));
     }
 

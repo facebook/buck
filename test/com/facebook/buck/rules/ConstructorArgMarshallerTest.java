@@ -32,7 +32,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -48,6 +47,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -325,7 +325,7 @@ public class ConstructorArgMarshallerTest {
         ImmutableSet.builder(),
         args);
 
-    assertEquals(Optional.absent(), dto.strings);
+    assertEquals(Optional.empty(), dto.strings);
   }
 
   @Test(expected = ConstructorArgMarshalException.class)
@@ -515,7 +515,7 @@ public class ConstructorArgMarshallerTest {
     assertEquals(42, dto.num);
     assertEquals(Optional.of(88L), dto.optionalLong);
     assertTrue(dto.needed);
-    assertEquals(Optional.<Boolean>absent(), dto.notNeeded);
+    assertEquals(Optional.empty(), dto.notNeeded);
     BuildTargetSourcePath expected = new BuildTargetSourcePath(expectedRule.getBuildTarget());
     assertEquals(expected, dto.aSrcPath);
     assertEquals(Paths.get("example/path/NotFile.java"), dto.notAPath.get());
@@ -538,10 +538,10 @@ public class ConstructorArgMarshallerTest {
         ImmutableSet.builder(),
         args);
 
-    assertEquals(Optional.<String>absent(), dto.noString);
-    assertEquals(Optional.<String>absent(), dto.defaultString);
-    assertEquals(Optional.<SourcePath>absent(), dto.noSourcePath);
-    assertEquals(Optional.<SourcePath>absent(), dto.defaultSourcePath);
+    assertEquals(Optional.empty(), dto.noString);
+    assertEquals(Optional.empty(), dto.defaultString);
+    assertEquals(Optional.empty(), dto.noSourcePath);
+    assertEquals(Optional.empty(), dto.defaultSourcePath);
     assertEquals(0, dto.primitiveNum);
     assertEquals(Integer.valueOf(0), dto.wrapperObjectNum);
   }

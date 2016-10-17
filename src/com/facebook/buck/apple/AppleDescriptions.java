@@ -48,10 +48,10 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.OptionalCompat;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -70,6 +70,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -100,7 +101,7 @@ public class AppleDescriptions {
   public static Path getHeaderPathPrefix(
       AppleNativeTargetDescriptionArg arg,
       BuildTarget buildTarget) {
-    return Paths.get(arg.headerPathPrefix.or(buildTarget.getShortName()));
+    return Paths.get(arg.headerPathPrefix.orElse(buildTarget.getShortName()));
   }
 
   public static ImmutableSortedMap<String, SourcePath> convertAppleHeadersToPublicCxxHeaders(
@@ -338,8 +339,8 @@ public class AppleDescriptions {
     ImmutableSortedSet.Builder<SourcePath> assetCatalogDirsBuilder =
         ImmutableSortedSet.naturalOrder();
 
-    Optional<String> appIcon = Optional.absent();
-    Optional<String> launchImage = Optional.absent();
+    Optional<String> appIcon = Optional.empty();
+    Optional<String> launchImage = Optional.empty();
 
     for (AppleAssetCatalogDescription.Arg arg : assetCatalogArgs) {
       assetCatalogDirsBuilder.addAll(arg.dirs);
@@ -366,7 +367,7 @@ public class AppleDescriptions {
         assetCatalogDirsBuilder.build();
 
     if (assetCatalogDirs.isEmpty()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     BuildRuleParams assetCatalogParams = params.copyWithChanges(
@@ -453,7 +454,7 @@ public class AppleDescriptions {
       Preconditions.checkArgument(dsymRule.get() instanceof AppleDsym);
       return Optional.of((AppleDsym) dsymRule.get());
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   static AppleDsym createAppleDsym(
@@ -605,7 +606,7 @@ public class AppleDescriptions {
           appleCxxPlatforms);
     } else {
       targetDebuggableBinaryRule = unstrippedBinaryRule;
-      appleDsym = Optional.absent();
+      appleDsym = Optional.empty();
     }
 
     BuildRuleParams bundleParamsWithFlavoredBinaryDep = getBundleParamsWithUpdatedDeps(
@@ -613,7 +614,7 @@ public class AppleDescriptions {
         binary,
         ImmutableSet.<BuildRule>builder()
             .add(targetDebuggableBinaryRule)
-            .addAll(assetCatalog.asSet())
+            .addAll(OptionalCompat.asSet(assetCatalog))
             .addAll(
                 BuildRules.toBuildRulesFor(
                     params.getBuildTarget(),
@@ -623,7 +624,7 @@ public class AppleDescriptions {
                             ImmutableList.of(
                                 collectedResources.getAll(),
                                 frameworks)))))
-            .addAll(appleDsym.asSet())
+            .addAll(OptionalCompat.asSet(appleDsym))
             .build());
 
     ImmutableMap<SourcePath, String> extensionBundlePaths = collectFirstLevelAppleDependencyBundles(

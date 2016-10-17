@@ -18,7 +18,6 @@ package com.facebook.buck.util.cache;
 
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.model.Pair;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
@@ -26,6 +25,7 @@ import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Presents a list of {@link FileHashCache}s as a single cache, implementing a Chain of
@@ -46,7 +46,7 @@ public class StackedFileHashCache implements FileHashCache {
         return Optional.of(new Pair<>(cache, path));
       }
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private Optional<Pair<FileHashCache, ArchiveMemberPath>> lookup(ArchiveMemberPath path) {
@@ -56,7 +56,7 @@ public class StackedFileHashCache implements FileHashCache {
         return Optional.of(new Pair<>(cache, path));
       }
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override

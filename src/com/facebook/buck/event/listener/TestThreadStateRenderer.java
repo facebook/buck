@@ -23,12 +23,12 @@ import com.facebook.buck.rules.TestSummaryEvent;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.util.Ansi;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 
@@ -75,18 +75,18 @@ public class TestThreadStateRenderer implements ThreadStateRenderer {
       if (testRuleEvent == null) {
         continue;
       }
-      Optional<BuildTarget> buildTarget = Optional.absent();
+      Optional<BuildTarget> buildTarget = Optional.empty();
       if (testRuleEvent.isPresent()) {
         buildTarget = Optional.of(testRuleEvent.get().getBuildTarget());
       }
       Optional<? extends TestSummaryEvent> testSummary = testSummariesByThread.get(threadId);
       if (testSummary == null) {
-        testSummary = Optional.absent();
+        testSummary = Optional.empty();
       }
       Optional<? extends TestStatusMessageEvent> testStatusMessage = testStatusMessagesByThread.get(
           threadId);
       if (testStatusMessage == null) {
-        testStatusMessage = Optional.absent();
+        testStatusMessage = Optional.empty();
       }
       AtomicLong accumulatedTime = null;
       if (buildTarget.isPresent()) {
@@ -96,12 +96,12 @@ public class TestThreadStateRenderer implements ThreadStateRenderer {
       if (testRuleEvent.isPresent() && accumulatedTime != null) {
         elapsedTimeMs = currentTimeMs - testRuleEvent.get().getTimestamp() + accumulatedTime.get();
       } else {
-        testRuleEvent = Optional.absent();
-        buildTarget = Optional.absent();
+        testRuleEvent = Optional.empty();
+        buildTarget = Optional.empty();
       }
       Optional<? extends LeafEvent> runningStep = runningStepsByThread.get(threadId);
       if (runningStep == null) {
-        runningStep = Optional.absent();
+        runningStep = Optional.empty();
       }
 
       threadInformationMapBuilder.put(
@@ -131,8 +131,8 @@ public class TestThreadStateRenderer implements ThreadStateRenderer {
   public String renderStatusLine(long threadId, StringBuilder lineBuilder) {
     ThreadRenderingInformation threadInformation = Preconditions.checkNotNull(
         threadInformationMap.get(threadId));
-    Optional<String> stepCategory = Optional.absent();
-    Optional<? extends LeafEvent> runningStep = Optional.absent();
+    Optional<String> stepCategory = Optional.empty();
+    Optional<? extends LeafEvent> runningStep = Optional.empty();
     if (threadInformation.getTestStatusMessage().isPresent() &&
         threadInformation.getTestStatusMessage().get()
             .getTestStatusMessage().getLevel().intValue() >= MIN_LOG_LEVEL.intValue()) {
@@ -151,7 +151,7 @@ public class TestThreadStateRenderer implements ThreadStateRenderer {
         threadInformation.getStartEvent(),
         runningStep,
         stepCategory,
-        Optional.absent(),
+        Optional.empty(),
         threadInformation.getElapsedTimeMs(),
         lineBuilder);
   }

@@ -28,10 +28,11 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
 
 public class CSharpLibraryDescription implements Description<CSharpLibraryDescription.Arg> {
 
@@ -63,7 +64,7 @@ public class CSharpLibraryDescription implements Description<CSharpLibraryDescri
       }
     }
 
-    String suggestedOut = args.dllName.or(params.getBuildTarget().getShortName() + ".dll");
+    String suggestedOut = args.dllName.orElse(params.getBuildTarget().getShortName() + ".dll");
 
     return new CSharpLibrary(
         params,

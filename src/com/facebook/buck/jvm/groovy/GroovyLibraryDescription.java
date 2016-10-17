@@ -35,11 +35,12 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+
+import java.util.Optional;
 
 
 public class GroovyLibraryDescription implements Description<GroovyLibraryDescription.Arg> {
@@ -93,8 +94,8 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
                     pathResolver,
                     params.getProjectFilesystem(),
                     args.resources),
-                Optional.absent(),
-                Optional.absent(),
+                Optional.empty(),
+                Optional.empty(),
                 ImmutableList.of(),
                 exportedDeps,
                 resolver.getAllRules(args.providedDeps),
@@ -110,9 +111,9 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
                         resolver,
                         pathResolver,
                         args)),
-                Optional.absent(),
-                /* manifest file */ Optional.absent(),
-                Optional.absent(),
+                Optional.empty(),
+                /* manifest file */ Optional.empty(),
+                Optional.empty(),
                 ImmutableSortedSet.of(),
                 /* classesToRemoveFromJar */ ImmutableSet.of()));
 

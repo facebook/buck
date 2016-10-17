@@ -21,12 +21,12 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.NativeLinkStrategy;
 import com.facebook.buck.cxx.NativeLinkTarget;
 import com.facebook.buck.cxx.NativeLinkTargetMode;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkables;
+import com.facebook.buck.cxx.Omnibus;
 import com.facebook.buck.cxx.OmnibusLibraries;
 import com.facebook.buck.cxx.OmnibusLibrary;
 import com.facebook.buck.cxx.OmnibusRoot;
-import com.facebook.buck.cxx.NativeLinkable;
-import com.facebook.buck.cxx.Omnibus;
 import com.facebook.buck.cxx.OmnibusRoots;
 import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.io.MorePaths;
@@ -43,7 +43,6 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -55,10 +54,11 @@ import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.LinkedHashMap;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class PythonUtil {
 
@@ -222,7 +222,7 @@ public class PythonUtil {
           NativeLinkTargetMode mode = target.getNativeLinkTargetMode(cxxPlatform);
           String soname =
               Preconditions.checkNotNull(
-                  mode.getLibraryName().orNull(),
+                  mode.getLibraryName().orElse(null),
                   "%s: omnibus library for %s was built without soname",
                   params.getBuildTarget(),
                   root.getKey());

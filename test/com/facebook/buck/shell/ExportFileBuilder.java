@@ -19,7 +19,8 @@ package com.facebook.buck.shell;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -33,7 +34,7 @@ public class ExportFileBuilder extends AbstractNodeBuilder<ExportFileDescription
   }
 
   public ExportFileBuilder setSrc(@Nullable SourcePath path) {
-    arg.src = Optional.fromNullable(path);
+    arg.src = Optional.ofNullable(path);
     return this;
   }
 

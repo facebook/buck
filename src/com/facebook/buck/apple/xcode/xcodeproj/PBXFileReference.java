@@ -18,8 +18,9 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Optional;
 import com.google.common.io.Files;
+
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -48,14 +49,14 @@ public class PBXFileReference extends PBXReference {
     String fileType = FileTypes.FILE_EXTENSION_TO_IDENTIFIER.get(
         Files.getFileExtension(pathOrName));
     if (fileType != null && FileTypes.EXPLICIT_FILE_TYPE_BROKEN_IDENTIFIERS.contains(fileType)) {
-      explicitFileType = Optional.absent();
+      explicitFileType = Optional.empty();
       lastKnownFileType = Optional.of(fileType);
     } else if (fileType != null) {
       explicitFileType = Optional.of(fileType);
-      lastKnownFileType = Optional.absent();
+      lastKnownFileType = Optional.empty();
     } else {
       explicitFileType = defaultType;
-      lastKnownFileType = Optional.absent();
+      lastKnownFileType = Optional.empty();
     }
   }
 

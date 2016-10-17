@@ -18,11 +18,11 @@ package com.facebook.buck.jvm.java.intellij;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
 public class IjProjectBuckConfig {
 

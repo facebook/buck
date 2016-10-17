@@ -54,7 +54,6 @@ import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -74,6 +73,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -441,7 +441,7 @@ public class JavaTest
                 getTestClassFailedSummary(
                     testClass,
                     message,
-                    testRuleTimeoutMs.or(0L)));
+                    testRuleTimeoutMs.orElse(0L)));
           }
         // Not having a test result file at all (which only happens when we are using test
         // selectors) is interpreted as meaning a test didn't run at all, so we'll completely
@@ -642,8 +642,8 @@ public class JavaTest
         getJUnitStep(
             executionContext,
             options,
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             getClassNamesForSources()
             );
     return ExternalTestRunnerTestSpec.builder()

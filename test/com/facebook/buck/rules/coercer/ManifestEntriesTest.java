@@ -23,10 +23,11 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilder;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
+
+import java.util.Optional;
 
 /**
  * Test functionality for the ManifestEntries class that goes beyond basic key/value get/set
@@ -60,9 +61,9 @@ public class ManifestEntriesTest {
         .andReturn(ruleKeyBuilder);
     expect(ruleKeyBuilder.setReflectively("versionName", Optional.of("thirteen")))
         .andReturn(ruleKeyBuilder);
-    expect(ruleKeyBuilder.setReflectively("debugMode", Optional.absent()))
+    expect(ruleKeyBuilder.setReflectively("debugMode", Optional.empty()))
         .andReturn(ruleKeyBuilder);
-    expect(ruleKeyBuilder.setReflectively("placeholders", Optional.absent()))
+    expect(ruleKeyBuilder.setReflectively("placeholders", Optional.empty()))
         .andReturn(ruleKeyBuilder);
 
     replay(ruleKeyBuilder);

@@ -16,11 +16,9 @@
 
 package com.facebook.buck.io;
 
-import com.google.common.base.Optional;
-
 import java.io.IOException;
-
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Testable interface for a Watchman client.

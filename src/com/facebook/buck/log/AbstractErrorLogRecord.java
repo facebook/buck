@@ -21,13 +21,13 @@ import static com.facebook.buck.util.MoreThrowables.getThrowableOrigin;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.LogRecord;
 
@@ -67,9 +67,9 @@ abstract class AbstractErrorLogRecord {
 
   @Value.Derived
   public String getMessage() {
-    Optional<String> initialErr = Optional.absent();
-    Optional<String> initialErrorMsg = Optional.absent();
-    Optional<String> errorMsg = Optional.absent();
+    Optional<String> initialErr = Optional.empty();
+    Optional<String> initialErrorMsg = Optional.empty();
+    Optional<String> errorMsg = Optional.empty();
     Throwable throwable = getRecord().getThrown();
     if (throwable != null) {
       initialErr = Optional.of(getInitialCause(throwable).getClass().getName());
@@ -83,7 +83,7 @@ abstract class AbstractErrorLogRecord {
     }
     StringBuilder sb = new StringBuilder();
     for (Optional<String> field : ImmutableList.of(initialErr, initialErrorMsg, errorMsg)) {
-      sb.append(field.or(""));
+      sb.append(field.orElse(""));
       if (field.isPresent()) {
         sb.append(": ");
       }
@@ -124,7 +124,7 @@ abstract class AbstractErrorLogRecord {
     if (logger != null) {
       return Optional.of(logger);
     }
-    return Optional.absent();
+    return Optional.empty();
   };
 
   @Value.Derived
@@ -133,7 +133,7 @@ abstract class AbstractErrorLogRecord {
     if (buildUuid != null) {
       return Optional.of(buildUuid);
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Value.Derived
@@ -142,7 +142,7 @@ abstract class AbstractErrorLogRecord {
     if (throwable != null) {
       return Optional.of(throwable.getStackTrace());
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Value.Derived
@@ -151,7 +151,7 @@ abstract class AbstractErrorLogRecord {
     if (throwable != null && throwable.getMessage() != null) {
       return Optional.of(throwable.getMessage());
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Value.Derived
@@ -160,7 +160,7 @@ abstract class AbstractErrorLogRecord {
     if (throwable != null) {
       return Optional.of(getInitialCause(throwable).getClass().getName());
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Value.Derived
@@ -169,7 +169,7 @@ abstract class AbstractErrorLogRecord {
     if (throwable != null) {
       return Optional.of(getInitialCause(throwable).getLocalizedMessage());
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Value.Derived
@@ -178,7 +178,7 @@ abstract class AbstractErrorLogRecord {
     if (throwable != null) {
       return Optional.of(getThrowableOrigin(throwable));
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   /**

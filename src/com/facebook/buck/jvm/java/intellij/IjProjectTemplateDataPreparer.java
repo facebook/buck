@@ -23,7 +23,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -41,6 +40,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -119,10 +119,9 @@ public class IjProjectTemplateDataPreparer {
         if (!folder.getWantsPackagePrefix()) {
           continue;
         }
-        Optional<Path> firstJavaFile = FluentIterable.from(folder.getInputs())
-            .filter(
-                input -> input.getFileName().toString().endsWith(".java"))
-            .first();
+        Optional<Path> firstJavaFile = folder.getInputs().stream()
+            .filter(input -> input.getFileName().toString().endsWith(".java"))
+            .findFirst();
         if (firstJavaFile.isPresent()) {
           builder.add(firstJavaFile.get());
         }

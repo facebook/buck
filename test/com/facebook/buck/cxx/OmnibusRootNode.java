@@ -16,10 +16,10 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.args.StringArg;
-import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 class OmnibusRootNode extends OmnibusNode implements NativeLinkTarget, NativeLinkable {
 
@@ -62,7 +62,7 @@ class OmnibusRootNode extends OmnibusNode implements NativeLinkTarget, NativeLin
 
   @Override
   public Optional<Path> getNativeLinkTargetOutputPath(CxxPlatform cxxPlatform) {
-    return Optional.absent();
+    return Optional.empty();
   }
 
 }

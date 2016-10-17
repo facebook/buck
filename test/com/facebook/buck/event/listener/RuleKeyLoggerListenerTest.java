@@ -31,7 +31,6 @@ import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.concurrent.MostExecutors;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -42,6 +41,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
@@ -100,7 +100,7 @@ public class RuleKeyLoggerListenerTest {
         .setUnflavoredBuildTarget(
             UnflavoredBuildTarget.of(
                 projectFilesystem.getRootPath(),
-                Optional.absent(),
+                Optional.empty(),
                 "//topspin",
                 "//downtheline"))
         .build(), null);

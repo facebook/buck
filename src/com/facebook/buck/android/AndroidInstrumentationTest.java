@@ -44,7 +44,6 @@ import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PackagedResource;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -54,6 +53,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -147,8 +147,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
             executionContext.getPathToAdbExecutable(),
             Optional.of(getProjectFilesystem().resolve(pathToTestOutput)),
             Optional.of(device.getSerialNumber()),
-            Optional.absent(),
-            Optional.absent()));
+            Optional.empty(),
+            Optional.empty()));
 
     return steps.build();
   }
@@ -276,14 +276,14 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
   @Override
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext, TestRunningOptions testRunningOptions) {
-    Optional<Path> apkUnderTestPath = Optional.absent();
+    Optional<Path> apkUnderTestPath = Optional.empty();
     if (apk instanceof AndroidInstrumentationApk) {
       apkUnderTestPath = Optional.of(toPath(((AndroidInstrumentationApk) apk).getApkUnderTest()));
     }
     InstrumentationStep step = getInstrumentationStep(
         executionContext.getPathToAdbExecutable(),
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         Optional.of(toPath(apk)),
         apkUnderTestPath);
 

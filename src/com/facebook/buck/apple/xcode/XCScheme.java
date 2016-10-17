@@ -16,11 +16,11 @@
 
 package com.facebook.buck.apple.xcode;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 
 public class XCScheme {
   private String name;

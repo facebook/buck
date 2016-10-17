@@ -43,7 +43,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -63,6 +62,7 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 
 public class PrebuiltJarSymbolsFinderTest {
@@ -117,7 +117,7 @@ public class PrebuiltJarSymbolsFinderTest {
     // DefaultRuleKeyBuilderFactory.
     final SourcePathResolver pathResolver = createMock(SourcePathResolver.class);
     expect(pathResolver.getRule(anyObject(SourcePath.class)))
-        .andReturn(Optional.absent())
+        .andReturn(Optional.empty())
         .anyTimes();
     expect(pathResolver.getRelativePath(anyObject(SourcePath.class)))
         .andReturn(relativePathToJar)

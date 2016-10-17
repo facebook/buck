@@ -21,7 +21,8 @@ import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 public class CommandLineTargetNodeSpecParser {
 
@@ -47,11 +48,11 @@ public class CommandLineTargetNodeSpecParser {
 
     // Strip out the leading "//" if there is one to make it easier to normalize the
     // remaining target string.  We'll add this back at the end.
-    target = MoreStrings.stripPrefix(target, "//").or(target);
+    target = MoreStrings.stripPrefix(target, "//").orElse(target);
 
     // Look up the section after the colon, if present, and strip it off.
     int colonIndex = target.indexOf(':');
-    Optional<String> nameAfterColon = Optional.absent();
+    Optional<String> nameAfterColon = Optional.empty();
     if (colonIndex != -1) {
       nameAfterColon = Optional.of(target.substring(colonIndex + 1, target.length()));
       target = target.substring(0, colonIndex);
@@ -82,7 +83,7 @@ public class CommandLineTargetNodeSpecParser {
   }
 
   public TargetNodeSpec parse(CellPathResolver cellNames, String arg) {
-    arg = Optional.fromNullable(config.getBuildTargetForAliasAsString(arg)).or(arg);
+    arg = Optional.ofNullable(config.getBuildTargetForAliasAsString(arg)).orElse(arg);
     arg = normalizeBuildTargetString(arg);
     return parser.parse(cellNames, arg);
   }

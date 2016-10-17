@@ -29,12 +29,12 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
 
@@ -96,8 +96,7 @@ public class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
           outputDirectory,
           sourceFilePaths,
           ImmutableSortedSet.<Path>naturalOrder()
-            .addAll(Optional.fromNullable(extraClassPath.apply(context))
-                .or(ImmutableList.of()))
+            .addAll(Optional.ofNullable(extraClassPath.apply(context)).orElse(ImmutableList.of()))
             .addAll(classpathEntries)
             .build(),
           filesystem));

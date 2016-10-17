@@ -25,11 +25,12 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
 
 
 
@@ -56,7 +57,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
             new BuildTargetSourcePath(androidBuildConfig.getBuildTarget())),
         /* resources */ ImmutableSortedSet.of(),
         javacOptions.getGeneratedSourceFolderName(),
-        /* proguardConfig */ Optional.absent(),
+        /* proguardConfig */ Optional.empty(),
         /* postprocessClassesCommands */ ImmutableList.of(),
         /* exportedDeps */ ImmutableSortedSet.of(),
         /* providedDeps */ ImmutableSortedSet.of(),
@@ -64,9 +65,9 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         /* trackClassUsage */ javacOptions.trackClassUsage(),
         /* additionalClasspathEntries */ ImmutableSet.of(),
         new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
-        /* resourcesRoot */ Optional.absent(),
-        /* manifest file */ Optional.absent(),
-        /* mavenCoords */ Optional.absent(),
+        /* resourcesRoot */ Optional.empty(),
+        /* manifest file */ Optional.empty(),
+        /* mavenCoords */ Optional.empty(),
         /* tests */ ImmutableSortedSet.of(),
         /* classesToRemoveFromJar */ ImmutableSet.of());
     this.androidBuildConfig = androidBuildConfig;

@@ -63,7 +63,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -95,6 +94,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -355,7 +355,7 @@ public class ProjectWorkspace {
       throws IOException {
     return runBuckCommandWithEnvironmentOverridesAndContext(
         destPath,
-        Optional.absent(),
+        Optional.empty(),
         ImmutableMap.of(),
         args);
   }
@@ -364,7 +364,7 @@ public class ProjectWorkspace {
       throws IOException {
     return runBuckCommandWithEnvironmentOverridesAndContext(
         destPath,
-        Optional.absent(),
+        Optional.empty(),
         environment,
         args);
   }
@@ -373,7 +373,7 @@ public class ProjectWorkspace {
       throws IOException {
     return runBuckCommandWithEnvironmentOverridesAndContext(
         repoRoot,
-        Optional.absent(),
+        Optional.empty(),
         ImmutableMap.of(),
         args);
   }
@@ -610,8 +610,8 @@ public class ProjectWorkspace {
     DefaultAndroidDirectoryResolver directoryResolver = new DefaultAndroidDirectoryResolver(
         filesystem.getRootPath().getFileSystem(),
         env,
-        Optional.absent(),
-        Optional.absent());
+        Optional.empty(),
+        Optional.empty());
     return CellProvider.createForLocalBuild(
         filesystem,
         Watchman.NULL_WATCHMAN,

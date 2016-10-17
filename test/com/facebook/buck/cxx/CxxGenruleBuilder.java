@@ -19,7 +19,8 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 public class CxxGenruleBuilder extends AbstractNodeBuilder<CxxGenruleDescription.Arg> {
 

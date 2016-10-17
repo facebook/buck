@@ -24,7 +24,6 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.io.MorePathsForTests;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
@@ -36,6 +35,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 
@@ -53,8 +53,8 @@ public class AndroidPlatformTargetTest {
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir),
             /* buildToolsDir */ Optional.of(androidSdkDir.resolve("platform-tools")),
-            /* androidNdkDir */ Optional.absent(),
-            /* ndkVersion */ Optional.absent());
+            /* androidNdkDir */ Optional.empty(),
+            /* ndkVersion */ Optional.empty());
 
     AndroidPlatformTarget androidPlatformTarget = AndroidPlatformTarget
         .createFromDefaultDirectoryStructure(
@@ -62,7 +62,7 @@ public class AndroidPlatformTargetTest {
             androidDirectoryResolver,
             platformDirectoryPath,
             additionalJarPaths,
-            /* aaptOverride */ Optional.absent());
+            /* aaptOverride */ Optional.empty());
     assertEquals(name, androidPlatformTarget.getName());
     assertEquals(
         ImmutableList.of(
@@ -105,8 +105,8 @@ public class AndroidPlatformTargetTest {
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
             Optional.of(buildToolsDir.toPath()),
-            /* androidNdkDir */ Optional.absent(),
-            /* ndkVersion */ Optional.absent());
+            /* androidNdkDir */ Optional.empty(),
+            /* ndkVersion */ Optional.empty());
 
     File addOnsLibsDir1 = new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs");
     addOnsLibsDir1.mkdirs();
@@ -123,7 +123,7 @@ public class AndroidPlatformTargetTest {
         AndroidPlatformTarget.getTargetForId(
             "Google Inc.:Google APIs:17",
             androidDirectoryResolver,
-            /* aaptOverride */ Optional.absent());
+            /* aaptOverride */ Optional.empty());
     assertTrue(androidPlatformTargetOption.isPresent());
 
     // Verify that addOnsLibsDir2 was picked up since addOnsLibsDir1 is empty.
@@ -143,8 +143,8 @@ public class AndroidPlatformTargetTest {
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
             Optional.of(buildToolsDir.toPath()),
-            /* androidNdkDir */ Optional.absent(),
-            /* ndkVersion */ Optional.absent());
+            /* androidNdkDir */ Optional.empty(),
+            /* ndkVersion */ Optional.empty());
     File optionalLibsDir = new File(androidSdkDir, "platforms/android-23/optional");
     optionalLibsDir.mkdirs();
     Files.touch(new File(optionalLibsDir, "httpclient.jar"));
@@ -161,7 +161,7 @@ public class AndroidPlatformTargetTest {
         AndroidPlatformTarget.getTargetForId(
             platformId,
             androidDirectoryResolver,
-            /* aaptOverride */ Optional.absent());
+            /* aaptOverride */ Optional.empty());
 
     AndroidPlatformTarget androidPlatformTarget = androidPlatformTargetOption.get();
     assertEquals(platformId, androidPlatformTarget.getName());
@@ -186,14 +186,14 @@ public class AndroidPlatformTargetTest {
     AndroidDirectoryResolver androidDirectoryResolver =
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
-            /* buildToolsDir */ Optional.absent(),
-            /* androidNdkDir */ Optional.absent(),
-            /* ndkVersion */ Optional.absent());
+            /* buildToolsDir */ Optional.empty(),
+            /* androidNdkDir */ Optional.empty(),
+            /* ndkVersion */ Optional.empty());
     try {
       AndroidPlatformTarget.getTargetForId(
           platformId,
           androidDirectoryResolver,
-          /* aaptOverride */ Optional.absent());
+          /* aaptOverride */ Optional.empty());
       fail("Should have thrown HumanReadableException");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -219,8 +219,8 @@ public class AndroidPlatformTargetTest {
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
             Optional.of(buildToolsDir.toPath()),
-            /* androidNdkDir */ Optional.absent(),
-            /* ndkVersion */ Optional.absent());
+            /* androidNdkDir */ Optional.empty(),
+            /* ndkVersion */ Optional.empty());
 
     File addOnsLibsDir = new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs");
     addOnsLibsDir.mkdirs();
@@ -233,7 +233,7 @@ public class AndroidPlatformTargetTest {
         AndroidPlatformTarget.getTargetForId(
             "Google Inc.:Google APIs:17",
             androidDirectoryResolver,
-            /* aaptOverride */ Optional.absent());
+            /* aaptOverride */ Optional.empty());
     assertTrue(androidPlatformTargetOption1.isPresent());
     assertEquals(
         ImmutableList.of(
@@ -248,7 +248,7 @@ public class AndroidPlatformTargetTest {
         AndroidPlatformTarget.getTargetForId(
             "android-17",
             androidDirectoryResolver,
-            /* aaptOverride */ Optional.absent());
+            /* aaptOverride */ Optional.empty());
     assertTrue(androidPlatformTargetOption2.isPresent());
     assertEquals(
         ImmutableList.of(
@@ -267,8 +267,8 @@ public class AndroidPlatformTargetTest {
         new FakeAndroidDirectoryResolver(
             Optional.of(androidSdkDir.toPath()),
             Optional.of(buildToolsDirFromOldUpgradePath.toPath()),
-            /* androidNdkDir */ Optional.absent(),
-            /* ndkVersion */ Optional.absent());
+            /* androidNdkDir */ Optional.empty(),
+            /* ndkVersion */ Optional.empty());
     Files.touch(new File(buildToolsDirFromOldUpgradePath, "zipalign"));
     File addOnsLibsDir = new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs");
     addOnsLibsDir.mkdirs();
@@ -279,7 +279,7 @@ public class AndroidPlatformTargetTest {
         AndroidPlatformTarget.getTargetForId(
             platformId,
             androidDirectoryResolver,
-            /* aaptOverride */ Optional.absent());
+            /* aaptOverride */ Optional.empty());
 
     assertTrue(androidPlatformTargetOption.isPresent());
     AndroidPlatformTarget androidPlatformTarget = androidPlatformTargetOption.get();
@@ -295,7 +295,7 @@ public class AndroidPlatformTargetTest {
         AndroidPlatformTarget.getTargetForId(
             platformId,
             androidDirectoryResolver,
-            /* aaptOverride */ Optional.absent());
+            /* aaptOverride */ Optional.empty());
     assertTrue(androidPlatformTargetOption.isPresent());
     androidPlatformTarget = androidPlatformTargetOption.get();
     assertEquals(platformId, androidPlatformTarget.getName());

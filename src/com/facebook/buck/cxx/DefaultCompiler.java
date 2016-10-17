@@ -21,10 +21,11 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
+import java.util.Optional;
 
 public abstract class DefaultCompiler implements Compiler {
 
@@ -36,12 +37,12 @@ public abstract class DefaultCompiler implements Compiler {
 
   @Override
   public Optional<ImmutableList<String>> debugCompilationDirFlags(String debugCompilationDir) {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override
   public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override

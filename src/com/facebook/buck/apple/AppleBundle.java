@@ -57,7 +57,6 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.swift.SwiftPlatform;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -75,6 +74,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -226,7 +226,7 @@ public class AppleBundle
     }
     this.codesignAllocatePath = appleCxxPlatform.getCodesignAllocate();
     this.swiftStdlibTool = appleCxxPlatform.getSwiftPlatform()
-        .transform(SwiftPlatform::getSwiftStdlibTool);
+        .map(SwiftPlatform::getSwiftStdlibTool);
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -338,7 +338,7 @@ public class AppleBundle
             infoPlistSubstitutionTempPath,
             assetCatalog.isPresent() ?
                 Optional.of(assetCatalog.get().getOutputPlist()) :
-                Optional.absent(),
+                Optional.empty(),
             infoPlistOutputPath,
             getInfoPlistAdditionalKeys(),
             getInfoPlistOverrideKeys(),
@@ -420,11 +420,11 @@ public class AppleBundle
       Supplier<CodeSignIdentity> codeSignIdentitySupplier;
 
       if (adHocCodeSignIsSufficient()) {
-        signingEntitlementsTempPath = Optional.absent();
+        signingEntitlementsTempPath = Optional.empty();
         codeSignIdentitySupplier = () -> CodeSignIdentity.AD_HOC;
       } else {
         // Copy the .mobileprovision file if the platform requires it, and sign the executable.
-        Optional<Path> entitlementsPlist = Optional.absent();
+        Optional<Path> entitlementsPlist = Optional.empty();
         final Path srcRoot = getProjectFilesystem().getRootPath().resolve(
             getBuildTarget().getBasePath());
         Optional<String> entitlementsPlistString =
@@ -449,7 +449,7 @@ public class AppleBundle
             new ProvisioningProfileCopyStep(
                 getProjectFilesystem(),
                 infoPlistOutputPath,
-                Optional.absent(),  // Provisioning profile UUID -- find automatically.
+                Optional.empty(),  // Provisioning profile UUID -- find automatically.
                 entitlementsPlist,
                 provisioningProfileStore,
                 resourcesDestinationPath.resolve("embedded.mobileprovision"),
@@ -504,7 +504,7 @@ public class AppleBundle
     } else {
       addSwiftStdlibStepIfNeeded(
           bundleRoot.resolve(Paths.get("Frameworks")),
-          Optional.<Supplier<CodeSignIdentity>>absent(),
+          Optional.<Supplier<CodeSignIdentity>>empty(),
           stepsBuilder,
           false /* is for packaging? */
       );
@@ -803,7 +803,7 @@ public class AppleBundle
             new PlistProcessStep(
                 getProjectFilesystem(),
                 sourcePath,
-                Optional.absent(),
+                Optional.empty(),
                 destinationPath,
                 ImmutableMap.of(),
                 ImmutableMap.of(),

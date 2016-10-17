@@ -18,9 +18,9 @@ package com.facebook.buck.maven;
 
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.google.common.base.Optional;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * A {@link com.facebook.buck.maven.Publisher}, that does not send real PUT requests, instead

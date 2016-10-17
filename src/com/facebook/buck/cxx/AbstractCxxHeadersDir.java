@@ -21,9 +21,10 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
+
+import java.util.Optional;
 
 /**
  * Wraps a header directory to add to the preprocessors search path.
@@ -47,7 +48,7 @@ abstract class AbstractCxxHeadersDir extends CxxHeaders {
 
   @Override
   public Optional<SourcePath> getHeaderMap() {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override

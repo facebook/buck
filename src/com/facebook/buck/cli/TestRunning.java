@@ -55,7 +55,6 @@ import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
@@ -86,6 +85,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -142,7 +142,7 @@ public class TestRunning {
               new MakeCleanDirectoryStep(
                   library.getProjectFilesystem(),
                   JacocoConstants.getJacocoOutputDir(library.getProjectFilesystem())),
-              Optional.absent());
+              Optional.empty());
         } catch (StepFailedException e) {
           params.getBuckEventBus().post(
               ConsoleEvent.severe(Throwables.getRootCause(e).getLocalizedMessage()));
@@ -442,7 +442,7 @@ public class TestRunning {
     if (options.isCodeCoverageEnabled() && !rulesUnderTest.isEmpty()) {
       try {
         Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional =
-            Optional.fromNullable(params.getBuckConfig().createDefaultJavaPackageFinder());
+            Optional.ofNullable(params.getBuckConfig().createDefaultJavaPackageFinder());
         stepRunner.runStepForBuildTarget(
             executionContext,
             getReportCommand(
@@ -457,7 +457,7 @@ public class TestRunning {
                 options.getCoverageReportTitle(),
                 options.getCoverageIncludes(),
                 options.getCoverageExcludes()),
-            Optional.absent());
+            Optional.empty());
       } catch (StepFailedException e) {
         params.getBuckEventBus().post(
             ConsoleEvent.severe(Throwables.getRootCause(e).getLocalizedMessage()));

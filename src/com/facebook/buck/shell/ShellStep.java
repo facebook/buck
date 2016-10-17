@@ -29,7 +29,6 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -44,6 +43,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -76,8 +76,8 @@ public abstract class ShellStep implements Step {
 
   protected ShellStep(Path workingDirectory) {
     this.workingDirectory = Preconditions.checkNotNull(workingDirectory);
-    this.stdout = Optional.absent();
-    this.stderr = Optional.absent();
+    this.stdout = Optional.empty();
+    this.stderr = Optional.empty();
 
     if (!workingDirectory.isAbsolute()) {
       LOG.info("Working directory is not absolute: %s", workingDirectory);
@@ -109,14 +109,14 @@ public abstract class ShellStep implements Step {
 
     LOG.debug(
         "%s: exit code: %d. os load (before, after): (%f, %f). CPU count: %d." +
-        "\nstdout:\n%s\nstderr:\n%s\n",
+            "\nstdout:\n%s\nstderr:\n%s\n",
         shellCommandArgs,
         exitCode,
         initialLoad,
         endLoad,
         OS_JMX.getAvailableProcessors(),
-        stdout.or(""),
-        stderr.or(""));
+        stdout.orElse(""),
+        stderr.orElse(""));
 
     return StepExecutionResult.of(exitCode, stderr);
   }
@@ -209,7 +209,7 @@ public abstract class ShellStep implements Step {
 
   @SuppressWarnings("unused")
   protected Optional<String> getStdin(ExecutionContext context) {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   /**
@@ -309,7 +309,7 @@ public abstract class ShellStep implements Step {
    * @return an optional timeout to apply to the step.
    */
   protected Optional<Long> getTimeout() {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   /**
@@ -318,6 +318,6 @@ public abstract class ShellStep implements Step {
    */
   @SuppressWarnings("unused")
   protected Optional<Function<Process, Void>> getTimeoutHandler(ExecutionContext context) {
-    return Optional.absent();
+    return Optional.empty();
   }
 }

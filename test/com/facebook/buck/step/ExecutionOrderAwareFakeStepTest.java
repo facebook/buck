@@ -19,10 +19,9 @@ package com.facebook.buck.step;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
-import com.google.common.base.Optional;
-
 import org.junit.Test;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ExecutionOrderAwareFakeStepTest {

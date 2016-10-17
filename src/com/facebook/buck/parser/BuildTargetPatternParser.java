@@ -22,11 +22,11 @@ import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
 import com.facebook.buck.rules.CellPathResolver;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Context for parsing build target names. Fully-qualified target names are parsed the same
@@ -92,7 +92,7 @@ public abstract class BuildTargetPatternParser<T> {
       cellPath = cellNames.getCellPath(Optional.of(buildTargetPattern.substring(0, index)));
       buildTargetPattern = buildTargetPattern.substring(index);
     } else {
-      cellPath = cellNames.getCellPath(Optional.absent());
+      cellPath = cellNames.getCellPath(Optional.empty());
     }
 
     if (buildTargetPattern.contains(BUILD_RULE_SEPARATOR)) {

@@ -31,8 +31,9 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
 
 public class AndroidInstrumentationTestDescription
     implements Description<AndroidInstrumentationTestDescription.Arg> {
@@ -77,14 +78,14 @@ public class AndroidInstrumentationTestDescription
 
     return new AndroidInstrumentationTest(
         params.appendExtraDeps(
-                BuildRules.getExportedRules(
-                        params.getDeclaredDeps().get())),
+            BuildRules.getExportedRules(
+                params.getDeclaredDeps().get())),
         new SourcePathResolver(resolver),
         (InstallableApk) apk,
         args.labels,
         args.contacts,
         javaOptions.getJavaRuntimeLauncher(),
-        args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs));
+        args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs));
   }
 
   @SuppressFieldNotInitialized

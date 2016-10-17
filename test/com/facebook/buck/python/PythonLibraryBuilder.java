@@ -20,8 +20,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
 
 public class PythonLibraryBuilder extends AbstractNodeBuilder<PythonLibraryDescription.Arg> {
 
@@ -60,7 +61,7 @@ public class PythonLibraryBuilder extends AbstractNodeBuilder<PythonLibraryDescr
   }
 
   public PythonLibraryBuilder setZipSafe(boolean zipSafe) {
-    arg.zipSafe = Optional.fromNullable(zipSafe);
+    arg.zipSafe = Optional.ofNullable(zipSafe);
     return this;
   }
 

@@ -32,7 +32,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -40,6 +39,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class CxxLink
     extends AbstractBuildRule
@@ -148,7 +148,7 @@ public class CxxLink
 
   @Override
   public RuleScheduleInfo getRuleScheduleInfo() {
-    return ruleScheduleInfo.or(RuleScheduleInfo.DEFAULT);
+    return ruleScheduleInfo.orElse(RuleScheduleInfo.DEFAULT);
   }
 
   @Override
@@ -160,7 +160,7 @@ public class CxxLink
     if (linker instanceof HasLinkerMap) {
       return Optional.of(((HasLinkerMap) linker).linkerMapPath(output));
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

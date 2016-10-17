@@ -18,14 +18,15 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.jvm.scala.ScalacToJarStepFactory;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.util.OptionalCompat;
 import com.google.common.collect.ImmutableList;
 
 public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
@@ -87,7 +88,7 @@ public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
     return ImmutableList.<BuildTarget>builder()
         .add(scalaBuckConfig.getScalaLibraryTarget())
         .addAll(scalaBuckConfig.getCompilerPlugins())
-        .addAll(scalaBuckConfig.getScalacTarget().asSet())
+        .addAll(OptionalCompat.asSet(scalaBuckConfig.getScalacTarget()))
         .build();
   }
 }

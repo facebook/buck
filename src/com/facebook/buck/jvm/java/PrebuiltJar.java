@@ -43,7 +43,6 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -55,6 +54,7 @@ import com.google.common.hash.HashCode;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 @BuildsAnnotationProcessor
 public class PrebuiltJar extends AbstractBuildRule
@@ -223,7 +223,7 @@ public class PrebuiltJar extends AbstractBuildRule
 
   @Override
   public Optional<Path> getGeneratedSourcePath() {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override

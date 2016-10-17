@@ -21,9 +21,7 @@ import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -39,6 +37,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Methods for finding and inspecting buck log files.
@@ -85,10 +84,10 @@ public class BuildLogHelper {
       builder.setMachineReadableLogFile(machineReadableLogFile);
     }
 
-    Optional <Path> traceFile = FluentIterable
-        .from(projectFilesystem.getFilesUnderPath(logFile.getParent()))
-        .filter(input -> input.toString().endsWith(".trace")).first();
-
+    Optional <Path> traceFile =
+        projectFilesystem.getFilesUnderPath(logFile.getParent()).stream()
+            .filter(input -> input.toString().endsWith(".trace"))
+            .findFirst();
     return builder
         .setRelativePath(logFile)
         .setSize(projectFilesystem.getFileSize(logFile))
@@ -114,7 +113,7 @@ public class BuildLogHelper {
       }
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public Collection<Path> getAllBuckLogFiles() throws IOException {

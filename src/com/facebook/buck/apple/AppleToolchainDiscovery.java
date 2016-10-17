@@ -21,7 +21,6 @@ import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.log.Logger;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -39,6 +38,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.Arrays;
+import java.util.Optional;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -136,19 +136,19 @@ public class AppleToolchainDiscovery {
     } catch (PropertyListFormatException | ParseException | ParserConfigurationException |
         SAXException e) {
       LOG.error(e, "Failed to parse %s: %s, ignoring", plistName, toolchainInfoPlistPath);
-      return Optional.absent();
+      return Optional.empty();
     }
     NSObject identifierObject = parsedToolchainInfoPlist.objectForKey("Identifier");
     if (identifierObject == null) {
       LOG.error("Identifier not found for toolchain path %s, ignoring", toolchainDir);
-      return Optional.absent();
+      return Optional.empty();
     }
     String identifier = identifierObject.toString();
 
     NSObject versionObject = parsedToolchainInfoPlist.objectForKey("DTSDKBuild");
     Optional<String> version =
         versionObject == null ?
-            Optional.absent() :
+            Optional.empty() :
             Optional.of(versionObject.toString());
     LOG.debug("Mapped SDK identifier %s to path %s", identifier, toolchainDir);
 

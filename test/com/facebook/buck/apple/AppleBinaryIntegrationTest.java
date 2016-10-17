@@ -40,7 +40,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
@@ -53,6 +52,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class AppleBinaryIntegrationTest {
 
@@ -507,7 +507,7 @@ public class AppleBinaryIntegrationTest {
     ProcessExecutor.Result lipoVerifyResult =
         workspace.runCommand("lipo", output.toString(), "-verify_arch", "i386", "x86_64");
     assertEquals(
-        lipoVerifyResult.getStderr().or(""),
+        lipoVerifyResult.getStderr().orElse(""),
         0,
         lipoVerifyResult.getExitCode());
   }
@@ -565,7 +565,7 @@ public class AppleBinaryIntegrationTest {
     assertThat(Files.exists(binaryOutput), equalTo(true));
 
     ProcessExecutor.Result hasSymbol = workspace.runCommand("nm", binaryOutput.toString());
-    String stdout = hasSymbol.getStdout().or("");
+    String stdout = hasSymbol.getStdout().orElse("");
     assertThat(stdout, Matchers.not(containsString("t -[AppDelegate window]")));
     assertThat(stdout, containsString("U _UIApplicationMain"));
   }
@@ -588,7 +588,7 @@ public class AppleBinaryIntegrationTest {
             .resolve(target.getShortName()));
     assertThat(Files.exists(output), equalTo(true));
     ProcessExecutor.Result hasSymbol = workspace.runCommand("nm", output.toString());
-    String stdout = hasSymbol.getStdout().or("");
+    String stdout = hasSymbol.getStdout().orElse("");
     assertThat(stdout, containsString("t -[AppDelegate window]"));
     assertThat(stdout, containsString("U _UIApplicationMain"));
   }
@@ -805,7 +805,7 @@ public class AppleBinaryIntegrationTest {
     assertThat(Files.exists(binaryOutput), equalTo(true));
 
     ProcessExecutor.Result hasSymbol = workspace.runCommand("nm", binaryOutput.toString());
-    String stdout = hasSymbol.getStdout().or("");
+    String stdout = hasSymbol.getStdout().orElse("");
     assertThat(stdout, Matchers.not(containsString("t -[AppDelegate window]")));
     assertThat(stdout, containsString("U _UIApplicationMain"));
   }

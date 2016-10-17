@@ -27,12 +27,12 @@ import com.facebook.thrift.transport.TSocket;
 import com.facebook.thrift.transport.TTransport;
 import com.facebook.thrift.transport.TTransportException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -102,7 +102,7 @@ public final class EdenClient {
     if (client != null) {
       return Optional.of(new EdenClient(clientFactory));
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

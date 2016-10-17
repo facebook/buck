@@ -83,7 +83,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -106,6 +105,7 @@ import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -209,7 +209,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, Optional.absent()),
+            ParseEvent.finished(parseStarted, Optional.empty()),
             300L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -341,10 +341,10 @@ public class SuperConsoleEventBusListenerTest {
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                Optional.absent(),
-                Optional.absent(),
-                Optional.absent(),
-                Optional.absent()),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()),
             1000L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -377,10 +377,10 @@ public class SuperConsoleEventBusListenerTest {
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                Optional.absent(),
-                Optional.absent(),
-                Optional.absent(),
-                Optional.absent()),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()),
             1120L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 2L));
@@ -433,8 +433,8 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             InstallEvent.finished(
                 installEventStarted,
-                true, Optional.absent(),
-                Optional.absent()),
+                true, Optional.empty(),
+                Optional.empty()),
             4000L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -573,7 +573,7 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             ParseEvent.finished(
                 parseStarted,
-                Optional.absent()),
+                Optional.empty()),
             300L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -645,10 +645,10 @@ public class SuperConsoleEventBusListenerTest {
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                Optional.absent(),
-                Optional.absent(),
-                Optional.absent(),
-                Optional.absent()),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()),
             1000L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -681,10 +681,10 @@ public class SuperConsoleEventBusListenerTest {
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                Optional.absent(),
-                Optional.absent(),
-                Optional.absent(),
-                Optional.absent()),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()),
             1120L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 2L));
@@ -771,7 +771,7 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             ParseEvent.finished(
                 parseStarted,
-                Optional.absent()),
+                Optional.empty()),
             300L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -804,7 +804,7 @@ public class SuperConsoleEventBusListenerTest {
                     .setStatus(BuildStatus.QUEUED)
                     .setMessage("step 1")
                     .setETAMillis(2000)
-                    .setLogBook(Optional.absent())
+                    .setLogBook(Optional.empty())
                     .build()),
             800L,
             TimeUnit.MILLISECONDS,
@@ -1014,7 +1014,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, Optional.absent()),
+            ParseEvent.finished(parseStarted, Optional.empty()),
             300L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1061,10 +1061,10 @@ public class SuperConsoleEventBusListenerTest {
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                Optional.absent(),
-                Optional.absent(),
-                Optional.absent(),
-                Optional.absent()),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()),
             1000L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1240,7 +1240,7 @@ public class SuperConsoleEventBusListenerTest {
                 "TESTS PASSED",
                 "")),
         // We don't care about stderr, since the last frame will be flushed there.
-        Optional.absent());
+        Optional.empty());
   }
 
   @Test
@@ -1306,7 +1306,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, Optional.absent()),
+            ParseEvent.finished(parseStarted, Optional.empty()),
             300L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1353,10 +1353,10 @@ public class SuperConsoleEventBusListenerTest {
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                Optional.absent(),
-                Optional.absent(),
-                Optional.absent(),
-                Optional.absent()),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()),
             1000L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1531,7 +1531,7 @@ public class SuperConsoleEventBusListenerTest {
                 "TESTS PASSED (with some assumption violations)",
                 "")),
         // We don't care about stderr, since the last frame will be flushed there.
-        Optional.absent());
+        Optional.empty());
   }
 
   @Test
@@ -1560,7 +1560,7 @@ public class SuperConsoleEventBusListenerTest {
             new DefaultExecutionEnvironment(
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-            Optional.absent(),
+            Optional.empty(),
             Locale.US,
             logPath,
             timeZone);
@@ -1611,7 +1611,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, Optional.absent()),
+            ParseEvent.finished(parseStarted, Optional.empty()),
             300L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1658,10 +1658,10 @@ public class SuperConsoleEventBusListenerTest {
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                Optional.absent(),
-                Optional.absent(),
-                Optional.absent(),
-                Optional.absent()),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()),
             1000L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1849,7 +1849,7 @@ public class SuperConsoleEventBusListenerTest {
                 "FAIL TestClass",
                 "")),
         // We don't care about stderr, since the last frame will be flushed there.
-        Optional.absent());
+        Optional.empty());
   }
 
   @Test
@@ -1897,7 +1897,7 @@ public class SuperConsoleEventBusListenerTest {
             /* threadId */ 0L));
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, Optional.absent()),
+            ParseEvent.finished(parseStarted, Optional.empty()),
             0L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -2004,10 +2004,10 @@ public class SuperConsoleEventBusListenerTest {
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                Optional.absent(),
-                Optional.absent(),
-                Optional.absent(),
-                Optional.absent()),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()),
             600L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -2310,7 +2310,7 @@ public class SuperConsoleEventBusListenerTest {
             new DefaultExecutionEnvironment(
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-            Optional.absent(),
+            Optional.empty(),
             // Note we use de_DE to ensure we get a decimal comma in the output.
             Locale.GERMAN,
             logPath,
@@ -2357,7 +2357,7 @@ public class SuperConsoleEventBusListenerTest {
             /* threadId */ 0L));
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, Optional.absent()),
+            ParseEvent.finished(parseStarted, Optional.empty()),
             200L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -2406,7 +2406,7 @@ public class SuperConsoleEventBusListenerTest {
             new DefaultExecutionEnvironment(
                 ImmutableMap.copyOf(System.getenv()),
                 System.getProperties()),
-            Optional.absent(),
+            Optional.empty(),
             Locale.US,
             logPath,
             timeZone);

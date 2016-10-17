@@ -22,7 +22,8 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Description;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 public class CxxLuaExtensionBuilder
     extends AbstractCxxSourceBuilder<CxxLuaExtensionDescription.Arg, CxxLuaExtensionBuilder> {

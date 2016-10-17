@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -34,6 +33,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.util.Collections;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -261,7 +261,7 @@ public final class AppleBuildRules {
             targetGraph,
             RecursiveDependenciesMode.BUILDING,
             targetNode,
-            Optional.absent()),
+            Optional.empty()),
         ImmutableSet.of(targetNode));
 
     return ImmutableSet.copyOf(

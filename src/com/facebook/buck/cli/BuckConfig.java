@@ -55,7 +55,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
@@ -72,6 +71,7 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -239,7 +239,7 @@ public class BuckConfig {
         return Optional.of(paths);
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Nullable
@@ -297,7 +297,7 @@ public class BuckConfig {
     Optional<String> target = getValue(section, field);
     return target.isPresent() ?
         Optional.of(getBuildTargetForFullyQualifiedTarget(target.get())) :
-        Optional.absent();
+        Optional.empty();
   }
 
   /**
@@ -308,12 +308,12 @@ public class BuckConfig {
   public Optional<BuildTarget> getMaybeBuildTarget(String section, String field) {
     Optional<String> value = getValue(section, field);
     if (!value.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     try {
       return Optional.of(getBuildTargetForFullyQualifiedTarget(value.get()));
     } catch (BuildTargetParseException e) {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -341,7 +341,7 @@ public class BuckConfig {
   public Optional<SourcePath> getSourcePath(String section, String field) {
     Optional<String> value = getValue(section, field);
     if (!value.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     try {
       BuildTarget target = getBuildTargetForFullyQualifiedTarget(value.get());
@@ -371,7 +371,7 @@ public class BuckConfig {
   public Optional<ToolProvider> getToolProvider(String section, String field) {
     Optional<String> value = getValue(section, field);
     if (!value.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     Optional<BuildTarget> target = getMaybeBuildTarget(section, field);
     if (target.isPresent()) {
@@ -391,7 +391,7 @@ public class BuckConfig {
   public Optional<Tool> getTool(String section, String field, BuildRuleResolver resolver) {
     Optional<ToolProvider> provider = getToolProvider(section, field);
     if (!provider.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of(provider.get().resolve(resolver));
   }
@@ -466,13 +466,13 @@ public class BuckConfig {
   }
 
   public long getDefaultTestTimeoutMillis() {
-    return Long.parseLong(getValue("test", "timeout").or("0"));
+    return Long.parseLong(getValue("test", "timeout").orElse("0"));
   }
 
   private static final String LOG_SECTION = "log";
 
   public int getMaxTraces() {
-    return parseInt(getValue(LOG_SECTION, "max_traces").or(DEFAULT_MAX_TRACES));
+    return parseInt(getValue(LOG_SECTION, "max_traces").orElse(DEFAULT_MAX_TRACES));
   }
 
   public boolean isChromeTraceCreationEnabled() {
@@ -496,12 +496,12 @@ public class BuckConfig {
   }
 
   public ProjectTestsMode xcodeProjectTestsMode() {
-    return getEnum("project", "xcode_project_tests_mode", ProjectTestsMode.class)
-        .or(ProjectTestsMode.WITH_TESTS);
+    return getEnum("project", "xcode_project_tests_mode", ProjectTestsMode.class).orElse(
+        ProjectTestsMode.WITH_TESTS);
   }
 
   public boolean getRestartAdbOnFailure() {
-    return Boolean.parseBoolean(getValue("adb", "adb_restart_on_failure").or("true"));
+    return Boolean.parseBoolean(getValue("adb", "adb_restart_on_failure").orElse("true"));
   }
 
   public boolean getMultiInstallMode() {
@@ -540,7 +540,7 @@ public class BuckConfig {
    * @param defaultColor Default value provided by the caller (e.g. the client of buckd)
    */
   public Ansi createAnsi(Optional<String> defaultColor) {
-    String color = getValue("color", "ui").or(defaultColor).or("auto");
+    String color = getValue("color", "ui").map(Optional::of).orElse(defaultColor).orElse("auto");
 
     switch (color) {
       case "false":
@@ -601,7 +601,7 @@ public class BuckConfig {
       return Optional.of(ImmutableSet.copyOf(patternAndMessages));
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public boolean hasUserDefinedValue(String sectionName, String propertyName) {
@@ -691,23 +691,27 @@ public class BuckConfig {
    * @return the mode with which to run the build engine.
    */
   public CachingBuildEngine.BuildMode getBuildEngineMode() {
-    return getEnum("build", "engine", CachingBuildEngine.BuildMode.class)
-        .or(CachingBuildEngine.BuildMode.SHALLOW);
+    return getEnum(
+        "build",
+        "engine",
+        CachingBuildEngine.BuildMode.class).orElse(CachingBuildEngine.BuildMode.SHALLOW);
   }
 
   /**
    * @return the mode with which to run the build engine.
    */
   public CachingBuildEngine.DepFiles getBuildDepFiles() {
-    return getEnum("build", "depfiles", CachingBuildEngine.DepFiles.class)
-        .or(CachingBuildEngine.DepFiles.ENABLED);
+    return getEnum(
+        "build",
+        "depfiles",
+        CachingBuildEngine.DepFiles.class).orElse(CachingBuildEngine.DepFiles.ENABLED);
   }
 
   /**
    * @return the maximum number of entries to support in the depfile cache.
    */
   public long getBuildMaxDepFileCacheEntries() {
-    return getLong("build", "max_depfile_cache_entries").or(256L);
+    return getLong("build", "max_depfile_cache_entries").orElse(256L);
   }
 
   /**
@@ -721,18 +725,18 @@ public class BuckConfig {
    * @return the maximum size of files input based rule keys will be willing to hash.
    */
   public long getBuildInputRuleKeyFileSizeLimit() {
-    return getLong("build", "input_rule_key_file_size_limit").or(Long.MAX_VALUE);
+    return getLong("build", "input_rule_key_file_size_limit").orElse(Long.MAX_VALUE);
   }
 
   /**
    * @return the local cache directory
    */
   public String getLocalCacheDirectory() {
-    return getValue("cache", "dir").or(BuckConstant.getDefaultCacheDir());
+    return getValue("cache", "dir").orElse(BuckConstant.getDefaultCacheDir());
   }
 
   public int getKeySeed() {
-    return parseInt(getValue("cache", "key_seed").or("0"));
+    return parseInt(getValue("cache", "key_seed").orElse("0"));
   }
 
   /**
@@ -748,7 +752,7 @@ public class BuckConfig {
   }
 
   public String getClientId() {
-    return getValue("client", "id").or("buck");
+    return getValue("client", "id").orElse("buck");
   }
 
   /**
@@ -765,8 +769,7 @@ public class BuckConfig {
   @VisibleForTesting
   int getDefaultMaximumNumberOfThreads(int detectedProcessorCount) {
     double ratio = config
-                      .getFloat("build", "thread_core_ratio")
-                      .or(DEFAULT_THREAD_CORE_RATIO);
+        .getFloat("build", "thread_core_ratio").orElse(DEFAULT_THREAD_CORE_RATIO);
     if (ratio <= 0.0F) {
       throw new HumanReadableException(
           "thread_core_ratio must be greater than zero (was " + ratio + ")");
@@ -849,8 +852,7 @@ public class BuckConfig {
    * @return the number of threads Buck should use or the specified defaultValue if it is not set.
    */
   public int getNumThreads(int defaultValue) {
-    return config.getLong("build", "threads")
-        .or((long) defaultValue)
+    return config.getLong("build", "threads").orElse((long) defaultValue)
         .intValue();
   }
 
@@ -862,16 +864,15 @@ public class BuckConfig {
    * @return the maximum load limit that Buck should stay under on the system.
    */
   public float getLoadLimit() {
-    return config.getFloat("build", "load_limit")
-        .or(Float.POSITIVE_INFINITY);
+    return config.getFloat("build", "load_limit").orElse(Float.POSITIVE_INFINITY);
   }
 
   public long getCountersFirstFlushIntervalMillis() {
-    return config.getLong("counters", "first_flush_interval_millis").or(5000L);
+    return config.getLong("counters", "first_flush_interval_millis").orElse(5000L);
   }
 
   public long getCountersFlushIntervalMillis() {
-    return config.getLong("counters", "flush_interval_millis").or(30000L);
+    return config.getLong("counters", "flush_interval_millis").orElse(30000L);
   }
 
   public Optional<Path> getPath(String sectionName, String name, boolean isCellRootRelative) {
@@ -881,7 +882,7 @@ public class BuckConfig {
             pathString.get(),
             isCellRootRelative,
             String.format("Overridden %s:%s path not found: ", sectionName, name))) :
-        Optional.absent();
+        Optional.empty();
   }
 
   /**
@@ -974,7 +975,7 @@ public class BuckConfig {
   public Optional<ImmutableList<String>> getExternalTestRunner() {
     Optional<String> value = getValue("test", "external_runner");
     if (!value.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of(ImmutableList.copyOf(Splitter.on(' ').splitToList(value.get())));
   }
@@ -991,8 +992,7 @@ public class BuckConfig {
     return config.getEnum(
         RESOURCES_SECTION_HEADER,
         "resource_allocation_fairness",
-        ResourceAllocationFairness.class)
-        .or(ResourceAllocationFairness.FAIR);
+        ResourceAllocationFairness.class).orElse(ResourceAllocationFairness.FAIR);
   }
 
   public boolean isResourceAwareSchedulingEnabled() {
@@ -1038,8 +1038,9 @@ public class BuckConfig {
     if (!isResourceAwareSchedulingEnabled()) {
       return getNumThreads();
     }
-    return config.getLong(RESOURCES_SECTION_HEADER, "managed_thread_count")
-        .or((long) getNumThreads() + getDefaultMaximumNumberOfThreads())
+    return config.getLong(
+        RESOURCES_SECTION_HEADER,
+        "managed_thread_count").orElse((long) getNumThreads() + getDefaultMaximumNumberOfThreads())
         .intValue();
   }
 
@@ -1048,14 +1049,14 @@ public class BuckConfig {
       return ResourceAmounts.of(1, 0, 0, 0);
     }
     return ResourceAmounts.of(
-        config.getInteger(RESOURCES_SECTION_HEADER, "default_cpu_amount")
-            .or(ResourceAmountsEstimator.DEFAULT_CPU_AMOUNT),
-        config.getInteger(RESOURCES_SECTION_HEADER, "default_memory_amount")
-            .or(ResourceAmountsEstimator.DEFAULT_MEMORY_AMOUNT),
-        config.getInteger(RESOURCES_SECTION_HEADER, "default_disk_io_amount")
-            .or(ResourceAmountsEstimator.DEFAULT_DISK_IO_AMOUNT),
-        config.getInteger(RESOURCES_SECTION_HEADER, "default_network_io_amount")
-            .or(ResourceAmountsEstimator.DEFAULT_NETWORK_IO_AMOUNT));
+        config.getInteger(RESOURCES_SECTION_HEADER, "default_cpu_amount").orElse(
+            ResourceAmountsEstimator.DEFAULT_CPU_AMOUNT),
+        config.getInteger(RESOURCES_SECTION_HEADER, "default_memory_amount").orElse(
+            ResourceAmountsEstimator.DEFAULT_MEMORY_AMOUNT),
+        config.getInteger(RESOURCES_SECTION_HEADER, "default_disk_io_amount").orElse(
+            ResourceAmountsEstimator.DEFAULT_DISK_IO_AMOUNT),
+        config.getInteger(RESOURCES_SECTION_HEADER, "default_network_io_amount").orElse(
+            ResourceAmountsEstimator.DEFAULT_NETWORK_IO_AMOUNT));
   }
 
   public ResourceAmounts getMaximumResourceAmounts() {
@@ -1064,13 +1065,13 @@ public class BuckConfig {
         getNumThreads(estimated.getCpu()),
         getInteger(
             BuckConfig.RESOURCES_SECTION_HEADER,
-            "max_memory_resource").or(estimated.getMemory()),
+            "max_memory_resource").orElse(estimated.getMemory()),
         getInteger(
             BuckConfig.RESOURCES_SECTION_HEADER,
-            "max_disk_io_resource").or(estimated.getDiskIO()),
+            "max_disk_io_resource").orElse(estimated.getDiskIO()),
         getInteger(
             BuckConfig.RESOURCES_SECTION_HEADER,
-            "max_network_io_resource").or(estimated.getNetworkIO()));
+            "max_network_io_resource").orElse(estimated.getNetworkIO()));
   }
 
   public boolean getIncludeAutodepsSignature() {

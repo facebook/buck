@@ -17,10 +17,11 @@
 package com.facebook.buck.counters;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
+
+import java.util.Optional;
 
 public abstract class Counter {
 

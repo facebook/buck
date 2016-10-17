@@ -19,11 +19,11 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleImmutable

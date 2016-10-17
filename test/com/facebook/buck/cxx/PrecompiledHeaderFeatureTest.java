@@ -43,7 +43,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
@@ -68,6 +67,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
 
 
 /**
@@ -284,7 +284,7 @@ public class PrecompiledHeaderFeatureTest {
       ExportFileDescription.Arg bazArgs = descriptionBaz.createUnpopulatedConstructorArg();
       SourcePath sourceBaz = new FakeSourcePath("bazheader.h");
       bazArgs.src = Optional.of(sourceBaz);
-      bazArgs.out = Optional.<String>absent();
+      bazArgs.out = Optional.empty();
       bazArgs.mode = Optional.of(ExportFileDescription.Mode.REFERENCE);
       ruleResolver.addToIndex(
           new ExportFileDescription()
@@ -347,7 +347,7 @@ public class PrecompiledHeaderFeatureTest {
       ExportFileDescription.Arg bazArgs = descriptionBaz.createUnpopulatedConstructorArg();
       SourcePath sourceBaz = new FakeSourcePath("bazheader.h");
       bazArgs.src = Optional.of(sourceBaz);
-      bazArgs.out = Optional.<String>absent();
+      bazArgs.out = Optional.empty();
       bazArgs.mode = Optional.of(ExportFileDescription.Mode.REFERENCE);
       ruleResolver.addToIndex(
           new ExportFileDescription()

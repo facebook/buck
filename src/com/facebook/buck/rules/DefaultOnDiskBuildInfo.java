@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -31,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Utility for reading the metadata associated with a build rule's output. This is metadata that
@@ -64,7 +64,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   public Optional<ImmutableList<String>> getValues(String key) {
     Optional<String> value = getValue(key);
     if (!value.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     try {
       ImmutableList<String> list =
@@ -73,7 +73,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
               new TypeReference<ImmutableList<String>>() {});
       return Optional.of(list);
     } catch (IOException ignored) {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -115,7 +115,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   public Optional<ImmutableMap<String, String>> getMap(String key) {
     Optional<String> value = getValue(key);
     if (!value.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     try {
       ImmutableMap<String, String> map =
@@ -124,7 +124,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
               new TypeReference<ImmutableMap<String, String>>() {});
       return Optional.of(map);
     } catch (IOException ignored) {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -141,20 +141,20 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
             "DefaultOnDiskBuildInfo.getHash(%s): Cannot transform %s to SHA1",
             key,
             value);
-        return Optional.absent();
+        return Optional.empty();
       }
     } else {
       LOG.warn("DefaultOnDiskBuildInfo.getHash(%s): Hash not found", key);
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
   @Override
   public Optional<RuleKey> getRuleKey(String key) {
     try {
-      return getValue(key).transform(RuleKey::new);
+      return getValue(key).map(RuleKey::new);
     } catch (IllegalArgumentException ignored) {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

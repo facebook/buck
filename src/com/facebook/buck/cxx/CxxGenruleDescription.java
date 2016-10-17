@@ -47,7 +47,6 @@ import com.facebook.buck.util.Escaper;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -58,6 +57,7 @@ import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Optional;
 
 public class CxxGenruleDescription
     extends AbstractGenruleDescription<AbstractGenruleDescription.Arg>
@@ -452,7 +452,7 @@ public class CxxGenruleDescription
               params.getBuildTarget(),
               cxxPlatform.getFlavor());
       SymlinkTree symlinkTree =
-          resolver.getRuleOptionalWithType(symlinkTreeTarget, SymlinkTree.class).orNull();
+          resolver.getRuleOptionalWithType(symlinkTreeTarget, SymlinkTree.class).orElse(null);
       if (symlinkTree == null) {
         try {
           symlinkTree =

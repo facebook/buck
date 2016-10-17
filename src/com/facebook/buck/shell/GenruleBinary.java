@@ -25,9 +25,9 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.google.common.base.Optional;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Same as a Genrule, but marked as a binary.

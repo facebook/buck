@@ -16,28 +16,24 @@
 
 package com.facebook.buck.apple.simulator;
 
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.FakeUserIdFetcher;
 import com.facebook.buck.util.ProcessExecutorParams;
-
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
-import java.io.IOException;
+import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import java.util.Map;
-
 import java.util.AbstractMap.SimpleImmutableEntry;
-
-import org.junit.Test;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Unit tests for {@link AppleCoreSimulatorServiceController}.

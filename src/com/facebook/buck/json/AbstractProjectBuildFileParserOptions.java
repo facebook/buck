@@ -20,7 +20,6 @@ import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -28,6 +27,7 @@ import org.immutables.value.Value;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleImmutable

@@ -29,11 +29,10 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -49,6 +48,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @RunWith(Parameterized.class)
 public class NdkCxxPlatformIntegrationTest {
@@ -123,8 +123,8 @@ public class NdkCxxPlatformIntegrationTest {
     DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         projectFilesystem.getRootPath().getFileSystem(),
         ImmutableMap.copyOf(System.getenv()),
-        Optional.absent(),
-        Optional.absent());
+        Optional.empty(),
+        Optional.empty());
     Optional<Path> ndkDir = resolver.getNdkOrAbsent();
     assertTrue(ndkDir.isPresent());
     assertTrue(java.nio.file.Files.exists(ndkDir.get()));

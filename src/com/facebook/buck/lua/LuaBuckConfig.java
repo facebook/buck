@@ -28,10 +28,10 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class LuaBuckConfig implements LuaConfig {
 
@@ -41,7 +41,7 @@ public class LuaBuckConfig implements LuaConfig {
           BuildTarget.of(
               UnflavoredBuildTarget.of(
                   Paths.get(""),
-                  Optional.absent(),
+                  Optional.empty(),
                   "//system",
                   "lua")));
 
@@ -105,7 +105,7 @@ public class LuaBuckConfig implements LuaConfig {
 
   @Override
   public String getExtension() {
-    return delegate.getValue(SECTION, "extension").or(".lex");
+    return delegate.getValue(SECTION, "extension").orElse(".lex");
   }
 
   @Override
@@ -115,7 +115,10 @@ public class LuaBuckConfig implements LuaConfig {
 
   @Override
   public PackageStyle getPackageStyle() {
-    return delegate.getEnum(SECTION, "package_style", PackageStyle.class).or(PackageStyle.INPLACE);
+    return delegate.getEnum(
+        SECTION,
+        "package_style",
+        PackageStyle.class).orElse(PackageStyle.INPLACE);
   }
 
   @Override
@@ -134,8 +137,8 @@ public class LuaBuckConfig implements LuaConfig {
 
   @Override
   public NativeLinkStrategy getNativeLinkStrategy() {
-    return delegate.getEnum(SECTION, "native_link_strategy", NativeLinkStrategy.class)
-        .or(NativeLinkStrategy.SEPARATE);
+    return delegate.getEnum(SECTION, "native_link_strategy", NativeLinkStrategy.class).orElse(
+        NativeLinkStrategy.SEPARATE);
   }
 
 }

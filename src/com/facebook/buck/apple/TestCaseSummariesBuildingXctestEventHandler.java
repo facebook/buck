@@ -19,15 +19,13 @@ package com.facebook.buck.apple;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
-
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 
 import java.util.Collection;
 import java.util.Map;
-
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -82,8 +80,8 @@ class TestCaseSummariesBuildingXctestEventHandler
   @Override
   public void handleBeginTestCaseEvent(XctestOutputParsing.BeginTestCaseEvent event) {
     testReportingCallback.testDidBegin(
-        Optional.fromNullable(event.className).or(Preconditions.checkNotNull(event.test)),
-        Optional.fromNullable(event.methodName).or(Preconditions.checkNotNull(event.test)));
+        Optional.ofNullable(event.className).orElse(Preconditions.checkNotNull(event.test)),
+        Optional.ofNullable(event.methodName).orElse(Preconditions.checkNotNull(event.test)));
   }
 
   @Override
@@ -91,7 +89,7 @@ class TestCaseSummariesBuildingXctestEventHandler
     TestResultSummary testResultSummary =
         XctestOutputParsing.testResultSummaryForEndTestCaseEvent(event);
     testResultSummariesBuilder.put(
-        Optional.fromNullable(event.className).or(Preconditions.checkNotNull(event.test)),
+        Optional.ofNullable(event.className).orElse(Preconditions.checkNotNull(event.test)),
         testResultSummary);
     testReportingCallback.testDidEnd(testResultSummary);
   }

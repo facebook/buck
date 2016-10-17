@@ -18,9 +18,9 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
-import com.google.common.base.Optional;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class CompilerProvider extends CxxToolProvider<Compiler> {
 

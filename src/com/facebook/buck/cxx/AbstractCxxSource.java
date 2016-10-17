@@ -18,12 +18,12 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Describes a source file written in the C programming language or a
@@ -71,7 +71,7 @@ abstract class AbstractCxxSource {
         String language,
         String preprocessedLanguage,
         String... extensions) {
-      this(language, preprocessedLanguage, Optional.absent(), extensions);
+      this(language, preprocessedLanguage, Optional.empty(), extensions);
     }
 
     Type(
@@ -91,7 +91,7 @@ abstract class AbstractCxxSource {
           return Optional.of(type);
         }
       }
-      return Optional.absent();
+      return Optional.empty();
     }
 
     public String getLanguage() {

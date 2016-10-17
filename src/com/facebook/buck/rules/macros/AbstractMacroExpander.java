@@ -20,8 +20,9 @@ import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+
+import java.util.Optional;
 
 public abstract class AbstractMacroExpander<T> implements MacroExpander {
 
@@ -107,7 +108,7 @@ public abstract class AbstractMacroExpander<T> implements MacroExpander {
       BuildRuleResolver resolver,
       T input)
       throws MacroException {
-    return Optional.absent();
+    return Optional.empty();
   }
 
 }

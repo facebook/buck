@@ -26,7 +26,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Ascii;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -38,6 +37,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -97,14 +97,11 @@ public class IjModuleGraph {
     public static final AggregationMode NONE = new AggregationMode(Integer.MAX_VALUE);
     public static final AggregationMode SHALLOW = new AggregationMode(SHALLOW_MAX_PATH_LENGTH);
 
-    public static final Function<String, AggregationMode> FROM_STRING_FUNCTION =
-        AggregationMode::fromString;
-
 
     private Optional<Integer> minimumDepth;
 
     AggregationMode() {
-      minimumDepth = Optional.absent();
+      minimumDepth = Optional.empty();
     }
 
     AggregationMode(int minimumDepth) {
@@ -119,9 +116,8 @@ public class IjModuleGraph {
     }
 
     public int getGraphMinimumDepth(int graphSize) {
-      return
-          minimumDepth
-              .or(graphSize < MIN_SHALLOW_GRAPH_SIZE ? Integer.MAX_VALUE : SHALLOW_MAX_PATH_LENGTH);
+      return minimumDepth.orElse(
+          graphSize < MIN_SHALLOW_GRAPH_SIZE ? Integer.MAX_VALUE : SHALLOW_MAX_PATH_LENGTH);
     }
 
     public static AggregationMode fromString(String aggregationModeString) {
@@ -243,8 +239,8 @@ public class IjModuleGraph {
     String defaultSourceLevel = defaultJavacOptions.getSourceLevel();
     String defaultTargetLevel = defaultJavacOptions.getTargetLevel();
     JavaLibraryDescription.Arg arg = (JavaLibraryDescription.Arg) node.getConstructorArg();
-    return !defaultSourceLevel.equals(arg.source.or(defaultSourceLevel)) ||
-        !defaultTargetLevel.equals(arg.target.or(defaultTargetLevel));
+    return !defaultSourceLevel.equals(arg.source.orElse(defaultSourceLevel)) ||
+        !defaultTargetLevel.equals(arg.target.orElse(defaultTargetLevel));
   }
 
   /**
@@ -313,7 +309,7 @@ public class IjModuleGraph {
                         return depModule;
                       }
                       TargetNode<?> targetNode = targetGraph.get(depTarget);
-                      return libraryFactory.getLibrary(targetNode).orNull();
+                      return libraryFactory.getLibrary(targetNode).orElse(null);
                     }
                   })
               .filter(Predicates.notNull())
@@ -359,8 +355,7 @@ public class IjModuleGraph {
   }
 
   public ImmutableMap<IjProjectElement, DependencyType> getDepsFor(IjProjectElement source) {
-    return Optional.fromNullable(deps.get(source))
-        .or(ImmutableMap.of());
+    return Optional.ofNullable(deps.get(source)).orElse(ImmutableMap.of());
   }
 
   public ImmutableMap<IjModule, DependencyType> getDependentModulesFor(IjModule source) {
@@ -397,7 +392,7 @@ public class IjModuleGraph {
 
 
   static class BlockedPathNode {
-    private static final Optional<BlockedPathNode> EMPTY_CHILD = Optional.absent();
+    private static final Optional<BlockedPathNode> EMPTY_CHILD = Optional.empty();
 
     private boolean isBlocked;
 
@@ -418,7 +413,7 @@ public class IjModuleGraph {
     }
 
     private Optional<BlockedPathNode> getChild(Path path) {
-      return children == null ? EMPTY_CHILD : Optional.fromNullable(children.get(path));
+      return children == null ? EMPTY_CHILD : Optional.ofNullable(children.get(path));
     }
 
     private void clearAllChildren() {

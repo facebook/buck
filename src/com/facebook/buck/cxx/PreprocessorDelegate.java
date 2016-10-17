@@ -28,7 +28,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -44,6 +43,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Helper class for handling preprocessing related tasks of a cxx compilation rule.
@@ -217,7 +217,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
 
   public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
     // TODO(jkeljo): I didn't know how to implement this, and didn't have time to figure it out.
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {

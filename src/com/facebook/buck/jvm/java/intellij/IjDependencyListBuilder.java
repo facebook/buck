@@ -17,12 +17,13 @@
 package com.facebook.buck.jvm.java.intellij;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.immutables.value.Value;
+
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 

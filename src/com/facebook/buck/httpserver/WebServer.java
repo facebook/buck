@@ -20,7 +20,6 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 
@@ -36,6 +35,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * A WebSocket server that reports events of buck.
@@ -78,7 +78,7 @@ public class WebServer {
       ObjectMapper objectMapper) {
     this.projectFilesystem = projectFilesystem;
     this.staticContentDirectory = staticContentDirectory;
-    this.port = Optional.absent();
+    this.port = Optional.empty();
     this.server = new Server(port);
     this.streamingWebSocketServlet = new StreamingWebSocketServlet(objectMapper);
     this.artifactCacheHandler = new ArtifactCacheHandler(projectFilesystem);

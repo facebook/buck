@@ -18,11 +18,11 @@ package com.facebook.buck.halide;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class HalideCompilerStep extends ShellStep {
   // The list of environment variables needed to run our generated compiler.

@@ -19,10 +19,11 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
+
+import java.util.Optional;
 
 
 /**
@@ -69,7 +70,7 @@ abstract class AbstractManifestEntries implements RuleKeyAppendable {
   }
 
   /**
-   * @return an empty (all items set to Optional.absent()) ManifestEntries
+   * @return an empty (all items set to Optional.empty()) ManifestEntries
    */
   public static ManifestEntries empty() {
     return ManifestEntries.builder().build();

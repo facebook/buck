@@ -18,7 +18,8 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.dd.plist.NSDictionary;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 /**
  * File referenced by a build phase, unique to each build phase.
@@ -37,7 +38,7 @@ public class PBXBuildFile extends PBXProjectItem {
 
   public PBXBuildFile(PBXReference fileRef) {
     this.fileRef = fileRef;
-    this.settings = Optional.absent();
+    this.settings = Optional.empty();
   }
 
   public PBXReference getFileRef() {

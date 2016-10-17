@@ -44,12 +44,12 @@ import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Optional;
 
 public class CommandRunnerParamsForTesting {
 
@@ -103,7 +103,7 @@ public class CommandRunnerParamsForTesting {
         javaPackageFinder,
         objectMapper,
         new DefaultClock(),
-        Optional.absent(),
+        Optional.empty(),
         webServer,
         config,
         new NullFileHashCache(),
@@ -129,7 +129,7 @@ public class CommandRunnerParamsForTesting {
     private ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
     private JavaPackageFinder javaPackageFinder = new FakeJavaPackageFinder();
     private ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-    private Optional<WebServer> webServer = Optional.absent();
+    private Optional<WebServer> webServer = Optional.empty();
 
     public CommandRunnerParams build()
         throws IOException, InterruptedException{

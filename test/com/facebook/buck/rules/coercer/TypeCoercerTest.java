@@ -39,7 +39,6 @@ import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -59,6 +58,7 @@ import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public class TypeCoercerTest {
@@ -450,11 +450,11 @@ public class TypeCoercerTest {
         NeededCoverageSpec.of(
             0.0f,
             BuildTargetFactory.newInstance("//some:build-target"),
-            Optional.absent()),
+            Optional.empty()),
         NeededCoverageSpec.of(
             0.9f,
             BuildTargetFactory.newInstance("//other/build:target"),
-            Optional.absent()),
+            Optional.empty()),
         NeededCoverageSpec.of(
             1.0f,
             BuildTargetFactory.newInstance("//:target"),

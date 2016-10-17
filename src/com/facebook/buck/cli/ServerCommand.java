@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -25,6 +24,7 @@ import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommands;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public class ServerCommand extends AbstractContainerCommand {
 
@@ -67,7 +67,7 @@ public class ServerCommand extends AbstractContainerCommand {
 
   @Override
   public Optional<Command> getSubcommand() {
-    return Optional.fromNullable(subcommand);
+    return Optional.ofNullable(subcommand);
   }
 
 }

@@ -66,7 +66,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -101,6 +100,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.SortedMap;
 import java.util.concurrent.Executors;
 
@@ -1987,7 +1987,7 @@ public class ParserTest {
     BuildTarget buildTarget = BuildTarget.of(
         UnflavoredBuildTarget.of(
             filesystem.getRootPath(),
-            Optional.absent(),
+            Optional.empty(),
             "//",
             "cake"));
     Files.write(

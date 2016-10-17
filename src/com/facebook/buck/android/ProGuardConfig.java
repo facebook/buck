@@ -18,7 +18,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 public class ProGuardConfig {
 
@@ -40,7 +41,7 @@ public class ProGuardConfig {
    * @return The upper heap size limit for Proguard if specified.
    */
   public String getProguardMaxHeapSize() {
-    return delegate.getValue("tools", "proguard-max-heap-size").or("1024M");
+    return delegate.getValue("tools", "proguard-max-heap-size").orElse("1024M");
   }
 
   /**

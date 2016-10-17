@@ -31,7 +31,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
@@ -41,6 +40,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, AndroidPackageable {
 
@@ -130,12 +130,12 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
 
   @Override
   public Optional<Path> getGeneratedSourcePath() {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override
   public Optional<SourcePath> getAbiJar() {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override
@@ -155,6 +155,6 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
 
   @Override
   public Optional<String> getMavenCoords() {
-    return Optional.absent();
+    return Optional.empty();
   }
 }

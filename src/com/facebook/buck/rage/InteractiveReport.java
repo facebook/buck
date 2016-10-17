@@ -21,7 +21,6 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -33,6 +32,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Responsible for gathering logs and other interesting information from buck, driven by user
@@ -95,7 +95,7 @@ public class InteractiveReport extends AbstractReport {
           return String.format(
               "\t%s\tbuck [%s] (%.2f %s)",
               input1.getLastModifiedTime(),
-              input1.getCommandArgs().or("unknown command"),
+              input1.getCommandArgs().orElse("unknown command"),
               humanReadableSize.getFirst(),
               humanReadableSize.getSecond().getAbbreviation());
         });
@@ -107,7 +107,7 @@ public class InteractiveReport extends AbstractReport {
     if (!vcsInfoCollector.isPresent() ||
         !input.confirm("Would you like to attach source control information (this includes " +
             "information about commits and changed files)?")) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     try {
@@ -115,7 +115,7 @@ public class InteractiveReport extends AbstractReport {
     } catch (VersionControlCommandFailedException e) {
       output.printf("Failed to get source control information: %s, proceeding regardless.\n", e);
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override

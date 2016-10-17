@@ -18,15 +18,15 @@ package com.facebook.buck.eden.cli;
 
 import com.facebook.buck.eden.EdenClient;
 import com.facebook.buck.eden.EdenMount;
-import com.facebook.eden.thrift.MountInfo;
 import com.facebook.eden.thrift.EdenError;
+import com.facebook.eden.thrift.MountInfo;
 import com.facebook.thrift.TException;
-import com.google.common.base.Optional;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 public class MountsCommand implements Command {
   @Override

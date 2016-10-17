@@ -15,14 +15,14 @@
  */
 package com.facebook.buck.rules;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public interface CellPathResolver {
   /**
-   * @param cellName name of cell, Optional.absent() for root cell.
+   * @param cellName name of cell, Optional.empty() for root cell.
    * @return Path to the physical location of the cell.
    */
   Path getCellPath(Optional<String> cellName);

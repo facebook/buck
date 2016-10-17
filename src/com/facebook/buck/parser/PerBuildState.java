@@ -35,7 +35,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -56,6 +55,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -315,12 +315,12 @@ public class PerBuildState implements AutoCloseable {
           if (projectFilesystem.isSymLink(subpath)) {
             Path symlinkTarget = projectFilesystem.resolve(subpath).toRealPath();
             Path relativeSymlinkTarget =
-                projectFilesystem.getPathRelativeToProjectRoot(symlinkTarget).or(symlinkTarget);
+                projectFilesystem.getPathRelativeToProjectRoot(symlinkTarget).orElse(symlinkTarget);
             LOG.verbose("Detected symbolic link %s -> %s", subpath, relativeSymlinkTarget);
             newSymlinksEncountered.put(subpath, relativeSymlinkTarget);
             symlinkExistenceCache.put(subpath, Optional.of(relativeSymlinkTarget));
           } else {
-            symlinkExistenceCache.put(subpath, Optional.absent());
+            symlinkExistenceCache.put(subpath, Optional.empty());
           }
         }
       }

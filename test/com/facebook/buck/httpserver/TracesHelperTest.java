@@ -28,7 +28,6 @@ import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
@@ -36,6 +35,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class TracesHelperTest {
@@ -104,7 +104,7 @@ public class TracesHelperTest {
     assertEquals(
         "TracesHelper should not be able to extract the command because there is no name " +
             "attribute.",
-        Optional.absent(),
+        Optional.empty(),
         traceAttributes.getCommand());
     assertEquals(2000L, traceAttributes.getLastModifiedTime());
   }
@@ -130,7 +130,7 @@ public class TracesHelperTest {
     assertEquals(
         "TracesHelper should not be able to extract the command because there is no " +
             "command_args attribute.",
-        Optional.absent(),
+        Optional.empty(),
         traceAttributes.getCommand());
     assertEquals(2000L, traceAttributes.getLastModifiedTime());
   }

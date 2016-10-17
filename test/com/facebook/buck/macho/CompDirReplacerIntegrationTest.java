@@ -140,13 +140,13 @@ public class CompDirReplacerIntegrationTest {
         workspace.runCommand("dwarfdump", unsanizitedObjectFilePath.toString());
 
     assertThat(
-        sanitizedResult.getStdout().or(""),
+        sanitizedResult.getStdout().orElse(""),
         containsString("AT_comp_dir( \"./////////////////////////////"));
     assertThat(
-        unsanitizedResult.getStdout().or(""),
+        unsanitizedResult.getStdout().orElse(""),
         not(containsString("AT_comp_dir( \"./////////////////////////////")));
     assertThat(
-        unsanitizedResult.getStdout().or(""),
+        unsanitizedResult.getStdout().orElse(""),
         containsString("AT_comp_dir( \"" + newCompDirValue));
   }
 }

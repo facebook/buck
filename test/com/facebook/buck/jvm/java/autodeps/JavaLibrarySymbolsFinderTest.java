@@ -45,7 +45,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -57,6 +56,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class JavaLibrarySymbolsFinderTest {
   @Rule
@@ -139,7 +139,7 @@ public class JavaLibrarySymbolsFinderTest {
           if (input instanceof BuildTargetSourcePath) {
             return Optional.of(new FakeBuildRule(fakeBuildTarget, pathResolver));
           } else {
-            return Optional.absent();
+            return Optional.empty();
           }
         })
         .anyTimes();

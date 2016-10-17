@@ -41,7 +41,6 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -50,6 +49,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.immutables.value.Value;
+
+import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleTuple
@@ -71,7 +72,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
       throw new HumanReadableException(e, e.getMessage());
     }
     if (!result.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     if (result.get().getMacroType().equals("")) {
       throw new HumanReadableException("expected library reference");
@@ -201,7 +202,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
 
       @Override
       public Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(CxxPlatform cxxPlatform) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       @Override

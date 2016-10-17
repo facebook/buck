@@ -53,9 +53,9 @@ import com.facebook.buck.testutil.FakeOutputStream;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
@@ -63,7 +63,6 @@ import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -83,6 +82,7 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.concurrent.Executors;
@@ -141,7 +141,7 @@ public class TargetsCommandTest {
         ImmutableMap.copyOf(System.getenv()),
         new FakeJavaPackageFinder(),
         objectMapper,
-        Optional.absent());
+        Optional.empty());
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
   }
 
@@ -308,8 +308,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(referencedFiles),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertTrue(matchingBuildRules.isEmpty());
@@ -320,8 +320,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(referencedFiles),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertEquals(
@@ -335,8 +335,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(referencedFiles),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertEquals(
@@ -350,8 +350,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(referencedFiles),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertEquals(
@@ -366,8 +366,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(referencedFiles),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertEquals(
@@ -378,9 +378,9 @@ public class TargetsCommandTest {
     matchingBuildRules =
         targetsCommand.getMatchingNodes(
             targetGraph,
-            Optional.absent(),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertEquals(
@@ -394,8 +394,8 @@ public class TargetsCommandTest {
     matchingBuildRules =
         targetsCommand.getMatchingNodes(
             targetGraph,
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             Optional.of(ImmutableSet.of(JavaTestDescription.TYPE, JavaLibraryDescription.TYPE)),
             false,
             "BUCK");
@@ -410,7 +410,7 @@ public class TargetsCommandTest {
     matchingBuildRules =
         targetsCommand.getMatchingNodes(
             targetGraph,
-            Optional.absent(),
+            Optional.empty(),
             Optional.of(ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))),
             Optional.of(ImmutableSet.of(JavaTestDescription.TYPE, JavaLibraryDescription.TYPE)),
             false,
@@ -422,9 +422,9 @@ public class TargetsCommandTest {
     matchingBuildRules =
         targetsCommand.getMatchingNodes(
             targetGraph,
-            Optional.absent(),
+            Optional.empty(),
             Optional.of(ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))),
-            Optional.absent(),
+            Optional.empty(),
             false,
             "BUCK");
     assertEquals(
@@ -437,7 +437,7 @@ public class TargetsCommandTest {
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("javatest/TestJavaLibrary.java"))),
             Optional.of(ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))),
-            Optional.absent(),
+            Optional.empty(),
             false,
             "BUCK");
     assertEquals(
@@ -462,8 +462,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("foo/bar.m"))),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertTrue(matchingBuildRules.isEmpty());
@@ -473,8 +473,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("foo/foo.m"))),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertEquals(
@@ -506,8 +506,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("foo/bar.m"))),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertTrue(matchingBuildRules.isEmpty());
@@ -517,8 +517,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("foo/foo.m"))),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertEquals(
@@ -530,8 +530,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("foo/testfoo.m"))),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertEquals(
@@ -563,8 +563,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(resDir.resolve("some_resource.txt"))),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertEquals(
@@ -579,8 +579,8 @@ public class TargetsCommandTest {
             Optional.of(
                 ImmutableSet.of(
                     Paths.get(resDir.toString() + "_extra").resolve("some_resource.txt"))),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertTrue(matchingBuildRules.isEmpty());
@@ -591,8 +591,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(genSrc)),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertEquals(
@@ -658,8 +658,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("foo/bar.m"))),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             true,
             "BUCK");
     assertTrue(matchingBuildRules.isEmpty());
@@ -669,8 +669,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("foo/testfoo1.m"))),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             true,
             "BUCK");
     assertEquals(
@@ -682,8 +682,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("foo/testfoo2.m"))),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             true,
             "BUCK");
     assertEquals(
@@ -695,8 +695,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("testlib/testlib.m"))),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             true,
             "BUCK");
     assertEquals(
@@ -713,8 +713,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("testlib/testlib-test.m"))),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             true,
             "BUCK");
     assertEquals(

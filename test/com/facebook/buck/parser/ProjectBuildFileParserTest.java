@@ -48,7 +48,6 @@ import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -71,6 +70,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public class ProjectBuildFileParserTest {
@@ -104,7 +104,7 @@ public class ProjectBuildFileParserTest {
         returnCode,
         new ByteArrayOutputStream(),
         new ByteArrayInputStream(buffer.array()),
-        new ByteArrayInputStream(stdout.or("").getBytes(StandardCharsets.UTF_8)));
+        new ByteArrayInputStream(stdout.orElse("").getBytes(StandardCharsets.UTF_8)));
   }
 
   @Test
@@ -336,8 +336,8 @@ public class ProjectBuildFileParserTest {
               params -> fakeProcessWithBserOutput(
                   1,
                   ImmutableList.of(),
-                  Optional.absent(),
-                  Optional.absent()),
+                  Optional.empty(),
+                  Optional.empty()),
               new TestConsole()),
           BuckEventBusFactory.newInstance(),
           watchmanDiagnosticCache);
@@ -350,8 +350,8 @@ public class ProjectBuildFileParserTest {
               params -> fakeProcessWithBserOutput(
                   0,
                   ImmutableList.of(),
-                  Optional.absent(),
-                  Optional.absent()),
+                  Optional.empty(),
+                  Optional.empty()),
               new TestConsole()),
           BuckEventBusFactory.newInstance(),
           watchmanDiagnosticCache);
@@ -365,7 +365,7 @@ public class ProjectBuildFileParserTest {
               params -> fakeProcessWithBserOutput(
                   0,
                   ImmutableList.of(),
-                  Optional.absent(),
+                  Optional.empty(),
                   Optional.of("Don't Panic!")),
               new TestConsole()),
           buckEventBus,
@@ -391,7 +391,7 @@ public class ProjectBuildFileParserTest {
                               warning,
                               "source",
                               source))),
-                  Optional.absent()),
+                  Optional.empty()),
               new TestConsole()),
           buckEventBus,
           watchmanDiagnosticCache);
@@ -416,7 +416,7 @@ public class ProjectBuildFileParserTest {
                               error,
                               "source",
                               source))),
-                  Optional.absent()),
+                  Optional.empty()),
               new TestConsole()),
           buckEventBus,
           watchmanDiagnosticCache);

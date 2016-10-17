@@ -17,10 +17,11 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import org.immutables.value.Value;
+
+import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleTuple
@@ -44,7 +45,7 @@ abstract class AbstractNativeLinkTargetMode {
   }
 
   public static NativeLinkTargetMode executable() {
-    return NativeLinkTargetMode.of(Linker.LinkType.EXECUTABLE, Optional.absent());
+    return NativeLinkTargetMode.of(Linker.LinkType.EXECUTABLE, Optional.empty());
   }
 
   public static NativeLinkTargetMode library(Optional<String> soname) {
@@ -56,7 +57,7 @@ abstract class AbstractNativeLinkTargetMode {
   }
 
   public static NativeLinkTargetMode library() {
-    return library(Optional.absent());
+    return library(Optional.empty());
   }
 
 }

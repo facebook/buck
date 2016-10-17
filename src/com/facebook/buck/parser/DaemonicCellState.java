@@ -23,7 +23,6 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
-import com.google.common.base.Optional;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -33,6 +32,7 @@ import com.google.common.collect.SetMultimap;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 
 import javax.annotation.concurrent.GuardedBy;
@@ -52,7 +52,7 @@ class DaemonicCellState {
         Cell cell,
         BuildTarget target) throws BuildTargetException {
       try (AutoCloseableLock readLock = rawAndComputedNodesLock.readLock()) {
-        return Optional.fromNullable(allComputedNodes.getIfPresent(target));
+        return Optional.ofNullable(allComputedNodes.getIfPresent(target));
       }
     }
 
@@ -133,7 +133,7 @@ class DaemonicCellState {
 
   Optional<ImmutableSet<Map<String, Object>>> lookupRawNodes(Path buildFile) {
     try (AutoCloseableLock readLock = rawAndComputedNodesLock.readLock()) {
-      return Optional.fromNullable(allRawNodes.getIfPresent(buildFile));
+      return Optional.ofNullable(allRawNodes.getIfPresent(buildFile));
     }
   }
 

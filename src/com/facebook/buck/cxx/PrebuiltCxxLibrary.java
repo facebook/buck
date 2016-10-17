@@ -37,7 +37,6 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
@@ -50,6 +49,7 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class PrebuiltCxxLibrary
@@ -217,7 +217,7 @@ public class PrebuiltCxxLibrary
       return Optional.of(staticLibraryPath);
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override
@@ -258,7 +258,7 @@ public class PrebuiltCxxLibrary
                 ruleResolver,
                 cxxPlatform,
                 input,
-                Optional.absent()
+                Optional.empty()
             ));
         for (SourcePath includePath : includePaths) {
           builder.addIncludes(CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, includePath));
@@ -282,7 +282,7 @@ public class PrebuiltCxxLibrary
               getBuildTarget(),
               cxxPlatform.getFlavor()));
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -433,7 +433,7 @@ public class PrebuiltCxxLibrary
   @Override
   public Optional<NativeLinkTarget> getNativeLinkTarget(CxxPlatform cxxPlatform) {
     if (getPreferredLinkage(cxxPlatform) == Linkage.SHARED) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of(
         new NativeLinkTarget() {
@@ -466,7 +466,7 @@ public class PrebuiltCxxLibrary
           }
           @Override
           public Optional<Path> getNativeLinkTargetOutputPath(CxxPlatform cxxPlatform) {
-            return Optional.absent();
+            return Optional.empty();
           }
         });
   }

@@ -18,9 +18,9 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.base.Optional;
-
 import org.junit.Test;
+
+import java.util.Optional;
 
 public class CxxSourceTest {
 

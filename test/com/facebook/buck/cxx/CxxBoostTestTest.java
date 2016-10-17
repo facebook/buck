@@ -35,7 +35,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -48,6 +47,7 @@ import org.junit.Test;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 public class CxxBoostTestTest {
 
@@ -86,7 +86,7 @@ public class CxxBoostTestTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
                 Paths.get("output"),
                 ImmutableList.of(),
-                Optional.absent(),
+                Optional.empty(),
                 /* cacheable */ true),
             new CommandTool.Builder()
                 .addArg(new StringArg(""))
@@ -98,7 +98,7 @@ public class CxxBoostTestTest {
             ImmutableSet.of(),
             ImmutableSet.of(),
             /* runTestSeparately */ false,
-            /* testRuleTimeoutMs */ Optional.absent());
+            /* testRuleTimeoutMs */ Optional.empty());
 
     for (String sample : samples) {
       Path exitCode = Paths.get("unused");

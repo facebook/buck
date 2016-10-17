@@ -16,10 +16,9 @@
 
 package com.facebook.buck.log;
 
-import com.google.common.base.Optional;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 /**
  * Utility class containing constants for logging configuration paths.
@@ -48,7 +47,7 @@ public class LogConfigPaths {
   static {
     String buckConfigFileProperty = System.getProperty(BUCK_CONFIG_STRING_TEMPLATE_FILE_PROPERTY);
     if (buckConfigFileProperty == null) {
-      MAIN_PATH = Optional.absent();
+      MAIN_PATH = Optional.empty();
     } else {
       MAIN_PATH = Optional.of(Paths.get(buckConfigFileProperty));
     }

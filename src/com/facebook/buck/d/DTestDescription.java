@@ -35,9 +35,10 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
 
 public class DTestDescription implements
     Description<DTestDescription.Arg>,
@@ -121,7 +122,7 @@ public class DTestDescription implements
         binaryRule,
         args.contacts,
         args.labels,
-        args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs));
+        args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs));
   }
 
   @Override

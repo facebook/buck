@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -34,6 +33,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class ExecutableFinderTest {
   @Rule
@@ -147,7 +147,7 @@ public class ExecutableFinderTest {
     Path dir3 = tmp.newFolder("baz");
 
     assertEquals(
-        Optional.<Path>absent(),
+        Optional.empty(),
         new ExecutableFinder().getOptionalExecutable(
             Paths.get("blech"),
             ImmutableList.of(dir1, dir2, dir3),
@@ -157,7 +157,7 @@ public class ExecutableFinderTest {
   @Test
   public void testSearchPathsEmptyReturnsAbsent() throws IOException {
     assertEquals(
-        Optional.<Path>absent(),
+        Optional.empty(),
         new ExecutableFinder().getOptionalExecutable(
             Paths.get("blech"),
             ImmutableList.of(),
@@ -177,7 +177,7 @@ public class ExecutableFinderTest {
     assertTrue(bar.toFile().setExecutable(false));
 
     assertEquals(
-        Optional.<Path>absent(),
+        Optional.empty(),
         new ExecutableFinder().getOptionalExecutable(
             Paths.get("bar"),
             ImmutableList.of(baz),
@@ -203,7 +203,7 @@ public class ExecutableFinderTest {
     createExecutable("foo/bar.COM");
 
     assertEquals(
-        Optional.absent(),
+        Optional.empty(),
         new ExecutableFinder().getOptionalExecutable(
             Paths.get("bar"),
             ImmutableList.of(dir),
@@ -217,7 +217,7 @@ public class ExecutableFinderTest {
     Files.createDirectories(exe);
 
     assertEquals(
-        Optional.absent(),
+        Optional.empty(),
         new ExecutableFinder().getOptionalExecutable(
             exe.toAbsolutePath(),
             ImmutableMap.of()));
@@ -238,7 +238,7 @@ public class ExecutableFinderTest {
   @Test
   public void testThatEmptyDirectoryDoesNotHaveSwift() throws IOException {
     assertEquals(
-        Optional.absent(),
+        Optional.empty(),
         new ExecutableFinder().getOptionalToolPath(
             "swift",
             ImmutableList.of()));

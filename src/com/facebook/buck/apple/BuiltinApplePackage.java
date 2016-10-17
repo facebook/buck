@@ -33,13 +33,12 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
-import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSource;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class BuiltinApplePackage extends AbstractBuildRule {
 
@@ -112,7 +111,7 @@ public class BuiltinApplePackage extends AbstractBuildRule {
 
       appleBundle.addSwiftStdlibStepIfNeeded(
         swiftSupportDir,
-        Optional.<Supplier<CodeSignIdentity>>absent(),
+        Optional.empty(),
         commands,
         true /* is for packaging? */
       );
@@ -182,7 +181,7 @@ public class BuiltinApplePackage extends AbstractBuildRule {
         }
       }
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override

@@ -15,6 +15,7 @@
  */
 
 package com.facebook.buck.step;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -23,7 +24,6 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -32,6 +32,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 
 public class DefaultStepRunnerTest {
@@ -50,9 +51,9 @@ public class DefaultStepRunnerTest {
         .setBuckEventBus(eventBus)
         .build();
     DefaultStepRunner runner = new DefaultStepRunner();
-    runner.runStepForBuildTarget(context, passingStep, Optional.absent());
+    runner.runStepForBuildTarget(context, passingStep, Optional.empty());
     try {
-      runner.runStepForBuildTarget(context, failingStep, Optional.absent());
+      runner.runStepForBuildTarget(context, failingStep, Optional.empty());
       fail("Failing step should have thrown an exception");
     } catch (StepFailedException e) {
       assertEquals(e.getStep(), failingStep);
@@ -105,7 +106,7 @@ public class DefaultStepRunnerTest {
     runner.runStepsInParallelAndWait(
         TestExecutionContext.newInstance(),
         steps.build(),
-        Optional.absent(),
+        Optional.empty(),
         service,
         StepRunner.NOOP_CALLBACK);
 
@@ -118,7 +119,7 @@ public class DefaultStepRunnerTest {
 
     DefaultStepRunner runner = new DefaultStepRunner();
     try {
-      runner.runStepForBuildTarget(context, new ExplosionStep(), Optional.absent());
+      runner.runStepForBuildTarget(context, new ExplosionStep(), Optional.empty());
       fail("Should have thrown a StepFailedException!");
     } catch (StepFailedException e) {
       assertTrue(e.getMessage().startsWith("Failed on step explode with an exception:\n#yolo"));

@@ -26,7 +26,6 @@ import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSource;
 
@@ -38,6 +37,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.Optional;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -54,7 +54,7 @@ public class ArtifactCacheHandler extends AbstractHandler {
 
   public ArtifactCacheHandler(
       ProjectFilesystem projectFilesystem) {
-    this.artifactCache = Optional.absent();
+    this.artifactCache = Optional.empty();
     this.projectFilesystem = projectFilesystem;
   }
 

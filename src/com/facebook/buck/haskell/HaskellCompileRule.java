@@ -41,10 +41,10 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.OptionalCompat;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -55,6 +55,7 @@ import com.google.common.collect.Iterables;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -304,7 +305,7 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
                 .addAll(
                     MoreIterables.zipAndConcat(
                         Iterables.cycle("-main-is"),
-                        main.asSet()))
+                        OptionalCompat.asSet(main)))
                 .addAll(getPackageNameArgs())
                 .addAll(getPreprocessorFlags())
                 .add("-odir", getProjectFilesystem().resolve(getObjectDir()).toString())

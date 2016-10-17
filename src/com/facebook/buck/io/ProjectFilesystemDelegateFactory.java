@@ -23,9 +23,9 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
-import com.google.common.base.Optional;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * {@link ProjectFilesystemDelegateFactory} mediates the creation of a
@@ -60,12 +60,12 @@ public final class ProjectFilesystemDelegateFactory {
     return new DefaultProjectFilesystemDelegate(root);
   }
 
-  /** @return {@link Optional#absent()} if there is no instance of Eden running. */
+  /** @return {@link Optional#empty()} if there is no instance of Eden running. */
   private static Optional<EdenClient> tryToCreateEdenClient() {
     if (Platform.detect() != Platform.WINDOWS) {
       return EdenClient.newInstance();
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 }

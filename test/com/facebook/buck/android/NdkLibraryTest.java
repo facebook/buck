@@ -35,7 +35,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -46,6 +45,7 @@ import org.junit.Test;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 public class NdkLibraryTest {
 
@@ -60,12 +60,12 @@ public class NdkLibraryTest {
     AndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
         projectFilesystem.getRootPath().getFileSystem(),
         ImmutableMap.copyOf(System.getenv()),
-        Optional.absent(),
-        Optional.absent());
+        Optional.empty(),
+        Optional.empty());
 
     AndroidPlatformTarget androidPlatformTarget = AndroidPlatformTarget.getDefaultPlatformTarget(
         resolver,
-        Optional.absent());
+        Optional.empty());
     executionContext = TestExecutionContext.newBuilder()
         .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
         .build();

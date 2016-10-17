@@ -56,13 +56,13 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -91,6 +91,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -423,7 +424,7 @@ public class AndroidBinary
 
     for (final APKModule module : enhancementResult.getAPKModuleGraph().getAPKModules()) {
       boolean shouldPackageAssetLibraries =
-          packageAssetLibraries.or(Boolean.FALSE) || !module.isRootModule();
+          packageAssetLibraries.orElse(Boolean.FALSE) || !module.isRootModule();
 
       if (!ExopackageMode.enabledForNativeLibraries(exopackageModes) &&
           enhancementResult.getCopyNativeLibraries().isPresent() &&
@@ -452,7 +453,7 @@ public class AndroidBinary
         getStepsForNativeAssets(
             steps,
             nativeLibDirs == null ?
-                Optional.absent() : Optional.of(nativeLibDirs),
+                Optional.empty() : Optional.of(nativeLibDirs),
             libSubdirectory,
             module.isRootModule() ? "metadata.txt" : "libs.txt",
             module);
@@ -572,7 +573,7 @@ public class AndroidBinary
           }
         });
 
-    if (packageAssetLibraries.or(Boolean.FALSE) || !module.isRootModule()) {
+    if (packageAssetLibraries.orElse(Boolean.FALSE) || !module.isRootModule()) {
       if (enhancementResult.getCopyNativeLibraries().isPresent() &&
           enhancementResult.getCopyNativeLibraries().get().containsKey(module)) {
         // Copy in cxx libraries marked as assets. Filtering and renaming was already done
@@ -636,7 +637,7 @@ public class AndroidBinary
             }
           });
     }
-    if (compressAssetLibraries.or(Boolean.FALSE) || !module.isRootModule()) {
+    if (compressAssetLibraries.orElse(Boolean.FALSE) || !module.isRootModule()) {
       final ImmutableList.Builder<Path> outputAssetLibrariesBuilder = ImmutableList.builder();
       steps.add(
           new AbstractExecutionStep("rename_asset_libraries_as_temp_files_" + module.getName()) {
@@ -661,7 +662,7 @@ public class AndroidBinary
       Path libOutputBlob = libSubdirectory.resolve("libraries.blob");
       steps.add(
           new ConcatStep(getProjectFilesystem(), outputAssetLibrariesBuilder, libOutputBlob));
-      int compressionLevel = xzCompressionLevel.or(XzStep.DEFAULT_COMPRESSION_LEVEL).intValue();
+      int compressionLevel = xzCompressionLevel.orElse(XzStep.DEFAULT_COMPRESSION_LEVEL).intValue();
       steps.add(
           new XzStep(
               getProjectFilesystem(),
@@ -737,9 +738,9 @@ public class AndroidBinary
           .toSet();
 
       AbstractGenruleStep.CommandString commandString = new AbstractGenruleStep.CommandString(
-          /* cmd */ Optional.absent(),
-          /* bash */ preprocessJavaClassesBash.transform(macroExpander),
-          /* cmdExe */ Optional.absent());
+          /* cmd */ Optional.empty(),
+          /* bash */ preprocessJavaClassesBash.map(macroExpander::apply),
+          /* cmdExe */ Optional.empty());
       steps.add(new AbstractGenruleStep(
           getProjectFilesystem(),
           this.getBuildTarget(),
@@ -941,7 +942,7 @@ public class AndroidBinary
         getProjectFilesystem(),
         proguardJarOverride.isPresent() ?
             Optional.of(getResolver().getAbsolutePath(proguardJarOverride.get())) :
-            Optional.absent(),
+            Optional.empty(),
         proguardMaxHeapSize,
         proguardAgentPath,
         proguardConfigDir.resolve("proguard.txt"),
@@ -997,8 +998,8 @@ public class AndroidBinary
     final Optional<ImmutableSet<Path>> additionalDexDirs;
 
     if (shouldSplitDex()) {
-      Optional<Path> proguardFullConfigFile = Optional.absent();
-      Optional<Path> proguardMappingFile = Optional.absent();
+      Optional<Path> proguardFullConfigFile = Optional.empty();
+      Optional<Path> proguardMappingFile = Optional.empty();
       if (packageType.isBuildWithObfuscation()) {
         Path proguardConfigDir = enhancementResult.getAaptPackageResources()
             .getPathToGeneratedProguardConfigDir();
@@ -1058,13 +1059,10 @@ public class AndroidBinary
           proguardFullConfigFile,
           proguardMappingFile,
           dexSplitMode,
-          dexSplitMode.getPrimaryDexScenarioFile()
-              .transform(getResolver()::deprecatedGetPath),
-          dexSplitMode.getPrimaryDexClassesFile().transform(getResolver()::deprecatedGetPath),
-          dexSplitMode.getSecondaryDexHeadClassesFile()
-              .transform(getResolver()::deprecatedGetPath),
-          dexSplitMode.getSecondaryDexTailClassesFile()
-              .transform(getResolver()::deprecatedGetPath),
+          dexSplitMode.getPrimaryDexScenarioFile().map(getResolver()::deprecatedGetPath),
+          dexSplitMode.getPrimaryDexClassesFile().map(getResolver()::deprecatedGetPath),
+          dexSplitMode.getSecondaryDexHeadClassesFile().map(getResolver()::deprecatedGetPath),
+          dexSplitMode.getSecondaryDexTailClassesFile().map(getResolver()::deprecatedGetPath),
           additionalDexStoreToJarPathMap,
           enhancementResult.getAPKModuleGraph(),
           zipSplitReportDir);
@@ -1087,7 +1085,7 @@ public class AndroidBinary
       }
 
       if (additionalDexStoreToJarPathMap.isEmpty()) {
-        additionalDexDirs = Optional.absent();
+        additionalDexDirs = Optional.empty();
       } else {
         ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
         for (APKModule dexStore : additionalDexStoreToJarPathMap.keySet()) {
@@ -1119,8 +1117,8 @@ public class AndroidBinary
       // Simple case where our inputs are the natural classpath directories and we don't have
       // to worry about secondary jar/dex files.
       primaryInputsToDex = Suppliers.ofInstance(classpathEntriesToDex);
-      secondaryDexDir = Optional.absent();
-      secondaryOutputToInputs = Optional.absent();
+      secondaryDexDir = Optional.empty();
+      secondaryOutputToInputs = Optional.empty();
     }
 
     HashInputJarsToDexStep hashInputJarsToDexStep = new HashInputJarsToDexStep(
@@ -1226,7 +1224,7 @@ public class AndroidBinary
     }
 
     if (!shouldInstall) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     ExopackageInfo exopackageInfo = builder.build();
@@ -1268,7 +1266,7 @@ public class AndroidBinary
       deps.addAll(enhancementResult.getCopyNativeLibraries().get().values());
     }
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
-      deps.addAll(enhancementResult.getPreDexMerge().asSet());
+      deps.addAll(OptionalCompat.asSet(enhancementResult.getPreDexMerge()));
     }
     return deps.build();
   }

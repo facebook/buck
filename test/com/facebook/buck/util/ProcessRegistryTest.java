@@ -18,13 +18,13 @@ package com.facebook.buck.util;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class ProcessRegistryTest {
 
@@ -51,7 +51,7 @@ public class ProcessRegistryTest {
     assertEquals(info2.process, registeredProcesses.get(1).process);
 
     ProcessRegistry.setsProcessRegisterCallback(
-        Optional.absent());
+        Optional.empty());
     assertEquals(2, registeredProcesses.size());
 
     ProcessInfo info3 = new ProcessInfo(new Object(), "Proc3");

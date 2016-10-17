@@ -20,11 +20,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * A {@link TargetNode} represents a node in the target graph which is created by the
@@ -168,7 +168,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     if (cls.isInstance(constructorArg)) {
       return Optional.of((TargetNode<U>) this);
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

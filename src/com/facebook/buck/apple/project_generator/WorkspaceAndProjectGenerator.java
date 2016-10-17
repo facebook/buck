@@ -44,10 +44,10 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
@@ -73,6 +73,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -99,7 +100,7 @@ public class WorkspaceAndProjectGenerator {
   private ImmutableSet<TargetNode<AppleTestDescription.Arg>> groupableTests = ImmutableSet.of();
 
   private Optional<ProjectGenerator> combinedProjectGenerator;
-  private Optional<ProjectGenerator> combinedTestsProjectGenerator = Optional.absent();
+  private Optional<ProjectGenerator> combinedTestsProjectGenerator = Optional.empty();
   private Map<String, SchemeGenerator> schemeGenerators = new HashMap<>();
   private final String buildFileName;
   private final Function<TargetNode<?>, SourcePathResolver> sourcePathResolverForNode;
@@ -152,7 +153,7 @@ public class WorkspaceAndProjectGenerator {
     this.sourcePathResolverForNode = sourcePathResolverForNode;
     this.buckEventBus = buckEventBus;
     this.swiftBuckConfig = swiftBuckConfig;
-    this.combinedProjectGenerator = Optional.absent();
+    this.combinedProjectGenerator = Optional.empty();
     this.halideBuckConfig = halideBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.appleConfig = appleConfig;
@@ -255,7 +256,7 @@ public class WorkspaceAndProjectGenerator {
         ungroupedTestsBuilder.build();
 
     ImmutableSet<BuildTarget> targetsInRequiredProjects = FluentIterable
-        .from(Optional.presentInstances(schemeNameToSrcTargetNode.values()))
+        .from(OptionalCompat.presentInstances(schemeNameToSrcTargetNode.values()))
         .append(buildForTestNodes.values())
         .transform(HasBuildTarget::getBuildTarget)
         .toSet();
@@ -483,7 +484,7 @@ public class WorkspaceAndProjectGenerator {
         "_CombinedTestBundles",
         buildFileName,
         projectGeneratorOptions,
-        Optional.absent(),
+        Optional.empty(),
         buildWithBuckFlags,
         focusModules,
         executableFinder,
@@ -545,7 +546,7 @@ public class WorkspaceAndProjectGenerator {
                 targetToBuildWithBuck,
                 input -> rules.contains(input)
                     ? Optional.of(input)
-                    : Optional.absent()),
+                    : Optional.empty()),
             buildWithBuckFlags,
             focusModules,
             executableFinder,
@@ -619,7 +620,7 @@ public class WorkspaceAndProjectGenerator {
         generator.getRequiredBuildTargets(),
         generator.getBuildTargetToGeneratedTargetMap(),
         generator.getBuildableCombinedTestTargets());
-    workspaceGenerator.addFilePath(result.getProjectPath(), Optional.absent());
+    workspaceGenerator.addFilePath(result.getProjectPath(), Optional.empty());
     processGenerationResult(
         buildTargetToPbxTargetMapBuilder,
         targetToProjectPathMapBuilder,
@@ -631,7 +632,7 @@ public class WorkspaceAndProjectGenerator {
     if (buildWithBuck) {
       return workspaceArguments.srcTarget;
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -715,7 +716,7 @@ public class WorkspaceAndProjectGenerator {
     } else {
       schemeNameToSrcTargetNodeBuilder.put(
           XcodeWorkspaceConfigDescription.getWorkspaceNameFromArg(schemeArguments),
-          Optional.absent());
+          Optional.empty());
     }
 
     for (BuildTarget extraTarget : schemeArguments.extraTargets) {
@@ -822,7 +823,7 @@ public class WorkspaceAndProjectGenerator {
     ImmutableSet.Builder<TargetNode<AppleTestDescription.Arg>> testsBuilder =
         ImmutableSet.builder();
     if (includeProjectTests) {
-      Optional<TargetNode<?>> mainTargetNode = Optional.absent();
+      Optional<TargetNode<?>> mainTargetNode = Optional.empty();
       if (mainTarget.isPresent()) {
         mainTargetNode = targetGraph.getOptional(mainTarget.get());
       }
@@ -884,7 +885,7 @@ public class WorkspaceAndProjectGenerator {
                     projectGraph,
                     AppleBuildRules.RecursiveDependenciesMode.BUILDING,
                     input,
-                    Optional.absent());
+                    Optional.empty());
               }
             })
         .append(nodes)
@@ -924,7 +925,8 @@ public class WorkspaceAndProjectGenerator {
           buildForTestNodesBuilder) {
     for (String schemeName : schemeNameToSrcTargetNode.keySet()) {
       ImmutableSet<TargetNode<?>> targetNodes =
-          ImmutableSet.copyOf(Optional.presentInstances(schemeNameToSrcTargetNode.get(schemeName)));
+          ImmutableSet.copyOf(OptionalCompat.presentInstances(schemeNameToSrcTargetNode.get(
+              schemeName)));
       ImmutableSet<TargetNode<AppleTestDescription.Arg>> testNodes =
           getOrderedTestNodes(
               mainTarget,
@@ -986,7 +988,7 @@ public class WorkspaceAndProjectGenerator {
       Iterable<PBXTarget> orderedBuildTargets = FluentIterable
           .from(
               ImmutableSet.copyOf(
-                  Optional.presentInstances(schemeNameToSrcTargetNode.get(schemeName))))
+                  OptionalCompat.presentInstances(schemeNameToSrcTargetNode.get(schemeName))))
           .transformAndConcat(targetNodeToPBXTargetTransformer)
           .toSet();
       FluentIterable<PBXTarget> orderedBuildTestTargets = FluentIterable
@@ -1017,15 +1019,15 @@ public class WorkspaceAndProjectGenerator {
             ).toString());
       }
       Optional<String> remoteRunnablePath;
-      if (schemeConfigArg.isRemoteRunnable.or(false)) {
+      if (schemeConfigArg.isRemoteRunnable.orElse(false)) {
         // XXX TODO(bhamiltoncx): Figure out the actual name of the binary to launch
         remoteRunnablePath = Optional.of("/" + workspaceName);
       } else {
-        remoteRunnablePath = Optional.absent();
+        remoteRunnablePath = Optional.empty();
       }
       SchemeGenerator schemeGenerator = new SchemeGenerator(
           rootCell.getFilesystem(),
-          schemeConfigArg.srcTarget.transform(buildTargetToPBXTargetTransformer),
+          schemeConfigArg.srcTarget.map(buildTargetToPBXTargetTransformer::apply),
           orderedBuildTargets,
           orderedBuildTestTargets,
           orderedRunTestTargets,
@@ -1039,7 +1041,7 @@ public class WorkspaceAndProjectGenerator {
           remoteRunnablePath,
           XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(workspaceArguments),
           targetToProjectPathMap,
-          schemeConfigArg.launchStyle.or(XCScheme.LaunchAction.LaunchStyle.AUTO));
+          schemeConfigArg.launchStyle.orElse(XCScheme.LaunchAction.LaunchStyle.AUTO));
       schemeGenerator.writeScheme();
       schemeGenerators.put(schemeName, schemeGenerator);
     }
@@ -1048,7 +1050,7 @@ public class WorkspaceAndProjectGenerator {
   private Optional<String> getProductName(
       ImmutableSet<Optional<TargetNode<?>>> targetNodes,
       Optional<BuildTarget> targetToBuildWithBuck) {
-    Optional<String> productName = Optional.absent();
+    Optional<String> productName = Optional.empty();
     Optional<TargetNode<?>> buildWithBuckTargetNode = getTargetNodeForBuildTarget(
         targetToBuildWithBuck,
         targetNodes);
@@ -1064,7 +1066,7 @@ public class WorkspaceAndProjectGenerator {
   private Optional<TargetNode<?>> getTargetNodeForBuildTarget(
       Optional<BuildTarget> targetToBuildWithBuck,
       ImmutableSet<Optional<TargetNode<?>>> targetNodes) {
-    Optional<TargetNode<?>> buildWithBuckTargetNode = Optional.absent();
+    Optional<TargetNode<?>> buildWithBuckTargetNode = Optional.empty();
     for (Optional<TargetNode<?>> targetNode : targetNodes) {
       if (targetNode.isPresent()) {
         UnflavoredBuildTarget unflavoredBuildTarget =

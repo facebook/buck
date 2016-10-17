@@ -25,7 +25,6 @@ import static java.nio.file.StandardOpenOption.WRITE;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.ByteBufferReplacer;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -39,6 +38,7 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nonnull;

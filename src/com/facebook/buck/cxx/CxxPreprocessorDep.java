@@ -19,8 +19,9 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+
+import java.util.Optional;
 
 /**
  * An interface that represents a {@link com.facebook.buck.rules.BuildRule} which can contribute

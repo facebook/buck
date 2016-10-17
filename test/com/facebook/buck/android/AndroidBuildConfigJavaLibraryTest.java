@@ -19,21 +19,21 @@ package com.facebook.buck.android;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.Optional;
 
 public class AndroidBuildConfigJavaLibraryTest {
 
@@ -49,7 +49,7 @@ public class AndroidBuildConfigJavaLibraryTest {
             "com.example.buck",
             /* values */ BuildConfigFields.fromFieldDeclarations(
                 Collections.singleton("String foo = \"bar\"")),
-            /* valuesFile */ Optional.absent(),
+            /* valuesFile */ Optional.empty(),
             /* useConstantExpressions */ false,
             DEFAULT_JAVAC_OPTIONS,
             buildRuleResolver);
@@ -78,7 +78,7 @@ public class AndroidBuildConfigJavaLibraryTest {
             params,
             "com.example.buck",
             /* values */ fields,
-            /* valuesFile */ Optional.absent(),
+            /* valuesFile */ Optional.empty(),
             /* useConstantExpressions */ false,
             DEFAULT_JAVAC_OPTIONS,
             buildRuleResolver);

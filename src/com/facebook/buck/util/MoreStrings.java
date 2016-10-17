@@ -17,12 +17,12 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 
 public final class MoreStrings {
@@ -98,7 +98,7 @@ public final class MoreStrings {
   public static Optional<String> stripPrefix(String s, String prefix) {
     return s.startsWith(prefix) ?
         Optional.of(s.substring(prefix.length(), s.length())) :
-        Optional.absent();
+        Optional.empty();
   }
 
   public static String truncatePretty(String data) {

@@ -16,16 +16,15 @@
 
 package com.facebook.buck.apple.simulator;
 
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
-import com.google.common.base.Optional;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
-
-import org.junit.Test;
+import java.util.Optional;
 
 /**
  * Unit tests for {@link SimctlListOutputParsing}.

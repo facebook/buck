@@ -21,11 +21,11 @@ import static com.facebook.buck.cxx.DebugSectionProperty.STRINGS;
 
 import com.facebook.buck.cxx.elf.Elf;
 import com.facebook.buck.cxx.elf.ElfSection;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.ByteBuffer;
+import java.util.Optional;
 
 public class DebugSectionFinder {
 
@@ -63,13 +63,13 @@ public class DebugSectionFinder {
 
   /**
    * @return a map of all the debug sections found in executable format represented as
-   *     {@code buffer}, or {@link Optional#absent()} if the format was not recognized.
+   *     {@code buffer}, or {@link Optional#empty()} if the format was not recognized.
    */
   public Optional<ImmutableMap<String, DebugSection>> find(ByteBuffer buffer) {
     if (Elf.isElf(buffer)) {
       return Optional.of(findElf(buffer));
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

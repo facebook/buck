@@ -37,7 +37,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -46,6 +45,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class JavaBinaryDescription implements
@@ -109,10 +109,10 @@ public class JavaBinaryDescription implements
         binaryParams.appendExtraDeps(transitiveClasspathDeps),
         pathResolver,
         javaOptions.getJavaRuntimeLauncher(),
-        args.mainClass.orNull(),
-        args.manifestFile.orNull(),
-        args.mergeManifests.or(true),
-        args.metaInfDirectory.orNull(),
+        args.mainClass.orElse(null),
+        args.manifestFile.orElse(null),
+        args.mergeManifests.orElse(true),
+        args.metaInfDirectory.orElse(null),
         args.blacklist,
         transitiveClasspathDeps,
         transitiveClasspaths);

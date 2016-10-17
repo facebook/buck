@@ -21,10 +21,10 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDependencyVisitors;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Collection;
+import java.util.Optional;
 
 public class UnsortedAndroidResourceDeps {
 

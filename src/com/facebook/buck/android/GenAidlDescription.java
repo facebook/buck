@@ -28,6 +28,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableSortedSet;
 
+
 public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
 
   public static final BuildRuleType TYPE = BuildRuleType.of("gen_aidl");

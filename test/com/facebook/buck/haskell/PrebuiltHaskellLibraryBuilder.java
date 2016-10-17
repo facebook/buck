@@ -19,10 +19,11 @@ package com.facebook.buck.haskell;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
 
 public class PrebuiltHaskellLibraryBuilder
     extends AbstractNodeBuilder<PrebuiltHaskellLibraryDescription.Arg> {

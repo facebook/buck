@@ -48,7 +48,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -58,6 +57,7 @@ import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.util.LinkedHashSet;
+import java.util.Optional;
 
 /**
  * A build rule which compiles one or more Swift sources into a Swift module.
@@ -125,7 +125,7 @@ class SwiftCompile
     this.objectPath = outputPath.resolve(escapedModuleName + ".o");
 
     this.srcs = ImmutableSortedSet.copyOf(srcs);
-    this.enableObjcInterop = enableObjcInterop.or(true);
+    this.enableObjcInterop = enableObjcInterop.orElse(true);
     this.bridgingHeader = bridgingHeader;
     this.hasMainEntry = FluentIterable.from(srcs).firstMatch(
         input -> SWIFT_MAIN_FILENAME.equalsIgnoreCase(

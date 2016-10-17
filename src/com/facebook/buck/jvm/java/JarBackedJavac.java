@@ -24,7 +24,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedSet;
@@ -88,7 +87,9 @@ public class JarBackedJavac extends Jsr199Javac {
                   @Override
                   public Collection<Path> apply(SourcePath input) {
                     Set<Path> paths = new HashSet<>();
-                    Optional<BuildRule> rule = resolver.getRule(input);
+                    com.google.common.base.Optional<BuildRule> rule =
+                        com.google.common.base.Optional.fromNullable(
+                            resolver.getRule(input).orElse(null));
                     if (rule instanceof JavaLibrary) {
                       paths.addAll(((JavaLibrary) rule).getTransitiveClasspaths());
                     } else {

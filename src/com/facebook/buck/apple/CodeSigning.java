@@ -18,12 +18,12 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.EnumSet;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -52,9 +52,9 @@ public class CodeSigning {
     ProcessExecutor.Result result = processExecutor.launchAndExecute(
         processExecutorParams,
         options,
-        /* stdin */ Optional.absent(),
-        /* timeOutMs */ Optional.absent(),
-        /* timeOutHandler */ Optional.absent());
+        /* stdin */ Optional.empty(),
+        /* timeOutMs */ Optional.empty(),
+        /* timeOutHandler */ Optional.empty());
 
     return result.getExitCode() == 0 &&
         result.getStderr().isPresent() &&

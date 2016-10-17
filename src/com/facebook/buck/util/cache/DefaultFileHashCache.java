@@ -20,7 +20,6 @@ import com.facebook.buck.hashing.PathHashing;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -35,6 +34,7 @@ import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nonnull;
@@ -86,7 +86,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   }
 
   public static FileHashCache createDefaultFileHashCache(ProjectFilesystem projectFilesystem) {
-    return new DefaultFileHashCache(projectFilesystem, Optional.absent());
+    return new DefaultFileHashCache(projectFilesystem, Optional.empty());
   }
 
   private HashCodeAndFileType getHashCodeAndFileType(Path path) throws IOException {

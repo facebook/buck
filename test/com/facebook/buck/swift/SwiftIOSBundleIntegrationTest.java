@@ -276,7 +276,7 @@ public class SwiftIOSBundleIntegrationTest {
         not(containsString("libiosdep1.dylib")));
 
     assertThat(
-        workspace.runCommand("nm", binaryOutput.toString()).getStdout().or(""),
+        workspace.runCommand("nm", binaryOutput.toString()).getStdout().orElse(""),
         containsString("baz"));
   }
 }

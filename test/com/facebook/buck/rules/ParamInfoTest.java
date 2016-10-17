@@ -24,13 +24,13 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
-import com.google.common.base.Optional;
 
 import org.junit.Test;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class ParamInfoTest {
 
@@ -124,7 +124,7 @@ public class ParamInfoTest {
         OptionalString.class.getField("field"));
 
     info.set(createCellRoots(filesystem), filesystem, testPath, example, null);
-    assertEquals(Optional.<String>absent(), example.field);
+    assertEquals(Optional.empty(), example.field);
 
     info.set(createCellRoots(filesystem), filesystem, testPath, example, "");
     assertEquals(Optional.of(""), example.field);

@@ -31,7 +31,6 @@ import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -40,6 +39,7 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class InteractiveReportIntegrationTest {
 
@@ -125,7 +125,7 @@ public class InteractiveReportIntegrationTest {
         BuckEventBusFactory.newInstance(clock),
         clock);
     CapturingPrintStream outputStream = new CapturingPrintStream();
-    ExtraInfoCollector extraInfoCollector = Optional::absent;
+    ExtraInfoCollector extraInfoCollector = Optional::empty;
     InteractiveReport interactiveReport =
         new InteractiveReport(
             defectReporter,

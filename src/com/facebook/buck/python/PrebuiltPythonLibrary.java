@@ -25,9 +25,10 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+
+import java.util.Optional;
 
 
 public class PrebuiltPythonLibrary extends NoopBuildRule implements PythonPackagable {
@@ -56,7 +57,7 @@ public class PrebuiltPythonLibrary extends NoopBuildRule implements PythonPackag
         ImmutableMap.of(),
         ImmutableMap.of(),
         ImmutableSet.of(binarySrc),
-        Optional.absent());
+        Optional.empty());
   }
 
   @Override

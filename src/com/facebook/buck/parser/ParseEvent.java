@@ -26,8 +26,9 @@ import com.facebook.buck.rules.TargetGraph;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+
+import java.util.Optional;
 
 /**
  * Base class for events about parsing build files..
@@ -78,7 +79,7 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent,
   }
 
   public static class Finished extends ParseEvent {
-    /** If this is {@link Optional#absent()}, then the parse did not complete successfully. */
+    /** If this is {@link Optional#empty()}, then the parse did not complete successfully. */
     private final Optional<TargetGraph> graph;
 
     protected Finished(Started started, Optional<TargetGraph> graph) {

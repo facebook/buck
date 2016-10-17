@@ -102,7 +102,7 @@ class CommandLineBuildTargetNormalizer {
 
     // Strip out the leading "//" if there is one to make it easier to normalize the
     // remaining target string.  We'll add this back at the end.
-    target = MoreStrings.stripPrefix(target, "//").or(target);
+    target = MoreStrings.stripPrefix(target, "//").orElse(target);
 
     // Add the colon, if necessary.
     int colonIndex = target.indexOf(':');

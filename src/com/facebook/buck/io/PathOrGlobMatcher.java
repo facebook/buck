@@ -17,7 +17,6 @@
 package com.facebook.buck.io;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 
@@ -25,6 +24,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.util.Objects;
+import java.util.Optional;
 
 public class PathOrGlobMatcher {
 
@@ -53,8 +53,8 @@ public class PathOrGlobMatcher {
   public PathOrGlobMatcher(Path basePath) {
     this.type = Type.PATH;
     this.basePath = Optional.of(basePath);
-    this.globPattern = Optional.absent();
-    this.globMatcher = Optional.absent();
+    this.globPattern = Optional.empty();
+    this.globMatcher = Optional.empty();
   }
 
   public PathOrGlobMatcher(Path root, String basePath) {
@@ -63,7 +63,7 @@ public class PathOrGlobMatcher {
 
   public PathOrGlobMatcher(PathMatcher globMatcher, String globPattern) {
     this.type = Type.GLOB;
-    this.basePath = Optional.absent();
+    this.basePath = Optional.empty();
     this.globMatcher = Optional.of(globMatcher);
     this.globPattern = Optional.of(globPattern);
   }

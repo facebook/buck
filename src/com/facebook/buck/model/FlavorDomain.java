@@ -17,9 +17,7 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -29,6 +27,7 @@ import com.google.common.collect.Sets;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -70,7 +69,7 @@ public class FlavorDomain<T> {
               Joiner.on(", ").join(match)));
     }
 
-    return Optional.fromNullable(Iterables.getFirst(match, null));
+    return Optional.ofNullable(Iterables.getFirst(match, null));
   }
 
   public Optional<Flavor> getFlavor(BuildTarget buildTarget) {
@@ -85,7 +84,7 @@ public class FlavorDomain<T> {
   public Optional<Map.Entry<Flavor, T>> getFlavorAndValue(Set<Flavor> flavors) {
     Optional<Flavor> flavor = getFlavor(flavors);
     if (!flavor.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     return Optional.of(
@@ -105,7 +104,7 @@ public class FlavorDomain<T> {
 
   public Optional<T> getValue(Set<Flavor> flavors) {
     Optional<Flavor> flavor = getFlavor(flavors);
-    return flavor.transform(Functions.forMap(translation));
+    return flavor.map(translation::get);
   }
 
   public Optional<T> getValue(BuildTarget buildTarget) {

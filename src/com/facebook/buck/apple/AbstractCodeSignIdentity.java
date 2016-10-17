@@ -19,11 +19,11 @@ package com.facebook.buck.apple;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.hash.HashCode;
 
 import org.immutables.value.Value;
 
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,7 +44,7 @@ abstract class AbstractCodeSignIdentity implements RuleKeyAppendable {
    * intended for Buck unit tests.
    */
   public static final CodeSignIdentity AD_HOC = CodeSignIdentity.builder()
-      .setFingerprint(Optional.absent()).setSubjectCommonName("Ad Hoc").build();
+      .setFingerprint(Optional.empty()).setSubjectCommonName("Ad Hoc").build();
 
   /**
    * Returns the identity's certificate hash, defined to be unique for each identity.
@@ -68,7 +68,7 @@ abstract class AbstractCodeSignIdentity implements RuleKeyAppendable {
     if (matcher.matches()) {
       return Optional.of(HashCode.fromString(identifier.toLowerCase()));
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -76,6 +76,6 @@ abstract class AbstractCodeSignIdentity implements RuleKeyAppendable {
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink.setReflectively(
         "code-sign-identity",
-        getFingerprint().transform(Object::toString));
+        getFingerprint().map(Object::toString));
   }
 }

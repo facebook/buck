@@ -37,7 +37,6 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -45,6 +44,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class JavaLibraryDescription implements Description<JavaLibraryDescription.Arg>, Flavored {
 
@@ -99,8 +99,9 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     }
 
     if (flavors.contains(JavaLibrary.SRC_JAR)) {
-      args.mavenCoords = args.mavenCoords.transform(
-          input -> AetherUtil.addClassifier(input, AetherUtil.CLASSIFIER_SOURCES));
+      args.mavenCoords = args.mavenCoords.map(input -> AetherUtil.addClassifier(
+          input,
+          AetherUtil.CLASSIFIER_SOURCES));
 
       if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
         return new JavaSourceJar(
@@ -148,8 +149,8 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
                     params.getProjectFilesystem(),
                     args.resources),
                 javacOptions.getGeneratedSourceFolderName(),
-                args.proguardConfig.transform(
-                    SourcePaths.toSourcePath(params.getProjectFilesystem())),
+                args.proguardConfig.map(
+                    SourcePaths.toSourcePath(params.getProjectFilesystem())::apply),
                 args.postprocessClassesCommands,
                 exportedDeps,
                 resolver.getAllRules(args.providedDeps),

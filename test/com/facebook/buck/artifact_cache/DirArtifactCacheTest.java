@@ -44,7 +44,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.DirectoryCleaner;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -62,6 +61,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.util.List;
+import java.util.Optional;
 
 public class DirArtifactCacheTest {
   @Rule
@@ -136,7 +136,7 @@ public class DirArtifactCacheTest {
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
         /* doStore */ true,
-        /* maxCacheSizeBytes */ Optional.absent());
+        /* maxCacheSizeBytes */ Optional.empty());
 
     Files.write(fileX, "x".getBytes(UTF_8));
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
@@ -178,7 +178,7 @@ public class DirArtifactCacheTest {
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
         /* doStore */ true,
-        /* maxCacheSizeBytes */ Optional.absent());
+        /* maxCacheSizeBytes */ Optional.empty());
 
     Files.write(fileX, "x".getBytes(UTF_8));
     BuildRule inputRuleX = new BuildRuleForTest(fileX);
@@ -223,7 +223,7 @@ public class DirArtifactCacheTest {
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
         /* doStore */ true,
-        /* maxCacheSizeBytes */ Optional.absent());
+        /* maxCacheSizeBytes */ Optional.empty());
 
     Files.write(fileX, "x".getBytes(UTF_8));
     Files.write(fileY, "y".getBytes(UTF_8));
@@ -317,7 +317,7 @@ public class DirArtifactCacheTest {
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
         /* doStore */ true,
-        /* maxCacheSizeBytes */ Optional.absent());
+        /* maxCacheSizeBytes */ Optional.empty());
 
     Files.write(fileX, "x".getBytes(UTF_8));
     Files.write(fileY, "y".getBytes(UTF_8));
@@ -473,7 +473,7 @@ public class DirArtifactCacheTest {
         new ProjectFilesystem(tmpDir.getRoot()),
         Paths.get("."),
         /* doStore */ true,
-        /* maxCacheSizeBytes */ Optional.absent());
+        /* maxCacheSizeBytes */ Optional.empty());
 
     Files.write(fileX, "x".getBytes(UTF_8));
     Files.write(fileY, "y".getBytes(UTF_8));
@@ -607,7 +607,7 @@ public class DirArtifactCacheTest {
             LazyPath.ofInstance(fileX)).getType());
 
     Files.setAttribute(
-        dirArtifactCache.getPathForRuleKey(ruleKeyX, Optional.absent()),
+        dirArtifactCache.getPathForRuleKey(ruleKeyX, Optional.empty()),
         "lastAccessTime",
         FileTime.fromMillis(0));
     Files.setAttribute(
@@ -626,7 +626,7 @@ public class DirArtifactCacheTest {
             LazyPath.ofInstance(fileY)).getType());
 
     Files.setAttribute(
-        dirArtifactCache.getPathForRuleKey(ruleKeyY, Optional.absent()),
+        dirArtifactCache.getPathForRuleKey(ruleKeyY, Optional.empty()),
         "lastAccessTime",
         FileTime.fromMillis(1000));
     Files.setAttribute(
@@ -661,7 +661,7 @@ public class DirArtifactCacheTest {
         new ProjectFilesystem(cacheDir),
         Paths.get("."),
         /* doStore */ true,
-        /* maxCacheSizeBytes */ Optional.absent());
+        /* maxCacheSizeBytes */ Optional.empty());
 
     Files.write(fileX, "x".getBytes(UTF_8));
 
@@ -690,7 +690,7 @@ public class DirArtifactCacheTest {
             filesystem,
             Paths.get("cache"),
             /* doStore */ true,
-            /* maxCacheSizeBytes */ Optional.absent());
+            /* maxCacheSizeBytes */ Optional.empty());
 
     RuleKey ruleKey = new RuleKey("0000");
     ImmutableMap<String, String> metadata = ImmutableMap.of("some", "metadata");
@@ -726,11 +726,11 @@ public class DirArtifactCacheTest {
         new FakeProjectFilesystem(),
         Paths.get("cache"),
         /* doStore */ false,
-        /* maxCacheSizeBytes */ Optional.absent());
+        /* maxCacheSizeBytes */ Optional.empty());
 
     Path result = cache.getPathForRuleKey(
         new RuleKey("aabb0123123234e324"),
-        Optional.absent());
+        Optional.empty());
     assertThat(result.endsWith(Paths.get("aa/bb/aabb0123123234e324")), Matchers.equalTo(true));
 
     result = cache.getPathForRuleKey(

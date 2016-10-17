@@ -41,7 +41,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -52,6 +51,7 @@ import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.EnumSet;
+import java.util.Optional;
 
 /**
  * Packages the resources using {@code aapt}.
@@ -162,7 +162,7 @@ public class AaptPackageResources extends AbstractBuildRule
     Path rDotTxtDir = getPathToRDotTxtDir();
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), rDotTxtDir));
 
-    Optional<Path> pathToGeneratedProguardConfig = Optional.absent();
+    Optional<Path> pathToGeneratedProguardConfig = Optional.empty();
     if (packageType.isBuildWithObfuscation()) {
       Path proguardConfigDir = getPathToGeneratedProguardConfigDir();
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), proguardConfigDir));

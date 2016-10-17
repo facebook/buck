@@ -204,7 +204,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
 
   @Override
   public RuleScheduleInfo getRuleScheduleInfo() {
-    return cxxBuckConfig.getLinkScheduleInfo().or(RuleScheduleInfo.DEFAULT);
+    return cxxBuckConfig.getLinkScheduleInfo().orElse(RuleScheduleInfo.DEFAULT);
   }
 
   private Path getScratchPath() {

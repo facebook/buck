@@ -20,10 +20,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.File;
+import java.util.Optional;
 
 public class LuaUtil {
 

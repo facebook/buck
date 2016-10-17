@@ -16,12 +16,12 @@
 package com.facebook.buck.macho;
 
 import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
-import com.google.common.base.Optional;
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
+import java.util.Optional;
 
 public class SectionUtils {
 
@@ -67,6 +67,6 @@ public class SectionUtils {
         UnsignedInteger.fromIntBits(buffer.getInt()),
         is64Bit ?
             Optional.of(UnsignedInteger.fromIntBits(buffer.getInt())) :
-            Optional.absent());
+            Optional.empty());
   }
 }

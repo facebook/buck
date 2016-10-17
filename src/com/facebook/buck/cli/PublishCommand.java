@@ -27,7 +27,6 @@ import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -41,6 +40,7 @@ import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -132,7 +132,7 @@ public class PublishCommand extends BuildCommand {
 
     Publisher publisher = new Publisher(
         params.getCell().getFilesystem(),
-        Optional.fromNullable(remoteRepo),
+        Optional.ofNullable(remoteRepo),
         dryRun);
 
     try {

@@ -49,7 +49,8 @@
   },
   "object_mapper" : {
     "deps" : [
-      "//third-party/java/jackson:jackson-datatype-guava"
+      "//third-party/java/jackson:jackson-datatype-guava",
+      "//third-party/java/jackson:jackson-datatype-jdk8"
     ],
     "exported_deps" : [
       "//third-party/java/jackson:jackson-databind"

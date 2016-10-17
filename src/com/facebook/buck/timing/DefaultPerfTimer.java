@@ -17,21 +17,21 @@
 package com.facebook.buck.timing;
 
 import com.facebook.buck.util.TriState;
-import com.google.common.base.Optional;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
+import java.util.Optional;
 
 public class DefaultPerfTimer implements PerfTimer {
   private static TriState jvmSupportsCpuTime = TriState.UNSPECIFIED;
   private static Object lock = new Object();
-  private static Optional<ThreadMXBean> bean = Optional.absent();
+  private static Optional<ThreadMXBean> bean = Optional.empty();
 
   private static boolean jvmSupportsCpuTime() {
     if (jvmSupportsCpuTime == TriState.UNSPECIFIED) {
       synchronized (lock) {
         if (jvmSupportsCpuTime == TriState.UNSPECIFIED) {
-          bean = Optional.fromNullable(ManagementFactory.getThreadMXBean());
+          bean = Optional.ofNullable(ManagementFactory.getThreadMXBean());
           jvmSupportsCpuTime = TriState.forBooleanValue(bean.isPresent() &&
                   bean.get().isThreadCpuTimeSupported());
           if (jvmSupportsCpuTime.asBoolean()) {

@@ -38,7 +38,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -61,6 +60,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 import javax.xml.transform.TransformerException;
@@ -226,7 +226,7 @@ public class PomIntegrationTest {
 
     @Override
     public Optional<Path> getPomTemplate() {
-      return Optional.fromNullable(pomTemplate);
+      return Optional.ofNullable(pomTemplate);
     }
 
     @Override

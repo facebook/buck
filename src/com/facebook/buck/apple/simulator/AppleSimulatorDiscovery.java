@@ -19,8 +19,6 @@ package com.facebook.buck.apple.simulator;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -28,11 +26,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Utilty class to discover state about Apple simulators installed on the host system.
@@ -88,11 +86,11 @@ public class AppleSimulatorDiscovery {
                 appleSimulator.getName()));
     LOG.debug("Parsing simulator profile plist %s", simulatorProfilePlistPath);
     try (InputStream inputStream = Files.newInputStream(simulatorProfilePlistPath)) {
-      // This might return Optional.absent() if the input could not be parsed.
+      // This might return Optional.empty() if the input could not be parsed.
       return AppleSimulatorProfileParsing.parseProfilePlistStream(inputStream);
     } catch (FileNotFoundException | NoSuchFileException e) {
       LOG.warn(e, "Could not open simulator profile %s, ignoring", simulatorProfilePlistPath);
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 }

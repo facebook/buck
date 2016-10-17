@@ -22,6 +22,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.util.OptionalCompat;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -50,7 +51,7 @@ public abstract class FrameworkPathArg extends Arg {
             new Function<FrameworkPath, Iterable<SourcePath>>() {
               @Override
               public Iterable<SourcePath> apply(FrameworkPath input) {
-                return input.getSourcePath().asSet();
+                return OptionalCompat.asSet(input.getSourcePath());
               }
             });
     return resolver.filterBuildRuleInputs(sourcePaths);
@@ -63,7 +64,7 @@ public abstract class FrameworkPathArg extends Arg {
             new Function<FrameworkPath, Iterable<SourcePath>>() {
               @Override
               public Iterable<SourcePath> apply(FrameworkPath input) {
-                return input.getSourcePath().asSet();
+                return OptionalCompat.asSet(input.getSourcePath());
               }
             })
         .toList();

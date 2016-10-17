@@ -27,7 +27,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -36,6 +35,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -50,7 +50,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -65,6 +64,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
 public class CxxLinkableEnhancerTest {
 
@@ -170,12 +170,12 @@ public class CxxLinkableEnhancerTest {
         new SourcePathResolver(resolver),
         target,
         Linker.LinkType.EXECUTABLE,
-        Optional.absent(),
+        Optional.empty(),
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(SourcePathArg.from(
@@ -218,12 +218,12 @@ public class CxxLinkableEnhancerTest {
         pathResolver,
         target,
         Linker.LinkType.EXECUTABLE,
-        Optional.absent(),
+        Optional.empty(),
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
@@ -271,12 +271,12 @@ public class CxxLinkableEnhancerTest {
         pathResolver,
         target,
         Linker.LinkType.EXECUTABLE,
-        Optional.absent(),
+        Optional.empty(),
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.STATIC,
         ImmutableList.<NativeLinkable>of(nativeLinkable),
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
@@ -307,12 +307,12 @@ public class CxxLinkableEnhancerTest {
         pathResolver,
         target,
         Linker.LinkType.EXECUTABLE,
-        Optional.absent(),
+        Optional.empty(),
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
@@ -329,12 +329,12 @@ public class CxxLinkableEnhancerTest {
         pathResolver,
         target,
         Linker.LinkType.SHARED,
-        Optional.absent(),
+        Optional.empty(),
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
@@ -355,8 +355,8 @@ public class CxxLinkableEnhancerTest {
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
@@ -401,12 +401,12 @@ public class CxxLinkableEnhancerTest {
         pathResolver,
         target,
         Linker.LinkType.EXECUTABLE,
-        Optional.absent(),
+        Optional.empty(),
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.STATIC,
         ImmutableList.<NativeLinkable>of(nativeLinkable),
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
@@ -426,12 +426,12 @@ public class CxxLinkableEnhancerTest {
         pathResolver,
         target,
         Linker.LinkType.EXECUTABLE,
-        Optional.absent(),
+        Optional.empty(),
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.SHARED,
         ImmutableList.<NativeLinkable>of(nativeLinkable),
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(DEFAULT_INPUTS)
@@ -471,12 +471,12 @@ public class CxxLinkableEnhancerTest {
               pathResolver,
               target,
               Linker.LinkType.SHARED,
-              Optional.absent(),
+              Optional.empty(),
               DEFAULT_OUTPUT,
               ent.getKey(),
               EMPTY_DEPS,
-              Optional.absent(),
-              Optional.absent(),
+              Optional.empty(),
+              Optional.empty(),
               ImmutableSet.of(),
               NativeLinkableInput.builder()
                   .setArgs(DEFAULT_INPUTS)
@@ -544,11 +544,11 @@ public class CxxLinkableEnhancerTest {
         new SourcePathResolver(resolver),
         target,
         Linker.LinkType.MACH_O_BUNDLE,
-        Optional.absent(),
+        Optional.empty(),
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.absent(),
+        Optional.empty(),
         Optional.of(new FakeSourcePath(filesystem, "path/to/MyBundleLoader")),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
@@ -581,12 +581,12 @@ public class CxxLinkableEnhancerTest {
         new SourcePathResolver(resolver),
         bundleLoaderTarget,
         Linker.LinkType.EXECUTABLE,
-        Optional.absent(),
+        Optional.empty(),
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(SourcePathArg.from(
@@ -605,11 +605,11 @@ public class CxxLinkableEnhancerTest {
         new SourcePathResolver(resolver),
         bundleTarget,
         Linker.LinkType.MACH_O_BUNDLE,
-        Optional.absent(),
+        Optional.empty(),
         DEFAULT_OUTPUT,
         Linker.LinkableDepType.STATIC,
         EMPTY_DEPS,
-        Optional.absent(),
+        Optional.empty(),
         Optional.of(
             new BuildTargetSourcePath(bundleLoaderRule.getBuildTarget())),
         ImmutableSet.of(),
@@ -639,7 +639,7 @@ public class CxxLinkableEnhancerTest {
                 new SourceTreePath(
                     PBXReference.SourceTree.DEVELOPER_DIR,
                     Paths.get("Library/Frameworks/XCTest.framework"),
-                    Optional.absent())),
+                    Optional.empty())),
             FrameworkPath.ofSourcePath(
                 new PathSourcePath(projectFilesystem, Paths.get("Vendor/Bar/Bar.framework")))));
 

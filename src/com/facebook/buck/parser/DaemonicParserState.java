@@ -32,9 +32,9 @@ import com.facebook.buck.model.FilesystemBackedBuildFileTree;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
@@ -56,6 +56,7 @@ import java.nio.file.WatchEvent;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -122,7 +123,7 @@ class DaemonicParserState {
 
       Cache<BuildTarget, T> state = getCache(cell);
       if (state == null) {
-        return Optional.absent();
+        return Optional.empty();
       }
       return state.lookupComputedNode(cell, target);
     }
@@ -163,7 +164,7 @@ class DaemonicParserState {
 
       DaemonicCellState state = getCellState(cell);
       if (state == null) {
-        return Optional.absent();
+        return Optional.empty();
       }
       return state.lookupRawNodes(buildFile);
     }
@@ -216,7 +217,7 @@ class DaemonicParserState {
                 ImmutableMap.copyOf(
                     Maps.transformValues(
                         ent.getValue(),
-                        Optional::fromNullable)));
+                        Optional::ofNullable)));
           }
           configs = builder.build();
         } else if (rawNode.containsKey(ENV_META_RULE)) {
@@ -487,7 +488,7 @@ class DaemonicParserState {
     // that.
     Optional<Path> packageBuildFile = buildFiles.getBasePathOfAncestorTarget(path);
     packageBuildFiles.addAll(
-        packageBuildFile.transform(cell.getFilesystem().getAbsolutifier()).asSet());
+        OptionalCompat.asSet(packageBuildFile.map(cell.getFilesystem().getAbsolutifier()::apply)));
 
     // If we're *not* enforcing package boundary checks, it's possible for multiple ancestor
     // packages to reference the same file
@@ -495,7 +496,7 @@ class DaemonicParserState {
       while (packageBuildFile.isPresent() && packageBuildFile.get().getParent() != null) {
         packageBuildFile =
             buildFiles.getBasePathOfAncestorTarget(packageBuildFile.get().getParent());
-        packageBuildFiles.addAll(packageBuildFile.asSet());
+        packageBuildFiles.addAll(OptionalCompat.asSet(packageBuildFile));
       }
     }
 

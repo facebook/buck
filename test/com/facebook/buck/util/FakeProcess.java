@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.io.ByteArrayInputStream;
@@ -25,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Optional;
 
 /**
  * Fake implementation of {@link java.lang.Process}.
@@ -47,7 +47,7 @@ public class FakeProcess extends Process {
       int exitValue,
       String stdout,
       String stderr) {
-    this(exitValue, stdout, stderr, Optional.absent());
+    this(exitValue, stdout, stderr, Optional.empty());
   }
 
   public FakeProcess(
@@ -73,7 +73,7 @@ public class FakeProcess extends Process {
         outputStream,
         inputStream,
         errorStream,
-        Optional.absent());
+        Optional.empty());
   }
 
   public FakeProcess(

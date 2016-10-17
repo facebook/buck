@@ -41,7 +41,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -52,6 +51,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.nio.file.Path;
 import java.util.EnumSet;
+import java.util.Optional;
 
 public class AndroidInstrumentationApkDescription
     implements Description<AndroidInstrumentationApkDescription.Arg> {
@@ -127,7 +127,7 @@ public class AndroidInstrumentationApkDescription
         ResourceCompressionMode.DISABLED,
         FilterResourcesStep.ResourceFilter.EMPTY_FILTER,
         /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-        /* resourceUnionPackage */ Optional.absent(),
+        /* resourceUnionPackage */ Optional.empty(),
         /* locales */ ImmutableSet.of(),
         args.manifest,
         PackageType.INSTRUMENTED,
@@ -141,19 +141,19 @@ public class AndroidInstrumentationApkDescription
             .toSet(),
         resourcesToExclude,
         /* skipCrunchPngs */ false,
-        args.includesVectorDrawables.or(false),
+        args.includesVectorDrawables.orElse(false),
         javacOptions,
         EnumSet.noneOf(ExopackageMode.class),
         apkUnderTest.getKeystore(),
         /* buildConfigValues */ BuildConfigFields.empty(),
-        /* buildConfigValuesFile */ Optional.absent(),
-        /* xzCompressionLevel */ Optional.absent(),
+        /* buildConfigValuesFile */ Optional.empty(),
+        /* xzCompressionLevel */ Optional.empty(),
         /* trimResourceIds */ false,
-        /* keepResourcePattern */ Optional.absent(),
+        /* keepResourcePattern */ Optional.empty(),
         nativePlatforms,
-        /* nativeLibraryMergeMap */ Optional.absent(),
-        /* nativeLibraryMergeGlue */ Optional.absent(),
-        /* nativeLibraryMergeCodeGenerator */ Optional.absent(),
+        /* nativeLibraryMergeMap */ Optional.empty(),
+        /* nativeLibraryMergeGlue */ Optional.empty(),
+        /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
         AndroidBinary.RelinkerMode.DISABLED,
         dxExecutorService,
         apkUnderTest.getManifestEntries(),
@@ -161,7 +161,7 @@ public class AndroidInstrumentationApkDescription
         new APKModuleGraph(
             targetGraph,
             params.getBuildTarget(),
-            Optional.absent()));
+            Optional.empty()));
 
     AndroidGraphEnhancementResult enhancementResult =
         graphEnhancer.createAdditionalBuildables();
@@ -198,6 +198,6 @@ public class AndroidInstrumentationApkDescription
     public SourcePath manifest;
     public BuildTarget apk;
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public Optional<Boolean> includesVectorDrawables = Optional.absent();
+    public Optional<Boolean> includesVectorDrawables = Optional.empty();
   }
 }

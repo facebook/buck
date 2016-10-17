@@ -21,13 +21,13 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.testutil.TestConsole;
-import com.google.common.base.Optional;
 
 import org.easymock.EasyMockSupport;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public class ServerStatusCommandTest extends EasyMockSupport {
 
@@ -58,7 +58,7 @@ public class ServerStatusCommandTest extends EasyMockSupport {
 
   @Test
   public void testWhenHttpserverNotRunning() throws IOException, InterruptedException {
-    expect(webServer.getPort()).andStubReturn(Optional.absent());
+    expect(webServer.getPort()).andStubReturn(Optional.empty());
     replayAll();
 
     ServerStatusCommand command = new ServerStatusCommand();

@@ -17,7 +17,6 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -25,6 +24,7 @@ import com.google.common.collect.Lists;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * List of build configurations.
@@ -38,7 +38,7 @@ public class XCConfigurationList extends PBXProjectItem {
 
   public XCConfigurationList() {
     buildConfigurations = Lists.newArrayList();
-    defaultConfigurationName = Optional.absent();
+    defaultConfigurationName = Optional.empty();
     defaultConfigurationIsVisible = false;
 
     buildConfigurationsByName = CacheBuilder.newBuilder().build(

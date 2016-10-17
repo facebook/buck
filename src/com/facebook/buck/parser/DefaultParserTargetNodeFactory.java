@@ -40,7 +40,6 @@ import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
@@ -50,6 +49,7 @@ import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Creates {@link TargetNode} instances from raw data coming in form the
@@ -92,7 +92,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
       TargetNodeFactory targetNodeFactory) {
     return new DefaultParserTargetNodeFactory(
         marshaller,
-        Optional.absent(),
+        Optional.empty(),
         (buildFile, node) -> {
           // No-op.
         },
@@ -213,7 +213,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
       }
 
       Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(path);
-      // It should not be possible for us to ever get an Optional.absent() for this because that
+      // It should not be possible for us to ever get an Optional.empty() for this because that
       // would require one of two conditions:
       // 1) The source path references parent directories, which we check for above.
       // 2) You don't have a build file above this file, which is impossible if it is referenced in

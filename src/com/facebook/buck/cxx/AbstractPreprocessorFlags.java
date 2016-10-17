@@ -22,10 +22,10 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -35,6 +35,7 @@ import com.google.common.collect.Ordering;
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -72,7 +73,7 @@ abstract class AbstractPreprocessorFlags {
 
   public Iterable<BuildRule> getDeps(SourcePathResolver resolver) {
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
-    deps.addAll(resolver.filterBuildRuleInputs(getPrefixHeader().asSet()));
+    deps.addAll(resolver.filterBuildRuleInputs(OptionalCompat.asSet(getPrefixHeader())));
     for (CxxHeaders cxxHeaders : getIncludes()) {
       deps.addAll(cxxHeaders.getDeps(resolver));
     }
@@ -109,7 +110,7 @@ abstract class AbstractPreprocessorFlags {
     builder.addAllRuleFlags(
         MoreIterables.zipAndConcat(
             Iterables.cycle("-include"),
-            FluentIterable.from(getPrefixHeader().asSet())
+            FluentIterable.from(OptionalCompat.asSet(getPrefixHeader()))
                 .transform(resolver::getAbsolutePath)
                 .transform(Object::toString)));
     builder.addAllRuleFlags(

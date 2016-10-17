@@ -19,11 +19,12 @@ package com.facebook.buck.parser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 
 import org.immutables.value.Value;
+
+import java.util.Optional;
+import java.util.stream.StreamSupport;
 
 /**
  * Matches a {@link TargetNode} name by a specific {@link BuildTarget}.
@@ -50,10 +51,11 @@ abstract class AbstractBuildTargetSpec implements TargetNodeSpec {
 
   @Override
   public ImmutableMap<BuildTarget, Optional<TargetNode<?>>> filter(Iterable<TargetNode<?>> nodes) {
-    Optional<TargetNode<?>> firstMatchingNode = Iterables.tryFind(
-        nodes,
-        input -> input.getBuildTarget().getUnflavoredBuildTarget().equals(
-            getBuildTarget().getUnflavoredBuildTarget()));
+    Optional<TargetNode<?>> firstMatchingNode =
+        StreamSupport.stream(nodes.spliterator(), false)
+        .filter(input -> input.getBuildTarget().getUnflavoredBuildTarget().equals(
+            getBuildTarget().getUnflavoredBuildTarget()))
+        .findFirst();
     return ImmutableMap.of(getBuildTarget(), firstMatchingNode);
   }
 

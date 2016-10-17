@@ -36,7 +36,6 @@ import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
@@ -48,6 +47,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -203,7 +203,7 @@ abstract class AbstractExecutionContext implements Closeable {
       PrintStream newStderr,
       Optional<Verbosity> verbosityOverride) {
     Console console = new Console(
-        verbosityOverride.or(this.getConsole().getVerbosity()),
+        verbosityOverride.orElse(this.getConsole().getVerbosity()),
         newStdout,
         newStderr,
         this.getConsole().getAnsi());

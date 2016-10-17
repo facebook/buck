@@ -40,12 +40,12 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -124,7 +124,7 @@ public class DummyRDotJava extends AbstractBuildRule
           rDotJavaSrcFolder,
           forceFinalResourceIds,
           unionPackage,
-          /* rName */ Optional.absent());
+          /* rName */ Optional.empty());
       steps.add(mergeStep);
 
       if (!finalRName.isPresent()) {

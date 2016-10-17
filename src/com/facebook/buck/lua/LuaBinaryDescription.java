@@ -62,10 +62,10 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreMaps;
+import com.facebook.buck.util.OptionalCompat;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Suppliers;
@@ -84,6 +84,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -165,8 +166,8 @@ public class LuaBinaryDescription implements
     Optional<BuildTarget> nativeStarterLibrary = luaConfig.getNativeStarterLibrary();
     return ImmutableSet.copyOf(
         nativeStarterLibrary.isPresent() ?
-            nativeStarterLibrary.asSet() :
-            luaConfig.getLuaCxxLibraryTarget().asSet());
+            OptionalCompat.asSet(nativeStarterLibrary) :
+            OptionalCompat.asSet(luaConfig.getLuaCxxLibraryTarget()));
   }
 
   private Starter getStarter(
@@ -224,7 +225,8 @@ public class LuaBinaryDescription implements
   }
 
   private StarterType getStarterType(boolean mayHaveNativeCode) {
-    return luaConfig.getStarterType().or(mayHaveNativeCode ? StarterType.NATIVE : StarterType.PURE);
+    return luaConfig.getStarterType()
+        .orElse(mayHaveNativeCode ? StarterType.NATIVE : StarterType.PURE);
   }
 
   /**
@@ -244,9 +246,9 @@ public class LuaBinaryDescription implements
     StarterType starterType = getStarterType(mayHaveNativeCode);
 
     // The relative paths from the starter to the various components.
-    Optional<Path> relativeModulesDir = Optional.absent();
-    Optional<Path> relativePythonModulesDir = Optional.absent();
-    Optional<Path> relativeNativeLibsDir = Optional.absent();
+    Optional<Path> relativeModulesDir = Optional.empty();
+    Optional<Path> relativePythonModulesDir = Optional.empty();
+    Optional<Path> relativeNativeLibsDir = Optional.empty();
 
     // For in-place binaries, set the relative paths to the symlink trees holding the components.
     if (packageStyle == LuaConfig.PackageStyle.INPLACE) {
@@ -444,7 +446,7 @@ public class LuaBinaryDescription implements
         NativeLinkTargetMode mode = target.getNativeLinkTargetMode(cxxPlatform);
         String soname =
             Preconditions.checkNotNull(
-                mode.getLibraryName().orNull(),
+                mode.getLibraryName().orElse(null),
                 "%s: omnibus library for %s was built without soname",
                 baseParams.getBuildTarget(),
                 root.getKey());
@@ -770,13 +772,13 @@ public class LuaBinaryDescription implements
       A args)
       throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
+    CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).orElse(
+        defaultCxxPlatform);
     PythonPlatform pythonPlatform =
-        pythonPlatforms.getValue(params.getBuildTarget())
-            .or(pythonPlatforms.getValue(
-                args.pythonPlatform
-                    .<Flavor>transform(ImmutableFlavor::of)
-                    .or(pythonPlatforms.getFlavors().iterator().next())));
+        pythonPlatforms.getValue(params.getBuildTarget()).orElse(
+            pythonPlatforms.getValue(
+                args.pythonPlatform.<Flavor>map(ImmutableFlavor::of).orElse(
+                    pythonPlatforms.getFlavors().iterator().next())));
     LuaBinaryPackageComponents components =
         getPackageComponentsFromDeps(
             params,
@@ -784,9 +786,9 @@ public class LuaBinaryDescription implements
             pathResolver,
             cxxPlatform,
             pythonPlatform,
-            args.nativeStarterLibrary.or(luaConfig.getNativeStarterLibrary()),
+            args.nativeStarterLibrary.map(Optional::of).orElse(luaConfig.getNativeStarterLibrary()),
             args.mainModule,
-            args.packageStyle.or(luaConfig.getPackageStyle()),
+            args.packageStyle.orElse(luaConfig.getPackageStyle()),
             params.getDeclaredDeps().get());
     Tool binary =
         getBinary(
@@ -797,7 +799,7 @@ public class LuaBinaryDescription implements
             args.mainModule,
             components.getStarter(),
             components.getComponents(),
-            args.packageStyle.or(luaConfig.getPackageStyle()));
+            args.packageStyle.orElse(luaConfig.getPackageStyle()));
     return new LuaBinary(
         params.appendExtraDeps(binary.getDeps(pathResolver)),
         pathResolver,

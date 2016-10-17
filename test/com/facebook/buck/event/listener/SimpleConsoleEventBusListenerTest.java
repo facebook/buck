@@ -48,7 +48,6 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.unit.SizeUnit;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -62,6 +61,7 @@ import org.junit.Test;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class SimpleConsoleEventBusListenerTest {
@@ -130,7 +130,7 @@ public class SimpleConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, Optional.absent()),
+            ParseEvent.finished(parseStarted, Optional.empty()),
             400L,
             TimeUnit.MILLISECONDS,
             threadId));
@@ -162,10 +162,10 @@ public class SimpleConsoleEventBusListenerTest {
                 BuildRuleStatus.SUCCESS,
                 CacheResult.miss(),
                 Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                Optional.absent(),
-                Optional.absent(),
-                Optional.absent(),
-                Optional.absent()),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()),
             1000L,
             TimeUnit.MILLISECONDS,
             threadId));
@@ -199,8 +199,8 @@ public class SimpleConsoleEventBusListenerTest {
             InstallEvent.finished(
                 installEventStarted,
                 true,
-                Optional.absent(),
-                Optional.absent()),
+                Optional.empty(),
+                Optional.empty()),
             4000L,
             TimeUnit.MILLISECONDS,
             threadId));
@@ -262,7 +262,7 @@ public class SimpleConsoleEventBusListenerTest {
             /* threadId */ 0L));
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, Optional.absent()),
+            ParseEvent.finished(parseStarted, Optional.empty()),
             300L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));

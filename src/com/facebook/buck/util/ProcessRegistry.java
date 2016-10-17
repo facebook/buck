@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -51,5 +51,5 @@ public abstract class ProcessRegistry {
     }
   }
 
-  private static Optional<ProcessRegisterCallback> sProcessRegisterCallback = Optional.absent();
+  private static Optional<ProcessRegisterCallback> sProcessRegisterCallback = Optional.empty();
 }

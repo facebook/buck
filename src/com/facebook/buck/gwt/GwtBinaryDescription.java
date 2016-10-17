@@ -32,7 +32,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -40,6 +39,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class GwtBinaryDescription implements Description<GwtBinaryDescription.Arg> {
 
@@ -148,11 +148,11 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
         args.modules,
         javaOptions.getJavaRuntimeLauncher(),
         args.vmArgs,
-        args.style.or(DEFAULT_STYLE),
-        args.draftCompile.or(DEFAULT_DRAFT_COMPILE),
-        args.optimize.or(DEFAULT_OPTIMIZE),
-        args.localWorkers.or(DEFAULT_NUM_LOCAL_WORKERS),
-        args.strict.or(DEFAULT_STRICT),
+        args.style.orElse(DEFAULT_STYLE),
+        args.draftCompile.orElse(DEFAULT_DRAFT_COMPILE),
+        args.optimize.orElse(DEFAULT_OPTIMIZE),
+        args.localWorkers.orElse(DEFAULT_NUM_LOCAL_WORKERS),
+        args.strict.orElse(DEFAULT_STRICT),
         args.experimentalArgs,
         gwtModuleJarsBuilder.build());
   }

@@ -21,7 +21,6 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
@@ -32,6 +31,7 @@ import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -84,15 +84,13 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public boolean getAllowEmptyGlobs() {
     return getDelegate()
-        .getValue("build", "allow_empty_globs")
-        .transform(
-            Boolean::parseBoolean)
-        .or(DEFAULT_ALLOW_EMPTY_GLOBS);
+        .getValue("build", "allow_empty_globs").map(Boolean::parseBoolean).orElse(
+            DEFAULT_ALLOW_EMPTY_GLOBS);
   }
 
   @Value.Lazy
   public String getBuildFileName() {
-    return getDelegate().getValue(BUILDFILE_SECTION_NAME, "name").or(DEFAULT_BUILD_FILE_NAME);
+    return getDelegate().getValue(BUILDFILE_SECTION_NAME, "name").orElse(DEFAULT_BUILD_FILE_NAME);
   }
 
   /**
@@ -134,8 +132,8 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
 
   @Value.Lazy
   public AllowSymlinks getAllowSymlinks() {
-    return getDelegate().getEnum("project", "allow_symlinks", AllowSymlinks.class)
-        .or(AllowSymlinks.WARN);
+    return getDelegate().getEnum("project", "allow_symlinks", AllowSymlinks.class).orElse(
+        AllowSymlinks.WARN);
   }
 
   @Value.Lazy
@@ -147,14 +145,17 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public GlobHandler getGlobHandler() {
     return
-        getDelegate().getEnum("project", "glob_handler", GlobHandler.class).or(GlobHandler.PYTHON);
+        getDelegate().getEnum(
+            "project",
+            "glob_handler",
+            GlobHandler.class).orElse(GlobHandler.PYTHON);
   }
 
   @Value.Lazy
   public WatchmanGlobSanityCheck getWatchmanGlobSanityCheck() {
     return getDelegate()
-        .getEnum("project", "watchman_glob_sanity_check", WatchmanGlobSanityCheck.class)
-        .or(WatchmanGlobSanityCheck.STAT);
+        .getEnum("project", "watchman_glob_sanity_check", WatchmanGlobSanityCheck.class).orElse(
+            WatchmanGlobSanityCheck.STAT);
   }
 
   @Value.Lazy
@@ -174,8 +175,7 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
     }
 
     int value = getDelegate()
-        .getLong("project", "parsing_threads")
-        .or(NUM_PARSING_THREADS_DEFAULT)
+        .getLong("project", "parsing_threads").orElse(NUM_PARSING_THREADS_DEFAULT)
         .intValue();
 
     return Math.min(value, getDelegate().getNumThreads());
@@ -183,8 +183,10 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
 
   @Value.Lazy
   public ApplyDefaultFlavorsMode getDefaultFlavorsMode() {
-    return getDelegate().getEnum("project", "default_flavors_mode", ApplyDefaultFlavorsMode.class)
-        .or(ApplyDefaultFlavorsMode.ENABLED);
+    return getDelegate().getEnum(
+        "project",
+        "default_flavors_mode",
+        ApplyDefaultFlavorsMode.class).orElse(ApplyDefaultFlavorsMode.ENABLED);
   }
 
   @Value.Lazy

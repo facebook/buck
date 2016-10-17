@@ -19,8 +19,9 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 

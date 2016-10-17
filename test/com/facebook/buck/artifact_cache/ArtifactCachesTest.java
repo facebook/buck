@@ -22,11 +22,12 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
+
+import java.util.Optional;
 
 public class ArtifactCachesTest {
   @Test
@@ -40,7 +41,7 @@ public class ArtifactCachesTest {
         cacheConfig,
         buckEventBus,
         projectFilesystem,
-        Optional.absent(),
+        Optional.empty(),
         MoreExecutors.newDirectExecutorService());
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(HttpArtifactCache.class));
   }
@@ -56,7 +57,7 @@ public class ArtifactCachesTest {
         cacheConfig,
         buckEventBus,
         projectFilesystem,
-        Optional.absent(),
+        Optional.empty(),
         MoreExecutors.newDirectExecutorService());
 
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(DirArtifactCache.class));
@@ -73,7 +74,7 @@ public class ArtifactCachesTest {
         cacheConfig,
         buckEventBus,
         projectFilesystem,
-        Optional.absent(),
+        Optional.empty(),
         MoreExecutors.newDirectExecutorService());
     assertThat(stripDecorators(artifactCache), Matchers.instanceOf(MultiArtifactCache.class));
   }

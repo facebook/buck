@@ -15,11 +15,11 @@
  */
 package com.facebook.buck.macho;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.UnsignedInteger;
 
 import java.nio.ByteBuffer;
+import java.util.Optional;
 
 public class MachoHeaderUtils {
 
@@ -42,7 +42,7 @@ public class MachoHeaderUtils {
         UnsignedInteger.fromIntBits(buffer.getInt()),
         UnsignedInteger.fromIntBits(buffer.getInt()),
         UnsignedInteger.fromIntBits(buffer.getInt()),
-        Optional.absent());
+        Optional.empty());
   }
 
   public static MachoHeader create64BitFromBuffer(ByteBuffer buffer) {

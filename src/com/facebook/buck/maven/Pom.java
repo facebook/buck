@@ -21,7 +21,6 @@ import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRule;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
@@ -65,6 +64,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 
@@ -376,7 +376,7 @@ public class Pom {
     if (buildRule instanceof HasMavenCoordinates) {
       return ((HasMavenCoordinates) buildRule).getMavenCoords();
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public Model getModel() {

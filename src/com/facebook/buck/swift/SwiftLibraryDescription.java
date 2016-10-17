@@ -47,7 +47,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -60,6 +59,7 @@ import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -226,7 +226,7 @@ public class SwiftLibraryDescription implements
           new SourcePathResolver(resolver),
           swiftPlatform.get().getSwift(),
           args.frameworks,
-          args.moduleName.or(buildTarget.getShortName()),
+          args.moduleName.orElse(buildTarget.getShortName()),
           BuildTargets.getGenPath(
               params.getProjectFilesystem(),
               buildTarget, "%s"),
@@ -245,7 +245,7 @@ public class SwiftLibraryDescription implements
         args.frameworks,
         args.libraries,
         args.supportedPlatformsRegex,
-        args.preferredLinkage.or(NativeLinkable.Linkage.ANY));
+        args.preferredLinkage.orElse(NativeLinkable.Linkage.ANY));
   }
 
   private BuildRule createSharedLibraryBuildRule(
@@ -290,8 +290,8 @@ public class SwiftLibraryDescription implements
         FluentIterable.from(params.getDeps())
             .filter(NativeLinkable.class)
             .append(swiftRuntimeLinkable),
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         ImmutableSet.of(),
         inputBuilder.build()));
   }
@@ -308,7 +308,7 @@ public class SwiftLibraryDescription implements
           args.srcs).isEmpty();
       return hasSwiftSource ?
           Optional.of(resolver.requireRule(buildTarget.withAppendedFlavors(SWIFT_COMPANION_FLAVOR)))
-          : Optional.absent();
+          : Optional.empty();
     }
 
     final SwiftLibraryDescription.Arg delegateArgs = createUnpopulatedConstructorArg();
@@ -322,7 +322,7 @@ public class SwiftLibraryDescription implements
           resolver.addToIndex(
               createBuildRule(targetGraph, params, resolver, delegateArgs)));
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

@@ -22,7 +22,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -37,6 +36,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class ManifestTest {
 
@@ -256,7 +256,7 @@ public class ManifestTest {
             ImmutableMap.of(RESOLVER.getAbsolutePath(input), HashCode.fromInt(2)));
     assertThat(
         manifest.lookup(fileHashCache, RESOLVER, ImmutableSet.of(input)),
-        Matchers.equalTo(Optional.<RuleKey>absent()));
+        Matchers.equalTo(Optional.empty()));
   }
 
   @Test
@@ -271,7 +271,7 @@ public class ManifestTest {
     FileHashCache fileHashCache = new FakeFileHashCache(ImmutableMap.of());
     assertThat(
         manifest.lookup(fileHashCache, RESOLVER, ImmutableSet.of(input)),
-        Matchers.equalTo(Optional.<RuleKey>absent()));
+        Matchers.equalTo(Optional.empty()));
   }
 
   @Test

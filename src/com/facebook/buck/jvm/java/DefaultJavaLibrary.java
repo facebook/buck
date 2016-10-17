@@ -49,7 +49,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
@@ -69,6 +68,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -271,7 +271,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     if (!srcs.isEmpty() || !resources.isEmpty() || manifestFile.isPresent()) {
       this.outputJar = Optional.of(getOutputJarPath(getBuildTarget(), getProjectFilesystem()));
     } else {
-      this.outputJar = Optional.absent();
+      this.outputJar = Optional.empty();
     }
 
     this.outputClasspathEntriesSupplier =
@@ -303,7 +303,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   }
 
   private Optional<SourcePath> sourcePathForOutputJar() {
-    return outputJar.transform(SourcePaths.getToBuildTargetSourcePath(getBuildTarget()));
+    return outputJar.map(SourcePaths.getToBuildTargetSourcePath(getBuildTarget())::apply);
   }
 
   static Path getOutputJarPath(BuildTarget target, ProjectFilesystem filesystem) {
@@ -519,8 +519,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           Optional.of(suggestBuildRule),
           postprocessClassesCommands,
           ImmutableSortedSet.of(outputDirectory),
-          /* mainClass */ Optional.absent(),
-          manifestFile.transform(getResolver()::getAbsolutePath),
+          /* mainClass */ Optional.empty(),
+          manifestFile.map(getResolver()::getAbsolutePath),
           outputJar.get(),
           usedClassesFileWriter,
           /* output params */
@@ -543,7 +543,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
                 output,
                 ImmutableSortedSet.of(outputDirectory),
                 /* mainClass */ null,
-                manifestFile.transform(getResolver()::getAbsolutePath).orNull(),
+                manifestFile.map(getResolver()::getAbsolutePath).orElse(null),
                 true,
                 classesToRemoveFromJar));
       }
@@ -584,7 +584,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
 
   @Override
   public Optional<SourcePath> getAbiJar() {
-    return outputJar.isPresent() ? Optional.of(abiJar) : Optional.absent();
+    return outputJar.isPresent() ? Optional.of(abiJar) : Optional.empty();
   }
 
   @Override
@@ -595,7 +595,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @Override
   @Nullable
   public Path getPathToOutput() {
-    return outputJar.orNull();
+    return outputJar.orElse(null);
   }
 
   @Override

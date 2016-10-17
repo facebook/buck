@@ -23,7 +23,8 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 
 public final class JavacOptionsFactory {
@@ -76,8 +77,7 @@ public final class JavacOptionsFactory {
           throw new HumanReadableException("Cannot set both javac and javacjar");
         }
         builder.setJavacPath(
-            jvmLibraryArg.javac.transform(
-                Either::ofLeft));
+            jvmLibraryArg.javac.map(Either::ofLeft));
         builder.setJavacJarPath(jvmLibraryArg.javacJar);
       }
     }

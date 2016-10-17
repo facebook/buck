@@ -20,7 +20,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 @SuppressWarnings("serial")
 public class StepFailedException extends Exception {

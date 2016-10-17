@@ -35,7 +35,6 @@ import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.cache.LoadingCache;
@@ -50,6 +49,7 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -175,7 +175,7 @@ public class CxxLibrary
               getBuildTarget(),
               cxxPlatform.getFlavor()));
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -358,7 +358,7 @@ public class CxxLibrary
 
   @Override
   public Optional<Path> getNativeLinkTargetOutputPath(CxxPlatform cxxPlatform) {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override

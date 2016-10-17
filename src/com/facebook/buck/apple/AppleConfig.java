@@ -24,7 +24,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -38,6 +37,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
@@ -154,12 +154,12 @@ public class AppleConfig {
           result = processExecutor.launchAndExecute(
               processExecutorParams,
               options,
-              /* stdin */ Optional.absent(),
-              /* timeOutMs */ Optional.absent(),
-              /* timeOutHandler */ Optional.absent());
+              /* stdin */ Optional.empty(),
+              /* timeOutMs */ Optional.empty(),
+              /* timeOutHandler */ Optional.empty());
         } catch (InterruptedException | IOException e) {
           LOG.warn("Could not execute xcode-select, continuing without developer dir.");
-          return Optional.absent();
+          return Optional.empty();
         }
 
         if (result.getExitCode() != 0) {
@@ -205,12 +205,12 @@ public class AppleConfig {
               result = processExecutor.launchAndExecute(
                   processExecutorParams,
                   options,
-                  /* stdin */ Optional.absent(),
-                  /* timeOutMs */ Optional.absent(),
-                  /* timeOutHandler */ Optional.absent());
+                  /* stdin */ Optional.empty(),
+                  /* timeOutMs */ Optional.empty(),
+                  /* timeOutHandler */ Optional.empty());
             } catch (InterruptedException | IOException e) {
               LOG.warn("Could not execute xcodebuild to find Xcode build number.");
-              return Optional.absent();
+              return Optional.empty();
             }
 
             if (result.getExitCode() != 0) {
@@ -224,7 +224,7 @@ public class AppleConfig {
               return Optional.of(xcodeBuildNumber);
             } else {
               LOG.warn("Xcode build number not found.");
-              return Optional.absent();
+              return Optional.empty();
             }
           }
         });
@@ -244,7 +244,7 @@ public class AppleConfig {
   }
 
   public Optional<Path> getXctoolPath() {
-    Path xctool = getOptionalPath("apple", "xctool_path").or(Paths.get("xctool"));
+    Path xctool = getOptionalPath("apple", "xctool_path").orElse(Paths.get("xctool"));
     return new ExecutableFinder().getOptionalExecutable(xctool, delegate.getEnvironment());
   }
 
@@ -273,9 +273,10 @@ public class AppleConfig {
   }
 
   public Path getProvisioningProfileSearchPath() {
-    return getOptionalPath("apple", "provisioning_profile_search_path")
-        .or(Paths.get(System.getProperty("user.home") +
-                    "/Library/MobileDevice/Provisioning Profiles"));
+    return getOptionalPath(
+        "apple",
+        "provisioning_profile_search_path").orElse(Paths.get(System.getProperty("user.home") +
+        "/Library/MobileDevice/Provisioning Profiles"));
   }
 
   private Optional<Path> getOptionalPath(String sectionName, String propertyName) {
@@ -284,7 +285,7 @@ public class AppleConfig {
       return Optional.of(delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(
               Paths.get(pathString.get())));
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -298,43 +299,41 @@ public class AppleConfig {
   public String getTestLogDirectoryEnvironmentVariable() {
     return delegate.getValue(
         "apple",
-        "test_log_directory_environment_variable")
-        .or(DEFAULT_TEST_LOG_DIRECTORY_ENVIRONMENT_VARIABLE);
+        "test_log_directory_environment_variable").orElse(
+        DEFAULT_TEST_LOG_DIRECTORY_ENVIRONMENT_VARIABLE);
   }
 
   public String getTestLogLevelEnvironmentVariable() {
     return delegate.getValue(
         "apple",
-        "test_log_level_environment_variable")
-        .or(DEFAULT_TEST_LOG_LEVEL_ENVIRONMENT_VARIABLE);
+        "test_log_level_environment_variable").orElse(DEFAULT_TEST_LOG_LEVEL_ENVIRONMENT_VARIABLE);
   }
 
   public String getTestLogLevel() {
     return delegate.getValue(
         "apple",
-        "test_log_level")
-        .or(DEFAULT_TEST_LOG_LEVEL);
+        "test_log_level").orElse(DEFAULT_TEST_LOG_LEVEL);
   }
 
   public AppleDebugFormat getDefaultDebugInfoFormatForBinaries() {
     return delegate.getEnum(
         "apple",
         "default_debug_info_format_for_binaries",
-        AppleDebugFormat.class).or(AppleDebugFormat.DWARF_AND_DSYM);
+        AppleDebugFormat.class).orElse(AppleDebugFormat.DWARF_AND_DSYM);
   }
 
   public AppleDebugFormat getDefaultDebugInfoFormatForTests() {
     return delegate.getEnum(
         "apple",
         "default_debug_info_format_for_tests",
-        AppleDebugFormat.class).or(AppleDebugFormat.DWARF);
+        AppleDebugFormat.class).orElse(AppleDebugFormat.DWARF);
   }
 
   public AppleDebugFormat getDefaultDebugInfoFormatForLibraries() {
     return delegate.getEnum(
         "apple",
         "default_debug_info_format_for_libraries",
-        AppleDebugFormat.class).or(AppleDebugFormat.DWARF);
+        AppleDebugFormat.class).orElse(AppleDebugFormat.DWARF);
   }
 
   public boolean forceDsymModeInBuildWithBuck() {
@@ -354,16 +353,16 @@ public class AppleConfig {
    */
   public Optional<ApplePackageConfig> getPackageConfigForPlatform(ApplePlatform platform) {
     String command =
-        delegate.getValue("apple", platform.getName() + "_package_command").or("");
+        delegate.getValue("apple", platform.getName() + "_package_command").orElse("");
     String extension =
-        delegate.getValue("apple", platform.getName() + "_package_extension").or("");
+        delegate.getValue("apple", platform.getName() + "_package_extension").orElse("");
     if (command.isEmpty() ^ extension.isEmpty()) {
       throw new HumanReadableException(
           "Config option %s and %s should be both specified, or be both omitted.",
           "apple." + platform.getName() + "_package_command",
           "apple." + platform.getName() + "_package_extension");
     } else if (command.isEmpty() && extension.isEmpty()) {
-      return Optional.absent();
+      return Optional.empty();
     } else {
       return Optional.of(ApplePackageConfig.of(command, extension));
     }

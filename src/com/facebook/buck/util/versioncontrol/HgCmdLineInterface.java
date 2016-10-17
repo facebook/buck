@@ -22,7 +22,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -34,6 +33,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -131,7 +131,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     try {
       return Optional.of(revisionId(name));
     } catch (VersionControlCommandFailedException e) {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -152,7 +152,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     try {
       return Optional.of(commonAncestor(revisionIdOne, revisionIdTwo));
     } catch (VersionControlCommandFailedException e) {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

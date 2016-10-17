@@ -17,7 +17,6 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Interner;
@@ -26,6 +25,7 @@ import com.google.common.collect.Interners;
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * A build target in the form of <pre>cell//path:rule</pre>.
@@ -113,7 +113,7 @@ abstract class AbstractUnflavoredBuildTarget implements Comparable<AbstractUnfla
   public static Builder builder(String baseName, String shortName) {
     return UnflavoredBuildTarget
         .builder()
-        .setCell(Optional.absent())
+        .setCell(Optional.empty())
         .setBaseName(baseName)
         .setShortName(shortName);
   }

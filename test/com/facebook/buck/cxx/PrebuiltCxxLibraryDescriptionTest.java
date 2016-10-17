@@ -23,8 +23,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -33,6 +31,8 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -48,7 +48,6 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -63,6 +62,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class PrebuiltCxxLibraryDescriptionTest {
@@ -72,30 +72,32 @@ public class PrebuiltCxxLibraryDescriptionTest {
   private static final CxxPlatform CXX_PLATFORM = PrebuiltCxxLibraryBuilder.createDefaultPlatform();
 
   private static Path getStaticLibraryPath(PrebuiltCxxLibraryDescription.Arg arg) {
-    String libDir = arg.libDir.or("lib");
-    String libName = arg.libName.or(TARGET.getShortName());
+    String libDir = arg.libDir.orElse("lib");
+    String libName = arg.libName.orElse(TARGET.getShortName());
     return TARGET.getBasePath().resolve(libDir).resolve(
         String.format("lib%s.a", libName));
   }
 
   private static Path getStaticPicLibraryPath(PrebuiltCxxLibraryDescription.Arg arg) {
-    String libDir = arg.libDir.or("lib");
-    String libName = arg.libName.or(TARGET.getShortName());
+    String libDir = arg.libDir.orElse("lib");
+    String libName = arg.libName.orElse(TARGET.getShortName());
     return TARGET.getBasePath().resolve(libDir).resolve(
         String.format("lib%s_pic.a", libName));
   }
 
   private static Path getSharedLibraryPath(PrebuiltCxxLibraryDescription.Arg arg) {
-    String libDir = arg.libDir.or("lib");
-    String libName = arg.libName.or(TARGET.getShortName());
+    String libDir = arg.libDir.orElse("lib");
+    String libName = arg.libName.orElse(TARGET.getShortName());
     return TARGET.getBasePath().resolve(libDir).resolve(
         String.format("lib%s.%s", libName, CXX_PLATFORM.getSharedLibraryExtension()));
   }
 
   private static String getSharedLibrarySoname(PrebuiltCxxLibraryDescription.Arg arg) {
-    String libName = arg.libName.or(TARGET.getShortName());
-    return arg.soname.or(
-        String.format("lib%s.%s", libName, CXX_PLATFORM.getSharedLibraryExtension()));
+    String libName = arg.libName.orElse(TARGET.getShortName());
+    return arg.soname.orElse(String.format(
+        "lib%s.%s",
+        libName,
+        CXX_PLATFORM.getSharedLibraryExtension()));
   }
 
   private static ImmutableList<Path> getIncludeDirs(PrebuiltCxxLibraryDescription.Arg arg) {
@@ -363,7 +365,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         resolver,
         platform,
         Optional.of("lib"),
-        Optional.absent());
+        Optional.empty());
 
     assertThat(
         MorePaths.pathWithUnixSeparators(pathResolver.getAbsolutePath(staticLibraryPath)),

@@ -31,12 +31,11 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -48,6 +47,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.io.Files;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
 
@@ -280,7 +280,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     langArgs.headerNamespace = args.cppHeaderNamespace;
     langArgs.srcs = ImmutableSortedSet.copyOf(srcs.values());
     langArgs.exportedHeaders = SourceList.ofNamedSources(headers);
-    langArgs.canBeAsset = Optional.absent();
+    langArgs.canBeAsset = Optional.empty();
     langArgs.compilerFlags = cpp2 ? args.cpp2CompilerFlags : args.cppCompilerFlags;
 
     // Since thrift generated C/C++ code uses lots of templates, just use exported deps throughout.

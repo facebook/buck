@@ -30,12 +30,12 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.Set;
 
 public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackageable {
@@ -83,7 +83,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         additionalClasspathEntries,
         compileStepFactory,
         resourcesRoot,
-        Optional.absent(),
+        Optional.empty(),
         mavenCoords,
         tests,
         javacOptions.getClassesToRemoveFromJar());

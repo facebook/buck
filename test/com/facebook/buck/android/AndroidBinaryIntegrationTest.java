@@ -47,7 +47,6 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.ZipConstants;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -76,6 +75,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -564,8 +564,8 @@ public class AndroidBinaryIntegrationTest {
     AndroidDirectoryResolver androidResolver = new DefaultAndroidDirectoryResolver(
         workspace.asCell().getRoot().getFileSystem(),
         ImmutableMap.copyOf(System.getenv()),
-        Optional.absent(),
-        Optional.absent());
+        Optional.empty(),
+        Optional.empty());
 
     Optional<Path> ndkPath = androidResolver.getNdkOrAbsent();
     assertTrue(ndkPath.isPresent());

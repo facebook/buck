@@ -29,11 +29,11 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class PrebuiltRustLibrary extends AbstractBuildRule
   implements RustLinkable {
@@ -57,7 +57,7 @@ public class PrebuiltRustLibrary extends AbstractBuildRule
         resolver);
 
     this.rlib = rlib;
-    this.crate = crate.or(getBuildTarget().getShortName());
+    this.crate = crate.orElse(getBuildTarget().getShortName());
   }
 
   @Override

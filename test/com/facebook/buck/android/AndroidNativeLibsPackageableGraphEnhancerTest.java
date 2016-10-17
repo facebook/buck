@@ -36,7 +36,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
@@ -47,6 +46,7 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
@@ -69,7 +69,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     APKModuleGraph apkModuleGraph = new APKModuleGraph(
         TargetGraph.EMPTY,
         target,
-        Optional.absent());
+        Optional.empty());
 
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
@@ -78,8 +78,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             ImmutableMap.of(),
             ImmutableSet.of(),
             CxxPlatformUtils.DEFAULT_CONFIG,
-            /* nativeLibraryMergeMap */ Optional.absent(),
-            /* nativeLibraryMergeGlue */ Optional.absent(),
+            /* nativeLibraryMergeMap */ Optional.empty(),
+            /* nativeLibraryMergeGlue */ Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
             apkModuleGraph
         );
@@ -152,7 +152,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     APKModuleGraph apkModuleGraph = new APKModuleGraph(
         TargetGraph.EMPTY,
         target,
-        Optional.absent());
+        Optional.empty());
 
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
@@ -161,8 +161,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             nativePlatforms,
             ImmutableSet.of(NdkCxxPlatforms.TargetCpuType.ARMV7),
             CxxPlatformUtils.DEFAULT_CONFIG,
-            /* nativeLibraryMergeMap */ Optional.absent(),
-            /* nativeLibraryMergeGlue */ Optional.absent(),
+            /* nativeLibraryMergeMap */ Optional.empty(),
+            /* nativeLibraryMergeGlue */ Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
             apkModuleGraph
         );

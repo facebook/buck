@@ -35,7 +35,6 @@ import com.facebook.buck.util.NamedTemporaryFile;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
@@ -56,6 +55,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
@@ -177,7 +177,7 @@ public class ExopackageInstaller {
     eventBus.post(InstallEvent.finished(
             started,
             success,
-            Optional.absent(),
+            Optional.empty(),
             Optional.of(AdbHelper.tryToExtractPackageNameFromManifest(apkRule))));
     return success;
   }
@@ -442,7 +442,7 @@ public class ExopackageInstaller {
             /* installViaSd */ false,
             /* quiet */ false);
         if (!success) {
-          return Optional.absent();
+          return Optional.empty();
         }
         return getPackageInfo(AgentUtil.AGENT_PACKAGE_NAME);
       }
@@ -763,7 +763,7 @@ public class ExopackageInstaller {
 
     if (pmPath == null || !pmPath.startsWith(pmPathPrefix)) {
       LOG.warn("unable to locate package path for [" + packageName + "]");
-      return Optional.absent();
+      return Optional.empty();
     }
 
     final String packagePrefix = "  Package [" + packageName + "] (";
@@ -821,7 +821,7 @@ public class ExopackageInstaller {
     }
 
     if (!sawPackageLine) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     Preconditions.checkNotNull(codePath, "Could not find codePath");

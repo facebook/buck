@@ -24,14 +24,13 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
@@ -42,6 +41,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 public class ShBinaryRuleIntegrationTest {
 
@@ -149,7 +149,7 @@ public class ShBinaryRuleIntegrationTest {
     ProcessResult buildResult =
         workspace.runBuckCommandWithEnvironmentOverridesAndContext(
             workspace.getDestPath(),
-            Optional.absent(),
+            Optional.empty(),
             ImmutableMap.of("PWD", alteredPwd),
             "run",
             "//:pwd");

@@ -62,7 +62,6 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -77,6 +76,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 public class ApkGenruleTest {
 
@@ -286,7 +286,7 @@ public class ApkGenruleTest {
 
     @Override
     public Optional<ExopackageInfo> getExopackageInfo() {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 }

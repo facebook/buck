@@ -22,7 +22,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.timing.FakeClock;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
@@ -34,6 +33,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 public class HttpArtifactCacheUploadListenerTest {
   private static final int NUMBER_OF_THREADS = 42;
@@ -112,7 +112,7 @@ public class HttpArtifactCacheUploadListenerTest {
   private HttpArtifactCacheEvent.Started createUploadStartedEvent(int timeMillis) {
     final HttpArtifactCacheEvent.Scheduled scheduled =
         HttpArtifactCacheEvent.newStoreScheduledEvent(
-            Optional.absent(), ImmutableSet.of());
+            Optional.empty(), ImmutableSet.of());
     lastStartedEvent = HttpArtifactCacheEvent.newStoreStartedEvent(scheduled);
     lastStartedEvent.configure(timeMillis, 0, 0, 0, buildId);
     return lastStartedEvent;

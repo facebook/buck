@@ -46,7 +46,6 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -58,6 +57,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class IjModuleGraphTest {
 
@@ -423,7 +423,7 @@ public class IjModuleGraphTest {
             libraryJavaTarget,
             productTarget),
         ImmutableMap.of(productTarget, Paths.get("buck-out/product.jar")),
-        Functions.constant(Optional.absent()));
+        Functions.constant(Optional.empty()));
 
     IjModule libraryModule = getModuleForTarget(moduleGraph, libraryJavaTarget);
     IjModule productModule = getModuleForTarget(moduleGraph, productTarget);
@@ -451,7 +451,7 @@ public class IjModuleGraphTest {
           if (input == productTarget) {
             return Optional.of(rDotJavaClassPath);
           }
-          return Optional.absent();
+          return Optional.empty();
         });
 
     IjModule productModule = getModuleForTarget(moduleGraph, productTarget);
@@ -586,7 +586,7 @@ public class IjModuleGraphTest {
     IjModuleGraph moduleGraph = createModuleGraph(
         ImmutableSet.of(guava, papaya, base, core),
         ImmutableMap.of(),
-        Functions.constant(Optional.absent()),
+        Functions.constant(Optional.empty()),
         IjModuleGraph.AggregationMode.SHALLOW);
 
     IjModule guavaModule = getModuleForTarget(moduleGraph, guava);
@@ -626,7 +626,7 @@ public class IjModuleGraphTest {
     IjModuleGraph moduleGraph = createModuleGraph(
         ImmutableSet.of(blah1, blah2, commonApp),
         ImmutableMap.of(),
-        Functions.constant(Optional.absent()),
+        Functions.constant(Optional.empty()),
         IjModuleGraph.AggregationMode.SHALLOW);
 
     IjModule blah1Module = getModuleForTarget(moduleGraph, blah1);
@@ -659,7 +659,7 @@ public class IjModuleGraphTest {
     IjModuleGraph moduleGraph = createModuleGraph(
         ImmutableSet.of(blah1, blah2, commonApp),
         ImmutableMap.of(),
-        Functions.constant(Optional.absent()),
+        Functions.constant(Optional.empty()),
         IjModuleGraph.AggregationMode.SHALLOW);
 
     IjModule blah1Module = getModuleForTarget(moduleGraph, blah1);
@@ -771,7 +771,7 @@ public class IjModuleGraphTest {
 
   public static IjModuleGraph createModuleGraph(ImmutableSet<TargetNode<?>> targets) {
     return createModuleGraph(targets, ImmutableMap.of(),
-        Functions.constant(Optional.absent()));
+        Functions.constant(Optional.empty()));
   }
 
   public static IjModuleGraph createModuleGraph(
@@ -801,7 +801,7 @@ public class IjModuleGraphTest {
 
           @Override
           public Optional<Path> getPathIfJavaLibrary(TargetNode<?> targetNode) {
-            return Optional.fromNullable(javaLibraryPaths.get(targetNode));
+            return Optional.ofNullable(javaLibraryPaths.get(targetNode));
           }
         };
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
@@ -821,31 +821,31 @@ public class IjModuleGraphTest {
           @Override
           public Optional<Path> getLibraryAndroidManifestPath(
               TargetNode<AndroidLibraryDescription.Arg> targetNode) {
-            return Optional.absent();
+            return Optional.empty();
           }
 
           @Override
           public Optional<Path> getProguardConfigPath(
               TargetNode<AndroidBinaryDescription.Arg> targetNode) {
-            return Optional.absent();
+            return Optional.empty();
           }
 
           @Override
           public Optional<Path> getAndroidResourcePath(
               TargetNode<AndroidResourceDescription.Arg> targetNode) {
-            return Optional.absent();
+            return Optional.empty();
           }
 
           @Override
           public Optional<Path> getAssetsPath(
               TargetNode<AndroidResourceDescription.Arg> targetNode) {
-            return Optional.absent();
+            return Optional.empty();
           }
 
           @Override
           public Optional<Path> getAnnotationOutputPath(
               TargetNode<? extends JvmLibraryArg> targetNode) {
-            return Optional.absent();
+            return Optional.empty();
           }
         },
         projectConfig,

@@ -17,8 +17,9 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.Tool;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+
+import java.util.Optional;
 
 public class ClangCompiler extends DefaultCompiler {
 

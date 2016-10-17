@@ -17,16 +17,16 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
-import com.google.common.base.Optional;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 
 public interface FileContentsProvider {
 
   /**
    * @param entry to fetch the contents for.
-   * @return the stream to the file contents or Optional.absent() if the file could not be found.
+   * @return the stream to the file contents or Optional.empty() if the file could not be found.
    */
   Optional<InputStream> getFileContents(BuildJobStateFileHashEntry entry) throws IOException;
 }

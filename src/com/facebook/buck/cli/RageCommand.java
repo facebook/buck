@@ -35,11 +35,11 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.versioncontrol.DefaultVersionControlCmdLineInterfaceFactory;
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlCmdLineInterfaceFactory;
-import com.google.common.base.Optional;
 
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public class RageCommand extends AbstractCommand {
 
@@ -94,7 +94,7 @@ public class RageCommand extends AbstractCommand {
           filesystem,
           stdOut,
           params.getBuildEnvironmentDescription(),
-          gatherVcsInfo ? vcsInfoCollector : Optional.absent(),
+          gatherVcsInfo ? vcsInfoCollector : Optional.empty(),
           rageConfig,
           extraInfoCollector);
     }

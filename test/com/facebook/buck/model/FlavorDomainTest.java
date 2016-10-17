@@ -20,11 +20,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
+
+import java.util.Optional;
 
 public class FlavorDomainTest {
 
@@ -38,7 +39,7 @@ public class FlavorDomainTest {
     assertEquals(Optional.of(flavor), domain.getFlavor(target));
     target = BuildTargetFactory.newInstance("//:test#invalid");
     assertEquals(
-        Optional.<Flavor>absent(),
+        Optional.empty(),
         domain.getFlavor(target));
   }
 

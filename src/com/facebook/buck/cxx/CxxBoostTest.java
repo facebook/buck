@@ -32,7 +32,6 @@ import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.XmlDomParser;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -52,6 +51,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -148,7 +148,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       NamedNodeMap attrs = testCase.getAttributes();
       String caseName = attrs.getNamedItem("name").getNodeValue();
       String test = String.format("%s.%s", suiteName, caseName);
-      Long time = Optional.fromNullable(times.get(test)).or(0L);
+      Long time = Optional.ofNullable(times.get(test)).orElse(0L);
       String resultString = attrs.getNamedItem("result").getNodeValue();
       ResultType result = ResultType.SUCCESS;
       String output = "";
@@ -187,7 +187,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
     Map<String, Long> times = Maps.newHashMap();
     try (BufferedReader reader = Files.newBufferedReader(output, Charsets.US_ASCII)) {
       Stack<String> testSuite = new Stack<>();
-      Optional<String> currentTest = Optional.absent();
+      Optional<String> currentTest = Optional.empty();
       String line;
       while ((line = reader.readLine()) != null) {
         Matcher matcher;
@@ -207,7 +207,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
           Preconditions.checkState(currentTest.isPresent() && currentTest.get().equals(test));
           String time = matcher.group(2);
           times.put(test, time == null ? 0 : Long.valueOf(time));
-          currentTest = Optional.absent();
+          currentTest = Optional.empty();
         } else if (currentTest.isPresent()) {
           if (ERROR.matcher(line).matches()) {
             messages.put(currentTest.get(), line);

@@ -26,13 +26,13 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class AndroidBinaryBuilder extends AbstractNodeBuilder<AndroidBinaryDescription.Arg> {

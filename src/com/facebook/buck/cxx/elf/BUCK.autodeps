@@ -1,8 +1,8 @@
 {
   "elf" : {
-    "deps" : [ ],
-    "exported_deps" : [
+    "deps" : [
       "//third-party/java/guava:guava"
-    ]
+    ],
+    "exported_deps" : [ ]
   }
 }

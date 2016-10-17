@@ -23,9 +23,9 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class RobolectricTestBuilder
     extends AbstractNodeBuilder<RobolectricTestDescription.Arg> {
@@ -35,7 +35,7 @@ public class RobolectricTestBuilder
         new RobolectricTestDescription(
             DEFAULT_JAVA_OPTIONS,
             ANDROID_JAVAC_OPTIONS,
-            /* testRuleTimeoutMs */ Optional.absent(),
+            /* testRuleTimeoutMs */ Optional.empty(),
             null),
         target);
   }

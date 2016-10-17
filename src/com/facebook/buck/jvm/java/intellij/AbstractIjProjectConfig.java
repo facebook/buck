@@ -18,10 +18,11 @@ package com.facebook.buck.jvm.java.intellij;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
+
+import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -39,7 +40,7 @@ abstract class AbstractIjProjectConfig {
   }
 
   public Optional<String> getJavaLibrarySdkNameForSourceLevel(String sourceLevel) {
-    return Optional.fromNullable(getJavaLibrarySdkNamesBySourceLevel().get(sourceLevel));
+    return Optional.ofNullable(getJavaLibrarySdkNamesBySourceLevel().get(sourceLevel));
   }
 
   public abstract Optional<String> getProjectJdkName();

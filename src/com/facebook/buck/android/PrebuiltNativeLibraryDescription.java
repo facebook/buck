@@ -28,13 +28,13 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class PrebuiltNativeLibraryDescription
     implements Description<PrebuiltNativeLibraryDescription.Arg> {
@@ -71,7 +71,7 @@ public class PrebuiltNativeLibraryDescription
         params,
         new SourcePathResolver(resolver),
         args.nativeLibs,
-        args.isAsset.or(false),
+        args.isAsset.orElse(false),
         librarySources
     );
   }

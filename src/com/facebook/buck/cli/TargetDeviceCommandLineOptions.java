@@ -19,9 +19,10 @@ package com.facebook.buck.cli;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 
 import org.kohsuke.args4j.Option;
+
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -95,12 +96,12 @@ public class TargetDeviceCommandLineOptions {
   }
 
   public Optional<String> getSimulatorName() {
-    return Optional.fromNullable(simulatorName);
+    return Optional.ofNullable(simulatorName);
   }
 
   public Optional<TargetDevice> getTargetDeviceOptional() {
     if (!hasSerialNumber() && !isEmulatorsOnlyModeEnabled() && !isRealDevicesOnlyModeEnabled()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     TargetDevice device = new TargetDevice(

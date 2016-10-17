@@ -18,12 +18,12 @@ package com.facebook.buck.util;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Optional;
 import java.util.Set;
 
 public interface ProcessExecutor {
@@ -183,7 +183,7 @@ public interface ProcessExecutor {
     }
 
     public Result(int exitCode) {
-      this(exitCode, /* timedOut */ false, Optional.absent(), Optional.absent());
+      this(exitCode, /* timedOut */ false, Optional.empty(), Optional.empty());
     }
 
     public int getExitCode() {
@@ -216,8 +216,8 @@ public interface ProcessExecutor {
               "%s" + "\n",
           message,
           getExitCode(),
-          MoreStrings.truncatePretty(getStdout().or("")),
-          MoreStrings.truncatePretty(getStderr().or("")));
+          MoreStrings.truncatePretty(getStdout().orElse("")),
+          MoreStrings.truncatePretty(getStderr().orElse("")));
     }
   }
 }

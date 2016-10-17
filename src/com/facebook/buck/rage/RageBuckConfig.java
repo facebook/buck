@@ -36,19 +36,18 @@ public class RageBuckConfig {
     return RageConfig.builder()
         .setReportUploadPath(buckConfig.getValue(
             SECTION_NAME,
-            REPORT_UPLOAD_PATH_FIELD).or(RageConfig.UPLOAD_PATH))
+            REPORT_UPLOAD_PATH_FIELD).orElse(RageConfig.UPLOAD_PATH))
         .setReportMaxSizeBytes(
-            buckConfig.getValue(SECTION_NAME, REPORT_MAX_SIZE_FIELD).transform(
-                SizeUnit::parseBytes))
+            buckConfig.getValue(SECTION_NAME, REPORT_MAX_SIZE_FIELD).map(SizeUnit::parseBytes))
         .setExtraInfoCommand(
             buckConfig.getListWithoutComments(SECTION_NAME, EXTRA_INFO_COMMAND_FIELD))
         .setFrontendConfig(new SlbBuckConfig(buckConfig, SECTION_NAME))
         .setHttpTimeout(buckConfig.getLong(
             SECTION_NAME,
-            RAGE_TIMEOUT_MILLIS_FIELD).or(RageConfig.HTTP_TIMEOUT_MILLIS))
+            RAGE_TIMEOUT_MILLIS_FIELD).orElse(RageConfig.HTTP_TIMEOUT_MILLIS))
         .setMaxUploadRetries(buckConfig.getInteger(
             SECTION_NAME,
-            RAGE_MAX_UPLOAD_RETRIES_FIELD).or(RageConfig.HTTP_MAX_UPLOAD_RETRIES))
+            RAGE_MAX_UPLOAD_RETRIES_FIELD).orElse(RageConfig.HTTP_MAX_UPLOAD_RETRIES))
         .build();
   }
 }

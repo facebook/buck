@@ -37,7 +37,6 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.DependencyMode;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -45,6 +44,8 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
+
+import java.util.Optional;
 
 public class AndroidLibraryGraphEnhancerTest {
 
@@ -57,8 +58,8 @@ public class AndroidLibraryGraphEnhancerTest {
         DEFAULT_JAVAC_OPTIONS,
         DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
-        /* unionPackage */ Optional.absent(),
-        /* rName */ Optional.absent());
+        /* unionPackage */ Optional.empty(),
+        /* rName */ Optional.empty());
     Optional<DummyRDotJava> result = graphEnhancer.getBuildableForAndroidResources(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()),
         /* createdBuildableIfEmptyDeps */ false);
@@ -74,8 +75,8 @@ public class AndroidLibraryGraphEnhancerTest {
         DEFAULT_JAVAC_OPTIONS,
         DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
-        /* unionPackage */ Optional.absent(),
-        /* rName */ Optional.absent());
+        /* unionPackage */ Optional.empty(),
+        /* rName */ Optional.empty());
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     Optional<DummyRDotJava> result = graphEnhancer.getBuildableForAndroidResources(
@@ -118,8 +119,8 @@ public class AndroidLibraryGraphEnhancerTest {
         DEFAULT_JAVAC_OPTIONS,
         DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
-        /* unionPackage */ Optional.absent(),
-        /* rName */ Optional.absent());
+        /* unionPackage */ Optional.empty(),
+        /* rName */ Optional.empty());
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
         ruleResolver,
         /* createBuildableIfEmptyDeps */ false);
@@ -174,8 +175,8 @@ public class AndroidLibraryGraphEnhancerTest {
                     .build(),
                 DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
-        /* unionPackage */ Optional.absent(),
-        /* rName */ Optional.absent());
+        /* unionPackage */ Optional.empty(),
+        /* rName */ Optional.empty());
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
         ruleResolver,
         /* createBuildableIfEmptyDeps */ false);
@@ -206,8 +207,8 @@ public class AndroidLibraryGraphEnhancerTest {
             options,
             DependencyMode.FIRST_ORDER,
             /* forceFinalResourceIds */ false,
-            /* unionPackage */ Optional.absent(),
-            /* rName */ Optional.absent());
+            /* unionPackage */ Optional.empty(),
+            /* rName */ Optional.empty());
     Optional<DummyRDotJava> result =
         graphEnhancer.getBuildableForAndroidResources(
             resolver,

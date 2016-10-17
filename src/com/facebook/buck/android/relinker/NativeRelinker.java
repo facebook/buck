@@ -33,7 +33,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -47,6 +46,7 @@ import com.google.common.collect.Maps;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -226,7 +226,7 @@ public class NativeRelinker {
         .withFlavor(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(cpuType.toString())))
         .withFlavor(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(libname)))
         .appendExtraDeps(relinkerDeps);
-    BuildRule baseRule = resolver.getRule(source).orNull();
+    BuildRule baseRule = resolver.getRule(source).orElse(null);
     ImmutableList<Arg> linkerArgs = ImmutableList.of();
     Linker linker = null;
     if (baseRule != null && baseRule instanceof CxxLink) {

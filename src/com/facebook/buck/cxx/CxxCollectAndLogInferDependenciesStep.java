@@ -20,12 +20,12 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public final class CxxCollectAndLogInferDependenciesStep implements Step {
 
@@ -51,7 +51,7 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
       Path outputFile) {
     return new CxxCollectAndLogInferDependenciesStep(
         Optional.of(analyzeRule),
-        Optional.absent(),
+        Optional.empty(),
         projectFilesystem,
         outputFile);
   }
@@ -61,7 +61,7 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
       ProjectFilesystem projectFilesystem,
       Path outputFile) {
     return new CxxCollectAndLogInferDependenciesStep(
-        Optional.absent(),
+        Optional.empty(),
         Optional.of(captureOnlyRule),
         projectFilesystem,
         outputFile);

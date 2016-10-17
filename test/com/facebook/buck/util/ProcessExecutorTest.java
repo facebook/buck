@@ -23,13 +23,13 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
 
 import java.io.IOException;
 import java.util.EnumSet;
+import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -63,9 +63,9 @@ public class ProcessExecutorTest {
     ProcessExecutor.Result result = executor.launchAndExecute(
         params,
         EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
-        /* stdin */ Optional.absent(),
-        /* timeOutMs */ Optional.absent(),
-        /* timeOutHandler */ Optional.absent());
+        /* stdin */ Optional.empty(),
+        /* timeOutMs */ Optional.empty(),
+        /* timeOutHandler */ Optional.empty());
     assertEquals("Hello\n", result.getStdout().get());
     assertEquals("", result.getStderr().get());
   }
@@ -104,7 +104,7 @@ public class ProcessExecutorTest {
     ProcessExecutor.Result result = executor.launchAndExecute(
         params,
         /* options */ ImmutableSet.<ProcessExecutor.Option>builder().build(),
-        /* stdin */ Optional.absent(),
+        /* stdin */ Optional.empty(),
         /* timeOutMs */ Optional.of((long) 100),
         /* timeOutHandler */ Optional.of(handler));
     assertTrue(
@@ -129,7 +129,7 @@ public class ProcessExecutorTest {
     ProcessExecutor.Result result = executor.launchAndExecute(
         params,
         /* options */ ImmutableSet.<ProcessExecutor.Option>builder().build(),
-        /* stdin */ Optional.absent(),
+        /* stdin */ Optional.empty(),
         /* timeOutMs */ Optional.of((long) 100),
         /* timeOutHandler */ Optional.of(handler));
     assertTrue(

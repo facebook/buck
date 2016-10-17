@@ -21,7 +21,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.FlavorDomainException;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 public class ApplePlatforms {
   // Utility class, do not instantiate.
@@ -32,7 +33,7 @@ public class ApplePlatforms {
       FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
       CxxPlatform defaultCxxPlatform,
       BuildTarget target) {
-    return cxxPlatformFlavorDomain.getValue(target).or(defaultCxxPlatform);
+    return cxxPlatformFlavorDomain.getValue(target).orElse(defaultCxxPlatform);
   }
 
   public static AppleCxxPlatform getAppleCxxPlatformForBuildTarget(

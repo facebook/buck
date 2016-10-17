@@ -20,14 +20,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cxx.CxxPlatformUtils;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.InferBuckConfig;
 import com.facebook.buck.cxx.NativeLinkable;
@@ -40,6 +39,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -50,7 +50,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.coercer.SourceWithFlagsList;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -62,6 +61,7 @@ import org.junit.Test;
 
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 
 public class ThriftCxxEnhancerTest {
 
@@ -527,7 +527,7 @@ public class ThriftCxxEnhancerTest {
     BuildRule argDep = createFakeBuildRule("//:arg_dep", pathResolver);
     resolver.addToIndex(argDep);
     ThriftConstructorArg arg = new ThriftConstructorArg();
-    arg.cppHeaderNamespace = Optional.absent();
+    arg.cppHeaderNamespace = Optional.empty();
     arg.cppExportedHeaders = SourceList.EMPTY;
     arg.cppSrcs = SourceWithFlagsList.EMPTY;
     arg.cpp2Options = ImmutableSet.of();
@@ -659,7 +659,7 @@ public class ThriftCxxEnhancerTest {
     arg.cpp2Deps = ImmutableSortedSet.of();
     arg.cpp2CompilerFlags = compilerFlags;
     arg.cppCompilerFlags = compilerFlags;
-    arg.cppHeaderNamespace = Optional.absent();
+    arg.cppHeaderNamespace = Optional.empty();
     arg.cppExportedHeaders = SourceList.EMPTY;
     arg.cppSrcs = SourceWithFlagsList.EMPTY;
 

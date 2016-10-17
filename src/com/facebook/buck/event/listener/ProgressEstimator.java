@@ -22,7 +22,6 @@ import com.facebook.buck.log.Logger;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.AtomicDouble;
 
@@ -31,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
@@ -260,7 +260,7 @@ public class ProgressEstimator {
 
   private Optional<Double> wrapValueIntoOptional(double value) {
     if (value == -1.0) {
-      return Optional.absent();
+      return Optional.empty();
     } else {
       return Optional.of(value);
     }

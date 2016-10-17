@@ -25,7 +25,6 @@ import com.facebook.buck.distributed.thrift.LogRecord;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
-import com.google.common.base.Optional;
 import com.google.common.base.Stopwatch;
 
 import java.io.IOException;
@@ -33,6 +32,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -124,8 +124,8 @@ public class DistBuildClientExecutor {
   }
 
   private DistBuildStatus.Builder prepareStatusFromJob(BuildJob job) {
-    Optional<List<LogRecord>> logBook = Optional.absent();
-    Optional<String> lastLine = Optional.absent();
+    Optional<List<LogRecord>> logBook = Optional.empty();
+    Optional<String> lastLine = Optional.empty();
     if (job.isSetDebug() && job.getDebug().isSetLogBook()) {
       logBook = Optional.of(job.getDebug().getLogBook());
       if (logBook.get().size() > 0) {

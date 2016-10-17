@@ -40,7 +40,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Verbosity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Before;
@@ -50,6 +49,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -94,7 +94,7 @@ public class BuildCommandTest {
     BuildRule rule4 = new FakeBuildRule(
         BuildTargetFactory.newInstance("//fake:rule4"),
         resolver);
-    ruleToResult.put(rule4, Optional.absent());
+    ruleToResult.put(rule4, Optional.empty());
 
     buildExecutionResult = BuildExecutionResult.builder()
         .setResults(ruleToResult)

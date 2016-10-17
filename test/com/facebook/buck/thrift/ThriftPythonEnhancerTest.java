@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -31,6 +30,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -38,7 +38,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.StringArg;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -48,6 +47,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class ThriftPythonEnhancerTest {
 
@@ -241,7 +241,7 @@ public class ThriftPythonEnhancerTest {
     // Add a dummy dependency to the constructor arg to make sure it gets through.
     ThriftConstructorArg arg = new ThriftConstructorArg();
     arg.pyOptions = ImmutableSet.of();
-    arg.pyBaseModule = Optional.absent();
+    arg.pyBaseModule = Optional.empty();
 
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
@@ -287,7 +287,7 @@ public class ThriftPythonEnhancerTest {
             Paths.get("output")));
 
     // Verify that not setting the base module parameter defaults to the build target base path.
-    arg.pyBaseModule = Optional.absent();
+    arg.pyBaseModule = Optional.empty();
     PythonLibrary normal = ENHANCER
         .createBuildRule(
             TargetGraph.EMPTY,
@@ -338,7 +338,7 @@ public class ThriftPythonEnhancerTest {
             Paths.get("output")));
 
     // Verify that not setting the base module parameter defaults to the build target base path.
-    arg.pyTwistedBaseModule = Optional.absent();
+    arg.pyTwistedBaseModule = Optional.empty();
     PythonLibrary normal = TWISTED_ENHANCER
         .createBuildRule(
             TargetGraph.EMPTY,
@@ -389,7 +389,7 @@ public class ThriftPythonEnhancerTest {
             Paths.get("output")));
 
     // Verify that not setting the base module parameter defaults to the build target base path.
-    arg.pyAsyncioBaseModule = Optional.absent();
+    arg.pyAsyncioBaseModule = Optional.empty();
     PythonLibrary normal =
         ASYNCIO_ENHANCER.createBuildRule(
             TargetGraph.EMPTY,

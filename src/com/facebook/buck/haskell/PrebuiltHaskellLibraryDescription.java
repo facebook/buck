@@ -40,12 +40,13 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
 
 public class PrebuiltHaskellLibraryDescription
     implements Description<PrebuiltHaskellLibraryDescription.Arg> {
@@ -90,11 +91,10 @@ public class PrebuiltHaskellLibraryDescription
                         HaskellPackageInfo.of(
                             getBuildTarget().getShortName(),
                             args.version,
-                            args.id.or(
-                                String.format(
-                                    "%s-%s",
-                                    getBuildTarget().getShortName(),
-                                    args.version))))
+                            args.id.orElse(String.format(
+                                "%s-%s",
+                                getBuildTarget().getShortName(),
+                                args.version))))
                     .setPackageDb(args.db)
                     .addAllInterfaces(args.importDirs)
                     .addAllLibraries(
@@ -154,7 +154,7 @@ public class PrebuiltHaskellLibraryDescription
 
       @Override
       public Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(CxxPlatform cxxPlatform) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       @Override

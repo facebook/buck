@@ -39,7 +39,6 @@ import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -57,6 +56,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class KnownBuildRuleTypesTest {
 
@@ -115,22 +115,22 @@ public class KnownBuildRuleTypesTest {
   private void populateJavaArg(JavaLibraryDescription.Arg arg) {
     arg.srcs = ImmutableSortedSet.of();
     arg.resources = ImmutableSortedSet.of();
-    arg.source = Optional.absent();
-    arg.target = Optional.absent();
-    arg.javaVersion = Optional.absent();
-    arg.javac = Optional.absent();
-    arg.javacJar = Optional.absent();
-    arg.compiler = Optional.absent();
+    arg.source = Optional.empty();
+    arg.target = Optional.empty();
+    arg.javaVersion = Optional.empty();
+    arg.javac = Optional.empty();
+    arg.javacJar = Optional.empty();
+    arg.compiler = Optional.empty();
     arg.extraArguments = ImmutableList.of();
     arg.removeClasses = ImmutableSet.of();
-    arg.proguardConfig = Optional.absent();
+    arg.proguardConfig = Optional.empty();
     arg.annotationProcessorDeps = ImmutableSortedSet.of();
     arg.annotationProcessorParams = ImmutableList.of();
     arg.annotationProcessors = ImmutableSet.of();
-    arg.annotationProcessorOnly = Optional.absent();
+    arg.annotationProcessorOnly = Optional.empty();
     arg.postprocessClassesCommands = ImmutableList.of();
-    arg.resourcesRoot = Optional.absent();
-    arg.manifestFile = Optional.absent();
+    arg.resourcesRoot = Optional.empty();
+    arg.manifestFile = Optional.empty();
     arg.providedDeps = ImmutableSortedSet.of();
     arg.exportedDeps = ImmutableSortedSet.of();
     arg.deps = ImmutableSortedSet.of();

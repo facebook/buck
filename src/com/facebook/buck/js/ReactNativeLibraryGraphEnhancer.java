@@ -27,10 +27,11 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
 
 public class ReactNativeLibraryGraphEnhancer {
 
@@ -115,7 +116,7 @@ public class ReactNativeLibraryGraphEnhancer {
           args.rDotJavaPackage.get(),
           /* assets */ null,
           /* assetsSrcs */ ImmutableSortedSet.of(),
-          Optional.absent(),
+          Optional.empty(),
           /* manifest */ null,
           /* hasWhitelistedStrings */ false);
       resolver.addToIndex(resource);

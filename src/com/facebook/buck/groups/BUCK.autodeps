@@ -5,7 +5,6 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",
-      "//third-party/java/guava:guava",
       "//third-party/java/infer-annotations:infer-annotations"
     ]
   }

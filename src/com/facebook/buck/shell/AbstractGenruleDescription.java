@@ -40,15 +40,16 @@ import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.MavenCoordinatesMacroExpander;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.OptionalCompat;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
 
 public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescription.Arg>
     implements Description<T>, ImplicitDepsInferringDescription<T> {
@@ -99,16 +100,16 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       final A args)
       throws NoSuchBuildTargetException {
     final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    Function<String, com.facebook.buck.rules.args.Arg> macroArgFunction =
+    java.util.function.Function<String, com.facebook.buck.rules.args.Arg> macroArgFunction =
         MacroArg.toMacroArgFunction(
             getMacroHandler(params, resolver, args),
             params.getBuildTarget(),
             params.getCellRoots(),
-            resolver);
-    final Optional<com.facebook.buck.rules.args.Arg> cmd = args.cmd.transform(macroArgFunction);
-    final Optional<com.facebook.buck.rules.args.Arg> bash = args.bash.transform(macroArgFunction);
+            resolver)::apply;
+    final Optional<com.facebook.buck.rules.args.Arg> cmd = args.cmd.map(macroArgFunction);
+    final Optional<com.facebook.buck.rules.args.Arg> bash = args.bash.map(macroArgFunction);
     final Optional<com.facebook.buck.rules.args.Arg> cmdExe =
-        args.cmdExe.transform(macroArgFunction);
+        args.cmdExe.map(macroArgFunction);
     return createBuildRule(
         params.copyWithExtraDeps(
             Suppliers.ofInstance(
@@ -117,7 +118,10 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
                     // Attach any extra dependencies found from macro expansion.
                     .addAll(
                         FluentIterable
-                            .from(Optional.presentInstances(ImmutableList.of(cmd, bash, cmdExe)))
+                            .from(OptionalCompat.presentInstances(ImmutableList.of(
+                                cmd,
+                                bash,
+                                cmdExe)))
                             .transformAndConcat(
                                 com.facebook.buck.rules.args.Arg.getDepsFunction(pathResolver)))
                     .build())),

@@ -51,7 +51,6 @@ import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -61,6 +60,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public class AppleLibraryDescription implements
@@ -172,7 +172,7 @@ public class AppleLibraryDescription implements
           resolver,
           args,
           args.linkStyle,
-          Optional.absent(),
+          Optional.empty(),
           ImmutableSet.of());
     }
   }
@@ -194,8 +194,7 @@ public class AppleLibraryDescription implements
               AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR));
     }
     AppleDebugFormat debugFormat = AppleDebugFormat.FLAVOR_DOMAIN
-        .getValue(params.getBuildTarget())
-        .or(defaultDebugFormat);
+        .getValue(params.getBuildTarget()).orElse(defaultDebugFormat);
     if (!params.getBuildTarget().getFlavors().contains(debugFormat.getFlavor())) {
       return resolver.requireRule(
           params.getBuildTarget().withAppendedFlavors(debugFormat.getFlavor()));
@@ -212,7 +211,7 @@ public class AppleLibraryDescription implements
         provisioningProfileStore,
         params.getBuildTarget(),
         Either.ofLeft(AppleBundleExtension.FRAMEWORK),
-        Optional.absent(),
+        Optional.empty(),
         args.infoPlist.get(),
         args.infoPlistSubstitutions,
         args.deps,
@@ -280,7 +279,7 @@ public class AppleLibraryDescription implements
         CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle),
         resolver,
         representativePlatform.getStrip(),
-        flavoredStripStyle.or(StripStyle.NON_GLOBAL_SYMBOLS),
+        flavoredStripStyle.orElse(StripStyle.NON_GLOBAL_SYMBOLS),
         pathResolver,
         unstrippedBinaryRule);
 
@@ -289,7 +288,7 @@ public class AppleLibraryDescription implements
         resolver,
         strippedBinaryRule,
         (ProvidesLinkedBinaryDeps) unstrippedBinaryRule,
-        AppleDebugFormat.FLAVOR_DOMAIN.getValue(params.getBuildTarget()).or(defaultDebugFormat),
+        AppleDebugFormat.FLAVOR_DOMAIN.getValue(params.getBuildTarget()).orElse(defaultDebugFormat),
         delegate.getCxxPlatforms(),
         delegate.getDefaultCxxPlatform(),
         appleCxxPlatformFlavorDomain);

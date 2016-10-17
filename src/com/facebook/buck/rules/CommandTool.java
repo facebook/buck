@@ -18,11 +18,12 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
 
 /**
  * A {@link Tool} based on a list of arguments formed by {@link SourcePath}s.
@@ -132,7 +133,7 @@ public class CommandTool implements Tool {
     }
 
     public Builder() {
-      this(Optional.absent());
+      this(Optional.empty());
     }
 
     /**

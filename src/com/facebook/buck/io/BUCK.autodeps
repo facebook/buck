@@ -37,8 +37,7 @@
       "//src/com/facebook/buck/eden:eden",
       "//src/com/facebook/buck/io:DefaultProjectFilesystemDelegate",
       "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/util/environment:platform",
-      "//third-party/java/guava:guava"
+      "//src/com/facebook/buck/util/environment:platform"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/io:ProjectFilesystemDelegate"

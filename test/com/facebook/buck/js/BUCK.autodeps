@@ -9,7 +9,6 @@
       "//test/com/facebook/buck/android:testutil",
       "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
-      "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/junit:junit"
     ],

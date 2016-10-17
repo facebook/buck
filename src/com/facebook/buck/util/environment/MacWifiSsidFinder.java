@@ -16,17 +16,16 @@
 
 package com.facebook.buck.util.environment;
 
-import ca.weblite.objc.Client;
-import ca.weblite.objc.Proxy;
-import ca.weblite.objc.RuntimeUtils;
-
 import com.facebook.buck.log.Logger;
-
-import com.google.common.base.Optional;
-
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
+
+import java.util.Optional;
+
+import ca.weblite.objc.Client;
+import ca.weblite.objc.Proxy;
+import ca.weblite.objc.RuntimeUtils;
 
 /**
  * Mac OS X implementation of finding the SSID of the default Wi-Fi interface.
@@ -62,7 +61,7 @@ public class MacWifiSsidFinder {
     } else {
       LOG.verbose("Getting default interface using +[CWInterface defaultInterface]");
       // CWInterface *defaultInterface = [CWInterface interface];
-      defaultInterface = Optional.fromNullable(objcClient.sendProxy("CWInterface", "interface"));
+      defaultInterface = Optional.ofNullable(objcClient.sendProxy("CWInterface", "interface"));
     }
     return getSsidFromInterface(defaultInterface);
   }
@@ -77,14 +76,14 @@ public class MacWifiSsidFinder {
     Proxy sharedWiFiClient = objcClient.sendProxy(wifiClientClass, "sharedWiFiClient");
     if (sharedWiFiClient == null) {
       LOG.warn("+[CWWiFiClient sharedWiFiClient] returned null, could not find SSID.");
-      return Optional.absent();
+      return Optional.empty();
     }
 
     // CWInterface *defaultInterface = [sharedWiFiClient interface];
     Proxy defaultInterface = sharedWiFiClient.sendProxy("interface");
     if (defaultInterface == null) {
       LOG.warn("-[sharedWiFiClient interface] returned null, could not find SSID.");
-      return Optional.absent();
+      return Optional.empty();
     }
 
     return Optional.of(defaultInterface);
@@ -93,7 +92,7 @@ public class MacWifiSsidFinder {
   private static Optional<String> getSsidFromInterface(Optional<Proxy> defaultInterface) {
     if (!defaultInterface.isPresent()) {
       LOG.debug("No Wi-Fi interface found.");
-      return Optional.absent();
+      return Optional.empty();
     }
     LOG.debug("Getting SSID from Wi-Fi interface: %s", defaultInterface.get());
 
@@ -101,7 +100,7 @@ public class MacWifiSsidFinder {
     Object ssid = defaultInterface.get().send("ssid");
     if (ssid == null) {
       LOG.debug("No SSID found for interface %s.", defaultInterface.get());
-      return Optional.absent();
+      return Optional.empty();
     }
     String ssidString;
     if (!(ssid instanceof String)) {

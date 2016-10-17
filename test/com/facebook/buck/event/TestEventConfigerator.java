@@ -16,8 +16,8 @@
 package com.facebook.buck.event;
 
 import com.facebook.buck.timing.Clock;
-import com.google.common.base.Optional;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class TestEventConfigerator {
@@ -80,7 +80,7 @@ public class TestEventConfigerator {
     public ConfigBuilder(T event) {
       this.event = event;
       this.currentTimeMillis = 0L;
-      this.timestampNanos = Optional.absent();
+      this.timestampNanos = Optional.empty();
       this.threadUserNanoTime = -1L;
       this.threadId = 2L;
     }
@@ -125,7 +125,7 @@ public class TestEventConfigerator {
     public T configure() {
       event.configure(
           currentTimeMillis,
-          timestampNanos.or(TimeUnit.MILLISECONDS.toNanos(currentTimeMillis)),
+          timestampNanos.orElse(TimeUnit.MILLISECONDS.toNanos(currentTimeMillis)),
           threadUserNanoTime,
           threadId,
           BuckEventBusFactory.BUILD_ID_FOR_TEST);

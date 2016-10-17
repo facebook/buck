@@ -38,7 +38,6 @@ import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.network.RemoteLogBuckConfig;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
@@ -55,6 +54,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -138,7 +138,7 @@ public class PublicAnnouncementManagerIntegrationTest {
           clock,
         /* verbosity */ TestResultSummaryVerbosity.of(false, false),
           executionEnvironment,
-          Optional.absent(),
+          Optional.empty(),
           Locale.US,
           logPath,
           TimeZone.getTimeZone("UTC"));

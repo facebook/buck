@@ -19,12 +19,13 @@ package com.facebook.buck.apple.project_generator;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 
 import org.immutables.value.Value;
+
+import java.util.Optional;
 
 /**
  * Parameters that can affect how tests are linked and bundled.

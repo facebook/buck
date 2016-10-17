@@ -41,7 +41,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -54,6 +53,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -324,7 +324,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
    * Native libraries compiled for different CPU architectures are placed in the
    * respective ABI subdirectories, such as 'armeabi', 'armeabi-v7a', 'x86' and 'mips'.
    * This looks at the cpu filter and returns the correct subdirectory. If cpu filter is
-   * not present or not supported, returns Optional.absent();
+   * not present or not supported, returns Optional.empty();
    */
   private static Optional<String> getAbiDirectoryComponent(TargetCpuType cpuType) {
     switch (cpuType) {
@@ -339,7 +339,7 @@ public class CopyNativeLibraries extends AbstractBuildRule {
       case MIPS:
         return Optional.of(SdkConstants.ABI_MIPS);
       default:
-        return Optional.absent();
+        return Optional.empty();
     }
   }
 

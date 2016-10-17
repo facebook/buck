@@ -91,7 +91,6 @@ import com.facebook.buck.zip.ZipOutputStreams;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Functions;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -129,6 +128,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -319,10 +319,10 @@ public class CachingBuildEngineTest {
                   BuildRuleStatus.SUCCESS,
                   CacheResult.miss(),
                   Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                  Optional.absent(),
-                  Optional.absent(),
-                  Optional.absent(),
-                  Optional.absent())));
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty())));
     }
 
     @Test
@@ -385,10 +385,10 @@ public class CachingBuildEngineTest {
                   BuildRuleStatus.SUCCESS,
                   CacheResult.miss(),
                   Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                  Optional.absent(),
-                  Optional.absent(),
-                  Optional.absent(),
-                  Optional.absent())));
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty())));
     }
 
     @Test
@@ -582,10 +582,10 @@ public class CachingBuildEngineTest {
                   BuildRuleStatus.SUCCESS,
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
-                  Optional.absent(),
-                  Optional.absent(),
-                  Optional.absent(),
-                  Optional.absent())));
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty())));
     }
 
     @Test
@@ -652,10 +652,10 @@ public class CachingBuildEngineTest {
                   BuildRuleStatus.SUCCESS,
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
-                  Optional.absent(),
-                  Optional.absent(),
-                  Optional.absent(),
-                  Optional.absent())));
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty())));
       assertThat(
           events,
           Matchers.containsInRelativeOrder(
@@ -666,10 +666,10 @@ public class CachingBuildEngineTest {
                   BuildRuleStatus.SUCCESS,
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
-                  Optional.absent(),
-                  Optional.absent(),
-                  Optional.absent(),
-                  Optional.absent())));
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty())));
     }
 
     @Test
@@ -757,10 +757,10 @@ public class CachingBuildEngineTest {
                   BuildRuleStatus.SUCCESS,
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
-                  Optional.absent(),
-                  Optional.absent(),
-                  Optional.absent(),
-                  Optional.absent())));
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty())));
       assertThat(
           events,
           Matchers.containsInRelativeOrder(
@@ -771,10 +771,10 @@ public class CachingBuildEngineTest {
                   BuildRuleStatus.SUCCESS,
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
-                  Optional.absent(),
-                  Optional.absent(),
-                  Optional.absent(),
-                  Optional.absent())));
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty())));
       assertThat(
           events,
           Matchers.containsInRelativeOrder(
@@ -785,10 +785,10 @@ public class CachingBuildEngineTest {
                   BuildRuleStatus.SUCCESS,
                   CacheResult.localKeyUnchangedHit(),
                   Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
-                  Optional.absent(),
-                  Optional.absent(),
-                  Optional.absent(),
-                  Optional.absent())));
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty())));
     }
 
     @Test
@@ -1412,7 +1412,7 @@ public class CachingBuildEngineTest {
 
     @Test
     public void missingInputBasedRuleKeyDoesNotMatchAbsentRuleKey() throws Exception {
-      missingInputBasedRuleKeyCausesLocalBuild(Optional.absent());
+      missingInputBasedRuleKeyCausesLocalBuild(Optional.empty());
     }
 
     private void missingInputBasedRuleKeyCausesLocalBuild(Optional<RuleKey> previousRuleKey)
@@ -1462,7 +1462,7 @@ public class CachingBuildEngineTest {
                   new CachingBuildEngine.RuleKeyFactories(
                       ruleKeyBuilderFactory,
                       new FakeInputBasedRuleKeyBuilderFactory(
-                          ImmutableMap.of(rule.getBuildTarget(), Optional.absent())),
+                          ImmutableMap.of(rule.getBuildTarget(), Optional.empty())),
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_DEP_FILE_RULE_KEY_FACTORY,
                       NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
@@ -1480,7 +1480,7 @@ public class CachingBuildEngineTest {
           equalTo(Optional.of(ruleKeyBuilderFactory.build(rule))));
       assertThat(
           onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY),
-          equalTo(Optional.<RuleKey>absent()));
+          equalTo(Optional.empty()));
     }
 
     private static class FailingInputRuleKeyBuildRule extends InputRuleKeyBuildRule {
@@ -1552,7 +1552,7 @@ public class CachingBuildEngineTest {
 
             @Override
             public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-              return Optional.absent();
+              return Optional.empty();
             }
 
             @Override
@@ -1571,8 +1571,8 @@ public class CachingBuildEngineTest {
       // Run the build.
       RuleKey depFileRuleKey = depFileFactory.build(
           rule,
-          Optional.absent(),
-          ImmutableList.of(DependencyFileEntry.of(input, Optional.absent())))
+          Optional.empty(),
+          ImmutableList.of(DependencyFileEntry.of(input, Optional.empty())))
           .get().getFirst();
       BuildResult result =
           cachingBuildEngine.build(buildContext, TestExecutionContext.newInstance(), rule).get();
@@ -1635,7 +1635,7 @@ public class CachingBuildEngineTest {
             }
             @Override
             public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-              return Optional.absent();
+              return Optional.empty();
             }
             @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
@@ -1707,7 +1707,7 @@ public class CachingBuildEngineTest {
             }
             @Override
             public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-              return Optional.absent();
+              return Optional.empty();
             }
             @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
@@ -1723,8 +1723,8 @@ public class CachingBuildEngineTest {
       filesystem.writeContentsToPath("something", input);
       RuleKey depFileRuleKey = depFileFactory.build(
           rule,
-          Optional.absent(),
-          ImmutableList.of(DependencyFileEntry.of(input, Optional.absent())))
+          Optional.empty(),
+          ImmutableList.of(DependencyFileEntry.of(input, Optional.empty())))
           .get().getFirst();
 
       // Prepopulate the dep file rule key and dep file.
@@ -1869,7 +1869,7 @@ public class CachingBuildEngineTest {
             }
             @Override
             public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-              return Optional.absent();
+              return Optional.empty();
             }
             @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
@@ -1885,8 +1885,8 @@ public class CachingBuildEngineTest {
       filesystem.writeContentsToPath("something", input);
       RuleKey depFileRuleKey = depFileFactory.build(
           rule,
-          Optional.absent(),
-          ImmutableList.of(DependencyFileEntry.of(input, Optional.absent())))
+          Optional.empty(),
+          ImmutableList.of(DependencyFileEntry.of(input, Optional.empty())))
           .get().getFirst();
 
       // Prepopulate the dep file rule key and dep file.
@@ -1948,7 +1948,7 @@ public class CachingBuildEngineTest {
             }
             @Override
             public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-              return Optional.absent();
+              return Optional.empty();
             }
             @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
@@ -1968,7 +1968,7 @@ public class CachingBuildEngineTest {
                 Optional<ImmutableSet<SourcePath>> possibleDepFileSourcePaths,
                 ImmutableList<DependencyFileEntry> inputs) {
               if (rule.getBuildTarget().equals(target)) {
-                return Optional.absent();
+                return Optional.empty();
               }
 
               throw new AssertionError();
@@ -1978,7 +1978,7 @@ public class CachingBuildEngineTest {
             public Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> buildManifestKey(
                 BuildRule rule) {
               if (rule.getBuildTarget().equals(target)) {
-                return Optional.absent();
+                return Optional.empty();
               }
 
               throw new AssertionError();
@@ -1990,8 +1990,8 @@ public class CachingBuildEngineTest {
 
       RuleKey depFileRuleKey = depFileFactory.build(
           rule,
-          Optional.absent(),
-          ImmutableList.of(DependencyFileEntry.of(input, Optional.absent())))
+          Optional.empty(),
+          ImmutableList.of(DependencyFileEntry.of(input, Optional.empty())))
           .get().getFirst();
 
       // Prepopulate the dep file rule key and dep file.
@@ -2024,7 +2024,7 @@ public class CachingBuildEngineTest {
           equalTo(Optional.of(ruleKeyBuilderFactory.build(rule))));
       assertThat(
           onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY),
-          equalTo(Optional.<RuleKey>absent()));
+          equalTo(Optional.empty()));
     }
 
     public CachingBuildEngine engineWithDepFileFactory(
@@ -2191,7 +2191,7 @@ public class CachingBuildEngineTest {
             }
             @Override
             public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-              return Optional.absent();
+              return Optional.empty();
             }
             @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
@@ -2309,7 +2309,7 @@ public class CachingBuildEngineTest {
             }
             @Override
             public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-              return Optional.absent();
+              return Optional.empty();
             }
             @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
@@ -2419,7 +2419,7 @@ public class CachingBuildEngineTest {
             }
             @Override
             public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-              return Optional.absent();
+              return Optional.empty();
             }
             @Override
             public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
@@ -2671,7 +2671,7 @@ public class CachingBuildEngineTest {
 
       @Override
       public Optional<ImmutableSet<SourcePath>> getPossibleInputSourcePaths() {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       @Override
@@ -3110,7 +3110,7 @@ public class CachingBuildEngineTest {
   }
 
   private static String fileToDepFileEntryString(Path file) {
-    DependencyFileEntry entry = DependencyFileEntry.of(file, Optional.absent());
+    DependencyFileEntry entry = DependencyFileEntry.of(file, Optional.empty());
 
     try {
       return MAPPER.writeValueAsString(entry);

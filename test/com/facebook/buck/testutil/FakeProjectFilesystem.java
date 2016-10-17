@@ -27,7 +27,6 @@ import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
@@ -77,6 +76,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.jar.JarEntry;
@@ -624,7 +624,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   @Override
   public Optional<String> readFileIfItExists(Path path) {
     if (!exists(path)) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of(new String(getFileBytes(path), Charsets.UTF_8));
   }
@@ -636,7 +636,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   public Optional<Reader> getReaderIfFileExists(Path path) {
     Optional<String> content = readFileIfItExists(path);
     if (!content.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of((Reader) new StringReader(content.get()));
   }
@@ -650,10 +650,10 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     try {
       lines = readLines(path);
     } catch (IOException e) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
-    return Optional.fromNullable(Iterables.get(lines, 0, null));
+    return Optional.ofNullable(Iterables.get(lines, 0, null));
   }
 
   /**

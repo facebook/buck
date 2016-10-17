@@ -25,7 +25,6 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -98,6 +97,7 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
@@ -286,7 +286,7 @@ public class Resolver {
 
   /**
    * @return {@link Path} to the file in {@code project} with filename consistent with the given
-   * {@link Artifact}, but with a newer version. If no such file exists, {@link Optional#absent} is
+   * {@link Artifact}, but with a newer version. If no such file exists, {@link Optional#empty} is
    * returned. If multiple such files are present one with the newest version will be returned.
    */
   @VisibleForTesting
@@ -328,7 +328,7 @@ public class Resolver {
 
     List<Version> newestPresent = Ordering.natural().greatestOf(versionsPresent, 1);
     if (newestPresent.isEmpty() || newestPresent.get(0).compareTo(artifactToDownloadVersion) <= 0) {
-      return Optional.absent();
+      return Optional.empty();
     } else {
       return Optional.of(
           project.resolve(

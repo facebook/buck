@@ -30,7 +30,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -42,6 +41,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class JUnitStepTest {
@@ -83,7 +83,7 @@ public class JUnitStepTest {
     JUnitStep junit = new JUnitStep(
         filesystem,
         /* nativeLibsEnvironment */ ImmutableMap.of(),
-        /* testRuleTimeoutMs*/ Optional.absent(),
+        /* testRuleTimeoutMs*/ Optional.empty(),
         ImmutableMap.of(),
         new ExternalJavaRuntimeLauncher("/foo/bar/custom/java"),
         args);
@@ -143,7 +143,7 @@ public class JUnitStepTest {
     JUnitStep junit = new JUnitStep(
         filesystem,
         /* nativeLibsEnvironment */ ImmutableMap.of(),
-        /* testRuleTimeoutMs*/ Optional.absent(),
+        /* testRuleTimeoutMs*/ Optional.empty(),
         ImmutableMap.of("FOO", "BAR"),
         new ExternalJavaRuntimeLauncher("/foo/bar/custom/java"),
         args);
@@ -192,7 +192,7 @@ public class JUnitStepTest {
     JUnitStep junit = new JUnitStep(
         filesystem,
         ImmutableMap.of(),
-        /* testRuleTimeoutMs*/ Optional.absent(),
+        /* testRuleTimeoutMs*/ Optional.empty(),
         ImmutableMap.of(),
         new ExternalJavaRuntimeLauncher("/foo/bar/custom/java"),
         args);

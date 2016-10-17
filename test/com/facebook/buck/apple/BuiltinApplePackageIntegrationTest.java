@@ -36,7 +36,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.Unzip;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
@@ -48,6 +47,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.EnumSet;
+import java.util.Optional;
 import java.util.Set;
 
 public class BuiltinApplePackageIntegrationTest {
@@ -263,9 +263,9 @@ public class BuiltinApplePackageIntegrationTest {
     ProcessExecutor.Result result = executor.launchAndExecute(
         processExecutorParams,
         options,
-        /* stdin */ Optional.absent(),
-        /* timeOutMs */ Optional.absent(),
-        /* timeOutHandler */ Optional.absent());
+        /* stdin */ Optional.empty(),
+        /* timeOutMs */ Optional.empty(),
+        /* timeOutHandler */ Optional.empty());
 
     assertEquals(result.getExitCode(), 0);
     assertTrue(result.getStdout().isPresent());

@@ -75,7 +75,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -95,6 +94,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -227,7 +227,7 @@ public class BuildCommand extends AbstractCommand {
   }
 
   public Optional<CachingBuildEngine.BuildMode> getBuildEngineMode() {
-    Optional<CachingBuildEngine.BuildMode> mode = Optional.absent();
+    Optional<CachingBuildEngine.BuildMode> mode = Optional.empty();
     if (deepBuild) {
       mode = Optional.of(CachingBuildEngine.BuildMode.DEEP);
     }
@@ -261,10 +261,10 @@ public class BuildCommand extends AbstractCommand {
   }
 
   /**
-   * @return an absolute path or {@link Optional#absent()}.
+   * @return an absolute path or {@link Optional#empty()}.
    */
   public Optional<Path> getPathToBuildReport(BuckConfig buckConfig) {
-    return Optional.fromNullable(
+    return Optional.ofNullable(
         buckConfig.resolvePathThatMayBeOutsideTheProjectFilesystem(buildReport));
   }
 
@@ -522,7 +522,7 @@ public class BuildCommand extends AbstractCommand {
       CommandRunnerParams params,
       ActionGraphAndResolver actionGraphAndResolver) {
     Optional<DefaultRuleKeyBuilderFactory> ruleKeyBuilderFactory =
-        Optional.absent();
+        Optional.empty();
     if (showRuleKey) {
       ruleKeyBuilderFactory = Optional.of(
           new DefaultRuleKeyBuilderFactory(
@@ -544,7 +544,7 @@ public class BuildCommand extends AbstractCommand {
             rule.getFullyQualifiedName(),
             showRuleKey ? " " + ruleKeyBuilderFactory.get().build(rule).toString() : "",
             showOutput || showFullOutput ?
-                " " + outputPath.transform(Object::toString).or("")
+                " " + outputPath.map(Object::toString).orElse("")
                 : "");
       } catch (NoSuchBuildTargetException e) {
         throw new HumanReadableException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
@@ -668,7 +668,7 @@ public class BuildCommand extends AbstractCommand {
             cachingBuildEngineDelegate,
             executor,
             new DefaultStepRunner(),
-            getBuildEngineMode().or(rootCellBuckConfig.getBuildEngineMode()),
+            getBuildEngineMode().orElse(rootCellBuckConfig.getBuildEngineMode()),
             rootCellBuckConfig.getBuildDepFiles(),
             rootCellBuckConfig.getBuildMaxDepFileCacheEntries(),
             rootCellBuckConfig.getBuildArtifactCacheSizeLimit(),
@@ -680,13 +680,13 @@ public class BuildCommand extends AbstractCommand {
         artifactCache,
         params.getConsole(),
         params.getBuckEventBus(),
-        Optional.absent(),
+        Optional.empty(),
         rootCellBuckConfig.getPlatform(),
         rootCellBuckConfig.getEnvironment(),
         params.getObjectMapper(),
         params.getClock(),
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         params.getExecutors())) {
       lastBuild = build;
       return build.executeAndPrintFailuresToEventBus(

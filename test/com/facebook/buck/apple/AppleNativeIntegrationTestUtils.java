@@ -22,9 +22,9 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
+
+import java.util.Optional;
 
 public class AppleNativeIntegrationTestUtils {
 
@@ -40,9 +40,9 @@ public class AppleNativeIntegrationTestUtils {
   private static Optional<AppleSdk> anySdkForPlatform(
       final ApplePlatform platform,
       final ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths) {
-    return Iterables.tryFind(
-        sdkPaths.keySet(),
-        sdk -> sdk.getApplePlatform().equals(platform));
+    return sdkPaths.keySet().stream()
+        .filter(sdk -> sdk.getApplePlatform().equals(platform))
+        .findFirst();
   }
 
   public static boolean isApplePlatformAvailable(ApplePlatform platform) {
@@ -66,7 +66,7 @@ public class AppleNativeIntegrationTestUtils {
         buckConfig,
         new AppleConfig(buckConfig),
         Optional.of(new DefaultProcessExecutor(Console.createNullConsole())),
-        Optional.absent());
+        Optional.empty());
     return appleCxxPlatform.getSwiftPlatform().isPresent();
   }
 

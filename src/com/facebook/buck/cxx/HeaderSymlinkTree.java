@@ -20,10 +20,10 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class HeaderSymlinkTree extends SymlinkTree {
 
@@ -59,7 +59,7 @@ public class HeaderSymlinkTree extends SymlinkTree {
    * Get path of the header map indexing this tree if one exists.
    */
   public Optional<Path> getHeaderMap() {
-    return Optional.absent();
+    return Optional.empty();
   }
 
 }

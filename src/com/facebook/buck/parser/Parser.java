@@ -44,7 +44,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
@@ -71,6 +70,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
@@ -377,7 +377,7 @@ public class Parser {
     } catch (RuntimeException e) {
       throw propagateRuntimeCause(e);
     } finally {
-      eventBus.post(ParseEvent.finished(parseStart, Optional.fromNullable(targetGraph)));
+      eventBus.post(ParseEvent.finished(parseStart, Optional.ofNullable(targetGraph)));
     }
   }
 
@@ -669,7 +669,7 @@ public class Parser {
   }
 
   public Optional<BuckEvent> getParseStartTime() {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public ImmutableList<Counter> getCounters() {

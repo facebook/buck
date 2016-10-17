@@ -47,7 +47,6 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -60,6 +59,7 @@ import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Compute transitive dependencies and generate ocaml build rules
@@ -563,9 +563,9 @@ public class OCamlRuleBuilder {
     ProcessExecutor.Result result = exe.launchAndExecute(
         params,
         options.build(),
-        /* stdin */ Optional.absent(),
-        /* timeOutMs */ Optional.absent(),
-        /* timeOutHandler */ Optional.absent());
+        /* stdin */ Optional.empty(),
+        /* timeOutMs */ Optional.empty(),
+        /* timeOutHandler */ Optional.empty());
     if (result.getExitCode() != 0) {
       throw new HumanReadableException(result.getStderr().get());
     }

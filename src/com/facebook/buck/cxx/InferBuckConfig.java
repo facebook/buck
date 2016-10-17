@@ -26,7 +26,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
@@ -36,6 +35,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class InferBuckConfig implements RuleKeyAppendable {
 
@@ -58,17 +58,15 @@ public class InferBuckConfig implements RuleKeyAppendable {
   public InferBuckConfig(final BuckConfig delegate) {
     this.delegate = delegate;
     this.clangCompiler = Suppliers.memoize(
-        () -> HashedFileTool.FROM_PATH.apply(
-            Preconditions.checkNotNull(
-                getPathFromConfig(delegate, "clang_compiler").orNull(),
-                "clang_compiler path not found on the current configuration"))
+        () -> new HashedFileTool(Preconditions.checkNotNull(
+            getPathFromConfig(delegate, "clang_compiler").orElse(null),
+            "clang_compiler path not found on the current configuration"))
     );
 
     this.clangPlugin = Suppliers.memoize(
-        () -> HashedFileTool.FROM_PATH.apply(
-            Preconditions.checkNotNull(
-                getPathFromConfig(delegate, "clang_plugin").orNull(),
-                "clang_plugin path not found on the current configuration"))
+        () -> new HashedFileTool(Preconditions.checkNotNull(
+            getPathFromConfig(delegate, "clang_plugin").orElse(null),
+            "clang_plugin path not found on the current configuration"))
     );
 
     this.inferVersion = Suppliers.memoize(
@@ -88,7 +86,7 @@ public class InferBuckConfig implements RuleKeyAppendable {
             throw new RuntimeException(e);
           }
           Optional<String> stderr = result.getStderr();
-          String versionOutput = stderr.or("").trim();
+          String versionOutput = stderr.orElse("").trim();
           Preconditions.checkState(!Strings.isNullOrEmpty(versionOutput));
           return VersionedTool.of(topLevel, "infer", versionOutput);
         });
@@ -100,7 +98,7 @@ public class InferBuckConfig implements RuleKeyAppendable {
 
   private Path getInferBin() {
     return Preconditions.checkNotNull(
-        getPathFromConfig(this.delegate, "infer_bin").orNull(),
+        getPathFromConfig(this.delegate, "infer_bin").orElse(null),
         "path to infer bin/ folder not found on the current configuration");
   }
 

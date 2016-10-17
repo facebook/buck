@@ -40,8 +40,8 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.OptionalCompat;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -55,6 +55,7 @@ import com.google.common.collect.Lists;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class ThriftLibraryDescription
   implements
@@ -174,7 +175,7 @@ public class ThriftLibraryDescription
       includesBuilder.putAll(dep.getIncludes());
       includeTreeRulesBuilder.add(dep.getIncludeTreeRule());
       includeRootsBuilder.add(dep.getIncludeTreeRule().getIncludePath());
-      headerMapsBuilder.addAll(dep.getIncludeTreeRule().getHeaderMap().asSet());
+      headerMapsBuilder.addAll(OptionalCompat.asSet(dep.getIncludeTreeRule().getHeaderMap()));
     }
     ImmutableMap<Path, SourcePath> includes = includesBuilder.build();
     ImmutableSortedSet<HeaderSymlinkTree> includeTreeRules = includeTreeRulesBuilder.build();
@@ -441,8 +442,8 @@ public class ThriftLibraryDescription
 
     // Add the compiler target, if there is one.
     deps.addAll(
-        thriftBuckConfig.getCompilerTarget(
-            enhancerFlavor.get().getValue().getCompilerType()).asSet());
+        OptionalCompat.asSet(thriftBuckConfig.getCompilerTarget(
+            enhancerFlavor.get().getValue().getCompilerType())));
 
     // Grab the language specific implicit dependencies and add their raw target representations
     // to our list.

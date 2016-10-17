@@ -21,7 +21,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Tool;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 public class ThriftBuckConfig {
 
@@ -63,7 +64,7 @@ public class ThriftBuckConfig {
       }
       return Optional.of(delegate.getRequiredBuildTarget(SECTION, COMPILER));
     } catch (BuildTargetParseException e) {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

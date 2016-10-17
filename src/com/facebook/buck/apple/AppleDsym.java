@@ -38,13 +38,13 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Creates dSYM bundle for the given _unstripped_ binary.
@@ -161,8 +161,8 @@ public class AppleDsym
                     String.format("target create %s\ntarget symbols add %s",
                         getResolver().getAbsolutePath(unstrippedBinarySourcePath),
                         dsymOutputPath)),
-                Optional.absent(),
-                Optional.absent()));
+                Optional.empty(),
+                Optional.empty()));
           }
 
           @Override

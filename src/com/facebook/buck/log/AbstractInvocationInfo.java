@@ -23,12 +23,12 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
+import java.util.Optional;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -93,7 +93,7 @@ abstract class AbstractInvocationInfo {
       return Optional.of(new ParsedLog(buildId, args));
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public Path getLogDirectoryPath() {

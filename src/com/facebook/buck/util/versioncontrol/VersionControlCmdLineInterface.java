@@ -16,9 +16,10 @@
 
 package com.facebook.buck.util.versioncontrol;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+
+import java.util.Optional;
 
 /***
  * Provides meta-data about the version control repository the project being built is using.
@@ -40,7 +41,7 @@ public interface VersionControlCmdLineInterface {
 
   /**
    * @param name Bookmark name, e.g master
-   * @return Global revision ID for given name or {@link Optional#absent} if the bookmark doesn't
+   * @return Global revision ID for given name or {@link Optional#empty} if the bookmark doesn't
    * exist or an error was encountered. If you want to handle the exception use
    * {@link #revisionId(String)}
    * @throws InterruptedException
@@ -70,7 +71,7 @@ public interface VersionControlCmdLineInterface {
    * @param revisionIdOne
    * @param revisionIdTwo
    * @return Revision ID that is an ancestor for both revisionIdOne and revisionIdTwo or
-   * {@link Optional#absent()} is there is no common ancestor or an error was encountered. If you
+   * {@link Optional#empty()} is there is no common ancestor or an error was encountered. If you
    * want to handle the error use {@link #commonAncestor(String, String)}
    * @throws InterruptedException
    */

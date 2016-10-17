@@ -25,11 +25,12 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
 
 class SwiftDescriptions {
   /**
@@ -66,7 +67,8 @@ class SwiftDescriptions {
     output.libraries = args.libraries;
     output.deps = args.deps;
     output.supportedPlatformsRegex = args.supportedPlatformsRegex;
-    output.moduleName = args.moduleName.or(Optional.of(buildTarget.getShortName()));
+    output.moduleName =
+        args.moduleName.map(Optional::of).orElse(Optional.of(buildTarget.getShortName()));
     output.enableObjcInterop = Optional.of(true);
     output.bridgingHeader = args.bridgingHeader;
     output.preferredLinkage = args.preferredLinkage;

@@ -27,11 +27,11 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 public class OCamlBuckConfig {
 
@@ -114,14 +114,14 @@ public class OCamlBuckConfig {
 
   private Optional<Path> getExecutable(String section, String label, Path defaultValue) {
     return new ExecutableFinder().getOptionalExecutable(
-        delegate.getPath(section, label).or(defaultValue),
+        delegate.getPath(section, label).orElse(defaultValue),
         delegate.getEnvironment());
   }
 
   private Optional<Tool> getTool(String section, String label, Path defaultValue) {
     Optional<Path> executable = getExecutable(section, label, defaultValue);
     if (!executable.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of(new HashedFileTool(executable.get()));
   }

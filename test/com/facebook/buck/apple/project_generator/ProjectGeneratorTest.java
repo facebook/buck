@@ -119,7 +119,6 @@ import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -148,6 +147,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -349,9 +349,10 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(project, "//foo:lib");
     assertEquals(
-        Optional.<PBXBuildPhase>absent(),
-        Iterables.tryFind(
-            target.getBuildPhases(), input -> input instanceof PBXHeadersBuildPhase));
+        0,
+        target.getBuildPhases().stream()
+            .filter(input -> input instanceof PBXHeadersBuildPhase)
+            .count());
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
     assertThat(headerSymlinkTrees, hasSize(2));
@@ -442,9 +443,10 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(project, "//foo:lib");
     assertEquals(
-        Optional.<PBXBuildPhase>absent(),
-        Iterables.tryFind(
-            target.getBuildPhases(), input -> input instanceof PBXHeadersBuildPhase));
+        0,
+        target.getBuildPhases().stream()
+            .filter(input -> input instanceof PBXHeadersBuildPhase)
+            .count());
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
     assertThat(headerSymlinkTrees, hasSize(2));
@@ -1077,8 +1079,8 @@ public class ProjectGeneratorTest {
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target, ImmutableMap.of(
             "foo.m", Optional.of("-foo"),
-            "bar.m", Optional.absent(),
-            "libsomething.a", Optional.absent()));
+            "bar.m", Optional.empty(),
+            "libsomething.a", Optional.empty()));
 
     // this target should not have an asset catalog build phase
     assertTrue(
@@ -1163,7 +1165,7 @@ public class ProjectGeneratorTest {
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target, ImmutableMap.of(
             "foo.cpp", Optional.of("-foo"),
-            "bar.cpp", Optional.absent()));
+            "bar.cpp", Optional.empty()));
   }
 
   @Test
@@ -1839,7 +1841,7 @@ public class ProjectGeneratorTest {
                     new SourceTreePath(
                         PBXReference.SourceTree.SDKROOT,
                         Paths.get("Library.framework"),
-                        Optional.absent()))))
+                        Optional.empty()))))
         .build();
 
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "xctest").build();
@@ -1854,7 +1856,7 @@ public class ProjectGeneratorTest {
                     new SourceTreePath(
                         PBXReference.SourceTree.SDKROOT,
                         Paths.get("Test.framework"),
-                        Optional.absent()))))
+                        Optional.empty()))))
         .setDeps(ImmutableSortedSet.of(libraryTarget))
         .build();
 
@@ -1908,7 +1910,7 @@ public class ProjectGeneratorTest {
                     new SourceTreePath(
                         PBXReference.SourceTree.SDKROOT,
                         Paths.get("Library.framework"),
-                        Optional.absent()))))
+                        Optional.empty()))))
         .build();
 
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "xctest").build();
@@ -1923,7 +1925,7 @@ public class ProjectGeneratorTest {
                     new SourceTreePath(
                         PBXReference.SourceTree.SDKROOT,
                         Paths.get("Test.framework"),
-                        Optional.absent()))))
+                        Optional.empty()))))
         .setDeps(ImmutableSortedSet.of(libraryTarget))
         .build();
 
@@ -1972,7 +1974,7 @@ public class ProjectGeneratorTest {
                     new SourceTreePath(
                         PBXReference.SourceTree.SDKROOT,
                         Paths.get("Library.framework"),
-                        Optional.absent()))))
+                        Optional.empty()))))
         .build();
 
     BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
@@ -1986,7 +1988,7 @@ public class ProjectGeneratorTest {
                     new SourceTreePath(
                         PBXReference.SourceTree.SDKROOT,
                         Paths.get("Library.framework"),
-                        Optional.absent()))))
+                        Optional.empty()))))
         .setDeps(ImmutableSortedSet.of(libraryDepTarget))
         .build();
 
@@ -2002,7 +2004,7 @@ public class ProjectGeneratorTest {
                     new SourceTreePath(
                         PBXReference.SourceTree.SDKROOT,
                         Paths.get("Test.framework"),
-                        Optional.absent()))))
+                        Optional.empty()))))
         .setDeps(ImmutableSortedSet.of(libraryTarget))
         .build();
 
@@ -2049,7 +2051,7 @@ public class ProjectGeneratorTest {
                     new SourceTreePath(
                         PBXReference.SourceTree.SDKROOT,
                         Paths.get("Library.framework"),
-                        Optional.absent()))))
+                        Optional.empty()))))
         .build();
 
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "xctest").build();
@@ -2074,7 +2076,7 @@ public class ProjectGeneratorTest {
 
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target,
-        ImmutableMap.of("fooTest.m", Optional.absent()));
+        ImmutableMap.of("fooTest.m", Optional.empty()));
 
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
@@ -2102,7 +2104,7 @@ public class ProjectGeneratorTest {
                     new SourceTreePath(
                         PBXReference.SourceTree.SDKROOT,
                         Paths.get("Library.framework"),
-                        Optional.absent()))))
+                        Optional.empty()))))
         .build();
 
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "xctest").build();
@@ -2140,7 +2142,7 @@ public class ProjectGeneratorTest {
 
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target,
-        ImmutableMap.of("fooTest.m", Optional.absent()));
+        ImmutableMap.of("fooTest.m", Optional.empty()));
 
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
@@ -2197,10 +2199,10 @@ public class ProjectGeneratorTest {
                     new SourceTreePath(
                         PBXReference.SourceTree.SDKROOT,
                         Paths.get("Foo.framework"),
-                        Optional.absent()))))
+                        Optional.empty()))))
         .setDeps(ImmutableSortedSet.of(depTarget))
-        .setHeaderPathPrefix(Optional.absent())
-        .setPrefixHeader(Optional.absent())
+        .setHeaderPathPrefix(Optional.empty())
+        .setPrefixHeader(Optional.empty())
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -2217,7 +2219,7 @@ public class ProjectGeneratorTest {
         target,
         ImmutableMap.of(
             "foo.m", Optional.of("-foo"),
-            "libsomething.a", Optional.absent()));
+            "libsomething.a", Optional.empty()));
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
         ImmutableList.of(
@@ -2509,7 +2511,7 @@ public class ProjectGeneratorTest {
 
     // Make sure the file type is set from the path.
     assertEquals(Optional.of("file.storyboard"), baseStoryboardReference.getLastKnownFileType());
-    assertEquals(Optional.<String>absent(), baseStoryboardReference.getExplicitFileType());
+    assertEquals(Optional.empty(), baseStoryboardReference.getExplicitFileType());
   }
 
   @Test
@@ -2714,7 +2716,7 @@ public class ProjectGeneratorTest {
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target, ImmutableMap.of(
             "foo.m", Optional.of("-foo"),
-            "bar.m", Optional.absent()));
+            "bar.m", Optional.empty()));
   }
 
   @Test
@@ -3122,17 +3124,17 @@ public class ProjectGeneratorTest {
                     new SourceTreePath(
                         PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
                         Paths.get("libfoo.a"),
-                        Optional.absent())),
+                        Optional.empty())),
                 FrameworkPath.ofSourceTreePath(
                     new SourceTreePath(
                         PBXReference.SourceTree.SDKROOT,
                         Paths.get("libfoo.a"),
-                        Optional.absent())),
+                        Optional.empty())),
                 FrameworkPath.ofSourceTreePath(
                     new SourceTreePath(
                         PBXReference.SourceTree.SOURCE_ROOT,
                         Paths.get("libfoo.a"),
-                        Optional.absent()))))
+                        Optional.empty()))))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -3364,7 +3366,7 @@ public class ProjectGeneratorTest {
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("DeclaredInTestLibDep.framework"),
-                            Optional.absent()))))
+                            Optional.empty()))))
             .setDeps(ImmutableSortedSet.of(testLibDepResource.getBuildTarget()))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("e.m"))))
             .build();
@@ -3378,7 +3380,7 @@ public class ProjectGeneratorTest {
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("DeclaredInTestLib.framework"),
-                            Optional.absent()))))
+                            Optional.empty()))))
             .build();
     TargetNode<AppleLibraryDescription.Arg> dep2 =
         AppleLibraryBuilder.createBuilder(BuildTarget.builder(rootPath, "//foo", "dep2").build())
@@ -3394,7 +3396,7 @@ public class ProjectGeneratorTest {
                         new SourceTreePath(
                             PBXReference.SourceTree.SDKROOT,
                             Paths.get("DeclaredInTest.framework"),
-                            Optional.absent()))))
+                            Optional.empty()))))
             .build();
     TargetNode<AppleTestDescription.Arg> xctest2 =
         AppleTestBuilder.createBuilder(BuildTarget.builder(rootPath, "//foo", "xctest2").build())
@@ -3419,7 +3421,7 @@ public class ProjectGeneratorTest {
         PROJECT_NAME,
         "BUCK",
         ProjectGenerator.SEPARATED_PROJECT_OPTIONS,
-        Optional.absent(),
+        Optional.empty(),
         ImmutableList.of(),
         ImmutableList.of(),
         new AlwaysFoundExecutableFinder(),
@@ -3453,7 +3455,7 @@ public class ProjectGeneratorTest {
         ImmutableMap.of(
             projectFilesystem.getBuckPaths().getGenDir().resolve("xcode-scripts/emptyFile.c")
                 .toString(),
-            Optional.absent()));
+            Optional.empty()));
     ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
         target,
         ImmutableList.of(
@@ -3542,9 +3544,9 @@ public class ProjectGeneratorTest {
     assertHasSingletonSourcesPhaseWithSourcesAndFlags(
         target,
         ImmutableMap.of(
-            "Vendor/sources/source1", Optional.absent(),
-            "Vendor/source2", Optional.absent(),
-            "Vendor/source3", Optional.absent()));
+            "Vendor/sources/source1", Optional.empty(),
+            "Vendor/source2", Optional.empty(),
+            "Vendor/source3", Optional.empty()));
 
     ImmutableMap<String, String> settings = getBuildSettings(libTarget, target, "Debug");
     assertEquals("../Vendor/header", settings.get("GCC_PREFIX_HEADER"));
@@ -4547,7 +4549,7 @@ public class ProjectGeneratorTest {
         PROJECT_NAME,
         "BUCK",
         projectGeneratorOptions,
-        Optional.absent(),
+        Optional.empty(),
         ImmutableList.of(),
         ImmutableList.of(),
         new AlwaysFoundExecutableFinder(),

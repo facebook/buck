@@ -32,7 +32,6 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
@@ -41,6 +40,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -139,7 +139,7 @@ public class Cell {
     if (knownRoots.contains(target.getCellPath())) {
       return Optional.of(getCell(target));
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   /**

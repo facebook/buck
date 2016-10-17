@@ -20,11 +20,11 @@ import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Collection;
+import java.util.Optional;
 
 /**
  * Bundles together some information about whether and how we should split up dex files.
@@ -37,11 +37,11 @@ class DexSplitMode implements RuleKeyAppendable {
       /* useLinearAllocSplitDex */ false,
       /* linearAllocHardLimit */ 0,
       /* primaryDexPatterns */ ImmutableSet.of(),
-      /* primaryDexClassesFile */ Optional.absent(),
-      /* primaryDexScenarioFile */ Optional.absent(),
+      /* primaryDexClassesFile */ Optional.empty(),
+      /* primaryDexScenarioFile */ Optional.empty(),
       /* isPrimaryDexScenarioOverflowAllowed */ false,
-      /* secondaryDexHeadClassesFile */ Optional.absent(),
-      /* secondaryDexTailClassesFile */ Optional.absent());
+      /* secondaryDexHeadClassesFile */ Optional.empty(),
+      /* secondaryDexTailClassesFile */ Optional.empty());
 
   private final boolean shouldSplitDex;
   private final DexStore dexStore;

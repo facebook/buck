@@ -32,13 +32,13 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.InputStream;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * {@link CommandRunnerParams} is the collection of parameters needed to run a {@link Command}.

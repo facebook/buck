@@ -21,7 +21,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Resources;
 
@@ -36,6 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Optional;
 
 /**
  * Writes the serialized representations of IntelliJ project components to disk.
@@ -121,13 +121,13 @@ public class IjProjectWriter {
         projectDataPreparer.getAndroidProperties(module));
     moduleContents.add(
         "sdk",
-        module.getSdkName().orNull());
+        module.getSdkName().orElse(null));
     moduleContents.add(
         "sdkType",
-        module.getSdkType().orNull());
+        module.getSdkType().orElse(null));
     moduleContents.add(
         "languageLevel",
-        module.getLanguageLevel().orNull());
+        module.getLanguageLevel().orElse(null));
 
     writeToFile(moduleContents, path);
     return path;
@@ -173,7 +173,7 @@ public class IjProjectWriter {
     contents.add("name", library.getName());
     contents.add(
         "binaryJar",
-        library.getBinaryJar().transform(MorePaths::pathWithUnixSeparators).orNull());
+        library.getBinaryJar().map(MorePaths::pathWithUnixSeparators).orElse(null));
     contents.add(
         "classPaths",
         library.getClassPaths().stream()
@@ -181,8 +181,8 @@ public class IjProjectWriter {
             .collect(MoreCollectors.toImmutableSet()));
     contents.add(
         "sourceJar",
-        library.getSourceJar().transform(MorePaths::pathWithUnixSeparators).orNull());
-    contents.add("javadocUrl", library.getJavadocUrl().orNull());
+        library.getSourceJar().map(MorePaths::pathWithUnixSeparators).orElse(null));
+    contents.add("javadocUrl", library.getJavadocUrl().orElse(null));
     //TODO(marcinkosiba): support res and assets for aar.
 
     writeToFile(contents, path);

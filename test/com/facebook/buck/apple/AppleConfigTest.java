@@ -30,7 +30,6 @@ import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -42,6 +41,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class AppleConfigTest {
 
@@ -152,7 +152,7 @@ public class AppleConfigTest {
             .build());
     assertThat(
         config.getPackageConfigForPlatform(ApplePlatform.IPHONEOS),
-        equalTo(Optional.<ApplePackageConfig>absent()));
+        equalTo(Optional.empty()));
   }
 
   @Test

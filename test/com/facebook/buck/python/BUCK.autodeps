@@ -66,9 +66,7 @@
     "exported_deps" : [ ]
   },
   "testutil" : {
-    "deps" : [
-      "//third-party/java/guava:guava"
-    ],
+    "deps" : [ ],
     "exported_deps" : [
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/python:support"

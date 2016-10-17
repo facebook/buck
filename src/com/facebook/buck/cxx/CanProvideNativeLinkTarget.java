@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 /**
  * Helper interface for nodes which conditionally support the {@link NativeLinkTarget}

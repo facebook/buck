@@ -23,12 +23,12 @@ import com.facebook.buck.apple.device.AppleDeviceHelper;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class FakeAppleDeveloperEnvironment {
   private static final Logger LOG = Logger.get(FakeAppleDeveloperEnvironment.class);

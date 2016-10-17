@@ -17,9 +17,10 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
+
+import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleTuple

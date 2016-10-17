@@ -28,10 +28,10 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasPostBuildSteps;
+import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
-import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -39,7 +39,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -49,6 +48,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 public class CxxCompilationDatabase extends AbstractBuildRule
     implements HasPostBuildSteps, HasRuntimeDeps {
@@ -166,7 +166,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule
     Iterable<CxxCompilationDatabaseEntry> createEntries() {
       List<CxxCompilationDatabaseEntry> entries = Lists.newArrayList();
       for (CxxPreprocessAndCompile compileRule : compileRules) {
-        Optional<CxxPreprocessAndCompile> preprocessRule = Optional.absent();
+        Optional<CxxPreprocessAndCompile> preprocessRule = Optional.empty();
         if (preprocessMode == CxxPreprocessMode.SEPARATE) {
           for (BuildRule buildRule : compileRule.getDeclaredDeps()) {
             if (CxxSourceRuleFactory.isPreprocessFlavoredBuildTarget(buildRule.getBuildTarget())) {
@@ -187,8 +187,8 @@ public class CxxCompilationDatabase extends AbstractBuildRule
         Optional<CxxPreprocessAndCompile> preprocessRule,
         CxxPreprocessAndCompile compileRule) {
 
-      SourcePath inputSourcePath = preprocessRule.or(compileRule).getInput();
-      ProjectFilesystem inputFilesystem = preprocessRule.or(compileRule).getProjectFilesystem();
+      SourcePath inputSourcePath = preprocessRule.orElse(compileRule).getInput();
+      ProjectFilesystem inputFilesystem = preprocessRule.orElse(compileRule).getProjectFilesystem();
 
       String fileToCompile = inputFilesystem
           .resolve(getResolver().getAbsolutePath(inputSourcePath))

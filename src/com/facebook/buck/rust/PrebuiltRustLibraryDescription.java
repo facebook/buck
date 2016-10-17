@@ -28,8 +28,9 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
 
 public class PrebuiltRustLibraryDescription
     implements Description<PrebuiltRustLibraryDescription.Arg> {
@@ -66,7 +67,7 @@ public class PrebuiltRustLibraryDescription
         new SourcePathResolver(resolver),
         args.rlib,
         cxxPlatform,
-        args.linkStyle.or(Linker.LinkableDepType.STATIC),
+        args.linkStyle.orElse(Linker.LinkableDepType.STATIC),
         args.crate);
   }
 

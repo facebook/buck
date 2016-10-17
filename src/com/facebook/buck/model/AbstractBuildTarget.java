@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSet;
@@ -33,6 +32,7 @@ import com.google.common.collect.Ordering;
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 
@@ -158,7 +158,7 @@ abstract class AbstractBuildTarget
     return BuildTarget
         .builder()
         .setUnflavoredBuildTarget(
-            UnflavoredBuildTarget.of(cellPath, Optional.absent(), baseName, shortName));
+            UnflavoredBuildTarget.of(cellPath, Optional.empty(), baseName, shortName));
   }
 
   /** @return {@link #getFullyQualifiedName()} */

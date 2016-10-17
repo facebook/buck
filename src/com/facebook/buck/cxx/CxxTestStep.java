@@ -18,11 +18,11 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.AbstractTestStep;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Run a C/C++ test command, remembering it's exit code and streaming it's output to
@@ -42,7 +42,7 @@ public class CxxTestStep extends AbstractTestStep {
     super(
         NAME,
         filesystem,
-        Optional.absent(),
+        Optional.empty(),
         command,
         Optional.of(env),
         exitCode,

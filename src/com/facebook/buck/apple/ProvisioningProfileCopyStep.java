@@ -26,7 +26,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -34,6 +33,7 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Class to handle:
@@ -161,7 +161,7 @@ class ProvisioningProfileCopyStep implements Step {
       return (new PlistProcessStep(
           filesystem,
           entitlementsPlist.get(),
-          Optional.absent(),
+          Optional.empty(),
           signingEntitlementsTempPath,
           bestProfile.get().getMergeableEntitlements(),
           ImmutableMap.of(),

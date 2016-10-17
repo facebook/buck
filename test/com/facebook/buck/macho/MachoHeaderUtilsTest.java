@@ -15,17 +15,17 @@
  */
 package com.facebook.buck.macho;
 
-import org.junit.Test;
-
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.equalToObject;
 import static org.junit.Assert.assertThat;
 
-import com.google.common.base.Optional;
 import com.google.common.primitives.UnsignedInteger;
+
+import org.junit.Test;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Optional;
 
 public class MachoHeaderUtilsTest {
 
@@ -41,7 +41,7 @@ public class MachoHeaderUtilsTest {
                 UnsignedInteger.ZERO,
                 UnsignedInteger.ZERO,
                 UnsignedInteger.ZERO,
-                Optional.absent())),
+                Optional.empty())),
         equalTo(MachoHeader.MACH_HEADER_SIZE_32));
     assertThat(
         MachoHeaderUtils.getHeaderSize(

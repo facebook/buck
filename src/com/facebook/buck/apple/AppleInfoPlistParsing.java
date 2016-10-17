@@ -20,11 +20,10 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListParser;
 
-import com.google.common.base.Optional;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 
 /**
  * Utility class to parse Info.plist from an Apple bundle.
@@ -49,7 +48,7 @@ public class AppleInfoPlistParsing {
     }
     NSObject bundleId = infoPlist.objectForKey("CFBundleIdentifier");
     if (bundleId == null) {
-      return Optional.absent();
+      return Optional.empty();
     } else {
       return Optional.of(bundleId.toString());
     }

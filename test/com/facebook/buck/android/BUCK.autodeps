@@ -217,10 +217,11 @@
     "exported_deps" : [ ]
   },
   "utils" : {
-    "deps" : [ ],
-    "exported_deps" : [
-      "//src/com/facebook/buck/android:utils",
+    "deps" : [
       "//third-party/java/guava:guava"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/android:utils"
     ]
   }
 }

@@ -16,11 +16,10 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.google.common.base.Optional;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Locale;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 import javax.tools.Diagnostic;
@@ -114,7 +113,7 @@ public class DiagnosticPrettyPrinter {
 
   private static Optional<String> getLine(JavaFileObject source, long line) {
     if (line < 0) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     String toReturn = null;
@@ -124,9 +123,9 @@ public class DiagnosticPrettyPrinter {
       }
     } catch (IOException e) {
       // Do nothing. We're just trying to get some context, but we've failed.
-      return Optional.absent();
+      return Optional.empty();
     }
 
-    return Optional.fromNullable(toReturn);
+    return Optional.ofNullable(toReturn);
   }
 }

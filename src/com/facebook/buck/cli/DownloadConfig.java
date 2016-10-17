@@ -17,13 +17,13 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.log.Logger;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 
 import java.net.InetSocketAddress;
 import java.net.PasswordAuthentication;
 import java.net.Proxy;
+import java.util.Optional;
 
 public class DownloadConfig {
   private static final Logger LOG = Logger.get(DownloadConfig.class);
@@ -37,7 +37,7 @@ public class DownloadConfig {
 
     Optional<String> proxyHost = delegate.getValue("download", "proxy_host");
     Optional<Long> proxyPort = delegate.getLong("download", "proxy_port");
-    String proxyType = delegate.getValue("download", "proxy_type").or("HTTP");
+    String proxyType = delegate.getValue("download", "proxy_type").orElse("HTTP");
 
     LOG.debug("Got proxy: " + proxyHost + " " + proxyPort + " from " + delegate);
     if (proxyHost.isPresent() && proxyPort.isPresent()) {
@@ -46,7 +46,7 @@ public class DownloadConfig {
       Proxy p = new Proxy(type, new InetSocketAddress(proxyHost.get(), (int) port));
       return Optional.of(p);
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public Optional<String> getMavenRepo() {
@@ -73,7 +73,7 @@ public class DownloadConfig {
     Optional<String> user = delegate.getValue("credentials", repo + "_user");
     Optional<String> password = delegate.getValue("credentials", repo + "_pass");
     if (!user.isPresent() || !password.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     return Optional.of(new PasswordAuthentication(user.get(), password.get().toCharArray()));

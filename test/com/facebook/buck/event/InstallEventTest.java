@@ -23,10 +23,11 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.model.BuildTargetFactory;
-import com.google.common.base.Optional;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
+
+import java.util.Optional;
 
 public class InstallEventTest {
   @Test
@@ -41,20 +42,20 @@ public class InstallEventTest {
         InstallEvent.finished(
             started,
             true,
-            Optional.absent(),
-            Optional.absent()));
+            Optional.empty(),
+            Optional.empty()));
     InstallEvent finishedDifferentEvent = configureTestEvent(
         InstallEvent.finished(
             startedDifferentEvent,
             true,
-            Optional.absent(),
-            Optional.absent()));
+            Optional.empty(),
+            Optional.empty()));
     InstallEvent finishedFail = configureTestEvent(
         InstallEvent.finished(
             started,
             false,
-            Optional.absent(),
-            Optional.absent()));
+            Optional.empty(),
+            Optional.empty()));
 
     assertNotEquals(started, startedTwo);
     assertNotEquals(finished, finishedDifferentEvent);

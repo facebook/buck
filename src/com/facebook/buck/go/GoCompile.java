@@ -33,13 +33,13 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.step.fs.TouchStep;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class GoCompile extends AbstractBuildRule {
   @AddToRuleKey
@@ -137,7 +137,7 @@ public class GoCompile extends AbstractBuildRule {
 
       steps.add(new MkdirStep(getProjectFilesystem(), asmHeaderPath.get().getParent()));
     } else {
-      asmHeaderPath = Optional.absent();
+      asmHeaderPath = Optional.empty();
     }
 
     boolean allowExternalReferences = !asmSrcs.isEmpty();

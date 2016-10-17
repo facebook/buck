@@ -18,11 +18,10 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 
 import static org.junit.Assert.assertNotEquals;
 
-import com.google.common.base.Optional;
-
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.Optional;
 
 /**
  * Tests for {@link SourceTreePath}.
@@ -33,11 +32,11 @@ public class SourceTreePathTest {
     SourceTreePath path1 = new SourceTreePath(
         PBXReference.SourceTree.SOURCE_ROOT,
         Paths.get("foo/bar.c"),
-        Optional.absent());
+        Optional.empty());
     SourceTreePath path2 = new SourceTreePath(
         PBXReference.SourceTree.SOURCE_ROOT,
         Paths.get("foo/baz.c"),
-        Optional.absent());
+        Optional.empty());
     assertNotEquals(path1, path2);
   }
 }

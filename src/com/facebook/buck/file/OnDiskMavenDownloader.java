@@ -17,7 +17,6 @@
 package com.facebook.buck.file;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.google.common.base.Optional;
 
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
@@ -26,6 +25,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * A {@link Downloader} that pulls content from the local file system.

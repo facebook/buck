@@ -46,7 +46,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -56,6 +55,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class CxxCollectAndLogInferDependenciesStepTest {
 
@@ -125,7 +125,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         .setUnflavoredBuildTarget(
             UnflavoredBuildTarget.of(
                 filesystem.getRootPath(),
-                Optional.absent(),
+                Optional.empty(),
                 "//target",
                 "short"))
         .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())
@@ -317,7 +317,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         .setUnflavoredBuildTarget(
             UnflavoredBuildTarget.of(
                 filesystem1.getRootPath(),
-                Optional.absent(),
+                Optional.empty(),
                 "//target/in_default_cell",
                 "short"))
         .addFlavors(CxxInferEnhancer.InferFlavors.INFER.get())

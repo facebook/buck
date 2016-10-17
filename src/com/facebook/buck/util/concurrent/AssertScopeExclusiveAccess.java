@@ -17,8 +17,8 @@
 package com.facebook.buck.util.concurrent;
 
 import com.facebook.buck.log.Logger;
-import com.google.common.base.Optional;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -33,7 +33,7 @@ public class AssertScopeExclusiveAccess {
 
   public AssertScopeExclusiveAccess() {
     inScope = new AtomicBoolean();
-    inScopeStack = Optional.absent();
+    inScopeStack = Optional.empty();
   }
 
   public Scope scope() {

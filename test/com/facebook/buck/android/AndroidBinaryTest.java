@@ -44,7 +44,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.base.Suppliers;
@@ -62,6 +61,7 @@ import org.junit.Test;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class AndroidBinaryTest {
@@ -139,14 +139,14 @@ public class AndroidBinaryTest {
     ProGuardObfuscateStep.create(
         JavaCompilationConstants.DEFAULT_JAVA_OPTIONS.getJavaRuntimeLauncher(),
         new FakeProjectFilesystem(),
-        /* proguardJarOverride */ Optional.absent(),
+        /* proguardJarOverride */ Optional.empty(),
         /* proguardMaxHeapSize */ "1024M",
-        /* proguardAgentPath */ Optional.absent(),
+        /* proguardAgentPath */ Optional.empty(),
         proguardOutputDir.resolve("proguard.txt"),
         /* customProguardConfigs */ ImmutableSet.of(),
         ProGuardObfuscateStep.SdkProguardType.DEFAULT,
-        /* optimizationPasses */ Optional.absent(),
-        /* proguardJvmArgs */ Optional.absent(),
+        /* optimizationPasses */ Optional.empty(),
+        /* proguardJvmArgs */ Optional.empty(),
         ImmutableMap.of(
             BuildTargets
                 .getGenPath(
@@ -319,8 +319,8 @@ public class AndroidBinaryTest {
         secondaryDexDirectories,
         commandsBuilder,
         primaryDexPath,
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.of());
 
     assertEquals("Expected 2 new assets paths (one for metadata.txt and the other for the " +

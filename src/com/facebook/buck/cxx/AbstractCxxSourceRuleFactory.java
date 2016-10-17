@@ -34,7 +34,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Suppliers;
@@ -55,6 +54,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -543,7 +543,7 @@ abstract class AbstractCxxSourceRuleFactory {
         .add(preprocessorDelegate.getPreprocessor())
         .add(compiler)
         .add(source);
-    Optional<PrecompiledHeaderReference> precompiledHeaderReference = Optional.absent();
+    Optional<PrecompiledHeaderReference> precompiledHeaderReference = Optional.empty();
     if (shouldUsePrecompiledHeaders(getCxxBuckConfig(), preprocessorDelegate, strategy)) {
       CxxPrecompiledHeader precompiledHeader =
           requirePrecompiledHeaderBuildRule(preprocessorDelegateValue, source);
@@ -610,7 +610,7 @@ abstract class AbstractCxxSourceRuleFactory {
         preprocessorDelegateCacheValue.getCommandHash(compilerFlags));
 
     // Detect the rule for which we are building this PCH:
-    SourcePath sourcePath = Preconditions.checkNotNull(this.getPrefixHeader().orNull());
+    SourcePath sourcePath = Preconditions.checkNotNull(this.getPrefixHeader().orElse(null));
     BuildTarget targetToBuildFor;
     if (sourcePath instanceof BuildTargetSourcePath) {
       // e.g. a library "//foo:foo" has "prefix_header='//bar:header'"; then clone "//bar:header",

@@ -25,13 +25,13 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
-import com.google.common.base.Optional;
 import com.google.common.hash.HashCode;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.concurrent.GuardedBy;
@@ -65,7 +65,7 @@ public class RecordingFileHashLoader implements FileHashLoader {
     synchronized (this) {
       if (!seenPaths.contains(path)) {
         seenPaths.add(path);
-        record(path, Optional.absent(), hashCode);
+        record(path, Optional.empty(), hashCode);
       }
     }
     return hashCode;

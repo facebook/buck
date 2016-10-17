@@ -47,7 +47,6 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
@@ -65,6 +64,7 @@ import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -326,7 +326,7 @@ public class CxxLibraryDescription implements
     arg.exportedDeps = ImmutableSortedSet.of();
     arg.srcs = ImmutableSortedSet.of();
     arg.platformSrcs = PatternMatchedCollection.of();
-    arg.prefixHeader = Optional.absent();
+    arg.prefixHeader = Optional.empty();
     arg.headers = SourceList.ofUnnamedSources(ImmutableSortedSet.of());
     arg.platformHeaders = PatternMatchedCollection.of();
     arg.exportedHeaders = SourceList.ofUnnamedSources(ImmutableSortedSet.of());
@@ -344,21 +344,21 @@ public class CxxLibraryDescription implements
     arg.exportedLinkerFlags = ImmutableList.of();
     arg.platformLinkerFlags = PatternMatchedCollection.of();
     arg.exportedPlatformLinkerFlags = PatternMatchedCollection.of();
-    arg.cxxRuntimeType = Optional.absent();
-    arg.forceStatic = Optional.absent();
-    arg.preferredLinkage = Optional.absent();
-    arg.linkWhole = Optional.absent();
-    arg.headerNamespace = Optional.absent();
-    arg.soname = Optional.absent();
+    arg.cxxRuntimeType = Optional.empty();
+    arg.forceStatic = Optional.empty();
+    arg.preferredLinkage = Optional.empty();
+    arg.linkWhole = Optional.empty();
+    arg.headerNamespace = Optional.empty();
+    arg.soname = Optional.empty();
     arg.frameworks = ImmutableSortedSet.of();
     arg.libraries = ImmutableSortedSet.of();
     arg.tests = ImmutableSortedSet.of();
-    arg.supportedPlatformsRegex = Optional.absent();
-    arg.linkStyle = Optional.absent();
-    arg.bridgingHeader = Optional.absent();
-    arg.moduleName = Optional.absent();
-    arg.xcodePublicHeadersSymlinks = Optional.absent();
-    arg.xcodePrivateHeadersSymlinks = Optional.absent();
+    arg.supportedPlatformsRegex = Optional.empty();
+    arg.linkStyle = Optional.empty();
+    arg.bridgingHeader = Optional.empty();
+    arg.moduleName = Optional.empty();
+    arg.xcodePublicHeadersSymlinks = Optional.empty();
+    arg.xcodePrivateHeadersSymlinks = Optional.empty();
     return arg;
   }
 
@@ -522,7 +522,7 @@ public class CxxLibraryDescription implements
         resolver,
         args,
         args.linkStyle,
-        Optional.absent(),
+        Optional.empty(),
         ImmutableSet.of());
   }
 
@@ -542,7 +542,7 @@ public class CxxLibraryDescription implements
     if (params.getBuildTarget().getFlavors()
         .contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       // XXX: This needs bundleLoader for tests..
-      CxxPlatform cxxPlatform = platform.or(defaultCxxPlatform);
+      CxxPlatform cxxPlatform = platform.orElse(defaultCxxPlatform);
       SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
       return CxxDescriptionEnhancer.createCompilationDatabase(
           params,
@@ -565,7 +565,7 @@ public class CxxLibraryDescription implements
           resolver,
           new SourcePathResolver(resolver),
           cxxBuckConfig,
-          platform.or(defaultCxxPlatform),
+          platform.orElse(defaultCxxPlatform),
           args,
           inferBuckConfig,
           new CxxInferSourceFilter(inferBuckConfig));
@@ -576,7 +576,7 @@ public class CxxLibraryDescription implements
           resolver,
           new SourcePathResolver(resolver),
           cxxBuckConfig,
-          platform.or(defaultCxxPlatform),
+          platform.orElse(defaultCxxPlatform),
           args,
           inferBuckConfig,
           new CxxInferSourceFilter(inferBuckConfig));
@@ -586,7 +586,7 @@ public class CxxLibraryDescription implements
           params,
           resolver,
           cxxBuckConfig,
-          platform.or(defaultCxxPlatform),
+          platform.orElse(defaultCxxPlatform),
           inferBuckConfig,
           new CxxInferSourceFilter(inferBuckConfig),
           args);
@@ -597,7 +597,7 @@ public class CxxLibraryDescription implements
           resolver,
           new SourcePathResolver(resolver),
           cxxBuckConfig,
-          platform.or(defaultCxxPlatform),
+          platform.orElse(defaultCxxPlatform),
           args,
           inferBuckConfig,
           new CxxInferSourceFilter(inferBuckConfig));
@@ -637,8 +637,8 @@ public class CxxLibraryDescription implements
               platform.get(),
               args,
               Linker.LinkType.SHARED,
-              linkableDepType.or(Linker.LinkableDepType.SHARED),
-              Optional.absent(),
+              linkableDepType.orElse(Linker.LinkableDepType.SHARED),
+              Optional.empty(),
               blacklist);
         case MACH_O_BUNDLE:
           return createSharedLibraryBuildRule(
@@ -648,7 +648,7 @@ public class CxxLibraryDescription implements
               platform.get(),
               args,
               Linker.LinkType.MACH_O_BUNDLE,
-              linkableDepType.or(Linker.LinkableDepType.SHARED),
+              linkableDepType.orElse(Linker.LinkableDepType.SHARED),
               bundleLoader,
               blacklist);
         case STATIC:
@@ -744,13 +744,13 @@ public class CxxLibraryDescription implements
         args.supportedPlatformsRegex,
         args.frameworks,
         args.libraries,
-        args.forceStatic.or(false)
+        args.forceStatic.orElse(false)
             ? NativeLinkable.Linkage.STATIC
-            : args.preferredLinkage.or(NativeLinkable.Linkage.ANY),
-        args.linkWhole.or(false),
+            : args.preferredLinkage.orElse(NativeLinkable.Linkage.ANY),
+        args.linkWhole.orElse(false),
         args.soname,
         args.tests,
-        args.canBeAsset.or(false));
+        args.canBeAsset.orElse(false));
   }
 
   @Override
@@ -808,13 +808,11 @@ public class CxxLibraryDescription implements
       final Class<U> metadataClass) throws NoSuchBuildTargetException {
     if (!metadataClass.isAssignableFrom(CxxCompilationDatabaseDependencies.class) ||
         !buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return CxxDescriptionEnhancer
-        .createCompilationDatabaseDependencies(buildTarget, cxxPlatforms, resolver, args)
-        .transform(
-            metadataClass::cast
-        );
+        .createCompilationDatabaseDependencies(buildTarget, cxxPlatforms, resolver, args).map(
+            metadataClass::cast);
   }
 
   @Override
@@ -838,20 +836,20 @@ public class CxxLibraryDescription implements
           cxxBuckConfig.getDefaultFlavorsForRuleType(type);
 
       if (!typeFlavor.isPresent()) {
-        typeFlavor = Optional.fromNullable(
+        typeFlavor = Optional.ofNullable(
             libraryDefaults.get(CxxBuckConfig.DEFAULT_FLAVOR_LIBRARY_TYPE));
       }
 
       if (!platformFlavor.isPresent()) {
-        platformFlavor = Optional.fromNullable(
+        platformFlavor = Optional.ofNullable(
             libraryDefaults.get(CxxBuckConfig.DEFAULT_FLAVOR_PLATFORM));
       }
     }
 
     ImmutableSortedSet<Flavor> result = ImmutableSortedSet.of(
         // Default to static if not otherwise specified.
-        typeFlavor.or(CxxDescriptionEnhancer.STATIC_FLAVOR),
-        platformFlavor.or(defaultCxxPlatform.getFlavor()));
+        typeFlavor.orElse(CxxDescriptionEnhancer.STATIC_FLAVOR),
+        platformFlavor.orElse(defaultCxxPlatform.getFlavor()));
 
     LOG.debug(
         "Got default flavors %s for rule types %s",

@@ -39,7 +39,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -50,6 +49,7 @@ import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.Optional;
 
 public final class ProjectGeneratorTestUtils {
 
@@ -69,7 +69,7 @@ public final class ProjectGeneratorTestUtils {
       } else if (field.getType().isAssignableFrom(ImmutableMap.class)) {
         value = ImmutableMap.of();
       } else if (field.getType().isAssignableFrom(Optional.class)) {
-        value = Optional.absent();
+        value = Optional.empty();
       } else if (field.getType().isAssignableFrom(String.class)) {
         value = "";
       } else if (field.getType().isAssignableFrom(Path.class)) {

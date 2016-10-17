@@ -18,8 +18,8 @@ package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.java.CalculateAbi;
-import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
@@ -38,7 +38,6 @@ import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -46,6 +45,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
+import java.util.Optional;
 import java.util.logging.Level;
 
 public class GroovyTestDescription implements Description<GroovyTestDescription.Arg> {
@@ -118,7 +118,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                     params.getProjectFilesystem(),
                     args.resources),
                 defaultJavacOptions.getGeneratedSourceFolderName(),
-                /* proguardConfig */ Optional.absent(),
+                /* proguardConfig */ Optional.empty(),
                 /* postprocessClassesCommands */ ImmutableList.of(),
                 /* exportDeps */ ImmutableSortedSet.of(),
                 /* providedDeps */ ImmutableSortedSet.of(),
@@ -126,9 +126,9 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                 /* trackClassUsage */ false,
                 /* additionalClasspathEntries */ ImmutableSet.of(),
                 stepFactory,
-                /* resourcesRoot */ Optional.absent(),
-                /* manifest file */ Optional.absent(),
-                /* mavenCoords */ Optional.absent(),
+                /* resourcesRoot */ Optional.empty(),
+                /* manifest file */ Optional.empty(),
+                /* mavenCoords */ Optional.empty(),
                 /* tests */ ImmutableSortedSet.of(),
                 /* classesToRemoveFromJar */ ImmutableSet.of()
             ));
@@ -144,11 +144,11 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                 /* additionalClasspathEntries */ ImmutableSet.of(),
                 args.labels,
                 args.contacts,
-                args.testType.or(TestType.JUNIT),
+                args.testType.orElse(TestType.JUNIT),
                 javaOptions.getJavaRuntimeLauncher(),
                 args.vmArgs,
                 /* nativeLibsEnvironment */ ImmutableMap.of(),
-                args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
+                args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
                 args.env,
                 args.getRunTestSeparately(),
                 args.getForkMode(),
@@ -179,11 +179,11 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
     public ImmutableMap<String, String> env = ImmutableMap.of();
 
     public boolean getRunTestSeparately() {
-      return runTestSeparately.or(false);
+      return runTestSeparately.orElse(false);
     }
 
     public ForkMode getForkMode() {
-      return forkMode.or(ForkMode.NONE);
+      return forkMode.orElse(ForkMode.NONE);
     }
   }
 }

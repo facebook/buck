@@ -22,13 +22,13 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.immutables.value.Value;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.logging.Level;
 
 /**

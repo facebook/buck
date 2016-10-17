@@ -36,10 +36,11 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+
+import java.util.Optional;
 
 /**
  * Description for a {@link BuildRule} that wraps an {@code .aar} file as an Android dependency.
@@ -175,10 +176,10 @@ public class AndroidPrebuiltAarDescription
             unzipAar.getBuildTarget(),
             unzipAar.getPathToClassesJar()),
         abiJar,
-        /* sourceJar */ Optional.absent(),
-        /* gwtJar */ Optional.absent(),
-        /* javadocUrl */ Optional.absent(),
-        /* mavenCoords */ Optional.absent(),
+        /* sourceJar */ Optional.empty(),
+        /* gwtJar */ Optional.empty(),
+        /* javadocUrl */ Optional.empty(),
+        /* mavenCoords */ Optional.empty(),
         /* provided */ false);
 
   }

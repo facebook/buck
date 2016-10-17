@@ -19,19 +19,19 @@ package com.facebook.buck.util.cache;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.WatchEvents;
 import com.facebook.buck.log.Logger;
-import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 
 import java.nio.file.Path;
 import java.nio.file.WatchEvent;
+import java.util.Optional;
 
 public class WatchedFileHashCache extends DefaultFileHashCache {
 
   private static final Logger LOG = Logger.get(WatchedFileHashCache.class);
 
   public WatchedFileHashCache(ProjectFilesystem projectFilesystem) {
-    super(projectFilesystem, Optional.absent());
+    super(projectFilesystem, Optional.empty());
   }
 
   /**

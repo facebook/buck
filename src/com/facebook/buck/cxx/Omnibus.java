@@ -36,7 +36,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Functions;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -55,6 +54,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public class Omnibus {
@@ -362,14 +362,15 @@ public class Omnibus {
                 ruleResolver,
                 pathResolver,
                 rootTarget,
-                output.or(
-                    BuildTargets.getGenPath(params.getProjectFilesystem(), rootTarget, "%s")
-                        .resolve(
-                            rootSoname.or(
-                                String.format(
-                                    "%s.%s",
-                                    rootTarget.getShortName(),
-                                    cxxPlatform.getSharedLibraryExtension())))),
+                output.orElse(BuildTargets.getGenPath(
+                    params.getProjectFilesystem(),
+                    rootTarget,
+                    "%s")
+                    .resolve(
+                        rootSoname.orElse(String.format(
+                            "%s.%s",
+                            rootTarget.getShortName(),
+                            cxxPlatform.getSharedLibraryExtension())))),
                 rootSoname,
                 argsBuilder.build());
        break;
@@ -385,12 +386,14 @@ public class Omnibus {
                 ruleResolver,
                 pathResolver,
                 rootTarget,
-                output.or(
-                    BuildTargets.getGenPath(params.getProjectFilesystem(), rootTarget, "%s")
-                        .resolve(rootTarget.getShortName())),
+                output.orElse(BuildTargets.getGenPath(
+                    params.getProjectFilesystem(),
+                    rootTarget,
+                    "%s")
+                    .resolve(rootTarget.getShortName())),
                 argsBuilder.build(),
                 Linker.LinkableDepType.SHARED,
-                Optional.absent());
+                Optional.empty());
         break;
       }
 
@@ -456,7 +459,7 @@ public class Omnibus {
         omnibus,
         root,
         getDummyRootTarget(root.getBuildTarget()),
-        Optional.absent());
+        Optional.empty());
   }
 
   private static ImmutableList<Arg> createUndefinedSymbolsArgs(
@@ -661,7 +664,7 @@ public class Omnibus {
     }
 
     // If there are any body nodes, generate the giant merged omnibus library.
-    Optional<SourcePath> realOmnibus = Optional.absent();
+    Optional<SourcePath> realOmnibus = Optional.empty();
     if (!spec.getBody().isEmpty()) {
       OmnibusLibrary omnibus =
           createOmnibus(
@@ -689,7 +692,7 @@ public class Omnibus {
                 cxxPlatform,
                 extraLdflags,
                 spec,
-                realOmnibus.or(dummyOmnibus),
+                realOmnibus.orElse(dummyOmnibus),
                 target);
         libs.putRoots(target.getBuildTarget(), root);
       }

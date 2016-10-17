@@ -49,7 +49,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -60,6 +59,7 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class CxxTestDescriptionTest {
@@ -105,7 +105,7 @@ public class CxxTestDescriptionTest {
         cxxBuckConfig,
         cxxPlatform,
         FlavorDomain.of("platform"),
-        /* testRuleTimeoutMs */ Optional.absent());
+        /* testRuleTimeoutMs */ Optional.empty());
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     CxxTestDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();

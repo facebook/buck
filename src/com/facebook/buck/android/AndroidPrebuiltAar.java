@@ -23,15 +23,15 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Optional;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class AndroidPrebuiltAar
     extends AndroidLibrary
@@ -69,8 +69,8 @@ public class AndroidPrebuiltAar
         javacOptions,
         /* trackClassUsage */ false,
         compileStepFactory,
-        /* resourcesRoot */ Optional.absent(),
-        /* mavenCoords */ Optional.absent(),
+        /* resourcesRoot */ Optional.empty(),
+        /* mavenCoords */ Optional.empty(),
         Optional.of(
             new BuildTargetSourcePath(unzipAar.getBuildTarget(), unzipAar.getAndroidManifest())),
         /* tests */ ImmutableSortedSet.of());

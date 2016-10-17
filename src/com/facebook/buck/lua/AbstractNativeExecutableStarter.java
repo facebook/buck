@@ -50,7 +50,6 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -66,6 +65,7 @@ import org.immutables.value.Value;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * {@link Starter} implementation which builds a starter as a native executable.
@@ -205,7 +205,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                 .addAll(getTransitiveCxxPreprocessorInput(getCxxPlatform(), nativeStarterDeps))
                 .build(),
             ImmutableMultimap.of(),
-            Optional.absent(),
+            Optional.empty(),
             getCxxBuckConfig().getPreprocessMode(),
             ImmutableMap.of("native-starter.cpp", getNativeStarterCxxSource()),
             CxxSourceRuleFactory.PicType.PDC);
@@ -235,12 +235,12 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
             getPathResolver(),
             getTarget(),
             Linker.LinkType.EXECUTABLE,
-            Optional.absent(),
+            Optional.empty(),
             getOutput(),
             Linker.LinkableDepType.SHARED,
             getNativeStarterDeps(),
-            Optional.absent(),
-            Optional.absent(),
+            Optional.empty(),
+            Optional.empty(),
             ImmutableSet.of(),
             getNativeLinkableInput()));
     return new BuildTargetSourcePath(getTarget());

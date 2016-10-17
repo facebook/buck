@@ -31,7 +31,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
@@ -56,6 +55,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -131,7 +131,7 @@ public abstract class Jsr199Javac implements Javac {
     JavaCompiler compiler = createCompiler(context, resolver);
 
     StandardJavaFileManager fileManager =
-        fileManagerFactory.or(DEFAULT_FILE_MANAGER_FACTORY).create(compiler);
+        fileManagerFactory.orElse(DEFAULT_FILE_MANAGER_FACTORY).create(compiler);
     try {
       Iterable<? extends JavaFileObject> compilationUnits;
       try {

@@ -22,7 +22,6 @@ import com.facebook.eden.thrift.EdenService;
 import com.facebook.eden.thrift.SHA1Result;
 import com.facebook.thrift.TException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -31,6 +30,7 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Utility to make requests to the Eden thrift API for an (Eden mount point, Buck project root)
@@ -105,14 +105,14 @@ public class EdenMount {
 
   /**
    * Returns the path relative to {@link #getProjectRoot()} if {@code path} is contained by
-   * {@link #getProjectRoot()}; otherwise, returns {@link Optional#absent()}.
+   * {@link #getProjectRoot()}; otherwise, returns {@link Optional#empty()}.
    */
   Optional<Path> getPathRelativeToProjectRoot(Path path) {
     if (path.isAbsolute()) {
       if (path.startsWith(projectRoot)) {
         return Optional.of(projectRoot.relativize(path));
       } else {
-        return Optional.absent();
+        return Optional.empty();
       }
     } else {
       return Optional.of(path);

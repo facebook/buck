@@ -17,12 +17,12 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.model.BuildTarget;
-import com.google.common.base.Optional;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 public interface StepRunner {

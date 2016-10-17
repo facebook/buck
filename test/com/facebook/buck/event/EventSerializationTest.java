@@ -50,7 +50,6 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -61,6 +60,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Random;
 
 public class EventSerializationTest {
@@ -129,7 +129,7 @@ public class EventSerializationTest {
   public void testParseEventFinished() throws IOException {
     ParseEvent.Started started = ParseEvent.started(ImmutableList.of(
             BuildTargetFactory.newInstance("//base:short#flv")));
-    ParseEvent.Finished event = ParseEvent.finished(started, Optional.absent());
+    ParseEvent.Finished event = ParseEvent.finished(started, Optional.empty());
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = MAPPER.writeValueAsString(event);
     assertJsonEquals("{%s," +
@@ -185,10 +185,10 @@ public class EventSerializationTest {
             BuildRuleStatus.SUCCESS,
             CacheResult.miss(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-            Optional.absent(),
-            Optional.absent(),
-            Optional.absent(),
-            Optional.absent());
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = MAPPER.writeValueAsString(event);
     assertJsonEquals(

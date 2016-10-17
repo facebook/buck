@@ -18,7 +18,8 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 public interface MetadataProvidingDescription<T>  {
 

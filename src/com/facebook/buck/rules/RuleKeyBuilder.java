@@ -26,7 +26,6 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
@@ -39,6 +38,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.SortedMap;
 import java.util.Stack;
 import java.util.regex.Pattern;
@@ -208,7 +208,7 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
 
     // Optionals get special handling. Unwrap them if necessary and recurse.
     if (val instanceof Optional) {
-      Object o = ((Optional<?>) val).orNull();
+      Object o = ((Optional<?>) val).orElse(null);
       return setReflectively(key, o);
     }
 

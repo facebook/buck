@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -30,19 +29,21 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import org.junit.Test;
+
+import java.util.Optional;
 
 public class AppleBuildRulesTest {
 
@@ -120,7 +121,7 @@ public class AppleBuildRulesTest {
         TargetGraphFactory.newInstance(ImmutableSet.of(libraryNode, bundleNode, rootNode)),
         AppleBuildRules.RecursiveDependenciesMode.BUILDING,
         rootNode,
-        Optional.absent());
+        Optional.empty());
 
     assertTrue(Iterables.elementsEqual(ImmutableSortedSet.of(libraryNode, bundleNode), rules));
   }
@@ -171,7 +172,7 @@ public class AppleBuildRulesTest {
                 barFrameworkNode)),
         AppleBuildRules.RecursiveDependenciesMode.LINKING,
         rootNode,
-        Optional.absent());
+        Optional.empty());
 
     assertEquals(
         ImmutableSortedSet.of(
@@ -239,7 +240,7 @@ public class AppleBuildRulesTest {
         TargetGraphFactory.newInstance(targetNodes),
         AppleBuildRules.RecursiveDependenciesMode.COPYING,
         bazFrameworkNode,
-        Optional.absent());
+        Optional.empty());
 
     assertEquals(
         ImmutableSortedSet.of(
@@ -291,7 +292,7 @@ public class AppleBuildRulesTest {
         TargetGraphFactory.newInstance(targetNodes),
         AppleBuildRules.RecursiveDependenciesMode.LINKING,
         barFrameworkNode,
-        Optional.absent());
+        Optional.empty());
 
     assertEquals(
         ImmutableSortedSet.of(fooGenruleNode),
@@ -341,7 +342,7 @@ public class AppleBuildRulesTest {
         TargetGraphFactory.newInstance(targetNodes),
         AppleBuildRules.RecursiveDependenciesMode.COPYING,
         barFrameworkNode,
-        Optional.absent());
+        Optional.empty());
 
     assertEquals(
         ImmutableSortedSet.of(fooGenruleNode),
@@ -406,7 +407,7 @@ public class AppleBuildRulesTest {
         TargetGraphFactory.newInstance(targetNodes),
         AppleBuildRules.RecursiveDependenciesMode.BUILDING,
         bazFrameworkNode,
-        Optional.absent());
+        Optional.empty());
 
     assertEquals(
         ImmutableSortedSet.of(barFrameworkNode, fooGenruleNode),

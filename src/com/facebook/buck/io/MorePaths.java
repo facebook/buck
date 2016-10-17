@@ -19,7 +19,6 @@ package com.facebook.buck.io;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
@@ -32,6 +31,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -251,11 +251,11 @@ public class MorePaths {
 
   public static Optional<Path> stripPrefix(Path p, Path prefix) {
     if (prefix.getNameCount() > p.getNameCount()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     for (int i = 0; i < prefix.getNameCount(); ++i) {
       if (!prefix.getName(i).equals(p.getName(i))) {
-        return Optional.absent();
+        return Optional.empty();
       }
     }
     return Optional.of(p.subpath(prefix.getNameCount(), p.getNameCount()));

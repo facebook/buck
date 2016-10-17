@@ -30,9 +30,10 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.OCamlSource;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
 
 public class OCamlBinaryDescription implements
     Description<OCamlBinaryDescription.Arg>,
@@ -64,8 +65,8 @@ public class OCamlBinaryDescription implements
     if (ocamlBuckConfig.getWarningsFlags().isPresent() ||
         args.warningsFlags.isPresent()) {
       flags.add("-w");
-      flags.add(ocamlBuckConfig.getWarningsFlags().or("") +
-          args.warningsFlags.or(""));
+      flags.add(ocamlBuckConfig.getWarningsFlags().orElse("") +
+          args.warningsFlags.orElse(""));
     }
     ImmutableList<String> linkerFlags = args.linkerFlags;
     return OCamlRuleBuilder.createBuildRule(
@@ -74,7 +75,7 @@ public class OCamlBinaryDescription implements
         resolver,
         srcs,
          /*isLibrary*/ false,
-        args.bytecodeOnly.or(false),
+        args.bytecodeOnly.orElse(false),
         flags.build(),
         linkerFlags);
   }

@@ -16,8 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.google.common.base.Optional;
-
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class CxxInferSourceFilter {
@@ -28,7 +27,7 @@ public class CxxInferSourceFilter {
     Optional<String> rawFilterRegex = inferConfig.getBlacklistRegex();
 
     blacklistRegex = rawFilterRegex.isPresent() ?
-        Optional.of(Pattern.compile(rawFilterRegex.get())) : Optional.absent();
+        Optional.of(Pattern.compile(rawFilterRegex.get())) : Optional.empty();
   }
 
   public boolean isBlacklisted(CxxSource source) {

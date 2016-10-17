@@ -25,8 +25,8 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 
+import java.util.Optional;
 import java.util.Set;
 
 public class TargetGroupDescription implements Description<TargetGroupDescription.Arg> {

@@ -37,7 +37,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -47,6 +46,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
 
@@ -162,7 +162,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
                     .toSortedSet(Ordering.natural()),
                 /* resources */ ImmutableSet.of(),
                 templateOptions.getGeneratedSourceFolderName(),
-                /* proguardConfig */ Optional.absent(),
+                /* proguardConfig */ Optional.empty(),
                 /* postprocessClassesCommands */ ImmutableList.of(),
                 /* exportedDeps */ ImmutableSortedSet.of(),
                 /* providedDeps */ ImmutableSortedSet.of(),
@@ -170,9 +170,9 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
                 templateOptions.trackClassUsage(),
                 /* additionalClasspathEntries */ ImmutableSet.of(),
                 new JavacToJarStepFactory(templateOptions, JavacOptionsAmender.IDENTITY),
-                /* resourcesRoot */ Optional.absent(),
-                /* manifest file */ Optional.absent(),
-                /* mavenCoords */ Optional.absent(),
+                /* resourcesRoot */ Optional.empty(),
+                /* manifest file */ Optional.empty(),
+                /* mavenCoords */ Optional.empty(),
                 /* tests */ ImmutableSortedSet.of(),
                 /* classesToRemoveFromJar */ ImmutableSet.of()));
 

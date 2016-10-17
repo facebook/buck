@@ -29,7 +29,6 @@ import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.io.WatchmanQuery;
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -46,6 +45,7 @@ import java.nio.file.WatchEvent;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -299,8 +299,8 @@ public class WatchmanWatcher {
       if (mSinceCursor.startsWith("c:")) {
         // Update the clockId
         mSinceCursor = Optional
-            .fromNullable((String) response.get("clock"))
-            .or(Watchman.NULL_CLOCK);
+            .ofNullable((String) response.get("clock"))
+            .orElse(Watchman.NULL_CLOCK);
       }
 
       List<Map<String, Object>> files = (List<Map<String, Object>>) response.get("files");

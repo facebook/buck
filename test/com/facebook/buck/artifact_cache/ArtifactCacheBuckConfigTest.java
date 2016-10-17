@@ -27,7 +27,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -41,6 +40,7 @@ import java.io.StringReader;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class ArtifactCacheBuckConfigTest {
 
@@ -201,7 +201,7 @@ public class ArtifactCacheBuckConfigTest {
     ArtifactCacheBuckConfig config = createFromText(
         "[cache]",
         "dir = ~/cache_dir");
-    assertThat(config.getServedLocalCache(), Matchers.equalTo(Optional.<DirCacheEntry>absent()));
+    assertThat(config.getServedLocalCache(), Matchers.equalTo(Optional.empty()));
   }
 
   @Test
@@ -215,7 +215,7 @@ public class ArtifactCacheBuckConfigTest {
         config.getServedLocalCache(),
         Matchers.equalTo(Optional.of(
                 DirCacheEntry.builder()
-                    .setMaxSizeBytes(Optional.absent())
+                    .setMaxSizeBytes(Optional.empty())
                     .setCacheDir(cacheDir)
                     .setCacheReadMode(ArtifactCacheBuckConfig.CacheReadMode.readonly)
                     .build())));
@@ -248,7 +248,7 @@ public class ArtifactCacheBuckConfigTest {
         config.getServedLocalCache(),
         Matchers.equalTo(Optional.of(
                 DirCacheEntry.builder()
-                    .setMaxSizeBytes(Optional.absent())
+                    .setMaxSizeBytes(Optional.empty())
                     .setCacheDir(cacheDir)
                     .setCacheReadMode(ArtifactCacheBuckConfig.CacheReadMode.readwrite)
                     .build())));

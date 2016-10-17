@@ -18,8 +18,9 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+
+import java.util.Optional;
 
 /**
  * A {@link ToolProvider} which provides the {@link Tool} object of the {@link BinaryBuildRule}

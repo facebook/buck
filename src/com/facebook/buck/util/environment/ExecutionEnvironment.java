@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.util.environment;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public interface ExecutionEnvironment {
 

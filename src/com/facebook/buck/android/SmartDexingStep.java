@@ -33,7 +33,6 @@ import com.facebook.buck.zip.ZipCompressionLevel;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -56,6 +55,7 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -182,8 +182,8 @@ public class SmartDexingStep implements Step {
             } else {
               xzStep = new XzStep(filesystem, secondaryBlobOutput, secondaryCompressedBlobOutput);
             }
-            stepRunner.runStepForBuildTarget(context, concatStep, Optional.absent());
-            stepRunner.runStepForBuildTarget(context, xzStep, Optional.absent());
+            stepRunner.runStepForBuildTarget(context, concatStep, Optional.empty());
+            stepRunner.runStepForBuildTarget(context, xzStep, Optional.empty());
           }
         }
       }
@@ -204,7 +204,7 @@ public class SmartDexingStep implements Step {
     stepRunner.runStepsInParallelAndWait(
         context,
         dxSteps,
-        Optional.absent(),
+        Optional.empty(),
         executorService,
         DefaultStepRunner.NOOP_CALLBACK);
   }
@@ -332,7 +332,7 @@ public class SmartDexingStep implements Step {
     @Nullable
     private String getPreviousInputsHash() {
       // Returning null will trigger the dx command to run again.
-      return filesystem.readFirstLine(outputHashPath).orNull();
+      return filesystem.readFirstLine(outputHashPath).orElse(null);
     }
 
     @VisibleForTesting

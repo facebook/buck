@@ -20,13 +20,12 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.config.Config;
 import com.facebook.buck.config.ConfigBuilder;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.FakeWatchmanClient;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -39,6 +38,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class BuildFileSpecTest {
@@ -149,7 +149,7 @@ public class BuildFileSpecTest {
                     Watchman.Capability.SUPPORTS_PROJECT_WATCH,
                     Watchman.Capability.DIRNAME,
                     Watchman.Capability.WILDMATCH_GLOB),
-                Optional.absent(),
+                Optional.empty(),
                 Optional.of(Paths.get(".watchman-sock")),
                 Optional.of(fakeWatchmanClient),
                 TimeUnit.SECONDS.toMillis(45)))
@@ -198,7 +198,7 @@ public class BuildFileSpecTest {
                     Watchman.Capability.SUPPORTS_PROJECT_WATCH,
                     Watchman.Capability.DIRNAME,
                     Watchman.Capability.WILDMATCH_GLOB),
-                Optional.absent(),
+                Optional.empty(),
                 Optional.of(Paths.get(".watchman-sock")),
                 Optional.of(fakeWatchmanClient),
                 TimeUnit.SECONDS.toMillis(45)))
@@ -256,7 +256,7 @@ public class BuildFileSpecTest {
                     Watchman.Capability.SUPPORTS_PROJECT_WATCH,
                     Watchman.Capability.DIRNAME,
                     Watchman.Capability.WILDMATCH_GLOB),
-                Optional.absent(),
+                Optional.empty(),
                 Optional.of(Paths.get(".watchman-sock")),
                 Optional.of(timingOutWatchmanClient),
                 TimeUnit.SECONDS.toMillis(45)))

@@ -58,7 +58,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -91,6 +90,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.SortedMap;
 
 public class TargetsCommand extends AbstractCommand {
@@ -443,13 +443,13 @@ public class TargetsCommand extends AbstractCommand {
       matchingNodes = getMatchingNodes(
           targetGraphAndBuildTargets.getTargetGraph(),
           referencedFiles.relativePathsUnderProjectRoot.isEmpty() ?
-              Optional.absent() :
+              Optional.empty() :
               Optional.of(referencedFiles.relativePathsUnderProjectRoot),
           matchingBuildTargets.isEmpty() ?
-              Optional.absent() :
+              Optional.empty() :
               Optional.of(matchingBuildTargets),
           buildRuleTypes.get().isEmpty() ?
-              Optional.absent() :
+              Optional.empty() :
               buildRuleTypes,
           isDetectTestChanges(),
           parserConfig.getBuildFileName());
@@ -513,7 +513,7 @@ public class TargetsCommand extends AbstractCommand {
       } catch (IllegalArgumentException e) {
         params.getBuckEventBus().post(ConsoleEvent.severe(
                 "Invalid build rule type: " + name));
-        return Optional.absent();
+        return Optional.empty();
       }
     }
     return Optional.of(buildRuleTypesBuilder.build());
@@ -791,9 +791,9 @@ public class TargetsCommand extends AbstractCommand {
 
     // We only need the action graph if we're showing the output or the keys, and the
     // RuleKeyBuilderFactory if we're showing the keys.
-    Optional<ActionGraph> actionGraph = Optional.absent();
-    Optional<BuildRuleResolver> buildRuleResolver = Optional.absent();
-    Optional<DefaultRuleKeyBuilderFactory> ruleKeyBuilderFactory = Optional.absent();
+    Optional<ActionGraph> actionGraph = Optional.empty();
+    Optional<BuildRuleResolver> buildRuleResolver = Optional.empty();
+    Optional<DefaultRuleKeyBuilderFactory> ruleKeyBuilderFactory = Optional.empty();
     if (isShowRuleKey() || isShowOutput() || isShowFullOutput()) {
       ActionGraphAndResolver result = Preconditions.checkNotNull(
           ActionGraphCache.getFreshActionGraph(
@@ -843,7 +843,7 @@ public class TargetsCommand extends AbstractCommand {
       BuildRule rule,
       boolean absolute,
       boolean buckOutCompatLink) {
-    Optional<Path> outputPathOptional = Optional.fromNullable(rule.getPathToOutput());
+    Optional<Path> outputPathOptional = Optional.ofNullable(rule.getPathToOutput());
 
     // When using buck out compat mode, we favor using the default buck output path in the UI, so
     // amend the output paths when this is set.
@@ -858,7 +858,7 @@ public class TargetsCommand extends AbstractCommand {
     }
 
     if (absolute) {
-      return outputPathOptional.transform(rule.getProjectFilesystem().getAbsolutifier());
+      return outputPathOptional.map(rule.getProjectFilesystem().getAbsolutifier()::apply);
     } else {
       return outputPathOptional;
     }

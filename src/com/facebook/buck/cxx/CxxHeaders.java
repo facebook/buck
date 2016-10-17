@@ -22,7 +22,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -30,6 +29,7 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Encapsulates headers from a single root location.
@@ -69,7 +69,7 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
       SourcePath path,
       Optional<Function<Path, Path>> pathShortener) {
     return Preconditions.checkNotNull(
-        pathShortener.or(Functions.identity())
+        pathShortener.orElse(Functions.identity())
             .apply(resolver.getAbsolutePath(path))).toString();
   }
 

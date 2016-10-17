@@ -31,7 +31,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.zip.UnzipStep;
 import com.facebook.buck.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -40,6 +39,7 @@ import com.google.common.collect.Multimap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -72,9 +72,9 @@ public class IntraDexReorderStep implements Step {
       String inputSubDir,
       String outputSubDir) {
     this.filesystem = filesystem;
-    this.reorderTool = reorderTool.transform(sourcePathResolver::deprecatedGetPath).get();
+    this.reorderTool = reorderTool.map(sourcePathResolver::deprecatedGetPath).get();
     this.reorderDataFile =
-        reorderDataFile.transform(sourcePathResolver::deprecatedGetPath).get();
+        reorderDataFile.map(sourcePathResolver::deprecatedGetPath).get();
     this.inputPrimaryDexPath = inputPrimaryDexPath;
     this.outputPrimaryDexPath = outputPrimaryDexPath;
     this.secondaryDexMap = secondaryDexMap;

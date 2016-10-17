@@ -24,7 +24,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -42,6 +41,7 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -80,7 +80,7 @@ class SchemeGenerator {
   private final Optional<String> remoteRunnablePath;
   private final ImmutableMap<SchemeActionType, String> actionConfigNames;
   private final ImmutableMap<PBXTarget, Path> targetToProjectPathMap;
-  private Optional<XCScheme> outputScheme = Optional.absent();
+  private Optional<XCScheme> outputScheme = Optional.empty();
   private final XCScheme.LaunchAction.LaunchStyle launchStyle;
 
   public SchemeGenerator(
@@ -185,8 +185,8 @@ class SchemeGenerator {
       testAction.addTestableReference(testableReference);
     }
 
-    Optional<XCScheme.LaunchAction> launchAction = Optional.absent();
-    Optional<XCScheme.ProfileAction> profileAction = Optional.absent();
+    Optional<XCScheme.LaunchAction> launchAction = Optional.empty();
+    Optional<XCScheme.ProfileAction> profileAction = Optional.empty();
 
     if (primaryTarget.isPresent()) {
       XCScheme.BuildableReference primaryBuildableReference =

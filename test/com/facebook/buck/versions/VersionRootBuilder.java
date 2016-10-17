@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -34,6 +33,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.AbstractMap;
 import java.util.Map;
+import java.util.Optional;
 
 class VersionRootBuilder extends AbstractNodeBuilder<VersionRootBuilder.Arg> {
 

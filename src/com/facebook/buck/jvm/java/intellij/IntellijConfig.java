@@ -17,9 +17,9 @@
 package com.facebook.buck.jvm.java.intellij;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.google.common.base.Optional;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class IntellijConfig {
 

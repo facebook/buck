@@ -21,13 +21,13 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Optional;
 
 public class MavenUrlDecoderTest {
 
@@ -111,6 +111,6 @@ public class MavenUrlDecoderTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void shouldRefuseToParseNonMavenUri() throws URISyntaxException {
-    MavenUrlDecoder.toHttpUrl(Optional.absent(), new URI("http://www.example.com/"));
+    MavenUrlDecoder.toHttpUrl(Optional.empty(), new URI("http://www.example.com/"));
   }
 }

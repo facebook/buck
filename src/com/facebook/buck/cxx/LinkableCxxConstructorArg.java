@@ -17,7 +17,8 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 @SuppressFieldNotInitialized
 public class LinkableCxxConstructorArg extends CxxConstructorArg {

@@ -32,11 +32,11 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class PrebuiltAppleFrameworkDescription implements
@@ -87,7 +87,7 @@ public class PrebuiltAppleFrameworkDescription implements
           ImmutableSet.of(new BuildTargetSourcePath(buildTarget));
       return Optional.of(metadataClass.cast(FrameworkDependencies.of(sourcePaths)));
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @SuppressFieldNotInitialized

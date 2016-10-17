@@ -17,10 +17,10 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.google.common.base.Optional;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class TestArtifactCaches {
   private TestArtifactCaches() {
@@ -34,6 +34,6 @@ public class TestArtifactCaches {
         new ProjectFilesystem(filesystemRoot),
         cacheDir,
         true,
-        Optional.absent());
+        Optional.empty());
   }
 }

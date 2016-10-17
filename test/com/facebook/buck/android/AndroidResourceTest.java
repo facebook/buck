@@ -36,7 +36,6 @@ import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -46,7 +45,7 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.google.common.base.Optional;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -58,6 +57,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 
 public class AndroidResourceTest {
@@ -194,11 +194,11 @@ public class AndroidResourceTest {
         /* deps */ ImmutableSortedSet.of(),
         new FakeSourcePath("foo/res"),
         ImmutableSortedSet.of((SourcePath) new FakeSourcePath("foo/res/values/strings.xml")),
-        Optional.absent(),
+        Optional.empty(),
         /* rDotJavaPackage */ "com.example.android",
         /* assets */ null,
         /* assetsSrcs */ ImmutableSortedSet.of(),
-        Optional.absent(),
+        Optional.empty(),
         /* manifestFile */ null,
         /* hasWhitelistedStrings */ false);
     assertEquals("com.example.android", androidResource.getRDotJavaPackage());
@@ -217,11 +217,11 @@ public class AndroidResourceTest {
         /* deps */ ImmutableSortedSet.of(),
         new FakeSourcePath("foo/res"),
         ImmutableSortedSet.of((SourcePath) new FakeSourcePath("foo/res/values/strings.xml")),
-        Optional.absent(),
+        Optional.empty(),
         /* rDotJavaPackage */ null,
         /* assets */ null,
         /* assetsSrcs */ ImmutableSortedSet.of(),
-        Optional.absent(),
+        Optional.empty(),
         /* manifestFile */ new PathSourcePath(
             projectFilesystem,
             Paths.get("foo/AndroidManifest.xml")),

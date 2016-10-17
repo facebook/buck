@@ -43,7 +43,6 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -52,6 +51,7 @@ import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -264,17 +264,15 @@ public class Genrule extends AbstractBuildRule
   }
 
   private static Optional<String> flattenToSpaceSeparatedString(Optional<Arg> arg) {
-    return arg
-        .transform(Arg.stringListFunction())
-        .transform(
-            input -> Joiner.on(' ').join(input));
+    return arg.map(Arg.stringListFunction()::apply)
+        .map(input -> Joiner.on(' ').join(input));
   }
 
   @VisibleForTesting
   public boolean isWorkerGenrule() {
-    Arg cmdArg = this.cmd.orNull();
-    Arg bashArg = this.bash.orNull();
-    Arg cmdExeArg = this.cmdExe.orNull();
+    Arg cmdArg = cmd.orElse(null);
+    Arg bashArg = bash.orElse(null);
+    Arg cmdExeArg = cmdExe.orElse(null);
     if ((cmdArg instanceof WorkerMacroArg) ||
         (bashArg instanceof WorkerMacroArg) ||
         (cmdExeArg instanceof WorkerMacroArg)) {
@@ -328,18 +326,16 @@ public class Genrule extends AbstractBuildRule
   }
 
   private static Optional<WorkerJobParams> convertToWorkerJobParams(Optional<Arg> arg) {
-    return arg
-        .transform(
-            arg1 -> {
-              WorkerMacroArg workerMacroArg = (WorkerMacroArg) arg1;
-              return WorkerJobParams.of(
-                  workerMacroArg.getTempDir(),
-                  workerMacroArg.getStartupCommand(),
-                  workerMacroArg.getStartupArgs(),
-                  workerMacroArg.getEnvironment(),
-                  workerMacroArg.getJobArgs(),
-                  workerMacroArg.getMaxWorkers());
-            });
+    return arg.map(arg1 -> {
+      WorkerMacroArg workerMacroArg = (WorkerMacroArg) arg1;
+      return WorkerJobParams.of(
+          workerMacroArg.getTempDir(),
+          workerMacroArg.getStartupCommand(),
+          workerMacroArg.getStartupArgs(),
+          workerMacroArg.getEnvironment(),
+          workerMacroArg.getJobArgs(),
+          workerMacroArg.getMaxWorkers());
+    });
   }
 
   @Override

@@ -30,13 +30,12 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -50,6 +49,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class AppleTestIntegrationTest {
 
@@ -250,27 +250,27 @@ public class AppleTestIntegrationTest {
         "file", "-b", testBinaryPath.toString());
     assertEquals(0, binaryFileTypeResult.getExitCode());
     assertThat(
-        binaryFileTypeResult.getStdout().or(""),
+        binaryFileTypeResult.getStdout().orElse(""),
         containsString("Mach-O 64-bit bundle x86_64"));
 
     ProcessExecutor.Result otoolResult = workspace.runCommand(
         "otool", "-L", testBinaryPath.toString());
     assertEquals(0, otoolResult.getExitCode());
     assertThat(
-        otoolResult.getStdout().or(""),
+        otoolResult.getStdout().orElse(""),
         containsString("foo"));
     assertThat(
-        otoolResult.getStdout().or(""),
+        otoolResult.getStdout().orElse(""),
         not(containsString("bar.dylib")));
 
     ProcessExecutor.Result nmResult = workspace.runCommand(
         "nm", "-j", testBinaryPath.toString());
     assertEquals(0, nmResult.getExitCode());
     assertThat(
-        nmResult.getStdout().or(""),
+        nmResult.getStdout().orElse(""),
         containsString("_OBJC_CLASS_$_Foo"));
     assertThat(
-        nmResult.getStdout().or(""),
+        nmResult.getStdout().orElse(""),
         containsString("_OBJC_CLASS_$_Bar"));
   }
 
@@ -672,7 +672,7 @@ public class AppleTestIntegrationTest {
     ProcessExecutor.Result lipoVerifyResult = workspace.runCommand(
         "lipo", output.resolve("foo").toString(), "-verify_arch", "i386", "x86_64");
     assertEquals(
-        lipoVerifyResult.getStderr().or(""),
+        lipoVerifyResult.getStderr().orElse(""),
         0,
         lipoVerifyResult.getExitCode());
   }
@@ -710,7 +710,7 @@ public class AppleTestIntegrationTest {
     ProcessExecutor.Result lipoVerifyResult = workspace.runCommand(
         "lipo", output.toString(), "-verify_arch", "i386", "x86_64");
     assertEquals(
-        lipoVerifyResult.getStderr().or(""),
+        lipoVerifyResult.getStderr().orElse(""),
         0,
         lipoVerifyResult.getExitCode());
     AppleDsymTestUtil.checkDsymFileHasDebugSymbolForConcreteArchitectures(
@@ -749,7 +749,7 @@ public class AppleTestIntegrationTest {
     ProcessExecutor.Result lipoVerifyResult = workspace.runCommand(
         "lipo", output.resolve("AppTest").toString(), "-verify_arch", "i386", "x86_64");
     assertEquals(
-        lipoVerifyResult.getStderr().or(""),
+        lipoVerifyResult.getStderr().orElse(""),
         0,
         lipoVerifyResult.getExitCode());
   }

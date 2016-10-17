@@ -35,7 +35,6 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -47,6 +46,7 @@ import org.immutables.value.Value;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * OCaml build context
@@ -333,7 +333,7 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
             CxxHeaders.getArgs(
                 cxxPreprocessorInput.getIncludes(),
                 getSourcePathResolver(),
-                Optional.absent(),
+                Optional.empty(),
                 getCPreprocessor())));
 
     for (Path includes : cxxPreprocessorInput.getSystemIncludeRoots()) {
@@ -359,8 +359,7 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
     builder.addAll(addPrefix("-ccopt", getCFlags()));
     builder.add("-ccopt",
         "-isystem" +
-            getOCamlInteropIncludesDir()
-                .or(DEFAULT_OCAML_INTEROP_INCLUDE_DIR.toString()));
+            getOCamlInteropIncludesDir().orElse(DEFAULT_OCAML_INTEROP_INCLUDE_DIR.toString()));
     return builder.build();
   }
 

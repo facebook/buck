@@ -48,7 +48,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -65,6 +64,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class NdkLibraryDescription implements Description<NdkLibraryDescription.Arg> {
@@ -192,7 +192,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
           CxxHeaders.getArgs(
               cxxPreprocessorInput.getIncludes(),
               pathResolver,
-              Optional.absent(),
+              Optional.empty(),
               preprocessor));
       String localCflags =
           Joiner.on(' ').join(escapeForMakefile(params.getProjectFilesystem(), ppFlags.build()));
@@ -352,7 +352,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
         makefilePair.getFirst(),
         sources,
         args.flags,
-        args.isAsset.or(false),
+        args.isAsset.orElse(false),
         ndkVersion,
         MACRO_HANDLER.getExpander(
             params.getBuildTarget(),

@@ -16,18 +16,17 @@
 
 package com.facebook.buck.apple;
 
-import static org.junit.Assert.assertThat;
-
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
-import java.io.InputStream;
-import java.io.IOException;
-
 import org.junit.Test;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Optional;
 
 /**
  * Unit tests for {@link AppleInfoPlistParsing}.
@@ -55,6 +54,6 @@ public class AppleInfoPlistParsingTest {
       bundleID = AppleInfoPlistParsing.getBundleIdFromPlistStream(in);
     }
 
-    assertThat(bundleID, is(equalTo(Optional.<String>absent())));
+    assertThat(bundleID, is(equalTo(Optional.empty())));
   }
 }

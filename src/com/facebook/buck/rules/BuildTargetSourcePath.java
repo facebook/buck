@@ -18,10 +18,10 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
-import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * A {@link SourcePath} that utilizes the output from the {@link BuildRule} referenced by a
@@ -33,7 +33,7 @@ public class BuildTargetSourcePath extends AbstractSourcePath<BuildTargetSourceP
   private final Optional<Path> resolvedPath;
 
   public BuildTargetSourcePath(BuildTarget target) {
-    this(target, Optional.absent());
+    this(target, Optional.empty());
   }
 
   public BuildTargetSourcePath(BuildTarget target, Path path) {

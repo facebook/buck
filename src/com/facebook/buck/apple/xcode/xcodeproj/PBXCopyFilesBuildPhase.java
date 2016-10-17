@@ -69,6 +69,6 @@ public class PBXCopyFilesBuildPhase extends PBXBuildPhase {
   public void serializeInto(XcodeprojSerializer s) {
     super.serializeInto(s);
     s.addField("dstSubfolderSpec", dstSubfolderSpec.getDestination().getValue());
-    s.addField("dstPath", dstSubfolderSpec.getPath().or(""));
+    s.addField("dstPath", dstSubfolderSpec.getPath().orElse(""));
   }
 }

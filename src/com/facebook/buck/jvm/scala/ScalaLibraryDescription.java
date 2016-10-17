@@ -36,14 +36,15 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.util.OptionalCompat;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class ScalaLibraryDescription implements Description<ScalaLibraryDescription.Arg>,
     ImplicitDepsInferringDescription<ScalaLibraryDescription.Arg> {
@@ -104,8 +105,8 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
                     pathResolver,
                     params.getProjectFilesystem(),
                     args.resources),
-                /* generatedSourceFolder */ Optional.absent(),
-                /* proguardConfig */ Optional.absent(),
+                /* generatedSourceFolder */ Optional.empty(),
+                /* proguardConfig */ Optional.empty(),
                 /* postprocessClassesCommands */ ImmutableList.of(),
                 params.getDeclaredDeps().get(),
                 resolver.getAllRules(args.providedDeps),
@@ -142,7 +143,7 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
     return ImmutableList.<BuildTarget>builder()
         .add(scalaBuckConfig.getScalaLibraryTarget())
         .addAll(scalaBuckConfig.getCompilerPlugins())
-        .addAll(scalaBuckConfig.getScalacTarget().asSet())
+        .addAll(OptionalCompat.asSet(scalaBuckConfig.getScalacTarget()))
         .build();
   }
 

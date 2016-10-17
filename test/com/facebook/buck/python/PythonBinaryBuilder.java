@@ -24,10 +24,11 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
 
 public class PythonBinaryBuilder extends AbstractNodeBuilder<PythonBinaryDescription.Arg> {
 
@@ -80,7 +81,7 @@ public class PythonBinaryBuilder extends AbstractNodeBuilder<PythonBinaryDescrip
   }
 
   public PythonBinaryBuilder setZipSafe(boolean zipSafe) {
-    arg.zipSafe = Optional.fromNullable(zipSafe);
+    arg.zipSafe = Optional.ofNullable(zipSafe);
     return this;
   }
 

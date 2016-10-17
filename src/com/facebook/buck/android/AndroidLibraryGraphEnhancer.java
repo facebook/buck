@@ -28,12 +28,13 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.DependencyMode;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
 
 public class AndroidLibraryGraphEnhancer {
 
@@ -78,8 +79,7 @@ public class AndroidLibraryGraphEnhancer {
       boolean createBuildableIfEmptyDeps) {
     Optional<BuildRule> previouslyCreated = ruleResolver.getRuleOptional(dummyRDotJavaBuildTarget);
     if (previouslyCreated.isPresent()) {
-      return previouslyCreated.transform(
-          input -> (DummyRDotJava) input);
+      return previouslyCreated.map(input -> (DummyRDotJava) input);
     }
     ImmutableSortedSet<BuildRule> originalDeps = originalBuildRuleParams.getDeps();
     ImmutableSet<HasAndroidResourceDeps> androidResourceDeps;
@@ -94,7 +94,7 @@ public class AndroidLibraryGraphEnhancer {
       case TRANSITIVE:
         androidResourceDeps = UnsortedAndroidResourceDeps.createFrom(
             originalDeps,
-            Optional.absent())
+            Optional.empty())
             .getResourceDeps();
         break;
       default:
@@ -103,7 +103,7 @@ public class AndroidLibraryGraphEnhancer {
     }
 
     if (androidResourceDeps.isEmpty() && !createBuildableIfEmptyDeps) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);

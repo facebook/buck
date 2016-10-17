@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.codehaus.plexus.util.StringUtils;
@@ -26,6 +25,7 @@ import org.hamcrest.Matchers;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class AppleDsymTestUtil {
   private static final String MAIN = "main";
@@ -45,7 +45,7 @@ public class AppleDsymTestUtil {
         symbolName,
         workspace,
         dwarfPath,
-        Optional.absent());
+        Optional.empty());
   }
 
   public static void checkDsymFileHasDebugSymbolsForMainForConcreteArchitectures(
@@ -61,7 +61,7 @@ public class AppleDsymTestUtil {
       Path dwarfPath,
       Optional<ImmutableList<String>> architectures) throws IOException, InterruptedException {
     String dwarfdumpMainStdout = workspace
-        .runCommand("dwarfdump", "-n", symbolName, dwarfPath.toString()).getStdout().or("");
+        .runCommand("dwarfdump", "-n", symbolName, dwarfPath.toString()).getStdout().orElse("");
 
     int expectedMatchCount = 1;
     if (architectures.isPresent()) {

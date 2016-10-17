@@ -38,7 +38,6 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -49,6 +48,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -156,7 +156,7 @@ public class DTest extends AbstractBuildRule implements
       }
 
       String testOutput = getProjectFilesystem().readFileIfItExists(
-          getPathToTestOutput()).or("");
+          getPathToTestOutput()).orElse("");
       String message = "";
       String stackTrace = "";
       String testName = "";

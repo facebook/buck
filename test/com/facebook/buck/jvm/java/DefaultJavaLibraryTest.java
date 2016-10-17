@@ -76,7 +76,6 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -105,6 +104,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.zip.ZipOutputStream;
 
@@ -371,7 +371,7 @@ public class DefaultJavaLibraryTest {
 
       @Override
       public Optional<SourcePath> getAbiJar() {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       @Override
@@ -590,7 +590,7 @@ public class DefaultJavaLibraryTest {
           /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
           /* deps */ ImmutableSortedSet.of(),
           /* exportedDeps */ ImmutableSortedSet.of(genrule),
-          /* spoolMode */ Optional.absent(),
+          /* spoolMode */ Optional.empty(),
           /* postprocessClassesCommands */ ImmutableList.of());
       fail("A non-java library listed as exported dep should have thrown.");
     } catch (HumanReadableException e) {
@@ -1074,7 +1074,7 @@ public class DefaultJavaLibraryTest {
         srcsAsPaths,
         /* resources */ ImmutableSet.of(),
         javacOptions.getGeneratedSourceFolderName(),
-        /* proguardConfig */ Optional.absent(),
+        /* proguardConfig */ Optional.empty(),
         postprocessClassesCommands,
         exportedDeps,
         /* providedDeps */ ImmutableSortedSet.of(),
@@ -1082,9 +1082,9 @@ public class DefaultJavaLibraryTest {
         javacOptions.trackClassUsage(),
         /* additionalClasspathEntries */ ImmutableSet.of(),
         new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
-        /* resourcesRoot */ Optional.absent(),
-        /* manifest file */ Optional.absent(),
-        /* mavenCoords */ Optional.absent(),
+        /* resourcesRoot */ Optional.empty(),
+        /* manifest file */ Optional.empty(),
+        /* mavenCoords */ Optional.empty(),
         /* tests */ ImmutableSortedSet.of(),
         /* classesToRemoveFromJar */ ImmutableSet.of()) {
     };
@@ -1368,7 +1368,7 @@ public class DefaultJavaLibraryTest {
           ImmutableSet.of(new FakeSourcePath(src)),
           /* resources */ ImmutableSet.of(),
           options.getGeneratedSourceFolderName(),
-          /* proguardConfig */ Optional.absent(),
+          /* proguardConfig */ Optional.empty(),
           /* postprocessClassesCommands */ ImmutableList.of(),
           /* exportedDeps */ ImmutableSortedSet.of(),
           /* providedDeps */ ImmutableSortedSet.of(),
@@ -1376,9 +1376,9 @@ public class DefaultJavaLibraryTest {
           options.trackClassUsage(),
           /* additionalClasspathEntries */ ImmutableSet.of(),
           new JavacToJarStepFactory(options, JavacOptionsAmender.IDENTITY),
-          /* resourcesRoot */ Optional.absent(),
-          /* manifestFile */ Optional.absent(),
-          /* mavenCoords */ Optional.absent(),
+          /* resourcesRoot */ Optional.empty(),
+          /* manifestFile */ Optional.empty(),
+          /* mavenCoords */ Optional.empty(),
           /* tests */ ImmutableSortedSet.of(),
           options.getClassesToRemoveFromJar());
 

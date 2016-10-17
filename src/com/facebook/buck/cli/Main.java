@@ -128,7 +128,6 @@ import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -168,6 +167,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -192,7 +192,7 @@ public final class Main {
   public static final int BUSY_EXIT_CODE = 2;
 
   private static final Optional<String> BUCKD_LAUNCH_TIME_NANOS =
-      Optional.fromNullable(System.getProperty("buck.buckd_launch_time_nanos"));
+      Optional.ofNullable(System.getProperty("buck.buckd_launch_time_nanos"));
   private static final String BUCK_BUILD_ID_ENV_VAR = "BUCK_BUILD_ID";
 
   private static final String BUCKD_COLOR_DEFAULT_ENV_VAR = "BUCKD_COLOR_DEFAULT";
@@ -221,7 +221,7 @@ public final class Main {
   private final Architecture architecture;
 
   private static final Semaphore commandSemaphore = new Semaphore(1);
-  private static volatile Optional<NGContext> commandSemaphoreNgClient = Optional.absent();
+  private static volatile Optional<NGContext> commandSemaphoreNgClient = Optional.empty();
 
   // Ensure we only have one instance of this, so multiple trash cleaning
   // operations are serialized on one queue.
@@ -367,7 +367,7 @@ public final class Main {
       if (watchmanCursorType.isPresent() &&
           watchmanCursorType.get() == WatchmanWatcher.CursorType.CLOCK_ID &&
           cell.getWatchman().getClockId().isPresent()) {
-        watchmanQueryUUID = Optional.absent();
+        watchmanQueryUUID = Optional.empty();
       } else {
         watchmanQueryUUID = Optional.of(UUID.randomUUID());
       }
@@ -387,7 +387,7 @@ public final class Main {
             objectMapper);
         return Optional.of(webServer);
       } else {
-        return Optional.absent();
+        return Optional.empty();
       }
     }
 
@@ -399,13 +399,13 @@ public final class Main {
       // Enable the web httpserver if it is given by command line parameter or specified in
       // .buckconfig. The presence of a nonnegative port number is sufficient.
       Optional<String> serverPort =
-          Optional.fromNullable(System.getProperty("buck.httpserver.port"));
+          Optional.ofNullable(System.getProperty("buck.httpserver.port"));
       if (!serverPort.isPresent()) {
         serverPort = config.getValue("httpserver", "port");
       }
 
       if (!serverPort.isPresent() || serverPort.get().isEmpty()) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       String rawPort = serverPort.get();
@@ -415,10 +415,10 @@ public final class Main {
         LOG.debug("Starting up web server on port %d.", port);
       } catch (NumberFormatException e) {
         LOG.error("Could not parse port for httpserver: %s.", rawPort);
-        return Optional.absent();
+        return Optional.empty();
       }
 
-      return port >= 0 ? Optional.of(port) : Optional.absent();
+      return port >= 0 ? Optional.of(port) : Optional.empty();
     }
 
     public Optional<WebServer> getWebServer() {
@@ -447,7 +447,7 @@ public final class Main {
 
     private void watchClient(final NGContext context) {
       context.addClientListener(() -> {
-        if (isSessionLeader && commandSemaphoreNgClient.orNull() == context) {
+        if (isSessionLeader && commandSemaphoreNgClient.orElse(null) == context) {
           LOG.info("killing background processes on client disconnection");
           // Process no longer wants work done on its behalf.
           BgProcessKiller.killBgProcesses();
@@ -544,7 +544,7 @@ public final class Main {
       ObjectMapper objectMapper)
       throws IOException {
     Path rootPath = cell.getFilesystem().getRootPath();
-    Optional<WebServer> webServer = Optional.absent();
+    Optional<WebServer> webServer = Optional.empty();
     if (daemon == null) {
       LOG.debug("Starting up daemon for project root [%s]", rootPath);
       daemon = new Daemon(cell, objectMapper, webServer);
@@ -813,9 +813,9 @@ public final class Main {
     Optional<String> color;
     if (context.isPresent() && (context.get().getEnv() != null)) {
       String colorString = context.get().getEnv().getProperty(BUCKD_COLOR_DEFAULT_ENV_VAR);
-      color = Optional.fromNullable(colorString);
+      color = Optional.ofNullable(colorString);
     } else {
-      color = Optional.absent();
+      color = Optional.empty();
     }
     final Console console = new Console(
         verbosity,
@@ -1103,7 +1103,7 @@ public final class Main {
                 executionEnvironment,
                 buildEventBus,
                 consoleListener,
-                buckConfig.getRepository().or("unknown"),
+                buckConfig.getRepository().orElse("unknown"),
                 new RemoteLogBuckConfig(buckConfig),
                 executors.get(ExecutorPool.CPU));
             announcementManager.getAndPostAnnouncements();
@@ -1150,7 +1150,7 @@ public final class Main {
               Daemon daemon = getDaemon(rootCell, objectMapper);
               WatchmanWatcher watchmanWatcher = createWatchmanWatcher(
                   daemon,
-                  watchman.getWatchRoot().or(canonicalRootPath.toString()),
+                  watchman.getWatchRoot().orElse(canonicalRootPath.toString()),
                   daemon.getFileEventBus(),
                   ImmutableSet.<PathOrGlobMatcher>builder()
                       .addAll(filesystem.getIgnorePaths())
@@ -1197,7 +1197,7 @@ public final class Main {
 
           Optional<ProcessManager> processManager;
           if (platform == Platform.WINDOWS) {
-            processManager = Optional.absent();
+            processManager = Optional.empty();
           } else {
             processManager = Optional.of(new PkillProcessManager(processExecutor));
           }
@@ -1253,13 +1253,13 @@ public final class Main {
         } catch (Throwable t) {
           LOG.debug(t, "Failing build on exception.");
           closeHttpExecutorService(
-              cacheBuckConfig, Optional.absent(), httpWriteExecutorService);
+              cacheBuckConfig, Optional.empty(), httpWriteExecutorService);
           closeDiskIoExecutorService(diskIoExecutorService);
           flushEventListeners(console, buildId, eventListeners);
           throw t;
         } finally {
           if (commandSemaphoreAcquired) {
-            commandSemaphoreNgClient = Optional.absent();
+            commandSemaphoreNgClient = Optional.empty();
             BgProcessKiller.disarm();
             commandSemaphore.release(); // Allow another command to execute while outputting traces.
             commandSemaphoreAcquired = false;
@@ -1287,7 +1287,7 @@ public final class Main {
       }
     } finally {
       if (commandSemaphoreAcquired) {
-        commandSemaphoreNgClient = Optional.absent();
+        commandSemaphoreNgClient = Optional.empty();
         BgProcessKiller.disarm();
         commandSemaphore.release();
       }
@@ -1561,7 +1561,7 @@ public final class Main {
       Daemon daemon = getDaemon(cell, objectMapper);
       return daemon.getWebServer();
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private void loadListenersFromBuckConfig(
@@ -1787,7 +1787,7 @@ public final class Main {
   }
 
   public static void main(String[] args) {
-    new Main(System.out, System.err, System.in).runMainThenExit(args, Optional.absent());
+    new Main(System.out, System.err, System.in).runMainThenExit(args, Optional.empty());
   }
 
   private static void markFdCloseOnExec(int fd) {

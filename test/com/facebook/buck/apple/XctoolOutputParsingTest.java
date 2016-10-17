@@ -23,25 +23,23 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
-
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.test.TestStatusMessage;
-
-import com.google.common.base.Optional;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 
 import org.junit.Test;
 
-import java.io.StringReader;
 import java.io.Reader;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.logging.Level;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
+import java.util.logging.Level;
 
 public class XctoolOutputParsingTest {
 
@@ -303,7 +301,7 @@ public class XctoolOutputParsingTest {
         XctoolOutputParsing.testStatusMessageForStatusEvent(statusEvent);
     assertThat(
         testStatusMessage,
-        equalTo(Optional.<TestStatusMessage>absent()));
+        equalTo(Optional.empty()));
   }
 
   @Test
@@ -317,6 +315,6 @@ public class XctoolOutputParsingTest {
         XctoolOutputParsing.testStatusMessageForStatusEvent(statusEvent);
     assertThat(
         testStatusMessage,
-        equalTo(Optional.<TestStatusMessage>absent()));
+        equalTo(Optional.empty()));
   }
 }

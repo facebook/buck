@@ -26,7 +26,6 @@ import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -84,6 +83,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.jar.JarFile;
@@ -274,7 +274,7 @@ public class ProjectFilesystem {
   }
 
   private static Path getCacheDir(Path root, Optional<String> value, BuckPaths buckPaths) {
-    String cacheDir = value.or(root.resolve(buckPaths.getCacheDir()).toString());
+    String cacheDir = value.orElse(root.resolve(buckPaths.getCacheDir()).toString());
     Path toReturn = root.getFileSystem().getPath(cacheDir);
     toReturn = MorePaths.expandHomeDir(toReturn);
     if (toReturn.isAbsolute()) {
@@ -398,7 +398,7 @@ public class ProjectFilesystem {
       if (path.startsWith(projectRoot)) {
         return Optional.of(MorePaths.relativize(projectRoot, path));
       } else {
-        return Optional.absent();
+        return Optional.empty();
       }
     } else {
       return Optional.of(path);
@@ -836,18 +836,18 @@ public class ProjectFilesystem {
       try {
         contents = new String(Files.readAllBytes(fileToRead), Charsets.UTF_8);
       } catch (IOException e) {
-        // Alternatively, we could return Optional.absent(), though something seems suspicious if we
+        // Alternatively, we could return Optional.empty(), though something seems suspicious if we
         // have already verified that fileToRead is a file and then we cannot read it.
         throw new RuntimeException("Error reading " + pathRelativeToProjectRoot, e);
       }
       return Optional.of(contents);
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
   /**
-   * Attempts to open the file for future read access. Returns {@link Optional#absent()} if the file
+   * Attempts to open the file for future read access. Returns {@link Optional#empty()} if the file
    * does not exist.
    */
   public Optional<Reader> getReaderIfFileExists(Path pathRelativeToProjectRoot) {
@@ -861,13 +861,13 @@ public class ProjectFilesystem {
         throw new RuntimeException("Error reading " + pathRelativeToProjectRoot, e);
       }
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
   /**
    * Attempts to read the first line of the file specified by the relative path. If the file does
-   * not exist, is empty, or encounters an error while being read, {@link Optional#absent()} is
+   * not exist, is empty, or encounters an error while being read, {@link Optional#empty()} is
    * returned. Otherwise, an {@link Optional} with the first line of the file will be returned.
    *
    * // @deprecated PRefero operation on {@code Path}s directly, replaced by
@@ -879,7 +879,7 @@ public class ProjectFilesystem {
 
   /**
    * Attempts to read the first line of the file specified by the relative path. If the file does
-   * not exist, is empty, or encounters an error while being read, {@link Optional#absent()} is
+   * not exist, is empty, or encounters an error while being read, {@link Optional#empty()} is
    * returned. Otherwise, an {@link Optional} with the first line of the file will be returned.
    */
   public Optional<String> readFirstLine(Path pathRelativeToProjectRoot) {
@@ -889,16 +889,16 @@ public class ProjectFilesystem {
 
   /**
    * Attempts to read the first line of the specified file. If the file does not exist, is empty,
-   * or encounters an error while being read, {@link Optional#absent()} is returned. Otherwise, an
+   * or encounters an error while being read, {@link Optional#empty()} is returned. Otherwise, an
    * {@link Optional} with the first line of the file will be returned.
    */
   public Optional<String> readFirstLineFromFile(Path file) {
     try {
-      return Optional.fromNullable(
+      return Optional.ofNullable(
           Files.newBufferedReader(file, Charsets.UTF_8).readLine());
     } catch (IOException e) {
       // Because the file is not even guaranteed to exist, swallow the IOException.
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -1163,7 +1163,7 @@ public class ProjectFilesystem {
       FileAttribute<?>... attrs)
       throws IOException {
     Path tmp = Files.createTempFile(resolve(directory), prefix, suffix, attrs);
-    return getPathRelativeToProjectRoot(tmp).or(tmp);
+    return getPathRelativeToProjectRoot(tmp).orElse(tmp);
   }
 
   public void touch(Path fileToTouch) throws IOException {

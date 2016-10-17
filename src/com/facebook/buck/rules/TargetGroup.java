@@ -17,11 +17,11 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public class TargetGroup implements Iterable<BuildTarget>, HasBuildTarget {
@@ -37,7 +37,7 @@ public class TargetGroup implements Iterable<BuildTarget>, HasBuildTarget {
       BuildTarget buildTarget) {
     this.buildTarget = buildTarget;
     this.targets = ImmutableSet.copyOf(targets);
-    this.restrictOutboundVisibility = restrictOutboundVisibility.or(false);
+    this.restrictOutboundVisibility = restrictOutboundVisibility.orElse(false);
   }
 
   public boolean containsTarget(BuildTarget target) {

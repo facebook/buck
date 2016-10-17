@@ -44,7 +44,6 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -52,6 +51,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class RobolectricTestDescription implements Description<RobolectricTestDescription.Arg> {
 
@@ -108,8 +108,8 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
         javacOptions,
         DependencyMode.TRANSITIVE,
         /* forceFinalResourceIds */ true,
-        /* resourceUnionPackage */ Optional.absent(),
-        /* rName */ Optional.absent());
+        /* resourceUnionPackage */ Optional.empty(),
+        /* rName */ Optional.empty());
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
         resolver,
         /* createBuildableIfEmpty */ true);
@@ -164,8 +164,8 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                     params.getProjectFilesystem(),
                     args.resources),
                 javacOptions.getGeneratedSourceFolderName(),
-                args.proguardConfig.transform(
-                    SourcePaths.toSourcePath(params.getProjectFilesystem())),
+                args.proguardConfig.map(
+                    SourcePaths.toSourcePath(params.getProjectFilesystem())::apply),
                 /* postprocessClassesCommands */ ImmutableList.of(),
                 /* exportDeps */ ImmutableSortedSet.of(),
                 /* providedDeps */ ImmutableSortedSet.of(),
@@ -196,7 +196,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                 vmArgs,
                 cxxLibraryEnhancement.nativeLibsEnvironment,
                 dummyRDotJava,
-                args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
+                args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
                 args.env,
                 args.getRunTestSeparately(),
                 args.getForkMode(),

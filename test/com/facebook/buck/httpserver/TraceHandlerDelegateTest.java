@@ -22,7 +22,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.httpserver.TracesHelper.TraceAttributes;
-import com.google.common.base.Optional;
 
 import org.easymock.EasyMockSupport;
 import org.eclipse.jetty.server.Handler;
@@ -32,6 +31,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Optional;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;

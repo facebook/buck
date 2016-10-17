@@ -66,7 +66,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     Preconditions.checkArgument(
         args.getThriftEndpointPath().isPresent(),
         "Hybrid thrift endpoint path is mandatory for the ThriftArtifactCache.");
-    this.hybridThriftEndpoint = args.getThriftEndpointPath().or("");
+    this.hybridThriftEndpoint = args.getThriftEndpointPath().orElse("");
   }
 
   @Override
@@ -178,7 +178,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
                 " to url [%s] for build target [%s] that has size [%d] bytes.",
             httpResponse.code(),
             httpResponse.requestUrl(),
-            info.getBuildTarget().orNull(),
+            info.getBuildTarget().orElse(null),
             artifactSizeBytes));
       }
 

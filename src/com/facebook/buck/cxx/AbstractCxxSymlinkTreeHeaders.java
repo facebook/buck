@@ -21,8 +21,8 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Encapsulates headers modeled using a {@link HeaderSymlinkTree}.
@@ -73,7 +74,7 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders {
     deps.addAll(resolver.filterBuildRuleInputs(getNameToPathMap().values()));
     deps.addAll(resolver.filterBuildRuleInputs(getRoot()));
     deps.addAll(resolver.filterBuildRuleInputs(getIncludeRoot()));
-    deps.addAll(resolver.filterBuildRuleInputs(getHeaderMap().asSet()));
+    deps.addAll(resolver.filterBuildRuleInputs(OptionalCompat.asSet(getHeaderMap())));
     return deps.build();
   }
 

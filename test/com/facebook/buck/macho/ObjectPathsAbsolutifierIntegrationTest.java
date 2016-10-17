@@ -44,7 +44,6 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 
@@ -60,6 +59,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
+import java.util.Optional;
 
 public class ObjectPathsAbsolutifierIntegrationTest {
 
@@ -174,8 +174,8 @@ public class ObjectPathsAbsolutifierIntegrationTest {
     ProcessExecutor.Result unsanitizedResult =
         workspace.runCommand("nm", "-a", unsanizitedBinaryPath.toString());
 
-    String sanitizedOutput = sanitizedResult.getStdout().or("");
-    String unsanitizedOutput = unsanitizedResult.getStdout().or("");
+    String sanitizedOutput = sanitizedResult.getStdout().orElse("");
+    String unsanitizedOutput = unsanitizedResult.getStdout().orElse("");
 
     // check that weird buck comp dir is not present anymore
     assertThat(
@@ -234,19 +234,19 @@ public class ObjectPathsAbsolutifierIntegrationTest {
         ProcessExecutorParams.builder()
             .setCommand(ImmutableList.of("codesign", "-vvvv", "-d", file1.toString())).build(),
         EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT, ProcessExecutor.Option.IS_SILENT),
-        /* stdin */ Optional.absent(),
-        /* timeOutMs */ Optional.absent(),
-        /* timeOutHandler */ Optional.absent());
+        /* stdin */ Optional.empty(),
+        /* timeOutMs */ Optional.empty(),
+        /* timeOutHandler */ Optional.empty());
     ProcessExecutor.Result result2 = processExecutor.launchAndExecute(
         ProcessExecutorParams.builder()
             .setCommand(ImmutableList.of("codesign", "-vvvv", "-d", file1.toString())).build(),
         EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT, ProcessExecutor.Option.IS_SILENT),
-        /* stdin */ Optional.absent(),
-        /* timeOutMs */ Optional.absent(),
-        /* timeOutHandler */ Optional.absent());
+        /* stdin */ Optional.empty(),
+        /* timeOutMs */ Optional.empty(),
+        /* timeOutHandler */ Optional.empty());
 
-    String stderr1 = result1.getStderr().or("");
-    String stderr2 = result2.getStderr().or("");
+    String stderr1 = result1.getStderr().orElse("");
+    String stderr2 = result2.getStderr().orElse("");
 
     // skip first line as it has a path to the binary
     Assert.assertThat(stderr1, startsWith("Executable="));

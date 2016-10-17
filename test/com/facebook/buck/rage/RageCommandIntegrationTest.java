@@ -40,7 +40,6 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -57,6 +56,7 @@ import org.junit.rules.ExpectedException;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.servlet.ServletException;
@@ -72,8 +72,6 @@ public class RageCommandIntegrationTest {
 
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
-
-  private static final ExtraInfoCollector EMPTY_EXTRA_INFO_HELPER = Optional::absent;
 
   private static final String BUILD_COMMAND_DIR_PATH = "buck-out/log/" +
           "2016-06-21_16h16m24s_buildcommand_ac8bd626-6137-4747-84dd-5d4f215c876c/";
@@ -140,7 +138,7 @@ public class RageCommandIntegrationTest {
           TestBuildEnvironmentDescription.INSTANCE,
           VcsInfoCollector.create(new NoOpCmdLineInterface()),
           rageConfig,
-          EMPTY_EXTRA_INFO_HELPER);
+          Optional::empty);
       DefectSubmitResult defectSubmitResult = automatedReport.collectAndSubmitResult().get();
 
       assertThat(
@@ -234,7 +232,7 @@ public class RageCommandIntegrationTest {
           TestBuildEnvironmentDescription.INSTANCE,
           VcsInfoCollector.create(new NoOpCmdLineInterface()),
           rageConfig,
-          EMPTY_EXTRA_INFO_HELPER);
+          Optional::empty);
 
       DefectSubmitResult submitReport = automatedReport.collectAndSubmitResult().get();
       // If upload fails it should store the zip locally and inform the user.

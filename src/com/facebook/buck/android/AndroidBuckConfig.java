@@ -18,11 +18,11 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.Set;
 
 public class AndroidBuckConfig {
@@ -52,9 +52,7 @@ public class AndroidBuckConfig {
   }
 
   public Optional<Set<String>> getNdkCpuAbis() {
-    return delegate.getOptionalListWithoutComments("ndk", "cpu_abis")
-        .transform(
-            ImmutableSet::copyOf);
+    return delegate.getOptionalListWithoutComments("ndk", "cpu_abis").map(ImmutableSet::copyOf);
   }
 
   public Optional<NdkCxxPlatformCompiler.Type> getNdkCompiler() {
@@ -80,7 +78,7 @@ public class AndroidBuckConfig {
   public Optional<Path> getAaptOverride() {
     Optional<String> pathString = delegate.getValue("tools", "aapt");
     if (!pathString.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     String platformDir;
@@ -91,7 +89,7 @@ public class AndroidBuckConfig {
     } else if (platform == Platform.WINDOWS) {
       platformDir = "windows";
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     Path pathToAapt = Paths.get(pathString.get(), platformDir, "aapt");

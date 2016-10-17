@@ -24,7 +24,6 @@ import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Architecture;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -32,6 +31,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class DBuckConfig {
   private static final Path DEFAULT_D_COMPILER = Paths.get("dmd");
@@ -57,7 +57,7 @@ public class DBuckConfig {
     // If flags are configured in buckconfig, return those.
     // Else, return an empty list (no flags), as that should normally work.
     return delegate.getOptionalListWithoutComments(
-        "d", "base_compiler_flags", ' ').or(ImmutableList.of());
+        "d", "base_compiler_flags", ' ').orElse(ImmutableList.of());
   }
 
   /**
@@ -156,8 +156,8 @@ public class DBuckConfig {
    * @return the Path to the D compiler.
    */
   private Path getDCompilerPath() {
-    Path compilerPath = delegate.getPath("d", "compiler", /*isCellRootRelative=*/false)
-      .or(DEFAULT_D_COMPILER);
+    Path compilerPath = delegate.getPath("d", "compiler", /*isCellRootRelative=*/false).orElse(
+        DEFAULT_D_COMPILER);
 
     return new ExecutableFinder().getExecutable(compilerPath, delegate.getEnvironment());
   }

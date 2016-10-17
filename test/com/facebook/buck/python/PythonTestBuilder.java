@@ -25,9 +25,10 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
 
 public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription.Arg> {
 
@@ -49,7 +50,7 @@ public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription
             pythonPlatforms,
             CxxPlatformUtils.DEFAULT_CONFIG,
             defaultCxxPlatform,
-            Optional.absent(),
+            Optional.empty(),
             cxxPlatforms),
         target);
   }
@@ -98,7 +99,7 @@ public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription
   }
 
   public PythonTestBuilder setZipSafe(boolean zipSafe) {
-    arg.zipSafe = Optional.fromNullable(zipSafe);
+    arg.zipSafe = Optional.ofNullable(zipSafe);
     return this;
   }
 

@@ -18,21 +18,21 @@ package com.facebook.buck.android;
 import static org.junit.Assume.assumeNotNull;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class AssumeAndroidPlatform {
 
   private AssumeAndroidPlatform() {}
 
   public static void assumeNdkIsAvailable() {
-    assumeNotNull(getAndroidDirectoryResolver().getNdkOrAbsent().orNull());
+    assumeNotNull(getAndroidDirectoryResolver().getNdkOrAbsent().orElse(null));
   }
 
   public static void assumeSdkIsAvailable() {
-    assumeNotNull(getAndroidDirectoryResolver().getSdkOrAbsent().orNull());
+    assumeNotNull(getAndroidDirectoryResolver().getSdkOrAbsent().orElse(null));
   }
 
   private static AndroidDirectoryResolver getAndroidDirectoryResolver() {
@@ -40,7 +40,7 @@ public class AssumeAndroidPlatform {
     return new DefaultAndroidDirectoryResolver(
         projectFilesystem.getRootPath().getFileSystem(),
         ImmutableMap.copyOf(System.getenv()),
-        Optional.absent(),
-        Optional.absent());
+        Optional.empty(),
+        Optional.empty());
   }
 }

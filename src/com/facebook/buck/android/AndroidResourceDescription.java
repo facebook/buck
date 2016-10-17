@@ -34,10 +34,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
@@ -48,6 +45,7 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Optional;
 
 public class AndroidResourceDescription implements Description<AndroidResourceDescription.Arg> {
 
@@ -81,13 +79,9 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
       A args) {
 
     // Only allow android resource and library rules as dependencies.
-    Optional<BuildRule> invalidDep = FluentIterable.from(params.getDeclaredDeps().get())
-        .filter(
-            Predicates.not(
-                Predicates.or(
-                    Predicates.instanceOf(AndroidResource.class),
-                    Predicates.instanceOf(AndroidLibrary.class))))
-        .first();
+    Optional<BuildRule> invalidDep = params.getDeclaredDeps().get().stream()
+        .filter(rule -> !(rule instanceof AndroidResource || rule instanceof AndroidLibrary))
+        .findFirst();
     if (invalidDep.isPresent()) {
       throw new HumanReadableException(
           params.getBuildTarget() + " (android_resource): dependency " +
@@ -116,22 +110,22 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
             params.getExtraDeps()),
         pathResolver,
         resolver.getAllRules(args.deps),
-        args.res.orNull(),
+        args.res.orElse(null),
         resInputsAndKey.getFirst(),
         resInputsAndKey.getSecond(),
-        args.rDotJavaPackage.orNull(),
-        args.assets.orNull(),
+        args.rDotJavaPackage.orElse(null),
+        args.assets.orElse(null),
         assetsInputsAndKey.getFirst(),
         assetsInputsAndKey.getSecond(),
-        args.manifest.orNull(),
-        args.hasWhitelistedStrings.or(false),
-        args.resourceUnion.or(false));
+        args.manifest.orElse(null),
+        args.hasWhitelistedStrings.orElse(false),
+        args.resourceUnion.orElse(false));
   }
 
   private Pair<ImmutableSortedSet<SourcePath>, Optional<SourcePath>> collectInputFilesAndKey(
       Optional<SourcePath> sourcePath) {
     ImmutableSortedSet<SourcePath> inputFiles = ImmutableSortedSet.of();
-    Optional<SourcePath> additionalKey = Optional.absent();
+    Optional<SourcePath> additionalKey = Optional.empty();
     if (!sourcePath.isPresent()) {
       return new Pair<>(inputFiles, additionalKey);
     }

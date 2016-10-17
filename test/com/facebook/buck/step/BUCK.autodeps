@@ -24,11 +24,11 @@
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/event:testutil",
       "//test/com/facebook/buck/jvm/java:fakepackagefinder",
-      "//test/com/facebook/buck/testutil:testutil"
+      "//test/com/facebook/buck/testutil:testutil",
+      "//third-party/java/guava:guava"
     ],
     "exported_deps" : [
-      "//src/com/facebook/buck/step:step",
-      "//third-party/java/guava:guava"
+      "//src/com/facebook/buck/step:step"
     ]
   }
 }

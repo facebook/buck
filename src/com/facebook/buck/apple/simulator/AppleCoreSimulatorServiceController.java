@@ -17,25 +17,20 @@
 package com.facebook.buck.apple.simulator;
 
 import com.facebook.buck.log.Logger;
-
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.UserIdFetcher;
-
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-import java.io.IOException;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
-
 import java.nio.charset.StandardCharsets;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -67,7 +62,7 @@ public class AppleCoreSimulatorServiceController {
 
   /**
    * Returns the path on disk to the running Core Simulator service, if any.
-   * Returns {@code Optional.absent()} unless exactly one Core Simulator service is running.
+   * Returns {@code Optional.empty()} unless exactly one Core Simulator service is running.
    */
   public Optional<Path> getCoreSimulatorServicePath(UserIdFetcher userIdFetcher)
       throws IOException, InterruptedException {
@@ -76,7 +71,7 @@ public class AppleCoreSimulatorServiceController {
 
     if (coreSimulatorServiceNames.size() != 1) {
       LOG.debug("Could not get core simulator service name (got %s)", coreSimulatorServiceNames);
-      return Optional.absent();
+      return Optional.empty();
     }
 
     String coreSimulatorServiceName = Iterables.getOnlyElement(coreSimulatorServiceNames);
@@ -96,7 +91,7 @@ public class AppleCoreSimulatorServiceController {
             .build();
     ProcessExecutor.LaunchedProcess launchctlPrintProcess = processExecutor.launchProcess(
         launchctlPrintParams);
-    Optional<Path> result = Optional.absent();
+    Optional<Path> result = Optional.empty();
     try (InputStreamReader stdoutReader = new InputStreamReader(
              launchctlPrintProcess.getInputStream(),
              StandardCharsets.UTF_8);

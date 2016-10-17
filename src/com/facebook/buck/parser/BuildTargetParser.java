@@ -21,7 +21,6 @@ import com.facebook.buck.model.FlavorParser;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.CellPathResolver;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
@@ -30,6 +29,7 @@ import com.google.common.collect.Interners;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class BuildTargetParser {
@@ -75,7 +75,7 @@ public class BuildTargetParser {
           String.format("%s cannot end with a colon", buildTargetName));
     }
 
-    Optional<String> givenCellName = Optional.absent();
+    Optional<String> givenCellName = Optional.empty();
     String targetAfterCell = buildTargetName;
     if (buildTargetName.contains(BUILD_RULE_PREFIX) &&
         !buildTargetName.startsWith(BUILD_RULE_PREFIX)) {

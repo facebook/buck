@@ -21,11 +21,11 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigPaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -39,6 +39,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 /**
  * Base class for gathering logs and other interesting information from buck.
@@ -81,14 +82,14 @@ public abstract class AbstractReport {
 
     ImmutableSet<BuildLogEntry> selectedBuilds = promptForBuildSelection();
     if (selectedBuilds.isEmpty()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     Optional<UserReport> userReport = getUserReport();
     Optional<SourceControlInfo> sourceControlInfo = getSourceControlInfo();
 
     ImmutableSet<Path> extraInfoPaths = ImmutableSet.of();
-    Optional<String> extraInfo = Optional.absent();
+    Optional<String> extraInfo = Optional.empty();
     try {
       Optional<ExtraInfoResult> extraInfoResultOptional = extraInfoCollector.run();
       if (extraInfoResultOptional.isPresent()) {
@@ -128,7 +129,7 @@ public abstract class AbstractReport {
                     new Function<BuildLogEntry, Iterable<BuildId>>() {
                       @Override
                       public Iterable<BuildId> apply(BuildLogEntry input) {
-                        return input.getBuildId().asSet();
+                        return OptionalCompat.asSet(input.getBuildId());
                       }
                     }))
         .setBuildEnvironmentDescription(buildEnvironmentDescription)

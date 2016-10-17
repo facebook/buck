@@ -53,7 +53,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -62,6 +61,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class HalideLibraryDescription
@@ -149,8 +149,8 @@ public class HalideLibraryDescription
         langPreprocessorFlags = ImmutableMap.of();
     ImmutableSortedSet<FrameworkPath> frameworks = ImmutableSortedSet.of();
     ImmutableSortedSet<FrameworkPath> libraries = ImmutableSortedSet.of();
-    Optional<SourcePath> prefixHeader = Optional.absent();
-    Optional<Linker.CxxRuntimeType> cxxRuntimeType = Optional.absent();
+    Optional<SourcePath> prefixHeader = Optional.empty();
+    Optional<Linker.CxxRuntimeType> cxxRuntimeType = Optional.empty();
 
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinary(
@@ -271,7 +271,7 @@ public class HalideLibraryDescription
       A args) throws NoSuchBuildTargetException {
     BuildTarget target = params.getBuildTarget();
     ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(target.getFlavors());
-    CxxPlatform cxxPlatform = cxxPlatforms.getValue(flavors).or(defaultCxxPlatform);
+    CxxPlatform cxxPlatform = cxxPlatforms.getValue(flavors).orElse(defaultCxxPlatform);
 
     if (flavors.contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)) {
       ImmutableMap.Builder<Path, SourcePath> headersBuilder = ImmutableMap.builder();

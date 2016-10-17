@@ -27,7 +27,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipConstants;
 import com.facebook.buck.zip.ZipOutputStreams;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -47,6 +46,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
@@ -173,8 +173,8 @@ public class JarDirectoryStepHelper {
         filesystem,
         pathToOutputFile,
         ImmutableSortedSet.of(),
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         true,
         ImmutableList.of(),
         context);
@@ -398,7 +398,7 @@ public class JarDirectoryStepHelper {
             JarEntry entry = new JarEntry(entryName);
             // We want deterministic JARs, so avoid mtimes.
             entry.setTime(ZipConstants.getFakeTime());
-            entries.put(entry.getName(), new Pair<>(entry, Optional.absent()));
+            entries.put(entry.getName(), new Pair<>(entry, Optional.empty()));
             return FileVisitResult.CONTINUE;
           }
         });

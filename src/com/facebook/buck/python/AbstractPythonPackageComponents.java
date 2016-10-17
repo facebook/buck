@@ -23,7 +23,6 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -35,6 +34,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 @Value.Immutable(builder = false)
@@ -47,7 +47,7 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
         /* resources */ ImmutableMap.of(),
         /* nativeLibraries */ ImmutableMap.of(),
         /* prebuiltLibraries */ ImmutableSet.of(),
-        /* zipSafe */ Optional.absent());
+        /* zipSafe */ Optional.empty());
 
   // Python modules as map of their module name to location of the source.
   @Value.Parameter
@@ -116,7 +116,7 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
     private final Map<Path, SourcePath> resources = new HashMap<>();
     private final Map<Path, SourcePath> nativeLibraries = new HashMap<>();
     private final Set<SourcePath> prebuiltLibraries = new LinkedHashSet<>();
-    private Optional<Boolean> zipSafe = Optional.absent();
+    private Optional<Boolean> zipSafe = Optional.empty();
 
     // Bookkeeping used to for error handling in the presence of duplicate
     // entries.  These data structures map the components named above to the
@@ -215,7 +215,7 @@ abstract class AbstractPythonPackageComponents implements RuleKeyAppendable {
         return this;
       }
 
-      this.zipSafe = Optional.of(this.zipSafe.or(true) && zipSafe.or(true));
+      this.zipSafe = Optional.of(this.zipSafe.orElse(true) && zipSafe.orElse(true));
       return this;
     }
 

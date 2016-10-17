@@ -29,13 +29,13 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class XcodeWorkspaceConfigDescription
     implements Description<XcodeWorkspaceConfigDescription.Arg> {

@@ -18,7 +18,6 @@ package com.facebook.buck.python;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cxx.NativeLinkStrategy;
-import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuckVersion;
@@ -30,13 +29,13 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PackagedResource;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -48,6 +47,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
+import java.util.Optional;
 
 import javax.annotation.Nonnull;
 
@@ -212,7 +212,7 @@ public class PythonBuckConfig {
   public Tool getPexTool(BuildRuleResolver resolver) {
     CommandTool.Builder builder = new CommandTool.Builder(getRawPexTool(resolver));
     for (String flag : Splitter.on(' ').omitEmptyStrings().split(
-        delegate.getValue(SECTION, "pex_flags").or(""))) {
+        delegate.getValue(SECTION, "pex_flags").orElse(""))) {
       builder.addArg(flag);
     }
 
@@ -241,12 +241,12 @@ public class PythonBuckConfig {
   }
 
   public NativeLinkStrategy getNativeLinkStrategy() {
-    return delegate.getEnum(SECTION, "native_link_strategy", NativeLinkStrategy.class)
-        .or(NativeLinkStrategy.SEPARATE);
+    return delegate.getEnum(SECTION, "native_link_strategy", NativeLinkStrategy.class).orElse(
+        NativeLinkStrategy.SEPARATE);
   }
 
   public String getPexExtension() {
-    return delegate.getValue(SECTION, "pex_extension").or(".pex");
+    return delegate.getValue(SECTION, "pex_extension").orElse(".pex");
   }
 
   private static PythonVersion getPythonVersion(ProcessExecutor processExecutor, Path pythonPath)
@@ -271,8 +271,8 @@ public class PythonBuckConfig {
               ProcessExecutor.Option.EXPECTING_STD_OUT,
               ProcessExecutor.Option.EXPECTING_STD_ERR),
           Optional.of(versionId),
-          /* timeOutMs */ Optional.absent(),
-          /* timeoutHandler */ Optional.absent());
+          /* timeOutMs */ Optional.empty(),
+          /* timeoutHandler */ Optional.empty());
       return extractPythonVersion(pythonPath, versionResult);
     } catch (IOException e) {
       throw new HumanReadableException(
@@ -315,8 +315,10 @@ public class PythonBuckConfig {
   }
 
   public PackageStyle getPackageStyle() {
-    return delegate.getEnum(SECTION, "package_style", PackageStyle.class)
-        .or(PackageStyle.STANDALONE);
+    return delegate.getEnum(
+        SECTION,
+        "package_style",
+        PackageStyle.class).orElse(PackageStyle.STANDALONE);
   }
 
   public enum PackageStyle {

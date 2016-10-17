@@ -30,13 +30,13 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Optional;
 
 public class CopyResourcesStep implements Step {
 
@@ -118,8 +118,11 @@ public class CopyResourcesStep implements Step {
           Path scratchOutputParent =
               BuildTargets.getScratchPath(filesystem, underlyingTarget, "%s").getParent();
           Optional<Path> outputPath =
-              MorePaths.stripPrefix(relativePathToResource, genOutputParent)
-                  .or(MorePaths.stripPrefix(relativePathToResource, scratchOutputParent));
+              MorePaths.stripPrefix(
+                  relativePathToResource,
+                  genOutputParent).map(Optional::of).orElse(MorePaths.stripPrefix(
+                  relativePathToResource,
+                  scratchOutputParent));
           Preconditions.checkState(
               outputPath.isPresent(),
               "%s is used as a resource but does not output to a default output directory",

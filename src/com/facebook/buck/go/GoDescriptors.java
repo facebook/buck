@@ -39,7 +39,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -56,6 +55,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 abstract class GoDescriptors {
 
@@ -239,8 +239,7 @@ abstract class GoDescriptors {
                     .build()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,
-        platform.getCxxPlatform().transform(
-            input -> input.getLd().resolve(resolver)),
+        platform.getCxxPlatform().map(input -> input.getLd().resolve(resolver)),
         symlinkTree,
         library,
         goBuckConfig.getLinker(),

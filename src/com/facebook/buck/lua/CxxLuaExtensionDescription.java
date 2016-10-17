@@ -53,9 +53,9 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.util.OptionalCompat;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -64,6 +64,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 
 public class CxxLuaExtensionDescription implements
     Description<CxxLuaExtensionDescription.Arg>,
@@ -216,7 +217,7 @@ public class CxxLuaExtensionDescription implements
             .filter(NativeLinkable.class)
             .append(luaConfig.getLuaCxxLibrary(ruleResolver)),
         args.cxxRuntimeType,
-        Optional.absent(),
+        Optional.empty(),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
             .setArgs(getExtensionArgs(params, ruleResolver, pathResolver, cxxPlatform, args))
@@ -298,7 +299,7 @@ public class CxxLuaExtensionDescription implements
 
       @Override
       public Optional<Path> getNativeLinkTargetOutputPath(CxxPlatform cxxPlatform) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
     };
@@ -312,7 +313,7 @@ public class CxxLuaExtensionDescription implements
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
 
     // Add deps from lua C/C++ library.
-    deps.addAll(luaConfig.getLuaCxxLibraryTarget().asSet());
+    deps.addAll(OptionalCompat.asSet(luaConfig.getLuaCxxLibraryTarget()));
 
     // Get any parse time deps from the C/C++ platforms.
     deps.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatforms.getValues()));

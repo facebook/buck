@@ -22,12 +22,12 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 class RegisterDebugSymbolsStep implements Step {
 
@@ -62,8 +62,8 @@ class RegisterDebugSymbolsStep implements Step {
             String.format("target create %s\ntarget symbols add %s",
                 binaryBuildRule.getPathToOutput(),
                 location)),
-        Optional.absent(),
-        Optional.absent()));
+        Optional.empty(),
+        Optional.empty()));
   }
 
   @Override

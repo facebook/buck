@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -29,6 +28,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.SortedMap;
 
 public class CxxFlags {
@@ -47,7 +47,7 @@ public class CxxFlags {
       public void appendToRuleKey(RuleKeyObjectSink sink) {
         SortedMap<String, String> sanitizedMap = Maps.transformValues(
             flagMacros,
-            cxxPlatform.getDebugPathSanitizer().sanitize(Optional.absent()));
+            cxxPlatform.getDebugPathSanitizer().sanitize(Optional.empty()));
         sink.setReflectively("flagMacros", sanitizedMap);
       }
 

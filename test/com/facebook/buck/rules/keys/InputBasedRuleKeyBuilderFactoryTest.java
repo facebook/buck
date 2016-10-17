@@ -18,7 +18,6 @@ package com.facebook.buck.rules.keys;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -26,6 +25,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.NoopBuildRule;
@@ -42,7 +42,6 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -54,6 +53,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class InputBasedRuleKeyBuilderFactoryTest {
 
@@ -296,7 +296,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
     Optional<RuleKey> inputKey =
         new InputBasedRuleKeyBuilderFactory(0, hashCache, pathResolver, 200)
             .build(rule);
-    assertThat(inputKey, Matchers.equalTo(Optional.<RuleKey>absent()));
+    assertThat(inputKey, Matchers.equalTo(Optional.empty()));
   }
 
   @Test
@@ -327,7 +327,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
     Optional<RuleKey> inputKey =
         new InputBasedRuleKeyBuilderFactory(0, hashCache, pathResolver, 200)
             .build(rule);
-    assertThat(inputKey, Matchers.equalTo(Optional.<RuleKey>absent()));
+    assertThat(inputKey, Matchers.equalTo(Optional.empty()));
   }
 
   @Test
@@ -355,7 +355,7 @@ public class InputBasedRuleKeyBuilderFactoryTest {
     Optional<RuleKey> inputKey =
         new InputBasedRuleKeyBuilderFactory(0, hashCache, pathResolver, 200)
             .build(rule);
-    assertThat(inputKey, Matchers.equalTo(Optional.<RuleKey>absent()));
+    assertThat(inputKey, Matchers.equalTo(Optional.empty()));
   }
 
   private static class RuleKeyAppendableWithInput implements RuleKeyAppendable {

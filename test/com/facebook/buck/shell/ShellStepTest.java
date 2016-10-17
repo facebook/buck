@@ -30,7 +30,6 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -43,6 +42,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 
 public class ShellStepTest {
@@ -96,7 +96,7 @@ public class ShellStepTest {
         workingDirectory,
         /* shouldPrintStdErr */ false,
         /* shouldRecordStdOut */ false,
-        /* stdin */ Optional.absent());
+        /* stdin */ Optional.empty());
   }
 
   private static ShellStep createCommand(boolean shouldPrintStdErr, boolean shouldPrintStdOut) {
@@ -106,7 +106,7 @@ public class ShellStepTest {
         null,
         shouldPrintStdErr,
         shouldPrintStdOut,
-        /* stdin */ Optional.absent());
+        /* stdin */ Optional.empty());
   }
 
   private static ShellStep createCommand(
@@ -315,7 +315,7 @@ public class ShellStepTest {
 
   @Test
   public void testStdinDoesNotGetToProcessWhenAbsent() throws Exception {
-    final Optional<String> stdin = Optional.absent();
+    final Optional<String> stdin = Optional.empty();
     ShellStep command = createCommand(
         ImmutableMap.of(),
         ImmutableList.of("cat", "-"),

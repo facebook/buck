@@ -53,7 +53,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -70,6 +69,7 @@ import com.google.common.io.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -228,8 +228,7 @@ public class CxxDescriptionEnhancer {
       }
     }
     return CxxPreprocessables.resolveHeaderMap(
-        args.headerNamespace.transform(Paths::get)
-            .or(buildTarget.getBasePath()),
+        args.headerNamespace.map(Paths::get).orElse(buildTarget.getBasePath()),
         headers.build());
   }
 
@@ -261,8 +260,7 @@ public class CxxDescriptionEnhancer {
       }
     }
     return CxxPreprocessables.resolveHeaderMap(
-        args.headerNamespace.transform(Paths::get)
-            .or(buildTarget.getBasePath()),
+        args.headerNamespace.map(Paths::get).orElse(buildTarget.getBasePath()),
         headers.build());
   }
 
@@ -562,7 +560,7 @@ public class CxxDescriptionEnhancer {
         srcs,
         headers,
         stripStyle,
-        args.linkStyle.or(Linker.LinkableDepType.STATIC),
+        args.linkStyle.orElse(Linker.LinkableDepType.STATIC),
         args.preprocessorFlags,
         args.platformPreprocessorFlags,
         args.langPreprocessorFlags,
@@ -727,7 +725,7 @@ public class CxxDescriptionEnhancer {
         linkRuleTarget);
 
     BuildRule binaryRuleForExecutable;
-    Optional<CxxStrip> cxxStrip = Optional.absent();
+    Optional<CxxStrip> cxxStrip = Optional.empty();
     if (stripStyle.isPresent()) {
       CxxStrip stripRule = createCxxStripRule(
           params,
@@ -785,13 +783,13 @@ public class CxxDescriptionEnhancer {
               sourcePathResolver,
               linkRuleTarget,
               Linker.LinkType.EXECUTABLE,
-              Optional.absent(),
+              Optional.empty(),
               linkOutput,
               linkStyle,
               FluentIterable.from(params.getDeps())
                   .filter(NativeLinkable.class),
               cxxRuntimeType,
-              Optional.absent(),
+              Optional.empty(),
               ImmutableSet.of(),
               NativeLinkableInput.builder()
                   .setArgs(argsBuilder.build())
@@ -1160,7 +1158,7 @@ public class CxxDescriptionEnhancer {
       throws NoSuchBuildTargetException {
     BuildTarget target =
         createSharedLibrarySymlinkTreeTarget(params.getBuildTarget(), cxxPlatform.getFlavor());
-    SymlinkTree tree = resolver.getRuleOptionalWithType(target, SymlinkTree.class).orNull();
+    SymlinkTree tree = resolver.getRuleOptionalWithType(target, SymlinkTree.class).orElse(null);
     if (tree == null) {
       tree =
           resolver.addToIndex(

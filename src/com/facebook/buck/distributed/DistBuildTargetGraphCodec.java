@@ -34,7 +34,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -43,6 +42,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -107,7 +107,7 @@ public class DistBuildTargetGraphCodec {
         .setShortName(remoteTarget.getShortName())
         .setBaseName(remoteTarget.getBaseName())
         .setCellPath(cell.getRoot())
-        .setCell(Optional.fromNullable(remoteTarget.getCellName()))
+        .setCell(Optional.ofNullable(remoteTarget.getCellName()))
         .build();
 
     ImmutableSet<Flavor> flavors = remoteTarget.flavors.stream()
@@ -143,7 +143,7 @@ public class DistBuildTargetGraphCodec {
           buildFilePath,
           target,
           rawNode,
-          input -> SimplePerfEvent.scope(Optional.absent(), input));
+          input -> SimplePerfEvent.scope(Optional.empty(), input));
       targetNodeIndexBuilder.put(targetNode.getBuildTarget(), targetNode);
     }
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex = targetNodeIndexBuilder.build();

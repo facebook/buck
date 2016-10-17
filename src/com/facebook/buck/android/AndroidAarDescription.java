@@ -34,7 +34,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -43,6 +42,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Description for a {@link BuildRule} that generates an {@code .aar} file.
@@ -124,7 +124,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     final APKModuleGraph apkModuleGraph = new APKModuleGraph(
         targetGraph,
         originalBuildRuleParams.getBuildTarget(),
-        Optional.absent());
+        Optional.empty());
 
     /* assemble dirs */
     AndroidPackageableCollector collector =
@@ -187,11 +187,11 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
         .build(),
         new BuildTargetSourcePath(assembleResourceDirectories.getBuildTarget()),
         /* resSrcs */ ImmutableSortedSet.of(),
-        Optional.absent(),
+        Optional.empty(),
         /* rDotJavaPackage */ null,
         new BuildTargetSourcePath(assembleAssetsDirectories.getBuildTarget()),
         /* assetsSrcs */ ImmutableSortedSet.of(),
-        Optional.absent(),
+        Optional.empty(),
         new BuildTargetSourcePath(manifest.getBuildTarget()),
         /* hasWhitelistedStrings */ false);
     aarExtraDepsBuilder.add(resolver.addToIndex(androidResource));
@@ -204,8 +204,8 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
             nativePlatforms,
             ImmutableSet.of(),
             cxxBuckConfig,
-            /* nativeLibraryMergeMap */ Optional.absent(),
-            /* nativeLibraryMergeGlue */ Optional.absent(),
+            /* nativeLibraryMergeMap */ Optional.empty(),
+            /* nativeLibraryMergeGlue */ Optional.empty(),
             AndroidBinary.RelinkerMode.DISABLED,
             apkModuleGraph);
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> nativeLibrariesOptional =
@@ -217,16 +217,15 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
               nativeLibrariesOptional.get().get(apkModuleGraph.getRootAPKModule())));
     }
 
-    Optional<Path> assembledNativeLibsDir = nativeLibrariesOptional.transform(
-        input -> {
-          // there will be only one value for the root module
-          CopyNativeLibraries copyNativeLibraries = input.get(apkModuleGraph.getRootAPKModule());
-          if (copyNativeLibraries == null) {
-            throw new HumanReadableException(
-                "Native libraries are present but not in the root application module.");
-          }
-          return copyNativeLibraries.getPathToNativeLibsDir();
-        });
+    Optional<Path> assembledNativeLibsDir = nativeLibrariesOptional.map(input -> {
+      // there will be only one value for the root module
+      CopyNativeLibraries copyNativeLibraries = input.get(apkModuleGraph.getRootAPKModule());
+      if (copyNativeLibraries == null) {
+        throw new HumanReadableException(
+            "Native libraries are present but not in the root application module.");
+      }
+      return copyNativeLibraries.getPathToNativeLibsDir();
+    });
     BuildRuleParams androidAarParams = originalBuildRuleParams.copyWithExtraDeps(
         Suppliers.ofInstance(ImmutableSortedSet.copyOf(aarExtraDepsBuilder.build())));
     return new AndroidAar(

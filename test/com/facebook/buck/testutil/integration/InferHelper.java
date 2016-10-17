@@ -18,7 +18,6 @@ package com.facebook.buck.testutil.integration;
 
 
 import com.facebook.buck.model.BuildTarget;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.GsonBuilder;
 
@@ -26,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public class InferHelper {
 
@@ -59,7 +59,7 @@ public class InferHelper {
         temporaryFolder.getRoot(),
         rawBlacklistRegex,
         "infertest",
-        Optional.absent());
+        Optional.empty());
   }
 
   public static ProjectWorkspace setupCxxInferWorkspace(
@@ -72,7 +72,7 @@ public class InferHelper {
         testCase, scenarioName, temporaryFolder);
     workspace.setUp();
 
-    Path fakeInferRootPath = fakeInferRootPathOpt.or(workspace.getPath("fake-infer"));
+    Path fakeInferRootPath = fakeInferRootPathOpt.orElse(workspace.getPath("fake-infer"));
 
     Path inferBin = fakeInferRootPath.resolve("fake-bin");
     Path facebookClangPluginsRoot = fakeInferRootPath.resolve("fake-clang");

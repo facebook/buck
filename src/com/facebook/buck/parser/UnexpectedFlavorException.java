@@ -23,9 +23,9 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PatternAndMessage;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class UnexpectedFlavorException extends HumanReadableException {

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -26,9 +25,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public class HashedFileTool implements Tool {
-
-  public static final Function<Path, HashedFileTool> FROM_PATH =
-      HashedFileTool::new;
 
   private final Path path;
 

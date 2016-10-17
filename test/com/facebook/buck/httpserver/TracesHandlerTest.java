@@ -21,7 +21,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.httpserver.TracesHelper.TraceAttributes;
 import com.facebook.buck.util.BuckConstant;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.easymock.EasyMockSupport;
@@ -29,6 +28,7 @@ import org.eclipse.jetty.server.Request;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public class TracesHandlerTest extends EasyMockSupport {
 
@@ -43,7 +43,7 @@ public class TracesHandlerTest extends EasyMockSupport {
         .andReturn(new TraceAttributes(Optional.of("buck test --all --code-coverage"), 4000L));
     expect(tracesHelper.getTraceAttributesFor(BuckConstant.getBuckTraceDir().resolve(
         "build.c.trace")))
-        .andReturn(new TraceAttributes(Optional.absent(), 2000L));
+        .andReturn(new TraceAttributes(Optional.empty(), 2000L));
     expect(tracesHelper.getTraceAttributesFor(BuckConstant.getBuckTraceDir().resolve(
         "build.d.trace")))
         .andReturn(

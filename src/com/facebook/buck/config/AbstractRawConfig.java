@@ -16,13 +16,13 @@
 package com.facebook.buck.config;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import org.immutables.value.Value;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Hierarcical configuration of section/key/value triples.
@@ -41,16 +41,14 @@ abstract class AbstractRawConfig {
    * @return The contents of the named section. If the section does not exist, the empty map.
    */
   public ImmutableMap<String, String> getSection(String sectionName) {
-    return Optional
-        .fromNullable(getValues().get(sectionName))
-        .or(ImmutableMap.of());
+    return Optional.ofNullable(getValues().get(sectionName)).orElse(ImmutableMap.of());
   }
 
   /**
    * Retrieve a value from a named section.
    */
   public Optional<String> getValue(String sectionName, String key) {
-    return Optional.fromNullable(getSection(sectionName).get(key));
+    return Optional.ofNullable(getSection(sectionName).get(key));
   }
 
   /**

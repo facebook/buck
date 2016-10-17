@@ -61,7 +61,6 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -78,6 +77,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class CxxLibraryDescriptionTest {
@@ -100,7 +100,7 @@ public class CxxLibraryDescriptionTest {
               headerMapBuildTarget,
               HeaderSymlinkTreeWithHeaderMap.getPath(filesystem, headerMapBuildTarget)));
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -1266,7 +1266,7 @@ public class CxxLibraryDescriptionTest {
                     new SourceTreePath(
                         PBXReference.SourceTree.SDKROOT,
                         Paths.get("/usr/lib/libz.dylib"),
-                        Optional.absent())),
+                        Optional.empty())),
                 FrameworkPath.ofSourcePath(new FakeSourcePath("/another/path/liba.dylib"))))
         .setSrcs(
             ImmutableSortedSet.of(

@@ -33,7 +33,6 @@ import com.facebook.buck.util.ChunkAccumulator;
 import com.facebook.buck.util.XmlDomParser;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -55,6 +54,7 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -148,14 +148,14 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
       return ImmutableList.of(
           getProgramFailureSummary(
               "test program aborted before finishing",
-              getProjectFilesystem().readFileIfItExists(output).or("")));
+              getProjectFilesystem().readFileIfItExists(output).orElse("")));
     }
 
     ImmutableList.Builder<TestResultSummary> summariesBuilder = ImmutableList.builder();
 
     // It's possible the test output had invalid characters in it's output, so make sure to
     // ignore these as we parse the output lines.
-    Optional<String> currentTest = Optional.absent();
+    Optional<String> currentTest = Optional.empty();
     Map<String, ChunkAccumulator> stdout = Maps.newHashMap();
     CharsetDecoder decoder = Charsets.UTF_8.newDecoder();
     decoder.onMalformedInput(CodingErrorAction.IGNORE);
@@ -169,7 +169,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
           currentTest = Optional.of(test);
           stdout.put(test, new ChunkAccumulator(Charsets.UTF_8, maxTestOutputSize));
         } else if (END.matcher(line.trim()).matches()) {
-          currentTest = Optional.absent();
+          currentTest = Optional.empty();
         } else if (currentTest.isPresent()) {
           stdout.get(currentTest.get()).append(line);
         }

@@ -17,7 +17,7 @@
 package com.facebook.buck.counters;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.google.common.base.Optional;
+import com.facebook.buck.util.OptionalCompat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -28,6 +28,7 @@ import com.google.common.eventbus.Subscribe;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -123,7 +124,7 @@ public class CounterRegistryImpl implements CounterRegistry {
     }
 
     ImmutableList<CounterSnapshot> presentSnapshots = ImmutableList.copyOf(
-        Optional.presentInstances(snapshots));
+        OptionalCompat.presentInstances(snapshots));
     if (!presentSnapshots.isEmpty()) {
       CountersSnapshotEvent event = new CountersSnapshotEvent(presentSnapshots);
       eventBus.post(event);

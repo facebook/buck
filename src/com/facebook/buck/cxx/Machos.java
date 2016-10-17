@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.util.MoreStrings;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.primitives.Ints;
@@ -30,6 +29,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class Machos {
 
@@ -219,9 +219,7 @@ public class Machos {
               String rootPrefix = root + "/";
               Optional<String> fixed =
                   MoreStrings
-                      .stripPrefix(string, rootPrefix)
-                      .transform(
-                          input -> "./" + input);
+                      .stripPrefix(string, rootPrefix).map(input -> "./" + input);
               if (fixed.isPresent()) {
                 string = fixed.get();
                 break;

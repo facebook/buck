@@ -18,7 +18,6 @@ package com.facebook.buck.model;
 
 import com.facebook.buck.io.MorePaths;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.FluentIterable;
@@ -33,6 +32,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeSet;
 
 import javax.annotation.Nullable;
@@ -90,7 +90,7 @@ public class InMemoryBuildFileTree extends BuildFileTree {
     if (parent != null) {
       return Optional.of(parent.basePath);
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

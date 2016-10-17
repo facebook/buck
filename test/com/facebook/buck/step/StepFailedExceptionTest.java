@@ -23,12 +23,12 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Optional;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public class StepFailedExceptionTest {
 
@@ -74,7 +74,7 @@ public class StepFailedExceptionTest {
     final StepExecutionResult executionResult = StepExecutionResult.of(exitCode);
     Step step = new FakeStep("cp", "cp foo bar", exitCode);
     StepFailedException exception = StepFailedException.createForFailingStepWithExitCode(
-        step, verboseContext, executionResult, Optional.absent());
+        step, verboseContext, executionResult, Optional.empty());
 
     assertEquals(step, exception.getStep());
     assertEquals(exitCode, exception.getExitCode());
@@ -113,7 +113,7 @@ public class StepFailedExceptionTest {
     final int exitCode = 17;
     Step step = new FakeStep("cp", "cp foo bar", exitCode);
     StepFailedException exception = StepFailedException.createForFailingStepWithException(
-        step, new IOException("Copy failed!"), Optional.absent());
+        step, new IOException("Copy failed!"), Optional.empty());
 
     assertEquals(step, exception.getStep());
     assertEquals(1, exception.getExitCode());

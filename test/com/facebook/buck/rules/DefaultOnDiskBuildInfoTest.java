@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
@@ -32,6 +31,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class DefaultOnDiskBuildInfoTest {
 
@@ -100,7 +100,7 @@ public class DefaultOnDiskBuildInfoTest {
             ObjectMappers.newDefaultInstance());
     assertThat(
         onDiskBuildInfo.getValues("KEY"),
-        Matchers.equalTo(Optional.<ImmutableList<String>>absent()));
+        Matchers.equalTo(Optional.empty()));
   }
 
   @Test
@@ -118,7 +118,7 @@ public class DefaultOnDiskBuildInfoTest {
             ObjectMappers.newDefaultInstance());
     assertThat(
         onDiskBuildInfo.getValues("KEY"),
-        Matchers.equalTo(Optional.<ImmutableList<String>>absent()));
+        Matchers.equalTo(Optional.empty()));
   }
 
   @Test
@@ -153,7 +153,7 @@ public class DefaultOnDiskBuildInfoTest {
             ObjectMappers.newDefaultInstance());
     assertThat(
         onDiskBuildInfo.getHash("KEY"),
-        Matchers.equalTo(Optional.<Sha1HashCode>absent()));
+        Matchers.equalTo(Optional.empty()));
   }
 
   @Test
@@ -171,7 +171,7 @@ public class DefaultOnDiskBuildInfoTest {
             ObjectMappers.newDefaultInstance());
     assertThat(
         onDiskBuildInfo.getHash("KEY"),
-        Matchers.equalTo(Optional.<Sha1HashCode>absent()));
+        Matchers.equalTo(Optional.empty()));
   }
 
   @Test
@@ -208,7 +208,7 @@ public class DefaultOnDiskBuildInfoTest {
             ObjectMappers.newDefaultInstance());
     assertThat(
         onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY),
-        Matchers.equalTo(Optional.<RuleKey>absent()));
+        Matchers.equalTo(Optional.empty()));
   }
 
   @Test
@@ -226,7 +226,7 @@ public class DefaultOnDiskBuildInfoTest {
             ObjectMappers.newDefaultInstance());
     assertThat(
         onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY),
-        Matchers.equalTo(Optional.<RuleKey>absent()));
+        Matchers.equalTo(Optional.empty()));
   }
 
 }

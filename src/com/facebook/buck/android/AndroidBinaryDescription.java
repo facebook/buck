@@ -57,7 +57,6 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -71,6 +70,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -137,7 +137,7 @@ public class AndroidBinaryDescription
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
     try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(
-        Optional.fromNullable(resolver.getEventBus()),
+        Optional.ofNullable(resolver.getEventBus()),
         PerfEventId.of("AndroidBinaryDescription"),
         "target", params.getBuildTarget().toString())) {
 
@@ -170,7 +170,7 @@ public class AndroidBinaryDescription
           Optional.of(args.applicationModuleTargets));
 
       ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =
-          args.androidSdkProguardConfig.or(ProGuardObfuscateStep.SdkProguardType.DEFAULT);
+          args.androidSdkProguardConfig.orElse(ProGuardObfuscateStep.SdkProguardType.DEFAULT);
 
       // If the old boolean version of this argument was specified, make sure the new form
       // was not specified, and allow the old form to override the default.
@@ -179,7 +179,7 @@ public class AndroidBinaryDescription
             !args.androidSdkProguardConfig.isPresent(),
             "The deprecated use_android_proguard_config_with_optimizations parameter" +
                 " cannot be used with android_sdk_proguard_config.");
-        androidSdkProguardConfig = args.useAndroidProguardConfigWithOptimizations.or(false)
+        androidSdkProguardConfig = args.useAndroidProguardConfigWithOptimizations.orElse(false)
             ? ProGuardObfuscateStep.SdkProguardType.OPTIMIZED
             : ProGuardObfuscateStep.SdkProguardType.DEFAULT;
       }
@@ -187,14 +187,14 @@ public class AndroidBinaryDescription
       EnumSet<ExopackageMode> exopackageModes = EnumSet.noneOf(ExopackageMode.class);
       if (!args.exopackageModes.isEmpty()) {
         exopackageModes = EnumSet.copyOf(args.exopackageModes);
-      } else if (args.exopackage.or(false)) {
+      } else if (args.exopackage.orElse(false)) {
         exopackageModes = EnumSet.of(ExopackageMode.SECONDARY_DEX);
       }
 
       DexSplitMode dexSplitMode = createDexSplitMode(args, exopackageModes);
 
       PackageType packageType = getPackageType(args);
-      boolean shouldPreDex = !args.disablePreDex.or(false) &&
+      boolean shouldPreDex = !args.disablePreDex.orElse(false) &&
           PackageType.DEBUG.equals(packageType) &&
           !args.preprocessJavaClassesBash.isPresent();
 
@@ -220,27 +220,27 @@ public class AndroidBinaryDescription
           args.manifest,
           packageType,
           ImmutableSet.copyOf(args.cpuFilters),
-          args.buildStringSourceMap.or(false),
+          args.buildStringSourceMap.orElse(false),
           shouldPreDex,
           AndroidBinary.getPrimaryDexPath(params.getBuildTarget(), params.getProjectFilesystem()),
           dexSplitMode,
-          ImmutableSet.copyOf(args.noDx.or(ImmutableSet.of())),
+          ImmutableSet.copyOf(args.noDx.orElse(ImmutableSet.of())),
           /* resourcesToExclude */ ImmutableSet.of(),
-          args.skipCrunchPngs.or(false),
-          args.includesVectorDrawables.or(false),
+          args.skipCrunchPngs.orElse(false),
+          args.includesVectorDrawables.orElse(false),
           javacOptions,
           exopackageModes,
           (Keystore) keystore,
           args.buildConfigValues,
           args.buildConfigValuesFile,
-          Optional.absent(),
-          args.trimResourceIds.or(false),
+          Optional.empty(),
+          args.trimResourceIds.orElse(false),
           args.keepResourcePattern,
           nativePlatforms,
           Optional.of(args.nativeLibraryMergeMap),
           args.nativeLibraryMergeGlue,
           args.nativeLibraryMergeCodeGenerator,
-          args.enableRelinker.or(false) ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
+          args.enableRelinker.orElse(false) ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
           dxExecutorService,
           args.manifestEntries,
           cxxBuckConfig,
@@ -256,7 +256,7 @@ public class AndroidBinaryDescription
       // Build rules added to "no_dx" are only hints, not hard dependencies. Therefore, although a
       // target may be mentioned in that parameter, it may not be present as a build rule.
       ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
-      for (BuildTarget noDxTarget : args.noDx.or(ImmutableSet.of())) {
+      for (BuildTarget noDxTarget : args.noDx.orElse(ImmutableSet.of())) {
         Optional<BuildRule> ruleOptional = resolver.getRuleOptional(noDxTarget);
         if (ruleOptional.isPresent()) {
           builder.add(ruleOptional.get());
@@ -287,7 +287,7 @@ public class AndroidBinaryDescription
           (Keystore) keystore,
           packageType,
           dexSplitMode,
-          args.noDx.or(ImmutableSet.of()),
+          args.noDx.orElse(ImmutableSet.of()),
           androidSdkProguardConfig,
           args.optimizationPasses,
           args.proguardConfig,
@@ -319,19 +319,19 @@ public class AndroidBinaryDescription
     DexStore defaultDexStore = ExopackageMode.enabledForSecondaryDexes(exopackageModes)
         ? DexStore.JAR
         : DexStore.RAW;
-    DexSplitStrategy dexSplitStrategy = args.minimizePrimaryDexSize.or(false)
+    DexSplitStrategy dexSplitStrategy = args.minimizePrimaryDexSize.orElse(false)
         ? DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE
         : DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE;
     return new DexSplitMode(
-        args.useSplitDex.or(false),
+        args.useSplitDex.orElse(false),
         dexSplitStrategy,
-        args.dexCompression.or(defaultDexStore),
-        args.useLinearAllocSplitDex.or(false),
-        args.linearAllocHardLimit.or(DEFAULT_LINEAR_ALLOC_HARD_LIMIT),
+        args.dexCompression.orElse(defaultDexStore),
+        args.useLinearAllocSplitDex.orElse(false),
+        args.linearAllocHardLimit.orElse(DEFAULT_LINEAR_ALLOC_HARD_LIMIT),
         args.primaryDexPatterns,
         args.primaryDexClassesFile,
         args.primaryDexScenarioFile,
-        args.primaryDexScenarioOverflowAllowed.or(false),
+        args.primaryDexScenarioOverflowAllowed.orElse(false),
         args.secondaryDexHeadClassesFile,
         args.secondaryDexTailClassesFile);
   }

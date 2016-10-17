@@ -17,11 +17,11 @@
 package com.facebook.buck.model;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Optional;
 
 /**
  * Interface to allow looking up parents and children of build files.

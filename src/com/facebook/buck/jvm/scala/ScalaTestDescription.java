@@ -19,8 +19,8 @@ package com.facebook.buck.jvm.scala;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.java.CalculateAbi;
-import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
@@ -41,8 +41,8 @@ import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.util.OptionalCompat;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -50,6 +50,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
+import java.util.Optional;
 import java.util.logging.Level;
 
 public class ScalaTestDescription implements Description<ScalaTestDescription.Arg>,
@@ -131,8 +132,8 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                     pathResolver,
                     params.getProjectFilesystem(),
                     args.resources),
-                /* generatedSourceFolderName */ Optional.absent(),
-                /* proguardConfig */ Optional.absent(),
+                /* generatedSourceFolderName */ Optional.empty(),
+                /* proguardConfig */ Optional.empty(),
                 /* postprocessClassesCommands */ ImmutableList.of(),
                 /* exportDeps */ ImmutableSortedSet.of(),
                 /* providedDeps */ ImmutableSortedSet.of(),
@@ -163,14 +164,14 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                 /* additionalClasspathEntries */ ImmutableSet.of(),
                 args.labels,
                 args.contacts,
-                args.testType.or(TestType.JUNIT),
+                args.testType.orElse(TestType.JUNIT),
                 javaOptions.getJavaRuntimeLauncher(),
                 args.vmArgs,
                 cxxLibraryEnhancement.nativeLibsEnvironment,
-                args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
+                args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
                 args.env,
-                args.runTestSeparately.or(false),
-                args.forkMode.or(ForkMode.NONE),
+                args.runTestSeparately.orElse(false),
+                args.forkMode.orElse(ForkMode.NONE),
                 args.stdOutLogLevel,
                 args.stdErrLogLevel));
 
@@ -191,7 +192,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
       Arg constructorArg) {
     return ImmutableList.<BuildTarget>builder()
         .add(config.getScalaLibraryTarget())
-        .addAll(config.getScalacTarget().asSet())
+        .addAll(OptionalCompat.asSet(config.getScalacTarget()))
         .build();
   }
 

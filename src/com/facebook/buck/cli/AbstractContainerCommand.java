@@ -18,13 +18,13 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.config.CellConfig;
 import com.facebook.buck.log.LogConfigSetup;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 
 import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommands;
 
 import java.io.PrintStream;
+import java.util.Optional;
 
 public abstract class AbstractContainerCommand implements Command {
 

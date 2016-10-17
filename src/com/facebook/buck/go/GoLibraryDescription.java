@@ -36,7 +36,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -47,6 +46,7 @@ import com.google.common.collect.Iterables;
 
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 public class GoLibraryDescription implements
     Description<GoLibraryDescription.Arg>,
@@ -94,8 +94,8 @@ public class GoLibraryDescription implements
               GoLinkable.builder()
                   .setGoLinkInput(
                       ImmutableMap.of(
-                          args.packageName.transform(Paths::get)
-                              .or(goBuckConfig.getDefaultPackageName(buildTarget)),
+                          args.packageName.map(Paths::get)
+                              .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),
                           output))
                   .setExportedDeps(args.exportedDeps)
                   .build()));
@@ -113,7 +113,7 @@ public class GoLibraryDescription implements
                       args.exportedDeps),
                   /* includeSelf */ true)));
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -131,8 +131,8 @@ public class GoLibraryDescription implements
           params,
           resolver,
           goBuckConfig,
-          args.packageName.transform(Paths::get)
-              .or(goBuckConfig.getDefaultPackageName(params.getBuildTarget())),
+          args.packageName.map(Paths::get)
+              .orElse(goBuckConfig.getDefaultPackageName(params.getBuildTarget())),
           args.srcs,
           args.compilerFlags,
           args.assemblerFlags,

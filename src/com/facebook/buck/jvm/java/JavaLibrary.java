@@ -21,12 +21,12 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public interface JavaLibrary extends BuildRule, HasClasspathEntries,
     HasJavaAbi, HasJavaClassHashes, HasMavenCoordinates, HasSources {
@@ -39,7 +39,7 @@ public interface JavaLibrary extends BuildRule, HasClasspathEntries,
    * <p/>
    * In the event that this {@link JavaLibrary} cannot be represented as a GWT module (for example,
    * if it has no {@code srcs} or {@code resources} of its own, but only exists to export deps),
-   * then the flavor will be {@link Optional#absent()}.
+   * then the flavor will be {@link Optional#empty()}.
    * <p/>
    * Note that the output of the {@link BuildRule} for this flavor may contain
    * {@code .class} files. For example, if a third-party releases its {@code .class} and

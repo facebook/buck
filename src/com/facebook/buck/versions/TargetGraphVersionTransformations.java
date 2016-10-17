@@ -18,11 +18,11 @@ package com.facebook.buck.versions;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 import java.lang.reflect.Field;
+import java.util.Optional;
 
 class TargetGraphVersionTransformations {
 
@@ -48,7 +48,7 @@ class TargetGraphVersionTransformations {
     try {
       return Optional.of(node.getConstructorArg().getClass().getField(VERSIONED_DEPS_FIELD_NAME));
     } catch (NoSuchFieldException e) {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 

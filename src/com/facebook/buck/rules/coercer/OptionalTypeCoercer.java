@@ -18,10 +18,10 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class OptionalTypeCoercer<T> implements TypeCoercer<Optional<T>> {
 
@@ -60,7 +60,7 @@ public class OptionalTypeCoercer<T> implements TypeCoercer<Optional<T>> {
       Object object)
       throws CoerceFailedException {
     if (object == null) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of(coercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
   }

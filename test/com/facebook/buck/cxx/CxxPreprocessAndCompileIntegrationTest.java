@@ -33,7 +33,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
@@ -49,6 +48,7 @@ import org.junit.runners.Parameterized;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Optional;
 
 @RunWith(Parameterized.class)
 public class CxxPreprocessAndCompileIntegrationTest {
@@ -129,7 +129,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
     workspace
         .runBuckCommandWithEnvironmentOverridesAndContext(
             tmp.getRoot(),
-            Optional.absent(),
+            Optional.empty(),
             ImmutableMap.of("PWD", symlinkedRoot.toString()),
             "build",
             target.getFullyQualifiedName())

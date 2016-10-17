@@ -16,13 +16,13 @@
 package com.facebook.buck.io;
 
 import com.facebook.buck.log.Logger;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public abstract class LazyPath {
   private static final Logger LOG = Logger.get(LazyPath.class);
   private AtomicReference<Path> path = new AtomicReference<>();
-  private Optional<IOException> exception = Optional.absent();
+  private Optional<IOException> exception = Optional.empty();
 
   /**
    * Creates an instance with given path.

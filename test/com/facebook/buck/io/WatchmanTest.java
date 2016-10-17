@@ -25,7 +25,6 @@ import com.facebook.buck.util.FakeListeningProcessExecutor;
 import com.facebook.buck.util.FakeListeningProcessState;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -38,9 +37,10 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.concurrent.TimeUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 public class WatchmanTest {
 
@@ -60,7 +60,7 @@ public class WatchmanTest {
               "glob_generator",
               "clock-sync-timeout")));
   private static final Function<Path, Optional<WatchmanClient>> NULL_WATCHMAN_CONNECTOR =
-      path -> Optional.absent();
+      path -> Optional.empty();
 
   private static Function<Path, Optional<WatchmanClient>> fakeWatchmanConnector(
       final Path socketName,
@@ -70,7 +70,7 @@ public class WatchmanTest {
     return path -> {
       if (!path.equals(socketName)) {
         System.err.format("bad path (%s != %s", path, socketName);
-        return Optional.absent();
+        return Optional.empty();
       }
       return Optional.of(
           new FakeWatchmanClient(queryElapsedTimeNanos, queryResults));
@@ -105,7 +105,7 @@ public class WatchmanTest {
         finder,
         new TestConsole(),
         clock,
-        Optional.absent());
+        Optional.empty());
 
     assertEquals(Watchman.NULL_WATCHMAN, watchman);
   }
@@ -144,7 +144,7 @@ public class WatchmanTest {
         finder,
         new TestConsole(),
         clock,
-        Optional.absent());
+        Optional.empty());
 
     assertEquals(Watchman.NULL_WATCHMAN, watchman);
   }
@@ -191,7 +191,7 @@ public class WatchmanTest {
         finder,
         new TestConsole(),
         clock,
-        Optional.absent());
+        Optional.empty());
 
     assertEquals(Watchman.NULL_WATCHMAN, watchman);
   }
@@ -330,7 +330,7 @@ public class WatchmanTest {
         finder,
         new TestConsole(),
         clock,
-        Optional.absent());
+        Optional.empty());
 
     assertEquals(
         ImmutableSet.of(
@@ -341,7 +341,7 @@ public class WatchmanTest {
         watchman.getCapabilities());
 
     assertEquals(
-        Optional.absent(),
+        Optional.empty(),
         watchman.getClockId());
   }
 
@@ -392,7 +392,7 @@ public class WatchmanTest {
         finder,
         new TestConsole(),
         clock,
-        Optional.<Long>absent());
+        Optional.empty());
 
     assertEquals(
         ImmutableSet.of(
@@ -456,10 +456,10 @@ public class WatchmanTest {
         finder,
         new TestConsole(),
         clock,
-        Optional.<Long>absent());
+        Optional.empty());
 
     assertEquals(
-        Optional.absent(),
+        Optional.empty(),
         watchman.getClockId());
   }
 }

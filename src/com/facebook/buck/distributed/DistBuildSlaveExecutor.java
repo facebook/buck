@@ -38,7 +38,6 @@ import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.cache.CacheBuilder;
@@ -49,6 +48,7 @@ import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
@@ -93,7 +93,7 @@ public class DistBuildSlaveExecutor {
         Preconditions.checkNotNull(actionGraphAndResolver).getActionGraph(),
         Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
         args.getRootCell(),
-        Optional.absent(),
+        Optional.empty(),
         getExplodingAndroidSupplier(),
         buildEngine,
         args.getArtifactCache(),
@@ -115,8 +115,8 @@ public class DistBuildSlaveExecutor {
             4,
             config.getDefaultResourceAmounts(),
             config.getMaximumResourceAmounts().withCpu(4)),
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         args.getExecutors())) {
 
       // TODO(ruibm): We need to pass to the distbuild target via de distributed build
@@ -130,7 +130,7 @@ public class DistBuildSlaveExecutor {
           /* isKeepGoing */ true,
           args.getBuckEventBus(),
           args.getConsole(),
-          Optional.absent());
+          Optional.empty());
     }
   }
 

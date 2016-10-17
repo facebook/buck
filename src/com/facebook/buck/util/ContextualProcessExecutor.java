@@ -17,11 +17,11 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.util.Set;
+import java.util.Optional;
 
 public class ContextualProcessExecutor implements ProcessExecutor {
 

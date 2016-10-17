@@ -16,11 +16,9 @@
 
 package com.facebook.buck.apple.project_generator;
 
-import javax.annotation.Nullable;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -28,6 +26,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
+import javax.annotation.Nullable;
 
 /**
  * Generates a set of Xcode build configurations from given cxxPlatform
@@ -109,7 +110,7 @@ class CxxPlatformXcodeConfigGenerator {
         CLANG_CXX_LIBRARY,
         notProcessedCxxFlags,
         "-stdlib=",
-        Optional.absent(),
+        Optional.empty(),
         notProcessedAppendedConfig);
     if (clangCxxLibraryValue != null) {
       configBuilder.put(CLANG_CXX_LIBRARY, clangCxxLibraryValue);
@@ -152,7 +153,7 @@ class CxxPlatformXcodeConfigGenerator {
         CLANG_CXX_LANGUAGE_STANDARD,
         notProcessedCxxFlags,
         "-std=",
-        Optional.absent(),
+        Optional.empty(),
         notProcessedAppendedConfig);
     if (clangCxxLanguageStandardValue != null) {
       configBuilder.put(CLANG_CXX_LANGUAGE_STANDARD, clangCxxLanguageStandardValue);

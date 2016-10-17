@@ -35,7 +35,6 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -51,6 +50,7 @@ import org.immutables.value.Value;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class AndroidNativeLibsPackageableGraphEnhancer {
@@ -321,7 +321,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         .setCopyNativeLibraries(
             hasCopyNativeLibraries ?
                 Optional.of(moduleMappedCopyNativeLibriesBuilder.build()) :
-                Optional.absent())
+                Optional.empty())
         .build();
 
   }

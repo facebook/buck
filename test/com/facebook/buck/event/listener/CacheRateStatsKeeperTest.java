@@ -25,12 +25,13 @@ import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.RuleKey;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Test;
+
+import java.util.Optional;
 
 public class CacheRateStatsKeeperTest {
   @Test
@@ -52,11 +53,11 @@ public class CacheRateStatsKeeperTest {
         BuildRuleKeys.of(new RuleKey("aa")),
         BuildRuleStatus.SUCCESS,
         cacheResult,
-        Optional.absent(),
-        Optional.absent(),
-        Optional.absent(),
-        Optional.absent(),
-        Optional.absent());
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 
   @Test

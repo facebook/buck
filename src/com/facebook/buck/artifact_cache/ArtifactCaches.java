@@ -27,7 +27,6 @@ import com.facebook.buck.slb.RetryingHttpService;
 import com.facebook.buck.slb.SingleUriService;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -37,6 +36,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.ConnectionPool;
@@ -116,11 +116,10 @@ public class ArtifactCaches {
   public static Optional<ArtifactCache> newServedCache(
       ArtifactCacheBuckConfig buckConfig,
       final ProjectFilesystem projectFilesystem) {
-    return buckConfig.getServedLocalCache().transform(
-        input -> createDirArtifactCache(
-            Optional.absent(),
-            input,
-            projectFilesystem));
+    return buckConfig.getServedLocalCache().map(input -> createDirArtifactCache(
+        Optional.empty(),
+        input,
+        projectFilesystem));
   }
 
   private static ArtifactCache newInstanceInternal(
@@ -329,9 +328,7 @@ public class ArtifactCaches {
             config.getLoadBalancingType());
     }
 
-    String cacheName = cacheDescription.getName()
-        .transform(input -> "http-" + input)
-        .or("http");
+    String cacheName = cacheDescription.getName().map(input -> "http-" + input).orElse("http");
     boolean doStore = cacheDescription.getCacheReadMode().isDoStore();
     return factory.newInstance(
         NetworkCacheArgs.builder()

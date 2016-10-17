@@ -30,7 +30,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -43,6 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.Optional;
 
 public class GoBuckConfig {
 
@@ -130,7 +130,7 @@ public class GoBuckConfig {
   }
 
   Path getDefaultPackageName(BuildTarget target) {
-    Path prefix = Paths.get(delegate.getValue(SECTION, "prefix").or(""));
+    Path prefix = Paths.get(delegate.getValue(SECTION, "prefix").orElse(""));
     return prefix.resolve(target.getBasePath());
   }
 
@@ -175,7 +175,7 @@ public class GoBuckConfig {
   private ImmutableList<String> getFlags(String key) {
     return ImmutableList.copyOf(
         Splitter.on(" ").omitEmptyStrings().split(
-            delegate.getValue(SECTION, key).or("")));
+            delegate.getValue(SECTION, key).orElse("")));
   }
 
   private Path getGoToolPath() {
@@ -196,16 +196,17 @@ public class GoBuckConfig {
 
   private String getGoEnvFromTool(ProcessExecutor processExecutor, String env) {
     Path goTool = getGoToolPath();
-    Optional<Map<String, String>> goRootEnv = delegate.getPath(SECTION, "root").transform(
-        input -> ImmutableMap.of("GOROOT", input.toString()));
+    Optional<Map<String, String>> goRootEnv = delegate.getPath(
+        SECTION,
+        "root").map(input -> ImmutableMap.of("GOROOT", input.toString()));
     try {
       ProcessExecutor.Result goToolResult = processExecutor.launchAndExecute(
           ProcessExecutorParams.builder().addCommand(
               goTool.toString(), "env", env).setEnvironment(goRootEnv).build(),
           EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
-                    /* stdin */ Optional.absent(),
-                    /* timeOutMs */ Optional.absent(),
-                    /* timeoutHandler */ Optional.absent());
+                    /* stdin */ Optional.empty(),
+                    /* timeOutMs */ Optional.empty(),
+                    /* timeoutHandler */ Optional.empty());
       if (goToolResult.getExitCode() == 0) {
         return CharMatcher.whitespace().trimFrom(goToolResult.getStdout().get());
       } else {

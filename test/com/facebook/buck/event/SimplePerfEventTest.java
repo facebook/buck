@@ -19,7 +19,6 @@ package com.facebook.buck.event;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.timing.SettableFakeClock;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -29,6 +28,7 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class SimplePerfEventTest {
@@ -174,7 +174,7 @@ public class SimplePerfEventTest {
 
     // This does absolutely nothing, but shouldn't crash either.
     try (SimplePerfEvent.Scope scope =
-             SimplePerfEvent.scope(Optional.absent(), testEventId)) {
+             SimplePerfEvent.scope(Optional.empty(), testEventId)) {
       scope.appendFinishedInfo("finished", "info");
       scope.update(ImmutableMap.of("update", "updateValue"));
     }

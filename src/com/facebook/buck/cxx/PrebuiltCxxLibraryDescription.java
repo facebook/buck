@@ -48,8 +48,8 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.StringExpander;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.OptionalCompat;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -60,6 +60,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class PrebuiltCxxLibraryDescription implements
@@ -132,7 +133,7 @@ public class PrebuiltCxxLibraryDescription implements
   // Platform unlike most macro expanders needs access to the cxx build flavor.
   // Because of that it can't be like normal expanders. So just create a handler here.
   private static MacroHandler getMacroHandler(final Optional<CxxPlatform> cxxPlatform) {
-    String flav = cxxPlatform.transform(input -> input.getFlavor().toString()).or("");
+    String flav = cxxPlatform.map(input -> input.getFlavor().toString()).orElse("");
     return new MacroHandler(
         ImmutableMap.of(
             "location", new LocationMacroExpander(),
@@ -197,9 +198,9 @@ public class PrebuiltCxxLibraryDescription implements
       Optional<String> soname,
       Optional<String> libName) {
 
-    String unexpanded = soname.or(String.format(
+    String unexpanded = soname.orElse(String.format(
         "lib%s.%s",
-        libName.or(target.getShortName()),
+        libName.orElse(target.getShortName()),
         cxxPlatform.getSharedLibraryExtension()));
     return expandMacros(
         getMacroHandler(Optional.of(cxxPlatform)),
@@ -219,10 +220,10 @@ public class PrebuiltCxxLibraryDescription implements
       final Optional<String> libName,
       String suffix) {
 
-    final String libDirString = libDir.or("lib");
+    final String libDirString = libDir.orElse("lib");
     final String fileNameString = String.format(
         "lib%s%s",
-        libName.or(target.getShortName()),
+        libName.orElse(target.getShortName()),
         suffix);
 
     return getApplicableSourcePath(
@@ -333,8 +334,7 @@ public class PrebuiltCxxLibraryDescription implements
           params.getBuildTarget());
     }
     return CxxPreprocessables.resolveHeaderMap(
-        args.headerNamespace.transform(Paths::get)
-            .or(params.getBuildTarget().getBasePath()),
+        args.headerNamespace.map(Paths::get).orElse(params.getBuildTarget().getBasePath()),
         headers.build());
   }
 
@@ -397,7 +397,7 @@ public class PrebuiltCxxLibraryDescription implements
                 params.getBuildTarget(),
                 params.getCellRoots(),
                 ruleResolver,
-                Optional.presentInstances(ImmutableList.of(args.libDir))))
+                OptionalCompat.presentInstances(ImmutableList.of(args.libDir))))
             .appendExtraDeps(
                 getBuildRules(
                     params.getBuildTarget(),
@@ -413,8 +413,8 @@ public class PrebuiltCxxLibraryDescription implements
         Linker.LinkableDepType.SHARED,
         FluentIterable.from(params.getDeps())
             .filter(NativeLinkable.class),
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
             .addAllArgs(
@@ -479,7 +479,7 @@ public class PrebuiltCxxLibraryDescription implements
                 params.getBuildTarget(),
                 params.getCellRoots(),
                 ruleResolver,
-                Optional.presentInstances(ImmutableList.of(args.libDir))))
+                OptionalCompat.presentInstances(ImmutableList.of(args.libDir))))
         .appendExtraDeps(
             getBuildRules(
                 params.getBuildTarget(),
@@ -504,13 +504,13 @@ public class PrebuiltCxxLibraryDescription implements
             args.exportedPlatformLinkerFlags,
             input),
         args.soname,
-        args.linkWithoutSoname.or(false),
+        args.linkWithoutSoname.orElse(false),
         args.frameworks,
         args.libraries,
-        args.forceStatic.or(false),
-        args.headerOnly.or(false),
-        args.linkWhole.or(false),
-        args.provided.or(false),
+        args.forceStatic.orElse(false),
+        args.headerOnly.orElse(false),
+        args.linkWhole.orElse(false),
+        args.provided.orElse(false),
         cxxPlatform -> {
           if (!args.exportedHeaders.isEmpty()) {
             return true;
@@ -523,8 +523,8 @@ public class PrebuiltCxxLibraryDescription implements
           }
           return false;
         },
-    args.supportedPlatformsRegex,
-    args.canBeAsset.or(false));
+        args.supportedPlatformsRegex,
+        args.canBeAsset.orElse(false));
   }
 
   @Override
@@ -549,7 +549,7 @@ public class PrebuiltCxxLibraryDescription implements
       BuildRuleResolver ruleResolver,
       Iterable<String> paramValues) {
     ImmutableList.Builder<BuildRule> builder = ImmutableList.builder();
-    MacroHandler macroHandler = getMacroHandler(Optional.absent());
+    MacroHandler macroHandler = getMacroHandler(Optional.empty());
     for (String p : paramValues) {
       try {
 
@@ -568,7 +568,7 @@ public class PrebuiltCxxLibraryDescription implements
       ImmutableSet.Builder<BuildTarget> targets) {
     try {
       // doesn't matter that the platform expander doesn't do anything.
-      MacroHandler macroHandler = getMacroHandler(Optional.absent());
+      MacroHandler macroHandler = getMacroHandler(Optional.empty());
       // Then get the parse time deps.
       targets.addAll(macroHandler.extractParseTimeDeps(target, cellNames, paramValue));
     } catch (MacroException e) {

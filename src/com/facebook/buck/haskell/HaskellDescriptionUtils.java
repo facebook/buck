@@ -48,7 +48,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.MoreIterables;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -59,6 +58,7 @@ import com.google.common.collect.Iterables;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 
 public class HaskellDescriptionUtils {
@@ -242,7 +242,7 @@ public class HaskellDescriptionUtils {
     if (linkType.equals(Linker.LinkType.SHARED)) {
       name =
           CxxDescriptionEnhancer.getSharedLibrarySoname(
-              Optional.absent(),
+              Optional.empty(),
               target.withFlavors(),
               cxxPlatform);
       argsBuilder.addAll(StringArg.from("-shared", "-dynamic"));
@@ -290,8 +290,8 @@ public class HaskellDescriptionUtils {
                 cxxPlatform,
                 haskellConfig,
                 depType,
-                Optional.absent(),
-                Optional.absent(),
+                Optional.empty(),
+                Optional.empty(),
                 ImmutableList.of(),
                 HaskellSources.builder()
                     .putModuleMap("Unused", new BuildTargetSourcePath(emptyModule.getBuildTarget()))

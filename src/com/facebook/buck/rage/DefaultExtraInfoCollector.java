@@ -19,12 +19,12 @@ package com.facebook.buck.rage;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Runs an optional user-specified command to get extra info for the rage report.
@@ -51,7 +51,7 @@ public class DefaultExtraInfoCollector implements ExtraInfoCollector {
       throws IOException, InterruptedException, ExtraInfoExecutionException {
     ImmutableList<String> extraInfoCommand = rageConfig.getExtraInfoCommand();
     if (extraInfoCommand.isEmpty()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     // TODO(ruibm): Potentially add the initial static launch dir here as well as any launch-*
@@ -74,9 +74,9 @@ public class DefaultExtraInfoCollector implements ExtraInfoCollector {
           ImmutableSet.of(
               ProcessExecutor.Option.EXPECTING_STD_OUT,
               ProcessExecutor.Option.PRINT_STD_ERR),
-          Optional.absent(),
+          Optional.empty(),
           Optional.of(PROCESS_TIMEOUT_MS),
-          Optional.absent()
+          Optional.empty()
       );
     } catch (IOException e) {
       throw new ExtraInfoExecutionException("Could not invoke extra report command.", e);
@@ -101,7 +101,7 @@ public class DefaultExtraInfoCollector implements ExtraInfoCollector {
     return Optional.of(
         ExtraInfoResult.builder()
             .setExtraFiles(rageExtraFiles)
-            .setOutput(extraInfoResult.getStdout().or(""))
+            .setOutput(extraInfoResult.getStdout().orElse(""))
             .build());
 
   }

@@ -22,12 +22,12 @@ import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.swift.SwiftPlatform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Adds Apple-specific tools to {@link CxxPlatform}.

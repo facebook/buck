@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -30,6 +29,7 @@ import com.google.common.collect.Maps;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Event produced for HttpArtifactCache operations containing different stats.
@@ -111,7 +111,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
           EventKey.unique(),
           CACHE_MODE,
           operation,
-          Optional.absent(),
+          Optional.empty(),
           ruleKeys,
           ArtifactCacheEvent.InvocationType.SYNCHRONOUS);
     }
@@ -176,7 +176,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
         return Optional.of((long) eventInfo.get(ARTIFACT_SIZE_BYTES_KEY));
       }
 
-      return Optional.absent();
+      return Optional.empty();
     }
 
     public long getRequestDurationMillis() {
@@ -210,7 +210,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
     public static class Builder {
       private final Map<String, Object> data;
       private boolean wasUploadSuccessful;
-      private Optional<CacheResult> cacheResult = Optional.absent();
+      private Optional<CacheResult> cacheResult = Optional.empty();
 
       private final Started startedEvent;
 

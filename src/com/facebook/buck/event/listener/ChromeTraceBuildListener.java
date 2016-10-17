@@ -58,7 +58,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -72,6 +71,7 @@ import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -202,7 +202,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
                PathListing.GET_PATH_MODIFIED_TIME,
                PathListing.FilterMode.EXCLUDE,
                Optional.of(tracesToKeep),
-               Optional.absent())) {
+               Optional.empty())) {
         projectFilesystem.deleteFileAtPath(path);
       }
     } catch (IOException e) {
@@ -317,7 +317,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         ImmutableMap.of(
             "cache_result", finished.getCacheResult().toString().toLowerCase(),
             "success_type",
-            finished.getSuccessType().transform(Object::toString).or("failed")
+            finished.getSuccessType().map(Object::toString).orElse("failed")
         ),
         finished);
   }
@@ -539,7 +539,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     ImmutableMap.Builder<String, String> argumentsBuilder = ImmutableMap.<String, String>builder()
         .put("success", Boolean.toString(finished.isSuccess()))
         .put("rule_key", Joiner.on(", ").join(finished.getRuleKeys()));
-    Optionals.putIfPresent(finished.getCacheResult().transform(Object::toString),
+    Optionals.putIfPresent(
+        finished.getCacheResult().map(Object::toString),
         "cache_result",
         argumentsBuilder);
 

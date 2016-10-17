@@ -20,11 +20,11 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.python.NeededCoverageSpec;
 import com.facebook.buck.rules.CellPathResolver;
-import com.google.common.base.Optional;
 
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Optional;
 
 /**
  * A type coercer to handle needed coverage specification for python_test.
@@ -95,7 +95,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
             filesystem,
             pathRelativeToProjectRoot,
             iter.next());
-        Optional<String> pathName = Optional.absent();
+        Optional<String> pathName = Optional.empty();
         if (iter.hasNext()) {
           pathName = Optional.of(
               pathNameTypeCoercer.coerce(

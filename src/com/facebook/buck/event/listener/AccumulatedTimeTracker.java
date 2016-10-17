@@ -20,13 +20,13 @@ import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.Map;
 
 
 public class AccumulatedTimeTracker {
@@ -97,7 +97,7 @@ public class AccumulatedTimeTracker {
   }
 
   public void didFinishTestRule(TestRuleEvent.Finished finished) {
-    threadsToRunningTestRuleEvent.put(finished.getThreadId(), Optional.absent());
+    threadsToRunningTestRuleEvent.put(finished.getThreadId(), Optional.empty());
     accumulatedRuleTime.remove(finished.getBuildTarget());
   }
 
@@ -106,7 +106,7 @@ public class AccumulatedTimeTracker {
         Preconditions.checkNotNull(
             threadsToRunningBuildRuleEvent.put(
                 buildRuleEvent.getThreadId(),
-                Optional.absent()));
+                Optional.empty()));
     Preconditions.checkState(started.isPresent());
     Preconditions.checkState(buildRuleEvent.getBuildRule().equals(started.get().getBuildRule()));
     AtomicLong current = accumulatedRuleTime.get(buildRuleEvent.getBuildRule().getBuildTarget());

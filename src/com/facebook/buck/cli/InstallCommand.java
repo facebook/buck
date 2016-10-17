@@ -57,7 +57,6 @@ import com.facebook.infer.annotation.Assertions;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -73,6 +72,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -255,7 +255,7 @@ public class InstallCommand extends BuildCommand {
                 started,
                 installResult.getExitCode() == 0,
                 installResult.getLaunchedPid(),
-                Optional.absent()));
+                Optional.empty()));
         exitCode = installResult.getExitCode();
         if (exitCode != 0) {
           return exitCode;
@@ -323,7 +323,7 @@ public class InstallCommand extends BuildCommand {
                   Optionals.bind(deviceHelperTarget,
                       input -> !input.toString().isEmpty()
                           ? Optional.of(input.toString())
-                          : Optional.absent()),
+                          : Optional.empty()),
                   installHelperTargets);
               }
             }
@@ -738,9 +738,9 @@ public class InstallCommand extends BuildCommand {
       Path simctlPath) throws IOException, InterruptedException {
     LOG.debug("Choosing simulator for %s", appleBundle);
 
-    Optional<AppleSimulator> simulatorByUdid = Optional.absent();
-    Optional<AppleSimulator> simulatorByName = Optional.absent();
-    Optional<AppleSimulator> defaultSimulator = Optional.absent();
+    Optional<AppleSimulator> simulatorByUdid = Optional.empty();
+    Optional<AppleSimulator> simulatorByName = Optional.empty();
+    Optional<AppleSimulator> defaultSimulator = Optional.empty();
 
     boolean wantUdid = deviceOptions.hasSerialNumber();
     boolean wantName = deviceOptions.getSimulatorName().isPresent();
@@ -775,7 +775,7 @@ public class InstallCommand extends BuildCommand {
         LOG.warn(
             "Asked to find simulator with UDID %s, but couldn't find one.",
             deviceOptions.getSerialNumber());
-        return Optional.absent();
+        return Optional.empty();
       }
     } else if (wantName) {
       if (simulatorByName.isPresent()) {
@@ -784,7 +784,7 @@ public class InstallCommand extends BuildCommand {
         LOG.warn(
             "Asked to find simulator with name %s, but couldn't find one.",
             deviceOptions.getSimulatorName().get());
-        return Optional.absent();
+        return Optional.empty();
       }
     } else {
       return defaultSimulator;

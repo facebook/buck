@@ -36,7 +36,7 @@ public class KotlinBuckConfig {
   }
 
   public Supplier<Tool> getKotlinCompiler() {
-    Path compilerPath = delegate.getPath("kotlin", "compiler").or(DEFAULT_KOTLIN_COMPILER);
+    Path compilerPath = delegate.getPath("kotlin", "compiler").orElse(DEFAULT_KOTLIN_COMPILER);
 
     Path compiler = new ExecutableFinder().getExecutable(compilerPath, delegate.getEnvironment());
 

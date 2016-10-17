@@ -34,7 +34,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -50,6 +49,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Optional;
 import java.util.concurrent.Future;
 
 public class ProvisioningProfileCopyStepTest {
@@ -102,7 +102,7 @@ public class ProvisioningProfileCopyStepTest {
     ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
         projectFilesystem,
         testdataDir.resolve("Info.plist"),
-        Optional.absent(),
+        Optional.empty(),
         Optional.of(testdataDir.resolve("Invalid.plist")),
         ProvisioningProfileStore.fromSearchPath(testdataDir),
         outputFile,
@@ -122,8 +122,8 @@ public class ProvisioningProfileCopyStepTest {
     ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
         projectFilesystem,
         testdataDir.resolve("Invalid.plist"),
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         ProvisioningProfileStore.fromSearchPath(testdataDir),
         outputFile,
         xcentFile,
@@ -146,8 +146,8 @@ public class ProvisioningProfileCopyStepTest {
     ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
         projectFilesystem,
         testdataDir.resolve("Info.plist"),
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         ProvisioningProfileStore.fromSearchPath(emptyDir),
         outputFile,
         xcentFile,
@@ -163,8 +163,8 @@ public class ProvisioningProfileCopyStepTest {
     ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
         projectFilesystem,
         testdataDir.resolve("Info.plist"),
-        Optional.absent(),
-        Optional.absent(),
+        Optional.empty(),
+        Optional.empty(),
         ProvisioningProfileStore.fromSearchPath(testdataDir),
         outputFile,
         xcentFile,
@@ -184,7 +184,7 @@ public class ProvisioningProfileCopyStepTest {
         projectFilesystem,
         testdataDir.resolve("Info.plist"),
         Optional.of("00000000-0000-0000-0000-000000000000"),
-        Optional.absent(),
+        Optional.empty(),
         ProvisioningProfileStore.fromSearchPath(testdataDir),
         outputFile,
         xcentFile,

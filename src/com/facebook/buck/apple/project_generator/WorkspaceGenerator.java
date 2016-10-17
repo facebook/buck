@@ -21,7 +21,6 @@ import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
@@ -38,6 +37,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.SortedMap;
 import java.util.Stack;
 
@@ -106,7 +106,7 @@ class WorkspaceGenerator {
   public void addFilePath(Path path) {
     path = path.normalize();
 
-    Optional<Path> groupPath = Optional.absent();
+    Optional<Path> groupPath = Optional.empty();
     // We skip the last name before the file name as it's usually the same as the project name, and
     // adding a group would add an unnecessary level of nesting. We don't check whether it's the
     // same or not to avoid inconsistent behaviour: this will result in all projects to show up in a

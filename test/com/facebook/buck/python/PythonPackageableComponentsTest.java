@@ -25,7 +25,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -33,6 +32,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class PythonPackageableComponentsTest {
 
@@ -84,13 +84,13 @@ public class PythonPackageableComponentsTest {
         ImmutableMap.of(),
         ImmutableMap.of(),
         ImmutableSet.of(),
-        Optional.absent());
+        Optional.empty());
     PythonPackageComponents compB = PythonPackageComponents.of(
         ImmutableMap.of(dest, new FakeSourcePath("sourceB")),
         ImmutableMap.of(),
         ImmutableMap.of(),
         ImmutableSet.of(),
-        Optional.absent());
+        Optional.empty());
     PythonPackageComponents.Builder builder = new PythonPackageComponents.Builder(me);
     builder.addComponent(compA, them);
     try {
@@ -112,13 +112,13 @@ public class PythonPackageableComponentsTest {
         ImmutableMap.of(),
         ImmutableMap.of(),
         ImmutableSet.of(),
-        Optional.absent());
+        Optional.empty());
     PythonPackageComponents compB = PythonPackageComponents.of(
         ImmutableMap.of(dest, path),
         ImmutableMap.of(),
         ImmutableMap.of(),
         ImmutableSet.of(),
-        Optional.absent());
+        Optional.empty());
     PythonPackageComponents.Builder builder = new PythonPackageComponents.Builder(me);
     builder.addComponent(compA, them);
     builder.addComponent(compB, them);

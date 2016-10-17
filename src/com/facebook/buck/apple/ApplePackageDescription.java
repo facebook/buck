@@ -40,7 +40,6 @@ import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -48,6 +47,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Sets;
 
+import java.util.Optional;
 import java.util.Set;
 
 public class ApplePackageDescription implements
@@ -174,12 +174,12 @@ public class ApplePackageDescription implements
                       packageConfig.get(),
                       macroExpander,
                       platform))
-              : Optional.absent(),
+              : Optional.empty(),
           flavor);
     }
 
     if (packageConfigs.isEmpty()) {
-      return Optional.absent();
+      return Optional.empty();
     } else if (packageConfigs.keySet().size() == 1) {
       return Iterables.getOnlyElement(packageConfigs.keySet());
     } else {

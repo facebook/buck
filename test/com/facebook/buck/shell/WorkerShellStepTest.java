@@ -32,7 +32,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -45,6 +44,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -68,9 +68,9 @@ public class WorkerShellStepTest {
       @Nullable WorkerJobParams cmdExeParams) {
     return new WorkerShellStep(
         new FakeProjectFilesystem(),
-        Optional.fromNullable(cmdParams),
-        Optional.fromNullable(bashParams),
-        Optional.fromNullable(cmdExeParams));
+        Optional.ofNullable(cmdParams),
+        Optional.ofNullable(bashParams),
+        Optional.ofNullable(cmdExeParams));
   }
 
   private WorkerJobParams createJobParams() {
@@ -353,8 +353,8 @@ public class WorkerShellStepTest {
             "",
             ImmutableMap.of("BAK", "chicken"),
             "$FOO $BAR $BAZ $BAK")),
-        Optional.absent(),
-        Optional.absent()) {
+        Optional.empty(),
+        Optional.empty()) {
 
       @Override
       protected ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
@@ -400,9 +400,9 @@ public class WorkerShellStepTest {
       WorkerShellStepWithFakeProcesses(WorkerJobParams jobParams) {
         super(
             new FakeProjectFilesystem(),
-            Optional.fromNullable(jobParams),
-            Optional.absent(),
-            Optional.absent());
+            Optional.ofNullable(jobParams),
+            Optional.empty(),
+            Optional.empty());
       }
 
       @Override

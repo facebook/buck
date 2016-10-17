@@ -18,7 +18,8 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -93,7 +94,7 @@ public class PBXReference extends PBXContainerItem {
         case "DEVELOPER_DIR":
           return Optional.of(DEVELOPER_DIR);
         default:
-          return Optional.absent();
+          return Optional.empty();
       }
     }
   }

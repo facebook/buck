@@ -40,7 +40,6 @@ import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
@@ -51,6 +50,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class JavaBuckConfigTest {
 
@@ -67,7 +67,7 @@ public class JavaBuckConfigTest {
   public void whenJavaIsNotSetThenJavaFromPathIsReturned() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
     JavaOptions options = config.getDefaultJavaOptions();
-    assertEquals(Optional.absent(), options.getJavaPath());
+    assertEquals(Optional.empty(), options.getJavaPath());
     assertEquals("java", options.getJavaRuntimeLauncher().getCommand());
   }
 
@@ -106,7 +106,7 @@ public class JavaBuckConfigTest {
   @Test
   public void whenJavacIsNotSetThenAbsentIsReturned() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
-    assertEquals(Optional.absent(), config.getJavacPath());
+    assertEquals(Optional.empty(), config.getJavacPath());
   }
 
   @Test

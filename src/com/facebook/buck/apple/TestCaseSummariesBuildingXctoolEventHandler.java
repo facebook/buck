@@ -20,15 +20,13 @@ import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestStatusMessage;
-
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 
 import java.util.Collection;
 import java.util.Map;
-
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**

@@ -18,7 +18,6 @@ package com.facebook.buck.file;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
-import com.google.common.base.Optional;
 import com.google.common.io.BaseEncoding;
 
 import java.io.BufferedInputStream;
@@ -33,6 +32,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -53,7 +53,7 @@ public class HttpDownloader implements Downloader {
 
   @Override
   public boolean fetch(BuckEventBus eventBus, URI uri, Path output) throws IOException {
-    return fetch(eventBus, uri, Optional.absent(), output);
+    return fetch(eventBus, uri, Optional.empty(), output);
   }
 
   public boolean fetch(

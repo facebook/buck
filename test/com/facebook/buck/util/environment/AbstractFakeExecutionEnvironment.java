@@ -17,11 +17,11 @@
 package com.facebook.buck.util.environment;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.base.Optional;
-
-import java.util.Map;
 
 import org.immutables.value.Value;
+
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Test utility implementation of {@link ExecutionEnvironment} based

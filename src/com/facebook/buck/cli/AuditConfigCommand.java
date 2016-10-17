@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -33,6 +32,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class AuditConfigCommand extends AbstractCommand {
 
@@ -93,7 +93,7 @@ public class AuditConfigCommand extends AbstractCommand {
           if (parts.length != 2) {
             params.getConsole().getStdErr().println(
                 String.format("%s is not a valid section/property string", input));
-            return ConfigValue.of(input, "", input, Optional.absent());
+            return ConfigValue.of(input, "", input, Optional.empty());
           }
           return ConfigValue.of(
               input,
@@ -120,7 +120,7 @@ public class AuditConfigCommand extends AbstractCommand {
           String.format(
               "%s\t%s",
               config.getKey(),
-              config.getValue().or("")));
+              config.getValue().orElse("")));
     }
   }
 

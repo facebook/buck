@@ -26,7 +26,6 @@ import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
@@ -35,6 +34,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Optional;
 
 public class TwoLevelArtifactCacheDecoratorTest {
 
@@ -55,7 +55,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
              BuckEventBusFactory.newInstance(),
              /* performTwoLevelStores */ true,
              /* minimumTwoLevelStoredArtifactSize */ 0L,
-             /* maximumTwoLevelStoredArtifactSize */ Optional.absent())) {
+             /* maximumTwoLevelStoredArtifactSize */ Optional.empty())) {
       LazyPath dummyFile = LazyPath.ofInstance(tmp.newFile());
 
       assertThat(
@@ -136,7 +136,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
              BuckEventBusFactory.newInstance(),
              /* performTwoLevelStores */ true,
              /* minimumTwoLevelStoredArtifactSize */ 0L,
-             /* maximumTwoLevelStoredArtifactSize */ Optional.absent())) {
+             /* maximumTwoLevelStoredArtifactSize */ Optional.empty())) {
       LazyPath dummyFile = LazyPath.ofInstance(tmp.newFile());
 
       final String testMetadataKey = "testMetaKey";
@@ -176,14 +176,14 @@ public class TwoLevelArtifactCacheDecoratorTest {
              BuckEventBusFactory.newInstance(),
              /* performTwoLevelStores */ true,
              /* minimumTwoLevelStoredArtifactSize */ 0L,
-             /* maximumTwoLevelStoredArtifactSize */ Optional.absent());
+             /* maximumTwoLevelStoredArtifactSize */ Optional.empty());
          TwoLevelArtifactCacheDecorator twoLevelCacheNoStore = new TwoLevelArtifactCacheDecorator(
           inMemoryArtifactCache,
           new ProjectFilesystem(tmp.getRoot()),
           BuckEventBusFactory.newInstance(),
              /* performTwoLevelStores */ false,
              /* minimumTwoLevelStoredArtifactSize */ 0L,
-             /* maximumTwoLevelStoredArtifactSize */ Optional.absent())) {
+             /* maximumTwoLevelStoredArtifactSize */ Optional.empty())) {
       LazyPath dummyFile = LazyPath.ofInstance(tmp.newFile());
 
       twoLevelCache.store(

@@ -17,7 +17,6 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -25,6 +24,7 @@ import com.google.common.collect.Lists;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -50,14 +50,14 @@ public class XCVersionGroup extends PBXReference {
           }
         });
 
-    currentVersion = Optional.absent();
+    currentVersion = Optional.empty();
   }
 
   public Optional<String> getVersionGroupType() {
     if (currentVersion.isPresent()) {
       return currentVersion.get().getExplicitFileType();
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public Optional<PBXFileReference> getCurrentVersion() {

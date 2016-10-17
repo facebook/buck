@@ -25,7 +25,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
@@ -33,6 +32,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @VisibleForTesting
 public class BuildReport {
@@ -54,10 +54,10 @@ public class BuildReport {
     StringBuilder report = new StringBuilder();
     for (Map.Entry<BuildRule, Optional<BuildResult>> entry : ruleToResult.entrySet()) {
       BuildRule rule = entry.getKey();
-      Optional<BuildRuleSuccessType> success = Optional.absent();
+      Optional<BuildRuleSuccessType> success = Optional.empty();
       Optional<BuildResult> result = entry.getValue();
       if (result.isPresent()) {
-        success = Optional.fromNullable(result.get().getSuccess());
+        success = Optional.ofNullable(result.get().getSuccess());
       }
 
       String successIndicator;
@@ -104,10 +104,10 @@ public class BuildReport {
     boolean isOverallSuccess = true;
     for (Map.Entry<BuildRule, Optional<BuildResult>> entry : ruleToResult.entrySet()) {
       BuildRule rule = entry.getKey();
-      Optional<BuildRuleSuccessType> success = Optional.absent();
+      Optional<BuildRuleSuccessType> success = Optional.empty();
       Optional<BuildResult> result = entry.getValue();
       if (result.isPresent()) {
-        success = Optional.fromNullable(result.get().getSuccess());
+        success = Optional.ofNullable(result.get().getSuccess());
       }
       Map<String, Object> value = Maps.newLinkedHashMap();
 

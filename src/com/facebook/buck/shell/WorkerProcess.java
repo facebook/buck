@@ -24,7 +24,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
@@ -37,6 +36,7 @@ import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
@@ -126,15 +126,16 @@ public class WorkerProcess {
     int exitCode = protocol.receiveCommandResponse(messageID);
     Optional<String> stdout = filesystem.readFileIfItExists(stdoutPath);
     Optional<String> stderr = filesystem.readFileIfItExists(stderrPath);
-    LOG.debug("Job %d for process %d finished \n" +
-        "  exit code: %d \n" +
-        "  stdout: %s \n" +
-        "  stderr: %s",
+    LOG.debug(
+        "Job %d for process %d finished \n" +
+            "  exit code: %d \n" +
+            "  stdout: %s \n" +
+            "  stderr: %s",
         messageID,
         this.hashCode(),
         exitCode,
-        stdout.or(""),
-        stderr.or(""));
+        stdout.orElse(""),
+        stderr.orElse(""));
 
     return WorkerJobResult.of(exitCode, stdout, stderr);
   }
@@ -152,7 +153,7 @@ public class WorkerProcess {
       LOG.debug("Worker process stderr at %s", this.stdErr.toString());
 
       String workerStderr = MoreStrings
-          .truncatePretty(filesystem.readFileIfItExists(this.stdErr).or(""))
+          .truncatePretty(filesystem.readFileIfItExists(this.stdErr).orElse(""))
           .trim()
           .replace("\n", "\nstderr: ");
       LOG.error("stderr: %s", workerStderr);

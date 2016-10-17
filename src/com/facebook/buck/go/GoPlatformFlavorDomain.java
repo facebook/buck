@@ -24,13 +24,12 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Map;
+import java.util.Optional;
 
 public class GoPlatformFlavorDomain {
 
@@ -106,7 +105,7 @@ public class GoPlatformFlavorDomain {
   public Optional<GoPlatform> getValue(Flavor flavor) {
     String[] components = flavor.getName().split("_");
     if (components.length != 2) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     Platform os = goOsValues.get(components[0]);
@@ -118,7 +117,7 @@ public class GoPlatformFlavorDomain {
           .setCxxPlatform(getCxxPlatform(os, arch))
           .build());
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public Optional<GoPlatform> getValue(ImmutableSet<Flavor> flavors) {
@@ -128,7 +127,7 @@ public class GoPlatformFlavorDomain {
         return result;
       }
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public Optional<GoPlatform> getValue(BuildTarget target) {
@@ -143,15 +142,15 @@ public class GoPlatformFlavorDomain {
     Preconditions.checkArgument(platform != Platform.UNKNOWN);
     Preconditions.checkArgument(architecture != Architecture.UNKNOWN);
 
-    Optional<Map.Entry<String, Platform>> osValue = FluentIterable
-        .from(goOsValues.entrySet())
-        .firstMatch(input -> input.getValue() == platform);
-    Optional<Map.Entry<String, Architecture>> archValue = FluentIterable
-        .from(goArchValues.entrySet())
-        .firstMatch(input -> input.getValue() == architecture);
+    Optional<Map.Entry<String, Platform>> osValue = goOsValues.entrySet().stream()
+        .filter(input -> input.getValue() == platform)
+        .findFirst();
+    Optional<Map.Entry<String, Architecture>> archValue = goArchValues.entrySet().stream()
+        .filter(input -> input.getValue() == architecture)
+        .findFirst();
 
     if (!osValue.isPresent() || !archValue.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     return Optional.of(GoPlatform.builder()
@@ -164,13 +163,13 @@ public class GoPlatformFlavorDomain {
   // TODO(mikekap): Move this somewhere closer to CxxPlatforms.
   private Optional<CxxPlatform> getCxxPlatform(Platform platform, Architecture arch) {
     if (platform == Platform.UNKNOWN || arch == Architecture.UNKNOWN) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     if (platform == currentPlatform && arch == currentArchitecture) {
       return cxxPlatforms.getValue(ImmutableSet.of(DefaultCxxPlatforms.FLAVOR));
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 }

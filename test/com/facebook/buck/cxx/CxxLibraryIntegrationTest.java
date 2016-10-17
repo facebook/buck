@@ -32,7 +32,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 
 import org.apache.commons.compress.archivers.ar.ArArchiveEntry;
 import org.apache.commons.compress.archivers.ar.ArArchiveInputStream;
@@ -45,6 +44,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Optional;
 
 public class CxxLibraryIntegrationTest {
 
@@ -152,7 +152,7 @@ public class CxxLibraryIntegrationTest {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
         this,
         tmp,
-        Optional.absent());
+        Optional.empty());
     workspace.runBuckBuild("//foo:dep_one#infer").assertSuccess();
   }
 
@@ -162,7 +162,7 @@ public class CxxLibraryIntegrationTest {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(
         this,
         tmp,
-        Optional.absent());
+        Optional.empty());
     workspace.runBuckBuild("//foo:headers_only_lib#infer-capture-all").assertSuccess();
   }
 

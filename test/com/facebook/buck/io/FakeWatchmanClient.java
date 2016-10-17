@@ -16,13 +16,11 @@
 
 package com.facebook.buck.io;
 
-import com.google.common.base.Optional;
-
 import java.io.IOException;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Fake implementation of {@link WatchmanClient} for tests.
@@ -61,7 +59,7 @@ public class FakeWatchmanClient implements WatchmanClient {
               queryResults.keySet()));
     }
     if (queryElapsedTimeNanos > timeoutNanos) {
-      return Optional.absent();
+      return Optional.empty();
     }
     if (exceptionToThrow != null) {
       if (exceptionToThrow instanceof IOException) {

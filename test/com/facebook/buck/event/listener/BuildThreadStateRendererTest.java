@@ -20,7 +20,6 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.TestEventConfigerator;
 import com.facebook.buck.model.BuildTarget;
@@ -28,13 +27,13 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.util.Ansi;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -43,6 +42,7 @@ import org.junit.Test;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -93,13 +93,13 @@ public class BuildThreadStateRendererTest {
             1L, createRuleStartedEventOptional(1, 1200, RULE2),
             3L, createRuleStartedEventOptional(3, 2300, RULE3),
             4L, createRuleStartedEventOptional(4, 1100, RULE1),
-            5L, Optional.absent(),
+            5L, Optional.empty(),
             8L, createRuleStartedEventOptional(6, 3000, RULE4)),
         ImmutableMap.of(
             1L, createStepStartedEventOptional(1, 1500, "step A"),
-            3L, Optional.absent(),
-            4L, Optional.absent(),
-            5L, Optional.absent(),
+            3L, Optional.empty(),
+            4L, Optional.empty(),
+            5L, Optional.empty(),
             8L, createStepStartedEventOptional(1, 3700, "step B")),
         ImmutableMap.of(
             TARGET1, new AtomicLong(200),
@@ -141,12 +141,12 @@ public class BuildThreadStateRendererTest {
         4200,
         ImmutableMap.of(
             3L, createRuleStartedEventOptional(3, 2300, RULE3),
-            5L, Optional.absent(),
+            5L, Optional.empty(),
             8L, createRuleStartedEventOptional(6, 3000, RULE4)),
         ImmutableMap.of(
             1L, createStepStartedEventOptional(1, 1500, "step A"),
-            4L, Optional.absent(),
-            5L, Optional.absent(),
+            4L, Optional.empty(),
+            5L, Optional.empty(),
             8L, createStepStartedEventOptional(1, 3700, "step B")),
         ImmutableMap.of(
             TARGET1, new AtomicLong(200),

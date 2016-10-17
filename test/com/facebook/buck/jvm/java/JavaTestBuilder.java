@@ -23,10 +23,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -36,7 +36,7 @@ public class JavaTestBuilder extends AbstractNodeBuilder<JavaTestDescription.Arg
         new JavaTestDescription(
             DEFAULT_JAVA_OPTIONS,
             DEFAULT_JAVAC_OPTIONS,
-            /* testRuleTimeoutMs */ Optional.absent(),
+            /* testRuleTimeoutMs */ Optional.empty(),
             null),
         target);
   }
@@ -61,7 +61,7 @@ public class JavaTestBuilder extends AbstractNodeBuilder<JavaTestDescription.Arg
   }
 
   public JavaTestBuilder setVmArgs(@Nullable ImmutableList<String> vmArgs) {
-    arg.vmArgs = Optional.fromNullable(vmArgs).or(ImmutableList.of());
+    arg.vmArgs = Optional.ofNullable(vmArgs).orElse(ImmutableList.of());
     return this;
   }
 }

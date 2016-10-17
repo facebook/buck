@@ -16,8 +16,7 @@
     "exported_deps" : [
       "//src/com/facebook/buck/util/environment:environment",
       "//src/com/facebook/buck/util/environment:platform",
-      "//src/com/facebook/buck/util/immutables:immutables",
-      "//third-party/java/guava:guava"
+      "//src/com/facebook/buck/util/immutables:immutables"
     ]
   }
 }

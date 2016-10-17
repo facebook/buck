@@ -24,12 +24,12 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class ScalaBuckConfig {
   private static final String SECTION = "scala";
@@ -44,7 +44,7 @@ public class ScalaBuckConfig {
     CommandTool.Builder scalac = new CommandTool.Builder(findScalac(resolver));
 
     // Add some standard options.
-    scalac.addArg("-target:" + delegate.getValue(SECTION, "target_level").or("jvm-1.7"));
+    scalac.addArg("-target:" + delegate.getValue(SECTION, "target_level").orElse("jvm-1.7"));
 
     if (delegate.getBooleanValue(SECTION, "optimize", false)) {
       scalac.addArg("-optimize");
@@ -68,7 +68,7 @@ public class ScalaBuckConfig {
   public ImmutableList<String> getCompilerFlags() {
     return ImmutableList.copyOf(
         Splitter.on(" ").omitEmptyStrings().split(
-            delegate.getValue(SECTION, "compiler_flags").or("")));
+            delegate.getValue(SECTION, "compiler_flags").orElse("")));
   }
 
   private Tool findScalac(BuildRuleResolver resolver) {

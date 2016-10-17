@@ -33,7 +33,6 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -50,6 +49,7 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Builds {@link IjModule}s out of {@link TargetNode}s.
@@ -140,7 +140,7 @@ public class IjModuleFactory {
 
     public ModuleBuildContext(ImmutableSet<BuildTarget> circularDependencyInducingTargets) {
       this.circularDependencyInducingTargets = circularDependencyInducingTargets;
-      this.androidFacetBuilder = Optional.absent();
+      this.androidFacetBuilder = Optional.empty();
       this.extraClassPathDependenciesBuilder = new ImmutableSet.Builder<>();
       this.generatedSourceCodeFoldersBuilder = ImmutableSet.builder();
       this.sourceFoldersMergeMap = new HashMap<>();
@@ -160,8 +160,7 @@ public class IjModuleFactory {
     }
 
     public Optional<IjModuleAndroidFacet> getAndroidFacet() {
-      return androidFacetBuilder.transform(
-          IjModuleAndroidFacet.Builder::build);
+      return androidFacetBuilder.map(IjModuleAndroidFacet.Builder::build);
     }
 
     public ImmutableSet<IjFolder> getSourceFolders() {
@@ -366,7 +365,7 @@ public class IjModuleFactory {
     if (sourceLevel.isPresent()) {
       sdkName = getSdkName(sourceLevel.get(), sdkType);
     } else {
-      sdkName = Optional.absent();
+      sdkName = Optional.empty();
     }
 
     return IjModule.builder()
@@ -385,7 +384,7 @@ public class IjModuleFactory {
 
   private Optional<String> getSourceLevel(
       Iterable<TargetNode<?>> targetNodes) {
-    Optional<String> result = Optional.absent();
+    Optional<String> result = Optional.empty();
     for (TargetNode<?> targetNode : targetNodes) {
       BuildRuleType type = targetNode.getType();
       if (!type.equals(JavaLibraryDescription.TYPE)) {
@@ -396,8 +395,8 @@ public class IjModuleFactory {
       String defaultSourceLevel = defaultJavacOptions.getSourceLevel();
       String defaultTargetLevel = defaultJavacOptions.getTargetLevel();
       JavaLibraryDescription.Arg arg = (JavaLibraryDescription.Arg) targetNode.getConstructorArg();
-      if (!defaultSourceLevel.equals(arg.source.or(defaultSourceLevel)) ||
-          !defaultTargetLevel.equals(arg.target.or(defaultTargetLevel))) {
+      if (!defaultSourceLevel.equals(arg.source.orElse(defaultSourceLevel)) ||
+          !defaultTargetLevel.equals(arg.target.orElse(defaultTargetLevel))) {
         result = arg.source;
       }
     }
@@ -421,7 +420,7 @@ public class IjModuleFactory {
   }
 
   private Optional<String> getSdkName(String sourceLevel, String sdkType) {
-    Optional<String> sdkName = Optional.absent();
+    Optional<String> sdkName = Optional.empty();
     if (SDK_TYPE_JAVA.equals(sdkType)) {
       sdkName = projectConfig.getJavaLibrarySdkNameForSourceLevel(sourceLevel);
     }

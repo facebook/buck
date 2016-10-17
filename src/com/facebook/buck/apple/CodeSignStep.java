@@ -24,7 +24,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -32,6 +31,7 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.EnumSet;
+import java.util.Optional;
 import java.util.Set;
 
 class CodeSignStep implements Step {
@@ -87,9 +87,9 @@ class CodeSignStep implements Step {
       result = processExecutor.launchAndExecute(
           processExecutorParams,
           options,
-              /* stdin */ Optional.absent(),
-              /* timeOutMs */ Optional.absent(),
-              /* timeOutHandler */ Optional.absent());
+              /* stdin */ Optional.empty(),
+              /* timeOutMs */ Optional.empty(),
+              /* timeOutHandler */ Optional.empty());
     } catch (InterruptedException | IOException e) {
       context.logError(e, "Could not execute codesign.");
       return StepExecutionResult.ERROR;

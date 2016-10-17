@@ -19,7 +19,8 @@ package com.facebook.buck.event;
 import com.facebook.buck.event.external.events.InstallFinishedEventExternalInterface;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 public abstract class InstallEvent
     extends AbstractBuckEvent
@@ -84,8 +85,8 @@ public abstract class InstallEvent
         Optional<String> packageName) {
       super(started.getEventKey(), started.getBuildTarget());
       this.success = success;
-      this.pid = pid.or(invalidPid);
-      this.packageName = packageName.or("");
+      this.pid = pid.orElse(invalidPid);
+      this.packageName = packageName.orElse("");
     }
 
     @Override

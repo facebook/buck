@@ -21,7 +21,6 @@ import com.facebook.buck.charset.NulTerminatedCharsetDecoder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -43,6 +42,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 public class ObjectPathsAbsolutifier {
@@ -113,7 +113,7 @@ public class ObjectPathsAbsolutifier {
     if (symTabCommands.size() == 0) {
       LOG.verbose("SymTabCommand was not found, so there is no need to work with " +
           "LinkEditDataCommand to fix code sign, as string table was not found");
-      return Optional.absent();
+      return Optional.empty();
     }
 
     buffer.position(0);
@@ -129,7 +129,7 @@ public class ObjectPathsAbsolutifier {
         .toList();
     if (codeSignatureCommands.size() == 0) {
       LOG.verbose("LinkEditDataCommand for code signature was not found");
-      return Optional.absent();
+      return Optional.empty();
     }
     Preconditions.checkArgument(
         codeSignatureCommands.size() == 1,
@@ -142,7 +142,7 @@ public class ObjectPathsAbsolutifier {
         codeSignatureCommand.getDataoff().intValue()) {
       LOG.verbose("String table location > Code signature data location. " +
           "Skipping code signature relocation.");
-      return Optional.absent();
+      return Optional.empty();
     }
     Preconditions.checkArgument(
         symTabCommand.getStroff().plus(symTabCommand.getStrsize()).intValue() <
@@ -216,11 +216,11 @@ public class ObjectPathsAbsolutifier {
       int stringTableSizeIncrease) throws IOException {
     if (!codeSignatureData.isPresent()) {
       LOG.info("Code had no code signature to relocate, skipping code signature update");
-      return Optional.absent();
+      return Optional.empty();
     }
     if (stringTableSizeIncrease == 0) {
       LOG.info("String table size did not change, skipping code signature update");
-      return Optional.absent();
+      return Optional.empty();
     }
     LinkEditDataCommand command = codeSignatureData.get().getFirst();
     ByteBuffer contents = codeSignatureData.get().getSecond();
@@ -502,7 +502,7 @@ public class ObjectPathsAbsolutifier {
     if (path.toString().endsWith(")")) {
       return Optional.of(string.substring(string.lastIndexOf("(")));
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private Path getAbsolutePath(String stringPath) throws IOException {

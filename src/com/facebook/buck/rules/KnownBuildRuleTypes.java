@@ -160,10 +160,8 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.ZipDescription;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -176,6 +174,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 
 import javax.annotation.Nullable;
@@ -278,19 +277,20 @@ public class KnownBuildRuleTypes {
         appleConfig);
 
     Optional<String> swiftVersion = swiftBuckConfig.getVersion();
-    Optional<AppleToolchain> swiftToolChain = Optional.absent();
+    Optional<AppleToolchain> swiftToolChain = Optional.empty();
     if (swiftVersion.isPresent()) {
-      final Optional<String> swiftToolChainName = swiftVersion.transform(
-          AppleCxxPlatform.SWIFT_VERSION_TO_TOOLCHAIN_IDENTIFIER);
-      swiftToolChain = FluentIterable.from(toolchains.values())
-          .firstMatch(input -> input.getIdentifier().equals(swiftToolChainName.get()));
+      Optional<String> swiftToolChainName =
+          swiftVersion.map(AppleCxxPlatform.SWIFT_VERSION_TO_TOOLCHAIN_IDENTIFIER);
+      swiftToolChain = toolchains.values().stream()
+          .filter(input -> input.getIdentifier().equals(swiftToolChainName.get()))
+          .findFirst();
     }
 
     for (Map.Entry<AppleSdk, AppleSdkPaths> entry : sdkPaths.entrySet()) {
       AppleSdk sdk = entry.getKey();
       AppleSdkPaths appleSdkPaths = entry.getValue();
       String targetSdkVersion = appleConfig.getTargetSdkVersion(
-          sdk.getApplePlatform()).or(sdk.getVersion());
+          sdk.getApplePlatform()).orElse(sdk.getVersion());
       LOG.debug("SDK %s using default version %s", sdk, targetSdkVersion);
       for (String architecture : sdk.getArchitectures()) {
         AppleCxxPlatform appleCxxPlatform = AppleCxxPlatforms.build(
@@ -357,11 +357,11 @@ public class KnownBuildRuleTypes {
         ImmutableMap.builder();
     if (ndkRoot.isPresent()) {
       NdkCxxPlatformCompiler.Type compilerType =
-          androidConfig.getNdkCompiler().or(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE);
-      String gccVersion = androidConfig.getNdkGccVersion().or(
-          NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion));
-      String clangVersion = androidConfig.getNdkClangVersion().or(
-          NdkCxxPlatforms.getDefaultClangVersionForNdk(ndkVersion));
+          androidConfig.getNdkCompiler().orElse(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE);
+      String gccVersion = androidConfig.getNdkGccVersion()
+          .orElse(NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion));
+      String clangVersion = androidConfig.getNdkClangVersion()
+          .orElse(NdkCxxPlatforms.getDefaultClangVersionForNdk(ndkVersion));
       String compilerVersion = compilerType == NdkCxxPlatformCompiler.Type.GCC ?
         gccVersion : clangVersion;
       NdkCxxPlatformCompiler compiler =
@@ -376,9 +376,9 @@ public class KnownBuildRuleTypes {
               filesystem,
               ndkRoot.get(),
               compiler,
-              androidConfig.getNdkCxxRuntime().or(NdkCxxPlatforms.DEFAULT_CXX_RUNTIME),
-              androidConfig.getNdkAppPlatform().or(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM),
-              androidConfig.getNdkCpuAbis().or(NdkCxxPlatforms.DEFAULT_CPU_ABIS),
+              androidConfig.getNdkCxxRuntime().orElse(NdkCxxPlatforms.DEFAULT_CXX_RUNTIME),
+              androidConfig.getNdkAppPlatform().orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM),
+              androidConfig.getNdkCpuAbis().orElse(NdkCxxPlatforms.DEFAULT_CPU_ABIS),
               platform));
     }
     ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> ndkCxxPlatforms =
@@ -594,7 +594,7 @@ public class KnownBuildRuleTypes {
     ListeningExecutorService dxExecutorService =
         MoreExecutors.listeningDecorator(
             Executors.newFixedThreadPool(
-                javaConfig.getDxThreadCount().or(SmartDexingStep.determineOptimalThreadCount()),
+                javaConfig.getDxThreadCount().orElse(SmartDexingStep.determineOptimalThreadCount()),
                 new CommandThreadFactory("SmartDexing")));
 
 

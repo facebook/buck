@@ -20,7 +20,6 @@ import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -35,6 +34,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Groups {@link IjFolder}s into sets which are of the same type and belong to the same package
@@ -137,7 +137,7 @@ public class IjSourceRootSimplifier {
       List<IjFolder> presentChildren = new ArrayList<>(children.size());
       for (Optional<IjFolder> folderOptional : children) {
         if (!folderOptional.isPresent()) {
-          return Optional.absent();
+          return Optional.empty();
         }
 
         IjFolder folder = folderOptional.get();
@@ -150,7 +150,7 @@ public class IjSourceRootSimplifier {
 
       IjFolder currentFolder = mergePathsMap.get(currentPath);
       if (presentChildren.isEmpty()) {
-        return Optional.fromNullable(currentFolder);
+        return Optional.ofNullable(currentFolder);
       }
 
       final IjFolder mergeDistination;
@@ -166,7 +166,7 @@ public class IjSourceRootSimplifier {
           .allMatch(
               input -> canMerge(mergeDistination, input, packagePathCache));
       if (!allChildrenCanBeMerged) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       return attemptMerge(mergeDistination, presentChildren);
@@ -177,7 +177,7 @@ public class IjSourceRootSimplifier {
       for (IjFolder presentChild : children) {
         mergedPaths.add(presentChild.getPath());
         if (!canMerge(mergePoint, presentChild, packagePathCache)) {
-          return Optional.absent();
+          return Optional.empty();
         }
         mergePoint = presentChild.merge(mergePoint);
       }
@@ -261,9 +261,8 @@ public class IjSourceRootSimplifier {
         if (!startingFolder.getWantsPackagePrefix()) {
           continue;
         }
-        Path path = FluentIterable.from(startingFolder.getInputs())
-            .first()
-            .or(lookupPath(startingFolder));
+        Path path = startingFolder.getInputs().stream().findFirst()
+            .orElse(lookupPath(startingFolder));
         delegate.insert(path, javaPackageFinder.findJavaPackageFolder(path));
       }
     }

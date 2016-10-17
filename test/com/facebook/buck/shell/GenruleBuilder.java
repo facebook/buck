@@ -19,9 +19,10 @@ package com.facebook.buck.shell;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -40,22 +41,22 @@ public class GenruleBuilder extends AbstractNodeBuilder<GenruleDescription.Arg> 
   }
 
   public GenruleBuilder setBash(@Nullable String bash) {
-    arg.bash = Optional.fromNullable(bash);
+    arg.bash = Optional.ofNullable(bash);
     return this;
   }
 
   public GenruleBuilder setCmd(@Nullable String cmd) {
-    arg.cmd = Optional.fromNullable(cmd);
+    arg.cmd = Optional.ofNullable(cmd);
     return this;
   }
 
   public GenruleBuilder setCmdExe(@Nullable String cmdExe) {
-    arg.cmdExe = Optional.fromNullable(cmdExe);
+    arg.cmdExe = Optional.ofNullable(cmdExe);
     return this;
   }
 
   public GenruleBuilder setSrcs(@Nullable ImmutableList<SourcePath> srcs) {
-    arg.srcs = Optional.fromNullable(srcs).or(ImmutableList.of());
+    arg.srcs = Optional.ofNullable(srcs).orElse(ImmutableList.of());
     return this;
   }
 

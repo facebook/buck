@@ -25,7 +25,7 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Optional;
+import com.facebook.buck.util.OptionalCompat;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -37,6 +37,7 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.Optional;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -216,7 +217,7 @@ public class InputBasedRuleKeyBuilderFactory
     @Override
     protected Builder setSourcePath(SourcePath sourcePath) {
       if (inputHandling == InputHandling.HASH) {
-        deps.add(pathResolver.getRule(sourcePath).asSet());
+        deps.add(OptionalCompat.asSet(pathResolver.getRule(sourcePath)));
 
         try {
           if (sourcePath instanceof ArchiveMemberSourcePath) {
@@ -260,7 +261,7 @@ public class InputBasedRuleKeyBuilderFactory
     protected Result buildResult() {
       if (inputSizeLimitExceeded) {
         return new Result(
-            Optional.absent(),
+            Optional.empty(),
             Collections.emptyList(),
             Collections.emptyList());
       } else {
@@ -274,7 +275,7 @@ public class InputBasedRuleKeyBuilderFactory
     @Override
     public Optional<RuleKey> build() {
       if (inputSizeLimitExceeded) {
-        return Optional.absent();
+        return Optional.empty();
       }
 
       return Optional.of(buildRuleKey());

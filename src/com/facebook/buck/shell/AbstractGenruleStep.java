@@ -24,7 +24,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -35,6 +34,7 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 
 public abstract class AbstractGenruleStep extends ShellStep {
 
@@ -211,9 +211,9 @@ public abstract class AbstractGenruleStep extends ShellStep {
       //   "(/bin/bash -c) or (cmd.exe /c) cmd" (All platforms)
       String command;
       if (platform == Platform.WINDOWS) {
-        if (!cmdExe.or("").isEmpty()) {
+        if (!cmdExe.orElse("").isEmpty()) {
           command = cmdExe.get();
-        } else if (!cmd.or("").isEmpty()) {
+        } else if (!cmd.orElse("").isEmpty()) {
           command = cmd.get();
         } else {
           throw new HumanReadableException("You must specify either cmd_exe or cmd for genrule %s.",
@@ -221,9 +221,9 @@ public abstract class AbstractGenruleStep extends ShellStep {
         }
         return new ExecutionArgsAndCommand(ShellType.CMD_EXE, command);
       } else {
-        if (!bash.or("").isEmpty()) {
+        if (!bash.orElse("").isEmpty()) {
           command = bash.get();
-        } else if (!cmd.or("").isEmpty()) {
+        } else if (!cmd.orElse("").isEmpty()) {
           command = cmd.get();
         } else {
           throw new HumanReadableException("You must specify either bash or cmd for genrule %s.",

@@ -70,7 +70,6 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -91,6 +90,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 
 public class AppleCxxPlatformsTest {
 
@@ -162,8 +162,8 @@ public class AppleCxxPlatformsTest {
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
             new FakeExecutableFinder(paths),
-            Optional.absent(),
-            Optional.absent());
+            Optional.empty(),
+            Optional.empty());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -267,8 +267,8 @@ public class AppleCxxPlatformsTest {
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
             new FakeExecutableFinder(paths),
-            Optional.absent(),
-            Optional.absent());
+            Optional.empty(),
+            Optional.empty());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -366,8 +366,8 @@ public class AppleCxxPlatformsTest {
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
             new FakeExecutableFinder(paths),
-            Optional.absent(),
-            Optional.absent());
+            Optional.empty(),
+            Optional.empty());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -465,8 +465,8 @@ public class AppleCxxPlatformsTest {
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
             new FakeExecutableFinder(paths),
-            Optional.absent(),
-            Optional.absent());
+            Optional.empty(),
+            Optional.empty());
 
     assertEquals(
         ImmutableFlavor.of("__in__va_id_-cha_rs"),
@@ -518,8 +518,8 @@ public class AppleCxxPlatformsTest {
                         "cxxppflags", "-DCXXTHING"))).build(),
             new FakeAppleConfig(),
             new FakeExecutableFinder(paths),
-            Optional.absent(),
-            Optional.absent());
+            Optional.empty(),
+            Optional.empty());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -570,8 +570,8 @@ public class AppleCxxPlatformsTest {
         FakeBuckConfig.builder().build(),
         new FakeAppleConfig(),
         new FakeExecutableFinder(ImmutableSet.of()),
-        Optional.absent(),
-        Optional.absent());
+        Optional.empty(),
+        Optional.empty());
   }
 
   @Test
@@ -612,8 +612,8 @@ public class AppleCxxPlatformsTest {
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
             new FakeExecutableFinder(paths),
-            Optional.absent(),
-            Optional.absent());
+            Optional.empty(),
+            Optional.empty());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -665,8 +665,8 @@ public class AppleCxxPlatformsTest {
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
             new FakeExecutableFinder(paths),
-            Optional.absent(),
-            Optional.absent());
+            Optional.empty(),
+            Optional.empty());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -718,8 +718,8 @@ public class AppleCxxPlatformsTest {
             FakeBuckConfig.builder().build(),
             new FakeAppleConfig(),
             new FakeExecutableFinder(paths),
-            Optional.absent(),
-            Optional.absent());
+            Optional.empty(),
+            Optional.empty());
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -830,12 +830,12 @@ public class AppleCxxPlatformsTest {
               pathResolver,
               target,
               Linker.LinkType.EXECUTABLE,
-              Optional.absent(),
+              Optional.empty(),
               Paths.get("output"),
               Linker.LinkableDepType.SHARED,
               ImmutableList.of(),
-              Optional.absent(),
-              Optional.absent(),
+              Optional.empty(),
+              Optional.empty(),
               ImmutableSet.of(),
               NativeLinkableInput.builder()
                   .setArgs(SourcePathArg.from(pathResolver, new FakeSourcePath("input.o")))
@@ -872,8 +872,8 @@ public class AppleCxxPlatformsTest {
         FakeBuckConfig.builder().build(),
         new FakeAppleConfig(),
         new AlwaysFoundExecutableFinder(),
-        Optional.absent(),
-        Optional.absent());
+        Optional.empty(),
+        Optional.empty());
   }
 
   // The important aspects we check for in rule keys is that the host platform and the path
@@ -934,7 +934,7 @@ public class AppleCxxPlatformsTest {
   @Test
   public void nonExistentPlatformVersionPlistIsLogged() {
     AppleCxxPlatform platform = buildAppleCxxPlatform(Paths.get("/nonexistentjabberwock"));
-    assertThat(platform.getBuildVersion(), equalTo(Optional.<String>absent()));
+    assertThat(platform.getBuildVersion(), equalTo(Optional.empty()));
     assertThat(
         logSink.getRecords(),
         hasItem(
@@ -951,7 +951,7 @@ public class AppleCxxPlatformsTest {
         platformRoot.resolve("version.plist"),
         "I am, as a matter of fact, an extremely invalid plist.".getBytes(Charsets.UTF_8));
     AppleCxxPlatform platform = buildAppleCxxPlatform(tempRoot);
-    assertThat(platform.getBuildVersion(), equalTo(Optional.<String>absent()));
+    assertThat(platform.getBuildVersion(), equalTo(Optional.empty()));
     assertThat(
         logSink.getRecords(),
         hasItem(
@@ -968,7 +968,7 @@ public class AppleCxxPlatformsTest {
         platformRoot.resolve("version.plist"),
         new NSDictionary().toXMLPropertyList().getBytes(Charsets.UTF_8));
     AppleCxxPlatform platform = buildAppleCxxPlatform(tempRoot);
-    assertThat(platform.getBuildVersion(), equalTo(Optional.<String>absent()));
+    assertThat(platform.getBuildVersion(), equalTo(Optional.empty()));
     assertThat(
         logSink.getRecords(),
         hasItem(
@@ -1027,7 +1027,7 @@ public class AppleCxxPlatformsTest {
     MoreFiles.makeExecutable(temp.newFile("usr/bin/swift"));
     MoreFiles.makeExecutable(temp.newFile("usr/bin/swift-stdlib-tool"));
     Optional<AppleToolchain> selectedSwiftToolChain = useDefaultSwift ?
-        Optional.absent() : Optional.of(swiftToolchain);
+        Optional.empty() : Optional.of(swiftToolchain);
     final ImmutableSet<Path> knownPaths = ImmutableSet.<Path>builder()
         .addAll(COMMON_KNOWN_PATHS)
         .add(Paths.get("Platforms/iPhoneOS.platform/Developer/usr/bin/libtool"))
@@ -1060,7 +1060,7 @@ public class AppleCxxPlatformsTest {
                 return Optional.of(path);
               }
             }
-            return Optional.absent();
+            return Optional.empty();
           }
         },
         Optional.of(FakeAppleRuleDescriptions.PROCESS_EXECUTOR),

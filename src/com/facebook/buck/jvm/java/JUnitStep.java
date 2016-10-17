@@ -25,7 +25,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -34,6 +33,7 @@ import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class JUnitStep extends ShellStep {
@@ -110,7 +110,7 @@ public class JUnitStep extends ShellStep {
   protected Optional<Function<Process, Void>> getTimeoutHandler(final ExecutionContext context) {
     return Optional.of(
         process -> {
-          Optional<Long> pid = Optional.absent();
+          Optional<Long> pid = Optional.empty();
           Platform platform = context.getPlatform();
           try {
             switch(platform) {
@@ -163,7 +163,7 @@ public class JUnitStep extends ShellStep {
                     .add(ProcessExecutor.Option.PRINT_STD_OUT)
                     .add(ProcessExecutor.Option.PRINT_STD_ERR)
                     .build(),
-                /* stdin */ Optional.absent(),
+                /* stdin */ Optional.empty(),
                 /* timeOutMs */ Optional.of(TimeUnit.SECONDS.toMillis(30)),
                 /* timeOutHandler */ Optional.of(
                     input -> {

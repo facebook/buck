@@ -20,7 +20,6 @@ import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.base.Functions;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -29,6 +28,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * MultiArtifactCache encapsulates a set of ArtifactCache instances such that fetch() succeeds if
@@ -124,7 +124,7 @@ public class MultiArtifactCache implements ArtifactCache {
 
   @Override
   public void close() {
-    Optional<RuntimeException> throwable = Optional.absent();
+    Optional<RuntimeException> throwable = Optional.empty();
     for (ArtifactCache artifactCache : artifactCaches) {
       try {
         artifactCache.close();

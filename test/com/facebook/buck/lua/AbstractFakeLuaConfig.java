@@ -26,11 +26,11 @@ import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 
 import org.immutables.value.Value;
 
 import java.nio.file.Paths;
+import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -54,7 +54,7 @@ abstract class AbstractFakeLuaConfig implements LuaConfig {
   public AbstractCxxLibrary getLuaCxxLibrary() {
     return new SystemLuaCxxLibrary(
         BuildTarget.of(
-            UnflavoredBuildTarget.of(Paths.get(""), Optional.absent(), "//system", "lua")));
+            UnflavoredBuildTarget.of(Paths.get(""), Optional.empty(), "//system", "lua")));
   }
 
   @Override

@@ -34,11 +34,10 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TargetDevice;
+import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -51,7 +50,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Level;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
@@ -77,8 +78,7 @@ public class RobolectricTest extends JavaTest {
       "buck.robolectric_manifest";
 
   private final Function<HasAndroidResourceDeps, Path> resourceDirectoryFunction =
-      input -> Optional.fromNullable(input.getRes())
-          .transform(getResolver()::deprecatedGetPath)
+      input -> Optional.ofNullable(input.getRes()).map(getResolver()::deprecatedGetPath)
           .get();
   private final Function<DummyRDotJava, ImmutableSet<BuildRule>> resourceRulesFunction =
       input -> {
@@ -169,7 +169,7 @@ public class RobolectricTest extends JavaTest {
   @VisibleForTesting
   String getRobolectricResourceDirectories(List<HasAndroidResourceDeps> resourceDeps) {
     ImmutableList<String> resourceDirs = FluentIterable.from(resourceDeps)
-        .transform(resourceDirectoryFunction)
+        .transform(resourceDirectoryFunction::apply)
         .filter(
             input -> {
               try {
@@ -203,10 +203,8 @@ public class RobolectricTest extends JavaTest {
         // On top of the runtime dependencies of a normal {@link JavaTest}, we need to make the
         // {@link DummyRDotJava} and any of its resource deps is available locally (if it exists)
         // to run this test.
-        .addAll(optionalDummyRDotJava.asSet())
-        .addAll(optionalDummyRDotJava
-                .transform(resourceRulesFunction)
-                .or(ImmutableSet.of()))
+        .addAll(OptionalCompat.asSet(optionalDummyRDotJava))
+        .addAll(optionalDummyRDotJava.map(resourceRulesFunction).orElse(ImmutableSet.of()))
         // It's possible that the user added some tool as a dependency, so make sure we promote
         // this rules first-order deps to runtime deps, so that these potential tools are available
         // when this test runs.

@@ -27,7 +27,6 @@ import com.facebook.buck.util.ProcessHelper;
 import com.facebook.buck.util.ProcessRegistry;
 import com.facebook.buck.util.ProcessResourceConsumption;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.AbstractScheduledService;
@@ -35,6 +34,7 @@ import com.google.common.util.concurrent.ServiceManager;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -124,7 +124,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
   @Override
   public void close() {
     ProcessRegistry.setsProcessRegisterCallback(
-        Optional.absent());
+        Optional.empty());
     serviceManager.stopAsync();
   }
 

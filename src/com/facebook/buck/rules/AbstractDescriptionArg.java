@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableSet;
 
+
 @SuppressFieldNotInitialized
 public abstract class AbstractDescriptionArg {
   public ImmutableSet<SourcePath> licenses = ImmutableSet.of();

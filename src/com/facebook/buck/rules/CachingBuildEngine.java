@@ -50,6 +50,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
@@ -59,7 +60,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -98,6 +98,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -260,7 +261,7 @@ public class CachingBuildEngine implements BuildEngine {
       ListeningExecutorService service) {
     if (buildMode == BuildMode.DEEP || buildMode == BuildMode.POPULATE_FROM_REMOTE_CACHE) {
       // Those modes never skip rules, there is no need to track unskipped rules.
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of(new UnskippedRulesTracker(ruleDeps, service));
   }
@@ -441,7 +442,7 @@ public class CachingBuildEngine implements BuildEngine {
                 "Skipping %s: in cache population mode local builds are disabled",
                 rule))));
       }
-      return Futures.immediateFuture(Optional.<BuildResult>absent());
+      return Futures.immediateFuture(Optional.empty());
     };
   }
 
@@ -473,7 +474,7 @@ public class CachingBuildEngine implements BuildEngine {
       Optional<RuleKey> cachedRuleKey =
           onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY);
       final RuleKey defaultRuleKey = ruleKeyFactory.defaultRuleKeyBuilderFactory.build(rule);
-      if (defaultRuleKey.equals(cachedRuleKey.orNull())) {
+      if (defaultRuleKey.equals(cachedRuleKey.orElse(null))) {
         return Futures.transform(
             markRuleAsUsed(rule, buildContext.getEventBus()),
             Functions.constant(
@@ -794,8 +795,8 @@ public class CachingBuildEngine implements BuildEngine {
                 if (rule instanceof SupportsInputBasedRuleKey &&
                     success.shouldUploadResultingArtifactInputBased()) {
                   ruleKeys.addAll(
-                      onDiskBuildInfo.getRuleKey(
-                          BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY).asSet());
+                      OptionalCompat.asSet(onDiskBuildInfo.getRuleKey(
+                          BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY)));
                 }
 
                 // If the manifest-based rule key has changed, we need to push the artifact to cache
@@ -803,8 +804,8 @@ public class CachingBuildEngine implements BuildEngine {
                 if (useManifestCaching(rule) &&
                     success.shouldUploadResultingArtifactManifestBased()) {
                   ruleKeys.addAll(
-                      onDiskBuildInfo.getRuleKey(
-                          BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY).asSet());
+                      OptionalCompat.asSet(onDiskBuildInfo.getRuleKey(
+                          BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY)));
                 }
 
                 // If we have any rule keys to push to the cache with, do the upload now.
@@ -826,9 +827,9 @@ public class CachingBuildEngine implements BuildEngine {
               }
 
               private void handleResult(BuildResult input) {
-                Optional<Long> outputSize = Optional.absent();
-                Optional<HashCode> outputHash = Optional.absent();
-                Optional<BuildRuleSuccessType> successType = Optional.absent();
+                Optional<Long> outputSize = Optional.empty();
+                Optional<HashCode> outputHash = Optional.empty();
+                Optional<BuildRuleSuccessType> successType = Optional.empty();
 
                 buildContext.getEventBus().logVerboseAndPost(
                     LOG,
@@ -846,8 +847,8 @@ public class CachingBuildEngine implements BuildEngine {
                 // Unblock dependents.
                 result.set(input);
 
-                Optional<Integer> inputsCount = Optional.absent();
-                Optional<Long> inputsSize = Optional.absent();
+                Optional<Integer> inputsCount = Optional.empty();
+                Optional<Long> inputsSize = Optional.empty();
                 if (input.getStatus() == BuildRuleStatus.SUCCESS) {
                   BuildRuleSuccessType success = Preconditions.checkNotNull(input.getSuccess());
                   successType = Optional.of(success);
@@ -1399,7 +1400,7 @@ public class CachingBuildEngine implements BuildEngine {
 
     // Extract the dep file from the last build.  If we don't find one, abort.
     if (!depFile.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     // Build the dep-file rule key.  If any inputs are no longer on disk, this means something
@@ -1418,7 +1419,7 @@ public class CachingBuildEngine implements BuildEngine {
       if (!allowMissingInputs) {
         throw e;
       }
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -1436,7 +1437,7 @@ public class CachingBuildEngine implements BuildEngine {
     if (result.isPresent()) {
       return Optional.of(result.get().getFirst());
     } else {
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
@@ -1520,7 +1521,7 @@ public class CachingBuildEngine implements BuildEngine {
       final BuildInfoRecorder buildInfoRecorder)
       throws IOException {
     if (!useManifestCaching(rule)) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     final Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> manifestKey =
@@ -1530,7 +1531,7 @@ public class CachingBuildEngine implements BuildEngine {
       buildInfoRecorder.addBuildMetadata(
           BuildInfo.METADATA_KEY_FOR_MANIFEST_KEY,
           manifestKey.get().getFirst().toString());
-      return Optional.absent();
+      return Optional.empty();
     }
 
     final LazyPath tempFile = new LazyPath() {
@@ -1547,7 +1548,7 @@ public class CachingBuildEngine implements BuildEngine {
         buildInfoRecorder);
 
     if (!manifestResult.getType().isSuccess()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     Path manifestPath = getManifestPath(rule);
@@ -1580,7 +1581,7 @@ public class CachingBuildEngine implements BuildEngine {
             pathResolver,
             manifestKey.get().getSecond());
     if (!ruleKey.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     CacheResult cacheResult =
@@ -1599,7 +1600,7 @@ public class CachingBuildEngine implements BuildEngine {
           BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED,
           cacheResult));
     }
-    return Optional.absent();
+    return Optional.empty();
 
   }
 
@@ -1610,12 +1611,12 @@ public class CachingBuildEngine implements BuildEngine {
       BuildInfoRecorder buildInfoRecorder,
       final RuleKeyFactories ruleKeyFactory) {
     if (!(rule instanceof SupportsInputBasedRuleKey)) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     Optional<RuleKey> inputRuleKey = ruleKeyFactory.inputBasedRuleKeyBuilderFactory.build(rule);
     if (!inputRuleKey.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     buildInfoRecorder.addBuildMetadata(
@@ -1625,7 +1626,7 @@ public class CachingBuildEngine implements BuildEngine {
     // Check the input-based rule key says we're already built.
     Optional<RuleKey> lastInputRuleKey = onDiskBuildInfo.getRuleKey(
         BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY);
-    if (inputRuleKey.get().equals(lastInputRuleKey.orNull())) {
+    if (inputRuleKey.get().equals(lastInputRuleKey.orElse(null))) {
       return Optional.of(
               BuildResult.success(
                   rule,
@@ -1650,7 +1651,7 @@ public class CachingBuildEngine implements BuildEngine {
           BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED,
           cacheResult));
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private Optional<BuildResult> performAbiBasedCacheFetch(
@@ -1690,14 +1691,14 @@ public class CachingBuildEngine implements BuildEngine {
 
       Optional<RuleKey> lastAbiRuleKey =
           onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_ABI_RULE_KEY);
-      if (abiRuleKey.equals(lastAbiRuleKey.orNull())) {
+      if (abiRuleKey.equals(lastAbiRuleKey.orElse(null))) {
         return Optional.of(BuildResult.success(
             rule,
             BuildRuleSuccessType.MATCHING_ABI_RULE_KEY,
             CacheResult.localKeyUnchangedHit()));
       }
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   private ResourceAmounts getRuleResourceAmounts(BuildRule rule) {

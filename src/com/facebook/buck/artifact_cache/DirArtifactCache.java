@@ -25,7 +25,6 @@ import com.facebook.buck.util.DirectoryCleaner;
 import com.facebook.buck.util.DirectoryCleanerArgs;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -47,6 +46,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class DirArtifactCache implements ArtifactCache {
 
@@ -106,7 +106,7 @@ public class DirArtifactCache implements ArtifactCache {
       }
 
       // Now copy the artifact out.
-      filesystem.copyFile(getPathForRuleKey(ruleKey, Optional.absent()), output.get());
+      filesystem.copyFile(getPathForRuleKey(ruleKey, Optional.empty()), output.get());
 
       result = CacheResult.hit(name, metadata.build(), filesystem.getFileSize(output.get()));
     } catch (NoSuchFileException e) {
@@ -138,9 +138,9 @@ public class DirArtifactCache implements ArtifactCache {
     }
 
     try {
-      Optional<Path> borrowedAndStoredArtifactPath = Optional.absent();
+      Optional<Path> borrowedAndStoredArtifactPath = Optional.empty();
       for (RuleKey ruleKey : info.getRuleKeys()) {
-        Path artifactPath = getPathForRuleKey(ruleKey, Optional.absent());
+        Path artifactPath = getPathForRuleKey(ruleKey, Optional.empty());
         Path metadataPath = getPathForRuleKey(ruleKey, Optional.of(".metadata"));
 
         if (filesystem.exists(artifactPath) && filesystem.exists(metadataPath)) {
@@ -224,7 +224,7 @@ public class DirArtifactCache implements ArtifactCache {
 
   @VisibleForTesting
   Path getPathForRuleKey(RuleKey ruleKey, Optional<String> extension) {
-    return getParentDirForRuleKey(ruleKey).resolve(ruleKey.toString() + extension.or(""));
+    return getParentDirForRuleKey(ruleKey).resolve(ruleKey.toString() + extension.orElse(""));
   }
 
   @VisibleForTesting

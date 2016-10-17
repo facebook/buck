@@ -51,7 +51,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -68,6 +67,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
 
 @RunWith(Parameterized.class)
 public class LuaBinaryIntegrationTest {
@@ -167,8 +167,8 @@ public class LuaBinaryIntegrationTest {
     Path path = workspace.buildAndReturnOutput("//:simple");
     ProcessExecutor.Result result = workspace.runCommand(path.toString());
     assertThat(
-        result.getStdout().or("") + result.getStderr().or(""),
-        result.getStderr().or("").trim(),
+        result.getStdout().orElse("") + result.getStderr().orElse(""),
+        result.getStderr().orElse("").trim(),
         Matchers.endsWith("hello world"));
   }
 

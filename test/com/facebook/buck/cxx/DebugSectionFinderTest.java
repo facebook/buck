@@ -21,10 +21,9 @@ import static com.facebook.buck.cxx.DebugSectionProperty.STRINGS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -38,6 +37,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
+import java.util.Optional;
 
 public class DebugSectionFinderTest {
 
@@ -149,7 +149,7 @@ public class DebugSectionFinderTest {
   @Test
   public void testUnrecognizedData() {
     assertDebugSections(
-        Optional.absent(),
+        Optional.empty(),
         ByteBuffer.wrap("some random data".getBytes()));
   }
 

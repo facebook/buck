@@ -17,7 +17,8 @@
 package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.google.common.base.Optional;
+
+import java.util.Optional;
 
 /***
  * Provides simplified access to settings from the version_control section of a .buckconfig file.

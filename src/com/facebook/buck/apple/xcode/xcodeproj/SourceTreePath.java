@@ -17,11 +17,11 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.util.Optionals;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 

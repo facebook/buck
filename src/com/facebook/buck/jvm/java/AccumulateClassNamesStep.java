@@ -25,7 +25,6 @@ import com.facebook.buck.jvm.java.classes.FileLikes;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSortedMap;
@@ -39,6 +38,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * {@link Step} that takes a directory or zip of {@code .class} files and traverses it to get the
@@ -114,9 +114,7 @@ public class AccumulateClassNamesStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    String sourceString = pathToJarOrClassesDirectory
-        .transform(Object::toString)
-        .or("null");
+    String sourceString = pathToJarOrClassesDirectory.map(Object::toString).orElse("null");
     return String.format("get_class_names %s > %s",
         sourceString,
         whereClassNamesShouldBeWritten);
@@ -155,7 +153,7 @@ public class AccumulateClassNamesStep implements Step {
       new DefaultClasspathTraverser().traverse(traversal);
     } catch (IOException e) {
       context.logError(e, "Error accumulating class names for %s.", path);
-      return Optional.absent();
+      return Optional.empty();
     }
 
     return Optional.of(classNamesBuilder.build());

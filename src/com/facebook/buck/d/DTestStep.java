@@ -18,10 +18,10 @@ package com.facebook.buck.d;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.AbstractTestStep;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Runs a D test command, remembering its exit code and streaming its output to
@@ -40,9 +40,9 @@ public class DTestStep extends AbstractTestStep {
     super(
         NAME,
         filesystem,
-        Optional.absent(),
+        Optional.empty(),
         command,
-        Optional.absent(),
+        Optional.empty(),
         exitCode,
         testRuleTimeoutMs,
         output);

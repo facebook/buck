@@ -23,7 +23,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -32,6 +31,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
@@ -90,7 +90,7 @@ public class BuildRuleResolver {
 
                 Description<?> description = node.getDescription();
                 if (!(description instanceof MetadataProvidingDescription)) {
-                  return Optional.absent();
+                  return Optional.empty();
                 }
                 MetadataProvidingDescription<T> metadataProvidingDescription =
                     (MetadataProvidingDescription<T>) description;
@@ -125,7 +125,7 @@ public class BuildRuleResolver {
   }
 
   public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
-    return Optional.fromNullable(buildRuleIndex.get(buildTarget));
+    return Optional.ofNullable(buildRuleIndex.get(buildTarget));
   }
 
   public BuildRule requireRule(BuildTarget target) throws NoSuchBuildTargetException {
@@ -183,11 +183,11 @@ public class BuildRuleResolver {
             rule.getClass());
       }
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public <T> T getRuleWithType(BuildTarget buildTarget, Class<T> cls) {
-    return fromNullable(buildTarget, getRuleOptionalWithType(buildTarget, cls).orNull());
+    return fromNullable(buildTarget, getRuleOptionalWithType(buildTarget, cls).orElse(null));
   }
 
   public Function<BuildTarget, BuildRule> getRuleFunction() {

@@ -16,9 +16,8 @@
 
 package com.facebook.buck.android;
 
-import com.google.common.base.Optional;
-
 import java.nio.file.Path;
+import java.util.Optional;
 
 
 /**
@@ -26,7 +25,7 @@ import java.nio.file.Path;
  */
 public interface AndroidDirectoryResolver {
   /**
-   * @return {@code Optional<Path>} pointing to Android SDK or {@code Optional.absent()}.
+   * @return {@code Optional<Path>} pointing to Android SDK or {@code Optional.empty()}.
    */
   Optional<Path> getSdkOrAbsent();
 
@@ -47,13 +46,13 @@ public interface AndroidDirectoryResolver {
   Path getBuildToolsOrThrow();
 
   /**
-   * @return {@code Optional<Path>} pointing to Android NDK or {@code Optional.absent()}.
+   * @return {@code Optional<Path>} pointing to Android NDK or {@code Optional.empty()}.
    */
   Optional<Path> getNdkOrAbsent();
 
   /**
    * @return {@code Optional<String>} of the NDK version pointed by {@code #getNdkOrAbsent} or
-   * {@code Optional.absent()}.
+   * {@code Optional.empty()}.
    */
   Optional<String> getNdkVersion();
 }

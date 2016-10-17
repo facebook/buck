@@ -31,7 +31,6 @@ import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.util.Ansi;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -39,6 +38,7 @@ import org.junit.Test;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -85,20 +85,20 @@ public class TestThreadStateRendererTest {
             1L, createTestStartedEventOptional(1, 1200, TARGET2),
             3L, createTestStartedEventOptional(3, 2300, TARGET3),
             4L, createTestStartedEventOptional(4, 1100, TARGET1),
-            5L, Optional.absent(),
+            5L, Optional.empty(),
             8L, createTestStartedEventOptional(6, 3000, TARGET4)),
         ImmutableMap.of(
-            1L, Optional.absent(),
+            1L, Optional.empty(),
             3L, createTestSummaryEventOptional(1, 1600, "Test Case A", "Test A"),
-            4L, Optional.absent(),
-            5L, Optional.absent(),
+            4L, Optional.empty(),
+            5L, Optional.empty(),
             8L, createTestSummaryEventOptional(1, 3800, "Test Case B", "Test B")),
         ImmutableMap.of(),
         ImmutableMap.of(
             1L, createStepStartedEventOptional(1, 1500, "step A"),
-            3L, Optional.absent(),
-            4L, Optional.absent(),
-            5L, Optional.absent(),
+            3L, Optional.empty(),
+            4L, Optional.empty(),
+            5L, Optional.empty(),
             8L, createStepStartedEventOptional(1, 3700, "step B")),
         ImmutableMap.of(
             TARGET1, new AtomicLong(200),
@@ -139,25 +139,25 @@ public class TestThreadStateRendererTest {
             1L, createTestStartedEventOptional(1, 1200, TARGET2),
             3L, createTestStartedEventOptional(3, 2300, TARGET3),
             4L, createTestStartedEventOptional(4, 1100, TARGET1),
-            5L, Optional.absent(),
+            5L, Optional.empty(),
             8L, createTestStartedEventOptional(6, 3000, TARGET4)),
         ImmutableMap.of(
-            1L, Optional.absent(),
+            1L, Optional.empty(),
             3L, createTestSummaryEventOptional(1, 1600, "Test Case A", "Test A"),
-            4L, Optional.absent(),
-            5L, Optional.absent(),
-            8L, Optional.absent()),
+            4L, Optional.empty(),
+            5L, Optional.empty(),
+            8L, Optional.empty()),
         ImmutableMap.of(
-            1L, Optional.absent(),
-            3L, Optional.absent(),
-            4L, Optional.absent(),
-            5L, Optional.absent(),
+            1L, Optional.empty(),
+            3L, Optional.empty(),
+            4L, Optional.empty(),
+            5L, Optional.empty(),
             8L, createTestStatusMessageEventOptional(1, 3800, "Installing Sim", Level.INFO)),
         ImmutableMap.of(
             1L, createStepStartedEventOptional(1, 1500, "step A"),
-            3L, Optional.absent(),
-            4L, Optional.absent(),
-            5L, Optional.absent(),
+            3L, Optional.empty(),
+            4L, Optional.empty(),
+            5L, Optional.empty(),
             8L, createStepStartedEventOptional(1, 3700, "step B")),
         ImmutableMap.of(
             TARGET1, new AtomicLong(200),
@@ -188,17 +188,17 @@ public class TestThreadStateRendererTest {
         ImmutableMap.of(
             3L, createTestStartedEventOptional(3, 2300, TARGET3),
             4L, createTestStartedEventOptional(4, 1100, TARGET1),
-            5L, Optional.absent(),
+            5L, Optional.empty(),
             8L, createTestStartedEventOptional(6, 3000, TARGET4)),
         ImmutableMap.of(
-            1L, Optional.absent(),
-            4L, Optional.absent(),
-            5L, Optional.absent()),
+            1L, Optional.empty(),
+            4L, Optional.empty(),
+            5L, Optional.empty()),
         ImmutableMap.of(),
         ImmutableMap.of(
             1L, createStepStartedEventOptional(1, 1500, "step A"),
-            3L, Optional.absent(),
-            5L, Optional.absent()),
+            3L, Optional.empty(),
+            5L, Optional.empty()),
         ImmutableMap.of(
             TARGET1, new AtomicLong(200),
             TARGET2, new AtomicLong(1400),
