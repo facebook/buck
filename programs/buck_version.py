@@ -34,12 +34,17 @@ class EmptyTempFile(object):
 
 def is_git(dirpath):
     dot_git = os.path.join(dirpath, '.git')
-    return all([
-        os.path.exists(dot_git),
-        os.path.isdir(dot_git),
-        which('git'),
-        sys.platform != 'cygwin',
-    ])
+    if(which('git') and sys.platform != 'cygwin'):
+        if(os.path.exists(dot_git) and os.path.isdir(dot_git)):
+            return True
+        output = check_output(
+            ['git', 'rev-parse', '--is-inside-work-tree'],
+            cwd=dirpath)
+        return output.strip() == 'true'
+    return False
+
+
+
 
 
 def is_dirty(dirpath):
