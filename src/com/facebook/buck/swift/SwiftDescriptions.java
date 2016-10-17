@@ -25,14 +25,11 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Path;
 
 class SwiftDescriptions {
   /**
@@ -60,14 +57,11 @@ class SwiftDescriptions {
       BuildTarget buildTarget) {
     output.srcs = args.srcs.transform(
         input -> filterSwiftSources(sourcePathResolver, args.srcs.get()));
-    output.exportedHeaders = args.exportedHeaders.transform(
+    output.headersSearchPath = args.exportedHeaders.transform(
          input -> FluentIterable.from(input.getPaths())
-            .uniqueIndex(new Function<SourcePath, Path>() {
-              @Override
-              public Path apply(SourcePath input) {
-                Preconditions.checkArgument(input instanceof PathSourcePath)
-                return ((PathSourcePath) input).getRelativePath();
-              }
+            .uniqueIndex(path -> {
+              Preconditions.checkArgument(path instanceof PathSourcePath);
+              return ((PathSourcePath) path).getRelativePath();
             })
     );
     output.compilerFlags = args.compilerFlags;

@@ -204,7 +204,7 @@ public class SwiftLibraryDescription implements
               })
               .toSortedSet(Ordering.natural()));
 
-      if (args.exportedHeaders.isPresent()) {
+      if (args.headersSearchPath.isPresent()) {
         UnflavoredBuildTarget unflavoredBuildTarget =
             params.getBuildTarget().getUnflavoredBuildTarget();
 
@@ -216,7 +216,7 @@ public class SwiftLibraryDescription implements
               resolver,
               new SourcePathResolver(resolver),
               cxxPlatform,
-              args.exportedHeaders.get(),
+              args.headersSearchPath.get(),
               headerVisibility);
         }
       }
@@ -233,7 +233,7 @@ public class SwiftLibraryDescription implements
               params.getProjectFilesystem(),
               buildTarget, "%s"),
           args.srcs.get(),
-          args.enableObjcInterop,
+          Optional.absent(),
           args.bridgingHeader);
     }
 
@@ -346,7 +346,7 @@ public class SwiftLibraryDescription implements
     public Optional<SourcePath> bridgingHeader;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
     public Optional<NativeLinkable.Linkage> preferredLinkage;
-    public Optional<ImmutableMap<Path, SourcePath>> exportedHeaders;
+    public Optional<ImmutableMap<Path, SourcePath>> headersSearchPath;
   }
 
 }
