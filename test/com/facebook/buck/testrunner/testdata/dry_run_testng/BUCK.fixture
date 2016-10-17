@@ -10,13 +10,19 @@ java_test(
 
 prebuilt_jar(
   name = 'testng',
-  binary_jar = 'testng.jar',
+  binary_jar = 'testng-6.8.jar',
   deps = [
-    ':hamcrest',
+    ':hamcrest-core',
+    ':hamcrest-library',
   ],
 )
 
 prebuilt_jar(
-  name = 'hamcrest',
-  binary_jar = 'hamcrest.jar',
+  name = 'hamcrest-core',
+  binary_jar = 'hamcrest-core-1.3.jar',
+)
+
+prebuilt_jar(
+  name = 'hamcrest-library',
+  binary_jar = 'hamcrest-library-1.3.jar',
 )
