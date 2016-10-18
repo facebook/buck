@@ -26,6 +26,7 @@ import com.facebook.buck.util.DirectoryCleanerArgs;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -317,25 +318,32 @@ public class DirArtifactCache implements ArtifactCache {
   private DirectoryCleaner newDirectoryCleaner() {
     DirectoryCleanerArgs cleanerArgs = DirectoryCleanerArgs.builder()
         .setPathSelector(
-            new DirectoryCleaner.PathSelector() {
-
-              @Override
-              public Iterable<Path> getCandidatesToDelete(Path rootPath) throws IOException {
-                return getAllFilesInCache();
-              }
-
-              @Override
-              public int comparePaths(
-                  DirectoryCleaner.PathStats path1,
-                  DirectoryCleaner.PathStats path2) {
-                return Long.compare(path1.getLastAccessMillis(), path2.getLastAccessMillis());
-              }
-            })
+            getDirectoryCleanerPathSelector())
         .setMaxTotalSizeBytes(maxCacheSizeBytes.get())
         .setMaxBytesAfterDeletion((long) (maxCacheSizeBytes.get() * MAX_BYTES_TRIM_RATIO))
         .setMinAmountOfEntriesToKeep(0)
         .build();
 
     return new DirectoryCleaner(cleanerArgs);
+  }
+
+  @VisibleForTesting
+  DirectoryCleaner.PathSelector getDirectoryCleanerPathSelector() {
+    return new DirectoryCleaner.PathSelector() {
+      @Override
+      public Iterable<Path> getCandidatesToDelete(Path rootPath) throws IOException {
+        return getAllFilesInCache();
+      }
+
+      @Override
+      public int comparePaths(
+          DirectoryCleaner.PathStats path1,
+          DirectoryCleaner.PathStats path2) {
+        return ComparisonChain.start()
+            .compare(path1.getLastAccessMillis(), path2.getLastAccessMillis())
+            .compare(path1.getCreationMillis(), path2.getCreationMillis())
+            .result();
+      }
+    };
   }
 }

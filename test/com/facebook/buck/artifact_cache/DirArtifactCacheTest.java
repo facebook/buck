@@ -19,7 +19,9 @@ package com.facebook.buck.artifact_cache;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
@@ -39,6 +41,7 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.util.DirectoryCleaner;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.google.common.base.Optional;
@@ -514,6 +517,8 @@ public class DirArtifactCacheTest {
     Files.setAttribute(fileY, "lastAccessTime", FileTime.fromMillis(1000));
     Files.setAttribute(fileZ, "lastAccessTime", FileTime.fromMillis(2000));
 
+    // On some filesystems, setting creationTime silently fails. So don't test that here.
+
     assertEquals(4, cacheDir.toFile().listFiles().length);
 
     dirArtifactCache.deleteOldFiles();
@@ -522,6 +527,30 @@ public class DirArtifactCacheTest {
     assertEquals(
         ImmutableSet.of(fileZ, fileW),
         FluentIterable.from(filesInCache).toSet());
+  }
+
+  private DirectoryCleaner.PathStats fakePathStats(long creationTime, long lastAccessTime) {
+    return new DirectoryCleaner.PathStats(null, 0, creationTime, lastAccessTime);
+  }
+
+  @Test
+  public void testDirectoryCleanerPathSelector() throws IOException {
+    Path cacheDir = tmpDir.newFolder();
+
+    dirArtifactCache = new DirArtifactCache(
+        "dir",
+        new ProjectFilesystem(cacheDir),
+        Paths.get("."),
+        /* doStore */ true,
+        /* maxCacheSizeBytes */ Optional.of(3L));
+
+    DirectoryCleaner.PathSelector pathSelector = dirArtifactCache.getDirectoryCleanerPathSelector();
+
+    assertTrue(pathSelector.comparePaths(fakePathStats(0, 0), fakePathStats(0, 10)) < 0);
+    assertTrue(pathSelector.comparePaths(fakePathStats(0, 10), fakePathStats(10, 10)) < 0);
+    assertSame(pathSelector.comparePaths(fakePathStats(20, 10), fakePathStats(20, 10)), 0);
+    assertTrue(pathSelector.comparePaths(fakePathStats(0, 20), fakePathStats(10, 10)) > 0);
+    assertTrue(pathSelector.comparePaths(fakePathStats(20, 10), fakePathStats(10, 10)) > 0);
   }
 
   @Test
