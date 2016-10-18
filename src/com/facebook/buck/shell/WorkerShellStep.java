@@ -82,7 +82,7 @@ public class WorkerShellStep implements Step {
         }
       }
       return StepExecutionResult.of(result.getExitCode());
-    } catch (IOException e) {
+    } catch (Exception e) {
       throw new HumanReadableException(e, "Error communicating with external process.");
     } finally {
       if (pool != null && process != null) {
