@@ -145,7 +145,7 @@ public class WorkerProcess {
         protocol.close();
       }
       Files.deleteIfExists(stdErr);
-    } catch (IOException e) {
+    } catch (Exception e) {
       LOG.debug(e, "Error closing worker process %s.", this.hashCode());
       throw new HumanReadableException(e,
           "Error while trying to close the process %s at the end of the build.",
