@@ -47,7 +47,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
@@ -79,6 +78,9 @@ import java.util.jar.JarOutputStream;
 public class DistributedBuildFileHashesTest {
   @Rule
   public TemporaryFolder tempDir = new TemporaryFolder();
+
+  @Rule
+  public TemporaryFolder archiveTempDir = new TemporaryFolder();
 
   private static class SingleFileFixture extends Fixture {
     protected Path javaSrcPath;
@@ -130,8 +132,8 @@ public class DistributedBuildFileHashesTest {
 
     List<BuildJobStateFileHashes> fileHashes = f.distributedBuildFileHashes.getFileHashes();
 
-    ProjectFilesystem readProjectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem(
-        "/read_hashes");
+    ProjectFilesystem readProjectFilesystem =
+        new ProjectFilesystem(tempDir.newFolder("read_hashes").toPath().toRealPath());
     FileHashCache fileHashCache = DistBuildFileHashes.createFileHashCache(
         readProjectFilesystem,
         fileHashes.get(0));
@@ -170,8 +172,8 @@ public class DistributedBuildFileHashesTest {
 
     List<BuildJobStateFileHashes> fileHashes = f.distributedBuildFileHashes.getFileHashes();
 
-    ProjectFilesystem readProjectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem(
-        "/read_hashes");
+    ProjectFilesystem readProjectFilesystem =
+        new ProjectFilesystem(tempDir.newFolder("read_hashes").toPath().toRealPath());
     FileHashCache fileHashCache = DistBuildFileHashes.createFileHashCache(
         readProjectFilesystem,
         fileHashes.get(0));
@@ -202,10 +204,10 @@ public class DistributedBuildFileHashesTest {
       this.secondFolder = secondFolder;
     }
 
-    public static ArchiveFilesFixture create() throws Exception {
+    public static ArchiveFilesFixture create(TemporaryFolder archiveTempDir) throws Exception {
       return new ArchiveFilesFixture(
-          Files.createTempDirectory("first"),
-          Files.createTempDirectory("second"));
+          archiveTempDir.newFolder("first").toPath().toRealPath(),
+          archiveTempDir.newFolder("second").toPath().toRealPath());
     }
 
     @Override
@@ -245,7 +247,7 @@ public class DistributedBuildFileHashesTest {
 
   @Test
   public void recordsArchiveHashes() throws Exception {
-    try (ArchiveFilesFixture f = ArchiveFilesFixture.create()) {
+    try (ArchiveFilesFixture f = ArchiveFilesFixture.create(archiveTempDir)) {
       List<BuildJobStateFileHashes> recordedHashes = f.distributedBuildFileHashes.getFileHashes();
 
       assertThat(recordedHashes, Matchers.hasSize(1));
@@ -262,11 +264,11 @@ public class DistributedBuildFileHashesTest {
 
   @Test
   public void readsHashesForArchiveMembers() throws Exception {
-    try (ArchiveFilesFixture f = ArchiveFilesFixture.create()) {
+    try (ArchiveFilesFixture f = ArchiveFilesFixture.create(archiveTempDir)) {
       List<BuildJobStateFileHashes> recordedHashes = f.distributedBuildFileHashes.getFileHashes();
 
-      ProjectFilesystem readProjectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem(
-          "/read_hashes");
+      ProjectFilesystem readProjectFilesystem =
+          new ProjectFilesystem(tempDir.newFolder("read_hashes").toPath().toRealPath());
       FileHashCache fileHashCache = DistBuildFileHashes.createFileHashCache(
           readProjectFilesystem,
           recordedHashes.get(0));

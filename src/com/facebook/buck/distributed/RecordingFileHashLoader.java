@@ -28,7 +28,6 @@ import com.facebook.buck.model.Pair;
 import com.google.common.base.Optional;
 import com.google.common.hash.HashCode;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -77,69 +76,79 @@ public class RecordingFileHashLoader implements FileHashLoader {
     return delegate.getSize(path);
   }
 
-  private Path followPathToFinalDestination(Path path) {
+  private Path findRealPath(Path path) {
     try {
-      while (isSymlink(path) && projectFilesystem.getPathRelativeToProjectRoot(path).isPresent()) {
-        path = path.toFile().getCanonicalFile().toPath();
-        LOG.info("Updated path to: %s", path.toAbsolutePath().toString());
+      Path realPath = path.toRealPath();
+      boolean pathContainedSymLinks =
+          !path.toAbsolutePath().normalize().equals(realPath.normalize());
+
+      if (pathContainedSymLinks) {
+        LOG.info("Followed path [%s] to real path: [%s]", path.toAbsolutePath(), realPath);
+        return realPath;
       }
       return path;
     } catch (Exception ex) {
-      LOG.error("Exception following symlink for path: " + path.toAbsolutePath().toString(), ex);
+      LOG.error(ex, "Exception following symlink for path [%s]", path.toAbsolutePath());
       throw new RuntimeException(ex);
     }
   }
 
-  Pair<Path, Path> findSymlinkRoot(Path symlink, Path target) {
-    Path symLinkParent = null, targetParent = null, symLinkParentTarget = null;
-
-    while (symLinkParentTarget == null || symLinkParentTarget.equals(targetParent)) {
-      symLinkParent = symlink.getParent();
-      targetParent = target.getParent();
-      symLinkParentTarget = followPathToFinalDestination(symLinkParent);
-
-      if (symLinkParentTarget.equals(targetParent)) {
-        symlink = symLinkParent;
-        target = targetParent;
+  // For given symlink, finds the highest level symlink in the path that points outside the project.
+  // This is to avoid collisions/redundant symlink creation during re-materialization.
+  // Example notes:
+  // In the below examples, /a is the root of the project, and /e is outside the project.
+  // Example 1:
+  // /a/b/symlink_to_x_y/d -> /e/f/x/y/d
+  // (where /a/b -> /e/f, and /e/f/symlink_to_x_y -> /e/f/x/y)
+  // returns /a/b -> /e/f
+  // Example 2:
+  // /a/b/symlink_to_c/d -> /e/f/d
+  // (where /a/b/symlink_to_c -> /a/b/c and /a/b/c -> /e/f)
+  // returns /a/b/symlink_to_c -> /e/f
+  // Note: when re-materializing symlinks we skip any intermediate symlinks inside the project
+  // (in Example 2 we will re-materialize /a/b/symlink_to_c -> /e/f, and skip /a/b/c).
+  private Pair<Path, Path> findSymlinkRoot(Path symlinkPath) {
+    for (int componentCount = 1; componentCount <= symlinkPath.getNameCount(); componentCount++) {
+      Path symlinkSubpath = symlinkPath.subpath(0, componentCount);
+      Path realSymlinkSubpath = findRealPath(symlinkSubpath);
+      boolean realPathOutsideProject =
+          projectFilesystem.getPathRelativeToProjectRoot(realSymlinkSubpath).isPresent();
+      if (realPathOutsideProject) {
+        return new Pair<>(
+            projectFilesystem.getPathRelativeToProjectRoot(
+                symlinkSubpath).get(), realSymlinkSubpath);
       }
     }
 
-    return new Pair<>(symlink, target);
-  }
+    throw new RuntimeException(
+        String.format(
+            "Failed to find root symlink for symlink with path [%s]",
+            symlinkPath.toAbsolutePath()));
 
-  // TODO(alisdair04): do this with ProjectFileSystem.isSymLink. The reason for not using it right
-  // now is that it doesn't behave as expected. If we have a path /a/b/c, which points to
-  // /d/e/f, but the actual sym link is /a/b to /d/e, then ProjectFileSystem.isSymLink will report
-  // that /a/b/c is not a sym link. With ProjectFileSystem.isSymLink we will need to look at the
-  // parent dirs of every single Path to figure out whether it is a sym link.
-  private static boolean isSymlink(Path path) {
-    File file = new File(path.toAbsolutePath().toUri());
-    try {
-      Path canonicalPath = file.getCanonicalFile().toPath();
-      return !path.toAbsolutePath().equals(canonicalPath);
-    } catch (IOException e) {
-      LOG.error(e);
-      throw new RuntimeException(e);
-    }
   }
 
   private synchronized void record(Path path, Optional<String> memberPath, HashCode hashCode) {
-    LOG.info("Recording path: %s", path.toAbsolutePath().toString());
+    LOG.info("Recording path: %s", path.toAbsolutePath());
+
     Optional<Path> pathRelativeToProjectRoot =
         projectFilesystem.getPathRelativeToProjectRoot(path);
     BuildJobStateFileHashEntry fileHashEntry = new BuildJobStateFileHashEntry();
-    Path entryKey;
     boolean pathIsAbsolute = !pathRelativeToProjectRoot.isPresent();
     fileHashEntry.setPathIsAbsolute(pathIsAbsolute);
-    entryKey = pathIsAbsolute ? path : pathRelativeToProjectRoot.get();
+    Path entryKey = pathIsAbsolute ? path : pathRelativeToProjectRoot.get();
     boolean isDirectory = projectFilesystem.isDirectory(path);
-    Path finalPath = followPathToFinalDestination(path);
-    boolean finalPathInsideProject =
-        projectFilesystem.getPathRelativeToProjectRoot(finalPath).isPresent();
+    Path realPath = findRealPath(path);
+    boolean realPathInsideProject =
+        projectFilesystem.getPathRelativeToProjectRoot(realPath).isPresent();
 
-    // Path was a symlink to destination outside of the project
-    if (!finalPathInsideProject && !pathIsAbsolute) {
-      Pair<Path, Path> symLinkRootAndTarget = findSymlinkRoot(path, finalPath);
+    // Symlink handling:
+    // 1) Symlink points inside the project:
+    // - We treat it like a regular file when uploading/re-materializing.
+    // 2) Symlink points outside the project:
+    // - We find the highest level part of the path that points outside the project and upload
+    // meta-data about this before it is re-materialized. See findSymlinkRoot() for more details.
+    if (!realPathInsideProject && !pathIsAbsolute) {
+      Pair<Path, Path> symLinkRootAndTarget = findSymlinkRoot(path);
 
       Path symLinkRoot =
           projectFilesystem.getPathRelativeToProjectRoot(symLinkRootAndTarget.getFirst()).get();
@@ -157,7 +166,7 @@ public class RecordingFileHashLoader implements FileHashLoader {
     if (memberPath.isPresent()) {
       fileHashEntry.setArchiveMemberPath(memberPath.get().toString());
     }
-    if (!isDirectory && !pathIsAbsolute && finalPathInsideProject) {
+    if (!isDirectory && !pathIsAbsolute && realPathInsideProject) {
       try {
         // TODO(shivanker, ruibm): Don't read everything in memory right away.
         fileHashEntry.setContents(Files.readAllBytes(path));
