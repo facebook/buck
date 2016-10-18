@@ -92,7 +92,6 @@
       "//test/com/facebook/buck/event:testutil",
       "//test/com/facebook/buck/jvm/java:fakepackagefinder",
       "//test/com/facebook/buck/model:testutil",
-      "//test/com/facebook/buck/step:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//third-party/java/cglib:cglib",
       "//third-party/java/jackson:jackson-databind",
