@@ -60,7 +60,7 @@ public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
   public AbstractTypeCoercerFactory(ObjectMapper mapper, PathTypeCoercer pathTypeCoercer) {
     // Cached instance for any type coercers that utilize Jackson
     jacksonObjectMapper = mapper.copy()
-        .setPropertyNamingStrategy(PropertyNamingStrategy.CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES)
+        .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
         .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
     TypeCoercer<String> stringTypeCoercer = new IdentityTypeCoercer<>(String.class);

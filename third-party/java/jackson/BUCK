@@ -13,7 +13,7 @@ java_library(
 
 prebuilt_jar(
   name = 'jackson-annotations',
-  binary_jar = 'jackson-annotations-2.5.5.jar',
+  binary_jar = 'jackson-annotations-2.7.8.jar',
   licenses = [
     'LICENSE',
   ],
@@ -22,7 +22,7 @@ prebuilt_jar(
 
 prebuilt_jar(
   name = 'jackson-mrbean',
-  binary_jar = 'jackson-mrbean-2.5.5.jar',
+  binary_jar = 'jackson-module-mrbean-2.7.8.jar',
   licenses = [
     'LICENSE',
   ],
@@ -31,7 +31,7 @@ prebuilt_jar(
 
 prebuilt_jar(
   name = 'jackson-core',
-  binary_jar = 'jackson-core-2.5.5.jar',
+  binary_jar = 'jackson-core-2.7.8.jar',
   licenses = [
     'LICENSE',
   ],
@@ -39,14 +39,23 @@ prebuilt_jar(
 )
 
 prebuilt_jar(
-  name = 'jackson-datatype-jdk7',
-  binary_jar = 'jackson-datatype-jdk7-2.5.0.jar',
+  name = 'jackson-datatype-jdk8',
+  binary_jar = 'jackson-datatype-jdk8-2.7.8.jar',
   licenses = [
     'LICENSE',
   ],
   visibility = [
     '//src/com/facebook/buck/util:object_mapper',
   ],
+)
+
+prebuilt_jar(
+  name = 'jackson-datatype-guava',
+  binary_jar = 'jackson-datatype-guava-2.7.8.jar',
+  licenses = [
+    'LICENSE',
+  ],
+  visibility = [ 'PUBLIC' ],
 )
 
 java_library(
@@ -62,7 +71,7 @@ java_library(
 
 prebuilt_jar(
   name = 'jackson-databind-jar',
-  binary_jar = 'jackson-databind-2.5.5.jar',
+  binary_jar = 'jackson-databind-2.7.8.jar',
   licenses = [
     'LICENSE',
   ],

@@ -18,7 +18,6 @@ package com.facebook.buck.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.fasterxml.jackson.datatype.jdk7.Jdk7Module;
 
 public class ObjectMappers {
 
@@ -30,8 +29,6 @@ public class ObjectMappers {
     ObjectMapper mapper = new ObjectMapper();
     // Add support for serializing Guava collections.
     mapper.registerModule(new GuavaModule());
-    // Add support for serializing Path and other JDK 7 objects.
-    mapper.registerModule(new Jdk7Module());
     return mapper;
   }
 }

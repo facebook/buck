@@ -69,7 +69,7 @@ java_library(
     '//third-party/java/guava:guava',
     '//third-party/java/jackson:jackson-databind',
     '//third-party/java/jackson:jackson-annotations',
-    '//third-party/java/jackson-datatype-guava:jackson-datatype-guava',
+    '//third-party/java/jackson:jackson-datatype-guava',
     '//third-party/java/jackson:jackson-mrbean',
     '//third-party/java/jetty:jetty',
     '//third-party/java/ddmlib:ddmlib',
