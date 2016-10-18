@@ -294,6 +294,21 @@ public final class Main {
   private static final NonReentrantSystemExit NON_REENTRANT_SYSTEM_EXIT =
       new NonReentrantSystemExit();
 
+  private static ProjectFilesystem createProjectFilesystem(Path path) {
+    try {
+      // toRealPath() is necessary to resolve symlinks, allowing us to later
+      // check whether files are inside or outside of the project without issue.
+      return new ProjectFilesystem(path.toRealPath().normalize());
+    } catch (IOException e) {
+      throw new HumanReadableException(
+          String.format(
+              ("Failed to resolve project root [%s]." +
+              "Check if it exists and has the right permissions."),
+              path.toAbsolutePath()),
+          e);
+    }
+  }
+
   /**
    * Daemon used to monitor the file system and cache build rules between Main() method
    * invocations is static so that it can outlive Main() objects and survive for the lifetime
@@ -317,10 +332,10 @@ public final class Main {
         Optional<WebServer> webServerToReuse) {
       this.cell = cell;
       this.hashCache = new WatchedFileHashCache(cell.getFilesystem());
-      this.buckOutHashCache =
-          DefaultFileHashCache.createBuckOutFileHashCache(
-              new ProjectFilesystem(cell.getFilesystem().getRootPath()),
-              cell.getFilesystem().getBuckPaths().getBuckOut());
+        this.buckOutHashCache =
+            DefaultFileHashCache.createBuckOutFileHashCache(
+                createProjectFilesystem(cell.getFilesystem().getRootPath()),
+                cell.getFilesystem().getBuckPaths().getBuckOut());
       this.fileEventBus = new EventBus("file-change-events");
 
       this.broadcastEventListener = new BroadcastEventListener();
@@ -921,8 +936,8 @@ public final class Main {
         // difference appears to be that filesystem is created with a Config that is used to produce
         // ImmutableSet<PathOrGlobMatcher> and BuckPaths for the ProjectFilesystem, whereas this one
         // uses the defaults.
-        ProjectFilesystem rootCellProjectFilesystem = new ProjectFilesystem(
-            rootCell.getFilesystem().getRootPath());
+        ProjectFilesystem rootCellProjectFilesystem =
+            createProjectFilesystem(rootCell.getFilesystem().getRootPath());
         if (isDaemon) {
           cellHashCache = getFileHashCacheFromDaemon(rootCell);
           buckOutHashCache = getBuckOutFileHashCacheFromDaemon(rootCell);
@@ -957,7 +972,7 @@ public final class Main {
           // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
           // multiple times in a single run.
           allCaches.add(
-              DefaultFileHashCache.createDefaultFileHashCache(new ProjectFilesystem(root)));
+              DefaultFileHashCache.createDefaultFileHashCache(createProjectFilesystem(root)));
         }
 
         FileHashCache fileHashCache = new StackedFileHashCache(allCaches.build());
