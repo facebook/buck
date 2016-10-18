@@ -70,6 +70,7 @@ public class WatchmanWatcherTest {
   private static final WatchmanQuery FAKE_QUERY =
       WatchmanQuery.of("/fake/root", ImmutableMap.of());
   private static final List<Object> FAKE_UUID_QUERY = FAKE_QUERY.toList("n:buckduuid");
+  private static final List<Object> FAKE_CLOCK_QUERY = FAKE_QUERY.toList("c:0:0");
 
   @After
   public void cleanUp() {
@@ -659,6 +660,34 @@ public class WatchmanWatcherTest {
             WatchmanDiagnostic.of(
                 WatchmanDiagnostic.Level.WARNING,
                 message)));
+  }
+
+  @Test
+  public void watcherInsertsAndUpdatesClockId() throws IOException, InterruptedException {
+    ImmutableMap<String, Object> watchmanOutput = ImmutableMap.<String, Object>of(
+        "clock", "c:0:1",
+        "files", ImmutableList.of());
+    EventBus eventBus = new EventBus("watchman test");
+    WatchmanWatcher watcher = createWatcher(
+        eventBus,
+        new FakeWatchmanClient(
+            0 /* queryElapsedTimeNanos */,
+            ImmutableMap.of(FAKE_CLOCK_QUERY, watchmanOutput)),
+        200 /* overflow */,
+        10000 /* timeout */,
+        "c:0:0" /* sinceParam */);
+    assertThat(
+      watcher.getWatchmanQuery(),
+      hasItem(hasEntry("since", "c:0:0")));
+
+    watcher.postEvents(
+        new BuckEventBus(new FakeClock(0), new BuildId()),
+        new WatchmanDiagnosticCache(),
+        WatchmanWatcher.FreshInstanceAction.NONE);
+
+    assertThat(
+      watcher.getWatchmanQuery(),
+      hasItem(hasEntry("since", "c:0:1")));
   }
 
   private WatchmanWatcher createWatcher(

@@ -66,6 +66,12 @@ public class WatchmanWatcher {
       ;
   };
 
+  // The type of cursor used to communicate with Watchman
+  public enum CursorType {
+    NAMED,
+    CLOCK_ID,
+  };
+
   private static final Logger LOG = Logger.get(WatchmanWatcher.class);
   private static final int DEFAULT_OVERFLOW_THRESHOLD = 10000;
   private static final long DEFAULT_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(10);
@@ -289,6 +295,12 @@ public class WatchmanWatcher {
             break;
         }
         return;
+      }
+      if (mSinceCursor.startsWith("c:")) {
+        // Update the clockId
+        mSinceCursor = Optional
+            .fromNullable((String) response.get("clock"))
+            .or(Watchman.NULL_CLOCK);
       }
 
       List<Map<String, Object>> files = (List<Map<String, Object>>) response.get("files");

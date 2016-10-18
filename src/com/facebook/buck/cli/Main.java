@@ -307,7 +307,7 @@ public final class Main {
     private final FileHashCache buckOutHashCache;
     private final EventBus fileEventBus;
     private final Optional<WebServer> webServer;
-    private final UUID watchmanQueryUUID;
+    private final Optional<UUID> watchmanQueryUUID;
     private final ActionGraphCache actionGraphCache;
     private final BroadcastEventListener broadcastEventListener;
 
@@ -344,7 +344,17 @@ public final class Main {
       if (!initWebServer()) {
         LOG.warn("Can't start web server");
       }
-      watchmanQueryUUID = UUID.randomUUID();
+      Optional<WatchmanWatcher.CursorType> watchmanCursorType = cell.getBuckConfig().getEnum(
+          "project",
+          "watchman_cursor",
+          WatchmanWatcher.CursorType.class);
+      if (watchmanCursorType.isPresent() &&
+          watchmanCursorType.get() == WatchmanWatcher.CursorType.CLOCK_ID &&
+          cell.getWatchman().getClockId().isPresent()) {
+        watchmanQueryUUID = Optional.absent();
+      } else {
+        watchmanQueryUUID = Optional.of(UUID.randomUUID());
+      }
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(cell.getFilesystem());
     }
 
@@ -486,7 +496,7 @@ public final class Main {
       return fileEventBus;
     }
 
-    public UUID getWatchmanQueryUUID() {
+    public Optional<UUID> getWatchmanQueryUUID() {
       return watchmanQueryUUID;
     }
 
@@ -559,12 +569,23 @@ public final class Main {
       EventBus fileChangeEventBus,
       ImmutableSet<PathOrGlobMatcher> ignorePaths,
       Watchman watchman) {
-    return new WatchmanWatcher(
-        watchRoot,
-        fileChangeEventBus,
-        ignorePaths,
-        watchman,
-        daemon.getWatchmanQueryUUID());
+    if (daemon.getWatchmanQueryUUID().isPresent()) {
+      return new WatchmanWatcher(
+          watchRoot,
+          fileChangeEventBus,
+          ignorePaths,
+          watchman,
+          daemon.getWatchmanQueryUUID().get());
+    } else if (watchman.getClockId().isPresent()) {
+      return new WatchmanWatcher(
+          watchRoot,
+          fileChangeEventBus,
+          ignorePaths,
+          watchman,
+          watchman.getClockId().get());
+    } else {
+      throw new HumanReadableException(String.format("Could not create WatchmanWatcher"));
+    }
   }
 
   private static BroadcastEventListener getBroadcastEventListener(
