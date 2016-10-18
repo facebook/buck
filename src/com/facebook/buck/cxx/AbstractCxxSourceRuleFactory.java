@@ -544,7 +544,7 @@ abstract class AbstractCxxSourceRuleFactory {
         .add(compiler)
         .add(source);
     Optional<PrecompiledHeaderReference> precompiledHeaderReference = Optional.absent();
-    if (shouldUsePrecompiledHeaders(preprocessorDelegate, strategy)) {
+    if (shouldUsePrecompiledHeaders(getCxxBuckConfig(), preprocessorDelegate, strategy)) {
       CxxPrecompiledHeader precompiledHeader =
           requirePrecompiledHeaderBuildRule(preprocessorDelegateValue, source);
       depsBuilder.add(precompiledHeader);
@@ -756,13 +756,27 @@ abstract class AbstractCxxSourceRuleFactory {
             input -> new BuildTargetSourcePath(input.getBuildTarget())));
   }
 
-  private boolean shouldUsePrecompiledHeaders(
-      PreprocessorDelegate preprocessorDelegate,
+  private static boolean shouldUsePrecompiledHeaders(
+      CxxBuckConfig cxxBuckConfig,
+      Optional<SourcePath> prefixHeaderSourcePath,
+      Preprocessor preprocessor,
       CxxPreprocessMode mode) {
     return
-        preprocessorDelegate.getPrefixHeader().isPresent() &&
-            preprocessorDelegate.getPreprocessor().supportsPrecompiledHeaders() &&
-            mode == CxxPreprocessMode.COMBINED;
+        cxxBuckConfig.isPCHEnabled() &&
+        prefixHeaderSourcePath.isPresent() &&
+        preprocessor.supportsPrecompiledHeaders() &&
+        mode == CxxPreprocessMode.COMBINED;
+  }
+
+  private static boolean shouldUsePrecompiledHeaders(
+      CxxBuckConfig cxxBuckConfig,
+      PreprocessorDelegate preprocessorDelegate,
+      CxxPreprocessMode mode) {
+    return shouldUsePrecompiledHeaders(
+        cxxBuckConfig,
+        preprocessorDelegate.getPrefixHeader(),
+        preprocessorDelegate.getPreprocessor(),
+        mode);
   }
 
   public static ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
@@ -848,13 +862,15 @@ abstract class AbstractCxxSourceRuleFactory {
     @Override
     public PreprocessorDelegateCacheValue load(@Nonnull PreprocessorDelegateCacheKey key)
         throws Exception {
+      Preprocessor preprocessor =
+          CxxSourceTypes.getPreprocessor(getCxxPlatform(), key.getSourceType())
+              .resolve(getResolver());
       PreprocessorDelegate delegate = new PreprocessorDelegate(
           getPathResolver(),
           getCxxPlatform().getDebugPathSanitizer(),
           getCxxBuckConfig().getHeaderVerification(),
           getParams().getProjectFilesystem().getRootPath(),
-          CxxSourceTypes.getPreprocessor(getCxxPlatform(), key.getSourceType())
-              .resolve(getResolver()),
+          preprocessor,
           PreprocessorFlags.of(
               getPrefixHeader(),
               computePreprocessorFlags(key.getSourceType(), key.getSourceFlags()),

@@ -1,4 +1,5 @@
 [cxx]
 preprocess_mode = combined
+pch_enabled = true
 [build]
 depfiles = enabled

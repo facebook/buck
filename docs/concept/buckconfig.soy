@@ -1229,6 +1229,28 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'cxx' /}
+  {param name: 'pch_enabled' /}
+  {param example_value: 'false' /}
+  {param description}
+    <p>
+    Whether prefix headers used by a cxx_library or other such build rule's
+    {sp}<code>prefix_header</code>{sp} parameter should be separately
+    precompiled, and used in that rule's build.
+    </p>
+
+    <p>
+    If this is disabled, the prefix header is included as-is, without
+    precompilation.
+    </p>
+
+    <p>
+    Default is <code>true</code>.
+    </p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cxx' /}
   {param name: 'link_weight' /}
   {param example_value: '3' /}
   {param description}

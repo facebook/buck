@@ -274,6 +274,10 @@ public class CxxBuckConfig {
     return delegate.getBooleanValue(cxxSection, "cache_links", true);
   }
 
+  public boolean isPCHEnabled() {
+    return delegate.getBooleanValue(cxxSection, "pch_enabled", true);
+  }
+
   public Archive.Contents getArchiveContents() {
     return delegate.getEnum(cxxSection, "archive_contents", Archive.Contents.class)
         .or(Archive.Contents.NORMAL);

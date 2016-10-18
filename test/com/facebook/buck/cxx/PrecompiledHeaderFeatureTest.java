@@ -118,7 +118,7 @@ public class PrecompiledHeaderFeatureTest {
     @Parameterized.Parameters(name = "{1}")
     public static Collection<Object[]> data() {
       CxxPlatform platformNotSupportingPch =
-          DEFAULT_PLATFORM.withCpp(
+          PLATFORM_NOT_SUPPORTING_PCH.withCpp(
               new PreprocessorProvider(
                   Paths.get("foopp"),
                   Optional.of(CxxToolProvider.Type.GCC)));
@@ -424,7 +424,7 @@ public class PrecompiledHeaderFeatureTest {
         .setPathResolver(new SourcePathResolver(ruleResolver))
         .setCxxPlatform(PLATFORM_SUPPORTING_PCH)
         .setPicType(AbstractCxxSourceRuleFactory.PicType.PDC)
-        .setCxxBuckConfig(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+        .setCxxBuckConfig(CXX_CONFIG_PCH_ENABLED);
   }
 
   private static CxxSourceRuleFactory.Builder preconfiguredSourceRuleFactoryBuilder() {
@@ -440,17 +440,26 @@ public class PrecompiledHeaderFeatureTest {
     return CxxSource.builder().setType(CxxSource.Type.C).setPath(new FakeSourcePath("foo.c"));
   }
 
-  /**
-   * The default cxx platform.
-   *
-   * Note that this may not support PCH depending on the system the test is running on.
-   */
-  private static final CxxPlatform DEFAULT_PLATFORM = DefaultCxxPlatforms.build(
-      new CxxBuckConfig(FakeBuckConfig.builder().build()));
+  private static final CxxBuckConfig CXX_CONFIG_PCH_DISABLED =
+      new CxxBuckConfig(
+          FakeBuckConfig.builder()
+          .setSections("[cxx]", "pch_enabled=false")
+          .build());
+
+  private static final CxxPlatform PLATFORM_NOT_SUPPORTING_PCH =
+      DefaultCxxPlatforms.build(CXX_CONFIG_PCH_DISABLED);
+
+  private static final CxxBuckConfig CXX_CONFIG_PCH_ENABLED =
+      new CxxBuckConfig(
+          FakeBuckConfig.builder()
+          .setSections("[cxx]", "pch_enabled=true")
+          .build());
 
   private static final CxxPlatform PLATFORM_SUPPORTING_PCH =
-      DEFAULT_PLATFORM.withCpp(
-          new PreprocessorProvider(
-              Paths.get("foopp"),
-              Optional.of(CxxToolProvider.Type.CLANG)));
+      DefaultCxxPlatforms
+          .build(CXX_CONFIG_PCH_ENABLED)
+          .withCpp(
+              new PreprocessorProvider(
+                  Paths.get("foopp"),
+                  Optional.of(CxxToolProvider.Type.CLANG)));
 }
