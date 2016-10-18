@@ -34,7 +34,6 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSource;
@@ -112,7 +111,7 @@ public class BuiltinApplePackage extends AbstractBuildRule {
 
       appleBundle.addSwiftStdlibStepIfNeeded(
         swiftSupportDir,
-        Optional.<Supplier<CodeSignIdentity>>absent(),
+        Optional.absent(),
         commands,
         true /* is for packaging? */
       );

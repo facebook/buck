@@ -504,7 +504,7 @@ public class AppleBundle
     } else {
       addSwiftStdlibStepIfNeeded(
         bundleRoot.resolve(Paths.get("Frameworks")),
-        Optional.<Supplier<CodeSignIdentity>>absent(),
+        Optional.absent(),
         stepsBuilder,
         false /* is for packaging? */
       );
@@ -687,7 +687,7 @@ public class AppleBundle
           "--scan-executable",
           bundleBinaryPath.toString(),
           "--scan-folder",
-          bundleRoot.resolve(this.destinations.getFrameworksPath()).toString(),
+          bundleRoot.resolve(destinations.getFrameworksPath()).toString(),
           "--scan-folder",
           bundleRoot.resolve(destinations.getPlugInsPath()).toString());
 
