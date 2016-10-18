@@ -18,6 +18,7 @@
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/event:testutil",
+      "//test/com/facebook/buck/rage:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:integration",
       "//third-party/java/guava:guava",
@@ -28,5 +29,12 @@
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]
+  },
+  "testutil" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/rage:rage",
+      "//src/com/facebook/buck/util:io"
+    ]
   }
 }

@@ -29,11 +29,6 @@ import org.hamcrest.junit.ExpectedException;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-
 public class UserInputTest {
 
   @Rule
@@ -42,7 +37,7 @@ public class UserInputTest {
   @Test
   public void testAsk() throws Exception {
     String cannedAnswer = "answer";
-    Fixture fixture = new Fixture(cannedAnswer);
+    UserInputFixture fixture = new UserInputFixture(cannedAnswer);
     UserInput input = fixture.getUserInput();
     CapturingPrintStream outputStream = fixture.getOutputStream();
 
@@ -93,7 +88,7 @@ public class UserInputTest {
 
   @Test
   public void parseOneInteractive() throws Exception {
-    Fixture fixture = new Fixture("1");
+    UserInputFixture fixture = new UserInputFixture("1");
     assertThat(
         fixture.getUserInput().selectRange(
             "selectrangequery",
@@ -105,7 +100,7 @@ public class UserInputTest {
 
   @Test
   public void parseRangeInteractive() throws Exception {
-    Fixture fixture = new Fixture("1, 2-4, 9");
+    UserInputFixture fixture = new UserInputFixture("1, 2-4, 9");
     assertThat(
         fixture.getUserInput().selectRange(
             "selectrangequery",
@@ -115,25 +110,4 @@ public class UserInputTest {
 
   }
 
-  private static class Fixture {
-    private CapturingPrintStream outputStream;
-    private UserInput userInput;
-
-    public Fixture(String cannedAnswer) throws Exception {
-      outputStream = new CapturingPrintStream();
-      InputStream inputStream = new ByteArrayInputStream((cannedAnswer + "\n").getBytes("UTF-8"));
-
-      userInput = new UserInput(
-          outputStream,
-          new BufferedReader(new InputStreamReader(inputStream)));
-    }
-
-    public CapturingPrintStream getOutputStream() {
-      return outputStream;
-    }
-
-    public UserInput getUserInput() {
-      return userInput;
-    }
-  }
 }
