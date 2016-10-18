@@ -136,7 +136,8 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
   // for this rule to be usable.
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.copyOf(getResolver().filterBuildRuleInputs(main));
+    return ImmutableSortedSet.copyOf(getResolver().filterBuildRuleInputs(
+        FluentIterable.from(resources).append(main)));
   }
 
 }
