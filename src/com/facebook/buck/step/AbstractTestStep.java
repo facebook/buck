@@ -83,7 +83,7 @@ public abstract class AbstractTestStep implements Step {
     }
     ProcessExecutorParams params = ProcessExecutorParams.builder()
         .setCommand(command)
-        .setDirectory(workingDirectory)
+        .setDirectory(workingDirectory.transform(filesystem::resolve))
         .setEnvironment(environment)
         .setRedirectOutput(ProcessBuilder.Redirect.to(filesystem.resolve(output).toFile()))
         .setRedirectErrorStream(true)
