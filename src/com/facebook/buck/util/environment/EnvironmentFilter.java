@@ -85,6 +85,7 @@ public class EnvironmentFilter {
       "SSH_TTY",          // Same.
       "SUDO_COMMAND",     // Folks shouldn't run buck under sudo, but..
       "TERMCAP",
+      "TERMINIX_ID",      // Added by Terminix on Linux.
       "TERM_SESSION_ID",  // UUID added to environment by OS X.
       "TERM_PROGRAM",     // Added to environment by OS X.
       "TERM_PROGRAM_VERSION", // Added to environment by OS X.
