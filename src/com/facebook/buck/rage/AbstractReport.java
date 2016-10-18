@@ -110,6 +110,7 @@ public abstract class AbstractReport {
               public Iterable<Path> apply(BuildLogEntry input) {
                 ImmutableSet.Builder<Path> result = ImmutableSet.builder();
                 Optionals.addIfPresent(input.getRuleKeyLoggerLogFile(), result);
+                Optionals.addIfPresent(input.getMachineReadableLogFile(), result);
                 result.add(input.getRelativePath());
                 return result.build();
               }

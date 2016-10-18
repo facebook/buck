@@ -79,9 +79,16 @@ public class BuildLogHelper {
       builder.setRuleKeyLoggerLogFile(ruleKeyLoggerFile);
     }
 
+    Path machineReadableLogFile =
+        logFile.getParent().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME);
+    if (projectFilesystem.isFile(machineReadableLogFile)) {
+      builder.setMachineReadableLogFile(machineReadableLogFile);
+    }
+
     Optional <Path> traceFile = FluentIterable
         .from(projectFilesystem.getFilesUnderPath(logFile.getParent()))
         .filter(input -> input.toString().endsWith(".trace")).first();
+
     return builder
         .setRelativePath(logFile)
         .setSize(projectFilesystem.getFileSize(logFile))
@@ -152,6 +159,7 @@ public class BuildLogHelper {
     public abstract Optional<BuildId> getBuildId();
     public abstract Optional<String> getCommandArgs();
     public abstract Optional<Path> getRuleKeyLoggerLogFile();
+    public abstract Optional<Path> getMachineReadableLogFile();
     public abstract Optional<Path> getTraceFile();
     public abstract long getSize();
     public abstract Date getLastModifiedTime();

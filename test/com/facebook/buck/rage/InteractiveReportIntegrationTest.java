@@ -96,7 +96,7 @@ public class InteractiveReportIntegrationTest {
         report.getReportSubmitLocation());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);
-    assertEquals(5, zipInspector.getZipFileEntries().size());
+    assertEquals(6, zipInspector.getZipFileEntries().size());
   }
 
   @Test
@@ -108,7 +108,7 @@ public class InteractiveReportIntegrationTest {
         report.getReportSubmitLocation());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);
-    assertEquals(6, zipInspector.getZipFileEntries().size());
+    assertEquals(8, zipInspector.getZipFileEntries().size());
   }
 
   private static DefectSubmitResult createDefectReport(

@@ -75,6 +75,11 @@ public class RageCommandIntegrationTest {
 
   private static final ExtraInfoCollector EMPTY_EXTRA_INFO_HELPER = Optional::absent;
 
+  private static final String BUILD_COMMAND_DIR_PATH = "buck-out/log/" +
+          "2016-06-21_16h16m24s_buildcommand_ac8bd626-6137-4747-84dd-5d4f215c876c/";
+  private static final String AUTODEPS_COMMAND_DIR_PATH = "buck-out/log/" +
+          "2016-06-21_16h18m51s_autodepscommand_d09893d5-b11e-4e3f-a5bf-70c60a06896e/";
+
   @Test
   public void testRageNonInteractiveReport() throws Exception {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -156,10 +161,10 @@ public class RageCommandIntegrationTest {
       zipInspector.assertFileExists("report.json");
       zipInspector.assertFileExists("buckconfig.local");
       zipInspector.assertFileExists("bucklogging.local.properties");
-      zipInspector.assertFileExists("buck-out/log/" +
-          "2016-06-21_16h16m24s_buildcommand_ac8bd626-6137-4747-84dd-5d4f215c876c/buck.log");
-      zipInspector.assertFileExists("buck-out/log/" +
-          "2016-06-21_16h18m51s_autodepscommand_d09893d5-b11e-4e3f-a5bf-70c60a06896e/buck.log");
+      zipInspector.assertFileExists(BUILD_COMMAND_DIR_PATH + "buck.log");
+      zipInspector.assertFileExists(AUTODEPS_COMMAND_DIR_PATH + "buck.log");
+      zipInspector.assertFileExists(BUILD_COMMAND_DIR_PATH + "buck-machine-log");
+      zipInspector.assertFileExists(AUTODEPS_COMMAND_DIR_PATH + "buck-machine-log");
     }
   }
 
@@ -236,7 +241,7 @@ public class RageCommandIntegrationTest {
       assertFalse(submitReport.getReportSubmitErrorMessage().get().isEmpty());
       ZipInspector zipInspector = new ZipInspector(
           filesystem.resolve(submitReport.getReportSubmitLocation()));
-      assertEquals(zipInspector.getZipFileEntries().size(), 5);
+      assertEquals(zipInspector.getZipFileEntries().size(), 7);
     }
   }
 
