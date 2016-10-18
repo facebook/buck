@@ -118,6 +118,7 @@ The following sections are recognized by Buck:
     'lua',
     'maven_repositories',
     'ndk',
+    'parser',
     'project',
     'python',
     'resources',
@@ -1838,6 +1839,23 @@ your <code>.buckjavaargs</code> file</a>:
       <li><code>stlport</code></li>
       <li><code>system</code></li>
     </ul>
+  {/param}
+{/call}
+
+{call buckconfig.section}
+  {param name: 'parser' /}
+  {param description}
+    This section defines settings for the BUCK parser.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'parser' /}
+  {param name: 'python_interpreter' /}
+  {param example_value: '/usr/bin/python' /}
+  {param description}
+    The path to the python interpreter to use for parsing. If not specified, the{sp}
+    {call buckconfig.python_interpreter /} setting is used.
   {/param}
 {/call}
 

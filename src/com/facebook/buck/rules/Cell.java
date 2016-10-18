@@ -29,7 +29,6 @@ import com.facebook.buck.json.ProjectBuildFileParserOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
@@ -56,7 +55,6 @@ public class Cell {
   private final BuckConfig config;
   private final KnownBuildRuleTypes knownBuildRuleTypes;
   private final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory;
-  private final String pythonInterpreter;
   private final CellProvider cellProvider;
   private final WatchmanDiagnosticCache watchmanDiagnosticCache;
 
@@ -84,9 +82,6 @@ public class Cell {
     this.filesystem = filesystem;
     this.watchman = watchman;
     this.config = config;
-
-    PythonBuckConfig pythonConfig = new PythonBuckConfig(config, new ExecutableFinder());
-    this.pythonInterpreter = pythonConfig.getPythonInterpreter();
 
     this.knownBuildRuleTypesFactory = knownBuildRuleTypesFactory;
     this.knownBuildRuleTypes = knownBuildRuleTypesFactory.create(config, filesystem);
@@ -233,6 +228,7 @@ public class Cell {
         Watchman.Capability.GLOB_GENERATOR);
     boolean useMercurialGlob =
         parserConfig.getGlobHandler() == ParserConfig.GlobHandler.MERCURIAL;
+    String pythonInterpreter = parserConfig.getPythonInterpreter(new ExecutableFinder());
 
     return new DefaultProjectBuildFileParserFactory(
         ProjectBuildFileParserOptions.builder()

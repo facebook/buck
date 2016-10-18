@@ -17,6 +17,8 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.ConfigView;
+import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -193,5 +195,34 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public ImmutableList<String> getBuildFileImportWhitelist() {
     return getDelegate().getListWithoutComments("project", "build_file_import_whitelist");
+  }
+
+  /**
+   * Returns the path to python interpreter. If python is specified in the
+   * 'python_interpreter' key of the 'parser' section that is used and an
+   * error reported if invalid.
+   *
+   * If none has been specified, consult the PythonBuckConfig for an interpreter.
+   *
+   * @return The found python interpreter.
+   */
+  @Value.Lazy
+  public String getPythonInterpreter(Optional<String> configPath, ExecutableFinder exeFinder) {
+    PythonBuckConfig pyconfig = new PythonBuckConfig(getDelegate(), exeFinder);
+    if (configPath.isPresent()) {
+      return pyconfig.getPythonInterpreter(configPath);
+    }
+
+    // Fall back to the Python section configuration
+    return pyconfig.getPythonInterpreter();
+  }
+
+  @Value.Lazy
+  public String getPythonInterpreter(ExecutableFinder exeFinder) {
+    Optional<String> configPath = getDelegate().getValue(
+        "parser",
+        "python_interpreter"
+    );
+    return getPythonInterpreter(configPath, exeFinder);
   }
 }
