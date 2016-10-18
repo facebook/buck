@@ -216,7 +216,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
   }
 
   @SuppressFieldNotInitialized
-  public class Arg extends JavaTestDescription.Arg {
+  public static class Arg extends JavaTestDescription.Arg {
     public Optional<String> robolectricRuntimeDependency;
     public Optional<SourcePath> robolectricManifest;
   }

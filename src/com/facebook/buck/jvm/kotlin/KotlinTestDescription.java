@@ -162,7 +162,7 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
   }
 
   @SuppressFieldNotInitialized
-  public class Arg extends KotlinLibraryDescription.Arg {
+  public static class Arg extends KotlinLibraryDescription.Arg {
     public Optional<ImmutableSortedSet<String>> contacts;
     public Optional<ImmutableSortedSet<Label>> labels;
     public Optional<ImmutableList<String>> vmArgs;

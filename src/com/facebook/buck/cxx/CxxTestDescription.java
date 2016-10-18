@@ -351,7 +351,7 @@ public class CxxTestDescription implements
   }
 
   @SuppressFieldNotInitialized
-  public class Arg extends CxxBinaryDescription.Arg {
+  public static class Arg extends CxxBinaryDescription.Arg {
     public Optional<ImmutableSet<String>> contacts;
     public Optional<ImmutableSet<Label>> labels;
     public Optional<CxxTestType> framework;

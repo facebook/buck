@@ -182,7 +182,7 @@ public class PrebuiltHaskellLibraryDescription
   }
 
   @SuppressFieldNotInitialized
-  public class Arg {
+  public static class Arg {
     public String version;
     public Optional<String> id;
     public SourcePath db;

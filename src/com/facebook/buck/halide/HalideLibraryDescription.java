@@ -354,7 +354,7 @@ public class HalideLibraryDescription
   }
 
   @SuppressFieldNotInitialized
-  public class Arg extends CxxBinaryDescription.Arg {
+  public static class Arg extends CxxBinaryDescription.Arg {
     public Optional<ImmutableSortedSet<BuildTarget>> compilerDeps;
     public Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs;
     public Optional<Pattern> supportedPlatformsRegex;

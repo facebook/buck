@@ -79,7 +79,7 @@ public class RemoteFileDescription implements Description<RemoteFileDescription.
   }
 
   @SuppressFieldNotInitialized
-  public class Arg extends AbstractDescriptionArg {
+  public static class Arg extends AbstractDescriptionArg {
     public URI url;
     public String sha1;
     public Optional<String> out;
