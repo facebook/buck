@@ -32,8 +32,10 @@ public interface StepRunner {
    *
    * Note that this method blocks until the specified command terminates.
    */
-  public void runStepForBuildTarget(Step step, Optional<BuildTarget> buildTarget)
-      throws StepFailedException, InterruptedException;
+  public void runStepForBuildTarget(
+      ExecutionContext context,
+      Step step,
+      Optional<BuildTarget> buildTarget) throws StepFailedException, InterruptedException;
 
   public interface StepRunningCallback {
     void stepsWillRun(Optional<BuildTarget> buildTarget);
@@ -53,6 +55,7 @@ public interface StepRunner {
    * return a value that represents the output of the commands.
    */
   public <T> ListenableFuture<T> runStepsAndYieldResult(
+      ExecutionContext context,
       List<Step> steps,
       Callable<T> interpretResults,
       Optional<BuildTarget> buildTarget,
@@ -60,6 +63,7 @@ public interface StepRunner {
       StepRunningCallback callback);
 
   public void runStepsInParallelAndWait(
+      ExecutionContext context,
       List<Step> steps,
       Optional<BuildTarget> target,
       ListeningExecutorService service,

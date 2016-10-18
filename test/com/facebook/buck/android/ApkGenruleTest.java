@@ -53,7 +53,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
@@ -169,7 +168,6 @@ public class ApkGenruleTest {
             .toSet());
     BuildContext buildContext = ImmutableBuildContext.builder()
         .setActionGraph(EasyMock.createMock(ActionGraph.class))
-        .setStepRunner(EasyMock.createNiceMock(StepRunner.class))
         .setClock(EasyMock.createMock(Clock.class))
         .setBuildId(EasyMock.createMock(BuildId.class))
         .setObjectMapper(ObjectMappers.newDefaultInstance())

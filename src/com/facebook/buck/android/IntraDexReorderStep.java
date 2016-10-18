@@ -86,10 +86,10 @@ public class IntraDexReorderStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     try {
-      DefaultStepRunner stepRunner = new DefaultStepRunner(context);
+      DefaultStepRunner stepRunner = new DefaultStepRunner();
       List<Step> dxSteps = generateReorderCommands();
       for (Step step : dxSteps) {
-        stepRunner.runStepForBuildTarget(step, Optional.of(buildTarget));
+        stepRunner.runStepForBuildTarget(context, step, Optional.of(buildTarget));
       }
     } catch (StepFailedException | InterruptedException e) {
       context.logError(e, "There was an error in intra dex reorder step.");

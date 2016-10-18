@@ -36,7 +36,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
-import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
@@ -131,6 +130,7 @@ final class JavaBuildGraphProcessor {
       BuildEngine buildEngine = new CachingBuildEngine(
           new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
           executorService,
+          new DefaultStepRunner(),
           CachingBuildEngine.BuildMode.SHALLOW,
           params.getBuckConfig().getBuildDepFiles(),
           params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
@@ -156,12 +156,10 @@ final class JavaBuildGraphProcessor {
           .setObjectMapper(params.getObjectMapper())
           .setPlatform(params.getPlatform())
           .build();
-      StepRunner stepRunner = new DefaultStepRunner(executionContext);
 
       BuildContext buildContext = ImmutableBuildContext.builder()
           // Note we do not create a real action graph because we do not need one.
           .setActionGraph(new ActionGraph(ImmutableList.of()))
-          .setStepRunner(stepRunner)
           .setClock(params.getClock())
           .setArtifactCache(params.getArtifactCache())
           .setJavaPackageFinder(executionContext.getJavaPackageFinder())
@@ -179,6 +177,7 @@ final class JavaBuildGraphProcessor {
           params.getCell().getCellPathResolver(),
           params.getObjectMapper(),
           buildContext,
+          executionContext,
           buildEngine);
 
       processor.process(graph, javaDepsFinder, executorService);

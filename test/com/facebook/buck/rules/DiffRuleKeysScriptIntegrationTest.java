@@ -19,8 +19,8 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.log.LogFormatter;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;

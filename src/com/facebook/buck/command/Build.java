@@ -40,7 +40,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.step.AdbOptions;
-import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.step.StepFailedException;
@@ -97,7 +96,6 @@ public class Build implements Closeable {
   private final ExecutionContext executionContext;
   private final ArtifactCache artifactCache;
   private final BuildEngine buildEngine;
-  private final DefaultStepRunner stepRunner;
   private final JavaPackageFinder javaPackageFinder;
   private final Clock clock;
   private final ObjectMapper objectMapper;
@@ -152,7 +150,6 @@ public class Build implements Closeable {
         .build();
     this.artifactCache = artifactCache;
     this.buildEngine = buildEngine;
-    this.stepRunner = new DefaultStepRunner(executionContext);
     this.javaPackageFinder = javaPackageFinder;
     this.clock = clock;
     this.objectMapper = objectMapper;
@@ -240,7 +237,6 @@ public class Build implements Closeable {
     BuildId buildId = executionContext.getBuildId();
     buildContext = ImmutableBuildContext.builder()
         .setActionGraph(actionGraph)
-        .setStepRunner(stepRunner)
         .setClock(clock)
         .setArtifactCache(artifactCache)
         .setJavaPackageFinder(javaPackageFinder)
@@ -288,10 +284,9 @@ public class Build implements Closeable {
     // Setup symlinks required when configuring the output path.
     createConfiguredBuckOutSymlinks();
 
-    final BuildContext currentBuildContext = buildContext;
     List<ListenableFuture<BuildResult>> futures = FluentIterable.from(rulesToBuild)
         .transform(
-            rule -> buildEngine.build(currentBuildContext, rule)).toList();
+            rule -> buildEngine.build(buildContext, executionContext, rule)).toList();
 
     // Get the Future representing the build and then block until everything is built.
     ListenableFuture<List<BuildResult>> buildFuture = Futures.allAsList(futures);
@@ -349,9 +344,7 @@ public class Build implements Closeable {
 
     try {
       try {
-        BuildExecutionResult buildExecutionResult = executeBuild(
-            targetsish,
-            isKeepGoing);
+        BuildExecutionResult buildExecutionResult = executeBuild(targetsish, isKeepGoing);
 
         BuildReport buildReport = new BuildReport(buildExecutionResult);
 

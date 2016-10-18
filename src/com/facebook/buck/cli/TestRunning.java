@@ -138,6 +138,7 @@ public class TestRunning {
           // TODO(t8220837): Support tests in multiple repos
           JavaLibrary library = rulesUnderTest.iterator().next();
           stepRunner.runStepForBuildTarget(
+              executionContext,
               new MakeCleanDirectoryStep(
                   library.getProjectFilesystem(),
                   JacocoConstants.getJacocoOutputDir(library.getProjectFilesystem())),
@@ -334,6 +335,7 @@ public class TestRunning {
     for (TestRun testRun : parallelTestRuns) {
       ListenableFuture<TestResults> testResults =
           stepRunner.runStepsAndYieldResult(
+              executionContext,
               testRun.getSteps(),
               testRun.getTestResultsCallable(),
               Optional.of(testRun.getTest().getBuildTarget()),
@@ -369,6 +371,7 @@ public class TestRunning {
                   transformTestResults(
                       params,
                       stepRunner.runStepsAndYieldResult(
+                          executionContext,
                           testRun.getSteps(),
                           testRun.getTestResultsCallable(),
                           Optional.of(testRun.getTest().getBuildTarget()),
@@ -441,6 +444,7 @@ public class TestRunning {
         Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional =
             Optional.fromNullable(params.getBuckConfig().createDefaultJavaPackageFinder());
         stepRunner.runStepForBuildTarget(
+            executionContext,
             getReportCommand(
                 rulesUnderTest,
                 defaultJavaPackageFinderOptional,

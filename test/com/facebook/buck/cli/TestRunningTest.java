@@ -848,7 +848,7 @@ public class TestRunningTest {
             separateTest3Target, new RuleKey("00")
         ));
     ExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
-    DefaultStepRunner stepRunner = new DefaultStepRunner(fakeExecutionContext);
+    DefaultStepRunner stepRunner = new DefaultStepRunner();
     int ret = TestRunning.runTests(
         commandRunnerParams,
         ImmutableList.of(separateTest1, separateTest2, separateTest3),
@@ -1056,7 +1056,7 @@ public class TestRunningTest {
             .put(parallelTest3Target, new RuleKey("00"))
             .build());
     ExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
-    DefaultStepRunner stepRunner = new DefaultStepRunner(fakeExecutionContext);
+    DefaultStepRunner stepRunner = new DefaultStepRunner();
     int ret = TestRunning.runTests(
         commandRunnerParams,
         ImmutableList.of(
@@ -1180,7 +1180,7 @@ public class TestRunningTest {
             failingTestTarget, new RuleKey("00")
         ));
     ExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
-    DefaultStepRunner stepRunner = new DefaultStepRunner(fakeExecutionContext);
+    DefaultStepRunner stepRunner = new DefaultStepRunner();
     int ret = TestRunning.runTests(
         commandRunnerParams,
         ImmutableList.of(failingTest),

@@ -39,7 +39,6 @@ import com.facebook.buck.rules.FakeExportDependenciesRule;
 import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Optional;
@@ -122,7 +121,6 @@ public class AndroidLibraryDescriptionTest {
 
     // Set to non-null values.
     builder.setActionGraph(createMock(ActionGraph.class));
-    builder.setStepRunner(createMock(StepRunner.class));
     builder.setArtifactCache(createMock(ArtifactCache.class));
     builder.setJavaPackageFinder(createMock(JavaPackageFinder.class));
     builder.setEventBus(BuckEventBusFactory.newInstance());

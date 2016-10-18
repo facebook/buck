@@ -25,7 +25,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.immutables.DeprecatedBuckStyleImmutable;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,7 +41,6 @@ import java.util.Map;
 public abstract class BuildContext {
 
   public abstract ActionGraph getActionGraph();
-  public abstract StepRunner getStepRunner();
 
   protected abstract Clock getClock();
   public abstract ArtifactCache getArtifactCache();

@@ -1234,7 +1234,6 @@ public class DefaultJavaLibraryTest {
     // TODO(bolinfest): Create a utility that populates a BuildContext.Builder with fakes.
     return ImmutableBuildContext.builder()
         .setActionGraph(new ActionGraph(ImmutableList.of(javaLibrary)))
-        .setStepRunner(EasyMock.createMock(StepRunner.class))
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())
         .setObjectMapper(ObjectMappers.newDefaultInstance())

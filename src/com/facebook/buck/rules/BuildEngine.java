@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.step.ExecutionContext;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.concurrent.ExecutionException;
@@ -35,7 +36,10 @@ public interface BuildEngine {
   /**
    * Build the given build rule and return a future to the build rule success.
    */
-  ListenableFuture<BuildResult> build(BuildContext context, BuildRule rule);
+  ListenableFuture<BuildResult> build(
+      BuildContext buildContext,
+      ExecutionContext executionContext,
+      BuildRule rule);
 
   /**
    * Returns the build result of the build rule associated with the given build target.

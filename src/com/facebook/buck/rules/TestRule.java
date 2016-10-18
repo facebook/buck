@@ -86,8 +86,9 @@ public interface TestRule extends HasBuildTarget, BuildRule {
    * Returns the commands required to run the tests.
    * <p>
    * <strong>Note:</strong> This method may be run without
-   * {@link BuildEngine#build(BuildContext, BuildRule)} having been run. This happens if the user
-   * has built [and ran] the test previously and then re-runs it using the {@code --debug} flag.
+   * {@link BuildEngine#build(BuildContext, ExecutionContext, BuildRule)} having been run. This
+   * happens if the user has built [and ran] the test previously and then re-runs it using the
+   * {@code --debug} flag.
    *
    * @param executionContext Provides context for creating {@link Step}s.
    * @param options The runtime testing options.

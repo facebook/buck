@@ -23,7 +23,8 @@ import com.google.common.collect.ImmutableSet;
 import java.util.EnumSet;
 
 /**
- * Token provided by the result of {@link BuildEngine#build(BuildContext, BuildRule)},
+ * Token provided by the result of
+ * {@link BuildEngine#build(BuildContext, com.facebook.buck.step.ExecutionContext, BuildRule)},
  * demonstrating that the associated {@link BuildRule} was built successfully.
  */
 public enum BuildRuleSuccessType {

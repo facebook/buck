@@ -41,7 +41,9 @@ public abstract class ProcessRegistry {
   /**
    * Registers process for resource consumption tracking.
    */
-  public static void registerProcess(Object process, ProcessExecutorParams params) {
+  public static void registerProcess(
+      Object process,
+      ProcessExecutorParams params) {
     if (sProcessRegisterCallback.isPresent()) {
       sProcessRegisterCallback.get().call(process, params);
     }

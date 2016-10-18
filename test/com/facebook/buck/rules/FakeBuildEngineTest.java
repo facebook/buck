@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
@@ -43,7 +44,12 @@ public class FakeBuildEngineTest {
         ImmutableMap.of(fakeBuildTarget, fakeBuildResult),
         ImmutableMap.of(fakeBuildTarget, new RuleKey("00")));
     assertThat(
-        fakeEngine.build(FakeBuildContext.NOOP_CONTEXT, fakeBuildRule).get(),
+        fakeEngine
+            .build(
+                FakeBuildContext.NOOP_CONTEXT,
+                TestExecutionContext.newInstance(),
+                fakeBuildRule)
+            .get(),
         equalTo(fakeBuildResult));
   }
 

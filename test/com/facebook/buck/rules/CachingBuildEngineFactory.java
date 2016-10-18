@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;
@@ -124,6 +125,7 @@ public class CachingBuildEngineFactory {
       return new CachingBuildEngine(
           cachingBuildEngineDelegate,
           executorService,
+          new DefaultStepRunner(),
           buildMode,
           depFiles,
           maxDepFileCacheEntries,
@@ -136,6 +138,7 @@ public class CachingBuildEngineFactory {
     return new CachingBuildEngine(
         cachingBuildEngineDelegate,
         executorService,
+        new DefaultStepRunner(),
         buildMode,
         depFiles,
         maxDepFileCacheEntries,

@@ -28,7 +28,6 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.BuckEventBusFactory.CapturingConsoleEventListener;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
@@ -44,7 +43,6 @@ public class BuildContextTest {
 
     // Set to non-null values.
     builder.setActionGraph(createMock(ActionGraph.class));
-    builder.setStepRunner(createMock(StepRunner.class));
     builder.setArtifactCache(createMock(ArtifactCache.class));
     builder.setJavaPackageFinder(createMock(JavaPackageFinder.class));
     builder.setEventBus(BuckEventBusFactory.newInstance());
@@ -67,7 +65,6 @@ public class BuildContextTest {
     eventBus.register(listener);
     BuildContext buildContext = ImmutableBuildContext.builder()
         .setActionGraph(createMock(ActionGraph.class))
-        .setStepRunner(createMock(StepRunner.class))
         .setArtifactCache(createMock(ArtifactCache.class))
         .setJavaPackageFinder(createMock(JavaPackageFinder.class))
         .setClock(createMock(Clock.class))

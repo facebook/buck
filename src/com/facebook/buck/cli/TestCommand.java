@@ -323,7 +323,7 @@ public class TestCommand extends BuildCommand {
           getTestRunningOptions(params),
           testPool.getExecutor(),
           buildEngine,
-          new DefaultStepRunner(build.getExecutionContext()));
+          new DefaultStepRunner());
     } catch (ExecutionException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
@@ -504,6 +504,7 @@ public class TestCommand extends BuildCommand {
           new CachingBuildEngine(
               new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
               pool.getExecutor(),
+              new DefaultStepRunner(),
               getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
               params.getBuckConfig().getBuildDepFiles(),
               params.getBuckConfig().getBuildMaxDepFileCacheEntries(),

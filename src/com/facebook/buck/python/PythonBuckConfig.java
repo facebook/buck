@@ -267,8 +267,9 @@ public class PythonBuckConfig {
 
       ProcessExecutor.Result versionResult = processExecutor.launchAndExecute(
           ProcessExecutorParams.builder().addCommand(pythonPath.toString(), "-").build(),
-          EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT,
-                     ProcessExecutor.Option.EXPECTING_STD_ERR),
+          EnumSet.of(
+              ProcessExecutor.Option.EXPECTING_STD_OUT,
+              ProcessExecutor.Option.EXPECTING_STD_ERR),
           Optional.of(versionId),
           /* timeOutMs */ Optional.absent(),
           /* timeoutHandler */ Optional.absent());

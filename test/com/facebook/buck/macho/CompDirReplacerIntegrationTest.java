@@ -15,12 +15,11 @@
  */
 package com.facebook.buck.macho;
 
+import static com.facebook.buck.cxx.CxxFlavorSanitizer.sanitize;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assume.assumeTrue;
-
-import static com.facebook.buck.cxx.CxxFlavorSanitizer.sanitize;
 
 import com.facebook.buck.cxx.DebugPathSanitizer;
 import com.facebook.buck.cxx.MungingDebugPathSanitizer;

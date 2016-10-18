@@ -37,16 +37,11 @@ public final class DefaultStepRunner implements StepRunner {
 
   private static final Logger LOG = Logger.get(DefaultStepRunner.class);
 
-  private final ExecutionContext context;
-
-  public DefaultStepRunner(ExecutionContext executionContext) {
-    this.context = executionContext;
-  }
-
   @Override
-  public void runStepForBuildTarget(Step step, Optional<BuildTarget> buildTarget)
-      throws StepFailedException, InterruptedException {
-
+  public void runStepForBuildTarget(
+      ExecutionContext context,
+      Step step,
+      Optional<BuildTarget> buildTarget) throws StepFailedException, InterruptedException {
     if (context.getVerbosity().shouldPrintCommand()) {
       context.getStdErr().println(step.getDescription(context));
     }
@@ -76,6 +71,7 @@ public final class DefaultStepRunner implements StepRunner {
 
   @Override
   public <T> ListenableFuture<T> runStepsAndYieldResult(
+      ExecutionContext context,
       final List<Step> steps,
       final Callable<T> interpretResults,
       final Optional<BuildTarget> buildTarget,
@@ -85,7 +81,7 @@ public final class DefaultStepRunner implements StepRunner {
     Callable<T> callable = () -> {
       callback.stepsWillRun(buildTarget);
       for (Step step : steps) {
-        runStepForBuildTarget(step, buildTarget);
+        runStepForBuildTarget(context, step, buildTarget);
       }
       callback.stepsDidRun(buildTarget);
 
@@ -103,6 +99,7 @@ public final class DefaultStepRunner implements StepRunner {
    */
   @Override
   public void runStepsInParallelAndWait(
+      ExecutionContext context,
       final List<Step> steps,
       final Optional<BuildTarget> target,
       ListeningExecutorService listeningExecutorService,
@@ -110,7 +107,7 @@ public final class DefaultStepRunner implements StepRunner {
       throws StepFailedException, InterruptedException {
     List<Callable<Void>> callables = Lists.transform(steps,
         step -> () -> {
-          runStepForBuildTarget(step, target);
+          runStepForBuildTarget(context, step, target);
           return null;
         });
 

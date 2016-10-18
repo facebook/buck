@@ -166,7 +166,7 @@ public class SmartDexingStep implements Step {
             Path secondaryBlobOutput = store.getParent().resolve("uncompressed.dex.blob");
             Path secondaryCompressedBlobOutput = store;
             // Concatenate the jars into a blob and compress it.
-            StepRunner stepRunner = new DefaultStepRunner(context);
+            StepRunner stepRunner = new DefaultStepRunner();
             Step concatStep = new ConcatStep(
                 filesystem,
                 ImmutableList.copyOf(secondaryDexJars),
@@ -182,8 +182,8 @@ public class SmartDexingStep implements Step {
             } else {
               xzStep = new XzStep(filesystem, secondaryBlobOutput, secondaryCompressedBlobOutput);
             }
-            stepRunner.runStepForBuildTarget(concatStep, Optional.absent());
-            stepRunner.runStepForBuildTarget(xzStep, Optional.absent());
+            stepRunner.runStepForBuildTarget(context, concatStep, Optional.absent());
+            stepRunner.runStepForBuildTarget(context, xzStep, Optional.absent());
           }
         }
       }
@@ -197,11 +197,12 @@ public class SmartDexingStep implements Step {
 
   private void runDxCommands(ExecutionContext context, Multimap<Path, Path> outputToInputs)
       throws StepFailedException, InterruptedException {
-    DefaultStepRunner stepRunner = new DefaultStepRunner(context);
+    DefaultStepRunner stepRunner = new DefaultStepRunner();
     // Invoke dx commands in parallel for maximum thread utilization.  In testing, dx revealed
     // itself to be CPU (and not I/O) bound making it a good candidate for parallelization.
     List<Step> dxSteps = generateDxCommands(filesystem, outputToInputs);
     stepRunner.runStepsInParallelAndWait(
+        context,
         dxSteps,
         Optional.absent(),
         executorService,

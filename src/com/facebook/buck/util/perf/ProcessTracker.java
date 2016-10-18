@@ -65,12 +65,12 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
     this.invocationInfo = invocationInfo;
     this.serviceManager = new ServiceManager(ImmutableList.of(this));
     serviceManager.startAsync();
-    ProcessRegistry.setsProcessRegisterCallback(
-        Optional.of(
-            this::registerProcess));
+    ProcessRegistry.setsProcessRegisterCallback(Optional.of(this::registerProcess));
   }
 
-  private void registerProcess(Object process, ProcessExecutorParams params) {
+  private void registerProcess(
+      Object process,
+      ProcessExecutorParams params) {
     Long pid = ProcessHelper.getPid(process);
     LOG.verbose("registerProcess: pid: %s, cmd: %s", pid, params.getCommand());
     if (pid == null) {
@@ -133,7 +133,10 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
     final ProcessExecutorParams params;
     ProcessResourceConsumption resourceConsumption;
 
-    ProcessInfo(Object process, ProcessExecutorParams params, ProcessResourceConsumption res) {
+    ProcessInfo(
+        Object process,
+        ProcessExecutorParams params,
+        ProcessResourceConsumption res) {
       this.process = process;
       this.params = params;
       this.resourceConsumption = res;

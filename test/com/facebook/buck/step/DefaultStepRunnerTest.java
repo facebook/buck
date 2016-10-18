@@ -49,10 +49,10 @@ public class DefaultStepRunnerTest {
     ExecutionContext context = TestExecutionContext.newBuilder()
         .setBuckEventBus(eventBus)
         .build();
-    DefaultStepRunner runner = new DefaultStepRunner(context);
-    runner.runStepForBuildTarget(passingStep, Optional.absent());
+    DefaultStepRunner runner = new DefaultStepRunner();
+    runner.runStepForBuildTarget(context, passingStep, Optional.absent());
     try {
-      runner.runStepForBuildTarget(failingStep, Optional.absent());
+      runner.runStepForBuildTarget(context, failingStep, Optional.absent());
       fail("Failing step should have thrown an exception");
     } catch (StepFailedException e) {
       assertEquals(e.getStep(), failingStep);
@@ -101,8 +101,9 @@ public class DefaultStepRunnerTest {
 
     ListeningExecutorService service =
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(3));
-    DefaultStepRunner runner = new DefaultStepRunner(TestExecutionContext.newInstance());
+    DefaultStepRunner runner = new DefaultStepRunner();
     runner.runStepsInParallelAndWait(
+        TestExecutionContext.newInstance(),
         steps.build(),
         Optional.absent(),
         service,
@@ -115,9 +116,9 @@ public class DefaultStepRunnerTest {
   public void testExplodingStep() throws InterruptedException, IOException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    DefaultStepRunner runner = new DefaultStepRunner(context);
+    DefaultStepRunner runner = new DefaultStepRunner();
     try {
-      runner.runStepForBuildTarget(new ExplosionStep(), Optional.absent());
+      runner.runStepForBuildTarget(context, new ExplosionStep(), Optional.absent());
       fail("Should have thrown a StepFailedException!");
     } catch (StepFailedException e) {
       assertTrue(e.getMessage().startsWith("Failed on step explode with an exception:\n#yolo"));

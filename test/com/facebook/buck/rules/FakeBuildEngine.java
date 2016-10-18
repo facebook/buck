@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -40,7 +41,10 @@ public class FakeBuildEngine implements BuildEngine {
   }
 
   @Override
-  public ListenableFuture<BuildResult> build(BuildContext context, BuildRule rule) {
+  public ListenableFuture<BuildResult> build(
+      BuildContext buildContext,
+      ExecutionContext executionContext,
+      BuildRule rule) {
     SettableFuture<BuildResult> future = SettableFuture.create();
     future.set(buildResults.get(rule.getBuildTarget()));
     return future;

@@ -34,6 +34,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
+import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -76,6 +77,7 @@ public class DistBuildSlaveExecutor {
     BuildEngine buildEngine = new CachingBuildEngine(
         Preconditions.checkNotNull(cachingBuildEngineDelegate),
         args.getExecutorService(),
+        new DefaultStepRunner(),
         config.getBuildEngineMode(),
         config.getBuildDepFiles(),
         config.getBuildMaxDepFileCacheEntries(),

@@ -61,6 +61,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.step.AdbOptions;
+import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
@@ -666,6 +667,7 @@ public class BuildCommand extends AbstractCommand {
         new CachingBuildEngine(
             cachingBuildEngineDelegate,
             executor,
+            new DefaultStepRunner(),
             getBuildEngineMode().or(rootCellBuckConfig.getBuildEngineMode()),
             rootCellBuckConfig.getBuildDepFiles(),
             rootCellBuckConfig.getBuildMaxDepFileCacheEntries(),

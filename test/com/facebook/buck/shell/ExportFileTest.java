@@ -45,8 +45,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepFailedException;
-import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -55,13 +53,8 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
@@ -74,7 +67,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 public class ExportFileTest {
 
@@ -328,44 +320,6 @@ public class ExportFileTest {
               }
             })
         .setActionGraph(new ActionGraph(ImmutableList.of()))
-        .setStepRunner(
-            new StepRunner() {
-
-              @Override
-              public void runStepForBuildTarget(Step step, Optional<BuildTarget> buildTarget)
-                  throws StepFailedException {
-                // Do nothing.
-              }
-
-              @Override
-              public <T> ListenableFuture<T> runStepsAndYieldResult(
-                  List<Step> steps,
-                  Callable<T> interpretResults,
-                  Optional<BuildTarget> buildTarget,
-                  ListeningExecutorService service,
-                  StepRunner.StepRunningCallback callback) {
-                return null;
-              }
-
-              @Override
-              public void runStepsInParallelAndWait(
-                  List<Step> steps,
-                  Optional<BuildTarget> target,
-                  ListeningExecutorService service,
-                  StepRunner.StepRunningCallback callback)
-                  throws StepFailedException {
-                // Do nothing.
-              }
-
-              @Override
-              public <T> ListenableFuture<Void> addCallback(
-                  ListenableFuture<List<T>> allBuiltDeps,
-                  FutureCallback<List<T>> futureCallback,
-                  ListeningExecutorService service) {
-                // Do nothing.
-                return Futures.immediateFuture(null);
-              }
-            })
         .build();
   }
 }

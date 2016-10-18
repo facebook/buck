@@ -37,6 +37,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Console;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.CharMatcher;
@@ -79,6 +80,7 @@ public class JavaDepsFinder {
   private final JavaFileParser javaFileParser;
   private final ObjectMapper objectMapper;
   private final BuildContext buildContext;
+  private final ExecutionContext executionContext;
   private final BuildEngine buildEngine;
 
   public JavaDepsFinder(
@@ -86,11 +88,13 @@ public class JavaDepsFinder {
       JavaFileParser javaFileParser,
       ObjectMapper objectMapper,
       BuildContext buildContext,
+      ExecutionContext executionContext,
       BuildEngine buildEngine) {
     this.javaPackageMapping = javaPackageMapping;
     this.javaFileParser = javaFileParser;
     this.objectMapper = objectMapper;
     this.buildContext = buildContext;
+    this.executionContext = executionContext;
     this.buildEngine = buildEngine;
   }
 
@@ -103,6 +107,7 @@ public class JavaDepsFinder {
       final CellPathResolver cellNames,
       ObjectMapper objectMapper,
       BuildContext buildContext,
+      ExecutionContext executionContext,
       BuildEngine buildEngine) {
     Optional<String> javaPackageMappingOption = buckConfig.getValue(
         BUCK_CONFIG_SECTION,
@@ -148,6 +153,7 @@ public class JavaDepsFinder {
         javaFileParser,
         objectMapper,
         buildContext,
+        executionContext,
         buildEngine);
   }
 
@@ -397,7 +403,8 @@ public class JavaDepsFinder {
         generatedSymbols,
         objectMapper,
         node.getRuleFactoryParams().getProjectFilesystem());
-    ListenableFuture<BuildResult> future = buildEngine.build(buildContext, buildRule);
+    ListenableFuture<BuildResult> future =
+        buildEngine.build(buildContext, executionContext, buildRule);
     BuildResult result = Futures.getUnchecked(future);
 
     Symbols features;

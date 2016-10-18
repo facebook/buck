@@ -20,9 +20,6 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.step.DefaultStepRunner;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.ImmutableList;
@@ -50,12 +47,7 @@ public class FakeBuildContext {
    * before the {@link ImmutableBuildContext.Builder#build()} method of the builder can be invoked.
    */
   public static ImmutableBuildContext.Builder newBuilder() {
-    ExecutionContext executionContext = TestExecutionContext
-        .newBuilder()
-        .build();
-
     return ImmutableBuildContext.builder()
-        .setStepRunner(new DefaultStepRunner(executionContext))
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())
         .setObjectMapper(ObjectMappers.newDefaultInstance())
