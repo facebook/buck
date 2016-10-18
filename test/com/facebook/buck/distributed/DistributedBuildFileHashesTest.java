@@ -63,7 +63,9 @@ import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.ByteArrayInputStream;
 import java.nio.file.FileSystem;
@@ -75,14 +77,16 @@ import java.util.Map;
 import java.util.jar.JarOutputStream;
 
 public class DistributedBuildFileHashesTest {
-
+  @Rule
+  public TemporaryFolder tempDir = new TemporaryFolder();
 
   private static class SingleFileFixture extends Fixture {
     protected Path javaSrcPath;
     protected HashCode writtenHashCode;
     protected String writtenContents;
 
-    public SingleFileFixture() throws Exception {
+    public SingleFileFixture(TemporaryFolder tempDir) throws Exception {
+      super(tempDir);
     }
 
     @Override
@@ -105,7 +109,7 @@ public class DistributedBuildFileHashesTest {
 
   @Test
   public void recordsFileHashes() throws Exception {
-    SingleFileFixture f = new SingleFileFixture();
+    SingleFileFixture f = new SingleFileFixture(tempDir);
 
     List<BuildJobStateFileHashes> recordedHashes = f.distributedBuildFileHashes.getFileHashes();
 
@@ -122,11 +126,9 @@ public class DistributedBuildFileHashesTest {
 
   @Test
   public void cacheReadsHashesForFiles() throws Exception {
-    SingleFileFixture f = new SingleFileFixture();
+    SingleFileFixture f = new SingleFileFixture(tempDir);
 
     List<BuildJobStateFileHashes> fileHashes = f.distributedBuildFileHashes.getFileHashes();
-    f.projectFilesystem.getRootPath().getFileSystem().close();
-    f.secondProjectFilesystem.getRootPath().getFileSystem().close();
 
     ProjectFilesystem readProjectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem(
         "/read_hashes");
@@ -145,14 +147,12 @@ public class DistributedBuildFileHashesTest {
 
   @Test
   public void materializerWritesContents() throws Exception {
-    SingleFileFixture f = new SingleFileFixture();
+    SingleFileFixture f = new SingleFileFixture(tempDir);
 
     List<BuildJobStateFileHashes> fileHashes = f.distributedBuildFileHashes.getFileHashes();
-    f.projectFilesystem.getRootPath().getFileSystem().close();
-    f.secondProjectFilesystem.getRootPath().getFileSystem().close();
 
-    ProjectFilesystem materializeProjectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem(
-        "/read_hashes");
+    ProjectFilesystem materializeProjectFilesystem =
+        new ProjectFilesystem(tempDir.newFolder("read_hashes").getCanonicalFile().toPath());
     FileHashLoader materializer = DistBuildFileHashes.createMaterializingLoader(
         materializeProjectFilesystem,
         fileHashes.get(0),
@@ -166,11 +166,9 @@ public class DistributedBuildFileHashesTest {
 
   @Test
   public void cacheMaterializes() throws Exception {
-    SingleFileFixture f = new SingleFileFixture();
+    SingleFileFixture f = new SingleFileFixture(tempDir);
 
     List<BuildJobStateFileHashes> fileHashes = f.distributedBuildFileHashes.getFileHashes();
-    f.projectFilesystem.getRootPath().getFileSystem().close();
-    f.secondProjectFilesystem.getRootPath().getFileSystem().close();
 
     ProjectFilesystem readProjectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem(
         "/read_hashes");
@@ -287,7 +285,7 @@ public class DistributedBuildFileHashesTest {
 
   @Test
   public void recordsAbsoluteFileHashes() throws Exception {
-    Fixture f = new Fixture() {
+    Fixture f = new Fixture(tempDir) {
       @Override
       protected void setUpRules(
           BuildRuleResolver resolver,
@@ -331,7 +329,7 @@ public class DistributedBuildFileHashesTest {
 
   @Test
   public void worksCrossCell() throws Exception {
-    final Fixture f = new Fixture() {
+    final Fixture f = new Fixture(tempDir) {
 
       @Override
       protected void setUpRules(
@@ -447,9 +445,9 @@ public class DistributedBuildFileHashesTest {
           /* keySeed */ 0);
     }
 
-    public Fixture() throws Exception {
-      this(FakeProjectFilesystem.createJavaOnlyFilesystem("/first"),
-          FakeProjectFilesystem.createJavaOnlyFilesystem("/second"));
+    public Fixture(TemporaryFolder tempDir) throws Exception {
+      this(new ProjectFilesystem(tempDir.newFolder("first").toPath().toRealPath()),
+          new ProjectFilesystem(tempDir.newFolder("second").toPath().toRealPath()));
     }
 
     protected abstract void setUpRules(

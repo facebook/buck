@@ -113,11 +113,6 @@ public class RecordingFileHashLoader implements FileHashLoader {
   // that /a/b/c is not a sym link. With ProjectFileSystem.isSymLink we will need to look at the
   // parent dirs of every single Path to figure out whether it is a sym link.
   private static boolean isSymlink(Path path) {
-    // TODO(alisdair04,ruibm): migrate tests away from JimFS, so that this isn't needed.
-    if (!path.toUri().getScheme().equals("file")) {
-      // We can only follow symlinks for files.
-      return false;
-    }
     File file = new File(path.toAbsolutePath().toUri());
     try {
       Path canonicalPath = file.getCanonicalFile().toPath();
@@ -154,7 +149,6 @@ public class RecordingFileHashLoader implements FileHashLoader {
           new PathWithUnixSeparators(MorePaths.pathWithUnixSeparators(
               symLinkRootAndTarget.getSecond().toAbsolutePath())));
     }
-
 
     fileHashEntry.setIsDirectory(isDirectory);
     fileHashEntry.setHashCode(hashCode.toString());
