@@ -110,13 +110,13 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
               }
             }));
 
-    Optional<Integer> maxWorkers;
+    int maxWorkers;
     if (args.maxWorkers.isPresent()) {
       // negative or zero: unlimited number of worker processes
-      maxWorkers = args.maxWorkers.get() < 1 ? Optional.absent() : args.maxWorkers;
+      maxWorkers = args.maxWorkers.get() < 1 ? Integer.MAX_VALUE : args.maxWorkers.get();
     } else {
       // default is 1 worker process (for backwards compatibility)
-      maxWorkers = Optional.of(1);
+      maxWorkers = 1;
     }
 
     return new DefaultWorkerTool(

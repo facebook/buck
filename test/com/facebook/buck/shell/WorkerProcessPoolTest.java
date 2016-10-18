@@ -18,7 +18,6 @@ package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertThat;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
@@ -35,7 +34,7 @@ public class WorkerProcessPoolTest {
   @Test
   public void testProvidesWorkersAccordingToCapacityThenBlocks() throws InterruptedException {
     int maxWorkers = 3;
-    final WorkerProcessPool pool = createPool(Optional.of(maxWorkers));
+    final WorkerProcessPool pool = createPool(maxWorkers);
     final Set<WorkerProcess> createdWorkers = concurrentSet();
 
     Thread[] tasks = new Thread[maxWorkers + 1];
@@ -57,7 +56,7 @@ public class WorkerProcessPoolTest {
   @Test
   public void testReusesWorkerProcesses() throws InterruptedException {
     int maxWorkers = 3;
-    final WorkerProcessPool pool = createPool(Optional.of(maxWorkers));
+    final WorkerProcessPool pool = createPool(maxWorkers);
     final ConcurrentHashMap<Runnable, WorkerProcess> usedWorkers = new ConcurrentHashMap<>();
 
     Thread[] threads = {
@@ -85,7 +84,7 @@ public class WorkerProcessPoolTest {
   @Test
   public void testUnlimitedPool() throws InterruptedException {
     int numThreads = 20;
-    final WorkerProcessPool pool = createPool(Optional.absent());
+    final WorkerProcessPool pool = createPool(Integer.MAX_VALUE);
     final Set<WorkerProcess> createdWorkers = concurrentSet();
 
     Thread[] threads = new Thread[numThreads];
@@ -104,7 +103,7 @@ public class WorkerProcessPoolTest {
   @Test
   public void testReusesWorkerProcessesInUnlimitedPools() throws InterruptedException {
     int numThreads = 3;
-    final WorkerProcessPool pool = createPool(Optional.absent());
+    final WorkerProcessPool pool = createPool(Integer.MAX_VALUE);
     final ConcurrentHashMap<Runnable, WorkerProcess> usedWorkers = new ConcurrentHashMap<>();
 
     Thread[] threads = new Thread[numThreads];
@@ -132,7 +131,7 @@ public class WorkerProcessPoolTest {
 
   }
 
-  private static WorkerProcessPool createPool(final Optional<Integer> maxWorkers) {
+  private static WorkerProcessPool createPool(int maxWorkers) {
     return new WorkerProcessPool(maxWorkers) {
       @Override
       protected WorkerProcess startWorkerProcess() throws IOException {

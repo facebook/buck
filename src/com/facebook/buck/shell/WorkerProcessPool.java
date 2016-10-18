@@ -16,40 +16,32 @@
 
 package com.facebook.buck.shell;
 
-import com.google.common.base.Optional;
-
 import java.io.IOException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 
 public abstract class WorkerProcessPool {
 
-  public static final int UNLIMITED_CAPACITY = 0;
-
   private final Semaphore available;
   private final int capacity;
   private final LinkedBlockingQueue<WorkerProcess> workerProcesses;
 
-  public WorkerProcessPool(Optional<Integer> maxWorkers) {
-    capacity = maxWorkers.or(UNLIMITED_CAPACITY);
+  public WorkerProcessPool(int maxWorkers) {
+    capacity = maxWorkers;
     available = new Semaphore(capacity, true);
     workerProcesses = new LinkedBlockingQueue<>();
   }
 
   public WorkerProcess borrowWorkerProcess()
       throws IOException, InterruptedException {
-    if (capacity != UNLIMITED_CAPACITY) {
-      available.acquire();
-    }
+    available.acquire();
     WorkerProcess workerProcess = workerProcesses.poll();
     return workerProcess != null ? workerProcess : startWorkerProcess();
   }
 
   public void returnWorkerProcess(WorkerProcess workerProcess) throws InterruptedException {
     workerProcesses.put(workerProcess);
-    if (capacity != UNLIMITED_CAPACITY) {
-      available.release();
-    }
+    available.release();
   }
 
   public void close() {
