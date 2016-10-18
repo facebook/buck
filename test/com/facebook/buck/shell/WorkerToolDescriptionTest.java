@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
@@ -30,36 +31,29 @@ import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class WorkerToolDescriptionTest {
   @Test
   public void testGetMaxWorkersWhenSet() throws NoSuchBuildTargetException {
     int maxWorkers = 14;
-    WorkerTool workerTool = createWorkerTool(Optional.of(maxWorkers));
-    assertThat(workerTool.getMaxWorkers(), Matchers.equalTo(Optional.of(maxWorkers)));
+    WorkerTool workerTool = createWorkerTool(maxWorkers);
+    assertThat(workerTool.getMaxWorkers(), equalTo(maxWorkers));
   }
 
   @Test
   public void testGetMaxWorkersWhenSetToZero() throws NoSuchBuildTargetException {
-    WorkerTool workerTool = createWorkerTool(Optional.of(0));
-    assertThat(workerTool.getMaxWorkers(), Matchers.equalTo(Optional.<Integer>absent()));
+    WorkerTool workerTool = createWorkerTool(0);
+    assertThat(workerTool.getMaxWorkers(), equalTo(Integer.MAX_VALUE));
   }
 
   @Test
   public void testGetMaxWorkersWhenSetToNegativeInt() throws NoSuchBuildTargetException {
-    WorkerTool workerTool = createWorkerTool(Optional.of(-2));
-    assertThat(workerTool.getMaxWorkers(), Matchers.equalTo(Optional.<Integer>absent()));
+    WorkerTool workerTool = createWorkerTool(-2);
+    assertThat(workerTool.getMaxWorkers(), equalTo(Integer.MAX_VALUE));
   }
 
-  @Test
-  public void testGetMaxWorkersDefaultValue() throws NoSuchBuildTargetException {
-    WorkerTool workerTool = createWorkerTool(Optional.absent());
-    assertThat(workerTool.getMaxWorkers(), Matchers.equalTo(Optional.of(1)));
-  }
-
-  private static WorkerTool createWorkerTool(Optional<Integer> maxWorkers)
+  private static WorkerTool createWorkerTool(Integer maxWorkers)
       throws NoSuchBuildTargetException {
     TargetGraph targetGraph = TargetGraph.EMPTY;
     BuildRuleResolver resolver =
@@ -74,7 +68,7 @@ public class WorkerToolDescriptionTest {
     args.env = Optional.of(ImmutableMap.<String, String>of());
     args.exe = shBinaryRule.getBuildTarget();
     args.args = Optional.absent();
-    args.maxWorkers = maxWorkers;
+    args.maxWorkers = Optional.of(maxWorkers);
 
     Description<WorkerToolDescription.Arg> workerToolDescription = new WorkerToolDescription();
     return (WorkerTool) workerToolDescription.createBuildRule(

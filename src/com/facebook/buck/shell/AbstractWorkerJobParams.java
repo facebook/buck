@@ -17,7 +17,6 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -33,5 +32,5 @@ interface AbstractWorkerJobParams {
   String getStartupArgs();
   ImmutableMap<String, String> getStartupEnvironment();
   String getJobArgs();
-  Optional<Integer> getMaxWorkers();
+  int getMaxWorkers();
 }

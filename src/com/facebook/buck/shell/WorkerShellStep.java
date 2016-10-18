@@ -129,14 +129,14 @@ public class WorkerShellStep implements Step {
     }
 
     int poolCapacity = pool.getCapacity();
-    if (poolCapacity != paramsToUse.getMaxWorkers().or(WorkerProcessPool.UNLIMITED_CAPACITY)) {
+    if (poolCapacity != paramsToUse.getMaxWorkers()) {
       context.postEvent(ConsoleEvent.warning(
           "There are two 'worker_tool' targets declared with the same command (%s), but " +
               "different 'max_worker' settings (%d and %d). Only the first capacity is applied. " +
               "Consolidate these workers to avoid this warning.",
           key,
           poolCapacity,
-          paramsToUse.getMaxWorkers().or(WorkerProcessPool.UNLIMITED_CAPACITY)));
+          paramsToUse.getMaxWorkers()));
     }
 
     return pool;
