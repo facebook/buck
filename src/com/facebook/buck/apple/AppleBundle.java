@@ -486,7 +486,12 @@ public class AppleBundle
         };
       }
 
-      addSwiftStdlibStepIfNeeded(Optional.of(codeSignIdentitySupplier), stepsBuilder);
+      addSwiftStdlibStepIfNeeded(
+        bundleRoot.resolve(Paths.get("Frameworks")),
+        Optional.of(codeSignIdentitySupplier),
+        stepsBuilder,
+        false /* is for packaging? */
+      );
 
       stepsBuilder.add(
           new CodeSignStep(
@@ -497,7 +502,12 @@ public class AppleBundle
               codeSignIdentitySupplier,
               codesignAllocatePath));
     } else {
-      addSwiftStdlibStepIfNeeded(Optional.absent(), stepsBuilder);
+      addSwiftStdlibStepIfNeeded(
+          bundleRoot.resolve(Paths.get("Frameworks")),
+          Optional.<Supplier<CodeSignIdentity>>absent(),
+          stepsBuilder,
+          false /* is for packaging? */
+      );
     }
 
     // Ensure the bundle directory is archived so we can fetch it later.
@@ -663,9 +673,11 @@ public class AppleBundle
     return keys.build();
   }
 
-  private void addSwiftStdlibStepIfNeeded(
+  public void addSwiftStdlibStepIfNeeded(
+      Path destinationPath,
       Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier,
-      ImmutableList.Builder<Step> stepsBuilder) {
+      ImmutableList.Builder<Step> stepsBuilder,
+      boolean isForPackaging) {
     // It's apparently safe to run this even on a non-swift bundle (in that case, no libs
     // are copied over).
     if (swiftStdlibTool.isPresent()) {
@@ -675,18 +687,19 @@ public class AppleBundle
           "--scan-executable",
           bundleBinaryPath.toString(),
           "--scan-folder",
-          bundleRoot.resolve(destinations.getFrameworksPath()).toString(),
+          bundleRoot.resolve(this.destinations.getFrameworksPath()).toString(),
           "--scan-folder",
           bundleRoot.resolve(destinations.getPlugInsPath()).toString());
 
+      String tempDirPattern = isForPackaging ? "__swift_packaging_temp__%s" : "__swift_temp__%s";
       stepsBuilder.add(
           new SwiftStdlibStep(
               getProjectFilesystem().getRootPath(),
               BuildTargets.getScratchPath(
                   getProjectFilesystem(),
                   getBuildTarget(),
-                  "__swift_temp__%s"),
-              bundleRoot.resolve(Paths.get("Frameworks")),
+                  tempDirPattern),
+              destinationPath,
               swiftStdlibCommand.build(),
               codeSignIdentitySupplier)
       );

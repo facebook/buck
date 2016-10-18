@@ -34,6 +34,7 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.base.Optional;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteSource;
@@ -83,6 +84,8 @@ public class BuiltinApplePackage extends AbstractBuildRule {
             payloadDir,
             CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
 
+    appendAdditionalSwiftSteps(commands);
+
     // do the zipping
     commands.add(new MkdirStep(getProjectFilesystem(), pathToOutputFile.getParent()));
     commands.add(
@@ -97,6 +100,23 @@ public class BuiltinApplePackage extends AbstractBuildRule {
     buildableContext.recordArtifact(getPathToOutput());
 
     return commands.build();
+  }
+
+  private void appendAdditionalSwiftSteps(ImmutableList.Builder<Step> commands) {
+    // For .ipas containing Swift code, Apple requires the following for App Store submissions:
+    // 1. Copy the Swift standard libraries to SwiftSupport/{platform}
+    if (bundle instanceof AppleBundle) {
+      AppleBundle appleBundle = (AppleBundle) bundle;
+
+      Path swiftSupportDir = temp.resolve("SwiftSupport").resolve(appleBundle.getPlatformName());
+
+      appleBundle.addSwiftStdlibStepIfNeeded(
+        swiftSupportDir,
+        Optional.<Supplier<CodeSignIdentity>>absent(),
+        commands,
+        true /* is for packaging? */
+      );
+    }
   }
 
   private void appendAdditionalAppleWatchSteps(ImmutableList.Builder<Step> commands) {
