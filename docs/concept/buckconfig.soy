@@ -1459,6 +1459,15 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'intellij' /}
+  {param name: 'remove_unused_libraries' /}
+  {param example_value: 'true' /}
+  {param description}
+    Removes unused libraries from .idea/libraries.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'java' /}
   {param description}

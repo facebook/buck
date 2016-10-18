@@ -89,7 +89,15 @@ public class IJProjectCleaner {
   }
 
   @SuppressWarnings("serial")
-  public void clean(final BuckConfig buckConfig, final Path librariesXmlBase) {
+  public void clean(
+      final BuckConfig buckConfig,
+      final Path librariesXmlBase,
+      final boolean runPostGenerationCleaner,
+      final boolean removeOldLibraries) {
+    if (!runPostGenerationCleaner && !removeOldLibraries) {
+      return;
+    }
+
     final Set<File> buckDirectories = new HashSet<>();
     buckDirectories.add(
         convertPathToFile(
@@ -105,10 +113,12 @@ public class IJProjectCleaner {
         @Override
         protected void compute() {
           List<RecursiveAction> topLevelTasks = new ArrayList<>(2);
-          topLevelTasks.add(new CandidateFinderWithExclusions(
-              convertPathToFile(projectFilesystem.resolve("")),
-              IML_FILENAME_FILTER,
-              buckDirectories));
+          if (runPostGenerationCleaner) {
+            topLevelTasks.add(new CandidateFinderWithExclusions(
+                convertPathToFile(projectFilesystem.resolve("")),
+                IML_FILENAME_FILTER,
+                buckDirectories));
+          }
           topLevelTasks.add(new CandidateFinder(
               convertPathToFile(librariesXmlBase),
               XML_FILENAME_FILTER));

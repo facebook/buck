@@ -236,6 +236,12 @@ public class ProjectCommand extends BuildCommand {
   private boolean runIjCleaner = false;
 
   @Option(
+      name = "--remove-unused-ij-libraries",
+      usage = "After generating an IntelliJ project remove all IntelliJ libraries that are not " +
+          "used in the project.")
+  private boolean removeUnusedLibraries = false;
+
+  @Option(
       name = "--exclude-artifacts",
       usage = "Don't include references to the artifacts created by compiling a target in" +
           "the module representing that target.")
@@ -315,6 +321,13 @@ public class ProjectCommand extends BuildCommand {
    */
   public boolean getIdePrompt(BuckConfig buckConfig) {
     return buckConfig.getBooleanValue("project", "ide_prompt", true);
+  }
+
+  public boolean getRemoveUnusedLibraries(BuckConfig buckConfig) {
+    if (removeUnusedLibraries) {
+      return true;
+    }
+    return buckConfig.getBooleanValue("intellij", "remove_unused_libraries", false);
   }
 
   private Optional<Ide> getIdeFromBuckConfig(BuckConfig buckConfig) {
@@ -647,6 +660,7 @@ public class ProjectCommand extends BuildCommand {
 
     return project.write(
         runIjCleaner,
+        getRemoveUnusedLibraries(buckConfig),
         excludeArtifacts || getExcludeArtifactsFromConfig(buckConfig));
   }
 

@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.intellij;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
@@ -605,6 +606,18 @@ public class ProjectIntegrationTest {
   @Test
   public void testVersion2BuckProjectWithProjectSettings() throws IOException {
     runBuckProjectAndVerify("experimental_project_with_project_settings");
+  }
+
+  @Test
+  public void testVersion2BuckProjectWithUnusedLibraries() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "experimental_project_with_unused_libraries", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("project");
+    result.assertSuccess("buck project should exit cleanly");
+
+    assertFalse(workspace.resolve(".idea/libraries/library_libs_jsr305.xml").toFile().exists());
   }
 
   private ProcessResult runBuckProjectAndVerify(

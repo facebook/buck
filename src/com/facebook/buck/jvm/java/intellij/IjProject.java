@@ -89,6 +89,7 @@ public class IjProject {
    */
   public ImmutableSet<BuildTarget> write(
       boolean runPostGenerationCleaner,
+      boolean removeUnusedLibraries,
       boolean excludeArtifacts)
       throws IOException {
     final ImmutableSet.Builder<BuildTarget> requiredBuildTargets = ImmutableSet.builder();
@@ -224,7 +225,7 @@ public class IjProject {
         new IjProjectTemplateDataPreparer(parsingJavaPackageFinder, moduleGraph, projectFilesystem),
         projectConfig,
         projectFilesystem);
-    writer.write(runPostGenerationCleaner);
+    writer.write(runPostGenerationCleaner, removeUnusedLibraries);
     return requiredBuildTargets.build();
   }
 }

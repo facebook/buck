@@ -76,7 +76,9 @@ public class IjProjectWriter {
     this.projectFilesystem = projectFilesystem;
   }
 
-  public void write(boolean runPostGenerationCleaner) throws IOException {
+  public void write(
+      boolean runPostGenerationCleaner,
+      boolean removeUnusedLibraries) throws IOException {
     IJProjectCleaner cleaner = new IJProjectCleaner(projectFilesystem);
 
     writeProjectSettings(cleaner, projectConfig);
@@ -92,9 +94,11 @@ public class IjProjectWriter {
     Path indexFile = writeModulesIndex();
     cleaner.doNotDelete(indexFile);
 
-    if (runPostGenerationCleaner) {
-      cleaner.clean(projectConfig.getBuckConfig(), LIBRARIES_PREFIX);
-    }
+    cleaner.clean(
+        projectConfig.getBuckConfig(),
+        LIBRARIES_PREFIX,
+        runPostGenerationCleaner,
+        removeUnusedLibraries);
   }
 
   private Path writeModule(IjModule module) throws IOException {
