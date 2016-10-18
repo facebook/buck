@@ -23,7 +23,7 @@ import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 
-public class OptionalTypeCoercer<T> extends LeafTypeCoercer<Optional<T>> {
+public class OptionalTypeCoercer<T> implements TypeCoercer<Optional<T>> {
 
   private final TypeCoercer<T> coercer;
 
@@ -41,6 +41,18 @@ public class OptionalTypeCoercer<T> extends LeafTypeCoercer<Optional<T>> {
   }
 
   @Override
+  public boolean hasElementClass(Class<?>... types) {
+    return coercer.hasElementClass(types);
+  }
+
+  @Override
+  public void traverse(Optional<T> object, Traversal traversal) {
+    if (object.isPresent()) {
+      coercer.traverse(object.get(), traversal);
+    }
+  }
+
+  @Override
   public Optional<T> coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
@@ -51,6 +63,11 @@ public class OptionalTypeCoercer<T> extends LeafTypeCoercer<Optional<T>> {
       return Optional.absent();
     }
     return Optional.of(coercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
+  }
+
+  @Override
+  public Optional<Optional<T>> getOptionalValue() {
+    return Optional.absent();
   }
 
 }
