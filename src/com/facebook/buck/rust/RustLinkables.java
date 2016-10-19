@@ -15,12 +15,27 @@
  */
 package com.facebook.buck.rust;
 
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.NativeLinkable;
+import com.facebook.buck.cxx.NativeLinkableInput;
+import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.google.common.base.Predicates;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
+import java.util.Comparator;
+
 
 /**
  * Common implementation of RustLinkable methods.
@@ -46,5 +61,67 @@ public class RustLinkables {
     }.start();
 
     return builder.build();
+  }
+
+  private static ImmutableList<NativeLinkableInput> getNativeLinkableInputs(
+      BuildRule top,
+      Linker.LinkableDepType linkStyle,
+      CxxPlatform cxxPlatform) {
+    ImmutableList.Builder<NativeLinkableInput> builder = ImmutableList.builder();
+
+    new AbstractBreadthFirstTraversal<BuildRule>(top) {
+      @Override
+      public ImmutableSet<BuildRule> visit(BuildRule rule) {
+        if (rule instanceof RustLinkable) {
+          return rule.getDeps();
+        }
+
+        if (rule instanceof NativeLinkable) {
+          try {
+            NativeLinkableInput nli = NativeLinkables.getTransitiveNativeLinkableInput(
+                cxxPlatform,
+                ImmutableList.of(rule),
+                linkStyle,
+                Predicates.alwaysTrue());
+            builder.add(nli);
+          } catch (NoSuchBuildTargetException e) {
+            e.printStackTrace();
+          }
+        }
+
+        return ImmutableSet.of();
+      }
+    }.start();
+
+    return builder.build();
+  }
+
+  static ImmutableSortedSet<Path> getNativePaths(
+      Iterable<BuildRule> deps,
+      SourcePathResolver resolver,
+      Linker.LinkableDepType linkStyle,
+      CxxPlatform cxxPlatform) {
+    return FluentIterable.from(deps)
+      .transformAndConcat(rule -> getNativeLinkableInputs(rule, linkStyle, cxxPlatform))
+      .transformAndConcat(nli -> nli.getArgs())
+      .transformAndConcat(arg -> arg.getDeps(resolver))
+      .transform(dep -> dep.getPathToOutput())
+      .toSortedSet(Comparator.<Path>naturalOrder());
+  }
+
+  static BuildRuleParams addNativeDependencies(
+      BuildRuleParams params,
+      SourcePathResolver resolver,
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType linkStyle) {
+    return params.copyWithChanges(
+        params.getBuildTarget(),
+        () -> FluentIterable.from(params.getDeps())
+            .transformAndConcat(rule -> getNativeLinkableInputs(rule, linkStyle, cxxPlatform))
+            .transformAndConcat(nli -> nli.getArgs())
+            .transformAndConcat(arg -> arg.getDeps(resolver))
+            .append(params.getDeps())
+            .toSortedSet(Ordering.natural()),
+        Suppliers.ofInstance(ImmutableSortedSet.of()));
   }
 }

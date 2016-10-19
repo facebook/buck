@@ -18,6 +18,7 @@ package com.facebook.buck.rust;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -86,6 +87,7 @@ public class RustCompileTest {
           srcs,
           /* flags */ ImmutableList.of(),
           /* features */ ImmutableSortedSet.of(),
+          /* nativePaths */ ImmutableSortedSet.of(),
           Paths.get("somewhere"),
           new Tool() {
             @Override
@@ -112,7 +114,8 @@ public class RustCompileTest {
             public void appendToRuleKey(RuleKeyObjectSink sink) {
               // Do nothing.
             }
-          });
+          },
+          Linker.LinkableDepType.STATIC);
     }
 
     @Override

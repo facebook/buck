@@ -18,6 +18,8 @@ package com.facebook.buck.rust;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -47,8 +49,13 @@ public class PrebuiltRustLibrary extends AbstractBuildRule
       BuildRuleParams params,
       SourcePathResolver resolver,
       SourcePath rlib,
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType linkStyle,
       Optional<String> crate) {
-    super(params, resolver);
+    super(
+        RustLinkables.addNativeDependencies(params, resolver, cxxPlatform, linkStyle),
+        resolver);
+
     this.rlib = rlib;
     this.crate = crate.or(getBuildTarget().getShortName());
   }
@@ -62,7 +69,7 @@ public class PrebuiltRustLibrary extends AbstractBuildRule
 
   @Override
   public Path getPathToOutput() {
-    return getLinkPath();
+    return getResolver().getRelativePath(rlib);
   }
 
   @Override
@@ -72,7 +79,7 @@ public class PrebuiltRustLibrary extends AbstractBuildRule
 
   @Override
   public Path getLinkPath() {
-    return getResolver().getRelativePath(rlib);
+    return getPathToOutput();
   }
 
   @Override

@@ -1,0 +1,77 @@
+rust_binary(
+    name = "addtest_static",
+    srcs = [ "main.rs" ],
+    features = [ 'static' ],
+    deps = [ ":adder_static" ],
+)
+
+rust_binary(
+    name = "addtest_shared",
+    srcs = [ "main.rs" ],
+    features = [ 'shared' ],
+    deps = [ ":adder_shared" ],
+)
+
+rust_binary(
+    name = "addtest_prebuilt_static",
+    srcs = [ "main.rs" ],
+    features = [ 'static' ],
+    deps = [ ":prebuilt_adder_static" ],
+)
+
+rust_binary(
+    name = "addtest_prebuilt_shared",
+    srcs = [ "main.rs" ],
+    features = [ 'shared' ],
+    deps = [ ":prebuilt_adder_shared" ],
+)
+
+rust_library(
+    name = 'adder_static',
+    link_style = 'static',
+    srcs = [ 'adder_static.rs' ],
+    deps = [ ':simpleadder' ],
+)
+
+rust_library(
+    name = 'adder_shared',
+    link_style = 'shared',
+    srcs = [ 'adder_shared.rs' ],
+    deps = [ ':simpleadder' ],
+)
+
+prebuilt_rust_library(
+    name = 'prebuilt_adder_static',
+    crate = 'adder_static',
+    deps = [ ':simpleadder' ],
+    link_style = 'static',
+    rlib = ':generated_adder_static',
+)
+
+prebuilt_rust_library(
+    name = 'prebuilt_adder_shared',
+    crate = 'adder_shared',
+    deps = [ ':simpleadder' ],
+    link_style = 'shared',
+    rlib = ':generated_adder_shared',
+)
+
+cxx_library(
+    name = "simpleadder",
+    srcs = [ "simpleadder.c" ],
+)
+
+# Generate .rlib files
+genrule(
+  name = 'generated_adder_static',
+  srcs = [ 'adder_static.rs' ],
+  out = 'libadder_static.rlib',
+  cmd = 'rustc --crate-type=lib --crate-name=adder_static -o $OUT $SRCS',
+)
+
+genrule(
+  name = 'generated_adder_shared',
+  srcs = [ 'adder_shared.rs' ],
+  out = 'libadder_shared.rlib',
+  cmd = 'rustc --crate-type=lib --crate-name=adder_shared -o $OUT $SRCS',
+)

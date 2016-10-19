@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rust;
 
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
@@ -38,9 +40,11 @@ public class RustBinaryDescription implements Description<RustBinaryDescription.
   private static final BuildRuleType TYPE = BuildRuleType.of("rust_binary");
 
   private final RustBuckConfig rustBuckConfig;
+  private final CxxPlatform cxxPlatform;
 
-  public RustBinaryDescription(RustBuckConfig rustBuckConfig) {
+  public RustBinaryDescription(RustBuckConfig rustBuckConfig, CxxPlatform cxxPlatform) {
     this.rustBuckConfig = rustBuckConfig;
+    this.cxxPlatform = cxxPlatform;
   }
 
   @Override
@@ -65,7 +69,9 @@ public class RustBinaryDescription implements Description<RustBinaryDescription.
         ImmutableSortedSet.copyOf(args.srcs),
         ImmutableSortedSet.copyOf(args.features.get()),
         ImmutableList.copyOf(args.rustcFlags.get()),
-        rustBuckConfig.getRustCompiler().get());
+        rustBuckConfig.getRustCompiler().get(),
+        cxxPlatform,
+        args.linkStyle.or(Linker.LinkableDepType.STATIC));
   }
 
   @SuppressFieldNotInitialized
@@ -74,5 +80,6 @@ public class RustBinaryDescription implements Description<RustBinaryDescription.
     public Optional<ImmutableSortedSet<String>> features;
     public Optional<List<String>> rustcFlags;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<Linker.LinkableDepType> linkStyle;
   }
 }

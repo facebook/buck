@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rust;
 
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -36,9 +38,11 @@ public class PrebuiltRustLibraryDescription
 
   @SuppressWarnings("unused")
   private final RustBuckConfig rustBuckConfig;
+  private final CxxPlatform cxxPlatform;
 
-  public PrebuiltRustLibraryDescription(RustBuckConfig rustBuckConfig) {
+  public PrebuiltRustLibraryDescription(RustBuckConfig rustBuckConfig, CxxPlatform cxxPlatform) {
     this.rustBuckConfig = rustBuckConfig;
+    this.cxxPlatform = cxxPlatform;
   }
 
   @Override
@@ -61,6 +65,8 @@ public class PrebuiltRustLibraryDescription
         params,
         new SourcePathResolver(resolver),
         args.rlib,
+        cxxPlatform,
+        args.linkStyle.or(Linker.LinkableDepType.STATIC),
         args.crate);
   }
 
@@ -69,6 +75,6 @@ public class PrebuiltRustLibraryDescription
     public SourcePath rlib;
     public Optional<String> crate;
     public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<Linker.LinkableDepType> linkStyle;
   }
-
 }

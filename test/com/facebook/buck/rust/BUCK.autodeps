@@ -21,6 +21,7 @@
   },
   "unit" : {
     "deps" : [
+      "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rust:rust",
       "//src/com/facebook/buck/util:exceptions",

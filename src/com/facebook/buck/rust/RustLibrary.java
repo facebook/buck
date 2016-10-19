@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rust;
 
+import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
@@ -34,7 +35,8 @@ public class RustLibrary extends RustCompile implements RustLinkable {
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<String> features,
       ImmutableList<String> rustcFlags,
-      Tool compiler) {
+      Tool compiler,
+      Linker.LinkableDepType linkStyle) {
     super(
         params,
         resolver,
@@ -45,11 +47,13 @@ public class RustLibrary extends RustCompile implements RustLinkable {
             .addAll(rustcFlags)
             .build(),
         features,
+        ImmutableSortedSet.of(),
         BuildTargets.getGenPath(
             params.getProjectFilesystem(),
             params.getBuildTarget(),
             "%s/lib" + params.getBuildTarget().getShortName() + ".rlib"),
-        compiler);
+        compiler,
+        linkStyle);
   }
 
   @Override

@@ -15,6 +15,7 @@
       "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/slb:slb",
       "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/environment:platform",

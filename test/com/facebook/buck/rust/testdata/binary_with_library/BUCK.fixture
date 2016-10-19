@@ -7,21 +7,3 @@ rust_binary(
     "//messenger:messenger",
   ],
 )
-
-rust_binary(
-  name = "illegal_dep",
-  srcs = [
-    "main.rs",
-  ],
-  deps = [
-    ":python_dep",
-    "//messenger:messenger",
-  ],
-)
-
-python_library(
-  name = "python_dep",
-  srcs = [
-    "empty.py"
-  ]
-)

@@ -89,6 +89,50 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void binaryWithStaticCxxDep() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_cxx_dep", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:addtest_static").assertSuccess().getStdout(),
+        Matchers.containsString("10 + 15 = 25"));
+  }
+
+  @Test
+  public void binaryWithSharedCxxDep() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_cxx_dep", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:addtest_shared").assertSuccess().getStdout(),
+        Matchers.containsString("10 + 15 = 25"));
+  }
+
+  @Test
+  public void binaryWithPrebuiltStaticCxxDep() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_cxx_dep", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:addtest_prebuilt_static").assertSuccess().getStdout(),
+        Matchers.containsString("10 + 15 = 25"));
+  }
+
+  @Test
+  public void binaryWithPrebuiltSharedCxxDep() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_cxx_dep", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:addtest_prebuilt_shared").assertSuccess().getStdout(),
+        Matchers.containsString("10 + 15 = 25"));
+  }
+
+  @Test
   public void binaryWithLibraryWithDep() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "binary_with_library_with_dep", tmp);
@@ -100,18 +144,6 @@ public class RustBinaryIntegrationTest {
             Matchers.containsString("Hello, world!"),
             Matchers.containsString("I have a message to deliver to you"),
             Matchers.containsString("thing handled")));
-  }
-
-  @Test
-  public void nonRustLibraryDepErrors() throws IOException, InterruptedException {
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(Matchers.containsString("is not an instance of rust_library"));
-
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "binary_with_library", tmp);
-    workspace.setUp();
-
-    workspace.runBuckCommand("run", "//:illegal_dep").assertFailure();
   }
 
   @Test

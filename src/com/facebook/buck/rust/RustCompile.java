@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rust;
 
+import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -35,6 +36,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
@@ -65,6 +67,11 @@ abstract class RustCompile extends AbstractBuildRule {
   private final ImmutableList<String> flags;
   @AddToRuleKey
   private final ImmutableSet<String> features;
+  @AddToRuleKey
+  private final Linker.LinkableDepType linkStyle;
+
+  private final ImmutableSortedSet<Path> nativePaths;
+
   private final Path scratchDir;
   private final Path output;
 
@@ -74,9 +81,12 @@ abstract class RustCompile extends AbstractBuildRule {
       ImmutableSet<SourcePath> srcs,
       ImmutableList<String> flags,
       ImmutableSet<String> features,
+      ImmutableSortedSet<Path> nativePaths,
       Path output,
-      Tool compiler) {
+      Tool compiler,
+      Linker.LinkableDepType linkStyle) {
     super(params, resolver);
+
     this.srcs = srcs;
     this.flags = ImmutableList.<String>builder()
         .add("--crate-name", getBuildTarget().getShortName())
@@ -85,8 +95,11 @@ abstract class RustCompile extends AbstractBuildRule {
     this.features = features;
     this.output = output;
     this.compiler = compiler;
+    this.linkStyle = linkStyle;
     this.scratchDir =
         BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "container");
+
+    this.nativePaths = nativePaths;
 
     for (String feature : features) {
       if (feature.contains("\"")) {
@@ -106,17 +119,14 @@ abstract class RustCompile extends AbstractBuildRule {
     ImmutableSet.Builder<Path> externalDepsBuilder = ImmutableSet.builder();
 
     for (BuildRule buildRule : getDeps()) {
-      if (!(buildRule instanceof RustLinkable)) {
-        throw new HumanReadableException(
-            "%s (dep of %s) is not an instance of rust_library or prebuilt_rust_library!",
-            buildRule.getBuildTarget().getFullyQualifiedName(),
-            getBuildTarget().getFullyQualifiedName());
+      if (buildRule instanceof RustLinkable) {
+        RustLinkable linkable = (RustLinkable) buildRule;
+        Path ruleOutput = linkable.getLinkPath();
+        externalCratesBuilder.put(linkable.getLinkTarget(), ruleOutput);
+        externalDepsBuilder.addAll(linkable.getDependencyPaths());
       }
-      RustLinkable linkable = (RustLinkable) buildRule;
-      Path ruleOutput = linkable.getLinkPath();
-      externalCratesBuilder.put(linkable.getLinkTarget(), ruleOutput);
-      externalDepsBuilder.addAll(linkable.getDependencyPaths());
     }
+
     return ImmutableList.of(
         new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),
         new SymlinkFilesIntoDirectoryStep(
@@ -134,6 +144,7 @@ abstract class RustCompile extends AbstractBuildRule {
             output,
             externalCratesBuilder.build(),
             externalDepsBuilder.build(),
+            nativePaths,
             getCrateRoot()));
   }
 
@@ -166,5 +177,9 @@ abstract class RustCompile extends AbstractBuildRule {
   @Override
   public Path getPathToOutput() {
     return output;
+  }
+
+  public Linker.LinkableDepType getLinkStyle() {
+    return linkStyle;
   }
 }

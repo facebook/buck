@@ -32,7 +32,8 @@ public class RustCompileStep extends ShellStep {
   private final ImmutableSet<String> features;
   private final Path output;
   private final ImmutableMap<String, Path> crates;
-  private final ImmutableSet<Path> dependencies;
+  private final ImmutableSet<Path> crateDeps;
+  private final ImmutableSet<Path> nativeDeps;
   private final Path crateRoot;
 
   public RustCompileStep(
@@ -43,7 +44,8 @@ public class RustCompileStep extends ShellStep {
       ImmutableSet<String> features,
       Path output,
       ImmutableMap<String, Path> crates,
-      ImmutableSet<Path> dependencies,
+      ImmutableSet<Path> crateDeps,
+      ImmutableSet<Path> nativeDeps,
       Path crateRoot) {
     super(workingDirectory);
     this.environment = environment;
@@ -52,7 +54,8 @@ public class RustCompileStep extends ShellStep {
     this.features = features;
     this.output = output;
     this.crates = crates;
-    this.dependencies = dependencies;
+    this.crateDeps = crateDeps;
+    this.nativeDeps = nativeDeps;
     this.crateRoot = crateRoot;
   }
 
@@ -73,10 +76,16 @@ public class RustCompileStep extends ShellStep {
           String.format("%s=%s", entry.getKey(), entry.getValue()));
     }
 
-    for (Path path : dependencies) {
+    for (Path path : crateDeps) {
       commandBuilder.add(
           "-L",
           String.format("dependency=%s", path));
+    }
+
+    for (Path path : nativeDeps) {
+      commandBuilder.add(
+          "-L",
+          String.format("native=%s", path.getParent()));
     }
 
     return commandBuilder
