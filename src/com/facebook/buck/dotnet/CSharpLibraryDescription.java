@@ -79,10 +79,11 @@ public class CSharpLibraryDescription implements Description<CSharpLibraryDescri
   public static class Arg extends AbstractDescriptionArg {
     public FrameworkVersion frameworkVer;
     public ImmutableSortedSet<SourcePath> srcs;
-    public Optional<ImmutableMap<String, SourcePath>> resources;
+    public Optional<ImmutableMap<String, SourcePath>> resources = Optional.of(ImmutableMap.of());
     public Optional<String> dllName;
 
     // We may have system-provided references ("System.Core.dll") or other build targets
-    public Optional<ImmutableList<Either<BuildTarget, String>>> deps;
+    public Optional<ImmutableList<Either<BuildTarget, String>>> deps =
+        Optional.of(ImmutableList.of());
   }
 }

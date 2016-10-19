@@ -57,8 +57,8 @@ public class ShBinaryDescription implements Description<ShBinaryDescription.Arg>
   public static class Arg extends AbstractDescriptionArg {
     public SourcePath main;
 
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
 
-    public Optional<ImmutableSet<SourcePath>> resources;
+    public Optional<ImmutableSet<SourcePath>> resources = Optional.of(ImmutableSet.of());
   }
 }

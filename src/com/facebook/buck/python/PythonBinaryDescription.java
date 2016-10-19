@@ -375,16 +375,17 @@ public class PythonBinaryDescription implements
   public static class Arg extends AbstractDescriptionArg implements HasTests {
     public Optional<SourcePath> main;
     public Optional<String> mainModule;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
     public Optional<String> baseModule;
     public Optional<Boolean> zipSafe;
-    public Optional<ImmutableList<String>> buildArgs;
+    public Optional<ImmutableList<String>> buildArgs = Optional.of(ImmutableList.of());
     public Optional<String> platform;
     public Optional<PythonBuckConfig.PackageStyle> packageStyle;
-    public Optional<ImmutableSet<BuildTarget>> preloadDeps;
-    public Optional<ImmutableList<String>> linkerFlags;
+    public Optional<ImmutableSet<BuildTarget>> preloadDeps = Optional.of(ImmutableSet.of());
+    public Optional<ImmutableList<String>> linkerFlags = Optional.of(ImmutableList.of());
     public Optional<String> extension;
-    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
+    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests =
+        Optional.of(ImmutableSortedSet.of());
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {

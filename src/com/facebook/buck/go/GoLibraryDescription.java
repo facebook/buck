@@ -147,14 +147,16 @@ public class GoLibraryDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg implements HasTests {
-    public Optional<ImmutableSortedSet<SourcePath>> srcs;
-    public Optional<List<String>> compilerFlags;
-    public Optional<List<String>> assemblerFlags;
+    public Optional<ImmutableSortedSet<SourcePath>> srcs = Optional.of(ImmutableSortedSet.of());
+    public Optional<List<String>> compilerFlags = Optional.of(ImmutableList.of());
+    public Optional<List<String>> assemblerFlags = Optional.of(ImmutableList.of());
     public Optional<String> packageName;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps =
+        Optional.of(ImmutableSortedSet.of());
 
-    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
+    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests =
+        Optional.of(ImmutableSortedSet.of());
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {

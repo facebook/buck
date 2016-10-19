@@ -148,13 +148,15 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
-    public Optional<ImmutableSortedSet<SourcePath>> srcs;
-    public Optional<ImmutableSortedSet<SourcePath>> resources;
-    public Optional<ImmutableList<String>> extraArguments;
+    public Optional<ImmutableSortedSet<SourcePath>> srcs = Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<SourcePath>> resources =
+        Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableList<String>> extraArguments = Optional.of(ImmutableList.of());
     // Note: scala does not have a exported_deps because scala needs the transitive closure of
     // dependencies to compile. deps is effectively exported_deps.
-    public Optional<ImmutableSortedSet<BuildTarget>> providedDeps;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> providedDeps =
+        Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
 
     @Hint(isInput = false)
     public Optional<Path> resourcesRoot;
@@ -162,7 +164,7 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
     public Optional<String> mavenCoords;
 
     @Hint(isDep = false)
-    public Optional<ImmutableSortedSet<BuildTarget>> tests;
+    public Optional<ImmutableSortedSet<BuildTarget>> tests = Optional.of(ImmutableSortedSet.of());
   }
 
 }

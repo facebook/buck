@@ -355,10 +355,13 @@ public class HalideLibraryDescription
 
   @SuppressFieldNotInitialized
   public static class Arg extends CxxBinaryDescription.Arg {
-    public Optional<ImmutableSortedSet<BuildTarget>> compilerDeps;
-    public Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs;
+    public Optional<ImmutableSortedSet<BuildTarget>> compilerDeps =
+        Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs =
+        Optional.of(ImmutableSortedMap.of());
     public Optional<Pattern> supportedPlatformsRegex;
-    public Optional<ImmutableList<String>> compilerInvocationFlags;
+    public Optional<ImmutableList<String>> compilerInvocationFlags =
+        Optional.of(ImmutableList.of());
     public Optional<String> functionName;
   }
 }

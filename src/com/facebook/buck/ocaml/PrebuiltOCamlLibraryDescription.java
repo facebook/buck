@@ -111,8 +111,8 @@ public class PrebuiltOCamlLibraryDescription
     public Optional<String> libName;
     public Optional<String> nativeLib;
     public Optional<String> bytecodeLib;
-    public Optional<ImmutableList<String>> cLibs;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableList<String>> cLibs = Optional.of(ImmutableList.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
     public Optional<Boolean> bytecodeOnly;
   }
 

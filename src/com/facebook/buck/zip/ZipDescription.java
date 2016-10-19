@@ -62,6 +62,6 @@ public class ZipDescription implements Description<ZipDescription.Arg> {
     public Optional<String> out;
     public ImmutableSortedSet<SourcePath> srcs;
 
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
   }
 }

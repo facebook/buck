@@ -272,9 +272,9 @@ public class HaskellBinaryDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg {
-    public Optional<SourceList> srcs;
-    public Optional<ImmutableList<String>> compilerFlags;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<SourceList> srcs = Optional.of(SourceList.EMPTY);
+    public Optional<ImmutableList<String>> compilerFlags = Optional.of(ImmutableList.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
     public Optional<String> main;
     public Optional<Linker.LinkableDepType> linkStyle;
   }

@@ -394,18 +394,19 @@ public class PythonTestDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends PythonLibraryDescription.Arg {
     public Optional<String> mainModule;
-    public Optional<ImmutableSet<String>> contacts;
-    public Optional<ImmutableSet<Label>> labels;
+    public Optional<ImmutableSet<String>> contacts = Optional.of(ImmutableSet.of());
+    public Optional<ImmutableSet<Label>> labels = Optional.of(ImmutableSet.of());
     public Optional<String> platform;
     public Optional<String> extension;
     public Optional<PythonBuckConfig.PackageStyle> packageStyle;
-    public Optional<ImmutableSet<BuildTarget>> preloadDeps;
-    public Optional<ImmutableList<String>> linkerFlags;
-    public Optional<ImmutableList<NeededCoverageSpec>> neededCoverage;
+    public Optional<ImmutableSet<BuildTarget>> preloadDeps = Optional.of(ImmutableSet.of());
+    public Optional<ImmutableList<String>> linkerFlags = Optional.of(ImmutableList.of());
+    public Optional<ImmutableList<NeededCoverageSpec>> neededCoverage =
+        Optional.of(ImmutableList.of());
 
-    public Optional<ImmutableList<String>> buildArgs;
+    public Optional<ImmutableList<String>> buildArgs = Optional.of(ImmutableList.of());
 
-    public Optional<ImmutableMap<String, String>> env;
+    public Optional<ImmutableMap<String, String>> env = Optional.of(ImmutableMap.of());
     public Optional<Long> testRuleTimeoutMs;
   }
 

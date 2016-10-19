@@ -188,7 +188,7 @@ public class AndroidPrebuiltAarDescription
     public SourcePath aar;
     public Optional<SourcePath> sourceJar;
     public Optional<String> javadocUrl;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
   }
 
 }

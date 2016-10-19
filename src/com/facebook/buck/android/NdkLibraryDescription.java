@@ -362,10 +362,10 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
-    public Optional<ImmutableList<String>> flags;
+    public Optional<ImmutableList<String>> flags = Optional.of(ImmutableList.of());
     public Optional<Boolean> isAsset;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-    public Optional<ImmutableSortedSet<SourcePath>> srcs;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<SourcePath>> srcs = Optional.of(ImmutableSortedSet.of());
   }
 
 }

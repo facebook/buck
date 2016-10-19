@@ -33,23 +33,23 @@ public class ThriftConstructorArg extends AbstractDescriptionArg {
 
   public String name;
   public ImmutableMap<SourcePath, ImmutableList<String>> srcs;
-  public Optional<ImmutableSortedSet<BuildTarget>> deps;
+  public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
 
-  public Optional<ImmutableList<String>> flags;
+  public Optional<ImmutableList<String>> flags = Optional.of(ImmutableList.of());
 
-  public Optional<ImmutableSet<String>> javaOptions;
+  public Optional<ImmutableSet<String>> javaOptions = Optional.of(ImmutableSet.of());
 
   public Optional<String> cppHeaderNamespace;
-  public Optional<SourceList> cppExportedHeaders;
-  public Optional<SourceWithFlagsList> cppSrcs;
-  public Optional<ImmutableSortedSet<BuildTarget>> cppDeps;
-  public Optional<ImmutableSortedSet<BuildTarget>> cpp2Deps;
-  public Optional<ImmutableList<String>> cppCompilerFlags;
-  public Optional<ImmutableList<String>> cpp2CompilerFlags;
-  public Optional<ImmutableSet<String>> cppOptions;
-  public Optional<ImmutableSet<String>> cpp2Options;
+  public Optional<SourceList> cppExportedHeaders = Optional.of(SourceList.EMPTY);
+  public Optional<SourceWithFlagsList> cppSrcs = Optional.of(SourceWithFlagsList.EMPTY);
+  public Optional<ImmutableSortedSet<BuildTarget>> cppDeps = Optional.of(ImmutableSortedSet.of());
+  public Optional<ImmutableSortedSet<BuildTarget>> cpp2Deps = Optional.of(ImmutableSortedSet.of());
+  public Optional<ImmutableList<String>> cppCompilerFlags = Optional.of(ImmutableList.of());
+  public Optional<ImmutableList<String>> cpp2CompilerFlags = Optional.of(ImmutableList.of());
+  public Optional<ImmutableSet<String>> cppOptions = Optional.of(ImmutableSet.of());
+  public Optional<ImmutableSet<String>> cpp2Options = Optional.of(ImmutableSet.of());
 
-  public Optional<ImmutableSet<String>> pyOptions;
+  public Optional<ImmutableSet<String>> pyOptions = Optional.of(ImmutableSet.of());
   public Optional<String> pyBaseModule;
   public Optional<String> pyTwistedBaseModule;
   public Optional<String> pyAsyncioBaseModule;

@@ -186,13 +186,14 @@ public class PrebuiltHaskellLibraryDescription
     public String version;
     public Optional<String> id;
     public SourcePath db;
-    public Optional<ImmutableList<SourcePath>> importDirs;
-    public Optional<ImmutableList<SourcePath>> staticLibs;
-    public Optional<ImmutableMap<String, SourcePath>> sharedLibs;
-    public Optional<ImmutableList<String>> exportedLinkerFlags;
-    public Optional<ImmutableList<String>> exportedCompilerFlags;
-    public Optional<ImmutableSortedSet<SourcePath>> cxxHeaderDirs;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableList<SourcePath>> importDirs = Optional.of(ImmutableList.of());
+    public Optional<ImmutableList<SourcePath>> staticLibs = Optional.of(ImmutableList.of());
+    public Optional<ImmutableMap<String, SourcePath>> sharedLibs = Optional.of(ImmutableMap.of());
+    public Optional<ImmutableList<String>> exportedLinkerFlags = Optional.of(ImmutableList.of());
+    public Optional<ImmutableList<String>> exportedCompilerFlags = Optional.of(ImmutableList.of());
+    public Optional<ImmutableSortedSet<SourcePath>> cxxHeaderDirs =
+        Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
   }
 
 }

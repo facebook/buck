@@ -184,11 +184,13 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
 
   @SuppressFieldNotInitialized
   public static class Arg extends JvmLibraryArg implements HasTests {
-    public Optional<ImmutableSortedSet<SourcePath>> srcs;
-    public Optional<ImmutableSortedSet<SourcePath>> resources;
+    public Optional<ImmutableSortedSet<SourcePath>> srcs = Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<SourcePath>> resources =
+        Optional.of(ImmutableSortedSet.of());
 
     public Optional<Path> proguardConfig;
-    public Optional<ImmutableList<String>> postprocessClassesCommands;
+    public Optional<ImmutableList<String>> postprocessClassesCommands =
+        Optional.of(ImmutableList.of());
 
     @Hint(isInput = false)
     public Optional<Path> resourcesRoot;
@@ -197,12 +199,17 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     public Optional<SourcePath> mavenPomTemplate;
 
     public Optional<Boolean> autodeps;
-    public Optional<ImmutableSortedSet<String>> generatedSymbols;
-    public Optional<ImmutableSortedSet<BuildTarget>> providedDeps;
-    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<String>> generatedSymbols =
+        Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> providedDeps =
+        Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps =
+        Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> deps =
+        Optional.of(ImmutableSortedSet.of());
 
-    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
+    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests =
+        Optional.of(ImmutableSortedSet.of());
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {

@@ -74,7 +74,7 @@ public class PrebuiltRustLibraryDescription
   public static class Arg extends AbstractDescriptionArg {
     public SourcePath rlib;
     public Optional<String> crate;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
     public Optional<Linker.LinkableDepType> linkStyle;
   }
 }

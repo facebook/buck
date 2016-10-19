@@ -84,11 +84,15 @@ public class XcodeWorkspaceConfigDescription
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public Optional<BuildTarget> srcTarget;
-    public Optional<ImmutableSortedSet<BuildTarget>> extraTests;
-    public Optional<ImmutableSortedSet<BuildTarget>> extraTargets;
+    public Optional<ImmutableSortedSet<BuildTarget>> extraTests =
+        Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> extraTargets =
+        Optional.of(ImmutableSortedSet.of());
     public Optional<String> workspaceName;
-    public Optional<ImmutableMap<SchemeActionType, String>> actionConfigNames;
-    public Optional<ImmutableSortedMap<String, BuildTarget>> extraSchemes;
+    public Optional<ImmutableMap<SchemeActionType, String>> actionConfigNames =
+        Optional.of(ImmutableMap.of());
+    public Optional<ImmutableSortedMap<String, BuildTarget>> extraSchemes =
+        Optional.of(ImmutableSortedMap.of());
     public Optional<Boolean> isRemoteRunnable;
     public Optional<String> explicitRunnablePath;
     public Optional<XCScheme.LaunchAction.LaunchStyle> launchStyle;

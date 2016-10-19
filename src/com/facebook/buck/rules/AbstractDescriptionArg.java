@@ -22,5 +22,6 @@ import com.google.common.collect.ImmutableSet;
 
 @SuppressFieldNotInitialized
 public abstract class AbstractDescriptionArg {
-  public Optional<ImmutableSet<SourcePath>> licenses;
+  public Optional<ImmutableSet<SourcePath>> licenses =
+      Optional.of(ImmutableSet.of());
 }

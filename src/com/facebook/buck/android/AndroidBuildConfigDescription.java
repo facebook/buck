@@ -173,7 +173,7 @@ public class AndroidBuildConfigDescription
     public String javaPackage;
 
     /** This will never be absent after this Arg is populated. */
-    public Optional<BuildConfigFields> values;
+    public Optional<BuildConfigFields> values = Optional.of(BuildConfigFields.empty());
 
     /** If present, contents of file can override those of {@link #values}. */
     public Optional<SourcePath> valuesFile;

@@ -446,7 +446,8 @@ public class CxxPythonExtensionDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends CxxConstructorArg {
-    public Optional<PatternMatchedCollection<ImmutableSortedSet<BuildTarget>>> platformDeps;
+    public Optional<PatternMatchedCollection<ImmutableSortedSet<BuildTarget>>> platformDeps =
+        Optional.of(PatternMatchedCollection.of());
     public Optional<String> baseModule;
   }
 

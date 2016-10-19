@@ -128,11 +128,14 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
 
   @SuppressFieldNotInitialized
   public static class Arg extends JvmLibraryArg {
-    public Optional<ImmutableSortedSet<SourcePath>> srcs;
-    public Optional<ImmutableSortedSet<SourcePath>> resources;
-    public Optional<ImmutableList<String>> extraGroovycArguments;
-    public Optional<ImmutableSortedSet<BuildTarget>> providedDeps;
-    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<SourcePath>> srcs = Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<SourcePath>> resources =
+        Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableList<String>> extraGroovycArguments = Optional.of(ImmutableList.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> providedDeps =
+        Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps =
+        Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
   }
 }

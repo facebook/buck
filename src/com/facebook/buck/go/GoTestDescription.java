@@ -357,14 +357,15 @@ public class GoTestDescription implements
     public ImmutableSet<SourcePath> srcs;
     public Optional<BuildTarget> library;
     public Optional<String> packageName;
-    public Optional<List<String>> compilerFlags;
-    public Optional<List<String>> assemblerFlags;
-    public Optional<List<String>> linkerFlags;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-    public Optional<ImmutableSet<String>> contacts;
-    public Optional<ImmutableSet<Label>> labels;
+    public Optional<List<String>> compilerFlags = Optional.of(ImmutableList.of());
+    public Optional<List<String>> assemblerFlags = Optional.of(ImmutableList.of());
+    public Optional<List<String>> linkerFlags = Optional.of(ImmutableList.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSet<String>> contacts = Optional.of(ImmutableSet.of());
+    public Optional<ImmutableSet<Label>> labels = Optional.of(ImmutableSet.of());
     public Optional<Long> testRuleTimeoutMs;
     public Optional<Boolean> runTestSeparately;
-    public Optional<ImmutableSortedSet<SourcePath>> resources;
+    public Optional<ImmutableSortedSet<SourcePath>> resources =
+        Optional.of(ImmutableSortedSet.of());
   }
 }

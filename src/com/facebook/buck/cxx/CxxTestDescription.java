@@ -352,15 +352,15 @@ public class CxxTestDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends CxxBinaryDescription.Arg {
-    public Optional<ImmutableSet<String>> contacts;
-    public Optional<ImmutableSet<Label>> labels;
+    public Optional<ImmutableSet<String>> contacts = Optional.of(ImmutableSet.of());
+    public Optional<ImmutableSet<Label>> labels = Optional.of(ImmutableSet.of());
     public Optional<CxxTestType> framework;
-    public Optional<ImmutableMap<String, String>> env;
-    public Optional<ImmutableList<String>> args;
+    public Optional<ImmutableMap<String, String>> env = Optional.of(ImmutableMap.of());
+    public Optional<ImmutableList<String>> args = Optional.of(ImmutableList.of());
     public Optional<Boolean> runTestSeparately;
     public Optional<Boolean> useDefaultTestMain;
     public Optional<Long> testRuleTimeoutMs;
-    public Optional<ImmutableSortedSet<Path>> resources;
+    public Optional<ImmutableSortedSet<Path>> resources = Optional.of(ImmutableSortedSet.of());
   }
 
 }

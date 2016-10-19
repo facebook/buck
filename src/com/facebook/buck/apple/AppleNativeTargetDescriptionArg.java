@@ -29,7 +29,9 @@ import com.google.common.collect.ImmutableSortedMap;
  */
 @SuppressFieldNotInitialized
 public class AppleNativeTargetDescriptionArg extends CxxLibraryDescription.Arg {
-  public Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs;
-  public Optional<ImmutableList<SourcePath>> extraXcodeSources;
+  public Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs =
+      Optional.of(ImmutableSortedMap.of());
+  public Optional<ImmutableList<SourcePath>> extraXcodeSources =
+      Optional.of(ImmutableList.of());
   public Optional<String> headerPathPrefix;
 }

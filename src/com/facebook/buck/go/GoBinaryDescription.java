@@ -111,9 +111,9 @@ public class GoBinaryDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public ImmutableSet<SourcePath> srcs;
-    public Optional<List<String>> compilerFlags;
-    public Optional<List<String>> assemblerFlags;
-    public Optional<List<String>> linkerFlags;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<List<String>> compilerFlags = Optional.of(ImmutableList.of());
+    public Optional<List<String>> assemblerFlags = Optional.of(ImmutableList.of());
+    public Optional<List<String>> linkerFlags = Optional.of(ImmutableList.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
   }
 }

@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 @SuppressFieldNotInitialized
 public class XcodeScriptDescriptionArg extends AbstractDescriptionArg {
-  public Optional<ImmutableSortedSet<SourcePath>> srcs;
-  public Optional<ImmutableSortedSet<String>> outputs;
+  public Optional<ImmutableSortedSet<SourcePath>> srcs = Optional.of(ImmutableSortedSet.of());
+  public Optional<ImmutableSortedSet<String>> outputs = Optional.of(ImmutableSortedSet.of());
   public String cmd;
 }

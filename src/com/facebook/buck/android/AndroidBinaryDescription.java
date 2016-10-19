@@ -377,40 +377,41 @@ public class AndroidBinaryDescription
     public SourcePath manifest;
     public BuildTarget keystore;
     public Optional<String> packageType;
-    @Hint(isDep = false) public Optional<Set<BuildTarget>> noDx;
+    @Hint(isDep = false) public Optional<Set<BuildTarget>> noDx = Optional.of(ImmutableSet.of());
     public Optional<Boolean> useSplitDex;
     public Optional<Boolean> useLinearAllocSplitDex;
     public Optional<Boolean> minimizePrimaryDexSize;
     public Optional<Boolean> disablePreDex;
     // TODO(natthu): mark this as deprecated.
     public Optional<Boolean> exopackage;
-    public Optional<Set<ExopackageMode>> exopackageModes;
+    public Optional<Set<ExopackageMode>> exopackageModes = Optional.of(ImmutableSet.of());
     public Optional<DexStore> dexCompression;
     public Optional<ProGuardObfuscateStep.SdkProguardType> androidSdkProguardConfig;
     public Optional<Boolean> useAndroidProguardConfigWithOptimizations;
     public Optional<Integer> optimizationPasses;
-    public Optional<List<String>> proguardJvmArgs;
+    public Optional<List<String>> proguardJvmArgs = Optional.of(ImmutableList.of());
     public Optional<SourcePath> proguardConfig;
     public Optional<String> resourceCompression;
     public Optional<Boolean> skipCrunchPngs;
     public Optional<Boolean> includesVectorDrawables;
-    public Optional<List<String>> primaryDexPatterns;
+    public Optional<List<String>> primaryDexPatterns = Optional.of(ImmutableList.of());
     public Optional<SourcePath> primaryDexClassesFile;
     public Optional<SourcePath> primaryDexScenarioFile;
     public Optional<Boolean> primaryDexScenarioOverflowAllowed;
     public Optional<SourcePath> secondaryDexHeadClassesFile;
     public Optional<SourcePath> secondaryDexTailClassesFile;
-    public Optional<Set<BuildTarget>> applicationModuleTargets;
+    public Optional<Set<BuildTarget>> applicationModuleTargets = Optional.of(ImmutableSet.of());
     public Optional<Long> linearAllocHardLimit;
-    public Optional<List<String>> resourceFilter;
-    public Optional<Set<RType>> bannedDuplicateResourceTypes;
+    public Optional<List<String>> resourceFilter = Optional.of(ImmutableList.of());
+    public Optional<Set<RType>> bannedDuplicateResourceTypes = Optional.of(ImmutableSet.of());
     public Optional<Boolean> trimResourceIds;
     public Optional<String> keepResourcePattern;
     public Optional<String> resourceUnionPackage;
-    public Optional<ImmutableSet<String>> locales;
+    public Optional<ImmutableSet<String>> locales = Optional.of(ImmutableSet.of());
     public Optional<Boolean> buildStringSourceMap;
-    public Optional<Set<TargetCpuType>> cpuFilters;
-    public Optional<ImmutableSortedSet<BuildTarget>> preprocessJavaClassesDeps;
+    public Optional<Set<TargetCpuType>> cpuFilters = Optional.of(ImmutableSet.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> preprocessJavaClassesDeps =
+        Optional.of(ImmutableSortedSet.of());
     public Optional<String> preprocessJavaClassesBash;
     public Optional<Boolean> reorderClassesIntraDex;
     public Optional<SourcePath> dexReorderToolFile;
@@ -418,15 +419,17 @@ public class AndroidBinaryDescription
     public Optional<Integer> xzCompressionLevel;
     public Optional<Boolean> packageAssetLibraries;
     public Optional<Boolean> compressAssetLibraries;
-    public Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap;
+    public Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap =
+        Optional.of(ImmutableMap.of());
     public Optional<BuildTarget> nativeLibraryMergeGlue;
     public Optional<BuildTarget> nativeLibraryMergeCodeGenerator;
     public Optional<Boolean> enableRelinker;
-    public Optional<ManifestEntries> manifestEntries;
-    public Optional<BuildConfigFields> buildConfigValues;
+    public Optional<ManifestEntries> manifestEntries = Optional.of(ManifestEntries.empty());
+    public Optional<BuildConfigFields> buildConfigValues = Optional.of(BuildConfigFields.empty());
     public Optional<SourcePath> buildConfigValuesFile;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests =
+        Optional.of(ImmutableSortedSet.of());
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {

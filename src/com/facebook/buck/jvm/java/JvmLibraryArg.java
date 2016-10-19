@@ -39,11 +39,13 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
   public Optional<Path> javac;
   public Optional<SourcePath> javacJar;
   public Optional<Either<BuiltInJavac, SourcePath>> compiler;
-  public Optional<ImmutableList<String>> extraArguments;
-  public Optional<ImmutableSet<Pattern>> removeClasses;
-  public Optional<ImmutableSortedSet<BuildTarget>> annotationProcessorDeps;
-  public Optional<ImmutableList<String>> annotationProcessorParams;
-  public Optional<ImmutableSet<String>> annotationProcessors;
+  public Optional<ImmutableList<String>> extraArguments = Optional.of(ImmutableList.of());
+  public Optional<ImmutableSet<Pattern>> removeClasses = Optional.of(ImmutableSet.of());
+  public Optional<ImmutableSortedSet<BuildTarget>> annotationProcessorDeps =
+      Optional.of(ImmutableSortedSet.of());
+  public Optional<ImmutableList<String>> annotationProcessorParams =
+      Optional.of(ImmutableList.of());
+  public Optional<ImmutableSet<String>> annotationProcessors = Optional.of(ImmutableSet.of());
   public Optional<Boolean> annotationProcessorOnly;
 
   public AnnotationProcessingParams buildAnnotationProcessingParams(

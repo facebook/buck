@@ -64,6 +64,6 @@ public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
     // relative to the build file directory.
     public String importPath;
 
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
   }
 }

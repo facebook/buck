@@ -467,7 +467,8 @@ public class AppleLibraryDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AppleNativeTargetDescriptionArg {
     public Optional<SourcePath> infoPlist;
-    public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
+    public Optional<ImmutableMap<String, String>> infoPlistSubstitutions =
+        Optional.of(ImmutableMap.of());
   }
 
 }

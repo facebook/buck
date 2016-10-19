@@ -145,13 +145,13 @@ public class ShTestDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public SourcePath test;
-    public Optional<ImmutableList<String>> args;
-    public Optional<ImmutableSet<String>> contacts;
-    public Optional<ImmutableSortedSet<Label>> labels;
+    public Optional<ImmutableList<String>> args = Optional.of(ImmutableList.of());
+    public Optional<ImmutableSet<String>> contacts = Optional.of(ImmutableSet.of());
+    public Optional<ImmutableSortedSet<Label>> labels = Optional.of(ImmutableSortedSet.of());
     public Optional<Long> testRuleTimeoutMs;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-    public Optional<ImmutableSortedSet<Path>> resources;
-    public Optional<ImmutableMap<String, String>> env;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<Path>> resources = Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableMap<String, String>> env = Optional.of(ImmutableMap.of());
   }
 
 }

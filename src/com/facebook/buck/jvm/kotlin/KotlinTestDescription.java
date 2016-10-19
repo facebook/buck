@@ -163,16 +163,16 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
 
   @SuppressFieldNotInitialized
   public static class Arg extends KotlinLibraryDescription.Arg {
-    public Optional<ImmutableSortedSet<String>> contacts;
-    public Optional<ImmutableSortedSet<Label>> labels;
-    public Optional<ImmutableList<String>> vmArgs;
+    public Optional<ImmutableSortedSet<String>> contacts = Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<Label>> labels = Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableList<String>> vmArgs = Optional.of(ImmutableList.of());
     public Optional<TestType> testType;
     public Optional<Boolean> runTestSeparately;
     public Optional<ForkMode> forkMode;
     public Optional<Level> stdErrLogLevel;
     public Optional<Level> stdOutLogLevel;
     public Optional<Long> testRuleTimeoutMs;
-    public Optional<ImmutableMap<String, String>> env;
+    public Optional<ImmutableMap<String, String>> env = Optional.of(ImmutableMap.of());
 
     public boolean getRunTestSeparately() {
       return runTestSeparately.or(false);

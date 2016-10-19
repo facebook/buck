@@ -209,7 +209,7 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
     public Optional<String> rDotJavaPackage;
     public Optional<SourcePath> manifest;
 
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
     public Optional<Boolean> resourceUnion;
   }
 }

@@ -135,10 +135,10 @@ public class DTestDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public SourceList srcs;
-    public Optional<ImmutableSortedSet<String>> contacts;
-    public Optional<ImmutableSortedSet<Label>> labels;
+    public Optional<ImmutableSortedSet<String>> contacts = Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<Label>> labels = Optional.of(ImmutableSortedSet.of());
     public Optional<Long> testRuleTimeoutMs;
     public ImmutableSortedSet<BuildTarget> deps;
-    public Optional<ImmutableList<String>> linkerFlags;
+    public Optional<ImmutableList<String>> linkerFlags = Optional.of(ImmutableList.of());
   }
 }

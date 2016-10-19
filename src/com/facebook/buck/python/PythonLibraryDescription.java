@@ -101,14 +101,17 @@ public class PythonLibraryDescription implements Description<Arg> {
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg implements HasTests {
-    public Optional<SourceList> srcs;
-    public Optional<PatternMatchedCollection<SourceList>> platformSrcs;
-    public Optional<SourceList> resources;
-    public Optional<PatternMatchedCollection<SourceList>> platformResources;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<SourceList> srcs = Optional.of(SourceList.EMPTY);
+    public Optional<PatternMatchedCollection<SourceList>> platformSrcs =
+        Optional.of(PatternMatchedCollection.of());
+    public Optional<SourceList> resources = Optional.of(SourceList.EMPTY);
+    public Optional<PatternMatchedCollection<SourceList>> platformResources =
+        Optional.of(PatternMatchedCollection.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
     public Optional<String> baseModule;
     public Optional<Boolean> zipSafe;
-    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
+    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests =
+        Optional.of(ImmutableSortedSet.of());
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {

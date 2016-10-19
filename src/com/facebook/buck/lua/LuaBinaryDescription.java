@@ -829,7 +829,7 @@ public class LuaBinaryDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public String mainModule;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
     public Optional<BuildTarget> nativeStarterLibrary;
     public Optional<String> pythonPlatform;
     public Optional<LuaConfig.PackageStyle> packageStyle;

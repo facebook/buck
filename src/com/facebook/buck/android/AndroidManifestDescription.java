@@ -93,6 +93,6 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
      * android_library rules will be filtered out to become dependent source files for the
      * {@link AndroidManifest}.
      */
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
   }
 }

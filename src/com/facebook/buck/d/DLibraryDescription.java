@@ -169,7 +169,7 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public SourceList srcs;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-    public Optional<ImmutableList<String>> linkerFlags;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableList<String>> linkerFlags = Optional.of(ImmutableList.of());
   }
 }

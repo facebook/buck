@@ -336,17 +336,20 @@ public class SwiftLibraryDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public Optional<String> moduleName;
-    public Optional<ImmutableSortedSet<SourcePath>> srcs;
-    public Optional<ImmutableList<String>> compilerFlags;
-    public Optional<ImmutableSortedSet<FrameworkPath>> frameworks;
-    public Optional<ImmutableSortedSet<FrameworkPath>> libraries;
+    public Optional<ImmutableSortedSet<SourcePath>> srcs = Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableList<String>> compilerFlags = Optional.of(ImmutableList.of());
+    public Optional<ImmutableSortedSet<FrameworkPath>> frameworks =
+        Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<FrameworkPath>> libraries =
+        Optional.of(ImmutableSortedSet.of());
     public Optional<Boolean> enableObjcInterop;
     public Optional<Pattern> supportedPlatformsRegex;
     public Optional<String> soname;
     public Optional<SourcePath> bridgingHeader;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
     public Optional<NativeLinkable.Linkage> preferredLinkage;
-    public Optional<ImmutableMap<Path, SourcePath>> headersSearchPath;
+    public Optional<ImmutableMap<Path, SourcePath>> headersSearchPath =
+        Optional.of(ImmutableMap.of());
   }
 
 }

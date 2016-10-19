@@ -94,10 +94,10 @@ public class OCamlLibraryDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
-    public Optional<ImmutableList<OCamlSource>> srcs;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-    public Optional<ImmutableList<String>> compilerFlags;
-    public Optional<ImmutableList<String>> linkerFlags;
+    public Optional<ImmutableList<OCamlSource>> srcs = Optional.of(ImmutableList.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableList<String>> compilerFlags = Optional.of(ImmutableList.of());
+    public Optional<ImmutableList<String>> linkerFlags = Optional.of(ImmutableList.of());
     public Optional<String> warningsFlags;
     public Optional<Boolean> bytecodeOnly;
   }

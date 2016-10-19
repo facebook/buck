@@ -93,9 +93,11 @@ public class PrebuiltAppleFrameworkDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public SourcePath framework;
-    public Optional<ImmutableSortedSet<FrameworkPath>> frameworks;
+    public Optional<ImmutableSortedSet<FrameworkPath>> frameworks =
+        Optional.of(ImmutableSortedSet.of());
     public Optional<Pattern> supportedPlatformsRegex;
-    public Optional<ImmutableList<String>> exportedLinkerFlags;
-    public Optional<PatternMatchedCollection<ImmutableList<String>>> exportedPlatformLinkerFlags;
+    public Optional<ImmutableList<String>> exportedLinkerFlags = Optional.of(ImmutableList.of());
+    public Optional<PatternMatchedCollection<ImmutableList<String>>> exportedPlatformLinkerFlags =
+        Optional.of(PatternMatchedCollection.of());
   }
 }

@@ -32,6 +32,9 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractSourceWithFlagsList {
 
+  public static final SourceWithFlagsList EMPTY =
+      SourceWithFlagsList.ofUnnamedSources(ImmutableSortedSet.of());
+
   public enum Type {
     UNNAMED,
     NAMED,

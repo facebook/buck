@@ -165,9 +165,10 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     public Optional<String> bash;
     public Optional<String> cmd;
     public Optional<String> cmdExe;
-    public Optional<ImmutableList<SourcePath>> srcs;
+    public Optional<ImmutableList<SourcePath>> srcs = Optional.of(ImmutableList.of());
 
-    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
+    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests =
+        Optional.of(ImmutableSortedSet.of());
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {

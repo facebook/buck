@@ -72,9 +72,9 @@ public class LuaLibraryDescription implements Description<LuaLibraryDescription.
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
-    public Optional<SourceList> srcs;
+    public Optional<SourceList> srcs = Optional.of(SourceList.EMPTY);
     public Optional<String> baseModule;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
   }
 
 }

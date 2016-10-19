@@ -259,9 +259,12 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     public Either<AppleBundleExtension, String> extension;
     public BuildTarget binary;
     public SourcePath infoPlist;
-    public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
-    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> deps;
-    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
+    public Optional<ImmutableMap<String, String>> infoPlistSubstitutions =
+        Optional.of(ImmutableMap.of());
+    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> deps =
+        Optional.of(ImmutableSortedSet.of());
+    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests =
+        Optional.of(ImmutableSortedSet.of());
     public Optional<String> xcodeProductType;
     public Optional<String> productName;
 

@@ -81,6 +81,6 @@ public class PrebuiltNativeLibraryDescription
     public Optional<Boolean> isAsset;
     public Path nativeLibs;
 
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
   }
 }

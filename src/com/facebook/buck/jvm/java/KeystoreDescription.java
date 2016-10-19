@@ -57,6 +57,6 @@ public class KeystoreDescription implements Description<KeystoreDescription.Arg>
     public SourcePath store;
     public SourcePath properties;
 
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
   }
 }

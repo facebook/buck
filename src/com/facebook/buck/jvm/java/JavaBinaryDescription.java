@@ -151,13 +151,14 @@ public class JavaBinaryDescription implements
 
   @SuppressFieldNotInitialized
   public static class Args extends AbstractDescriptionArg implements HasTests {
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
     public Optional<String> mainClass;
     public Optional<SourcePath> manifestFile;
     public Optional<Boolean> mergeManifests;
     public Optional<Path> metaInfDirectory;
-    public Optional<ImmutableSet<Pattern>> blacklist;
-    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
+    public Optional<ImmutableSet<Pattern>> blacklist = Optional.of(ImmutableSet.of());
+    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests =
+        Optional.of(ImmutableSortedSet.of());
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {

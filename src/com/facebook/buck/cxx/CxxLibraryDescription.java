@@ -872,16 +872,20 @@ public class CxxLibraryDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends LinkableCxxConstructorArg {
-    public Optional<SourceList> exportedHeaders;
-    public Optional<PatternMatchedCollection<SourceList>> exportedPlatformHeaders;
-    public Optional<ImmutableList<String>> exportedPreprocessorFlags;
+    public Optional<SourceList> exportedHeaders = Optional.of(SourceList.EMPTY);
+    public Optional<PatternMatchedCollection<SourceList>> exportedPlatformHeaders =
+        Optional.of(PatternMatchedCollection.of());
+    public Optional<ImmutableList<String>> exportedPreprocessorFlags =
+        Optional.of(ImmutableList.of());
     public Optional<PatternMatchedCollection<ImmutableList<String>>>
-        exportedPlatformPreprocessorFlags;
+        exportedPlatformPreprocessorFlags = Optional.of(PatternMatchedCollection.of());
     public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>>
-        exportedLangPreprocessorFlags;
-    public Optional<ImmutableList<String>> exportedLinkerFlags;
-    public Optional<PatternMatchedCollection<ImmutableList<String>>> exportedPlatformLinkerFlags;
-    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
+        exportedLangPreprocessorFlags = Optional.of(ImmutableMap.of());
+    public Optional<ImmutableList<String>> exportedLinkerFlags = Optional.of(ImmutableList.of());
+    public Optional<PatternMatchedCollection<ImmutableList<String>>> exportedPlatformLinkerFlags =
+        Optional.of(PatternMatchedCollection.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps =
+        Optional.of(ImmutableSortedSet.of());
     public Optional<Pattern> supportedPlatformsRegex;
     public Optional<String> soname;
     public Optional<Boolean> forceStatic;

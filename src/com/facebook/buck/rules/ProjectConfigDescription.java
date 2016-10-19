@@ -53,9 +53,9 @@ public class ProjectConfigDescription implements Description<ProjectConfigDescri
   @SuppressFieldNotInitialized
     public static class Arg extends AbstractDescriptionArg {
     public Optional<BuildTarget> srcTarget;
-    public Optional<ImmutableList<String>> srcRoots;
+    public Optional<ImmutableList<String>> srcRoots = Optional.of(ImmutableList.of());
     public Optional<BuildTarget> testTarget;
-    public Optional<ImmutableList<String>> testRoots;
+    public Optional<ImmutableList<String>> testRoots = Optional.of(ImmutableList.of());
     public Optional<Boolean> isIntellijPlugin;
   }
 }

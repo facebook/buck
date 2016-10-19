@@ -583,30 +583,36 @@ public class PrebuiltCxxLibraryDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
-    public Optional<ImmutableList<String>> includeDirs;
+    public Optional<ImmutableList<String>> includeDirs = Optional.of(ImmutableList.of());
     public Optional<String> libName;
     public Optional<String> libDir;
     public Optional<Boolean> headerOnly;
-    public Optional<SourceList> exportedHeaders;
-    public Optional<PatternMatchedCollection<SourceList>> exportedPlatformHeaders;
+    public Optional<SourceList> exportedHeaders = Optional.of(SourceList.EMPTY);
+    public Optional<PatternMatchedCollection<SourceList>> exportedPlatformHeaders =
+        Optional.of(PatternMatchedCollection.of());
     public Optional<String> headerNamespace;
     public Optional<Boolean> provided;
     public Optional<Boolean> linkWhole;
     public Optional<Boolean> forceStatic;
-    public Optional<ImmutableList<String>> exportedPreprocessorFlags;
+    public Optional<ImmutableList<String>> exportedPreprocessorFlags =
+        Optional.of(ImmutableList.of());
     public Optional<PatternMatchedCollection<ImmutableList<String>>>
-        exportedPlatformPreprocessorFlags;
+        exportedPlatformPreprocessorFlags = Optional.of(PatternMatchedCollection.of());
     public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>>
-        exportedLangPreprocessorFlags;
-    public Optional<ImmutableList<String>> exportedLinkerFlags;
-    public Optional<PatternMatchedCollection<ImmutableList<String>>> exportedPlatformLinkerFlags;
+        exportedLangPreprocessorFlags = Optional.of(ImmutableMap.of());
+    public Optional<ImmutableList<String>> exportedLinkerFlags = Optional.of(ImmutableList.of());
+    public Optional<PatternMatchedCollection<ImmutableList<String>>> exportedPlatformLinkerFlags =
+        Optional.of(PatternMatchedCollection.of());
     public Optional<String> soname;
     public Optional<Boolean> linkWithoutSoname;
     public Optional<Boolean> canBeAsset;
-    public Optional<ImmutableSortedSet<FrameworkPath>> frameworks;
-    public Optional<ImmutableSortedSet<FrameworkPath>> libraries;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
+    public Optional<ImmutableSortedSet<FrameworkPath>> frameworks =
+        Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<FrameworkPath>> libraries =
+        Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps =
+        Optional.of(ImmutableSortedSet.of());
     public Optional<Pattern> supportedPlatformsRegex;
   }
 

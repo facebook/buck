@@ -69,6 +69,6 @@ public class AppleResourceDescription implements Description<AppleResourceDescri
   public static class Arg extends AbstractDescriptionArg {
     public Set<SourcePath> dirs;
     public Set<SourcePath> files;
-    public Optional<Set<SourcePath>> variants;
+    public Optional<Set<SourcePath>> variants = Optional.of(ImmutableSet.of());
   }
 }

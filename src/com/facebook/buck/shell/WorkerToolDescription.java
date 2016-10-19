@@ -154,7 +154,7 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
-    public Optional<ImmutableMap<String, String>> env;
+    public Optional<ImmutableMap<String, String>> env = Optional.of(ImmutableMap.of());
     public Optional<String> args;
     public BuildTarget exe;
     public Optional<Integer> maxWorkers;

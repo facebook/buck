@@ -338,42 +338,45 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
   @SuppressFieldNotInitialized
   public static class Args {
 
-    public Optional<ImmutableList<String>> exportedPreprocessorFlags;
-    public Optional<ImmutableList<SourcePath>> includeDirs;
+    public Optional<ImmutableList<String>> exportedPreprocessorFlags =
+        Optional.of(ImmutableList.of());
+    public Optional<ImmutableList<SourcePath>> includeDirs = Optional.of(ImmutableList.of());
 
     /**
      * The link arguments to use when linking using the static link style.
      */
-    public Optional<ImmutableList<String>> staticLink;
+    public Optional<ImmutableList<String>> staticLink = Optional.of(ImmutableList.of());
 
     /**
      * Libraries references in the static link args above.
      */
-    public Optional<ImmutableList<SourcePath>> staticLibs;
+    public Optional<ImmutableList<SourcePath>> staticLibs = Optional.of(ImmutableList.of());
 
     /**
      * The link arguments to use when linking using the static-pic link style.
      */
-    public Optional<ImmutableList<String>> staticPicLink;
+    public Optional<ImmutableList<String>> staticPicLink = Optional.of(ImmutableList.of());
 
     /**
      * Libraries references in the static-pic link args above.
      */
-    public Optional<ImmutableList<SourcePath>> staticPicLibs;
+    public Optional<ImmutableList<SourcePath>> staticPicLibs = Optional.of(ImmutableList.of());
 
     /**
      * The link arguments to use when linking using the shared link style.
      */
-    public Optional<ImmutableList<String>> sharedLink;
+    public Optional<ImmutableList<String>> sharedLink = Optional.of(ImmutableList.of());
 
     /**
      * Libraries references in the shared link args above.
      */
-    public Optional<ImmutableMap<String, SourcePath>> sharedLibs;
-    public Optional<ImmutableMap<String, SourcePath>> providedSharedLibs;
+    public Optional<ImmutableMap<String, SourcePath>> sharedLibs = Optional.of(ImmutableMap.of());
+    public Optional<ImmutableMap<String, SourcePath>> providedSharedLibs =
+        Optional.of(ImmutableMap.of());
 
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps =
+        Optional.of(ImmutableSortedSet.of());
 
   }
 

@@ -90,8 +90,8 @@ public class AndroidInstrumentationTestDescription
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public BuildTarget apk;
-    public Optional<ImmutableSortedSet<Label>> labels;
-    public Optional<ImmutableSortedSet<String>> contacts;
+    public Optional<ImmutableSortedSet<Label>> labels = Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<String>> contacts = Optional.of(ImmutableSortedSet.of());
     public Optional<Long> testRuleTimeoutMs;
   }
 

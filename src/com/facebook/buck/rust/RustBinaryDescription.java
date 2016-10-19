@@ -77,9 +77,9 @@ public class RustBinaryDescription implements Description<RustBinaryDescription.
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public ImmutableSortedSet<SourcePath> srcs;
-    public Optional<ImmutableSortedSet<String>> features;
-    public Optional<List<String>> rustcFlags;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<String>> features = Optional.of(ImmutableSortedSet.of());
+    public Optional<List<String>> rustcFlags = Optional.of(ImmutableList.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
     public Optional<Linker.LinkableDepType> linkStyle;
   }
 }

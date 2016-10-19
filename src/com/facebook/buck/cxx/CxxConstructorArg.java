@@ -38,27 +38,37 @@ import com.google.common.collect.ImmutableSortedSet;
 public class CxxConstructorArg extends AbstractDescriptionArg
     implements HasDefaultFlavors, HasTests {
 
-  public Optional<ImmutableSortedSet<SourceWithFlags>> srcs;
-  public Optional<PatternMatchedCollection<ImmutableSortedSet<SourceWithFlags>>> platformSrcs;
-  public Optional<SourceList> headers;
-  public Optional<PatternMatchedCollection<SourceList>> platformHeaders;
+  public Optional<ImmutableSortedSet<SourceWithFlags>> srcs = Optional.of(ImmutableSortedSet.of());
+  public Optional<PatternMatchedCollection<ImmutableSortedSet<SourceWithFlags>>> platformSrcs =
+      Optional.of(PatternMatchedCollection.of());
+  public Optional<SourceList> headers = Optional.of(SourceList.EMPTY);
+  public Optional<PatternMatchedCollection<SourceList>> platformHeaders =
+      Optional.of(PatternMatchedCollection.of());
   public Optional<SourcePath> prefixHeader;
-  public Optional<ImmutableList<String>> compilerFlags;
-  public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langCompilerFlags;
-  public Optional<PatternMatchedCollection<ImmutableList<String>>> platformCompilerFlags;
-  public Optional<ImmutableList<String>> preprocessorFlags;
-  public Optional<PatternMatchedCollection<ImmutableList<String>>> platformPreprocessorFlags;
-  public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langPreprocessorFlags;
-  public Optional<ImmutableList<String>> linkerFlags;
-  public Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags;
-  public Optional<ImmutableSortedSet<FrameworkPath>> frameworks;
-  public Optional<ImmutableSortedSet<FrameworkPath>> libraries;
-  public Optional<ImmutableSortedSet<BuildTarget>> deps;
+  public Optional<ImmutableList<String>> compilerFlags = Optional.of(ImmutableList.of());
+  public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langCompilerFlags =
+      Optional.of(ImmutableMap.of());
+  public Optional<PatternMatchedCollection<ImmutableList<String>>> platformCompilerFlags =
+      Optional.of(PatternMatchedCollection.of());
+  public Optional<ImmutableList<String>> preprocessorFlags = Optional.of(ImmutableList.of());
+  public Optional<PatternMatchedCollection<ImmutableList<String>>> platformPreprocessorFlags =
+      Optional.of(PatternMatchedCollection.of());
+  public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langPreprocessorFlags =
+      Optional.of(ImmutableMap.of());
+  public Optional<ImmutableList<String>> linkerFlags = Optional.of(ImmutableList.of());
+  public Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags =
+      Optional.of(PatternMatchedCollection.of());
+  public Optional<ImmutableSortedSet<FrameworkPath>> frameworks =
+      Optional.of(ImmutableSortedSet.of());
+  public Optional<ImmutableSortedSet<FrameworkPath>> libraries =
+      Optional.of(ImmutableSortedSet.of());
+  public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
   public Optional<String> headerNamespace;
   public Optional<Linker.CxxRuntimeType> cxxRuntimeType;
 
-  @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
-  public Optional<ImmutableMap<String, Flavor>> defaults;
+  @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests =
+      Optional.of(ImmutableSortedSet.of());
+  public Optional<ImmutableMap<String, Flavor>> defaults = Optional.of(ImmutableMap.of());
 
   @Override
   public ImmutableSortedSet<BuildTarget> getTests() {

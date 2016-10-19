@@ -460,8 +460,8 @@ public class AppleTestDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends AppleNativeTargetDescriptionArg implements HasAppleBundleFields {
-    public Optional<ImmutableSortedSet<String>> contacts;
-    public Optional<ImmutableSortedSet<Label>> labels;
+    public Optional<ImmutableSortedSet<String>> contacts = Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<Label>> labels = Optional.of(ImmutableSortedSet.of());
     public Optional<Boolean> canGroup;
     public Optional<Boolean> runTestSeparately;
     public Optional<Boolean> isUiTest;
@@ -469,10 +469,12 @@ public class AppleTestDescription implements
 
     // Bundle related fields.
     public SourcePath infoPlist;
-    public Optional<ImmutableMap<String, String>> infoPlistSubstitutions;
+    public Optional<ImmutableMap<String, String>> infoPlistSubstitutions =
+        Optional.of(ImmutableMap.of());
     public Optional<String> xcodeProductType;
 
-    public Optional<ImmutableMap<String, String>> destinationSpecifier;
+    public Optional<ImmutableMap<String, String>> destinationSpecifier =
+        Optional.of(ImmutableMap.of());
 
     public Optional<Long> testRuleTimeoutMs;
 

@@ -159,14 +159,15 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
-    public Optional<ImmutableSortedSet<String>> modules;
-    public Optional<ImmutableSortedSet<BuildTarget>> moduleDeps;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    public Optional<ImmutableSortedSet<String>> modules = Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> moduleDeps =
+        Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
 
     /**
      * In practice, these may be values such as {@code -Xmx512m}.
      */
-    public Optional<ImmutableList<String>> vmArgs;
+    public Optional<ImmutableList<String>> vmArgs = Optional.of(ImmutableList.of());
 
     /** This will be passed to the GWT Compiler's {@code -style} flag. */
     public Optional<Style> style;
@@ -187,6 +188,6 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
      * In practice, these may be values such as {@code -XenableClosureCompiler},
      * {@code -XdisableClassMetadata}, {@code -XdisableCastChecking}, or {@code -XfragmentMerge}.
      */
-    public Optional<ImmutableList<String>> experimentalArgs;
+    public Optional<ImmutableList<String>> experimentalArgs = Optional.of(ImmutableList.of());
   }
 }
