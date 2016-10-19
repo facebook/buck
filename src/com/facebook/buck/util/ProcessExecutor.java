@@ -455,20 +455,8 @@ public class ProcessExecutor {
               "%s" + "\n",
           message,
           getExitCode(),
-          truncate(getStdout().or("")),
-          truncate(getStderr().or("")));
-    }
-
-    private static String truncate(String data) {
-      final int keepFirstChars = 10000;
-      final int keepLastChars = 10000;
-      final String truncateMessage = "...\n<truncated>\n...";
-      if (data.length() <= keepFirstChars + keepLastChars + truncateMessage.length()) {
-        return data;
-      }
-      return data.substring(0, keepFirstChars) +
-          truncateMessage +
-          data.substring(data.length() - keepLastChars);
+          MoreStrings.truncatePretty(getStdout().or("")),
+          MoreStrings.truncatePretty(getStderr().or("")));
     }
   }
 }

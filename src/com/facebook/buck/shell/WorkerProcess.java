@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
@@ -151,23 +152,10 @@ public class WorkerProcess {
       LOG.debug(e, "Error closing worker process %s.", this.hashCode());
 
       LOG.debug("Worker process stderr at %s", this.stdErr.toString());
-      Optional<Reader> fileReader = filesystem.getReaderIfFileExists(this.stdErr);
-      if (fileReader.isPresent()) {
-        LineReader lineReader = new LineReader(fileReader.get());
-        try {
-          for (String line = lineReader.readLine(); line != null; line = lineReader.readLine()) {
-            LOG.error("stderr: %s", line);
-          }
-        } catch (IOException e2) {
-          LOG.debug(e2, "Failed to read stderr file");
-        } finally {
-          try {
-            fileReader.get().close();
-          } catch (IOException e3) {
-            LOG.debug(e3, "Failed to close stderr reader");
-          }
-        }
-      }
+
+      String workerStderr = MoreStrings.truncatePretty(filesystem.readFileIfItExists(this.stdErr).or(""))
+          .trim().replace("\n", "\nstderr: ");
+      LOG.error("stderr: %s", workerStderr);
 
       throw new HumanReadableException(e,
           "Error while trying to close the process %s at the end of the build.",
