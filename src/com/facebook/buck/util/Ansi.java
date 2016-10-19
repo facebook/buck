@@ -31,7 +31,7 @@ public final class Ansi {
   private static final String BOLD = "\u001B[1m";
 
   private static final String BLACK = "\u001B[30m";
-  private static final String GREY = "\u001B[30;1m";
+  private static final String GREY = "\u001B[0;37m";
 
   private static final String WHITE = "\u001B[37m";
 
