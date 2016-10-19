@@ -66,7 +66,7 @@ public class PrebuiltAppleFrameworkDescription implements
         resolver,
         new SourcePathResolver(resolver),
         args.framework,
-        args.frameworks.or(ImmutableSortedSet.of()),
+        args.frameworks,
         args.supportedPlatformsRegex,
         input -> CxxFlags.getFlags(
             args.exportedLinkerFlags,
@@ -93,11 +93,10 @@ public class PrebuiltAppleFrameworkDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public SourcePath framework;
-    public Optional<ImmutableSortedSet<FrameworkPath>> frameworks =
-        Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<FrameworkPath> frameworks = ImmutableSortedSet.of();
     public Optional<Pattern> supportedPlatformsRegex;
-    public Optional<ImmutableList<String>> exportedLinkerFlags = Optional.of(ImmutableList.of());
-    public Optional<PatternMatchedCollection<ImmutableList<String>>> exportedPlatformLinkerFlags =
-        Optional.of(PatternMatchedCollection.of());
+    public ImmutableList<String> exportedLinkerFlags = ImmutableList.of();
+    public PatternMatchedCollection<ImmutableList<String>> exportedPlatformLinkerFlags =
+        PatternMatchedCollection.of();
   }
 }

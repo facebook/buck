@@ -87,11 +87,11 @@ public class AndroidPrebuiltAarDescription
 
     Iterable<PrebuiltJar> javaDeps = Iterables.concat(
         Iterables.filter(
-            buildRuleResolver.getAllRules(args.deps.get()),
+            buildRuleResolver.getAllRules(args.deps),
             PrebuiltJar.class),
         Iterables.transform(
             Iterables.filter(
-                buildRuleResolver.getAllRules(args.deps.get()),
+                buildRuleResolver.getAllRules(args.deps),
                 AndroidPrebuiltAar.class),
             AndroidPrebuiltAar::getPrebuiltJar));
 
@@ -188,7 +188,7 @@ public class AndroidPrebuiltAarDescription
     public SourcePath aar;
     public Optional<SourcePath> sourceJar;
     public Optional<String> javadocUrl;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
   }
 
 }

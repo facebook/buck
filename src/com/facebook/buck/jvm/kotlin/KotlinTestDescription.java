@@ -93,7 +93,7 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
 
     KotlincToJarStepFactory stepFactory = new KotlincToJarStepFactory(
         kotlinBuckConfig.getKotlinCompiler().get(),
-        args.extraKotlincArguments.get());
+        args.extraKotlincArguments);
 
     JavaLibrary testsLibrary =
         resolver.addToIndex(
@@ -103,16 +103,16 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
                         BuildRules.getExportedRules(
                             Iterables.concat(
                                 params.getDeclaredDeps().get(),
-                                resolver.getAllRules(args.providedDeps.get()))),
+                                resolver.getAllRules(args.providedDeps))),
                         pathResolver.filterBuildRuleInputs(
                             defaultJavacOptions.getInputs(pathResolver))))
                     .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR),
                 pathResolver,
-                args.srcs.get(),
+                args.srcs,
                 ResourceValidator.validateResources(
                     pathResolver,
                     params.getProjectFilesystem(),
-                    args.resources.get()),
+                    args.resources),
                 defaultJavacOptions.getGeneratedSourceFolderName(),
                 /* proguardConfig */ Optional.absent(),
                 /* postprocessClassesCommands */ ImmutableList.of(),
@@ -138,14 +138,14 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
                 pathResolver,
                 testsLibrary,
                 /* additionalClasspathEntries */ ImmutableSet.of(),
-                args.labels.get(),
-                args.contacts.get(),
+                args.labels,
+                args.contacts,
                 args.testType.or(TestType.JUNIT),
                 javaOptions.getJavaRuntimeLauncher(),
-                args.vmArgs.get(),
+                args.vmArgs,
                 /* nativeLibsEnvironment */ ImmutableMap.of(),
                 args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
-                args.env.get(),
+                args.env,
                 args.getRunTestSeparately(),
                 args.getForkMode(),
                 args.stdOutLogLevel,
@@ -163,16 +163,16 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
 
   @SuppressFieldNotInitialized
   public static class Arg extends KotlinLibraryDescription.Arg {
-    public Optional<ImmutableSortedSet<String>> contacts = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<Label>> labels = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableList<String>> vmArgs = Optional.of(ImmutableList.of());
+    public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
+    public ImmutableSortedSet<Label> labels = ImmutableSortedSet.of();
+    public ImmutableList<String> vmArgs = ImmutableList.of();
     public Optional<TestType> testType;
     public Optional<Boolean> runTestSeparately;
     public Optional<ForkMode> forkMode;
     public Optional<Level> stdErrLogLevel;
     public Optional<Level> stdOutLogLevel;
     public Optional<Long> testRuleTimeoutMs;
-    public Optional<ImmutableMap<String, String>> env = Optional.of(ImmutableMap.of());
+    public ImmutableMap<String, String> env = ImmutableMap.of();
 
     public boolean getRunTestSeparately() {
       return runTestSeparately.or(false);

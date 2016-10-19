@@ -58,11 +58,11 @@ public class ExportedDepsClosureResolver {
     TargetNode<?> targetNode = targetGraph.get(buildTarget);
     if (targetNode.getType().equals(JavaLibraryDescription.TYPE)) {
       JavaLibraryDescription.Arg arg = (JavaLibraryDescription.Arg) targetNode.getConstructorArg();
-      exportedDeps = arg.exportedDeps.get();
+      exportedDeps = arg.exportedDeps;
     } else if (targetNode.getType().equals(AndroidLibraryDescription.TYPE)) {
       AndroidLibraryDescription.Arg arg =
           (AndroidLibraryDescription.Arg) targetNode.getConstructorArg();
-      exportedDeps = arg.exportedDeps.get();
+      exportedDeps = arg.exportedDeps;
     }
 
     ImmutableSet<BuildTarget> exportedDepsClosure = FluentIterable.from(exportedDeps)

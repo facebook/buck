@@ -59,7 +59,7 @@ public class AndroidBinaryBuilder extends AbstractNodeBuilder<AndroidBinaryDescr
   }
 
   public AndroidBinaryBuilder setOriginalDeps(ImmutableSortedSet<BuildTarget> originalDeps) {
-    arg.deps = Optional.of(originalDeps);
+    arg.deps = originalDeps;
     return this;
   }
 
@@ -113,7 +113,7 @@ public class AndroidBinaryBuilder extends AbstractNodeBuilder<AndroidBinaryDescr
 
   public AndroidBinaryBuilder setResourceFilter(ResourceFilter resourceFilter) {
     List<String> rawFilters = ImmutableList.copyOf(resourceFilter.getFilter());
-    arg.resourceFilter = Optional.of(rawFilters);
+    arg.resourceFilter = rawFilters;
     return this;
   }
 

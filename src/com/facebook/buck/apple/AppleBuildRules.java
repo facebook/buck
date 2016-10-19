@@ -246,8 +246,8 @@ public final class AppleBuildRules {
         targetNode.getType() == CxxLibraryDescription.TYPE) {
       CxxLibraryDescription.Arg arg =
           (CxxLibraryDescription.Arg) targetNode.getConstructorArg();
-      LOG.verbose("Exported deps of node %s: %s", targetNode, arg.exportedDeps.get());
-      Iterable<TargetNode<?>> exportedNodes = targetGraph.getAll(arg.exportedDeps.get());
+      LOG.verbose("Exported deps of node %s: %s", targetNode, arg.exportedDeps);
+      Iterable<TargetNode<?>> exportedNodes = targetGraph.getAll(arg.exportedDeps);
       directDepsBuilder.addAll(exportedNodes);
       exportedDepsBuilder.addAll(exportedNodes);
     }

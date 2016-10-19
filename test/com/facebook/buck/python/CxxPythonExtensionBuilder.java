@@ -43,7 +43,7 @@ public class CxxPythonExtensionBuilder extends
 
   public CxxPythonExtensionBuilder setPlatformDeps(
       PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps) {
-    arg.platformDeps = Optional.of(platformDeps);
+    arg.platformDeps = platformDeps;
     return this;
   }
 

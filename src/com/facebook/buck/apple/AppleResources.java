@@ -79,9 +79,7 @@ public class AppleResources {
         AppleResourceDescription.Arg appleResource = (AppleResourceDescription.Arg) constructorArg;
         builder.addAllResourceDirs(appleResource.dirs);
         builder.addAllResourceFiles(appleResource.files);
-        if (appleResource.variants.isPresent()) {
-          builder.addAllResourceVariantFiles(appleResource.variants.get());
-        }
+        builder.addAllResourceVariantFiles(appleResource.variants);
       } else {
         Preconditions.checkState(constructorArg instanceof ReactNativeLibraryArgs);
         BuildTarget buildTarget = resourceNode.getBuildTarget();

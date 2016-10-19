@@ -50,7 +50,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       return new Genrule(
           params,
           new SourcePathResolver(resolver),
-          args.srcs.get(),
+          args.srcs,
           cmd,
           bash,
           cmdExe,
@@ -59,7 +59,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       return new GenruleBinary(
           params,
           new SourcePathResolver(resolver),
-          args.srcs.get(),
+          args.srcs,
           cmd,
           bash,
           cmdExe,

@@ -219,7 +219,7 @@ public class VersionedTargetGraphBuilder {
       try {
         // Update the `dep` parameter with the new declared deps.
         if (field.getName().equals("deps")) {
-          field.set(newConstructorArg, Optional.of(declaredDeps));
+          field.set(newConstructorArg, declaredDeps);
         // Clear-out the versioned deps field, as we only use this for generating the resolved
         // graph and we want to avoid the version alias nodes showing up in the new nodes extra
         // deps.
@@ -227,7 +227,7 @@ public class VersionedTargetGraphBuilder {
             field.getName().equals(TargetGraphVersionTransformations.VERSIONED_DEPS_FIELD_NAME)) {
           field.set(
               newConstructorArg,
-              Optional.of(ImmutableSortedMap.<BuildTarget, Optional<Constraint>>of()));
+              ImmutableSortedMap.<BuildTarget, Optional<Constraint>>of());
         // Use all other fields as-is.
         } else {
           field.set(newConstructorArg, field.get(constructorArg));

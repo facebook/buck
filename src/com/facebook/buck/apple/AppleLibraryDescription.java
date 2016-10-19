@@ -215,8 +215,8 @@ public class AppleLibraryDescription implements
         Optional.absent(),
         args.infoPlist.get(),
         args.infoPlistSubstitutions,
-        args.deps.get(),
-        args.tests.get(),
+        args.deps,
+        args.tests,
         debugFormat);
   }
 
@@ -409,7 +409,7 @@ public class AppleLibraryDescription implements
         "Could not find cxx platform in:\n%s",
         Joiner.on(", ").join(buildTarget.getFlavors()));
     ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
-    for (BuildTarget dep : args.deps.get()) {
+    for (BuildTarget dep : args.deps) {
       Optional<FrameworkDependencies> frameworks =
           resolver.requireMetadata(
               BuildTarget.builder(dep)
@@ -467,8 +467,7 @@ public class AppleLibraryDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AppleNativeTargetDescriptionArg {
     public Optional<SourcePath> infoPlist;
-    public Optional<ImmutableMap<String, String>> infoPlistSubstitutions =
-        Optional.of(ImmutableMap.of());
+    public ImmutableMap<String, String> infoPlistSubstitutions = ImmutableMap.of();
   }
 
 }

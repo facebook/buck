@@ -23,7 +23,6 @@ import static org.hamcrest.Matchers.everyItem;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -42,9 +41,9 @@ public class CxxFlagsTest {
   public void getLanguageFlagsMultimapIsEmpty() {
     assertThat(
         CxxFlags.getLanguageFlags(
-            Optional.absent(),
-            Optional.absent(),
-            Optional.absent(),
+            ImmutableList.of(),
+            PatternMatchedCollection.of(),
+            ImmutableMap.of(),
             CxxPlatformUtils.DEFAULT_PLATFORM).entries(),
         empty());
   }
@@ -53,9 +52,9 @@ public class CxxFlagsTest {
   public void getLanguageFlagsMultimapContainsAllSourceTypes() {
     ImmutableMultimap<CxxSource.Type, String> flags =
         CxxFlags.getLanguageFlags(
-            Optional.of(ImmutableList.of("flag")),
-            Optional.absent(),
-            Optional.absent(),
+            ImmutableList.of("flag"),
+            PatternMatchedCollection.of(),
+            ImmutableMap.of(),
             CxxPlatformUtils.DEFAULT_PLATFORM);
     assertThat(
         ImmutableSet.copyOf(CxxSource.Type.values()),
@@ -67,13 +66,12 @@ public class CxxFlagsTest {
   public void getLanguageFlagsMultimapContainsSomeSourceTypes() {
     ImmutableMultimap<CxxSource.Type, String> flags =
         CxxFlags.getLanguageFlags(
-            Optional.absent(),
-            Optional.absent(),
-            Optional.of(
-                ImmutableMap.of(
-                    CxxSource.Type.C, ImmutableList.of("foo", "bar"),
-                    CxxSource.Type.CXX, ImmutableList.of("baz", "blech"),
-                    CxxSource.Type.OBJC, ImmutableList.of("quux", "xyzzy"))),
+            ImmutableList.of(),
+            PatternMatchedCollection.of(),
+            ImmutableMap.of(
+                CxxSource.Type.C, ImmutableList.of("foo", "bar"),
+                CxxSource.Type.CXX, ImmutableList.of("baz", "blech"),
+                CxxSource.Type.OBJC, ImmutableList.of("quux", "xyzzy")),
             CxxPlatformUtils.DEFAULT_PLATFORM);
     assertThat(
         ImmutableSet.of(CxxSource.Type.C, CxxSource.Type.CXX, CxxSource.Type.OBJC),
@@ -88,13 +86,12 @@ public class CxxFlagsTest {
   public void getLanguageFlagsMultimapContainsConcatenatedFlags() {
     ImmutableMultimap<CxxSource.Type, String> flags =
         CxxFlags.getLanguageFlags(
-            Optional.of(ImmutableList.of("common")),
-            Optional.absent(),
-            Optional.of(
-                ImmutableMap.of(
-                    CxxSource.Type.C, ImmutableList.of("foo", "bar"),
-                    CxxSource.Type.CXX, ImmutableList.of("baz", "blech"),
-                    CxxSource.Type.OBJC, ImmutableList.of("quux", "xyzzy"))),
+            ImmutableList.of("common"),
+            PatternMatchedCollection.of(),
+            ImmutableMap.of(
+                CxxSource.Type.C, ImmutableList.of("foo", "bar"),
+                CxxSource.Type.CXX, ImmutableList.of("baz", "blech"),
+                CxxSource.Type.OBJC, ImmutableList.of("quux", "xyzzy")),
             CxxPlatformUtils.DEFAULT_PLATFORM);
     assertThat(
         ImmutableList.of("common", "foo", "bar"), equalTo(flags.get(CxxSource.Type.C)));
@@ -112,11 +109,10 @@ public class CxxFlagsTest {
     // Test that platform macros are expanded via `getFlags`.
     assertThat(
         CxxFlags.getFlags(
-            Optional.of(ImmutableList.of("-I$MACRO")),
-            Optional.of(
-                new PatternMatchedCollection.Builder<ImmutableList<String>>()
-                    .add(Pattern.compile(".*"), ImmutableList.of("-F$MACRO"))
-                    .build()),
+            ImmutableList.of("-I$MACRO"),
+            new PatternMatchedCollection.Builder<ImmutableList<String>>()
+                .add(Pattern.compile(".*"), ImmutableList.of("-F$MACRO"))
+                .build(),
             CxxPlatformUtils.DEFAULT_PLATFORM
                 .withFlagMacros(ImmutableMap.of("MACRO", "expansion"))),
         containsInAnyOrder(
@@ -126,14 +122,12 @@ public class CxxFlagsTest {
     // Test that platform macros are expanded via `getLanguageFlags`.
     assertThat(
         CxxFlags.getLanguageFlags(
-            Optional.of(ImmutableList.of("-I$MACRO")),
-            Optional.of(
-                new PatternMatchedCollection.Builder<ImmutableList<String>>()
-                    .add(Pattern.compile(".*"), ImmutableList.of("-F$MACRO"))
-                    .build()),
-            Optional.of(
-                ImmutableMap.of(
-                    CxxSource.Type.C, ImmutableList.of("-isystem$MACRO"))),
+            ImmutableList.of("-I$MACRO"),
+            new PatternMatchedCollection.Builder<ImmutableList<String>>()
+                .add(Pattern.compile(".*"), ImmutableList.of("-F$MACRO"))
+                .build(),
+            ImmutableMap.of(
+                CxxSource.Type.C, ImmutableList.of("-isystem$MACRO")),
             CxxPlatformUtils.DEFAULT_PLATFORM
                 .withFlagMacros(ImmutableMap.of("MACRO", "expansion")))
             .get(CxxSource.Type.C),

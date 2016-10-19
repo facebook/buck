@@ -24,7 +24,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
-import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -149,40 +148,38 @@ public abstract class AbstractNodeBuilder<A> {
     // Grab them in the unsafest way I know.
     try {
       Field depsField = arg.getClass().getField("deps");
-      Object optional = depsField.get(arg);
+      Object deps = depsField.get(arg);
 
-      if (optional == null) {
+      if (deps == null) {
         return ImmutableSortedSet.of();
       }
       // Here's a whole series of assumptions in one lump of a Bad Idea.
-      return (ImmutableSortedSet<BuildTarget>) ((Optional<?>) optional).get();
+      return (ImmutableSortedSet<BuildTarget>) deps;
     } catch (ReflectiveOperationException ignored) {
       // Field doesn't exist: no deps.
       return ImmutableSortedSet.of();
     }
   }
 
-  protected <C extends Comparable<?>> Optional<ImmutableSortedSet<C>> amend(
-      Optional<ImmutableSortedSet<C>> existing,
+  protected <C extends Comparable<?>> ImmutableSortedSet<C> amend(
+      ImmutableSortedSet<C> existing,
       C instance) {
     ImmutableSortedSet.Builder<C> toReturn = ImmutableSortedSet.naturalOrder();
-    if (existing != null && existing.isPresent()) {
-      toReturn.addAll(existing.get());
+    if (existing != null) {
+      toReturn.addAll(existing);
     }
     toReturn.add(instance);
-    return Optional.of(toReturn.build());
+    return toReturn.build();
   }
 
   // Thanks to type erasure, this needs a unique name.
-  protected <C extends Comparable<?>> Optional<ImmutableSet<C>> amendSet(
-      Optional<ImmutableSet<C>> existing,
+  protected <C extends Comparable<?>> ImmutableSet<C> amendSet(
+      ImmutableSet<C> existing,
       C instance) {
     ImmutableSet.Builder<C> toReturn = ImmutableSet.builder();
-    if (existing.isPresent()) {
-      toReturn.addAll(existing.get());
-    }
+    toReturn.addAll(existing);
     toReturn.add(instance);
-    return Optional.of(toReturn.build());
+    return toReturn.build();
   }
 
   /**

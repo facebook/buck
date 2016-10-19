@@ -58,12 +58,10 @@ class TargetGraphVersionTransformations {
     Optional<Field> versionedDepsField = getVersionedDepsField(node);
     if (versionedDepsField.isPresent()) {
       try {
-        Optional<ImmutableMap<BuildTarget, Optional<Constraint>>> versionedDeps =
-            (Optional<ImmutableMap<BuildTarget, Optional<Constraint>>>)
+        ImmutableMap<BuildTarget, Optional<Constraint>> versionedDeps =
+            (ImmutableMap<BuildTarget, Optional<Constraint>>)
                 versionedDepsField.get().get(node.getConstructorArg());
-        if (versionedDeps.isPresent()) {
-          return versionedDeps.get();
-        }
+        return versionedDeps;
       } catch (IllegalAccessException e) {
         throw new IllegalStateException(e);
       }

@@ -47,7 +47,6 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.AbstractGenruleStep;
@@ -140,12 +139,12 @@ public class ApkGenruleTest {
     arg.cmd = Optional.of("python signer.py $APK key.properties > $OUT");
     arg.cmdExe = Optional.of("");
     arg.out = "signed_fb4a.apk";
-    arg.srcs = Optional.of(ImmutableList.<SourcePath>of(
+    arg.srcs = ImmutableList.of(
         new PathSourcePath(projectFilesystem, fileSystem.getPath("src/com/facebook/signer.py")),
         new PathSourcePath(
             projectFilesystem,
-            fileSystem.getPath("src/com/facebook/key.properties"))));
-    arg.tests = Optional.of(ImmutableSortedSet.<BuildTarget>of());
+            fileSystem.getPath("src/com/facebook/key.properties")));
+    arg.tests = ImmutableSortedSet.of();
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
         .setProjectFilesystem(projectFilesystem).build();
     ApkGenrule apkGenrule =

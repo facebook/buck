@@ -55,15 +55,12 @@ class SwiftDescriptions {
       SwiftLibraryDescription.Arg output,
       final A args,
       BuildTarget buildTarget) {
-    output.srcs = args.srcs.transform(
-        input -> filterSwiftSources(sourcePathResolver, args.srcs.get()));
-    output.headersSearchPath = args.exportedHeaders.transform(
-         input -> FluentIterable.from(input.getPaths())
-            .uniqueIndex(path -> {
-              Preconditions.checkArgument(path instanceof PathSourcePath);
-              return ((PathSourcePath) path).getRelativePath();
-            })
-    );
+    output.srcs = filterSwiftSources(sourcePathResolver, args.srcs);
+    output.headersSearchPath = FluentIterable.from(args.exportedHeaders.getPaths())
+        .uniqueIndex(path -> {
+          Preconditions.checkArgument(path instanceof PathSourcePath);
+          return ((PathSourcePath) path).getRelativePath();
+        });
     output.compilerFlags = args.compilerFlags;
     output.frameworks = args.frameworks;
     output.libraries = args.libraries;

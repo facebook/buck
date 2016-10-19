@@ -65,15 +65,14 @@ public class CxxFlags {
   }
 
   public static ImmutableList<String> getFlags(
-      Optional<ImmutableList<String>> flags,
-      Optional<PatternMatchedCollection<ImmutableList<String>>> platformFlags,
+      ImmutableList<String> flags,
+      PatternMatchedCollection<ImmutableList<String>> platformFlags,
       CxxPlatform platform) {
     return FluentIterable
-        .from(flags.or(ImmutableList.of()))
+        .from(flags)
         .append(
             Iterables.concat(
                 platformFlags
-                    .or(PatternMatchedCollection.of())
                     .getMatchingValues(platform.getFlavor().toString())))
         .transform(getTranslateMacrosFn(platform))
         .toList();
@@ -92,9 +91,9 @@ public class CxxFlags {
   }
 
   public static ImmutableListMultimap<CxxSource.Type, String> getLanguageFlags(
-      Optional<ImmutableList<String>> flags,
-      Optional<PatternMatchedCollection<ImmutableList<String>>> platformFlags,
-      Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> languageFlags,
+      ImmutableList<String> flags,
+      PatternMatchedCollection<ImmutableList<String>> platformFlags,
+      ImmutableMap<CxxSource.Type, ImmutableList<String>> languageFlags,
       CxxPlatform platform) {
 
     ImmutableListMultimap.Builder<CxxSource.Type, String> langFlags =
@@ -103,7 +102,7 @@ public class CxxFlags {
     langFlags.putAll(toLanguageFlags(getFlags(flags, platformFlags, platform)));
 
     for (ImmutableMap.Entry<CxxSource.Type, ImmutableList<String>> entry :
-         languageFlags.or(ImmutableMap.of()).entrySet()) {
+         languageFlags.entrySet()) {
       langFlags.putAll(
           entry.getKey(),
           Iterables.transform(entry.getValue(), getTranslateMacrosFn(platform)));

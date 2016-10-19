@@ -335,8 +335,8 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
     Pair<String, Iterable<BuildRule>> makefilePair = generateMakefile(params, resolver);
 
     ImmutableSortedSet<SourcePath> sources;
-    if (args.srcs.isPresent() && !args.srcs.get().isEmpty()) {
-      sources = args.srcs.get();
+    if (!args.srcs.isEmpty()) {
+      sources = args.srcs;
     } else {
       sources = findSources(
           params.getProjectFilesystem(),
@@ -351,7 +351,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
         getGeneratedMakefilePath(params.getBuildTarget(), params.getProjectFilesystem()),
         makefilePair.getFirst(),
         sources,
-        args.flags.get(),
+        args.flags,
         args.isAsset.or(false),
         ndkVersion,
         MACRO_HANDLER.getExpander(
@@ -362,10 +362,10 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
-    public Optional<ImmutableList<String>> flags = Optional.of(ImmutableList.of());
+    public ImmutableList<String> flags = ImmutableList.of();
     public Optional<Boolean> isAsset;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<SourcePath>> srcs = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
   }
 
 }

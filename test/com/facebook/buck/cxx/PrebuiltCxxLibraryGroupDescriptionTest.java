@@ -29,7 +29,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.google.common.base.Optional;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -53,9 +53,9 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
             .getPreprocessorFlags(),
         Matchers.equalTo(
             CxxFlags.getLanguageFlags(
-                Optional.of(ImmutableList.of("-flag")),
-                Optional.absent(),
-                Optional.absent(),
+                ImmutableList.of("-flag"),
+                PatternMatchedCollection.of(),
+                ImmutableMap.of(),
                 CxxPlatformUtils.DEFAULT_PLATFORM)));
   }
 

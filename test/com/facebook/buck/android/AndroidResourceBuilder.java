@@ -37,7 +37,7 @@ public class AndroidResourceBuilder extends AbstractNodeBuilder<AndroidResourceD
   }
 
   public AndroidResourceBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.of(deps);
+    arg.deps = deps;
     return this;
   }
 

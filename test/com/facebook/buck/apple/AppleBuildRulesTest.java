@@ -63,9 +63,9 @@ public class AppleBuildRulesTest {
 
     AppleTestBuilder appleTestBuilder = new AppleTestBuilder(
         BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386"))
-        .setContacts(Optional.of(ImmutableSortedSet.of()))
-        .setLabels(Optional.of(ImmutableSortedSet.of()))
-        .setDeps(Optional.of(ImmutableSortedSet.of()));
+        .setContacts(ImmutableSortedSet.of())
+        .setLabels(ImmutableSortedSet.of())
+        .setDeps(ImmutableSortedSet.of());
 
     TargetNode<?> appleTestNode = appleTestBuilder.build();
     BuildRule testRule = appleTestBuilder.build(
@@ -113,7 +113,7 @@ public class AppleBuildRulesTest {
     BuildTarget rootTarget = BuildTargetFactory.newInstance("//foo:root");
     TargetNode<?> rootNode = AppleLibraryBuilder
         .createBuilder(rootTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget, bundleTarget)))
+        .setDeps(ImmutableSortedSet.of(libraryTarget, bundleTarget))
         .build();
 
     Iterable<TargetNode<?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
@@ -144,8 +144,8 @@ public class AppleBuildRulesTest {
         BuildTargetFactory.newInstance("//bar:lib#" + CxxDescriptionEnhancer.SHARED_FLAVOR);
     TargetNode<?> barLibNode = AppleLibraryBuilder
         .createBuilder(barLibTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(fooFrameworkTarget)))
-        .setExportedDeps(Optional.of(ImmutableSortedSet.of(fooFrameworkTarget)))
+        .setDeps(ImmutableSortedSet.of(fooFrameworkTarget))
+        .setExportedDeps(ImmutableSortedSet.of(fooFrameworkTarget))
         .build();
 
     BuildTarget barFrameworkTarget = BuildTargetFactory.newInstance("//bar:framework");
@@ -158,7 +158,7 @@ public class AppleBuildRulesTest {
     BuildTarget rootTarget = BuildTargetFactory.newInstance("//foo:root");
     TargetNode<?> rootNode = AppleLibraryBuilder
         .createBuilder(rootTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(barFrameworkTarget)))
+        .setDeps(ImmutableSortedSet.of(barFrameworkTarget))
         .build();
 
     Iterable<TargetNode<?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
@@ -199,8 +199,8 @@ public class AppleBuildRulesTest {
         BuildTargetFactory.newInstance("//bar:lib#" + CxxDescriptionEnhancer.SHARED_FLAVOR);
     TargetNode<?> barLibNode = AppleLibraryBuilder
         .createBuilder(barLibTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(fooFrameworkTarget)))
-        .setExportedDeps(Optional.of(ImmutableSortedSet.of(fooFrameworkTarget)))
+        .setDeps(ImmutableSortedSet.of(fooFrameworkTarget))
+        .setExportedDeps(ImmutableSortedSet.of(fooFrameworkTarget))
         .build();
 
     BuildTarget barFrameworkTarget = BuildTargetFactory.newInstance("//bar:framework");
@@ -214,7 +214,7 @@ public class AppleBuildRulesTest {
         BuildTargetFactory.newInstance("//baz:lib#" + CxxDescriptionEnhancer.SHARED_FLAVOR);
     TargetNode<?> bazLibNode = AppleLibraryBuilder
         .createBuilder(bazLibTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(barFrameworkTarget)))
+        .setDeps(ImmutableSortedSet.of(barFrameworkTarget))
         .build();
 
     BuildTarget bazFrameworkTarget = BuildTargetFactory.newInstance("//baz:framework");
@@ -269,7 +269,7 @@ public class AppleBuildRulesTest {
         BuildTargetFactory.newInstance("//bar:lib#" + CxxDescriptionEnhancer.SHARED_FLAVOR);
     TargetNode<?> barLibNode = AppleLibraryBuilder
         .createBuilder(barLibTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(fooGenruleTarget)))
+        .setDeps(ImmutableSortedSet.of(fooGenruleTarget))
         .build();
     BuildTarget barFrameworkTarget = BuildTargetFactory.newInstance("//bar:framework");
     TargetNode<?> barFrameworkNode = AppleBundleBuilder
@@ -319,7 +319,7 @@ public class AppleBuildRulesTest {
         BuildTargetFactory.newInstance("//bar:lib#" + CxxDescriptionEnhancer.SHARED_FLAVOR);
     TargetNode<?> barLibNode = AppleLibraryBuilder
         .createBuilder(barLibTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(fooGenruleTarget)))
+        .setDeps(ImmutableSortedSet.of(fooGenruleTarget))
         .build();
     BuildTarget barFrameworkTarget = BuildTargetFactory.newInstance("//bar:framework");
     TargetNode<?> barFrameworkNode = AppleBundleBuilder
@@ -369,7 +369,7 @@ public class AppleBuildRulesTest {
         BuildTargetFactory.newInstance("//bar:lib#" + CxxDescriptionEnhancer.SHARED_FLAVOR);
     TargetNode<?> barLibNode = AppleLibraryBuilder
         .createBuilder(barLibTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(fooGenruleTarget)))
+        .setDeps(ImmutableSortedSet.of(fooGenruleTarget))
         .build();
     BuildTarget barFrameworkTarget = BuildTargetFactory.newInstance("//bar:framework");
     TargetNode<?> barFrameworkNode = AppleBundleBuilder
@@ -382,7 +382,7 @@ public class AppleBuildRulesTest {
         BuildTargetFactory.newInstance("//baz:lib#" + CxxDescriptionEnhancer.SHARED_FLAVOR);
     TargetNode<?> bazLibNode = AppleLibraryBuilder
         .createBuilder(bazLibTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(barFrameworkTarget)))
+        .setDeps(ImmutableSortedSet.of(barFrameworkTarget))
         .build();
     BuildTarget bazFrameworkTarget = BuildTargetFactory.newInstance("//baz:framework");
     TargetNode<?> bazFrameworkNode = AppleBundleBuilder

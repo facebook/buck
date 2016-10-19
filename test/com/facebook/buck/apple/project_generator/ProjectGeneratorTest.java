@@ -309,7 +309,7 @@ public class ProjectGeneratorTest {
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
-        .setSrcs(Optional.of(ImmutableSortedSet.of()))
+        .setSrcs(ImmutableSortedSet.of())
         .setHeaders(
             ImmutableSortedSet.of(
                 new FakeSourcePath("HeaderGroup1/foo.h"),
@@ -392,7 +392,7 @@ public class ProjectGeneratorTest {
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
-        .setSrcs(Optional.of(ImmutableSortedSet.of()))
+        .setSrcs(ImmutableSortedSet.of())
         .setHeaders(
             ImmutableSortedMap.of(
                 "any/name.h", new FakeSourcePath("HeaderGroup1/foo.h"),
@@ -709,7 +709,7 @@ public class ProjectGeneratorTest {
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
-        .setSrcs(Optional.of(ImmutableSortedSet.of()))
+        .setSrcs(ImmutableSortedSet.of())
         .setHeaders(
             ImmutableSortedMap.of(
                 "key.h", new FakeSourcePath("value.h")))
@@ -732,7 +732,7 @@ public class ProjectGeneratorTest {
 
     node = AppleLibraryBuilder
         .createBuilder(buildTarget)
-        .setSrcs(Optional.of(ImmutableSortedSet.of()))
+        .setSrcs(ImmutableSortedSet.of())
         .setHeaders(
             ImmutableSortedMap.of(
                 "new-key.h", new FakeSourcePath("value.h")))
@@ -763,7 +763,7 @@ public class ProjectGeneratorTest {
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
-        .setSrcs(Optional.of(ImmutableSortedSet.of()))
+        .setSrcs(ImmutableSortedSet.of())
         .setHeaders(
             ImmutableSortedMap.of(
                 "key.h", new FakeSourcePath("value.h")))
@@ -786,7 +786,7 @@ public class ProjectGeneratorTest {
 
     node = AppleLibraryBuilder
         .createBuilder(buildTarget)
-        .setSrcs(Optional.of(ImmutableSortedSet.of()))
+        .setSrcs(ImmutableSortedSet.of())
         .setHeaders(
             ImmutableSortedMap.of(
                 "key.h", new FakeSourcePath("new-value.h")))
@@ -816,25 +816,23 @@ public class ProjectGeneratorTest {
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
         .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    SourceWithFlags.of(
-                        new FakeSourcePath("foo.h"),
-                        ImmutableList.of("public")),
-                    SourceWithFlags.of(
-                        new FakeSourcePath("bar.h")))))
-        .setTests(Optional.of(ImmutableSortedSet.of(testTarget)))
+            ImmutableSortedSet.of(
+                SourceWithFlags.of(
+                    new FakeSourcePath("foo.h"),
+                    ImmutableList.of("public")),
+                SourceWithFlags.of(
+                    new FakeSourcePath("bar.h"))))
+        .setTests(ImmutableSortedSet.of(testTarget))
         .build();
 
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Default",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Default",
+                ImmutableMap.of()))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+        .setDeps(ImmutableSortedSet.of(libraryTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -874,13 +872,12 @@ public class ProjectGeneratorTest {
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
         .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    SourceWithFlags.of(
-                        new FakeSourcePath("foo.h"),
-                        ImmutableList.of("public")),
-                    SourceWithFlags.of(
-                        new FakeSourcePath("bar.h")))))
+            ImmutableSortedSet.of(
+                SourceWithFlags.of(
+                    new FakeSourcePath("foo.h"),
+                    ImmutableList.of("public")),
+                SourceWithFlags.of(
+                    new FakeSourcePath("bar.h"))))
         .build();
 
     TargetNode<?> bundleNode = AppleBundleBuilder
@@ -888,18 +885,17 @@ public class ProjectGeneratorTest {
         .setBinary(libraryTarget)
         .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setTests(Optional.of(ImmutableSortedSet.of(testTarget)))
+        .setTests(ImmutableSortedSet.of(testTarget))
         .build();
 
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Default",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Default",
+                ImmutableMap.of()))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setDeps(Optional.of(ImmutableSortedSet.of(bundleTarget)))
+        .setDeps(ImmutableSortedSet.of(bundleTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -939,13 +935,12 @@ public class ProjectGeneratorTest {
     TargetNode<?> binaryNode = AppleBinaryBuilder
         .createBuilder(binaryTarget)
         .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    SourceWithFlags.of(
-                        new FakeSourcePath("foo.h"),
-                        ImmutableList.of("public")),
-                    SourceWithFlags.of(
-                        new FakeSourcePath("bar.h")))))
+            ImmutableSortedSet.of(
+                SourceWithFlags.of(
+                    new FakeSourcePath("foo.h"),
+                    ImmutableList.of("public")),
+                SourceWithFlags.of(
+                    new FakeSourcePath("bar.h"))))
         .build();
 
     TargetNode<?> bundleNode = AppleBundleBuilder
@@ -953,18 +948,17 @@ public class ProjectGeneratorTest {
         .setBinary(binaryTarget)
         .setExtension(Either.ofLeft(AppleBundleExtension.APP))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setTests(Optional.of(ImmutableSortedSet.of(testTarget)))
+        .setTests(ImmutableSortedSet.of(testTarget))
         .build();
 
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Default",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Default",
+                ImmutableMap.of()))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setDeps(Optional.of(ImmutableSortedSet.of(bundleTarget)))
+        .setDeps(ImmutableSortedSet.of(bundleTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1054,20 +1048,15 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
         .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    SourceWithFlags.of(
-                        new FakeSourcePath("foo.m"), ImmutableList.of("-foo")),
-                    SourceWithFlags.of(new FakeSourcePath("bar.m")))))
-        .setExtraXcodeSources(
-            Optional.of(
-                ImmutableList.of(
-                    new FakeSourcePath("libsomething.a"))))
+            ImmutableSortedSet.of(
+                SourceWithFlags.of(
+                    new FakeSourcePath("foo.m"), ImmutableList.of("-foo")),
+                SourceWithFlags.of(new FakeSourcePath("bar.m"))))
+        .setExtraXcodeSources(ImmutableList.of(new FakeSourcePath("libsomething.a")))
         .setHeaders(
             ImmutableSortedSet.of(new FakeSourcePath("foo.h")))
         .build();
@@ -1183,10 +1172,9 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
         .setHeaderPathPrefix(Optional.of("MyHeaderPathPrefix"))
         .setPrefixHeader(Optional.of(new FakeSourcePath("Foo/Foo-Prefix.pch")))
         .build();
@@ -1223,10 +1211,9 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
         .setHeaderPathPrefix(Optional.of("MyHeaderPathPrefix"))
         .build();
 
@@ -1257,10 +1244,9 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of("PUBLIC_HEADERS_FOLDER_PATH", "FooHeaders"))))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of("PUBLIC_HEADERS_FOLDER_PATH", "FooHeaders")))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1293,10 +1279,9 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1322,12 +1307,11 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
-        .setCompilerFlags(Optional.of(ImmutableList.of("-fhello")))
-        .setPreprocessorFlags(Optional.of(ImmutableList.of("-fworld")))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
+        .setCompilerFlags(ImmutableList.of("-fhello"))
+        .setPreprocessorFlags(ImmutableList.of("-fworld"))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1351,23 +1335,21 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
-        .setCompilerFlags(Optional.of(ImmutableList.of("-fhello")))
-        .setPreprocessorFlags(Optional.of(ImmutableList.of("-fworld")))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
+        .setCompilerFlags(ImmutableList.of("-fhello"))
+        .setPreprocessorFlags(ImmutableList.of("-fworld"))
         .build();
 
     BuildTarget dependentBuildTarget = BuildTarget.builder(rootPath, "//foo", "bin").build();
     TargetNode<?> dependentNode = AppleBinaryBuilder
         .createBuilder(dependentBuildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
-        .setDeps(Optional.of(ImmutableSortedSet.of(buildTarget)))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
+        .setDeps(ImmutableSortedSet.of(buildTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1390,11 +1372,10 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
-        .setExportedPreprocessorFlags(Optional.of(ImmutableList.of("-DHELLO")))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
+        .setExportedPreprocessorFlags(ImmutableList.of("-DHELLO"))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1418,22 +1399,20 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
-        .setExportedPreprocessorFlags(Optional.of(ImmutableList.of("-DHELLO")))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
+        .setExportedPreprocessorFlags(ImmutableList.of("-DHELLO"))
         .build();
 
     BuildTarget dependentBuildTarget = BuildTarget.builder(rootPath, "//foo", "bin").build();
     TargetNode<?> dependentNode = AppleBinaryBuilder
         .createBuilder(dependentBuildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
-        .setDeps(Optional.of(ImmutableSortedSet.of(buildTarget)))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
+        .setDeps(ImmutableSortedSet.of(buildTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1457,11 +1436,10 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
-        .setLinkerFlags(Optional.of(ImmutableList.of("-Xlinker", "-lhello")))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
+        .setLinkerFlags(ImmutableList.of("-Xlinker", "-lhello"))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1484,22 +1462,20 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
-        .setLinkerFlags(Optional.of(ImmutableList.of("-lhello")))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
+        .setLinkerFlags(ImmutableList.of("-lhello"))
         .build();
 
     BuildTarget dependentBuildTarget = BuildTarget.builder(rootPath, "//foo", "bin").build();
     TargetNode<?> dependentNode = AppleBinaryBuilder
         .createBuilder(dependentBuildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
-        .setDeps(Optional.of(ImmutableSortedSet.of(buildTarget)))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
+        .setDeps(ImmutableSortedSet.of(buildTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1522,11 +1498,10 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
-        .setExportedLinkerFlags(Optional.of(ImmutableList.of("-Xlinker", "-lhello")))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
+        .setExportedLinkerFlags(ImmutableList.of("-Xlinker", "-lhello"))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1549,22 +1524,20 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
-        .setExportedLinkerFlags(Optional.of(ImmutableList.of("-Xlinker", "-lhello")))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
+        .setExportedLinkerFlags(ImmutableList.of("-Xlinker", "-lhello"))
         .build();
 
     BuildTarget dependentBuildTarget = BuildTarget.builder(rootPath, "//foo", "bin").build();
     TargetNode<?> dependentNode = AppleBinaryBuilder
         .createBuilder(dependentBuildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
-        .setDeps(Optional.of(ImmutableSortedSet.of(buildTarget)))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
+        .setDeps(ImmutableSortedSet.of(buildTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1713,12 +1686,11 @@ public class ProjectGeneratorTest {
     TargetNode<?> dependentNode = AppleBinaryBuilder
         .createBuilder(dependentBuildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
-        .setPreprocessorFlags(Optional.of(ImmutableList.of("-D__APPLE__")))
-        .setDeps(Optional.of(ImmutableSortedSet.of(buildTarget)))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
+        .setPreprocessorFlags(ImmutableList.of("-D__APPLE__"))
+        .setDeps(ImmutableSortedSet.of(buildTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1757,12 +1729,11 @@ public class ProjectGeneratorTest {
     TargetNode<?> dependentNode = AppleBinaryBuilder
         .createBuilder(dependentBuildTarget)
         .setPlatformCompilerFlags(
-            Optional.of(
-                PatternMatchedCollection
-                    .<ImmutableList<String>>builder()
-                    .add(Pattern.compile("iphone.*"), ImmutableList.of("-ffoo-iphone"))
-                    .build()))
-        .setDeps(Optional.of(ImmutableSortedSet.of(buildTarget)))
+            PatternMatchedCollection
+                .<ImmutableList<String>>builder()
+                .add(Pattern.compile("iphone.*"), ImmutableList.of("-ffoo-iphone"))
+                .build())
+        .setDeps(ImmutableSortedSet.of(buildTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1812,10 +1783,9 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of("CUSTOM_SETTING", "VALUE"))))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of("CUSTOM_SETTING", "VALUE")))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1861,36 +1831,31 @@ public class ProjectGeneratorTest {
     BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setConfigs(Optional.of(configs))
-        .setSrcs(
-            Optional.of(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.m")))))
+        .setConfigs(configs)
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.m"))))
         .setFrameworks(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    FrameworkPath.ofSourceTreePath(
-                        new SourceTreePath(
-                            PBXReference.SourceTree.SDKROOT,
-                            Paths.get("Library.framework"),
-                            Optional.absent())))))
+            ImmutableSortedSet.of(
+                FrameworkPath.ofSourceTreePath(
+                    new SourceTreePath(
+                        PBXReference.SourceTree.SDKROOT,
+                        Paths.get("Library.framework"),
+                        Optional.absent()))))
         .build();
 
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "xctest").build();
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
-        .setConfigs(Optional.of(configs))
+        .setConfigs(configs)
         .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("fooTest.m")))))
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("fooTest.m"))))
         .setFrameworks(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    FrameworkPath.ofSourceTreePath(
-                        new SourceTreePath(
-                            PBXReference.SourceTree.SDKROOT,
-                            Paths.get("Test.framework"),
-                            Optional.absent())))))
-        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+            ImmutableSortedSet.of(
+                FrameworkPath.ofSourceTreePath(
+                    new SourceTreePath(
+                        PBXReference.SourceTree.SDKROOT,
+                        Paths.get("Test.framework"),
+                        Optional.absent()))))
+        .setDeps(ImmutableSortedSet.of(libraryTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -1935,36 +1900,31 @@ public class ProjectGeneratorTest {
     BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setConfigs(Optional.of(configs))
-        .setSrcs(
-            Optional.of(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.m")))))
+        .setConfigs(configs)
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.m"))))
         .setFrameworks(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    FrameworkPath.ofSourceTreePath(
-                        new SourceTreePath(
-                            PBXReference.SourceTree.SDKROOT,
-                            Paths.get("Library.framework"),
-                            Optional.absent())))))
+            ImmutableSortedSet.of(
+                FrameworkPath.ofSourceTreePath(
+                    new SourceTreePath(
+                        PBXReference.SourceTree.SDKROOT,
+                        Paths.get("Library.framework"),
+                        Optional.absent()))))
         .build();
 
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "xctest").build();
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
-        .setConfigs(Optional.of(configs))
+        .setConfigs(configs)
         .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("fooTest.m")))))
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("fooTest.m"))))
         .setFrameworks(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    FrameworkPath.ofSourceTreePath(
-                        new SourceTreePath(
-                            PBXReference.SourceTree.SDKROOT,
-                            Paths.get("Test.framework"),
-                            Optional.absent())))))
-        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+            ImmutableSortedSet.of(
+                FrameworkPath.ofSourceTreePath(
+                    new SourceTreePath(
+                        PBXReference.SourceTree.SDKROOT,
+                        Paths.get("Test.framework"),
+                        Optional.absent()))))
+        .setDeps(ImmutableSortedSet.of(libraryTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -2004,53 +1964,46 @@ public class ProjectGeneratorTest {
     BuildTarget libraryDepTarget = BuildTarget.builder(rootPath, "//bar", "lib").build();
     TargetNode<?> libraryDepNode = AppleLibraryBuilder
         .createBuilder(libraryDepTarget)
-        .setConfigs(Optional.of(configs))
-        .setSrcs(
-            Optional.of(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.m")))))
+        .setConfigs(configs)
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.m"))))
         .setFrameworks(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    FrameworkPath.ofSourceTreePath(
-                        new SourceTreePath(
-                            PBXReference.SourceTree.SDKROOT,
-                            Paths.get("Library.framework"),
-                            Optional.absent())))))
+            ImmutableSortedSet.of(
+                FrameworkPath.ofSourceTreePath(
+                    new SourceTreePath(
+                        PBXReference.SourceTree.SDKROOT,
+                        Paths.get("Library.framework"),
+                        Optional.absent()))))
         .build();
 
     BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setConfigs(Optional.of(configs))
-        .setSrcs(
-            Optional.of(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.m")))))
+        .setConfigs(configs)
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.m"))))
         .setFrameworks(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    FrameworkPath.ofSourceTreePath(
-                        new SourceTreePath(
-                            PBXReference.SourceTree.SDKROOT,
-                            Paths.get("Library.framework"),
-                            Optional.absent())))))
-        .setDeps(Optional.of(ImmutableSortedSet.of(libraryDepTarget)))
+            ImmutableSortedSet.of(
+                FrameworkPath.ofSourceTreePath(
+                    new SourceTreePath(
+                        PBXReference.SourceTree.SDKROOT,
+                        Paths.get("Library.framework"),
+                        Optional.absent()))))
+        .setDeps(ImmutableSortedSet.of(libraryDepTarget))
         .build();
 
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "xctest").build();
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
-        .setConfigs(Optional.of(configs))
+        .setConfigs(configs)
         .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("fooTest.m")))))
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("fooTest.m"))))
         .setFrameworks(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    FrameworkPath.ofSourceTreePath(
-                        new SourceTreePath(
-                            PBXReference.SourceTree.SDKROOT,
-                            Paths.get("Test.framework"),
-                            Optional.absent())))))
-        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+            ImmutableSortedSet.of(
+                FrameworkPath.ofSourceTreePath(
+                    new SourceTreePath(
+                        PBXReference.SourceTree.SDKROOT,
+                        Paths.get("Test.framework"),
+                        Optional.absent()))))
+        .setDeps(ImmutableSortedSet.of(libraryTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -2091,23 +2044,20 @@ public class ProjectGeneratorTest {
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
         .setFrameworks(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    FrameworkPath.ofSourceTreePath(
-                        new SourceTreePath(
-                            PBXReference.SourceTree.SDKROOT,
-                            Paths.get("Library.framework"),
-                            Optional.absent())))))
+            ImmutableSortedSet.of(
+                FrameworkPath.ofSourceTreePath(
+                    new SourceTreePath(
+                        PBXReference.SourceTree.SDKROOT,
+                        Paths.get("Library.framework"),
+                        Optional.absent()))))
         .build();
 
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "xctest").build();
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
         .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("fooTest.m")))))
-        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("fooTest.m"))))
+        .setDeps(ImmutableSortedSet.of(libraryTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -2142,29 +2092,26 @@ public class ProjectGeneratorTest {
     BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setConfigs(Optional.of(configs))
+        .setConfigs(configs)
         .setExportedHeaders(
             ImmutableSortedSet.of(
                 new FakeSourcePath("HeaderGroup1/bar.h")))
         .setFrameworks(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    FrameworkPath.ofSourceTreePath(
-                        new SourceTreePath(
-                            PBXReference.SourceTree.SDKROOT,
-                            Paths.get("Library.framework"),
-                            Optional.absent())))))
+            ImmutableSortedSet.of(
+                FrameworkPath.ofSourceTreePath(
+                    new SourceTreePath(
+                        PBXReference.SourceTree.SDKROOT,
+                        Paths.get("Library.framework"),
+                        Optional.absent()))))
         .build();
 
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "xctest").build();
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
-        .setConfigs(Optional.of(configs))
+        .setConfigs(configs)
         .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("fooTest.m")))))
-        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("fooTest.m"))))
+        .setDeps(ImmutableSortedSet.of(libraryTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -2226,38 +2173,32 @@ public class ProjectGeneratorTest {
     BuildTarget depTarget = BuildTarget.builder(rootPath, "//dep", "dep").build();
     TargetNode<?> depNode = AppleLibraryBuilder
         .createBuilder(depTarget)
-        .setSrcs(Optional.of(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("e.m")))))
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("e.m"))))
         .build();
 
     BuildTarget binaryTarget = BuildTarget.builder(rootPath, "//foo", "binary").build();
     TargetNode<?> binaryNode = AppleBinaryBuilder
         .createBuilder(binaryTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
         .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    SourceWithFlags.of(
-                        new FakeSourcePath("foo.m"), ImmutableList.of("-foo")))))
-        .setExtraXcodeSources(
-            Optional.of(
-                ImmutableList.of(
-                    new FakeSourcePath("libsomething.a"))))
+            ImmutableSortedSet.of(
+                SourceWithFlags.of(
+                    new FakeSourcePath("foo.m"), ImmutableList.of("-foo"))))
+        .setExtraXcodeSources(ImmutableList.of(new FakeSourcePath("libsomething.a")))
         .setHeaders(
             ImmutableSortedSet.of(
                 new FakeSourcePath("foo.h")))
         .setFrameworks(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    FrameworkPath.ofSourceTreePath(
-                        new SourceTreePath(
-                            PBXReference.SourceTree.SDKROOT,
-                            Paths.get("Foo.framework"),
-                            Optional.absent())))))
-        .setDeps(Optional.of(ImmutableSortedSet.of(depTarget)))
+            ImmutableSortedSet.of(
+                FrameworkPath.ofSourceTreePath(
+                    new SourceTreePath(
+                        PBXReference.SourceTree.SDKROOT,
+                        Paths.get("Foo.framework"),
+                        Optional.absent()))))
+        .setDeps(ImmutableSortedSet.of(depTarget))
         .setHeaderPathPrefix(Optional.absent())
         .setPrefixHeader(Optional.absent())
         .build();
@@ -2315,7 +2256,7 @@ public class ProjectGeneratorTest {
         .build();
     TargetNode<?> sharedLibraryNode = AppleLibraryBuilder
         .createBuilder(sharedLibraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
+        .setDeps(ImmutableSortedSet.of(resourceTarget))
         .build();
 
     BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "bundle").build();
@@ -2324,7 +2265,7 @@ public class ProjectGeneratorTest {
         .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setBinary(sharedLibraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(scriptTarget)))
+        .setDeps(ImmutableSortedSet.of(scriptTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -2380,7 +2321,7 @@ public class ProjectGeneratorTest {
         .build();
     TargetNode<?> sharedLibraryNode = AppleLibraryBuilder
         .createBuilder(sharedLibraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
+        .setDeps(ImmutableSortedSet.of(resourceTarget))
         .build();
 
     BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "bundle").build();
@@ -2389,7 +2330,7 @@ public class ProjectGeneratorTest {
         .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setBinary(sharedLibraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(scriptTarget)))
+        .setDeps(ImmutableSortedSet.of(scriptTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -2456,7 +2397,7 @@ public class ProjectGeneratorTest {
         .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setBinary(sharedLibraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(rnLibraryTarget)))
+        .setDeps(ImmutableSortedSet.of(rnLibraryTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -2489,10 +2430,9 @@ public class ProjectGeneratorTest {
     TargetNode<?> sharedLibraryNode = AppleLibraryBuilder
         .createBuilder(sharedLibraryTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
         .build();
 
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "bundle").build();
@@ -2532,15 +2472,12 @@ public class ProjectGeneratorTest {
         .createBuilder(resourceTarget)
         .setFiles(ImmutableSet.of())
         .setDirs(ImmutableSet.of())
-        .setVariants(
-            Optional.of(
-                ImmutableSet.of(
-                    new FakeSourcePath("Base.lproj/Bar.storyboard"))))
+        .setVariants(ImmutableSet.of(new FakeSourcePath("Base.lproj/Bar.storyboard")))
         .build();
     BuildTarget fooLibraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?> fooLibraryNode = AppleLibraryBuilder
         .createBuilder(fooLibraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
+        .setDeps(ImmutableSortedSet.of(resourceTarget))
         .build();
     BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "bundle").build();
     TargetNode<?> bundleNode = AppleBundleBuilder
@@ -2548,7 +2485,7 @@ public class ProjectGeneratorTest {
         .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setBinary(fooLibraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
+        .setDeps(ImmutableSortedSet.of(resourceTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -2584,10 +2521,9 @@ public class ProjectGeneratorTest {
     TargetNode<?> sharedLibraryNode = AppleLibraryBuilder
         .createBuilder(sharedLibraryTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
         .build();
 
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "custombundle").build();
@@ -2630,10 +2566,9 @@ public class ProjectGeneratorTest {
     TargetNode<?> sharedLibraryNode = AppleLibraryBuilder
         .createBuilder(sharedLibraryTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of("PRODUCT_NAME", "FancyFramework"))))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of("PRODUCT_NAME", "FancyFramework")))
         .build();
 
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "custombundle").build();
@@ -2668,7 +2603,7 @@ public class ProjectGeneratorTest {
     BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(modelTarget)))
+        .setDeps(ImmutableSortedSet.of(modelTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -2720,7 +2655,7 @@ public class ProjectGeneratorTest {
         .setExtension(Either.ofLeft(AppleBundleExtension.APP))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setBinary(hostAppBinaryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(watchAppTarget)))
+        .setDeps(ImmutableSortedSet.of(watchAppTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -2756,11 +2691,10 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    SourceWithFlags.of(
-                        new FakeSourcePath("foo.m"), ImmutableList.of("-foo")),
-                    SourceWithFlags.of(new FakeSourcePath("bar.m")))))
+            ImmutableSortedSet.of(
+                SourceWithFlags.of(
+                    new FakeSourcePath("foo.m"), ImmutableList.of("-foo")),
+                SourceWithFlags.of(new FakeSourcePath("bar.m"))))
         .setHeaders(
             ImmutableSortedSet.of(
                 new FakeSourcePath("foo.h")))
@@ -2819,9 +2753,8 @@ public class ProjectGeneratorTest {
         .build();
     TargetNode<?> dependentSharedLibraryNode = AppleLibraryBuilder
         .createBuilder(dependentSharedLibraryTarget)
-        .setSrcs(
-            Optional.of(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("empty.m")))))
-        .setDeps(Optional.of(ImmutableSortedSet.of(dependentStaticLibraryTarget)))
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("empty.m"))))
+        .setDeps(ImmutableSortedSet.of(dependentStaticLibraryTarget))
         .build();
 
     BuildTarget libraryTarget = BuildTarget
@@ -2830,7 +2763,7 @@ public class ProjectGeneratorTest {
         .build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(dependentSharedLibraryTarget)))
+        .setDeps(ImmutableSortedSet.of(dependentSharedLibraryTarget))
         .build();
 
     BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "final").build();
@@ -2874,8 +2807,8 @@ public class ProjectGeneratorTest {
         .build();
     TargetNode<?> dependentSharedLibraryNode = AppleLibraryBuilder
         .createBuilder(dependentSharedLibraryTarget)
-        .setSrcs(Optional.of(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("e.m")))))
-        .setDeps(Optional.of(ImmutableSortedSet.of(dependentStaticLibraryTarget)))
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("e.m"))))
+        .setDeps(ImmutableSortedSet.of(dependentStaticLibraryTarget))
         .build();
 
     BuildTarget dependentFrameworkTarget =
@@ -2893,7 +2826,7 @@ public class ProjectGeneratorTest {
         .build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(dependentFrameworkTarget)))
+        .setDeps(ImmutableSortedSet.of(dependentFrameworkTarget))
         .build();
 
     BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "final").build();
@@ -2947,7 +2880,7 @@ public class ProjectGeneratorTest {
         .build();
     TargetNode<?> dependentSharedLibraryNode = AppleLibraryBuilder
         .createBuilder(dependentSharedLibraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(dependentStaticFrameworkTarget)))
+        .setDeps(ImmutableSortedSet.of(dependentStaticFrameworkTarget))
         .build();
 
     BuildTarget dependentFrameworkTarget =
@@ -2965,8 +2898,8 @@ public class ProjectGeneratorTest {
         .build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setSrcs(Optional.of(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("e.m")))))
-        .setDeps(Optional.of(ImmutableSortedSet.of(dependentFrameworkTarget)))
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("e.m"))))
+        .setDeps(ImmutableSortedSet.of(dependentFrameworkTarget))
         .build();
 
     BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "final").build();
@@ -3039,13 +2972,13 @@ public class ProjectGeneratorTest {
     BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
+        .setDeps(ImmutableSortedSet.of(resourceTarget))
         .build();
 
     BuildTarget bundleLibraryTarget = BuildTarget.builder(rootPath, "//foo", "bundlelib").build();
     TargetNode<?> bundleLibraryNode = AppleLibraryBuilder
         .createBuilder(bundleLibraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+        .setDeps(ImmutableSortedSet.of(libraryTarget))
         .build();
 
     BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "bundle").build();
@@ -3079,13 +3012,13 @@ public class ProjectGeneratorTest {
     BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(assetCatalogTarget)))
+        .setDeps(ImmutableSortedSet.of(assetCatalogTarget))
         .build();
 
     BuildTarget bundleLibraryTarget = BuildTarget.builder(rootPath, "//foo", "bundlelib").build();
     TargetNode<?> bundleLibraryNode = AppleLibraryBuilder
         .createBuilder(bundleLibraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+        .setDeps(ImmutableSortedSet.of(libraryTarget))
         .build();
 
     BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "bundle").build();
@@ -3115,10 +3048,9 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -3146,20 +3078,18 @@ public class ProjectGeneratorTest {
     TargetNode<?> node1 = AppleLibraryBuilder
         .createBuilder(buildTarget1)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Conf1", ImmutableMap.of(),
-                    "Conf2", ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Conf1", ImmutableMap.of(),
+                "Conf2", ImmutableMap.of()))
         .build();
 
     BuildTarget buildTarget2 = BuildTarget.builder(rootPath, "//foo", "rule2").build();
     TargetNode<?> node2 = AppleLibraryBuilder
         .createBuilder(buildTarget2)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Conf2", ImmutableMap.of(),
-                    "Conf3", ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Conf2", ImmutableMap.of(),
+                "Conf3", ImmutableMap.of()))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -3183,28 +3113,26 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
         .setLibraries(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    FrameworkPath.ofSourceTreePath(
-                        new SourceTreePath(
-                            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-                            Paths.get("libfoo.a"),
-                            Optional.absent())),
-                    FrameworkPath.ofSourceTreePath(
-                        new SourceTreePath(
-                            PBXReference.SourceTree.SDKROOT,
-                            Paths.get("libfoo.a"),
-                            Optional.absent())),
-                    FrameworkPath.ofSourceTreePath(
-                        new SourceTreePath(
-                            PBXReference.SourceTree.SOURCE_ROOT,
-                            Paths.get("libfoo.a"),
-                            Optional.absent())))))
+            ImmutableSortedSet.of(
+                FrameworkPath.ofSourceTreePath(
+                    new SourceTreePath(
+                        PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+                        Paths.get("libfoo.a"),
+                        Optional.absent())),
+                FrameworkPath.ofSourceTreePath(
+                    new SourceTreePath(
+                        PBXReference.SourceTree.SDKROOT,
+                        Paths.get("libfoo.a"),
+                        Optional.absent())),
+                FrameworkPath.ofSourceTreePath(
+                    new SourceTreePath(
+                        PBXReference.SourceTree.SOURCE_ROOT,
+                        Paths.get("libfoo.a"),
+                        Optional.absent()))))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -3431,53 +3359,47 @@ public class ProjectGeneratorTest {
     TargetNode<AppleLibraryDescription.Arg> testLibDepLib =
         AppleLibraryBuilder.createBuilder(BuildTarget.builder(rootPath, "//libs", "deplib").build())
             .setFrameworks(
-                Optional.of(
-                    ImmutableSortedSet.of(
-                        FrameworkPath.ofSourceTreePath(
-                            new SourceTreePath(
-                                PBXReference.SourceTree.SDKROOT,
-                                Paths.get("DeclaredInTestLibDep.framework"),
-                                Optional.absent())))))
-            .setDeps(Optional.of(ImmutableSortedSet.of(testLibDepResource.getBuildTarget())))
-            .setSrcs(
-                Optional.of(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("e.m")))))
+                ImmutableSortedSet.of(
+                    FrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SDKROOT,
+                            Paths.get("DeclaredInTestLibDep.framework"),
+                            Optional.absent()))))
+            .setDeps(ImmutableSortedSet.of(testLibDepResource.getBuildTarget()))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("e.m"))))
             .build();
     TargetNode<AppleLibraryDescription.Arg> dep1 =
         AppleLibraryBuilder.createBuilder(BuildTarget.builder(rootPath, "//foo", "dep1").build())
-            .setDeps(Optional.of(ImmutableSortedSet.of(testLibDepLib.getBuildTarget())))
-            .setSrcs(
-                Optional.of(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("e.m")))))
+            .setDeps(ImmutableSortedSet.of(testLibDepLib.getBuildTarget()))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("e.m"))))
             .setFrameworks(
-                Optional.of(
-                    ImmutableSortedSet.of(
-                        FrameworkPath.ofSourceTreePath(
-                            new SourceTreePath(
-                                PBXReference.SourceTree.SDKROOT,
-                                Paths.get("DeclaredInTestLib.framework"),
-                                Optional.absent())))))
+                ImmutableSortedSet.of(
+                    FrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SDKROOT,
+                            Paths.get("DeclaredInTestLib.framework"),
+                            Optional.absent()))))
             .build();
     TargetNode<AppleLibraryDescription.Arg> dep2 =
         AppleLibraryBuilder.createBuilder(BuildTarget.builder(rootPath, "//foo", "dep2").build())
-            .setSrcs(
-                Optional.of(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("e.m")))))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("e.m"))))
             .build();
     TargetNode<AppleTestDescription.Arg> xctest1 =
         AppleTestBuilder.createBuilder(BuildTarget.builder(rootPath, "//foo", "xctest1").build())
             .setInfoPlist(new FakeSourcePath("Info.plist"))
-            .setDeps(Optional.of(ImmutableSortedSet.of(dep1.getBuildTarget())))
+            .setDeps(ImmutableSortedSet.of(dep1.getBuildTarget()))
             .setFrameworks(
-                Optional.of(
-                    ImmutableSortedSet.of(
-                        FrameworkPath.ofSourceTreePath(
-                            new SourceTreePath(
-                                PBXReference.SourceTree.SDKROOT,
-                                Paths.get("DeclaredInTest.framework"),
-                                Optional.absent())))))
+                ImmutableSortedSet.of(
+                    FrameworkPath.ofSourceTreePath(
+                        new SourceTreePath(
+                            PBXReference.SourceTree.SDKROOT,
+                            Paths.get("DeclaredInTest.framework"),
+                            Optional.absent()))))
             .build();
     TargetNode<AppleTestDescription.Arg> xctest2 =
         AppleTestBuilder.createBuilder(BuildTarget.builder(rootPath, "//foo", "xctest2").build())
             .setInfoPlist(new FakeSourcePath("Info.plist"))
-            .setDeps(Optional.of(ImmutableSortedSet.of(dep2.getBuildTarget())))
+            .setDeps(ImmutableSortedSet.of(dep2.getBuildTarget()))
             .build();
 
     final TargetGraph targetGraph =
@@ -3587,19 +3509,17 @@ public class ProjectGeneratorTest {
     TargetNode<AppleLibraryDescription.Arg> library = AppleLibraryBuilder
         .createBuilder(libTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
         .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    SourceWithFlags.of(
-                        new BuildTargetSourcePath(source1Target)),
-                    SourceWithFlags.of(
-                        new BuildTargetSourcePath(source2RefTarget)),
-                    SourceWithFlags.of(
-                        new BuildTargetSourcePath(source3Target)))))
+            ImmutableSortedSet.of(
+                SourceWithFlags.of(
+                    new BuildTargetSourcePath(source1Target)),
+                SourceWithFlags.of(
+                    new BuildTargetSourcePath(source2RefTarget)),
+                SourceWithFlags.of(
+                    new BuildTargetSourcePath(source3Target))))
         .setPrefixHeader(
             Optional.of(new BuildTargetSourcePath(headerTarget)))
         .build();
@@ -3649,10 +3569,9 @@ public class ProjectGeneratorTest {
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "AppTest").build();
     TargetNode<?> testNode = AppleTestBuilder.createBuilder(testTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setTestHostApp(Optional.of(hostAppTarget))
         .build();
@@ -3692,10 +3611,9 @@ public class ProjectGeneratorTest {
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "AppTest").build();
     TargetNode<?> testNode = AppleTestBuilder.createBuilder(testTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setTestHostApp(Optional.of(hostAppTarget))
         .isUiTest(Optional.of(true))
@@ -3736,10 +3654,9 @@ public class ProjectGeneratorTest {
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "AppTest").build();
     TargetNode<?> testNode = AppleTestBuilder.createBuilder(testTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setTestHostApp(Optional.of(hostAppTarget))
         .build();
@@ -3764,10 +3681,9 @@ public class ProjectGeneratorTest {
     TargetNode<?> binaryNode = AppleBinaryBuilder
         .createBuilder(binaryTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
         .build();
 
     BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "bundle").build();
@@ -3873,15 +3789,13 @@ public class ProjectGeneratorTest {
     TargetNode<?> binaryNode = AppleBinaryBuilder
         .createBuilder(binaryTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
         .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    SourceWithFlags.of(
-                        new FakeSourcePath("foo.m"), ImmutableList.of("-foo")))))
+            ImmutableSortedSet.of(
+                SourceWithFlags.of(
+                    new FakeSourcePath("foo.m"), ImmutableList.of("-foo"))))
         .build();
 
     ImmutableSet<TargetNode<?>> nodes = ImmutableSet.of(binaryNode);
@@ -3954,15 +3868,13 @@ public class ProjectGeneratorTest {
     TargetNode<?> binaryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
         .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    SourceWithFlags.of(
-                        new FakeSourcePath("foo.m"), ImmutableList.of("-foo")))))
+            ImmutableSortedSet.of(
+                SourceWithFlags.of(
+                    new FakeSourcePath("foo.m"), ImmutableList.of("-foo"))))
         .build();
 
     ImmutableSet<TargetNode<?>> nodes = ImmutableSet.of(binaryNode);
@@ -4025,28 +3937,24 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setLangPreprocessorFlags(
-            Optional.of(
-                ImmutableMap.of(
-                    CxxSource.Type.C, ImmutableList.of("-std=gnu11"),
-                    CxxSource.Type.OBJC, ImmutableList.of("-std=gnu11", "-fobjc-arc"),
-                    CxxSource.Type.CXX, ImmutableList.of("-std=c++11", "-stdlib=libc++"),
-                    CxxSource.Type.OBJCXX, ImmutableList.of(
-                        "-std=c++11",
-                        "-stdlib=libc++",
-                        "-fobjc-arc"))))
+            ImmutableMap.of(
+                CxxSource.Type.C, ImmutableList.of("-std=gnu11"),
+                CxxSource.Type.OBJC, ImmutableList.of("-std=gnu11", "-fobjc-arc"),
+                CxxSource.Type.CXX, ImmutableList.of("-std=c++11", "-stdlib=libc++"),
+                CxxSource.Type.OBJCXX, ImmutableList.of(
+                    "-std=c++11",
+                    "-stdlib=libc++",
+                    "-fobjc-arc")))
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
         .setSrcs(
-            Optional.of(
                 ImmutableSortedSet.of(
                     SourceWithFlags.of(new FakeSourcePath("foo1.m")),
                     SourceWithFlags.of(new FakeSourcePath("foo2.mm")),
                     SourceWithFlags.of(new FakeSourcePath("foo3.c")),
-                    SourceWithFlags.of(new FakeSourcePath("foo4.cc"))
-                    )))
+                    SourceWithFlags.of(new FakeSourcePath("foo4.cc"))))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -4082,9 +3990,7 @@ public class ProjectGeneratorTest {
     BuildTarget buildTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
-        .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.mm")))))
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.mm"))))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -4120,18 +4026,17 @@ public class ProjectGeneratorTest {
 
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setTests(Optional.of(ImmutableSortedSet.of(testTarget)))
-        .setDeps(Optional.of(ImmutableSortedSet.of(assetCatalogTarget)))
+        .setTests(ImmutableSortedSet.of(testTarget))
+        .setDeps(ImmutableSortedSet.of(assetCatalogTarget))
         .build();
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Default",
-                    ImmutableMap.of())))
+            ImmutableSortedMap.of(
+                "Default",
+                ImmutableMap.of()))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+        .setDeps(ImmutableSortedSet.of(libraryTarget))
         .build();
     TargetNode<?> assetCatalogNode = AppleAssetCatalogBuilder
         .createBuilder(assetCatalogTarget)
@@ -4193,7 +4098,7 @@ public class ProjectGeneratorTest {
         .build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
+        .setDeps(ImmutableSortedSet.of(resourceTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -4225,7 +4130,7 @@ public class ProjectGeneratorTest {
         .build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
+        .setDeps(ImmutableSortedSet.of(resourceTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -4259,7 +4164,7 @@ public class ProjectGeneratorTest {
         .build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
+        .setDeps(ImmutableSortedSet.of(resourceTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -4287,20 +4192,17 @@ public class ProjectGeneratorTest {
     BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setConfigs(Optional.of(configs))
-        .setSrcs(
-            Optional.of(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.m")))))
+        .setConfigs(configs)
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.m"))))
         .build();
 
     BuildTarget testTarget = BuildTarget.builder(rootPath, "//foo", "xctest").build();
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
-        .setConfigs(Optional.of(configs))
+        .setConfigs(configs)
         .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("fooTest.m")))))
-        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("fooTest.m"))))
+        .setDeps(ImmutableSortedSet.of(libraryTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -4355,7 +4257,7 @@ public class ProjectGeneratorTest {
         .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setBinary(framework1BinaryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(framework2Target)))
+        .setDeps(ImmutableSortedSet.of(framework2Target))
         .build();
 
     BuildTarget sharedLibraryTarget = BuildTarget
@@ -4373,7 +4275,7 @@ public class ProjectGeneratorTest {
         .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setBinary(sharedLibraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(framework1Target)))
+        .setDeps(ImmutableSortedSet.of(framework1Target))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -4433,7 +4335,7 @@ public class ProjectGeneratorTest {
         .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setBinary(framework1BinaryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(framework2Target)))
+        .setDeps(ImmutableSortedSet.of(framework2Target))
         .build();
 
     BuildTarget sharedLibraryTarget = BuildTarget
@@ -4451,7 +4353,7 @@ public class ProjectGeneratorTest {
         .setExtension(Either.ofLeft(AppleBundleExtension.APP))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setBinary(sharedLibraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(framework1Target)))
+        .setDeps(ImmutableSortedSet.of(framework1Target))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -4515,7 +4417,7 @@ public class ProjectGeneratorTest {
     BuildTarget binaryTarget = BuildTarget.builder(rootPath, "//foo", "bin").build();
     TargetNode<?> binaryNode = AppleBinaryBuilder
         .createBuilder(binaryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
+        .setDeps(ImmutableSortedSet.of(resourceTarget))
         .build();
     BuildTarget bundleTarget = BuildTarget.builder(rootPath, "//foo", "bundle")
         .addFlavors(FakeAppleRuleDescriptions.DEFAULT_MACOSX_X86_64_PLATFORM.getFlavor())
@@ -4554,11 +4456,10 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
-        .setSrcs(Optional.of(ImmutableSortedSet.of()))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
+        .setSrcs(ImmutableSortedSet.of())
         .setBridgingHeader(Optional.of(new FakeSourcePath("BridgingHeader/header1.h")))
         .build();
 
@@ -4593,11 +4494,10 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder
         .createBuilder(buildTarget)
         .setConfigs(
-            Optional.of(
-                ImmutableSortedMap.of(
-                    "Debug",
-                    ImmutableMap.of())))
-        .setSrcs(Optional.of(ImmutableSortedSet.of()))
+            ImmutableSortedMap.of(
+                "Debug",
+                ImmutableMap.of()))
+        .setSrcs(ImmutableSortedSet.of())
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
@@ -4695,7 +4595,7 @@ public class ProjectGeneratorTest {
     BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "foo").build();
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
+        .setDeps(ImmutableSortedSet.of(resourceTarget))
         .build();
 
     return ImmutableSet.of(resourceNode, libraryNode);

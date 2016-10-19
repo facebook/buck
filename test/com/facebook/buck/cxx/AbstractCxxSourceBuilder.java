@@ -40,70 +40,70 @@ public abstract class AbstractCxxSourceBuilder<
   }
 
   public U setSrcs(ImmutableSortedSet<SourceWithFlags> srcs)  {
-    arg.srcs = Optional.of(srcs);
+    arg.srcs = srcs;
     return getThis();
   }
 
   public U setHeaders(ImmutableSortedSet<SourcePath> headers)  {
-    arg.headers = Optional.of(SourceList.ofUnnamedSources(headers));
+    arg.headers = SourceList.ofUnnamedSources(headers);
     return getThis();
   }
 
   public U setHeaders(ImmutableSortedMap<String, SourcePath> headers)  {
-    arg.headers = Optional.of(SourceList.ofNamedSources(headers));
+    arg.headers = SourceList.ofNamedSources(headers);
     return getThis();
   }
 
   public U setHeaders(SourceList headers)  {
-    arg.headers = Optional.of(headers);
+    arg.headers = headers;
     return getThis();
   }
 
   public U setCompilerFlags(ImmutableList<String> compilerFlags) {
-    arg.compilerFlags = Optional.of(compilerFlags);
+    arg.compilerFlags = compilerFlags;
     return getThis();
   }
 
   public U setPreprocessorFlags(ImmutableList<String> preprocessorFlags) {
-    arg.preprocessorFlags = Optional.of(preprocessorFlags);
+    arg.preprocessorFlags = preprocessorFlags;
     return getThis();
   }
 
   public U setLinkerFlags(ImmutableList<String> linkerFlags) {
-    arg.linkerFlags = Optional.of(linkerFlags);
+    arg.linkerFlags = linkerFlags;
     return getThis();
   }
 
   public U setPlatformCompilerFlags(
       PatternMatchedCollection<ImmutableList<String>> platformCompilerFlags) {
-    arg.platformCompilerFlags = Optional.of(platformCompilerFlags);
+    arg.platformCompilerFlags = platformCompilerFlags;
     return getThis();
   }
 
   public U setPlatformPreprocessorFlags(
       PatternMatchedCollection<ImmutableList<String>> platformPreprocessorFlags) {
-    arg.platformPreprocessorFlags = Optional.of(platformPreprocessorFlags);
+    arg.platformPreprocessorFlags = platformPreprocessorFlags;
     return getThis();
   }
 
   public U setPlatformLinkerFlags(
       PatternMatchedCollection<ImmutableList<String>> platformLinkerFlags) {
-    arg.platformLinkerFlags = Optional.of(platformLinkerFlags);
+    arg.platformLinkerFlags = platformLinkerFlags;
     return getThis();
   }
 
   public U setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {
-    arg.frameworks = Optional.of(frameworks);
+    arg.frameworks = frameworks;
     return getThis();
   }
 
   public U setLibraries(ImmutableSortedSet<FrameworkPath> libraries) {
-    arg.libraries = Optional.of(libraries);
+    arg.libraries = libraries;
     return getThis();
   }
 
   public U setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.of(deps);
+    arg.deps = deps;
     return getThis();
   }
 

@@ -72,23 +72,23 @@ public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription
   }
 
   public PythonTestBuilder setSrcs(SourceList srcs) {
-    arg.srcs = Optional.of(srcs);
+    arg.srcs = srcs;
     return this;
   }
 
   public PythonTestBuilder setPlatformSrcs(PatternMatchedCollection<SourceList> platformSrcs) {
-    arg.platformSrcs = Optional.of(platformSrcs);
+    arg.platformSrcs = platformSrcs;
     return this;
   }
 
   public PythonTestBuilder setResources(SourceList resources) {
-    arg.resources = Optional.of(resources);
+    arg.resources = resources;
     return this;
   }
 
   public PythonTestBuilder setPlatformResources(
       PatternMatchedCollection<SourceList> platformResources) {
-    arg.platformResources = Optional.of(platformResources);
+    arg.platformResources = platformResources;
     return this;
   }
 
@@ -103,12 +103,12 @@ public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription
   }
 
   public PythonTestBuilder setBuildArgs(ImmutableList<String> buildArgs) {
-    arg.buildArgs = Optional.of(buildArgs);
+    arg.buildArgs = buildArgs;
     return this;
   }
 
   public PythonTestBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.fromNullable(deps);
+    arg.deps = deps;
     return this;
   }
 

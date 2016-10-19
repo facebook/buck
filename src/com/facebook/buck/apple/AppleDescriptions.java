@@ -92,8 +92,6 @@ public class AppleDescriptions {
       INCLUDE_FRAMEWORKS_FLAVOR,
       NO_INCLUDE_FRAMEWORKS_FLAVOR);
 
-  private static final SourceList EMPTY_HEADERS = SourceList.ofUnnamedSources(
-      ImmutableSortedSet.of());
   private static final String MERGED_ASSET_CATALOG_NAME = "Merged";
 
   /** Utility class: do not instantiate. */
@@ -114,7 +112,7 @@ public class AppleDescriptions {
     return AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
                 pathResolver,
                 headerPathPrefix,
-                arg.exportedHeaders.or(EMPTY_HEADERS));
+                arg.exportedHeaders);
   }
 
   public static ImmutableSortedMap<String, SourcePath> convertAppleHeadersToPrivateCxxHeaders(
@@ -127,16 +125,16 @@ public class AppleDescriptions {
         .putAll(
             AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
                 pathResolver,
-                arg.headers.or(EMPTY_HEADERS)))
+                arg.headers))
         .putAll(
             AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
                 pathResolver,
                 headerPathPrefix,
-                arg.headers.or(EMPTY_HEADERS)))
+                arg.headers))
         .putAll(
             AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
                 pathResolver,
-                arg.exportedHeaders.or(EMPTY_HEADERS)))
+                arg.exportedHeaders))
         .build();
   }
 
@@ -232,21 +230,17 @@ public class AppleDescriptions {
                     arg))
             .build();
 
-    if (arg.srcs.isPresent()) {
-      ImmutableSortedSet.Builder<SourceWithFlags> nonSwiftSrcs = ImmutableSortedSet.naturalOrder();
-      for (SourceWithFlags src: arg.srcs.get()) {
-        if (!MorePaths.getFileExtension(resolver.getAbsolutePath(src.getSourcePath()))
-            .equalsIgnoreCase(SWIFT_EXTENSION)) {
-          nonSwiftSrcs.add(src);
-        }
+    ImmutableSortedSet.Builder<SourceWithFlags> nonSwiftSrcs = ImmutableSortedSet.naturalOrder();
+    for (SourceWithFlags src: arg.srcs) {
+      if (!MorePaths.getFileExtension(resolver.getAbsolutePath(src.getSourcePath()))
+          .equalsIgnoreCase(SWIFT_EXTENSION)) {
+        nonSwiftSrcs.add(src);
       }
-      output.srcs = Optional.of(nonSwiftSrcs.build());
-    } else {
-      output.srcs = Optional.absent();
     }
+    output.srcs = nonSwiftSrcs.build();
 
     output.platformSrcs = arg.platformSrcs;
-    output.headers = Optional.of(SourceList.ofNamedSources(headerMap));
+    output.headers = SourceList.ofNamedSources(headerMap);
     output.platformHeaders = arg.platformHeaders;
     output.prefixHeader = arg.prefixHeader;
     output.compilerFlags = arg.compilerFlags;
@@ -291,20 +285,20 @@ public class AppleDescriptions {
         arg,
         buildTarget);
     Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(arg, buildTarget);
-    output.headers = Optional.of(
+    output.headers =
         SourceList.ofNamedSources(
             convertAppleHeadersToPrivateCxxHeaders(
                 resolver::deprecatedGetPath,
                 headerPathPrefix,
-                arg)));
+                arg));
     output.exportedDeps = arg.exportedDeps;
     output.exportedPreprocessorFlags = arg.exportedPreprocessorFlags;
-    output.exportedHeaders = Optional.of(
+    output.exportedHeaders =
         SourceList.ofNamedSources(
             convertAppleHeadersToPublicCxxHeaders(
                 resolver::deprecatedGetPath,
                 headerPathPrefix,
-                arg)));
+                arg));
     output.exportedPlatformHeaders = arg.exportedPlatformHeaders;
     output.exportedPlatformPreprocessorFlags = arg.exportedPlatformPreprocessorFlags;
     output.exportedLangPreprocessorFlags = arg.exportedLangPreprocessorFlags;
@@ -508,7 +502,7 @@ public class AppleDescriptions {
       Either<AppleBundleExtension, String> extension,
       Optional<String> productName,
       final SourcePath infoPlist,
-      Optional<ImmutableMap<String, String>> infoPlistSubstitutions,
+      ImmutableMap<String, String> infoPlistSubstitutions,
       ImmutableSortedSet<BuildTarget> deps,
       ImmutableSortedSet<BuildTarget> tests,
       AppleDebugFormat debugFormat)
@@ -642,7 +636,7 @@ public class AppleDescriptions {
         extension,
         productName,
         infoPlist,
-        infoPlistSubstitutions.get(),
+        infoPlistSubstitutions,
         Optional.of(getBinaryFromBuildRuleWithBinary(flavoredBinaryRule)),
         appleDsym,
         destinations,

@@ -292,8 +292,8 @@ public class AppleBinaryDescription implements
         Optional.absent(),
         args.infoPlist.get(),
         args.infoPlistSubstitutions,
-        args.deps.get(),
-        args.tests.get(),
+        args.deps,
+        args.tests,
         flavoredDebugFormat);
   }
 
@@ -389,7 +389,7 @@ public class AppleBinaryDescription implements
   private <A extends Arg> Optional<Path> getStubBinaryPath(BuildRuleParams params, A args) {
     Optional<Path> stubBinaryPath = Optional.absent();
     Optional<AppleCxxPlatform> appleCxxPlatform = getAppleCxxPlatformFromParams(params);
-    if (appleCxxPlatform.isPresent() && (!args.srcs.isPresent() || args.srcs.get().isEmpty())) {
+    if (appleCxxPlatform.isPresent() && args.srcs.isEmpty()) {
       stubBinaryPath = appleCxxPlatform.get().getStubBinary();
     }
     return stubBinaryPath;
@@ -421,7 +421,7 @@ public class AppleBinaryDescription implements
         "Could not find cxx platform in:\n%s",
         Joiner.on(", ").join(buildTarget.getFlavors()));
     ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
-    for (BuildTarget dep : args.deps.get()) {
+    for (BuildTarget dep : args.deps) {
       Optional<FrameworkDependencies> frameworks =
           resolver.requireMetadata(
               BuildTarget.builder(dep)
@@ -461,23 +461,22 @@ public class AppleBinaryDescription implements
               input -> delegate.findDepsForTargetFromConstructorArgs(
                   buildTarget.withFlavors(input),
                   cellRoots,
-                  constructorArg.linkerFlags.get(),
-                  constructorArg.platformLinkerFlags.get().getValues()))
+                  constructorArg.linkerFlags,
+                  constructorArg.platformLinkerFlags.getValues()))
       );
     } else {
       return delegate.findDepsForTargetFromConstructorArgs(
           buildTarget,
           cellRoots,
-          constructorArg.linkerFlags.get(),
-          constructorArg.platformLinkerFlags.get().getValues());
+          constructorArg.linkerFlags,
+          constructorArg.platformLinkerFlags.getValues());
     }
   }
 
   @SuppressFieldNotInitialized
   public static class Arg extends AppleNativeTargetDescriptionArg {
     public Optional<SourcePath> infoPlist;
-    public Optional<ImmutableMap<String, String>> infoPlistSubstitutions =
-        Optional.of(ImmutableMap.of());
+    public ImmutableMap<String, String> infoPlistSubstitutions = ImmutableMap.of();
   }
 
 }

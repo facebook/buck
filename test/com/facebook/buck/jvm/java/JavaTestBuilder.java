@@ -61,7 +61,7 @@ public class JavaTestBuilder extends AbstractNodeBuilder<JavaTestDescription.Arg
   }
 
   public JavaTestBuilder setVmArgs(@Nullable ImmutableList<String> vmArgs) {
-    arg.vmArgs = Optional.fromNullable(vmArgs);
+    arg.vmArgs = Optional.fromNullable(vmArgs).or(ImmutableList.of());
     return this;
   }
 }

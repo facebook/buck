@@ -83,7 +83,7 @@ public class PrebuiltHaskellLibraryDescription
           Linker.LinkableDepType depType)
           throws NoSuchBuildTargetException {
         return HaskellCompileInput.builder()
-            .addAllFlags(args.exportedCompilerFlags.or(ImmutableList.of()))
+            .addAllFlags(args.exportedCompilerFlags)
             .addPackages(
                 HaskellPackage.builder()
                     .setInfo(
@@ -96,11 +96,11 @@ public class PrebuiltHaskellLibraryDescription
                                     getBuildTarget().getShortName(),
                                     args.version))))
                     .setPackageDb(args.db)
-                    .addAllInterfaces(args.importDirs.or(ImmutableList.of()))
+                    .addAllInterfaces(args.importDirs)
                     .addAllLibraries(
                         depType == Linker.LinkableDepType.SHARED ?
-                            args.sharedLibs.or(ImmutableMap.of()).values() :
-                            args.staticLibs.or(ImmutableList.of()))
+                            args.sharedLibs.values() :
+                            args.staticLibs)
                     .build())
             .build();
       }
@@ -122,15 +122,15 @@ public class PrebuiltHaskellLibraryDescription
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type) {
         NativeLinkableInput.Builder builder = NativeLinkableInput.builder();
-        builder.addAllArgs(StringArg.from(args.exportedLinkerFlags.or(ImmutableList.of())));
+        builder.addAllArgs(StringArg.from(args.exportedLinkerFlags));
         if (type == Linker.LinkableDepType.SHARED) {
           builder.addAllArgs(
               SourcePathArg.from(getResolver(),
-                  args.sharedLibs.or(ImmutableMap.of()).values()));
+                  args.sharedLibs.values()));
         } else {
           builder.addAllArgs(
               SourcePathArg.from(getResolver(),
-                  args.staticLibs.or(ImmutableList.of())));
+                  args.staticLibs));
         }
         return builder.build();
       }
@@ -142,7 +142,7 @@ public class PrebuiltHaskellLibraryDescription
 
       @Override
       public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform) {
-        return args.sharedLibs.or(ImmutableMap.of());
+        return args.sharedLibs;
       }
 
       @Override
@@ -163,7 +163,7 @@ public class PrebuiltHaskellLibraryDescription
           HeaderVisibility headerVisibility)
           throws NoSuchBuildTargetException {
         CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
-        for (SourcePath headerDir : args.cxxHeaderDirs.or(ImmutableSortedSet.of())) {
+        for (SourcePath headerDir : args.cxxHeaderDirs) {
           builder.addIncludes(CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, headerDir));
         }
         return builder.build();
@@ -186,14 +186,13 @@ public class PrebuiltHaskellLibraryDescription
     public String version;
     public Optional<String> id;
     public SourcePath db;
-    public Optional<ImmutableList<SourcePath>> importDirs = Optional.of(ImmutableList.of());
-    public Optional<ImmutableList<SourcePath>> staticLibs = Optional.of(ImmutableList.of());
-    public Optional<ImmutableMap<String, SourcePath>> sharedLibs = Optional.of(ImmutableMap.of());
-    public Optional<ImmutableList<String>> exportedLinkerFlags = Optional.of(ImmutableList.of());
-    public Optional<ImmutableList<String>> exportedCompilerFlags = Optional.of(ImmutableList.of());
-    public Optional<ImmutableSortedSet<SourcePath>> cxxHeaderDirs =
-        Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public ImmutableList<SourcePath> importDirs = ImmutableList.of();
+    public ImmutableList<SourcePath> staticLibs = ImmutableList.of();
+    public ImmutableMap<String, SourcePath> sharedLibs = ImmutableMap.of();
+    public ImmutableList<String> exportedLinkerFlags = ImmutableList.of();
+    public ImmutableList<String> exportedCompilerFlags = ImmutableList.of();
+    public ImmutableSortedSet<SourcePath> cxxHeaderDirs = ImmutableSortedSet.of();
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
   }
 
 }

@@ -197,7 +197,7 @@ public class AndroidInstrumentationApkDescription
   public static class Arg extends AbstractDescriptionArg {
     public SourcePath manifest;
     public BuildTarget apk;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public Optional<Boolean> includesVectorDrawables = Optional.absent();
   }
 }

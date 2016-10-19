@@ -23,7 +23,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -60,13 +59,13 @@ public class AppleBundleDescriptionTest {
     AppleBundleDescription desc = FakeAppleRuleDescriptions.BUNDLE_DESCRIPTION;
     AppleBundleDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();
     constructorArg.binary = binary;
-    constructorArg.deps = Optional.of(
+    constructorArg.deps =
         ImmutableSortedSet.of(
             binary,
             unflavoredDep,
             flavoredDep,
             flavoredDepNotInDomain,
-            watchDep));
+            watchDep);
 
     // Now call the find deps methods and verify it returns the targets with flavors.
     Iterable<BuildTarget> results = desc.findDepsForTargetFromConstructorArgs(
@@ -118,7 +117,7 @@ public class AppleBundleDescriptionTest {
     AppleBundleDescription desc = FakeAppleRuleDescriptions.BUNDLE_DESCRIPTION;
     AppleBundleDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();
     constructorArg.binary = binary;
-    constructorArg.deps = Optional.of(
+    constructorArg.deps =
         ImmutableSortedSet.<BuildTarget>naturalOrder()
             .add(binary)
             .add(unflavoredDep)
@@ -126,7 +125,7 @@ public class AppleBundleDescriptionTest {
             .add(flavoredDepNotInDomain)
             .add(stripFlavorOnly)
             .add(debugFlavorOnly)
-            .build());
+            .build();
 
     // Now call the find deps methods and verify it returns the targets with flavors.
     Iterable<BuildTarget> results = desc.findDepsForTargetFromConstructorArgs(

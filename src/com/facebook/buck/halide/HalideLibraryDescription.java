@@ -37,7 +37,6 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -47,14 +46,14 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -125,11 +124,11 @@ public class HalideLibraryDescription
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       ImmutableSortedSet<SourceWithFlags> halideSources,
-      Optional<ImmutableList<String>> compilerFlags,
-      Optional<PatternMatchedCollection<ImmutableList<String>>> platformCompilerFlags,
-      Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langCompilerFlags,
-      Optional<ImmutableList<String>> linkerFlags,
-      Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags)
+      ImmutableList<String> compilerFlags,
+      PatternMatchedCollection<ImmutableList<String>> platformCompilerFlags,
+      ImmutableMap<CxxSource.Type, ImmutableList<String>> langCompilerFlags,
+      ImmutableList<String> linkerFlags,
+      PatternMatchedCollection<ImmutableList<String>> platformLinkerFlags)
       throws NoSuchBuildTargetException {
 
     Optional<StripStyle> flavoredStripStyle =
@@ -143,15 +142,13 @@ public class HalideLibraryDescription
         halideSources,
         PatternMatchedCollection.of());
 
-    Optional<ImmutableList<String>> preprocessorFlags = Optional.absent();
-    Optional<PatternMatchedCollection<ImmutableList<String>>>
-        platformPreprocessorFlags = Optional.absent();
-    Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>>
-        langPreprocessorFlags = Optional.absent();
-    Optional<ImmutableSortedSet<FrameworkPath>>
-        frameworks = Optional.of(ImmutableSortedSet.<FrameworkPath>of());
-    Optional<ImmutableSortedSet<FrameworkPath>>
-        libraries = Optional.of(ImmutableSortedSet.<FrameworkPath>of());
+    ImmutableList<String> preprocessorFlags = ImmutableList.of();
+    PatternMatchedCollection<ImmutableList<String>>
+        platformPreprocessorFlags = PatternMatchedCollection.of();
+    ImmutableMap<CxxSource.Type, ImmutableList<String>>
+        langPreprocessorFlags = ImmutableMap.of();
+    ImmutableSortedSet<FrameworkPath> frameworks = ImmutableSortedSet.of();
+    ImmutableSortedSet<FrameworkPath> libraries = ImmutableSortedSet.of();
     Optional<SourcePath> prefixHeader = Optional.absent();
     Optional<Linker.CxxRuntimeType> cxxRuntimeType = Optional.absent();
 
@@ -300,9 +297,8 @@ public class HalideLibraryDescription
       // we use the host flavor here, regardless of the flavors on the build
       // target.
       CxxPlatform hostCxxPlatform = cxxPlatforms.getValue(CxxPlatforms.getHostFlavor());
-      Preconditions.checkState(args.srcs.isPresent());
       final ImmutableSortedSet<BuildTarget> compilerDeps =
-          args.compilerDeps.or(ImmutableSortedSet.of());
+          args.compilerDeps;
       return createHalideCompiler(
           params.copyWithChanges(
               params.getBuildTarget().withFlavors(HALIDE_COMPILER_FLAVOR),
@@ -311,7 +307,7 @@ public class HalideLibraryDescription
           resolver,
           new SourcePathResolver(resolver),
           hostCxxPlatform,
-          args.srcs.get(),
+          args.srcs,
           args.compilerFlags,
           args.platformCompilerFlags,
           args.langCompilerFlags,
@@ -342,7 +338,7 @@ public class HalideLibraryDescription
           resolver,
           new SourcePathResolver(resolver),
           cxxPlatform,
-          args.compilerInvocationFlags,
+          Optional.of(args.compilerInvocationFlags),
           args.functionName);
     }
 
@@ -355,13 +351,11 @@ public class HalideLibraryDescription
 
   @SuppressFieldNotInitialized
   public static class Arg extends CxxBinaryDescription.Arg {
-    public Optional<ImmutableSortedSet<BuildTarget>> compilerDeps =
-        Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs =
-        Optional.of(ImmutableSortedMap.of());
+    public ImmutableSortedSet<BuildTarget> compilerDeps = ImmutableSortedSet.of();
+    public ImmutableSortedMap<String, ImmutableMap<String, String>> configs =
+        ImmutableSortedMap.of();
     public Optional<Pattern> supportedPlatformsRegex;
-    public Optional<ImmutableList<String>> compilerInvocationFlags =
-        Optional.of(ImmutableList.of());
+    public ImmutableList<String> compilerInvocationFlags = ImmutableList.of();
     public Optional<String> functionName;
   }
 }

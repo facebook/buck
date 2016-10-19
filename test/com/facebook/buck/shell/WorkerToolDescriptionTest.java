@@ -65,7 +65,7 @@ public class WorkerToolDescriptionTest {
         .build(resolver);
 
     WorkerToolDescription.Arg args = new WorkerToolDescription.Arg();
-    args.env = Optional.of(ImmutableMap.<String, String>of());
+    args.env = ImmutableMap.of();
     args.exe = shBinaryRule.getBuildTarget();
     args.args = Optional.absent();
     args.maxWorkers = Optional.of(maxWorkers);

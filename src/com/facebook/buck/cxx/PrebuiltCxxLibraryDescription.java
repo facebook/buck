@@ -318,13 +318,13 @@ public class PrebuiltCxxLibraryDescription implements
     ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     CxxDescriptionEnhancer.putAllHeaders(
-        args.exportedHeaders.get(),
+        args.exportedHeaders,
         headers,
         pathResolver,
         "exported_headers",
         params.getBuildTarget());
     for (SourceList sourceList :
-        args.exportedPlatformHeaders.get().getMatchingValues(cxxPlatform.getFlavor().toString())) {
+        args.exportedPlatformHeaders.getMatchingValues(cxxPlatform.getFlavor().toString())) {
       CxxDescriptionEnhancer.putAllHeaders(
           sourceList,
           headers,
@@ -403,7 +403,7 @@ public class PrebuiltCxxLibraryDescription implements
                     params.getBuildTarget(),
                     params.getCellRoots(),
                     ruleResolver,
-                    args.includeDirs.or(ImmutableList.of("include")))),
+                    args.includeDirs)),
         ruleResolver,
         pathResolver,
         sharedTarget,
@@ -437,7 +437,7 @@ public class PrebuiltCxxLibraryDescription implements
       final BuildRuleParams params,
       final BuildRuleResolver ruleResolver,
       final A args) throws NoSuchBuildTargetException {
-    if (args.includeDirs.get().size() > 0) {
+    if (args.includeDirs.size() > 0) {
       LOG.warn(
           "Build target %s uses `include_dirs` which is deprecated. Use `exported_headers` instead",
           params.getBuildTarget().toString());
@@ -485,13 +485,13 @@ public class PrebuiltCxxLibraryDescription implements
                 params.getBuildTarget(),
                 params.getCellRoots(),
                 ruleResolver,
-                args.includeDirs.or(ImmutableList.of("include")))),
+                args.includeDirs)),
         ruleResolver,
         pathResolver,
-        FluentIterable.from(args.exportedDeps.get())
+        FluentIterable.from(args.exportedDeps)
             .transform(ruleResolver.getRuleFunction())
             .filter(NativeLinkable.class),
-        args.includeDirs.or(ImmutableList.of("include")),
+        args.includeDirs,
         args.libDir,
         args.libName,
         input -> CxxFlags.getLanguageFlags(
@@ -505,23 +505,20 @@ public class PrebuiltCxxLibraryDescription implements
             input),
         args.soname,
         args.linkWithoutSoname.or(false),
-        args.frameworks.or(ImmutableSortedSet.of()),
-        args.libraries.or(ImmutableSortedSet.of()),
+        args.frameworks,
+        args.libraries,
         args.forceStatic.or(false),
         args.headerOnly.or(false),
         args.linkWhole.or(false),
         args.provided.or(false),
         cxxPlatform -> {
-          if (args.exportedHeaders.isPresent() && !args.exportedHeaders.get().isEmpty()) {
+          if (!args.exportedHeaders.isEmpty()) {
             return true;
           }
-          if (args.exportedPlatformHeaders.isPresent()) {
-            for (SourceList sourceList :
-                 args.exportedPlatformHeaders.get()
-                     .getMatchingValues(cxxPlatform.getFlavor().toString())) {
-              if (!sourceList.isEmpty()) {
-                return true;
-              }
+          for (SourceList sourceList :
+               args.exportedPlatformHeaders.getMatchingValues(cxxPlatform.getFlavor().toString())) {
+            if (!sourceList.isEmpty()) {
+              return true;
             }
           }
           return false;
@@ -540,10 +537,8 @@ public class PrebuiltCxxLibraryDescription implements
     if (constructorArg.libDir.isPresent()) {
       addDepsFromParam(buildTarget, cellRoots, constructorArg.libDir.get(), targets);
     }
-    if (constructorArg.includeDirs.isPresent()) {
-      for (String include : constructorArg.includeDirs.get()) {
-        addDepsFromParam(buildTarget, cellRoots, include, targets);
-      }
+    for (String include : constructorArg.includeDirs) {
+      addDepsFromParam(buildTarget, cellRoots, include, targets);
     }
     return targets.build();
   }
@@ -583,36 +578,32 @@ public class PrebuiltCxxLibraryDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
-    public Optional<ImmutableList<String>> includeDirs = Optional.of(ImmutableList.of());
+    public ImmutableList<String> includeDirs = ImmutableList.of();
     public Optional<String> libName;
     public Optional<String> libDir;
     public Optional<Boolean> headerOnly;
-    public Optional<SourceList> exportedHeaders = Optional.of(SourceList.EMPTY);
-    public Optional<PatternMatchedCollection<SourceList>> exportedPlatformHeaders =
-        Optional.of(PatternMatchedCollection.of());
+    public SourceList exportedHeaders = SourceList.EMPTY;
+    public PatternMatchedCollection<SourceList> exportedPlatformHeaders =
+        PatternMatchedCollection.of();
     public Optional<String> headerNamespace;
     public Optional<Boolean> provided;
     public Optional<Boolean> linkWhole;
     public Optional<Boolean> forceStatic;
-    public Optional<ImmutableList<String>> exportedPreprocessorFlags =
-        Optional.of(ImmutableList.of());
-    public Optional<PatternMatchedCollection<ImmutableList<String>>>
-        exportedPlatformPreprocessorFlags = Optional.of(PatternMatchedCollection.of());
-    public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>>
-        exportedLangPreprocessorFlags = Optional.of(ImmutableMap.of());
-    public Optional<ImmutableList<String>> exportedLinkerFlags = Optional.of(ImmutableList.of());
-    public Optional<PatternMatchedCollection<ImmutableList<String>>> exportedPlatformLinkerFlags =
-        Optional.of(PatternMatchedCollection.of());
+    public ImmutableList<String> exportedPreprocessorFlags = ImmutableList.of();
+    public PatternMatchedCollection<ImmutableList<String>>
+        exportedPlatformPreprocessorFlags = PatternMatchedCollection.of();
+    public ImmutableMap<CxxSource.Type, ImmutableList<String>>
+        exportedLangPreprocessorFlags = ImmutableMap.of();
+    public ImmutableList<String> exportedLinkerFlags = ImmutableList.of();
+    public PatternMatchedCollection<ImmutableList<String>> exportedPlatformLinkerFlags =
+        PatternMatchedCollection.of();
     public Optional<String> soname;
     public Optional<Boolean> linkWithoutSoname;
     public Optional<Boolean> canBeAsset;
-    public Optional<ImmutableSortedSet<FrameworkPath>> frameworks =
-        Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<FrameworkPath>> libraries =
-        Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps =
-        Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<FrameworkPath> frameworks = ImmutableSortedSet.of();
+    public ImmutableSortedSet<FrameworkPath> libraries = ImmutableSortedSet.of();
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    public ImmutableSortedSet<BuildTarget> exportedDeps = ImmutableSortedSet.of();
     public Optional<Pattern> supportedPlatformsRegex;
   }
 

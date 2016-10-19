@@ -34,7 +34,6 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.base.Optional;
@@ -99,13 +98,13 @@ public class SwiftLibraryIntegrationTest {
     SwiftLibraryDescription.Arg args =
         FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createUnpopulatedConstructorArg();
     args.moduleName = Optional.absent();
-    args.srcs = Optional.of(ImmutableSortedSet.<SourcePath>of());
-    args.compilerFlags = Optional.absent();
-    args.frameworks = Optional.of(ImmutableSortedSet.<FrameworkPath>of());
-    args.libraries = Optional.of(ImmutableSortedSet.<FrameworkPath>of());
+    args.srcs = ImmutableSortedSet.of();
+    args.compilerFlags = ImmutableList.of();
+    args.frameworks = ImmutableSortedSet.of();
+    args.libraries = ImmutableSortedSet.of();
     args.enableObjcInterop = Optional.absent();
     args.supportedPlatformsRegex = Optional.absent();
-    args.headersSearchPath = Optional.absent();
+    args.headersSearchPath = ImmutableMap.of();
 
     SwiftCompile buildRule = (SwiftCompile) FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION
         .createBuildRule(TargetGraph.EMPTY, params, resolver, args);

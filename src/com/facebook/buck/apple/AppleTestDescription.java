@@ -264,8 +264,8 @@ public class AppleTestDescription implements
         Optional.absent(),
         args.infoPlist,
         args.infoPlistSubstitutions,
-        args.deps.get(),
-        args.tests.get(),
+        args.deps,
+        args.tests,
         debugFormat);
 
     Optional<SourcePath> xctool = getXctool(params, resolver, sourcePathResolver);
@@ -277,15 +277,15 @@ public class AppleTestDescription implements
         appleConfig.getXctestPlatformNames().contains(platformName),
         platformName,
         appleConfig.getXctoolDefaultDestinationSpecifier(),
-        args.destinationSpecifier,
+        Optional.of(args.destinationSpecifier),
         params.copyWithDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(bundle)),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         sourcePathResolver,
         bundle,
         testHostInfo.transform(TestHostInfo::getTestHostApp),
-        args.contacts.get(),
-        args.labels.get(),
+        args.contacts,
+        args.labels,
         args.getRunTestSeparately(),
         xcodeDeveloperDirectorySupplier,
         appleConfig.getTestLogDirectoryEnvironmentVariable(),
@@ -460,8 +460,8 @@ public class AppleTestDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends AppleNativeTargetDescriptionArg implements HasAppleBundleFields {
-    public Optional<ImmutableSortedSet<String>> contacts = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<Label>> labels = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
+    public ImmutableSortedSet<Label> labels = ImmutableSortedSet.of();
     public Optional<Boolean> canGroup;
     public Optional<Boolean> runTestSeparately;
     public Optional<Boolean> isUiTest;
@@ -469,12 +469,10 @@ public class AppleTestDescription implements
 
     // Bundle related fields.
     public SourcePath infoPlist;
-    public Optional<ImmutableMap<String, String>> infoPlistSubstitutions =
-        Optional.of(ImmutableMap.of());
+    public ImmutableMap<String, String> infoPlistSubstitutions = ImmutableMap.of();
     public Optional<String> xcodeProductType;
 
-    public Optional<ImmutableMap<String, String>> destinationSpecifier =
-        Optional.of(ImmutableMap.of());
+    public ImmutableMap<String, String> destinationSpecifier = ImmutableMap.of();
 
     public Optional<Long> testRuleTimeoutMs;
 

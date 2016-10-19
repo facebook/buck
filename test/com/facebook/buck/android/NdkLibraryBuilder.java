@@ -65,7 +65,7 @@ public class NdkLibraryBuilder extends AbstractNodeBuilder<NdkLibraryDescription
   }
 
   public NdkLibraryBuilder setFlags(Iterable<String> flags) {
-    arg.flags = Optional.of(ImmutableList.copyOf(flags));
+    arg.flags = ImmutableList.copyOf(flags);
     return this;
   }
 

@@ -133,7 +133,7 @@ public class ThriftPythonEnhancerTest {
 
     // Test empty options.
     options = ImmutableSet.of();
-    arg.pyOptions = Optional.of(options);
+    arg.pyOptions = options;
     assertEquals(
         options,
         ENHANCER.getOptions(TARGET, arg));
@@ -143,7 +143,7 @@ public class ThriftPythonEnhancerTest {
 
     // Test set options.
     options = ImmutableSet.of("test", "option");
-    arg.pyOptions = Optional.of(options);
+    arg.pyOptions = options;
     assertEquals(
         options,
         ENHANCER.getOptions(TARGET, arg));
@@ -155,7 +155,7 @@ public class ThriftPythonEnhancerTest {
         ASYNCIO_ENHANCER.getOptions(TARGET, arg));
 
     // Test absent options.
-    arg.pyOptions = Optional.absent();
+    arg.pyOptions = ImmutableSet.of();
     assertEquals(
         ImmutableSet.<String>of(),
         ENHANCER.getOptions(TARGET, arg));
@@ -173,7 +173,7 @@ public class ThriftPythonEnhancerTest {
       ImmutableSet<BuildTarget> expected) {
 
     ThriftConstructorArg arg = new ThriftConstructorArg();
-    arg.pyOptions = Optional.of(options);
+    arg.pyOptions = options;
 
     assertEquals(
         expected,
@@ -240,7 +240,7 @@ public class ThriftPythonEnhancerTest {
 
     // Add a dummy dependency to the constructor arg to make sure it gets through.
     ThriftConstructorArg arg = new ThriftConstructorArg();
-    arg.pyOptions = Optional.absent();
+    arg.pyOptions = ImmutableSet.of();
     arg.pyBaseModule = Optional.absent();
 
     // Setup up some thrift inputs to pass to the createBuildRule method.
@@ -277,7 +277,7 @@ public class ThriftPythonEnhancerTest {
 
     // Add a dummy dependency to the constructor arg to make sure it gets through.
     ThriftConstructorArg arg = new ThriftConstructorArg();
-    arg.pyOptions = Optional.absent();
+    arg.pyOptions = ImmutableSet.of();
 
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
@@ -328,7 +328,7 @@ public class ThriftPythonEnhancerTest {
 
     // Add a dummy dependency to the constructor arg to make sure it gets through.
     ThriftConstructorArg arg = new ThriftConstructorArg();
-    arg.pyOptions = Optional.absent();
+    arg.pyOptions = ImmutableSet.of();
 
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(
@@ -379,7 +379,7 @@ public class ThriftPythonEnhancerTest {
 
     // Add a dummy dependency to the constructor arg to make sure it gets through.
     ThriftConstructorArg arg = new ThriftConstructorArg();
-    arg.pyOptions = Optional.absent();
+    arg.pyOptions = ImmutableSet.of();
 
     // Setup up some thrift inputs to pass to the createBuildRule method.
     ImmutableMap<String, ThriftSource> sources = ImmutableMap.of(

@@ -55,12 +55,12 @@ public class GenruleBuilder extends AbstractNodeBuilder<GenruleDescription.Arg> 
   }
 
   public GenruleBuilder setSrcs(@Nullable ImmutableList<SourcePath> srcs) {
-    arg.srcs = Optional.fromNullable(srcs);
+    arg.srcs = Optional.fromNullable(srcs).or(ImmutableList.of());
     return this;
   }
 
   public GenruleBuilder setTests(ImmutableSortedSet<BuildTarget> tests) {
-    arg.tests = Optional.of(tests);
+    arg.tests = tests;
     return this;
   }
 

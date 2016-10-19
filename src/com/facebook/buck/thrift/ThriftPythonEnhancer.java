@@ -194,29 +194,25 @@ public class ThriftPythonEnhancer implements ThriftLanguageSpecificEnhancer {
       BuildTarget target,
       ThriftConstructorArg args) {
 
-    ImmutableSet.Builder<String> options = ImmutableSet.builder();
-
-    if (args.pyOptions.isPresent()) {
-
-      // Don't allow the "twisted" or "asyncio" parameters to be passed in via the options
-      // parameter, as we use dedicated flavors to handle them.
-      if (args.pyOptions.get().contains("twisted")) {
-        throw new HumanReadableException(
-            "%s: parameter \"py_options\": cannot specify \"twisted\" as an option" +
-                " -- use the \"#%s\" flavor instead",
-            target,
-            PYTHON_TWISTED_FLAVOR);
-      }
-      if (args.pyOptions.get().contains("asyncio")) {
-        throw new HumanReadableException(
-            "%s: parameter \"py_options\": cannot specify \"asyncio\" as an option" +
-                " -- use the \"#%s\" flavor instead",
-            target,
-            PYTHON_ASYNCIO_FLAVOR);
-      }
-
-      options.addAll(args.pyOptions.get());
+    // Don't allow the "twisted" or "asyncio" parameters to be passed in via the options
+    // parameter, as we use dedicated flavors to handle them.
+    if (args.pyOptions.contains("twisted")) {
+      throw new HumanReadableException(
+          "%s: parameter \"py_options\": cannot specify \"twisted\" as an option" +
+              " -- use the \"#%s\" flavor instead",
+          target,
+          PYTHON_TWISTED_FLAVOR);
     }
+    if (args.pyOptions.contains("asyncio")) {
+      throw new HumanReadableException(
+          "%s: parameter \"py_options\": cannot specify \"asyncio\" as an option" +
+              " -- use the \"#%s\" flavor instead",
+          target,
+          PYTHON_ASYNCIO_FLAVOR);
+    }
+
+    ImmutableSet.Builder<String> options = ImmutableSet.builder();
+    options.addAll(args.pyOptions);
 
     if (type == Type.TWISTED) {
       options.add("twisted");

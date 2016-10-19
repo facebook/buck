@@ -71,7 +71,7 @@ public class CSharpLibraryDescription implements Description<CSharpLibraryDescri
         suggestedOut,
         args.srcs,
         refsAsRules.build(),
-        args.resources.get(),
+        args.resources,
         args.frameworkVer);
   }
 
@@ -79,7 +79,7 @@ public class CSharpLibraryDescription implements Description<CSharpLibraryDescri
   public static class Arg extends AbstractDescriptionArg {
     public FrameworkVersion frameworkVer;
     public ImmutableSortedSet<SourcePath> srcs;
-    public Optional<ImmutableMap<String, SourcePath>> resources = Optional.of(ImmutableMap.of());
+    public ImmutableMap<String, SourcePath> resources = ImmutableMap.of();
     public Optional<String> dllName;
 
     // We may have system-provided references ("System.Core.dll") or other build targets

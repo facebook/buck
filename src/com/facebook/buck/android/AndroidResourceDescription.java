@@ -115,7 +115,7 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
                 AndroidResourceHelper.androidResOnly(params.getDeclaredDeps().get())),
             params.getExtraDeps()),
         pathResolver,
-        resolver.getAllRules(args.deps.get()),
+        resolver.getAllRules(args.deps),
         args.res.orNull(),
         resInputsAndKey.getFirst(),
         resInputsAndKey.getSecond(),
@@ -209,7 +209,7 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
     public Optional<String> rDotJavaPackage;
     public Optional<SourcePath> manifest;
 
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public Optional<Boolean> resourceUnion;
   }
 }

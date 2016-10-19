@@ -39,7 +39,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -104,7 +103,7 @@ public class DBinaryDescription implements
             cxxBuckConfig,
             /* compilerFlags */ ImmutableList.of(),
             args.srcs,
-            args.linkerFlags.or(ImmutableList.of()),
+            args.linkerFlags,
             DIncludes.builder()
                 .setLinkTree(new BuildTargetSourcePath(sourceTree.getBuildTarget()))
                 .addAllSources(args.srcs.getPaths())
@@ -140,8 +139,8 @@ public class DBinaryDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public SourceList srcs;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableList<String>> linkerFlags = Optional.of(ImmutableList.of());
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    public ImmutableList<String> linkerFlags = ImmutableList.of();
   }
 
 }

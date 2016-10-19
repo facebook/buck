@@ -226,8 +226,8 @@ public class JavaDepsFinder {
         if (node.getConstructorArg() instanceof JavaLibraryDescription.Arg) {
           JavaLibraryDescription.Arg arg = (JavaLibraryDescription.Arg) node.getConstructorArg();
           autodeps = arg.autodeps.or(false);
-          providedDeps = arg.providedDeps.or(ImmutableSortedSet.of());
-          exportedDeps = arg.exportedDeps.or(ImmutableSortedSet.of());
+          providedDeps = arg.providedDeps;
+          exportedDeps = arg.exportedDeps;
         } else if (node.getConstructorArg() instanceof PrebuiltJarDescription.Arg) {
           autodeps = false;
           providedDeps = ImmutableSortedSet.of();
@@ -385,9 +385,9 @@ public class JavaDepsFinder {
       // The build target should be recorded as a provider for every symbol in its
       // generated_symbols set (if it exists). It is common to use this for symbols that are
       // generated via annotation processors.
-      generatedSymbols = arg.generatedSymbols.or(ImmutableSortedSet.of());
+      generatedSymbols = arg.generatedSymbols;
       symbolsFinder = new JavaLibrarySymbolsFinder(
-          arg.srcs.get(),
+          arg.srcs,
           javaFileParser,
           shouldRecordRequiredSymbols);
     } else {

@@ -555,7 +555,7 @@ class NewNativeTargetProjectMutator {
       resourceFilesBuilder.addAll(Iterables.transform(arg.files, sourcePathResolver));
       resourceDirsBuilder.addAll(Iterables.transform(arg.dirs, sourcePathResolver));
       variantResourceFilesBuilder.addAll(
-          Iterables.transform(arg.variants.get(), sourcePathResolver));
+          Iterables.transform(arg.variants, sourcePathResolver));
     }
 
     for (AppleAssetCatalogDescription.Arg arg : assetCatalogArgs) {
@@ -634,12 +634,12 @@ class NewNativeTargetProjectMutator {
         shellScriptBuildPhase
             .getInputPaths()
             .addAll(
-                FluentIterable.from(arg.srcs.get())
+                FluentIterable.from(arg.srcs)
                     .transform(sourcePathResolver)
                     .transform(pathRelativizer::outputDirToRootRelative)
                     .transform(Object::toString)
                     .toSet());
-        shellScriptBuildPhase.getOutputPaths().addAll(arg.outputs.get());
+        shellScriptBuildPhase.getOutputPaths().addAll(arg.outputs);
         shellScriptBuildPhase.setShellScript(arg.cmd);
       } else if (IosReactNativeLibraryDescription.TYPE.equals(node.getType())) {
         shellScriptBuildPhase.setShellScript(generateXcodeShellScript(node));

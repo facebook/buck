@@ -91,27 +91,27 @@ public class ProjectCommandXcodeTest {
     BuildTarget bazLibTarget = BuildTargetFactory.newInstance("//baz:lib");
     bazLibNode = AppleLibraryBuilder
         .createBuilder(bazLibTarget)
-        .setTests(Optional.of(ImmutableSortedSet.of(bazTestTarget)))
+        .setTests(ImmutableSortedSet.of(bazTestTarget))
         .build();
 
     BuildTarget fooTestTarget = BuildTargetFactory.newInstance("//foo:lib-xctest");
     fooTestNode = AppleTestBuilder
         .createBuilder(fooTestTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
+        .setDeps(ImmutableSortedSet.of(bazLibTarget))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo:lib");
     fooLibNode = AppleLibraryBuilder
         .createBuilder(fooLibTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
-        .setTests(Optional.of(ImmutableSortedSet.of(fooTestTarget)))
+        .setDeps(ImmutableSortedSet.of(barLibTarget))
+        .setTests(ImmutableSortedSet.of(fooTestTarget))
         .build();
 
     BuildTarget fooBinBinaryTarget = BuildTargetFactory.newInstance("//foo:binbinary");
     fooBinBinaryNode = AppleBinaryBuilder
         .createBuilder(fooBinBinaryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
+        .setDeps(ImmutableSortedSet.of(fooLibTarget))
         .build();
 
     BuildTarget fooBinTarget = BuildTargetFactory.newInstance("//foo:bin");
@@ -119,26 +119,26 @@ public class ProjectCommandXcodeTest {
         .createBuilder(fooBinTarget)
         .setExtension(Either.ofLeft(AppleBundleExtension.APP))
         .setBinary(fooBinBinaryTarget)
-        .setTests(Optional.of(ImmutableSortedSet.of(fooBinTestTarget)))
+        .setTests(ImmutableSortedSet.of(fooBinTestTarget))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 
     bazTestNode = AppleTestBuilder
         .createBuilder(bazTestTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
+        .setDeps(ImmutableSortedSet.of(bazLibTarget))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 
     fooBinTestNode = AppleTestBuilder
         .createBuilder(fooBinTestTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(fooBinTarget)))
+        .setDeps(ImmutableSortedSet.of(fooBinTarget))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 
     BuildTarget quxBinTarget = BuildTargetFactory.newInstance("//qux:bin");
     quxBinNode = AppleBinaryBuilder
         .createBuilder(quxBinTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
+        .setDeps(ImmutableSortedSet.of(barLibTarget))
         .build();
 
     BuildTarget workspaceExtraTestTarget = BuildTargetFactory.newInstance("//foo:extra-xctest");
@@ -152,7 +152,7 @@ public class ProjectCommandXcodeTest {
         .createBuilder(workspaceTarget)
         .setWorkspaceName(Optional.of("workspace"))
         .setSrcTarget(Optional.of(fooBinTarget))
-        .setExtraTests(Optional.of(ImmutableSortedSet.of(workspaceExtraTestTarget)))
+        .setExtraTests(ImmutableSortedSet.of(workspaceExtraTestTarget))
         .build();
 
     BuildTarget smallWorkspaceTarget = BuildTargetFactory.newInstance("//baz:small-workspace");

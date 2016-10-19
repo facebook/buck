@@ -67,8 +67,8 @@ public class RustBinaryDescription implements Description<RustBinaryDescription.
         params,
         new SourcePathResolver(resolver),
         ImmutableSortedSet.copyOf(args.srcs),
-        ImmutableSortedSet.copyOf(args.features.get()),
-        ImmutableList.copyOf(args.rustcFlags.get()),
+        ImmutableSortedSet.copyOf(args.features),
+        ImmutableList.copyOf(args.rustcFlags),
         rustBuckConfig.getRustCompiler().get(),
         cxxPlatform,
         args.linkStyle.or(Linker.LinkableDepType.STATIC));
@@ -77,9 +77,9 @@ public class RustBinaryDescription implements Description<RustBinaryDescription.
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public ImmutableSortedSet<SourcePath> srcs;
-    public Optional<ImmutableSortedSet<String>> features = Optional.of(ImmutableSortedSet.of());
-    public Optional<List<String>> rustcFlags = Optional.of(ImmutableList.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<String> features = ImmutableSortedSet.of();
+    public List<String> rustcFlags = ImmutableList.of();
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public Optional<Linker.LinkableDepType> linkStyle;
   }
 }

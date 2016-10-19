@@ -70,7 +70,7 @@ public class AndroidBuildConfigDescription
     return createBuildRule(
         params,
         args.javaPackage,
-        args.values.get(),
+        args.values,
         args.valuesFile,
         /* useConstantExpressions */ false,
         androidJavacOptions,
@@ -173,7 +173,7 @@ public class AndroidBuildConfigDescription
     public String javaPackage;
 
     /** This will never be absent after this Arg is populated. */
-    public Optional<BuildConfigFields> values = Optional.of(BuildConfigFields.empty());
+    public BuildConfigFields values = BuildConfigFields.empty();
 
     /** If present, contents of file can override those of {@link #values}. */
     public Optional<SourcePath> valuesFile;

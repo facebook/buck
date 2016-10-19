@@ -124,14 +124,14 @@ public class HaskellLibraryDescription implements
         depType,
         Optional.absent(),
         Optional.of(getPackageInfo(params.getBuildTarget())),
-        args.compilerFlags.or(ImmutableList.of()),
+        args.compilerFlags,
         HaskellSources.from(
             params.getBuildTarget(),
             resolver,
             pathResolver,
             cxxPlatform,
             "srcs",
-            args.srcs.or(SourceList.EMPTY)));
+            args.srcs));
   }
 
   private Archive createStaticLibrary(
@@ -590,9 +590,9 @@ public class HaskellLibraryDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg {
-    public Optional<SourceList> srcs = Optional.of(SourceList.EMPTY);
-    public Optional<ImmutableList<String>> compilerFlags = Optional.of(ImmutableList.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public SourceList srcs = SourceList.EMPTY;
+    public ImmutableList<String> compilerFlags = ImmutableList.of();
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public Optional<Boolean> linkWhole;
     public Optional<NativeLinkable.Linkage> preferredLinkage;
   }

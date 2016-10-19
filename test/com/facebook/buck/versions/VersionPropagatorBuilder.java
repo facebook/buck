@@ -67,7 +67,7 @@ class VersionPropagatorBuilder extends AbstractNodeBuilder<VersionPropagatorBuil
   }
 
   public VersionPropagatorBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.of(deps);
+    arg.deps = deps;
     return this;
   }
 
@@ -81,7 +81,7 @@ class VersionPropagatorBuilder extends AbstractNodeBuilder<VersionPropagatorBuil
 
   public VersionPropagatorBuilder setVersionedDeps(
       ImmutableSortedMap<BuildTarget, Optional<Constraint>> deps) {
-    arg.versionedDeps = Optional.of(deps);
+    arg.versionedDeps = deps;
     return this;
   }
 
@@ -99,9 +99,9 @@ class VersionPropagatorBuilder extends AbstractNodeBuilder<VersionPropagatorBuil
   }
 
   public static class Arg {
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedMap<BuildTarget, Optional<Constraint>>> versionedDeps =
-        Optional.of(ImmutableSortedMap.of());
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    public ImmutableSortedMap<BuildTarget, Optional<Constraint>> versionedDeps =
+        ImmutableSortedMap.of();
   }
 
 }

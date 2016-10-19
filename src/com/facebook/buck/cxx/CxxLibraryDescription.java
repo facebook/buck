@@ -37,7 +37,6 @@ import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -323,46 +322,37 @@ public class CxxLibraryDescription implements
 
   public static Arg createEmptyConstructorArg() {
     Arg arg = new Arg();
-    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    arg.exportedDeps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    arg.srcs = Optional.of(ImmutableSortedSet.<SourceWithFlags>of());
-    arg.platformSrcs = Optional.of(
-        PatternMatchedCollection.<ImmutableSortedSet<SourceWithFlags>>of());
+    arg.deps = ImmutableSortedSet.of();
+    arg.exportedDeps = ImmutableSortedSet.of();
+    arg.srcs = ImmutableSortedSet.of();
+    arg.platformSrcs = PatternMatchedCollection.of();
     arg.prefixHeader = Optional.absent();
-    arg.headers = Optional.of(SourceList.ofUnnamedSources(ImmutableSortedSet.of()));
-    arg.platformHeaders = Optional.of(PatternMatchedCollection.<SourceList>of());
-    arg.exportedHeaders = Optional.of(
-        SourceList.ofUnnamedSources(ImmutableSortedSet.of()));
-    arg.exportedPlatformHeaders = Optional.of(PatternMatchedCollection.<SourceList>of());
-    arg.compilerFlags = Optional.of(ImmutableList.<String>of());
-    arg.platformCompilerFlags =
-        Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());
-    arg.langCompilerFlags =
-        Optional.of(ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
-    arg.exportedPreprocessorFlags = Optional.of(ImmutableList.<String>of());
-    arg.exportedPlatformPreprocessorFlags =
-        Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());
-    arg.exportedLangPreprocessorFlags = Optional.of(
-        ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
-    arg.preprocessorFlags = Optional.of(ImmutableList.<String>of());
-    arg.platformPreprocessorFlags =
-        Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());
-    arg.langPreprocessorFlags = Optional.of(
-        ImmutableMap.<CxxSource.Type, ImmutableList<String>>of());
-    arg.linkerFlags = Optional.of(ImmutableList.<String>of());
-    arg.exportedLinkerFlags = Optional.of(ImmutableList.<String>of());
-    arg.platformLinkerFlags = Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());
-    arg.exportedPlatformLinkerFlags = Optional.of(
-        PatternMatchedCollection.<ImmutableList<String>>of());
+    arg.headers = SourceList.ofUnnamedSources(ImmutableSortedSet.of());
+    arg.platformHeaders = PatternMatchedCollection.of();
+    arg.exportedHeaders = SourceList.ofUnnamedSources(ImmutableSortedSet.of());
+    arg.exportedPlatformHeaders = PatternMatchedCollection.of();
+    arg.compilerFlags = ImmutableList.of();
+    arg.platformCompilerFlags = PatternMatchedCollection.of();
+    arg.langCompilerFlags = ImmutableMap.of();
+    arg.exportedPreprocessorFlags = ImmutableList.of();
+    arg.exportedPlatformPreprocessorFlags = PatternMatchedCollection.of();
+    arg.exportedLangPreprocessorFlags = ImmutableMap.of();
+    arg.preprocessorFlags = ImmutableList.of();
+    arg.platformPreprocessorFlags = PatternMatchedCollection.of();
+    arg.langPreprocessorFlags = ImmutableMap.of();
+    arg.linkerFlags = ImmutableList.of();
+    arg.exportedLinkerFlags = ImmutableList.of();
+    arg.platformLinkerFlags = PatternMatchedCollection.of();
+    arg.exportedPlatformLinkerFlags = PatternMatchedCollection.of();
     arg.cxxRuntimeType = Optional.absent();
     arg.forceStatic = Optional.absent();
     arg.preferredLinkage = Optional.absent();
     arg.linkWhole = Optional.absent();
     arg.headerNamespace = Optional.absent();
     arg.soname = Optional.absent();
-    arg.frameworks = Optional.of(ImmutableSortedSet.<FrameworkPath>of());
-    arg.libraries = Optional.of(ImmutableSortedSet.<FrameworkPath>of());
-    arg.tests = Optional.of(ImmutableSortedSet.<BuildTarget>of());
+    arg.frameworks = ImmutableSortedSet.of();
+    arg.libraries = ImmutableSortedSet.of();
+    arg.tests = ImmutableSortedSet.of();
     arg.supportedPlatformsRegex = Optional.absent();
     arg.linkStyle = Optional.absent();
     arg.bridgingHeader = Optional.absent();
@@ -511,8 +501,8 @@ public class CxxLibraryDescription implements
         cxxPlatform,
         args,
         linkerFlags.build(),
-        args.frameworks.or(ImmutableSortedSet.of()),
-        args.libraries.or(ImmutableSortedSet.of()),
+        args.frameworks,
+        args.libraries,
         args.soname,
         args.cxxRuntimeType,
         linkType,
@@ -681,21 +671,21 @@ public class CxxLibraryDescription implements
       throw new RuntimeException("unhandled library build type");
     }
 
-    boolean hasObjectsForAnyPlatform = !args.srcs.get().isEmpty();
+    boolean hasObjectsForAnyPlatform = !args.srcs.isEmpty();
     Predicate<CxxPlatform> hasObjects;
     if (hasObjectsForAnyPlatform) {
       hasObjects = Predicates.alwaysTrue();
     } else {
-      hasObjects = input -> !args.platformSrcs.get().getMatchingValues(
+      hasObjects = input -> !args.platformSrcs.getMatchingValues(
           input.getFlavor().toString()).isEmpty();
     }
 
     Predicate<CxxPlatform> hasExportedHeaders;
-    if (!args.exportedHeaders.get().isEmpty()) {
+    if (!args.exportedHeaders.isEmpty()) {
       hasExportedHeaders = Predicates.alwaysTrue();
     } else {
       hasExportedHeaders =
-          input -> !args.exportedPlatformHeaders.get()
+          input -> !args.exportedPlatformHeaders
               .getMatchingValues(input.getFlavor().toString()).isEmpty();
     }
 
@@ -706,7 +696,7 @@ public class CxxLibraryDescription implements
         params,
         resolver,
         pathResolver,
-        FluentIterable.from(args.exportedDeps.get())
+        FluentIterable.from(args.exportedDeps)
             .transform(resolver.getRuleFunction()),
         hasExportedHeaders,
         Predicates.not(hasObjects),
@@ -745,21 +735,21 @@ public class CxxLibraryDescription implements
                     args.exportedLinkerFlags,
                     args.exportedPlatformLinkerFlags,
                     cxxPlatform),
-                args.frameworks.or(ImmutableSortedSet.of()),
-                args.libraries.or(ImmutableSortedSet.of()));
+                args.frameworks,
+                args.libraries);
           } catch (NoSuchBuildTargetException e) {
             throw new RuntimeException(e);
           }
         },
         args.supportedPlatformsRegex,
-        args.frameworks.or(ImmutableSortedSet.of()),
-        args.libraries.or(ImmutableSortedSet.of()),
+        args.frameworks,
+        args.libraries,
         args.forceStatic.or(false)
             ? NativeLinkable.Linkage.STATIC
             : args.preferredLinkage.or(NativeLinkable.Linkage.ANY),
         args.linkWhole.or(false),
         args.soname,
-        args.tests.get(),
+        args.tests,
         args.canBeAsset.or(false));
   }
 
@@ -780,14 +770,14 @@ public class CxxLibraryDescription implements
 
     try {
       for (String val : Iterables.concat(
-          constructorArg.linkerFlags.get(),
-          constructorArg.exportedLinkerFlags.get())) {
+          constructorArg.linkerFlags,
+          constructorArg.exportedLinkerFlags)) {
         deps.addAll(MACRO_HANDLER.extractParseTimeDeps(buildTarget, cellRoots, val));
       }
       for (PatternMatchedCollection<ImmutableList<String>> values :
           ImmutableList.of(
-                  constructorArg.platformLinkerFlags.get(),
-                  constructorArg.exportedPlatformLinkerFlags.get())) {
+                  constructorArg.platformLinkerFlags,
+                  constructorArg.exportedPlatformLinkerFlags)) {
         for (Pair<Pattern, ImmutableList<String>> pav : values.getPatternsAndValues()) {
           for (String val : pav.getSecond()) {
             deps.addAll(
@@ -872,20 +862,18 @@ public class CxxLibraryDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends LinkableCxxConstructorArg {
-    public Optional<SourceList> exportedHeaders = Optional.of(SourceList.EMPTY);
-    public Optional<PatternMatchedCollection<SourceList>> exportedPlatformHeaders =
-        Optional.of(PatternMatchedCollection.of());
-    public Optional<ImmutableList<String>> exportedPreprocessorFlags =
-        Optional.of(ImmutableList.of());
-    public Optional<PatternMatchedCollection<ImmutableList<String>>>
-        exportedPlatformPreprocessorFlags = Optional.of(PatternMatchedCollection.of());
-    public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>>
-        exportedLangPreprocessorFlags = Optional.of(ImmutableMap.of());
-    public Optional<ImmutableList<String>> exportedLinkerFlags = Optional.of(ImmutableList.of());
-    public Optional<PatternMatchedCollection<ImmutableList<String>>> exportedPlatformLinkerFlags =
-        Optional.of(PatternMatchedCollection.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps =
-        Optional.of(ImmutableSortedSet.of());
+    public SourceList exportedHeaders = SourceList.EMPTY;
+    public PatternMatchedCollection<SourceList> exportedPlatformHeaders =
+        PatternMatchedCollection.of();
+    public ImmutableList<String> exportedPreprocessorFlags = ImmutableList.of();
+    public PatternMatchedCollection<ImmutableList<String>>
+        exportedPlatformPreprocessorFlags = PatternMatchedCollection.of();
+    public ImmutableMap<CxxSource.Type, ImmutableList<String>>
+        exportedLangPreprocessorFlags = ImmutableMap.of();
+    public ImmutableList<String> exportedLinkerFlags = ImmutableList.of();
+    public PatternMatchedCollection<ImmutableList<String>> exportedPlatformLinkerFlags =
+        PatternMatchedCollection.of();
+    public ImmutableSortedSet<BuildTarget> exportedDeps = ImmutableSortedSet.of();
     public Optional<Pattern> supportedPlatformsRegex;
     public Optional<String> soname;
     public Optional<Boolean> forceStatic;

@@ -122,15 +122,15 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                         BuildRules.getExportedRules(
                             Iterables.concat(
                                 params.getDeclaredDeps().get(),
-                                resolver.getAllRules(args.providedDeps.get()))),
+                                resolver.getAllRules(args.providedDeps))),
                         scalac.getDeps(pathResolver)))
                     .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR),
                 pathResolver,
-                args.srcs.get(),
+                args.srcs,
                 ResourceValidator.validateResources(
                     pathResolver,
                     params.getProjectFilesystem(),
-                    args.resources.get()),
+                    args.resources),
                 /* generatedSourceFolderName */ Optional.absent(),
                 /* proguardConfig */ Optional.absent(),
                 /* postprocessClassesCommands */ ImmutableList.of(),
@@ -143,7 +143,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                     scalac,
                     ImmutableList.<String>builder()
                         .addAll(config.getCompilerFlags())
-                        .addAll(args.extraArguments.get())
+                        .addAll(args.extraArguments)
                         .build()
                 ),
                 args.resourcesRoot,
@@ -161,14 +161,14 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                 pathResolver,
                 testsLibrary,
                 /* additionalClasspathEntries */ ImmutableSet.of(),
-                args.labels.get(),
-                args.contacts.get(),
+                args.labels,
+                args.contacts,
                 args.testType.or(TestType.JUNIT),
                 javaOptions.getJavaRuntimeLauncher(),
-                args.vmArgs.get(),
+                args.vmArgs,
                 cxxLibraryEnhancement.nativeLibsEnvironment,
                 args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
-                args.env.get(),
+                args.env,
                 args.runTestSeparately.or(false),
                 args.forkMode.or(ForkMode.NONE),
                 args.stdOutLogLevel,
@@ -197,17 +197,17 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
 
   @SuppressFieldNotInitialized
   public static class Arg extends ScalaLibraryDescription.Arg {
-    public Optional<ImmutableSortedSet<String>> contacts = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<Label>> labels = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableList<String>> vmArgs = Optional.of(ImmutableList.of());
+    public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
+    public ImmutableSortedSet<Label> labels = ImmutableSortedSet.of();
+    public ImmutableList<String> vmArgs = ImmutableList.of();
     public Optional<TestType> testType;
     public Optional<Boolean> runTestSeparately;
     public Optional<ForkMode> forkMode;
     public Optional<Level> stdErrLogLevel;
     public Optional<Level> stdOutLogLevel;
     public Optional<Boolean> useCxxLibraries;
-    public Optional<ImmutableSet<BuildTarget>> cxxLibraryWhitelist = Optional.of(ImmutableSet.of());
+    public ImmutableSet<BuildTarget> cxxLibraryWhitelist = ImmutableSet.of();
     public Optional<Long> testRuleTimeoutMs;
-    public Optional<ImmutableMap<String, String>> env = Optional.of(ImmutableMap.of());
+    public ImmutableMap<String, String> env = ImmutableMap.of();
   }
 }

@@ -450,9 +450,7 @@ public class TargetsCommandTest {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/foo.m")))))
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/foo.m"))))
         .build();
 
     ImmutableSet<TargetNode<?>> nodes = ImmutableSet.of(libraryNode);
@@ -489,18 +487,14 @@ public class TargetsCommandTest {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/foo.m")))))
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/foo.m"))))
         .build();
 
     BuildTarget testTarget = BuildTargetFactory.newInstance("//foo:xctest");
     TargetNode<?> testNode = AppleTestBuilder
         .createBuilder(testTarget)
-        .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo.m")))))
-        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo.m"))))
+        .setDeps(ImmutableSortedSet.of(libraryTarget))
         .build();
 
     ImmutableSet<TargetNode<?>> nodes = ImmutableSet.of(libraryNode, testNode);
@@ -616,44 +610,38 @@ public class TargetsCommandTest {
 
     TargetNode<?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/foo.m")))))
-        .setTests(Optional.of(ImmutableSortedSet.of(libraryTestTarget1, libraryTestTarget2)))
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/foo.m"))))
+        .setTests(ImmutableSortedSet.of(libraryTestTarget1, libraryTestTarget2))
         .build();
 
     TargetNode<?> libraryTestNode1 = AppleTestBuilder
         .createBuilder(libraryTestTarget1)
-        .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo1.m")))))
-        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo1.m"))))
+        .setDeps(ImmutableSortedSet.of(libraryTarget))
         .build();
 
     TargetNode<?> libraryTestNode2 = AppleTestBuilder
         .createBuilder(libraryTestTarget2)
-        .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo2.m")))))
-        .setDeps(Optional.of(ImmutableSortedSet.of(testLibraryTarget)))
+        .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo2.m"))))
+        .setDeps(ImmutableSortedSet.of(testLibraryTarget))
         .build();
 
     TargetNode<?> testLibraryNode = AppleLibraryBuilder
         .createBuilder(testLibraryTarget)
-        .setSrcs(Optional.of(ImmutableSortedSet.of(
-                    SourceWithFlags.of(
-                        new FakeSourcePath("testlib/testlib.m")))))
-        .setTests(Optional.of(ImmutableSortedSet.of(testLibraryTestTarget)))
+        .setSrcs(
+            ImmutableSortedSet.of(
+                SourceWithFlags.of(
+                    new FakeSourcePath("testlib/testlib.m"))))
+        .setTests(ImmutableSortedSet.of(testLibraryTestTarget))
         .build();
 
     TargetNode<?> testLibraryTestNode = AppleTestBuilder
         .createBuilder(testLibraryTestTarget)
         .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    SourceWithFlags.of(
-                        new FakeSourcePath("testlib/testlib-test.m")))))
-        .setDeps(Optional.of(ImmutableSortedSet.of(testLibraryTarget)))
+            ImmutableSortedSet.of(
+                SourceWithFlags.of(
+                    new FakeSourcePath("testlib/testlib-test.m"))))
+        .setDeps(ImmutableSortedSet.of(testLibraryTarget))
         .build();
 
     ImmutableSet<TargetNode<?>> nodes = ImmutableSet.of(

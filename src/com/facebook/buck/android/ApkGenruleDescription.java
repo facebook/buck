@@ -73,7 +73,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
                     .add(installableApk)
                     .build())),
         new SourcePathResolver(resolver),
-        args.srcs.get(),
+        args.srcs,
         cmd,
         bash,
         cmdExe,

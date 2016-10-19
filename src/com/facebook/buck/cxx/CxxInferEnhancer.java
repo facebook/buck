@@ -330,7 +330,7 @@ public final class CxxInferEnhancer {
             args.langPreprocessorFlags,
             cxxPlatform),
         ImmutableList.of(headerSymlinkTree),
-        args.frameworks.or(ImmutableSortedSet.of()),
+        args.frameworks,
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
             cxxPlatform,
             FluentIterable.from(params.getDeps())
@@ -370,7 +370,7 @@ public final class CxxInferEnhancer {
                 pathResolver,
                 Optional.of(cxxPlatform),
                 args),
-            args.frameworks.or(ImmutableSortedSet.of())));
+            args.frameworks));
   }
 
   private static ImmutableSet<CxxInferCapture> requireInferCaptureBuildRules(

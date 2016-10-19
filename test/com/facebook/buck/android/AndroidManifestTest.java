@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -26,13 +25,13 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -96,7 +95,7 @@ public class AndroidManifestTest {
     AndroidManifestDescription description = new AndroidManifestDescription();
     AndroidManifestDescription.Arg arg = description.createUnpopulatedConstructorArg();
     arg.skeleton = new FakeSourcePath("java/com/example/AndroidManifestSkeleton.xml");
-    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
+    arg.deps = ImmutableSortedSet.<BuildTarget>of();
     return description.createBuildRule(
         TargetGraph.EMPTY,
         buildRuleParams,

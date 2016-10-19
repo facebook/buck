@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -29,7 +28,6 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
@@ -57,10 +55,10 @@ public class AndroidManifestDescriptionTest {
 
     AndroidManifestDescription.Arg arg = new AndroidManifestDescription.Arg();
     arg.skeleton = skeleton;
-    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
+    arg.deps = ImmutableSortedSet.of();
 
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//foo:baz")
-        .setDeclaredDeps(buildRuleResolver.getAllRules(arg.deps.get()))
+        .setDeclaredDeps(buildRuleResolver.getAllRules(arg.deps))
         .build();
     BuildRule androidManifest = new AndroidManifestDescription()
         .createBuildRule(TargetGraph.EMPTY, params, buildRuleResolver, arg);

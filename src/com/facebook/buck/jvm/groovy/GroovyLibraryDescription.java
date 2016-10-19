@@ -77,7 +77,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
 
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
-    ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps.get());
+    ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
     DefaultJavaLibrary defaultJavaLibrary =
         resolver.addToIndex(
             new DefaultJavaLibrary(
@@ -86,24 +86,24 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
                             Iterables.concat(
                                 params.getDeclaredDeps().get(),
                                 exportedDeps,
-                                resolver.getAllRules(args.providedDeps.get())))),
+                                resolver.getAllRules(args.providedDeps)))),
                 pathResolver,
-                args.srcs.get(),
+                args.srcs,
                 validateResources(
                     pathResolver,
                     params.getProjectFilesystem(),
-                    args.resources.get()),
+                    args.resources),
                 Optional.absent(),
                 Optional.absent(),
                 ImmutableList.of(),
                 exportedDeps,
-                resolver.getAllRules(args.providedDeps.get()),
+                resolver.getAllRules(args.providedDeps),
                 new BuildTargetSourcePath(abiJarTarget),
                 /* trackClassUsage */ false,
                 /* additionalClasspathEntries */ ImmutableSet.of(),
                 new GroovycToJarStepFactory(
                     groovyBuckConfig.getGroovyCompiler().get(),
-                    args.extraGroovycArguments,
+                    Optional.of(args.extraGroovycArguments),
                     JavacOptionsFactory.create(
                         defaultJavacOptions,
                         params,
@@ -128,14 +128,11 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
 
   @SuppressFieldNotInitialized
   public static class Arg extends JvmLibraryArg {
-    public Optional<ImmutableSortedSet<SourcePath>> srcs = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<SourcePath>> resources =
-        Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableList<String>> extraGroovycArguments = Optional.of(ImmutableList.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> providedDeps =
-        Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps =
-        Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
+    public ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
+    public ImmutableList<String> extraGroovycArguments = ImmutableList.of();
+    public ImmutableSortedSet<BuildTarget> providedDeps = ImmutableSortedSet.of();
+    public ImmutableSortedSet<BuildTarget> exportedDeps = ImmutableSortedSet.of();
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
   }
 }

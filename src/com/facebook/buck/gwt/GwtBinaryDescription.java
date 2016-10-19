@@ -90,7 +90,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
     // Find all of the reachable JavaLibrary rules and grab their associated GwtModules.
     final ImmutableSortedSet.Builder<Path> gwtModuleJarsBuilder =
         ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet<BuildRule> moduleDependencies = resolver.getAllRules(args.moduleDeps.get());
+    ImmutableSortedSet<BuildRule> moduleDependencies = resolver.getAllRules(args.moduleDeps);
     new AbstractBreadthFirstTraversal<BuildRule>(moduleDependencies) {
       @Override
       public ImmutableSet<BuildRule> visit(BuildRule rule) {
@@ -145,29 +145,28 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
     return new GwtBinary(
         params.copyWithExtraDeps(Suppliers.ofInstance(extraDeps.build())),
         new SourcePathResolver(resolver),
-        args.modules.get(),
+        args.modules,
         javaOptions.getJavaRuntimeLauncher(),
-        args.vmArgs.get(),
+        args.vmArgs,
         args.style.or(DEFAULT_STYLE),
         args.draftCompile.or(DEFAULT_DRAFT_COMPILE),
         args.optimize.or(DEFAULT_OPTIMIZE),
         args.localWorkers.or(DEFAULT_NUM_LOCAL_WORKERS),
         args.strict.or(DEFAULT_STRICT),
-        args.experimentalArgs.get(),
+        args.experimentalArgs,
         gwtModuleJarsBuilder.build());
   }
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
-    public Optional<ImmutableSortedSet<String>> modules = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> moduleDeps =
-        Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<String> modules = ImmutableSortedSet.of();
+    public ImmutableSortedSet<BuildTarget> moduleDeps = ImmutableSortedSet.of();
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
 
     /**
      * In practice, these may be values such as {@code -Xmx512m}.
      */
-    public Optional<ImmutableList<String>> vmArgs = Optional.of(ImmutableList.of());
+    public ImmutableList<String> vmArgs = ImmutableList.of();
 
     /** This will be passed to the GWT Compiler's {@code -style} flag. */
     public Optional<Style> style;
@@ -188,6 +187,6 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
      * In practice, these may be values such as {@code -XenableClosureCompiler},
      * {@code -XdisableClassMetadata}, {@code -XdisableCastChecking}, or {@code -XfragmentMerge}.
      */
-    public Optional<ImmutableList<String>> experimentalArgs = Optional.of(ImmutableList.of());
+    public ImmutableList<String> experimentalArgs = ImmutableList.of();
   }
 }

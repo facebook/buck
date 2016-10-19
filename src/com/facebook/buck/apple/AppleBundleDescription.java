@@ -150,8 +150,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         args.productName,
         args.infoPlist,
         args.infoPlistSubstitutions,
-        args.deps.get(),
-        args.tests.get(),
+        args.deps,
+        args.tests,
         flavoredDebugFormat);
   }
 
@@ -164,10 +164,6 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
       AppleBundleDescription.Arg constructorArg) {
-    if (!constructorArg.deps.isPresent()) {
-      return ImmutableSet.of();
-    }
-
     if (!cxxPlatformFlavorDomain.containsAnyOf(buildTarget.getFlavors())) {
       buildTarget = BuildTarget.builder(buildTarget).addAllFlavors(
           ImmutableSet.of(defaultCxxPlatform.getFlavor())).build();
@@ -197,7 +193,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       actualWatchFlavor = ImmutableFlavor.of(platformName);
     }
 
-    FluentIterable<BuildTarget> depsExcludingBinary = FluentIterable.from(constructorArg.deps.get())
+    FluentIterable<BuildTarget> depsExcludingBinary = FluentIterable.from(constructorArg.deps)
         .filter(Predicates.not(Predicates.equalTo(constructorArg.binary)));
 
     // Propagate platform flavors.  Need special handling for watch to map the pseudo-flavor
@@ -259,12 +255,9 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     public Either<AppleBundleExtension, String> extension;
     public BuildTarget binary;
     public SourcePath infoPlist;
-    public Optional<ImmutableMap<String, String>> infoPlistSubstitutions =
-        Optional.of(ImmutableMap.of());
-    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> deps =
-        Optional.of(ImmutableSortedSet.of());
-    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests =
-        Optional.of(ImmutableSortedSet.of());
+    public ImmutableMap<String, String> infoPlistSubstitutions = ImmutableMap.of();
+    @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
     public Optional<String> xcodeProductType;
     public Optional<String> productName;
 
@@ -280,7 +273,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {
-      return tests.get();
+      return tests;
     }
 
     @Override

@@ -28,7 +28,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -64,11 +63,11 @@ public class AppleResourcesTest {
         AppleResourceBuilder.createBuilder(resourceTarget)
             .setFiles(ImmutableSet.of(new FakeSourcePath("foo.png")))
             .setDirs(ImmutableSet.of())
-            .setVariants(Optional.of(variants))
+            .setVariants(variants)
             .build();
     TargetNode<AppleLibraryDescription.Arg> libNode = AppleLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//foo:lib"))
-        .setDeps(Optional.of(ImmutableSortedSet.of(resourceTarget)))
+        .setDeps(ImmutableSortedSet.of(resourceTarget))
         .build();
     ImmutableSet<TargetNode<?>> graphNodes = ImmutableSet.of(
         resourceNode,
@@ -95,7 +94,7 @@ public class AppleResourcesTest {
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo:lib");
     TargetNode<AppleLibraryDescription.Arg> fooLibNode = AppleLibraryBuilder
         .createBuilder(fooLibTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(fooResourceTarget)))
+        .setDeps(ImmutableSortedSet.of(fooResourceTarget))
         .build();
     BuildTarget barResourceTarget = BuildTargetFactory.newInstance("//bar:resource");
     TargetNode<AppleResourceDescription.Arg> barResourceNode =
@@ -105,7 +104,7 @@ public class AppleResourcesTest {
             .build();
     TargetNode<AppleLibraryDescription.Arg> barLibNode = AppleLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//bar:lib"))
-        .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget, barResourceTarget)))
+        .setDeps(ImmutableSortedSet.of(fooLibTarget, barResourceTarget))
         .build();
     ImmutableSet<TargetNode<?>> graphNodes = ImmutableSet.of(
         fooResourceNode,

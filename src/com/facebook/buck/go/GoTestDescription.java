@@ -120,11 +120,11 @@ public class GoTestDescription implements
         GoLibraryDescription.Arg libraryArg = resolver.requireMetadata(
             args.library.get(), GoLibraryDescription.Arg.class).get();
         deps = ImmutableSortedSet.<BuildTarget>naturalOrder()
-            .addAll(args.deps.get())
-            .addAll(libraryArg.deps.get())
+            .addAll(args.deps)
+            .addAll(libraryArg.deps)
             .build();
       } else {
-        deps = args.deps.get();
+        deps = args.deps;
       }
 
       return Optional.of(metadataClass.cast(GoDescriptors.requireTransitiveGoLinkables(
@@ -193,11 +193,11 @@ public class GoTestDescription implements
         ),
         new SourcePathResolver(resolver),
         testMain,
-        args.labels.get(),
-        args.contacts.get(),
+        args.labels,
+        args.contacts,
         args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
         args.runTestSeparately.or(false),
-        args.resources.get());
+        args.resources);
   }
 
   private GoBinary createTestMainRule(
@@ -222,9 +222,9 @@ public class GoTestDescription implements
         resolver,
         goBuckConfig,
         ImmutableSet.of(new BuildTargetSourcePath(generatedTestMain.getBuildTarget())),
-        args.compilerFlags.get(),
-        args.assemblerFlags.get(),
-        args.linkerFlags.get(),
+        args.compilerFlags,
+        args.assemblerFlags,
+        args.linkerFlags,
         platform);
     resolver.addToIndex(testMain);
     return testMain;
@@ -249,7 +249,7 @@ public class GoTestDescription implements
             target);
       }
 
-      if (!libraryArg.get().tests.get().contains(target)) {
+      if (!libraryArg.get().tests.contains(target)) {
         throw new HumanReadableException(
             "go internal test target %s is not listed in `tests` of library %s",
             target, args.library.get());
@@ -282,7 +282,7 @@ public class GoTestDescription implements
       BuildRuleParams testTargetParams = params.copyWithDeps(
           () -> ImmutableSortedSet.<BuildRule>naturalOrder()
               .addAll(originalParams.getDeclaredDeps().get())
-              .addAll(resolver.getAllRules(libraryArg.deps.get()))
+              .addAll(resolver.getAllRules(libraryArg.deps))
               .build(),
           () -> {
             final SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
@@ -291,7 +291,7 @@ public class GoTestDescription implements
                 // Make sure to include dynamically generated sources as deps.
                 .addAll(
                     sourcePathResolver.filterBuildRuleInputs(
-                        libraryArg.srcs.or(ImmutableSortedSet.of())))
+                        libraryArg.srcs))
                 .build();
           });
 
@@ -301,16 +301,16 @@ public class GoTestDescription implements
           goBuckConfig,
           packageName,
           ImmutableSet.<SourcePath>builder()
-              .addAll(libraryArg.srcs.or(ImmutableSortedSet.of()))
+              .addAll(libraryArg.srcs)
               .addAll(args.srcs)
               .build(),
           ImmutableList.<String>builder()
-              .addAll(libraryArg.compilerFlags.get())
-              .addAll(args.compilerFlags.get())
+              .addAll(libraryArg.compilerFlags)
+              .addAll(args.compilerFlags)
               .build(),
           ImmutableList.<String>builder()
-              .addAll(libraryArg.assemblerFlags.get())
-              .addAll(args.assemblerFlags.get())
+              .addAll(libraryArg.assemblerFlags)
+              .addAll(args.assemblerFlags)
               .build(),
           platform,
           FluentIterable.from(params.getDeclaredDeps().get())
@@ -322,8 +322,8 @@ public class GoTestDescription implements
           goBuckConfig,
           packageName,
           args.srcs,
-          args.compilerFlags.get(),
-          args.assemblerFlags.get(),
+          args.compilerFlags,
+          args.assemblerFlags,
           platform,
           FluentIterable.from(params.getDeclaredDeps().get())
               .transform(HasBuildTarget::getBuildTarget));
@@ -357,15 +357,14 @@ public class GoTestDescription implements
     public ImmutableSet<SourcePath> srcs;
     public Optional<BuildTarget> library;
     public Optional<String> packageName;
-    public Optional<List<String>> compilerFlags = Optional.of(ImmutableList.of());
-    public Optional<List<String>> assemblerFlags = Optional.of(ImmutableList.of());
-    public Optional<List<String>> linkerFlags = Optional.of(ImmutableList.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSet<String>> contacts = Optional.of(ImmutableSet.of());
-    public Optional<ImmutableSet<Label>> labels = Optional.of(ImmutableSet.of());
+    public List<String> compilerFlags = ImmutableList.of();
+    public List<String> assemblerFlags = ImmutableList.of();
+    public List<String> linkerFlags = ImmutableList.of();
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    public ImmutableSet<String> contacts = ImmutableSet.of();
+    public ImmutableSet<Label> labels = ImmutableSet.of();
     public Optional<Long> testRuleTimeoutMs;
     public Optional<Boolean> runTestSeparately;
-    public Optional<ImmutableSortedSet<SourcePath>> resources =
-        Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
   }
 }

@@ -56,12 +56,12 @@ public class AppleBundleBuilder
     return this;
   }
 
-  public AppleBundleBuilder setDeps(Optional<ImmutableSortedSet<BuildTarget>> deps) {
+  public AppleBundleBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
     arg.deps = deps;
     return this;
   }
 
-  public AppleBundleBuilder setTests(Optional<ImmutableSortedSet<BuildTarget>> tests) {
+  public AppleBundleBuilder setTests(ImmutableSortedSet<BuildTarget> tests) {
     arg.tests = tests;
     return this;
   }

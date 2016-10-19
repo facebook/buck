@@ -323,7 +323,7 @@ public class PythonBinaryDescription implements
             pythonPlatform,
             cxxBuckConfig,
             cxxPlatform,
-            FluentIterable.from(args.linkerFlags.get())
+            FluentIterable.from(args.linkerFlags)
                 .transform(
                     MacroArg.toMacroArgFunction(
                         PythonUtil.MACRO_HANDLER,
@@ -332,7 +332,7 @@ public class PythonBinaryDescription implements
                         resolver))
                 .toList(),
             pythonBuckConfig.getNativeLinkStrategy(),
-            args.preloadDeps.get());
+            args.preloadDeps);
     return createPackageRule(
         params,
         resolver,
@@ -342,12 +342,12 @@ public class PythonBinaryDescription implements
         mainModule,
         args.extension,
         allPackageComponents,
-        args.buildArgs.or(ImmutableList.of()),
+        args.buildArgs,
         args.packageStyle.or(pythonBuckConfig.getPackageStyle()),
         PythonUtil.getPreloadNames(
             resolver,
             cxxPlatform,
-            args.preloadDeps.or(ImmutableSortedSet.of())));
+            args.preloadDeps));
   }
 
   @Override
@@ -375,21 +375,20 @@ public class PythonBinaryDescription implements
   public static class Arg extends AbstractDescriptionArg implements HasTests {
     public Optional<SourcePath> main;
     public Optional<String> mainModule;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public Optional<String> baseModule;
     public Optional<Boolean> zipSafe;
-    public Optional<ImmutableList<String>> buildArgs = Optional.of(ImmutableList.of());
+    public ImmutableList<String> buildArgs = ImmutableList.of();
     public Optional<String> platform;
     public Optional<PythonBuckConfig.PackageStyle> packageStyle;
-    public Optional<ImmutableSet<BuildTarget>> preloadDeps = Optional.of(ImmutableSet.of());
-    public Optional<ImmutableList<String>> linkerFlags = Optional.of(ImmutableList.of());
+    public ImmutableSet<BuildTarget> preloadDeps = ImmutableSet.of();
+    public ImmutableList<String> linkerFlags = ImmutableList.of();
     public Optional<String> extension;
-    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests =
-        Optional.of(ImmutableSortedSet.of());
+    @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {
-      return tests.get();
+      return tests;
     }
 
   }

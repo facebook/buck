@@ -37,6 +37,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -215,10 +216,10 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
             builder.putAllPreprocessorFlags(
                 CxxFlags.getLanguageFlags(
                     args.exportedPreprocessorFlags,
-                    Optional.absent(),
-                    Optional.absent(),
+                    PatternMatchedCollection.of(),
+                    ImmutableMap.of(),
                     cxxPlatform));
-            for (SourcePath includeDir : args.includeDirs.or(ImmutableList.of())) {
+            for (SourcePath includeDir : args.includeDirs) {
               builder.addIncludes(
                   CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, includeDir));
             }
@@ -250,7 +251,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
           CxxPlatform cxxPlatform) {
-        return FluentIterable.from(args.exportedDeps.or(ImmutableSortedSet.of()))
+        return FluentIterable.from(args.exportedDeps)
             .transform(resolver.getRuleFunction())
             .filter(NativeLinkable.class);
       }
@@ -267,16 +268,16 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
                 getStaticLinkArgs(
                     getBuildTarget(),
                     pathResolver,
-                    args.staticLibs.or(ImmutableList.of()),
-                    args.staticLink.or(ImmutableList.of())));
+                    args.staticLibs,
+                    args.staticLink));
             break;
           case STATIC_PIC:
             builder.addAllArgs(
                 getStaticLinkArgs(
                     getBuildTarget(),
                     pathResolver,
-                    args.staticPicLibs.or(ImmutableList.of()),
-                    args.staticPicLink.or(ImmutableList.of())));
+                    args.staticPicLibs,
+                    args.staticPicLink));
             break;
           case SHARED:
             builder.addAllArgs(
@@ -284,10 +285,10 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
                     getBuildTarget(),
                     pathResolver,
                     ImmutableMap.<String, SourcePath>builder()
-                        .putAll(args.sharedLibs.or(ImmutableMap.of()))
-                        .putAll(args.providedSharedLibs.or(ImmutableMap.of()))
+                        .putAll(args.sharedLibs)
+                        .putAll(args.providedSharedLibs)
                         .build(),
-                    args.sharedLink.or(ImmutableList.of())));
+                    args.sharedLink));
             break;
         }
         return builder.build();
@@ -297,18 +298,18 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
       public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
 
         // If we both shared and static libs, we support any linkage.
-        if (!args.sharedLink.get().isEmpty() &&
-            !(args.staticLink.get().isEmpty() && args.staticPicLink.get().isEmpty())) {
+        if (!args.sharedLink.isEmpty() &&
+            !(args.staticLink.isEmpty() && args.staticPicLink.isEmpty())) {
           return Linkage.ANY;
         }
 
         // Otherwise, if we have a shared library, we only support shared linkage.
-        if (!args.sharedLink.get().isEmpty()) {
+        if (!args.sharedLink.isEmpty()) {
           return Linkage.SHARED;
         }
 
         // Otherwise, if we have a static library, we only support static linkage.
-        if (!(args.staticLink.get().isEmpty() && args.staticPicLink.get().isEmpty())) {
+        if (!(args.staticLink.isEmpty() && args.staticPicLink.isEmpty())) {
           return Linkage.STATIC;
         }
 
@@ -319,7 +320,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
       @Override
       public ImmutableMap<String, SourcePath> getSharedLibraries(CxxPlatform cxxPlatform)
           throws NoSuchBuildTargetException {
-        return args.sharedLibs.or(ImmutableMap.of());
+        return args.sharedLibs;
       }
 
     };
@@ -338,45 +339,42 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
   @SuppressFieldNotInitialized
   public static class Args {
 
-    public Optional<ImmutableList<String>> exportedPreprocessorFlags =
-        Optional.of(ImmutableList.of());
-    public Optional<ImmutableList<SourcePath>> includeDirs = Optional.of(ImmutableList.of());
+    public ImmutableList<String> exportedPreprocessorFlags = ImmutableList.of();
+    public ImmutableList<SourcePath> includeDirs = ImmutableList.of();
 
     /**
      * The link arguments to use when linking using the static link style.
      */
-    public Optional<ImmutableList<String>> staticLink = Optional.of(ImmutableList.of());
+    public ImmutableList<String> staticLink = ImmutableList.of();
 
     /**
      * Libraries references in the static link args above.
      */
-    public Optional<ImmutableList<SourcePath>> staticLibs = Optional.of(ImmutableList.of());
+    public ImmutableList<SourcePath> staticLibs = ImmutableList.of();
 
     /**
      * The link arguments to use when linking using the static-pic link style.
      */
-    public Optional<ImmutableList<String>> staticPicLink = Optional.of(ImmutableList.of());
+    public ImmutableList<String> staticPicLink = ImmutableList.of();
 
     /**
      * Libraries references in the static-pic link args above.
      */
-    public Optional<ImmutableList<SourcePath>> staticPicLibs = Optional.of(ImmutableList.of());
+    public ImmutableList<SourcePath> staticPicLibs = ImmutableList.of();
 
     /**
      * The link arguments to use when linking using the shared link style.
      */
-    public Optional<ImmutableList<String>> sharedLink = Optional.of(ImmutableList.of());
+    public ImmutableList<String> sharedLink = ImmutableList.of();
 
     /**
      * Libraries references in the shared link args above.
      */
-    public Optional<ImmutableMap<String, SourcePath>> sharedLibs = Optional.of(ImmutableMap.of());
-    public Optional<ImmutableMap<String, SourcePath>> providedSharedLibs =
-        Optional.of(ImmutableMap.of());
+    public ImmutableMap<String, SourcePath> sharedLibs = ImmutableMap.of();
+    public ImmutableMap<String, SourcePath> providedSharedLibs = ImmutableMap.of();
 
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps =
-        Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    public ImmutableSortedSet<BuildTarget> exportedDeps = ImmutableSortedSet.of();
 
   }
 

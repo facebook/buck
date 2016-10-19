@@ -26,7 +26,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -50,15 +49,15 @@ public class ShBinaryDescription implements Description<ShBinaryDescription.Arg>
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return new ShBinary(params, new SourcePathResolver(resolver), args.main, args.resources.get());
+    return new ShBinary(params, new SourcePathResolver(resolver), args.main, args.resources);
   }
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public SourcePath main;
 
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
 
-    public Optional<ImmutableSet<SourcePath>> resources = Optional.of(ImmutableSet.of());
+    public ImmutableSet<SourcePath> resources = ImmutableSet.of();
   }
 }

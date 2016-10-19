@@ -43,22 +43,22 @@ public class LuaLibraryBuilder extends AbstractNodeBuilder<LuaLibraryDescription
   }
 
   public LuaLibraryBuilder setSrcs(SourceList srcs) {
-    arg.srcs = Optional.of(srcs);
+    arg.srcs = srcs;
     return this;
   }
 
   public LuaLibraryBuilder setSrcs(ImmutableSortedSet<SourcePath> srcs) {
-    arg.srcs = Optional.of(SourceList.ofUnnamedSources(srcs));
+    arg.srcs = SourceList.ofUnnamedSources(srcs);
     return this;
   }
 
   public LuaLibraryBuilder setSrcs(ImmutableSortedMap<String, SourcePath> srcs) {
-    arg.srcs = Optional.of(SourceList.ofNamedSources(srcs));
+    arg.srcs = SourceList.ofNamedSources(srcs);
     return this;
   }
 
   public LuaLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.of(deps);
+    arg.deps = deps;
     return this;
   }
 

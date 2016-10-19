@@ -42,116 +42,107 @@ public abstract class AbstractAppleNativeTargetBuilder<
     super(description, target);
   }
 
-  public BUILDER setConfigs(
-      Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs) {
+  public BUILDER setConfigs(ImmutableSortedMap<String, ImmutableMap<String, String>> configs) {
     arg.configs = configs;
     return getThis();
   }
 
-  public BUILDER setCompilerFlags(Optional<ImmutableList<String>> compilerFlags) {
+  public BUILDER setCompilerFlags(ImmutableList<String> compilerFlags) {
     arg.compilerFlags = compilerFlags;
     return getThis();
   }
 
   public BUILDER setPlatformCompilerFlags(
-      Optional<PatternMatchedCollection<ImmutableList<String>>> platformPreprocessorFlags) {
+      PatternMatchedCollection<ImmutableList<String>> platformPreprocessorFlags) {
     arg.platformPreprocessorFlags = platformPreprocessorFlags;
     return getThis();
   }
 
-  public BUILDER setPreprocessorFlags(Optional<ImmutableList<String>> preprocessorFlags) {
+  public BUILDER setPreprocessorFlags(ImmutableList<String> preprocessorFlags) {
     arg.preprocessorFlags = preprocessorFlags;
     return getThis();
   }
 
   public BUILDER setPlatformPreprocessorFlags(
-      Optional<PatternMatchedCollection<ImmutableList<String>>> platformPreprocessorFlags) {
+      PatternMatchedCollection<ImmutableList<String>> platformPreprocessorFlags) {
     arg.platformPreprocessorFlags = platformPreprocessorFlags;
     return getThis();
   }
 
   public BUILDER setLangPreprocessorFlags(
-      Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langPreprocessorFlags) {
+      ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags) {
     arg.langPreprocessorFlags = langPreprocessorFlags;
     return getThis();
   }
 
   public BUILDER setExportedPreprocessorFlags(
-      Optional<ImmutableList<String>> exportedPreprocessorFlags) {
+      ImmutableList<String> exportedPreprocessorFlags) {
     arg.exportedPreprocessorFlags = exportedPreprocessorFlags;
     return getThis();
   }
 
-  public BUILDER setLinkerFlags(Optional<ImmutableList<String>> linkerFlags) {
+  public BUILDER setLinkerFlags(ImmutableList<String> linkerFlags) {
     arg.linkerFlags = linkerFlags;
     return getThis();
   }
 
-  public BUILDER setLinkerFlags(ImmutableList<String> linkerFlags) {
-    return setLinkerFlags(Optional.of(linkerFlags));
-  }
-
-  public BUILDER setExportedLinkerFlags(Optional<ImmutableList<String>> exportedLinkerFlags) {
+  public BUILDER setExportedLinkerFlags(ImmutableList<String> exportedLinkerFlags) {
     arg.exportedLinkerFlags = exportedLinkerFlags;
     return getThis();
   }
 
-  public BUILDER setSrcs(Optional<ImmutableSortedSet<SourceWithFlags>> srcs) {
+  public BUILDER setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
     arg.srcs = srcs;
     return getThis();
   }
 
-  public BUILDER setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
-    return setSrcs(Optional.of(srcs));
-  }
-
-  public BUILDER setExtraXcodeSources(Optional<ImmutableList<SourcePath>> extraXcodeSources) {
+  public BUILDER setExtraXcodeSources(ImmutableList<SourcePath> extraXcodeSources) {
     arg.extraXcodeSources = extraXcodeSources;
     return getThis();
   }
 
-  public BUILDER setHeaders(Optional<SourceList> headers) {
+  public BUILDER setHeaders(SourceList headers) {
     arg.headers = headers;
     return getThis();
   }
 
   public BUILDER setHeaders(ImmutableSortedSet<SourcePath> headers) {
-    return setHeaders(Optional.of(SourceList.ofUnnamedSources(headers)));
+    return setHeaders(SourceList.ofUnnamedSources(headers));
   }
 
   public BUILDER setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
-    return setHeaders(Optional.of(SourceList.ofNamedSources(headers)));
+    return setHeaders(SourceList.ofNamedSources(headers));
   }
 
-  public BUILDER setExportedHeaders(Optional<SourceList> exportedHeaders) {
+  public BUILDER setExportedHeaders(SourceList exportedHeaders) {
     arg.exportedHeaders = exportedHeaders;
     return getThis();
   }
 
   public BUILDER setExportedHeaders(ImmutableSortedSet<SourcePath> exportedHeaders) {
-    return setExportedHeaders(Optional.of(SourceList.ofUnnamedSources(exportedHeaders)));
+    return setExportedHeaders(SourceList.ofUnnamedSources(exportedHeaders));
   }
 
   public BUILDER setExportedHeaders(ImmutableSortedMap<String, SourcePath> exportedHeaders) {
-    return setExportedHeaders(Optional.of(SourceList.ofNamedSources(exportedHeaders)));
+    return setExportedHeaders(SourceList.ofNamedSources(exportedHeaders));
   }
 
-  public BUILDER setFrameworks(Optional<ImmutableSortedSet<FrameworkPath>> frameworks) {
+  public BUILDER setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {
     arg.frameworks = frameworks;
     return getThis();
   }
 
-  public BUILDER setLibraries(Optional<ImmutableSortedSet<FrameworkPath>> libraries) {
+  public BUILDER setLibraries(ImmutableSortedSet<FrameworkPath> libraries) {
     arg.libraries = libraries;
     return getThis();
   }
 
-  public BUILDER setDeps(Optional<ImmutableSortedSet<BuildTarget>> deps) {
+  public BUILDER setDeps(ImmutableSortedSet<BuildTarget> deps) {
     arg.deps = deps;
     return getThis();
   }
 
-  public BUILDER setExportedDeps(Optional<ImmutableSortedSet<BuildTarget>> exportedDeps) {
+  public BUILDER setExportedDeps(ImmutableSortedSet<BuildTarget> exportedDeps) {
     arg.exportedDeps = exportedDeps;
     return getThis();
   }
@@ -166,7 +157,7 @@ public abstract class AbstractAppleNativeTargetBuilder<
     return getThis();
   }
 
-  public BUILDER setTests(Optional<ImmutableSortedSet<BuildTarget>> tests) {
+  public BUILDER setTests(ImmutableSortedSet<BuildTarget> tests) {
     arg.tests = tests;
     return getThis();
   }

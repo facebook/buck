@@ -60,7 +60,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -293,7 +292,7 @@ public class CxxLuaExtensionDescription implements
           throws NoSuchBuildTargetException {
         return NativeLinkableInput.builder()
             .addAllArgs(getExtensionArgs(params, resolver, pathResolver, cxxPlatform, args))
-            .addAllFrameworks(args.frameworks.or(ImmutableSortedSet.of()))
+            .addAllFrameworks(args.frameworks)
             .build();
       }
 

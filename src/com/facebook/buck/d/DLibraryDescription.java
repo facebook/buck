@@ -35,7 +35,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -169,7 +168,7 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public SourceList srcs;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableList<String>> linkerFlags = Optional.of(ImmutableList.of());
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    public ImmutableList<String> linkerFlags = ImmutableList.of();
   }
 }

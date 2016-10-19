@@ -38,22 +38,22 @@ public class ShTestBuilder extends AbstractNodeBuilder<ShTestDescription.Arg> {
   }
 
   public ShTestBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.of(deps);
+    arg.deps = deps;
     return this;
   }
 
   public ShTestBuilder setArgs(ImmutableList<String> args) {
-    arg.args = Optional.of(args);
+    arg.args = args;
     return this;
   }
 
   public ShTestBuilder setEnv(ImmutableMap<String, String> env) {
-    arg.env = Optional.of(env);
+    arg.env = env;
     return this;
   }
 
   public ShTestBuilder setResources(ImmutableSortedSet<Path> resources) {
-    arg.resources = Optional.of(resources);
+    arg.resources = resources;
     return this;
   }
 

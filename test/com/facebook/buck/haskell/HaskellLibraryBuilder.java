@@ -50,17 +50,17 @@ public class HaskellLibraryBuilder
   }
 
   public HaskellLibraryBuilder setSrcs(SourceList srcs) {
-    arg.srcs = Optional.of(srcs);
+    arg.srcs = srcs;
     return this;
   }
 
   public HaskellLibraryBuilder setCompilerFlags(ImmutableList<String> flags) {
-    arg.compilerFlags = Optional.of(flags);
+    arg.compilerFlags = flags;
     return this;
   }
 
   public HaskellLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.of(deps);
+    arg.deps = deps;
     return this;
   }
 

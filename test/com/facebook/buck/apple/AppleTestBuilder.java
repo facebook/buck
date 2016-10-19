@@ -38,12 +38,12 @@ public final class AppleTestBuilder
     return new AppleTestBuilder(target);
   }
 
-  public AppleTestBuilder setContacts(Optional<ImmutableSortedSet<String>> contacts) {
+  public AppleTestBuilder setContacts(ImmutableSortedSet<String> contacts) {
     arg.contacts = contacts;
     return this;
   }
 
-  public AppleTestBuilder setLabels(Optional<ImmutableSortedSet<Label>> labels) {
+  public AppleTestBuilder setLabels(ImmutableSortedSet<Label> labels) {
     arg.labels = labels;
     return this;
   }

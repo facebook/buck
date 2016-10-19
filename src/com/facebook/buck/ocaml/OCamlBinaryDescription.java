@@ -58,16 +58,16 @@ public class OCamlBinaryDescription implements
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
 
-    ImmutableList<OCamlSource> srcs = args.srcs.get();
+    ImmutableList<OCamlSource> srcs = args.srcs;
     ImmutableList.Builder<String> flags = ImmutableList.builder();
-    flags.addAll(args.compilerFlags.get());
+    flags.addAll(args.compilerFlags);
     if (ocamlBuckConfig.getWarningsFlags().isPresent() ||
         args.warningsFlags.isPresent()) {
       flags.add("-w");
       flags.add(ocamlBuckConfig.getWarningsFlags().or("") +
           args.warningsFlags.or(""));
     }
-    ImmutableList<String> linkerFlags = args.linkerFlags.get();
+    ImmutableList<String> linkerFlags = args.linkerFlags;
     return OCamlRuleBuilder.createBuildRule(
         ocamlBuckConfig,
         params,
@@ -94,10 +94,10 @@ public class OCamlBinaryDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
-    public Optional<ImmutableList<OCamlSource>> srcs = Optional.of(ImmutableList.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableList<String>> compilerFlags = Optional.of(ImmutableList.of());
-    public Optional<ImmutableList<String>> linkerFlags = Optional.of(ImmutableList.of());
+    public ImmutableList<OCamlSource> srcs = ImmutableList.of();
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    public ImmutableList<String> compilerFlags = ImmutableList.of();
+    public ImmutableList<String> linkerFlags = ImmutableList.of();
     public Optional<String> warningsFlags;
     public Optional<Boolean> bytecodeOnly;
   }

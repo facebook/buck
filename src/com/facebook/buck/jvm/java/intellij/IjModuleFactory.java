@@ -451,11 +451,8 @@ public class IjModuleFactory {
    * @param paths paths to check
    * @return whether any of the paths pointed to something not in the source tree.
    */
-  private static boolean containsNonSourcePath(Optional<? extends Iterable<SourcePath>> paths) {
-    if (!paths.isPresent()) {
-      return false;
-    }
-    return FluentIterable.from(paths.get())
+  private static boolean containsNonSourcePath(Iterable<SourcePath> paths) {
+    return FluentIterable.from(paths)
         .anyMatch(
             input -> !(input instanceof PathSourcePath));
   }
@@ -561,7 +558,7 @@ public class IjModuleFactory {
 
     T arg = targetNode.getConstructorArg();
     // TODO(marcinkosiba): investigate supporting annotation processors without resorting to this.
-    boolean hasAnnotationProcessors = !arg.annotationProcessors.get().isEmpty();
+    boolean hasAnnotationProcessors = !arg.annotationProcessors.isEmpty();
     if (containsNonSourcePath(arg.srcs) || hasAnnotationProcessors) {
       context.addCompileShadowDep(targetNode.getBuildTarget());
     }

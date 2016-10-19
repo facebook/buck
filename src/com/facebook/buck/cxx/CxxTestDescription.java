@@ -143,7 +143,7 @@ public class CxxTestDescription implements
     Supplier<ImmutableMap<String, String>> testEnv =
         () -> ImmutableMap.copyOf(
             Maps.transformValues(
-                args.env.or(ImmutableMap.of()),
+                args.env,
                 CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
                     params.getBuildTarget(),
                     params.getCellRoots(),
@@ -151,7 +151,7 @@ public class CxxTestDescription implements
 
     // Supplier which expands macros in the passed in test arguments.
     Supplier<ImmutableList<String>> testArgs =
-        () -> FluentIterable.from(args.args.or(ImmutableList.of()))
+        () -> FluentIterable.from(args.args)
             .transform(
                 CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
                     params.getBuildTarget(),
@@ -173,8 +173,8 @@ public class CxxTestDescription implements
           // Add any build-time from any macros embedded in the `env` or `args` parameter.
           for (String part :
               Iterables.concat(
-                  args.args.or(ImmutableList.of()),
-                  args.env.or(ImmutableMap.of()).values())) {
+                  args.args,
+                  args.env.values())) {
             try {
               deps.addAll(
                   CxxDescriptionEnhancer.MACRO_HANDLER.extractBuildTimeDeps(
@@ -206,12 +206,12 @@ public class CxxTestDescription implements
             cxxLinkAndCompileRules.executable,
             testEnv,
             testArgs,
-            FluentIterable.from(args.resources.or(ImmutableSortedSet.of()))
+            FluentIterable.from(args.resources)
                 .transform(SourcePaths.toSourcePath(params.getProjectFilesystem()))
                 .toSortedSet(Ordering.natural()),
             additionalDeps,
-            args.labels.get(),
-            args.contacts.get(),
+            args.labels,
+            args.contacts,
             args.runTestSeparately.or(false),
             args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
             cxxBuckConfig.getMaximumTestOutputSize());
@@ -225,12 +225,12 @@ public class CxxTestDescription implements
             cxxLinkAndCompileRules.executable,
             testEnv,
             testArgs,
-            FluentIterable.from(args.resources.or(ImmutableSortedSet.of()))
+            FluentIterable.from(args.resources)
                 .transform(SourcePaths.toSourcePath(params.getProjectFilesystem()))
                 .toSortedSet(Ordering.natural()),
             additionalDeps,
-            args.labels.get(),
-            args.contacts.get(),
+            args.labels,
+            args.contacts,
             args.runTestSeparately.or(false),
             args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs));
         break;
@@ -262,10 +262,10 @@ public class CxxTestDescription implements
     // Extract parse time deps from flags, args, and environment parameters.
     Iterable<Iterable<String>> macroStrings =
         ImmutableList.<Iterable<String>>builder()
-            .add(constructorArg.linkerFlags.get())
-            .addAll(constructorArg.platformLinkerFlags.get().getValues())
-            .add(constructorArg.args.get())
-            .add(constructorArg.env.get().values())
+            .add(constructorArg.linkerFlags)
+            .addAll(constructorArg.platformLinkerFlags.getValues())
+            .add(constructorArg.args)
+            .add(constructorArg.env.values())
             .build();
     for (String macroString : Iterables.concat(macroStrings)) {
       try {
@@ -352,15 +352,15 @@ public class CxxTestDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends CxxBinaryDescription.Arg {
-    public Optional<ImmutableSet<String>> contacts = Optional.of(ImmutableSet.of());
-    public Optional<ImmutableSet<Label>> labels = Optional.of(ImmutableSet.of());
+    public ImmutableSet<String> contacts = ImmutableSet.of();
+    public ImmutableSet<Label> labels = ImmutableSet.of();
     public Optional<CxxTestType> framework;
-    public Optional<ImmutableMap<String, String>> env = Optional.of(ImmutableMap.of());
-    public Optional<ImmutableList<String>> args = Optional.of(ImmutableList.of());
+    public ImmutableMap<String, String> env = ImmutableMap.of();
+    public ImmutableList<String> args = ImmutableList.of();
     public Optional<Boolean> runTestSeparately;
     public Optional<Boolean> useDefaultTestMain;
     public Optional<Long> testRuleTimeoutMs;
-    public Optional<ImmutableSortedSet<Path>> resources = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<Path> resources = ImmutableSortedSet.of();
   }
 
 }

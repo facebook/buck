@@ -22,7 +22,6 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class DBinaryBuilder extends AbstractNodeBuilder<DBinaryDescription.Arg> {
@@ -53,7 +52,7 @@ public class DBinaryBuilder extends AbstractNodeBuilder<DBinaryDescription.Arg> 
   }
 
   public DBinaryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.fromNullable(deps);
+    arg.deps = deps;
     return this;
   }
 

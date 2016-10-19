@@ -39,7 +39,7 @@ public class JavaBinaryRuleBuilder extends AbstractNodeBuilder<JavaBinaryDescrip
   }
 
   public JavaBinaryRuleBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.of(deps);
+    arg.deps = deps;
     return this;
   }
 

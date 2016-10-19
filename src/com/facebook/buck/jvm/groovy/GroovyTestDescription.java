@@ -90,7 +90,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
 
     GroovycToJarStepFactory stepFactory = new GroovycToJarStepFactory(
         groovyBuckConfig.getGroovyCompiler().get(),
-        args.extraGroovycArguments,
+        Optional.of(args.extraGroovycArguments),
         JavacOptionsFactory.create(
             defaultJavacOptions,
             params,
@@ -107,16 +107,16 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                         BuildRules.getExportedRules(
                             Iterables.concat(
                                 params.getDeclaredDeps().get(),
-                                resolver.getAllRules(args.providedDeps.get()))),
+                                resolver.getAllRules(args.providedDeps))),
                         pathResolver.filterBuildRuleInputs(
                             defaultJavacOptions.getInputs(pathResolver))))
                     .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR),
                 pathResolver,
-                args.srcs.get(),
+                args.srcs,
                 ResourceValidator.validateResources(
                     pathResolver,
                     params.getProjectFilesystem(),
-                    args.resources.get()),
+                    args.resources),
                 defaultJavacOptions.getGeneratedSourceFolderName(),
                 /* proguardConfig */ Optional.absent(),
                 /* postprocessClassesCommands */ ImmutableList.of(),
@@ -142,14 +142,14 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                 pathResolver,
                 testsLibrary,
                 /* additionalClasspathEntries */ ImmutableSet.of(),
-                args.labels.get(),
-                args.contacts.get(),
+                args.labels,
+                args.contacts,
                 args.testType.or(TestType.JUNIT),
                 javaOptions.getJavaRuntimeLauncher(),
-                args.vmArgs.get(),
+                args.vmArgs,
                 /* nativeLibsEnvironment */ ImmutableMap.of(),
                 args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
-                args.env.get(),
+                args.env,
                 args.getRunTestSeparately(),
                 args.getForkMode(),
                 args.stdOutLogLevel,
@@ -167,16 +167,16 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
 
   @SuppressFieldNotInitialized
   public static class Arg extends GroovyLibraryDescription.Arg {
-    public Optional<ImmutableSortedSet<String>> contacts = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<Label>> labels = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableList<String>> vmArgs = Optional.of(ImmutableList.of());
+    public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
+    public ImmutableSortedSet<Label> labels = ImmutableSortedSet.of();
+    public ImmutableList<String> vmArgs = ImmutableList.of();
     public Optional<TestType> testType;
     public Optional<Boolean> runTestSeparately;
     public Optional<ForkMode> forkMode;
     public Optional<Level> stdErrLogLevel;
     public Optional<Level> stdOutLogLevel;
     public Optional<Long> testRuleTimeoutMs;
-    public Optional<ImmutableMap<String, String>> env = Optional.of(ImmutableMap.of());
+    public ImmutableMap<String, String> env = ImmutableMap.of();
 
     public boolean getRunTestSeparately() {
       return runTestSeparately.or(false);

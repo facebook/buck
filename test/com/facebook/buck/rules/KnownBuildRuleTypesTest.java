@@ -29,7 +29,6 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
@@ -114,28 +113,28 @@ public class KnownBuildRuleTypesTest {
   }
 
   private void populateJavaArg(JavaLibraryDescription.Arg arg) {
-    arg.srcs = Optional.of(ImmutableSortedSet.<SourcePath>of());
-    arg.resources = Optional.of(ImmutableSortedSet.<SourcePath>of());
+    arg.srcs = ImmutableSortedSet.of();
+    arg.resources = ImmutableSortedSet.of();
     arg.source = Optional.absent();
     arg.target = Optional.absent();
     arg.javaVersion = Optional.absent();
     arg.javac = Optional.absent();
     arg.javacJar = Optional.absent();
     arg.compiler = Optional.absent();
-    arg.extraArguments = Optional.absent();
-    arg.removeClasses = Optional.absent();
+    arg.extraArguments = ImmutableList.of();
+    arg.removeClasses = ImmutableSet.of();
     arg.proguardConfig = Optional.absent();
-    arg.annotationProcessorDeps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    arg.annotationProcessorParams = Optional.of(ImmutableList.<String>of());
-    arg.annotationProcessors = Optional.of(ImmutableSet.<String>of());
+    arg.annotationProcessorDeps = ImmutableSortedSet.of();
+    arg.annotationProcessorParams = ImmutableList.of();
+    arg.annotationProcessors = ImmutableSet.of();
     arg.annotationProcessorOnly = Optional.absent();
-    arg.postprocessClassesCommands = Optional.of(ImmutableList.<String>of());
+    arg.postprocessClassesCommands = ImmutableList.of();
     arg.resourcesRoot = Optional.absent();
     arg.manifestFile = Optional.absent();
-    arg.providedDeps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    arg.exportedDeps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    arg.tests = Optional.of(ImmutableSortedSet.<BuildTarget>of());
+    arg.providedDeps = ImmutableSortedSet.of();
+    arg.exportedDeps = ImmutableSortedSet.of();
+    arg.deps = ImmutableSortedSet.of();
+    arg.tests = ImmutableSortedSet.of();
   }
 
   private DefaultJavaLibrary createJavaLibrary(KnownBuildRuleTypes buildRuleTypes) {

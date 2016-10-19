@@ -33,23 +33,23 @@ public class ThriftConstructorArg extends AbstractDescriptionArg {
 
   public String name;
   public ImmutableMap<SourcePath, ImmutableList<String>> srcs;
-  public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+  public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
 
-  public Optional<ImmutableList<String>> flags = Optional.of(ImmutableList.of());
+  public ImmutableList<String> flags = ImmutableList.of();
 
-  public Optional<ImmutableSet<String>> javaOptions = Optional.of(ImmutableSet.of());
+  public ImmutableSet<String> javaOptions = ImmutableSet.of();
 
   public Optional<String> cppHeaderNamespace;
-  public Optional<SourceList> cppExportedHeaders = Optional.of(SourceList.EMPTY);
-  public Optional<SourceWithFlagsList> cppSrcs = Optional.of(SourceWithFlagsList.EMPTY);
-  public Optional<ImmutableSortedSet<BuildTarget>> cppDeps = Optional.of(ImmutableSortedSet.of());
-  public Optional<ImmutableSortedSet<BuildTarget>> cpp2Deps = Optional.of(ImmutableSortedSet.of());
-  public Optional<ImmutableList<String>> cppCompilerFlags = Optional.of(ImmutableList.of());
-  public Optional<ImmutableList<String>> cpp2CompilerFlags = Optional.of(ImmutableList.of());
-  public Optional<ImmutableSet<String>> cppOptions = Optional.of(ImmutableSet.of());
-  public Optional<ImmutableSet<String>> cpp2Options = Optional.of(ImmutableSet.of());
+  public SourceList cppExportedHeaders = SourceList.EMPTY;
+  public SourceWithFlagsList cppSrcs = SourceWithFlagsList.EMPTY;
+  public ImmutableSortedSet<BuildTarget> cppDeps = ImmutableSortedSet.of();
+  public ImmutableSortedSet<BuildTarget> cpp2Deps = ImmutableSortedSet.of();
+  public ImmutableList<String> cppCompilerFlags = ImmutableList.of();
+  public ImmutableList<String> cpp2CompilerFlags = ImmutableList.of();
+  public ImmutableSet<String> cppOptions = ImmutableSet.of();
+  public ImmutableSet<String> cpp2Options = ImmutableSet.of();
 
-  public Optional<ImmutableSet<String>> pyOptions = Optional.of(ImmutableSet.of());
+  public ImmutableSet<String> pyOptions = ImmutableSet.of();
   public Optional<String> pyBaseModule;
   public Optional<String> pyTwistedBaseModule;
   public Optional<String> pyAsyncioBaseModule;

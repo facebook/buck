@@ -164,32 +164,32 @@ public class ThriftCxxEnhancerTest {
 
     // Test empty options.
     options = ImmutableSet.of();
-    arg.cppOptions = Optional.of(options);
+    arg.cppOptions = options;
     assertEquals(
         getExpectedOptions(TARGET, options),
         ENHANCER_CPP.getOptions(TARGET, arg));
-    arg.cpp2Options = Optional.of(options);
+    arg.cpp2Options = options;
     assertEquals(
         getExpectedOptions(TARGET, options),
         ENHANCER_CPP2.getOptions(TARGET, arg));
 
     // Test set options.
     options = ImmutableSet.of("test", "option");
-    arg.cppOptions = Optional.of(options);
+    arg.cppOptions = options;
     assertEquals(
         getExpectedOptions(TARGET, options),
         ENHANCER_CPP.getOptions(TARGET, arg));
-    arg.cpp2Options = Optional.of(options);
+    arg.cpp2Options = options;
     assertEquals(
         getExpectedOptions(TARGET, options),
         ENHANCER_CPP.getOptions(TARGET, arg));
 
     // Test absent options.
-    arg.cppOptions = Optional.absent();
+    arg.cppOptions = ImmutableSet.of();
     assertEquals(
         getExpectedOptions(TARGET, ImmutableSet.of()),
         ENHANCER_CPP.getOptions(TARGET, arg));
-    arg.cpp2Options = Optional.absent();
+    arg.cpp2Options = ImmutableSet.of();
     assertEquals(
         getExpectedOptions(TARGET, ImmutableSet.of()),
         ENHANCER_CPP2.getOptions(TARGET, arg));
@@ -201,8 +201,8 @@ public class ThriftCxxEnhancerTest {
       ImmutableSet<BuildTarget> expected) {
 
     ThriftConstructorArg arg = new ThriftConstructorArg();
-    arg.cppOptions = Optional.of(options);
-    arg.cpp2Options = Optional.of(options);
+    arg.cppOptions = options;
+    arg.cpp2Options = options;
 
     assertEquals(
         expected,
@@ -528,11 +528,10 @@ public class ThriftCxxEnhancerTest {
     resolver.addToIndex(argDep);
     ThriftConstructorArg arg = new ThriftConstructorArg();
     arg.cppHeaderNamespace = Optional.absent();
-    arg.cppExportedHeaders = Optional.absent();
-    arg.cppSrcs = Optional.absent();
-    arg.cpp2Options = Optional.absent();
-    arg.cpp2Deps = Optional.of(
-        ImmutableSortedSet.of(argDep.getBuildTarget()));
+    arg.cppExportedHeaders = SourceList.EMPTY;
+    arg.cppSrcs = SourceWithFlagsList.EMPTY;
+    arg.cpp2Options = ImmutableSet.of();
+    arg.cpp2Deps = ImmutableSortedSet.of(argDep.getBuildTarget());
 
     ThriftCompiler thrift1 = createFakeThriftCompiler("//:thrift_source1", pathResolver);
     resolver.addToIndex(thrift1);
@@ -587,11 +586,11 @@ public class ThriftCxxEnhancerTest {
             "source.cpp", SourceWithFlags.of(new FakeSourcePath("source.cpp")));
 
     ThriftConstructorArg arg = new ThriftConstructorArg();
-    arg.cppOptions = Optional.absent();
-    arg.cppDeps = Optional.absent();
+    arg.cppOptions = ImmutableSet.of();
+    arg.cppDeps = ImmutableSortedSet.of();
     arg.cppHeaderNamespace = Optional.of(cppHeaderNamespace);
-    arg.cppExportedHeaders = Optional.of(SourceList.ofNamedSources(cppHeaders));
-    arg.cppSrcs = Optional.of(SourceWithFlagsList.ofNamedSources(cppSrcs));
+    arg.cppExportedHeaders = SourceList.ofNamedSources(cppHeaders);
+    arg.cppSrcs = SourceWithFlagsList.ofNamedSources(cppSrcs);
 
     ThriftCompiler thrift = createFakeThriftCompiler("//:thrift_source", pathResolver);
     resolver.addToIndex(thrift);
@@ -620,12 +619,12 @@ public class ThriftCxxEnhancerTest {
             assertThat(args.headerNamespace, Matchers.equalTo(Optional.of(cppHeaderNamespace)));
             for (Map.Entry<String, SourcePath> header : cppHeaders.entrySet()) {
               assertThat(
-                  args.exportedHeaders.get().getNamedSources().get().get(header.getKey()),
+                  args.exportedHeaders.getNamedSources().get().get(header.getKey()),
                   Matchers.equalTo(header.getValue()));
             }
             for (Map.Entry<String, SourceWithFlags> source : cppSrcs.entrySet()) {
               assertThat(
-                  args.srcs.get(),
+                  args.srcs,
                   Matchers.hasItem(source.getValue()));
             }
             return super.createBuildRule(targetGraph, params, resolver, args);
@@ -655,14 +654,14 @@ public class ThriftCxxEnhancerTest {
     final ImmutableList<String> compilerFlags = ImmutableList.of("-flag");
 
     ThriftConstructorArg arg = new ThriftConstructorArg();
-    arg.cppOptions = Optional.absent();
-    arg.cppDeps = Optional.absent();
-    arg.cpp2Deps = Optional.absent();
-    arg.cpp2CompilerFlags = Optional.of(compilerFlags);
-    arg.cppCompilerFlags = Optional.of(compilerFlags);
+    arg.cppOptions = ImmutableSet.of();
+    arg.cppDeps = ImmutableSortedSet.of();
+    arg.cpp2Deps = ImmutableSortedSet.of();
+    arg.cpp2CompilerFlags = compilerFlags;
+    arg.cppCompilerFlags = compilerFlags;
     arg.cppHeaderNamespace = Optional.absent();
-    arg.cppExportedHeaders = Optional.absent();
-    arg.cppSrcs = Optional.absent();
+    arg.cppExportedHeaders = SourceList.EMPTY;
+    arg.cppSrcs = SourceWithFlagsList.EMPTY;
 
     ThriftCompiler thrift = createFakeThriftCompiler("//:thrift_source", pathResolver);
     resolver.addToIndex(thrift);
@@ -681,7 +680,7 @@ public class ThriftCxxEnhancerTest {
               BuildRuleParams params,
               BuildRuleResolver resolver,
               A args) throws NoSuchBuildTargetException {
-            assertThat(args.compilerFlags.get(), Matchers.hasItem("-flag"));
+            assertThat(args.compilerFlags, Matchers.hasItem("-flag"));
             return super.createBuildRule(targetGraph, params, resolver, args);
           }
         };

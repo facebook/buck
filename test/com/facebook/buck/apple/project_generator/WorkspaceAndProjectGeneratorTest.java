@@ -170,15 +170,15 @@ public class WorkspaceAndProjectGeneratorTest {
     BuildTarget fooLibTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "lib").build();
     TargetNode<?> fooLibNode = AppleLibraryBuilder
         .createBuilder(fooLibTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
-        .setTests(Optional.of(ImmutableSortedSet.of(fooTestTarget)))
+        .setDeps(ImmutableSortedSet.of(barLibTarget))
+        .setTests(ImmutableSortedSet.of(fooTestTarget))
         .build();
 
     BuildTarget fooBinBinaryTarget = BuildTarget
       .builder(rootCell.getRoot(), "//foo", "binbinary").build();
     TargetNode<?> fooBinBinaryNode = AppleBinaryBuilder
         .createBuilder(fooBinBinaryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
+        .setDeps(ImmutableSortedSet.of(fooLibTarget))
         .build();
 
     BuildTarget fooBinTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "bin").build();
@@ -187,38 +187,38 @@ public class WorkspaceAndProjectGeneratorTest {
         .setExtension(Either.ofLeft(AppleBundleExtension.APP))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setBinary(fooBinBinaryTarget)
-        .setTests(Optional.of(ImmutableSortedSet.of(fooBinTestTarget)))
+        .setTests(ImmutableSortedSet.of(fooBinTestTarget))
         .build();
 
     BuildTarget bazLibTarget = BuildTarget.builder(rootCell.getRoot(), "//baz", "lib").build();
     TargetNode<?> bazLibNode = AppleLibraryBuilder
         .createBuilder(bazLibTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
-        .setTests(Optional.of(ImmutableSortedSet.of(bazTestTarget)))
+        .setDeps(ImmutableSortedSet.of(fooLibTarget))
+        .setTests(ImmutableSortedSet.of(bazTestTarget))
         .build();
 
     TargetNode<?> bazTestNode = AppleTestBuilder
         .createBuilder(bazTestTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
+        .setDeps(ImmutableSortedSet.of(bazLibTarget))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 
     TargetNode<?> fooTestNode = AppleTestBuilder
         .createBuilder(fooTestTarget)
         .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
+        .setDeps(ImmutableSortedSet.of(bazLibTarget))
         .build();
 
     TargetNode<?> fooBinTestNode = AppleTestBuilder
         .createBuilder(fooBinTestTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(fooBinTarget)))
+        .setDeps(ImmutableSortedSet.of(fooBinTarget))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 
     BuildTarget quxBinTarget = BuildTarget.builder(rootCell.getRoot(), "//qux", "bin").build();
     TargetNode<?> quxBinNode = AppleBinaryBuilder
         .createBuilder(quxBinTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
+        .setDeps(ImmutableSortedSet.of(barLibTarget))
         .build();
 
     BuildTarget workspaceTarget = BuildTarget
@@ -515,10 +515,9 @@ public class WorkspaceAndProjectGeneratorTest {
     TargetNode<AppleLibraryDescription.Arg> library = AppleLibraryBuilder
         .createBuilder(libraryTarget)
         .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    SourceWithFlags.of(
-                        new BuildTargetSourcePath(genruleTarget)))))
+            ImmutableSortedSet.of(
+                SourceWithFlags.of(
+                    new BuildTargetSourcePath(genruleTarget))))
         .build();
 
     TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceNode = XcodeWorkspaceConfigBuilder
@@ -573,10 +572,9 @@ public class WorkspaceAndProjectGeneratorTest {
     TargetNode<AppleLibraryDescription.Arg> library = AppleLibraryBuilder
         .createBuilder(libraryTarget)
         .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    SourceWithFlags.of(
-                        new BuildTargetSourcePath(genruleTarget)))))
+            ImmutableSortedSet.of(
+                SourceWithFlags.of(
+                    new BuildTargetSourcePath(genruleTarget))))
         .build();
 
     TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceNode = XcodeWorkspaceConfigBuilder
@@ -807,12 +805,11 @@ public class WorkspaceAndProjectGeneratorTest {
     TargetNode<AppleLibraryDescription.Arg> library = AppleLibraryBuilder
         .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//foo", "lib").build())
         .setTests(
-            Optional.of(
-                ImmutableSortedSet.of(
-                    combinableTest1.getBuildTarget(),
-                    combinableTest2.getBuildTarget(),
-                    testMarkedUncombinable.getBuildTarget(),
-                    anotherTest.getBuildTarget())))
+            ImmutableSortedSet.of(
+                combinableTest1.getBuildTarget(),
+                combinableTest2.getBuildTarget(),
+                testMarkedUncombinable.getBuildTarget(),
+                anotherTest.getBuildTarget()))
         .build();
     TargetNode<XcodeWorkspaceConfigDescription.Arg> workspace = XcodeWorkspaceConfigBuilder
         .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//foo", "workspace").build())
@@ -991,7 +988,7 @@ public class WorkspaceAndProjectGeneratorTest {
     TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
         .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//bar", "test2").build())
         .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setConfigs(Optional.of(configs))
+        .setConfigs(configs)
         .setCanGroup(Optional.of(true))
         .build();
 
@@ -1038,8 +1035,8 @@ public class WorkspaceAndProjectGeneratorTest {
     TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
         .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//bar", "test2").build())
         .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setLinkerFlags(Optional.of(ImmutableList.of("-flag")))
-        .setExportedLinkerFlags(Optional.of(ImmutableList.of("-exported-flag")))
+        .setLinkerFlags(ImmutableList.of("-flag"))
+        .setExportedLinkerFlags(ImmutableList.of("-exported-flag"))
         .setCanGroup(Optional.of(true))
         .build();
 
@@ -1107,15 +1104,15 @@ public class WorkspaceAndProjectGeneratorTest {
     BuildTarget fooLibTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "FooLib").build();
     TargetNode<?> fooLibNode = AppleLibraryBuilder
         .createBuilder(fooLibTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
-        .setTests(Optional.of(ImmutableSortedSet.of(fooTestTarget)))
+        .setDeps(ImmutableSortedSet.of(barLibTarget))
+        .setTests(ImmutableSortedSet.of(fooTestTarget))
         .build();
 
     BuildTarget fooBinBinaryTarget = BuildTarget
       .builder(rootCell.getRoot(), "//foo", "FooBinBinary").build();
     TargetNode<?> fooBinBinaryNode = AppleBinaryBuilder
         .createBuilder(fooBinBinaryTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
+        .setDeps(ImmutableSortedSet.of(fooLibTarget))
         .build();
 
     BuildTarget fooBinTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "FooBin").build();
@@ -1124,38 +1121,38 @@ public class WorkspaceAndProjectGeneratorTest {
         .setExtension(Either.ofLeft(AppleBundleExtension.APP))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setBinary(fooBinBinaryTarget)
-        .setTests(Optional.of(ImmutableSortedSet.of(fooBinTestTarget)))
+        .setTests(ImmutableSortedSet.of(fooBinTestTarget))
         .build();
 
     BuildTarget bazLibTarget = BuildTarget.builder(rootCell.getRoot(), "//baz", "BazLib").build();
     TargetNode<?> bazLibNode = AppleLibraryBuilder
         .createBuilder(bazLibTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(fooLibTarget)))
-        .setTests(Optional.of(ImmutableSortedSet.of(bazTestTarget)))
+        .setDeps(ImmutableSortedSet.of(fooLibTarget))
+        .setTests(ImmutableSortedSet.of(bazTestTarget))
         .build();
 
     TargetNode<?> bazTestNode = AppleTestBuilder
         .createBuilder(bazTestTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
+        .setDeps(ImmutableSortedSet.of(bazLibTarget))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 
     TargetNode<?> fooTestNode = AppleTestBuilder
         .createBuilder(fooTestTarget)
         .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setDeps(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
+        .setDeps(ImmutableSortedSet.of(bazLibTarget))
         .build();
 
     TargetNode<?> fooBinTestNode = AppleTestBuilder
         .createBuilder(fooBinTestTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(fooBinTarget)))
+        .setDeps(ImmutableSortedSet.of(fooBinTarget))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .build();
 
     BuildTarget quxBinTarget = BuildTarget.builder(rootCell.getRoot(), "//qux", "QuxBin").build();
     TargetNode<?> quxBinNode = AppleBinaryBuilder
         .createBuilder(quxBinTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
+        .setDeps(ImmutableSortedSet.of(barLibTarget))
         .build();
 
     BuildTarget workspaceTarget = BuildTarget
@@ -1172,7 +1169,7 @@ public class WorkspaceAndProjectGeneratorTest {
         .createBuilder(workspaceWithExtraSchemeTarget)
         .setWorkspaceName(Optional.of("workspace"))
         .setSrcTarget(Optional.of(quxBinTarget))
-        .setExtraSchemes(Optional.of(ImmutableSortedMap.of("FooScheme", workspaceTarget)))
+        .setExtraSchemes(ImmutableSortedMap.of("FooScheme", workspaceTarget))
         .build();
 
     targetGraph = TargetGraphFactory.newInstance(
@@ -1340,14 +1337,14 @@ public class WorkspaceAndProjectGeneratorTest {
     BuildTarget bazLibTarget = BuildTarget.builder(rootCell.getRoot(), "//baz", "BazLib").build();
     TargetNode<AppleLibraryDescription.Arg> bazLib = AppleLibraryBuilder
         .createBuilder(bazLibTarget)
-        .setDeps(Optional.of(ImmutableSortedSet.of(barLibTarget)))
+        .setDeps(ImmutableSortedSet.of(barLibTarget))
         .build();
 
     TargetNode<XcodeWorkspaceConfigDescription.Arg> workspaceNode = XcodeWorkspaceConfigBuilder
         .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//foo", "workspace").build())
         .setWorkspaceName(Optional.of("workspace"))
         .setSrcTarget(Optional.of(fooLibTarget))
-        .setExtraTargets(Optional.of(ImmutableSortedSet.of(bazLibTarget)))
+        .setExtraTargets(ImmutableSortedSet.of(bazLibTarget))
         .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(

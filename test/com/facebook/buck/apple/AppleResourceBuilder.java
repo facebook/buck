@@ -19,7 +19,6 @@ package com.facebook.buck.apple;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
 
 import java.util.Set;
 
@@ -43,7 +42,7 @@ public class AppleResourceBuilder extends AbstractNodeBuilder<AppleResourceDescr
     return this;
   }
 
-  public AppleResourceBuilder setVariants(Optional<Set<SourcePath>> variants) {
+  public AppleResourceBuilder setVariants(Set<SourcePath> variants) {
     arg.variants = variants;
     return this;
   }

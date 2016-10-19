@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -32,58 +31,58 @@ public class PrebuiltCxxLibraryGroupBuilder
   }
 
   public PrebuiltCxxLibraryGroupBuilder setExportedPreprocessorFlags(ImmutableList<String> flags) {
-    arg.exportedPreprocessorFlags = Optional.of(flags);
+    arg.exportedPreprocessorFlags = flags;
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setIncludeDirs(ImmutableList<SourcePath> includeDirs) {
-    arg.includeDirs = Optional.of(includeDirs);
+    arg.includeDirs = includeDirs;
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setStaticLink(ImmutableList<String> args) {
-    arg.staticLink = Optional.of(args);
+    arg.staticLink = args;
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setStaticLibs(ImmutableList<SourcePath> args) {
-    arg.staticLibs = Optional.of(args);
+    arg.staticLibs = args;
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setStaticPicLink(ImmutableList<String> args) {
-    arg.staticPicLink = Optional.of(args);
+    arg.staticPicLink = args;
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setStaticPicLibs(ImmutableList<SourcePath> args) {
-    arg.staticPicLibs = Optional.of(args);
+    arg.staticPicLibs = args;
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setSharedLink(ImmutableList<String> args) {
-    arg.sharedLink = Optional.of(args);
+    arg.sharedLink = args;
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setSharedLibs(ImmutableMap<String, SourcePath> args) {
-    arg.sharedLibs = Optional.of(args);
+    arg.sharedLibs = args;
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setProvidedSharedLibs(
       ImmutableMap<String, SourcePath> args) {
-    arg.providedSharedLibs = Optional.of(args);
+    arg.providedSharedLibs = args;
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.of(deps);
+    arg.deps = deps;
     return this;
   }
 
   public PrebuiltCxxLibraryGroupBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.exportedDeps = Optional.of(deps);
+    arg.exportedDeps = deps;
     return this;
   }
 

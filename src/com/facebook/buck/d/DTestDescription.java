@@ -109,7 +109,7 @@ public class DTestDescription implements
             cxxBuckConfig,
             ImmutableList.of("-unittest"),
             args.srcs,
-            args.linkerFlags.or(ImmutableList.of()),
+            args.linkerFlags,
             DIncludes.builder()
                 .setLinkTree(new BuildTargetSourcePath(sourceTree.getBuildTarget()))
                 .addAllSources(args.srcs.getPaths())
@@ -119,8 +119,8 @@ public class DTestDescription implements
         params.appendExtraDeps(ImmutableList.of(binaryRule)),
         new SourcePathResolver(buildRuleResolver),
         binaryRule,
-        args.contacts.get(),
-        args.labels.get(),
+        args.contacts,
+        args.labels,
         args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs));
   }
 
@@ -135,10 +135,10 @@ public class DTestDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public SourceList srcs;
-    public Optional<ImmutableSortedSet<String>> contacts = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<Label>> labels = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
+    public ImmutableSortedSet<Label> labels = ImmutableSortedSet.of();
     public Optional<Long> testRuleTimeoutMs;
     public ImmutableSortedSet<BuildTarget> deps;
-    public Optional<ImmutableList<String>> linkerFlags = Optional.of(ImmutableList.of());
+    public ImmutableList<String> linkerFlags = ImmutableList.of();
   }
 }

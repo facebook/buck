@@ -92,7 +92,7 @@ public class AndroidLibraryDescription
       A args) {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     if (params.getBuildTarget().getFlavors().contains(JavaLibrary.SRC_JAR)) {
-      return new JavaSourceJar(params, pathResolver, args.srcs.get(), args.mavenCoords);
+      return new JavaSourceJar(params, pathResolver, args.srcs, args.mavenCoords);
     }
 
     JavacOptions javacOptions = JavacOptionsFactory.create(
@@ -106,7 +106,7 @@ public class AndroidLibraryDescription
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
         params.copyWithExtraDeps(
-            Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps.get()))),
+            Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps))),
         javacOptions,
         DependencyMode.FIRST_ORDER,
         /* forceFinalResourceIds */ false,
@@ -139,7 +139,7 @@ public class AndroidLibraryDescription
       AndroidLibraryCompiler compiler =
           compilerFactory.getCompiler(args.language.or(JvmLanguage.JAVA));
 
-      ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps.get());
+      ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
 
       ImmutableSortedSet<BuildRule> declaredDeps =
           ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -154,7 +154,7 @@ public class AndroidLibraryDescription
                   Iterables.concat(
                       declaredDeps,
                       exportedDeps,
-                      resolver.getAllRules(args.providedDeps.get()))))
+                      resolver.getAllRules(args.providedDeps))))
               .addAll(pathResolver.filterBuildRuleInputs(javacOptions.getInputs(pathResolver)))
               .addAll(compiler.getExtraDeps(args, resolver))
               .build();
@@ -166,15 +166,15 @@ public class AndroidLibraryDescription
                       Suppliers.ofInstance(declaredDeps),
                       Suppliers.ofInstance(extraDeps)),
                   pathResolver,
-                  args.srcs.get(),
+                  args.srcs,
                   ResourceValidator.validateResources(
                       pathResolver,
-                      params.getProjectFilesystem(), args.resources.get()),
+                      params.getProjectFilesystem(), args.resources),
                   args.proguardConfig.transform(
                       SourcePaths.toSourcePath(params.getProjectFilesystem())),
-                  args.postprocessClassesCommands.get(),
+                  args.postprocessClassesCommands,
                   exportedDeps,
-                  resolver.getAllRules(args.providedDeps.get()),
+                  resolver.getAllRules(args.providedDeps),
                   new BuildTargetSourcePath(abiJarTarget),
                   additionalClasspathEntries,
                   javacOptions,
@@ -183,7 +183,7 @@ public class AndroidLibraryDescription
                   args.resourcesRoot,
                   args.mavenCoords,
                   args.manifest,
-                  args.tests.get()));
+                  args.tests));
 
       resolver.addToIndex(
           CalculateAbi.of(

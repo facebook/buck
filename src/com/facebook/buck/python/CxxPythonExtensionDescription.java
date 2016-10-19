@@ -236,9 +236,7 @@ public class CxxPythonExtensionDescription implements
     rules.addAll(
         ruleResolver.getAllRules(
             Iterables.concat(
-                args.platformDeps
-                    .or(PatternMatchedCollection.of())
-                    .getMatchingValues(pythonPlatform.getFlavor().toString()))));
+                args.platformDeps.getMatchingValues(pythonPlatform.getFlavor().toString()))));
 
     // Add a dep on the python C/C++ library.
     rules.add(ruleResolver.getRule(pythonPlatform.getCxxLibrary().get().getBuildTarget()));
@@ -282,8 +280,8 @@ public class CxxPythonExtensionDescription implements
         ImmutableSet.of(),
         NativeLinkableInput.builder()
           .setArgs(getExtensionArgs(params, ruleResolver, pathResolver, cxxPlatform, args))
-          .setFrameworks(args.frameworks.or(ImmutableSortedSet.of()))
-          .setLibraries(args.libraries.or(ImmutableSortedSet.of()))
+          .setFrameworks(args.frameworks)
+          .setLibraries(args.libraries)
           .build());
   }
 
@@ -402,7 +400,7 @@ public class CxxPythonExtensionDescription implements
                         pathResolver,
                         cxxPlatform,
                         args))
-                .addAllFrameworks(args.frameworks.or(ImmutableSortedSet.of()))
+                .addAllFrameworks(args.frameworks)
                 .build();
           }
 
@@ -446,8 +444,8 @@ public class CxxPythonExtensionDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg extends CxxConstructorArg {
-    public Optional<PatternMatchedCollection<ImmutableSortedSet<BuildTarget>>> platformDeps =
-        Optional.of(PatternMatchedCollection.of());
+    public PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps =
+        PatternMatchedCollection.of();
     public Optional<String> baseModule;
   }
 

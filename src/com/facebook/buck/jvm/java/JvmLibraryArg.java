@@ -39,13 +39,11 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
   public Optional<Path> javac;
   public Optional<SourcePath> javacJar;
   public Optional<Either<BuiltInJavac, SourcePath>> compiler;
-  public Optional<ImmutableList<String>> extraArguments = Optional.of(ImmutableList.of());
-  public Optional<ImmutableSet<Pattern>> removeClasses = Optional.of(ImmutableSet.of());
-  public Optional<ImmutableSortedSet<BuildTarget>> annotationProcessorDeps =
-      Optional.of(ImmutableSortedSet.of());
-  public Optional<ImmutableList<String>> annotationProcessorParams =
-      Optional.of(ImmutableList.of());
-  public Optional<ImmutableSet<String>> annotationProcessors = Optional.of(ImmutableSet.of());
+  public ImmutableList<String> extraArguments = ImmutableList.of();
+  public ImmutableSet<Pattern> removeClasses = ImmutableSet.of();
+  public ImmutableSortedSet<BuildTarget> annotationProcessorDeps = ImmutableSortedSet.of();
+  public ImmutableList<String> annotationProcessorParams = ImmutableList.of();
+  public ImmutableSet<String> annotationProcessors = ImmutableSet.of();
   public Optional<Boolean> annotationProcessorOnly;
 
   public AnnotationProcessingParams buildAnnotationProcessingParams(
@@ -53,7 +51,7 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver) {
     ImmutableSet<String> annotationProcessors =
-        this.annotationProcessors.or(ImmutableSet.of());
+        this.annotationProcessors;
 
     if (annotationProcessors.isEmpty()) {
       return AnnotationProcessingParams.EMPTY;
@@ -63,12 +61,11 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
     builder.setOwnerTarget(owner);
     builder.addAllProcessors(annotationProcessors);
     builder.setProjectFilesystem(filesystem);
-    ImmutableSortedSet<BuildRule> processorDeps =
-        resolver.getAllRules(annotationProcessorDeps.or(ImmutableSortedSet.of()));
+    ImmutableSortedSet<BuildRule> processorDeps = resolver.getAllRules(annotationProcessorDeps);
     for (BuildRule processorDep : processorDeps) {
       builder.addProcessorBuildTarget(processorDep);
     }
-    for (String processorParam : annotationProcessorParams.or(ImmutableList.of())) {
+    for (String processorParam : annotationProcessorParams) {
       builder.addParameter(processorParam);
     }
     builder.setProcessOnly(annotationProcessorOnly.or(Boolean.FALSE));

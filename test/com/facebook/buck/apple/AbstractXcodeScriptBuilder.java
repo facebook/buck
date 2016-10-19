@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
 public abstract class AbstractXcodeScriptBuilder<T extends AbstractXcodeScriptBuilder<T>>
@@ -32,23 +31,13 @@ public abstract class AbstractXcodeScriptBuilder<T extends AbstractXcodeScriptBu
     super(description, target);
   }
 
-  public T setSrcs(Optional<ImmutableSortedSet<SourcePath>> srcs) {
+  public T setSrcs(ImmutableSortedSet<SourcePath> srcs) {
     arg.srcs = srcs;
     return getThis();
   }
 
-  public T setSrcs(ImmutableSortedSet<SourcePath> srcs) {
-    arg.srcs = Optional.of(srcs);
-    return getThis();
-  }
-
-  public T setOutputs(Optional<ImmutableSortedSet<String>> outputs) {
-    arg.outputs = outputs;
-    return getThis();
-  }
-
   public T setOutputs(ImmutableSortedSet<String> outputs) {
-    arg.outputs = Optional.of(outputs);
+    arg.outputs = outputs;
     return getThis();
   }
 

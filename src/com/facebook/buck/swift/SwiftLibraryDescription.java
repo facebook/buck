@@ -204,21 +204,19 @@ public class SwiftLibraryDescription implements
               })
               .toSortedSet(Ordering.natural()));
 
-      if (args.headersSearchPath.isPresent()) {
-        UnflavoredBuildTarget unflavoredBuildTarget =
-            params.getBuildTarget().getUnflavoredBuildTarget();
+      UnflavoredBuildTarget unflavoredBuildTarget =
+          params.getBuildTarget().getUnflavoredBuildTarget();
 
-        for (HeaderVisibility headerVisibility : HeaderVisibility.values()) {
-          // unflavoredBuildTarget because #headers can collide with any other flavor
-          // from the same domain.
-          CxxDescriptionEnhancer.requireHeaderSymlinkTree(
-              params.copyWithBuildTarget(BuildTarget.builder(unflavoredBuildTarget).build()),
-              resolver,
-              new SourcePathResolver(resolver),
-              cxxPlatform,
-              args.headersSearchPath.get(),
-              headerVisibility);
-        }
+      for (HeaderVisibility headerVisibility : HeaderVisibility.values()) {
+        // unflavoredBuildTarget because #headers can collide with any other flavor
+        // from the same domain.
+        CxxDescriptionEnhancer.requireHeaderSymlinkTree(
+            params.copyWithBuildTarget(BuildTarget.builder(unflavoredBuildTarget).build()),
+            resolver,
+            new SourcePathResolver(resolver),
+            cxxPlatform,
+            args.headersSearchPath,
+            headerVisibility);
       }
 
       return new SwiftCompile(
@@ -227,12 +225,12 @@ public class SwiftLibraryDescription implements
           params,
           new SourcePathResolver(resolver),
           swiftPlatform.get().getSwift(),
-          args.frameworks.get(),
+          args.frameworks,
           args.moduleName.or(buildTarget.getShortName()),
           BuildTargets.getGenPath(
               params.getProjectFilesystem(),
               buildTarget, "%s"),
-          args.srcs.get(),
+          args.srcs,
           args.enableObjcInterop,
           args.bridgingHeader);
     }
@@ -244,8 +242,8 @@ public class SwiftLibraryDescription implements
         new SourcePathResolver(resolver),
         ImmutableSet.of(),
         swiftPlatformFlavorDomain,
-        args.frameworks.get(),
-        args.libraries.get(),
+        args.frameworks,
+        args.libraries,
         args.supportedPlatformsRegex,
         args.preferredLinkage.or(NativeLinkable.Linkage.ANY));
   }
@@ -307,7 +305,7 @@ public class SwiftLibraryDescription implements
     if (!isSwiftTarget(buildTarget)) {
       boolean hasSwiftSource = !SwiftDescriptions.filterSwiftSources(
           new SourcePathResolver(resolver),
-          args.srcs.get()).isEmpty();
+          args.srcs).isEmpty();
       return hasSwiftSource ?
           Optional.of(resolver.requireRule(buildTarget.withAppendedFlavors(SWIFT_COMPANION_FLAVOR)))
           : Optional.absent();
@@ -319,7 +317,7 @@ public class SwiftLibraryDescription implements
         delegateArgs,
         args,
         buildTarget);
-    if (delegateArgs.srcs.isPresent() && !delegateArgs.srcs.get().isEmpty()) {
+    if (!delegateArgs.srcs.isEmpty()) {
       return Optional.of(
           resolver.addToIndex(
               createBuildRule(targetGraph, params, resolver, delegateArgs)));
@@ -336,20 +334,17 @@ public class SwiftLibraryDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public Optional<String> moduleName;
-    public Optional<ImmutableSortedSet<SourcePath>> srcs = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableList<String>> compilerFlags = Optional.of(ImmutableList.of());
-    public Optional<ImmutableSortedSet<FrameworkPath>> frameworks =
-        Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<FrameworkPath>> libraries =
-        Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
+    public ImmutableList<String> compilerFlags = ImmutableList.of();
+    public ImmutableSortedSet<FrameworkPath> frameworks = ImmutableSortedSet.of();
+    public ImmutableSortedSet<FrameworkPath> libraries = ImmutableSortedSet.of();
     public Optional<Boolean> enableObjcInterop;
     public Optional<Pattern> supportedPlatformsRegex;
     public Optional<String> soname;
     public Optional<SourcePath> bridgingHeader;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public Optional<NativeLinkable.Linkage> preferredLinkage;
-    public Optional<ImmutableMap<Path, SourcePath>> headersSearchPath =
-        Optional.of(ImmutableMap.of());
+    public ImmutableMap<Path, SourcePath> headersSearchPath = ImmutableMap.of();
   }
 
 }

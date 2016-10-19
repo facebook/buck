@@ -131,7 +131,7 @@ public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescripti
   }
 
   public JavaLibraryBuilder setAnnotationProcessors(ImmutableSet<String> annotationProcessors) {
-    arg.annotationProcessors = Optional.of(annotationProcessors);
+    arg.annotationProcessors = annotationProcessors;
     return this;
   }
 

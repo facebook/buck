@@ -26,7 +26,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
@@ -64,6 +63,6 @@ public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
     // relative to the build file directory.
     public String importPath;
 
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
   }
 }

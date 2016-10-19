@@ -53,13 +53,9 @@ public final class JavacOptionsFactory {
       builder.setTargetLevel(jvmLibraryArg.target.get());
     }
 
-    if (jvmLibraryArg.extraArguments.isPresent()) {
-      builder.addAllExtraArguments(jvmLibraryArg.extraArguments.get());
-    }
+    builder.addAllExtraArguments(jvmLibraryArg.extraArguments);
 
-    if (jvmLibraryArg.removeClasses.isPresent()) {
-      builder.addAllClassesToRemoveFromJar(jvmLibraryArg.removeClasses.get());
-    }
+    builder.addAllClassesToRemoveFromJar(jvmLibraryArg.removeClasses);
 
     if (jvmLibraryArg.compiler.isPresent()) {
       Either<BuiltInJavac, SourcePath> either = jvmLibraryArg.compiler.get();

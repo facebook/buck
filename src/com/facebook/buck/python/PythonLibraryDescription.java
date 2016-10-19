@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
+import java.util.Collections;
 
 public class PythonLibraryDescription implements Description<Arg> {
 
@@ -69,15 +70,14 @@ public class PythonLibraryDescription implements Description<Arg> {
                     pathResolver,
                     "srcs",
                     baseModule,
-                    args.srcs.asSet()))
+                    Collections.singleton(args.srcs)))
             .putAll(
                 PythonUtil.toModuleMap(
                     params.getBuildTarget(),
                     pathResolver,
                     "platformSrcs",
                     baseModule,
-                    args.platformSrcs.get()
-                        .getMatchingValues(pythonPlatform.getFlavor().toString())))
+                    args.platformSrcs.getMatchingValues(pythonPlatform.getFlavor().toString())))
             .build(),
         pythonPlatform -> ImmutableMap.<Path, SourcePath>builder()
             .putAll(
@@ -86,14 +86,14 @@ public class PythonLibraryDescription implements Description<Arg> {
                     pathResolver,
                     "resources",
                     baseModule,
-                    args.resources.asSet()))
+                    Collections.singleton(args.resources)))
             .putAll(
                 PythonUtil.toModuleMap(
                     params.getBuildTarget(),
                     pathResolver,
                     "platformResources",
                     baseModule,
-                    args.platformResources.get()
+                    args.platformResources
                         .getMatchingValues(pythonPlatform.getFlavor().toString())))
             .build(),
         args.zipSafe);
@@ -101,21 +101,18 @@ public class PythonLibraryDescription implements Description<Arg> {
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg implements HasTests {
-    public Optional<SourceList> srcs = Optional.of(SourceList.EMPTY);
-    public Optional<PatternMatchedCollection<SourceList>> platformSrcs =
-        Optional.of(PatternMatchedCollection.of());
-    public Optional<SourceList> resources = Optional.of(SourceList.EMPTY);
-    public Optional<PatternMatchedCollection<SourceList>> platformResources =
-        Optional.of(PatternMatchedCollection.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public SourceList srcs = SourceList.EMPTY;
+    public PatternMatchedCollection<SourceList> platformSrcs = PatternMatchedCollection.of();
+    public SourceList resources = SourceList.EMPTY;
+    public PatternMatchedCollection<SourceList> platformResources = PatternMatchedCollection.of();
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public Optional<String> baseModule;
     public Optional<Boolean> zipSafe;
-    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests =
-        Optional.of(ImmutableSortedSet.of());
+    @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {
-      return tests.get();
+      return tests;
     }
 
   }

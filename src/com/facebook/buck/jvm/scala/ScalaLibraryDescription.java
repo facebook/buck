@@ -96,19 +96,19 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
                         BuildRules.getExportedRules(
                             Iterables.concat(
                                 params.getDeclaredDeps().get(),
-                                resolver.getAllRules(args.providedDeps.get()))),
+                                resolver.getAllRules(args.providedDeps))),
                         scalac.getDeps(pathResolver))),
                 pathResolver,
-                args.srcs.get(),
+                args.srcs,
                 validateResources(
                     pathResolver,
                     params.getProjectFilesystem(),
-                    args.resources.get()),
+                    args.resources),
                 /* generatedSourceFolder */ Optional.absent(),
                 /* proguardConfig */ Optional.absent(),
                 /* postprocessClassesCommands */ ImmutableList.of(),
                 params.getDeclaredDeps().get(),
-                resolver.getAllRules(args.providedDeps.get()),
+                resolver.getAllRules(args.providedDeps),
                 new BuildTargetSourcePath(abiJarTarget),
                 /* trackClassUsage */ false,
                 /* additionalClasspathEntries */ ImmutableSet.of(),
@@ -117,11 +117,11 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
                     ScalacToJarStepFactory.collectScalacArguments(
                         scalaBuckConfig,
                         resolver,
-                        args.extraArguments.get())),
+                        args.extraArguments)),
                 args.resourcesRoot,
                 args.manifestFile,
                 args.mavenCoords,
-                args.tests.get(),
+                args.tests,
                 /* classesToRemoveFromJar */ ImmutableSet.of()));
 
     resolver.addToIndex(
@@ -148,15 +148,13 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
-    public Optional<ImmutableSortedSet<SourcePath>> srcs = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<SourcePath>> resources =
-        Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableList<String>> extraArguments = Optional.of(ImmutableList.of());
+    public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
+    public ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
+    public ImmutableList<String> extraArguments = ImmutableList.of();
     // Note: scala does not have a exported_deps because scala needs the transitive closure of
     // dependencies to compile. deps is effectively exported_deps.
-    public Optional<ImmutableSortedSet<BuildTarget>> providedDeps =
-        Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<BuildTarget> providedDeps = ImmutableSortedSet.of();
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
 
     @Hint(isInput = false)
     public Optional<Path> resourcesRoot;
@@ -164,7 +162,7 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
     public Optional<String> mavenCoords;
 
     @Hint(isDep = false)
-    public Optional<ImmutableSortedSet<BuildTarget>> tests = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
   }
 
 }

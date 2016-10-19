@@ -74,7 +74,7 @@ public class LuaBinaryBuilder extends AbstractNodeBuilder<LuaBinaryDescription.A
   }
 
   public LuaBinaryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.of(deps);
+    arg.deps = deps;
     return this;
   }
 

@@ -176,7 +176,7 @@ public class DistributedBuildStateTest {
     ProjectFilesystem reconstructedCellFilesystem =
         distributedBuildState.getCells().get(0).getFilesystem();
     assertThat(
-        reconstructedJavaLibrary.getConstructorArg().srcs.get(),
+        reconstructedJavaLibrary.getConstructorArg().srcs,
         Matchers.contains(
             new PathSourcePath(
                 reconstructedCellFilesystem,

@@ -90,7 +90,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    ImmutableList<String> vmArgs = args.vmArgs.get();
+    ImmutableList<String> vmArgs = args.vmArgs;
 
 
     JavacOptions javacOptions =
@@ -104,7 +104,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
         params.getBuildTarget(),
         params.copyWithExtraDeps(
-            Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps.get()))),
+            Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps))),
         javacOptions,
         DependencyMode.TRANSITIVE,
         /* forceFinalResourceIds */ true,
@@ -144,7 +144,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                     .addAll(BuildRules.getExportedRules(
                         Iterables.concat(
                             params.getDeclaredDeps().get(),
-                            resolver.getAllRules(args.providedDeps.get()))))
+                            resolver.getAllRules(args.providedDeps))))
                     .addAll(pathResolver.filterBuildRuleInputs(
                         javacOptions.getInputs(pathResolver)))
                     .build()
@@ -158,11 +158,11 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             new DefaultJavaLibrary(
                 testsLibraryParams,
                 pathResolver,
-                args.srcs.get(),
+                args.srcs,
                 validateResources(
                     pathResolver,
                     params.getProjectFilesystem(),
-                    args.resources.get()),
+                    args.resources),
                 javacOptions.getGeneratedSourceFolderName(),
                 args.proguardConfig.transform(
                     SourcePaths.toSourcePath(params.getProjectFilesystem())),
@@ -189,15 +189,15 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                 pathResolver,
                 testsLibrary,
                 additionalClasspathEntries,
-                args.labels.get(),
-                args.contacts.get(),
+                args.labels,
+                args.contacts,
                 TestType.JUNIT,
                 javaOptions,
                 vmArgs,
                 cxxLibraryEnhancement.nativeLibsEnvironment,
                 dummyRDotJava,
                 args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
-                args.env.get(),
+                args.env,
                 args.getRunTestSeparately(),
                 args.getForkMode(),
                 args.stdOutLogLevel,

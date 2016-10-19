@@ -50,40 +50,40 @@ public class CxxLibraryBuilder extends
   }
 
   public CxxLibraryBuilder setExportedHeaders(ImmutableSortedSet<SourcePath> headers)  {
-    arg.exportedHeaders = Optional.of(SourceList.ofUnnamedSources(headers));
+    arg.exportedHeaders = SourceList.ofUnnamedSources(headers);
     return this;
   }
 
   public CxxLibraryBuilder setExportedHeaders(ImmutableSortedMap<String, SourcePath> headers)  {
-    arg.exportedHeaders = Optional.of(SourceList.ofNamedSources(headers));
+    arg.exportedHeaders = SourceList.ofNamedSources(headers);
     return this;
   }
 
   public CxxLibraryBuilder setExportedHeaders(SourceList headers)  {
-    arg.exportedHeaders = Optional.of(headers);
+    arg.exportedHeaders = headers;
     return this;
   }
 
   public CxxLibraryBuilder setExportedPreprocessorFlags(
       ImmutableList<String> exportedPreprocessorFlags) {
-    arg.exportedPreprocessorFlags = Optional.of(exportedPreprocessorFlags);
+    arg.exportedPreprocessorFlags = exportedPreprocessorFlags;
     return getThis();
   }
 
   public CxxLibraryBuilder setExportedPlatformPreprocessorFlags(
       PatternMatchedCollection<ImmutableList<String>> exportedPlatformPreprocessorFlags) {
-    arg.exportedPlatformPreprocessorFlags = Optional.of(exportedPlatformPreprocessorFlags);
+    arg.exportedPlatformPreprocessorFlags = exportedPlatformPreprocessorFlags;
     return this;
   }
 
   public CxxLibraryBuilder setExportedLinkerFlags(ImmutableList<String> exportedLinkerFlags) {
-    arg.exportedLinkerFlags = Optional.of(exportedLinkerFlags);
+    arg.exportedLinkerFlags = exportedLinkerFlags;
     return this;
   }
 
   public CxxLibraryBuilder setExportedPlatformLinkerFlags(
       PatternMatchedCollection<ImmutableList<String>> exportedPlatformLinkerFlags) {
-    arg.exportedPlatformLinkerFlags = Optional.of(exportedPlatformLinkerFlags);
+    arg.exportedPlatformLinkerFlags = exportedPlatformLinkerFlags;
     return this;
   }
 
@@ -108,7 +108,7 @@ public class CxxLibraryBuilder extends
   }
 
   public CxxLibraryBuilder setTests(ImmutableSortedSet<BuildTarget> tests) {
-    arg.tests = Optional.of(tests);
+    arg.tests = tests;
     return this;
   }
 
@@ -118,7 +118,7 @@ public class CxxLibraryBuilder extends
   }
 
   public CxxLibraryBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> exportedDeps) {
-    arg.exportedDeps = Optional.of(exportedDeps);
+    arg.exportedDeps = exportedDeps;
     return this;
   }
 

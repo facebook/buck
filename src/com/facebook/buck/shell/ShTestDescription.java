@@ -94,13 +94,13 @@ public class ShTestDescription implements
             params.getCellRoots(),
             resolver);
     final ImmutableList<com.facebook.buck.rules.args.Arg> testArgs =
-        FluentIterable.from(args.args.or(ImmutableList.of()))
+        FluentIterable.from(args.args)
             .transform(toArg)
             .toList();
     final ImmutableMap<String, com.facebook.buck.rules.args.Arg> testEnv =
         ImmutableMap.copyOf(
             Maps.transformValues(
-                args.env.or(ImmutableMap.of()),
+                args.env,
                 toArg));
     return new ShTest(
         params.appendExtraDeps(
@@ -112,12 +112,12 @@ public class ShTestDescription implements
         args.test,
         testArgs,
         testEnv,
-        FluentIterable.from(args.resources.or(ImmutableSortedSet.of()))
+        FluentIterable.from(args.resources)
             .transform(SourcePaths.toSourcePath(params.getProjectFilesystem()))
             .toSortedSet(Ordering.natural()),
         args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
-        args.labels.get(),
-        args.contacts.or(ImmutableSet.of()));
+        args.labels,
+        args.contacts);
   }
 
   @Override
@@ -130,8 +130,8 @@ public class ShTestDescription implements
     // Add parse time deps for any macros.
     for (String blob :
          Iterables.concat(
-             constructorArg.args.or(ImmutableList.of()),
-             constructorArg.env.or(ImmutableMap.of()).values())) {
+             constructorArg.args,
+             constructorArg.env.values())) {
       try {
         deps.addAll(MACRO_HANDLER.extractParseTimeDeps(buildTarget, cellRoots, blob));
       } catch (MacroException e) {
@@ -145,13 +145,13 @@ public class ShTestDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public SourcePath test;
-    public Optional<ImmutableList<String>> args = Optional.of(ImmutableList.of());
-    public Optional<ImmutableSet<String>> contacts = Optional.of(ImmutableSet.of());
-    public Optional<ImmutableSortedSet<Label>> labels = Optional.of(ImmutableSortedSet.of());
+    public ImmutableList<String> args = ImmutableList.of();
+    public ImmutableSet<String> contacts = ImmutableSet.of();
+    public ImmutableSortedSet<Label> labels = ImmutableSortedSet.of();
     public Optional<Long> testRuleTimeoutMs;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<Path>> resources = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableMap<String, String>> env = Optional.of(ImmutableMap.of());
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    public ImmutableSortedSet<Path> resources = ImmutableSortedSet.of();
+    public ImmutableMap<String, String> env = ImmutableMap.of();
   }
 
 }

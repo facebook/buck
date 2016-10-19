@@ -222,22 +222,22 @@ public class ProjectGenerator {
   public static final Function<
       TargetNode<CxxLibraryDescription.Arg>,
       Iterable<String>> GET_EXPORTED_LINKER_FLAGS =
-      input -> input.getConstructorArg().exportedLinkerFlags.get();
+      input -> input.getConstructorArg().exportedLinkerFlags;
 
   public static final Function<
       TargetNode<CxxLibraryDescription.Arg>,
       Iterable<String>> GET_EXPORTED_PREPROCESSOR_FLAGS =
-      input -> input.getConstructorArg().exportedPreprocessorFlags.get();
+      input -> input.getConstructorArg().exportedPreprocessorFlags;
 
   public static final Function<
       TargetNode<CxxLibraryDescription.Arg>,
       Iterable<Pair<Pattern, ImmutableList<String>>>> GET_EXPORTED_PLATFORM_LINKER_FLAGS =
-      input -> input.getConstructorArg().exportedPlatformLinkerFlags.get().getPatternsAndValues();
+      input -> input.getConstructorArg().exportedPlatformLinkerFlags.getPatternsAndValues();
 
   public static final Function<
       TargetNode<CxxLibraryDescription.Arg>,
       Iterable<Pair<Pattern, ImmutableList<String>>>> GET_EXPORTED_PLATFORM_PREPROCESSOR_FLAGS =
-      input -> input.getConstructorArg().exportedPlatformPreprocessorFlags.get()
+      input -> input.getConstructorArg().exportedPlatformPreprocessorFlags
         .getPatternsAndValues();
 
   private final Function<SourcePath, Path> sourcePathResolver;
@@ -808,19 +808,15 @@ public class ProjectGenerator {
 
     // pass the source list to the xcode script
     String halideCompilerSrcs = "";
-    if (targetNode.getConstructorArg().srcs.isPresent()) {
-      Iterable<Path> compilerSrcFiles =
-          Iterables.transform(
-              targetNode.getConstructorArg().srcs.get(),
-              input -> sourcePathResolver.apply(input.getSourcePath())
-          );
-      halideCompilerSrcs = Joiner.on(" ").join(compilerSrcFiles);
-    }
+    Iterable<Path> compilerSrcFiles =
+        Iterables.transform(
+            targetNode.getConstructorArg().srcs,
+            input -> sourcePathResolver.apply(input.getSourcePath())
+        );
+    halideCompilerSrcs = Joiner.on(" ").join(compilerSrcFiles);
     defaultSettingsBuilder.put("HALIDE_COMPILER_SRCS", halideCompilerSrcs);
     String halideCompilerFlags = "";
-    if (targetNode.getConstructorArg().compilerFlags.isPresent()) {
-      halideCompilerFlags = Joiner.on(" ").join(targetNode.getConstructorArg().compilerFlags.get());
-    }
+    halideCompilerFlags = Joiner.on(" ").join(targetNode.getConstructorArg().compilerFlags);
     defaultSettingsBuilder.put("HALIDE_COMPILER_FLAGS", halideCompilerFlags);
 
     defaultSettingsBuilder.put("HALIDE_OUTPUT_PATH", outputPath.toString());
@@ -1104,7 +1100,7 @@ public class ProjectGenerator {
         ImmutableSet.copyOf(getHeaderSourcePaths(arg.exportedHeaders));
     ImmutableSet<SourcePath> headers = ImmutableSet.copyOf(getHeaderSourcePaths(arg.headers));
     ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags =
-        targetNode.getConstructorArg().langPreprocessorFlags.get();
+        targetNode.getConstructorArg().langPreprocessorFlags;
 
     mutator
         .setTargetName(getXcodeTargetName(buildTarget))
@@ -1119,7 +1115,7 @@ public class ProjectGenerator {
           .setLangPreprocessorFlags(langPreprocessorFlags)
           .setPublicHeaders(exportedHeaders)
           .setPrefixHeader(arg.prefixHeader)
-          .setSourcesWithFlags(ImmutableSet.copyOf(arg.srcs.get()))
+          .setSourcesWithFlags(ImmutableSet.copyOf(arg.srcs))
           .setPrivateHeaders(headers)
           .setRecursiveResources(recursiveResources)
           .setDirectResources(directResources);
@@ -1137,7 +1133,7 @@ public class ProjectGenerator {
     if (appleTargetNode.isPresent() && isFocusedOnTarget) {
       AppleNativeTargetDescriptionArg appleArg = appleTargetNode.get().getConstructorArg();
       mutator = mutator
-          .setExtraXcodeSources(ImmutableSet.copyOf(appleArg.extraXcodeSources.get()));
+          .setExtraXcodeSources(ImmutableSet.copyOf(appleArg.extraXcodeSources));
     }
 
     if (options.contains(Option.CREATE_DIRECTORY_STRUCTURE) && isFocusedOnTarget) {
@@ -1158,8 +1154,8 @@ public class ProjectGenerator {
 
     if (includeFrameworks && isFocusedOnTarget) {
       ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
-      frameworksBuilder.addAll(targetNode.getConstructorArg().frameworks.get());
-      frameworksBuilder.addAll(targetNode.getConstructorArg().libraries.get());
+      frameworksBuilder.addAll(targetNode.getConstructorArg().frameworks);
+      frameworksBuilder.addAll(targetNode.getConstructorArg().libraries);
       frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(ImmutableList.of(targetNode)));
       mutator.setFrameworks(frameworksBuilder.build());
 
@@ -1353,8 +1349,8 @@ public class ProjectGenerator {
                               cxxBuckConfig.getFlags("cflags").or(DEFAULT_CFLAGS),
                               collectRecursiveExportedPreprocessorFlags(
                                   ImmutableList.of(targetNode)),
-                              targetNode.getConstructorArg().compilerFlags.get(),
-                              targetNode.getConstructorArg().preprocessorFlags.get()),
+                              targetNode.getConstructorArg().compilerFlags,
+                              targetNode.getConstructorArg().preprocessorFlags),
                           Escaper.BASH_ESCAPER)))
           .put(
               "OTHER_CPLUSPLUSFLAGS",
@@ -1366,8 +1362,8 @@ public class ProjectGenerator {
                               cxxBuckConfig.getFlags("cxxflags").or(DEFAULT_CXXFLAGS),
                               collectRecursiveExportedPreprocessorFlags(
                                   ImmutableList.of(targetNode)),
-                              targetNode.getConstructorArg().compilerFlags.get(),
-                              targetNode.getConstructorArg().preprocessorFlags.get()),
+                              targetNode.getConstructorArg().compilerFlags,
+                              targetNode.getConstructorArg().preprocessorFlags),
                           Escaper.BASH_ESCAPER)))
           .put(
               "OTHER_LDFLAGS",
@@ -1376,7 +1372,7 @@ public class ProjectGenerator {
                   .join(
                       Iterables.transform(
                           Iterables.concat(
-                              targetNode.getConstructorArg().linkerFlags.get(),
+                              targetNode.getConstructorArg().linkerFlags,
                               collectRecursiveExportedLinkerFlags(
                                   ImmutableList.of(targetNode))),
                           Escaper.BASH_ESCAPER)));
@@ -1385,9 +1381,9 @@ public class ProjectGenerator {
           ImmutableMultimap.builder();
       for (Pair<Pattern, ImmutableList<String>> flags :
              Iterables.concat(
-                 targetNode.getConstructorArg().platformCompilerFlags.get()
+                 targetNode.getConstructorArg().platformCompilerFlags
                      .getPatternsAndValues(),
-                 targetNode.getConstructorArg().platformPreprocessorFlags.get()
+                 targetNode.getConstructorArg().platformPreprocessorFlags
                      .getPatternsAndValues(),
                  collectRecursiveExportedPlatformPreprocessorFlags(
                      ImmutableList.of(targetNode)))) {
@@ -1415,7 +1411,7 @@ public class ProjectGenerator {
           ImmutableMultimap.builder();
       for (Pair<Pattern, ImmutableList<String>> flags :
              Iterables.concat(
-                 targetNode.getConstructorArg().platformLinkerFlags.get()
+                 targetNode.getConstructorArg().platformLinkerFlags
                      .getPatternsAndValues(),
                  collectRecursiveExportedPlatformLinkerFlags(
                      ImmutableList.of(targetNode)))) {
@@ -1564,9 +1560,9 @@ public class ProjectGenerator {
     Optional<TargetNode<HalideLibraryDescription.Arg>> halideTargetNode =
         targetNode.castArg(HalideLibraryDescription.Arg.class);
     if (appleTargetNode.isPresent()) {
-      configs = appleTargetNode.get().getConstructorArg().configs;
+      configs = Optional.of(appleTargetNode.get().getConstructorArg().configs);
     } else if (halideTargetNode.isPresent()) {
-      configs = halideTargetNode.get().getConstructorArg().configs;
+      configs = Optional.of(halideTargetNode.get().getConstructorArg().configs);
     }
     if (!configs.isPresent() ||
         (configs.isPresent() && configs.get().isEmpty()) ||
@@ -1598,14 +1594,11 @@ public class ProjectGenerator {
         buildTarget, "%s-" + input + ".xcconfig");
   }
 
-  private Iterable<SourcePath> getHeaderSourcePaths(
-      Optional<SourceList> headers) {
-    if (!headers.isPresent()) {
-      return ImmutableList.of();
-    } else if (headers.get().getUnnamedSources().isPresent()) {
-      return headers.get().getUnnamedSources().get();
+  private Iterable<SourcePath> getHeaderSourcePaths(SourceList headers) {
+    if (headers.getUnnamedSources().isPresent()) {
+      return headers.getUnnamedSources().get();
     } else {
-      return headers.get().getNamedSources().get().values();
+      return headers.getNamedSources().get().values();
     }
   }
 
@@ -1638,8 +1631,8 @@ public class ProjectGenerator {
     ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
     frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(tests));
     for (TargetNode<AppleTestDescription.Arg> test : tests) {
-      frameworksBuilder.addAll(test.getConstructorArg().frameworks.get());
-      frameworksBuilder.addAll(test.getConstructorArg().libraries.get());
+      frameworksBuilder.addAll(test.getConstructorArg().frameworks);
+      frameworksBuilder.addAll(test.getConstructorArg().libraries);
     }
     mutator.setFrameworks(frameworksBuilder.build());
 
@@ -2326,7 +2319,7 @@ public class ProjectGenerator {
         .addAll(
             collectRecursiveSearchPathsForFrameworkPaths(
                 targetNodes,
-                input -> input.libraries.or(ImmutableSortedSet.of()))).build();
+                input -> input.libraries)).build();
   }
 
   private <T> ImmutableSet<String> collectRecursiveFrameworkSearchPaths(
@@ -2336,7 +2329,7 @@ public class ProjectGenerator {
         .addAll(
             collectRecursiveSearchPathsForFrameworkPaths(
                 targetNodes,
-                input -> input.frameworks.or(ImmutableSortedSet.of()))).build();
+                input -> input.frameworks)).build();
   }
 
   private <T> Iterable<FrameworkPath> collectRecursiveFrameworkDependencies(
@@ -2358,8 +2351,8 @@ public class ProjectGenerator {
                     !AppleLibraryDescription.isSharedLibraryTarget(
                         library.get().getBuildTarget())) {
                   return Iterables.concat(
-                      library.get().getConstructorArg().frameworks.get(),
-                      library.get().getConstructorArg().libraries.get());
+                      library.get().getConstructorArg().frameworks,
+                      library.get().getConstructorArg().libraries);
                 } else {
                   return ImmutableList.of();
                 }
@@ -2725,7 +2718,7 @@ public class ProjectGenerator {
       if (!library.isPresent()) {
         return false;
       }
-      return (library.get().getConstructorArg().srcs.get().size() != 0);
+      return (library.get().getConstructorArg().srcs.size() != 0);
     };
   }
 

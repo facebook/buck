@@ -57,13 +57,13 @@ public class ReactNativeLibraryGraphEnhancer {
             Suppliers.ofInstance(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(pathResolver.filterBuildRuleInputs(args.entryPath))
-                    .addAll(pathResolver.filterBuildRuleInputs(args.srcs.get()))
+                    .addAll(pathResolver.filterBuildRuleInputs(args.srcs))
                     .addAll(jsPackager.getDeps(pathResolver))
                     .build()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,
         args.entryPath,
-        args.srcs.get(),
+        args.srcs,
         ReactNativeFlavors.useUnbundling(baseParams.getBuildTarget()),
         ReactNativeFlavors.isDevMode(baseParams.getBuildTarget()),
         args.bundleName,

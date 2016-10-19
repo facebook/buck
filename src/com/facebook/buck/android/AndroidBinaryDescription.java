@@ -167,7 +167,7 @@ public class AndroidBinaryDescription
       APKModuleGraph apkModuleGraph = new APKModuleGraph(
           targetGraph,
           target,
-          args.applicationModuleTargets);
+          Optional.of(args.applicationModuleTargets));
 
       ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =
           args.androidSdkProguardConfig.or(ProGuardObfuscateStep.SdkProguardType.DEFAULT);
@@ -185,8 +185,8 @@ public class AndroidBinaryDescription
       }
 
       EnumSet<ExopackageMode> exopackageModes = EnumSet.noneOf(ExopackageMode.class);
-      if (args.exopackageModes.isPresent() && !args.exopackageModes.get().isEmpty()) {
-        exopackageModes = EnumSet.copyOf(args.exopackageModes.get());
+      if (!args.exopackageModes.isEmpty()) {
+        exopackageModes = EnumSet.copyOf(args.exopackageModes);
       } else if (args.exopackage.or(false)) {
         exopackageModes = EnumSet.of(ExopackageMode.SECONDARY_DEX);
       }
@@ -199,12 +199,12 @@ public class AndroidBinaryDescription
           !args.preprocessJavaClassesBash.isPresent();
 
       ResourceFilter resourceFilter =
-        new ResourceFilter(args.resourceFilter.or(ImmutableList.of()));
+        new ResourceFilter(args.resourceFilter);
 
-      Optional<Set<RType>> bannedDuplicateTypesArgs = args.bannedDuplicateResourceTypes;
+      Set<RType> bannedDuplicateTypesArgs = args.bannedDuplicateResourceTypes;
       EnumSet<RType> bannedDuplicateResourceTypes;
-      if (bannedDuplicateTypesArgs.isPresent() && !bannedDuplicateTypesArgs.get().isEmpty()) {
-        bannedDuplicateResourceTypes = EnumSet.copyOf(bannedDuplicateTypesArgs.get());
+      if (!bannedDuplicateTypesArgs.isEmpty()) {
+        bannedDuplicateResourceTypes = EnumSet.copyOf(bannedDuplicateTypesArgs);
       } else {
         bannedDuplicateResourceTypes = EnumSet.noneOf(RType.class);
       }
@@ -216,10 +216,10 @@ public class AndroidBinaryDescription
           resourceFilter,
           bannedDuplicateResourceTypes,
           args.resourceUnionPackage,
-          addFallbackLocales(args.locales.or(ImmutableSet.of())),
+          addFallbackLocales(args.locales),
           args.manifest,
           packageType,
-          ImmutableSet.copyOf(args.cpuFilters.get()),
+          ImmutableSet.copyOf(args.cpuFilters),
           args.buildStringSourceMap.or(false),
           shouldPreDex,
           AndroidBinary.getPrimaryDexPath(params.getBuildTarget(), params.getProjectFilesystem()),
@@ -231,18 +231,18 @@ public class AndroidBinaryDescription
           javacOptions,
           exopackageModes,
           (Keystore) keystore,
-          args.buildConfigValues.get(),
+          args.buildConfigValues,
           args.buildConfigValuesFile,
           Optional.absent(),
           args.trimResourceIds.or(false),
           args.keepResourcePattern,
           nativePlatforms,
-          args.nativeLibraryMergeMap,
+          Optional.of(args.nativeLibraryMergeMap),
           args.nativeLibraryMergeGlue,
           args.nativeLibraryMergeCodeGenerator,
           args.enableRelinker.or(false) ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
           dxExecutorService,
-          args.manifestEntries.get(),
+          args.manifestEntries,
           cxxBuckConfig,
           apkModuleGraph);
       AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
@@ -282,7 +282,7 @@ public class AndroidBinaryDescription
           pathResolver,
           proGuardConfig.getProguardJarOverride(),
           proGuardConfig.getProguardMaxHeapSize(),
-          args.proguardJvmArgs,
+          Optional.of(args.proguardJvmArgs),
           proGuardConfig.getProguardAgentPath(),
           (Keystore) keystore,
           packageType,
@@ -292,7 +292,7 @@ public class AndroidBinaryDescription
           args.optimizationPasses,
           args.proguardConfig,
           compressionMode,
-          args.cpuFilters.get(),
+          args.cpuFilters,
           resourceFilter,
           exopackageModes,
           MACRO_HANDLER.getExpander(
@@ -309,7 +309,7 @@ public class AndroidBinaryDescription
           dxExecutorService,
           args.packageAssetLibraries,
           args.compressAssetLibraries,
-          args.manifestEntries.or(ManifestEntries.empty()),
+          args.manifestEntries,
           javaOptions.getJavaRuntimeLauncher());
     }
   }
@@ -328,7 +328,7 @@ public class AndroidBinaryDescription
         args.dexCompression.or(defaultDexStore),
         args.useLinearAllocSplitDex.or(false),
         args.linearAllocHardLimit.or(DEFAULT_LINEAR_ALLOC_HARD_LIMIT),
-        args.primaryDexPatterns.or(ImmutableList.of()),
+        args.primaryDexPatterns,
         args.primaryDexClassesFile,
         args.primaryDexScenarioFile,
         args.primaryDexScenarioOverflowAllowed.or(false),
@@ -384,34 +384,33 @@ public class AndroidBinaryDescription
     public Optional<Boolean> disablePreDex;
     // TODO(natthu): mark this as deprecated.
     public Optional<Boolean> exopackage;
-    public Optional<Set<ExopackageMode>> exopackageModes = Optional.of(ImmutableSet.of());
+    public Set<ExopackageMode> exopackageModes = ImmutableSet.of();
     public Optional<DexStore> dexCompression;
     public Optional<ProGuardObfuscateStep.SdkProguardType> androidSdkProguardConfig;
     public Optional<Boolean> useAndroidProguardConfigWithOptimizations;
     public Optional<Integer> optimizationPasses;
-    public Optional<List<String>> proguardJvmArgs = Optional.of(ImmutableList.of());
+    public List<String> proguardJvmArgs = ImmutableList.of();
     public Optional<SourcePath> proguardConfig;
     public Optional<String> resourceCompression;
     public Optional<Boolean> skipCrunchPngs;
     public Optional<Boolean> includesVectorDrawables;
-    public Optional<List<String>> primaryDexPatterns = Optional.of(ImmutableList.of());
+    public List<String> primaryDexPatterns = ImmutableList.of();
     public Optional<SourcePath> primaryDexClassesFile;
     public Optional<SourcePath> primaryDexScenarioFile;
     public Optional<Boolean> primaryDexScenarioOverflowAllowed;
     public Optional<SourcePath> secondaryDexHeadClassesFile;
     public Optional<SourcePath> secondaryDexTailClassesFile;
-    public Optional<Set<BuildTarget>> applicationModuleTargets = Optional.of(ImmutableSet.of());
+    public Set<BuildTarget> applicationModuleTargets = ImmutableSet.of();
     public Optional<Long> linearAllocHardLimit;
-    public Optional<List<String>> resourceFilter = Optional.of(ImmutableList.of());
-    public Optional<Set<RType>> bannedDuplicateResourceTypes = Optional.of(ImmutableSet.of());
+    public List<String> resourceFilter = ImmutableList.of();
+    public Set<RType> bannedDuplicateResourceTypes = ImmutableSet.of();
     public Optional<Boolean> trimResourceIds;
     public Optional<String> keepResourcePattern;
     public Optional<String> resourceUnionPackage;
-    public Optional<ImmutableSet<String>> locales = Optional.of(ImmutableSet.of());
+    public ImmutableSet<String> locales = ImmutableSet.of();
     public Optional<Boolean> buildStringSourceMap;
-    public Optional<Set<TargetCpuType>> cpuFilters = Optional.of(ImmutableSet.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> preprocessJavaClassesDeps =
-        Optional.of(ImmutableSortedSet.of());
+    public Set<TargetCpuType> cpuFilters = ImmutableSet.of();
+    public ImmutableSortedSet<BuildTarget> preprocessJavaClassesDeps = ImmutableSortedSet.of();
     public Optional<String> preprocessJavaClassesBash;
     public Optional<Boolean> reorderClassesIntraDex;
     public Optional<SourcePath> dexReorderToolFile;
@@ -419,21 +418,19 @@ public class AndroidBinaryDescription
     public Optional<Integer> xzCompressionLevel;
     public Optional<Boolean> packageAssetLibraries;
     public Optional<Boolean> compressAssetLibraries;
-    public Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap =
-        Optional.of(ImmutableMap.of());
+    public Map<String, List<Pattern>> nativeLibraryMergeMap = ImmutableMap.of();
     public Optional<BuildTarget> nativeLibraryMergeGlue;
     public Optional<BuildTarget> nativeLibraryMergeCodeGenerator;
     public Optional<Boolean> enableRelinker;
-    public Optional<ManifestEntries> manifestEntries = Optional.of(ManifestEntries.empty());
-    public Optional<BuildConfigFields> buildConfigValues = Optional.of(BuildConfigFields.empty());
+    public ManifestEntries manifestEntries = ManifestEntries.empty();
+    public BuildConfigFields buildConfigValues = BuildConfigFields.empty();
     public Optional<SourcePath> buildConfigValuesFile;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
-    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests =
-        Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {
-      return tests.get();
+      return tests;
     }
 
   }

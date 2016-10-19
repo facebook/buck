@@ -63,8 +63,7 @@ public class LuaLibraryDescription implements Description<LuaLibraryDescription.
                     "srcs",
                     LuaUtil.getBaseModule(params.getBuildTarget(), args.baseModule),
                     ImmutableList.of(
-                        args.srcs.or(
-                            SourceList.ofUnnamedSources(ImmutableSortedSet.of())))))
+                        args.srcs)))
             .build();
       }
     };
@@ -72,9 +71,9 @@ public class LuaLibraryDescription implements Description<LuaLibraryDescription.
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
-    public Optional<SourceList> srcs = Optional.of(SourceList.EMPTY);
+    public SourceList srcs = SourceList.EMPTY;
     public Optional<String> baseModule;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
   }
 
 }

@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.SourceList;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -48,17 +47,17 @@ public class HaskellBinaryBuilder
   }
 
   public HaskellBinaryBuilder setSrcs(SourceList srcs) {
-    arg.srcs = Optional.of(srcs);
+    arg.srcs = srcs;
     return this;
   }
 
   public HaskellBinaryBuilder setCompilerFlags(ImmutableList<String> flags) {
-    arg.compilerFlags = Optional.of(flags);
+    arg.compilerFlags = flags;
     return this;
   }
 
   public HaskellBinaryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.of(deps);
+    arg.deps = deps;
     return this;
   }
 

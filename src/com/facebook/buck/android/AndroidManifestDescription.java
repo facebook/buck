@@ -27,7 +27,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -58,7 +57,7 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     AndroidTransitiveDependencyGraph transitiveDependencyGraph =
-        new AndroidTransitiveDependencyGraph(resolver.getAllRules(args.deps.get()));
+        new AndroidTransitiveDependencyGraph(resolver.getAllRules(args.deps));
     ImmutableSet<SourcePath> manifestFiles = transitiveDependencyGraph.findManifestFiles();
 
     // The only rules that need to be built before this AndroidManifest are those
@@ -93,6 +92,6 @@ public class AndroidManifestDescription implements Description<AndroidManifestDe
      * android_library rules will be filtered out to become dependent source files for the
      * {@link AndroidManifest}.
      */
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
   }
 }

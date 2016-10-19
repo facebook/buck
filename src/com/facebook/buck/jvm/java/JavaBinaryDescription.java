@@ -113,7 +113,7 @@ public class JavaBinaryDescription implements
         args.manifestFile.orNull(),
         args.mergeManifests.or(true),
         args.metaInfDirectory.orNull(),
-        args.blacklist.or(ImmutableSet.of()),
+        args.blacklist,
         transitiveClasspathDeps,
         transitiveClasspaths);
 
@@ -151,18 +151,17 @@ public class JavaBinaryDescription implements
 
   @SuppressFieldNotInitialized
   public static class Args extends AbstractDescriptionArg implements HasTests {
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public Optional<String> mainClass;
     public Optional<SourcePath> manifestFile;
     public Optional<Boolean> mergeManifests;
     public Optional<Path> metaInfDirectory;
-    public Optional<ImmutableSet<Pattern>> blacklist = Optional.of(ImmutableSet.of());
-    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests =
-        Optional.of(ImmutableSortedSet.of());
+    public ImmutableSet<Pattern> blacklist = ImmutableSet.of();
+    @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {
-      return tests.get();
+      return tests;
     }
 
   }

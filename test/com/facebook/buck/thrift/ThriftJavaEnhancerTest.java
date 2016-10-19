@@ -23,7 +23,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.model.BuildTarget;
@@ -33,6 +32,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CommandTool;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeExportDependenciesRule;
@@ -40,7 +40,6 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.StringArg;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -117,22 +116,16 @@ public class ThriftJavaEnhancerTest {
 
     // Test empty options.
     options = ImmutableSet.of();
-    arg.javaOptions = Optional.of(options);
+    arg.javaOptions = options;
     assertEquals(
         options,
         ENHANCER.getOptions(TARGET, arg));
 
     // Test set options.
     options = ImmutableSet.of("test", "option");
-    arg.javaOptions = Optional.of(options);
+    arg.javaOptions = options;
     assertEquals(
         options,
-        ENHANCER.getOptions(TARGET, arg));
-
-    // Test absent options.
-    arg.javaOptions = Optional.absent();
-    assertEquals(
-        ImmutableSet.<String>of(),
         ENHANCER.getOptions(TARGET, arg));
   }
 

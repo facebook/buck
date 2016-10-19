@@ -29,7 +29,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Set;
@@ -69,6 +68,6 @@ public class AppleResourceDescription implements Description<AppleResourceDescri
   public static class Arg extends AbstractDescriptionArg {
     public Set<SourcePath> dirs;
     public Set<SourcePath> files;
-    public Optional<Set<SourcePath>> variants = Optional.of(ImmutableSet.of());
+    public Set<SourcePath> variants = ImmutableSet.of();
   }
 }

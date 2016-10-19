@@ -106,13 +106,13 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
         return new JavaSourceJar(
             params,
             pathResolver,
-            args.srcs.get(),
+            args.srcs,
             args.mavenCoords);
       } else {
         return MavenUberJar.SourceJar.create(
             Preconditions.checkNotNull(paramsWithMavenFlavor),
             pathResolver,
-            args.srcs.get(),
+            args.srcs,
             args.mavenCoords,
             args.mavenPomTemplate);
       }
@@ -128,7 +128,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
 
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
-    ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps.get());
+    ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
     DefaultJavaLibrary defaultJavaLibrary =
         resolver.addToIndex(
             new DefaultJavaLibrary(
@@ -138,21 +138,21 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
                             Iterables.concat(
                                 params.getDeclaredDeps().get(),
                                 exportedDeps,
-                                resolver.getAllRules(args.providedDeps.get()))),
+                                resolver.getAllRules(args.providedDeps))),
                         pathResolver.filterBuildRuleInputs(
                             javacOptions.getInputs(pathResolver)))),
                 pathResolver,
-                args.srcs.get(),
+                args.srcs,
                 validateResources(
                     pathResolver,
                     params.getProjectFilesystem(),
-                    args.resources.get()),
+                    args.resources),
                 javacOptions.getGeneratedSourceFolderName(),
                 args.proguardConfig.transform(
                     SourcePaths.toSourcePath(params.getProjectFilesystem())),
-                args.postprocessClassesCommands.get(),
+                args.postprocessClassesCommands,
                 exportedDeps,
-                resolver.getAllRules(args.providedDeps.get()),
+                resolver.getAllRules(args.providedDeps),
                 new BuildTargetSourcePath(abiJarTarget),
                 javacOptions.trackClassUsage(),
                 /* additionalClasspathEntries */ ImmutableSet.of(),
@@ -160,7 +160,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
                 args.resourcesRoot,
                 args.manifestFile,
                 args.mavenCoords,
-                args.tests.get(),
+                args.tests,
                 javacOptions.getClassesToRemoveFromJar()));
 
     resolver.addToIndex(
@@ -184,13 +184,11 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
 
   @SuppressFieldNotInitialized
   public static class Arg extends JvmLibraryArg implements HasTests {
-    public Optional<ImmutableSortedSet<SourcePath>> srcs = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<SourcePath>> resources =
-        Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
+    public ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
 
     public Optional<Path> proguardConfig;
-    public Optional<ImmutableList<String>> postprocessClassesCommands =
-        Optional.of(ImmutableList.of());
+    public ImmutableList<String> postprocessClassesCommands = ImmutableList.of();
 
     @Hint(isInput = false)
     public Optional<Path> resourcesRoot;
@@ -199,21 +197,16 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     public Optional<SourcePath> mavenPomTemplate;
 
     public Optional<Boolean> autodeps;
-    public Optional<ImmutableSortedSet<String>> generatedSymbols =
-        Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> providedDeps =
-        Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps =
-        Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> deps =
-        Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<String> generatedSymbols = ImmutableSortedSet.of();
+    public ImmutableSortedSet<BuildTarget> providedDeps = ImmutableSortedSet.of();
+    public ImmutableSortedSet<BuildTarget> exportedDeps = ImmutableSortedSet.of();
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
 
-    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests =
-        Optional.of(ImmutableSortedSet.of());
+    @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {
-      return tests.get();
+      return tests;
     }
   }
 }

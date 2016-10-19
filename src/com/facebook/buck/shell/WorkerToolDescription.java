@@ -94,7 +94,7 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
     }
 
     ImmutableMap<String, String> expandedEnv = ImmutableMap.copyOf(
-        FluentIterable.from(args.env.get().entrySet())
+        FluentIterable.from(args.env.entrySet())
             .transform(input -> {
               try {
                 return Maps.immutableEntry(
@@ -140,7 +140,7 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
             MACRO_HANDLER.extractParseTimeDeps(
                 buildTarget, cellRoots, constructorArg.args.get()));
       }
-      for (Map.Entry<String, String> env : constructorArg.env.get().entrySet()) {
+      for (Map.Entry<String, String> env : constructorArg.env.entrySet()) {
         targets.addAll(
             MACRO_HANDLER.extractParseTimeDeps(
                 buildTarget, cellRoots, env.getValue()));
@@ -154,7 +154,7 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
 
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
-    public Optional<ImmutableMap<String, String>> env = Optional.of(ImmutableMap.of());
+    public ImmutableMap<String, String> env = ImmutableMap.of();
     public Optional<String> args;
     public BuildTarget exe;
     public Optional<Integer> maxWorkers;

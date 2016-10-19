@@ -246,8 +246,8 @@ public class CxxBinaryDescription implements
         pathResolver,
         cxxLinkAndCompileRules.getBinaryRule(),
         cxxLinkAndCompileRules.executable,
-        args.frameworks.get(),
-        args.tests.get(),
+        args.frameworks,
+        args.tests,
         params.getBuildTarget().withoutFlavors(cxxPlatforms.getFlavors()));
     resolver.addToIndex(cxxBinary);
     return cxxBinary;
@@ -266,8 +266,8 @@ public class CxxBinaryDescription implements
     return findDepsForTargetFromConstructorArgs(
         buildTarget,
         cellRoots,
-        constructorArg.linkerFlags.get(),
-        constructorArg.platformLinkerFlags.get().getValues());
+        constructorArg.linkerFlags,
+        constructorArg.platformLinkerFlags.getValues());
   }
 
   public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(

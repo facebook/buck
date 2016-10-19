@@ -22,7 +22,6 @@ import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleTestDescription;
-import com.facebook.buck.apple.SchemeActionType;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.project_generator.ProjectGenerator;
 import com.facebook.buck.apple.project_generator.WorkspaceAndProjectGenerator;
@@ -1282,11 +1281,11 @@ public class ProjectCommand extends BuildCommand {
       TargetNode<?> sourceTargetNode) {
     XcodeWorkspaceConfigDescription.Arg workspaceArgs = new XcodeWorkspaceConfigDescription.Arg();
     workspaceArgs.srcTarget = Optional.of(sourceTargetNode.getBuildTarget());
-    workspaceArgs.actionConfigNames = Optional.of(ImmutableMap.<SchemeActionType, String>of());
-    workspaceArgs.extraTests = Optional.of(ImmutableSortedSet.<BuildTarget>of());
-    workspaceArgs.extraTargets = Optional.of(ImmutableSortedSet.<BuildTarget>of());
+    workspaceArgs.actionConfigNames = ImmutableMap.of();
+    workspaceArgs.extraTests = ImmutableSortedSet.of();
+    workspaceArgs.extraTargets = ImmutableSortedSet.of();
     workspaceArgs.workspaceName = Optional.absent();
-    workspaceArgs.extraSchemes = Optional.of(ImmutableSortedMap.<String, BuildTarget>of());
+    workspaceArgs.extraSchemes = ImmutableSortedMap.of();
     workspaceArgs.isRemoteRunnable = Optional.absent();
     workspaceArgs.explicitRunnablePath = Optional.absent();
     workspaceArgs.launchStyle = Optional.absent();
@@ -1298,7 +1297,7 @@ public class ProjectCommand extends BuildCommand {
       return false;
     }
     JavaLibraryDescription.Arg arg = ((JavaLibraryDescription.Arg) target.getConstructorArg());
-    return !arg.annotationProcessors.get().isEmpty();
+    return !arg.annotationProcessors.isEmpty();
   }
 
   @Override

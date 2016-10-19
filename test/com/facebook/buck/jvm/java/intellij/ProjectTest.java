@@ -646,40 +646,11 @@ public class ProjectTest {
   }
 
   /**
-   * A project_config()'s src_roots argument can be {@code None}, {@code []}, or a non-empty array.
+   * A project_config()'s src_roots argument can be {@code []}, or a non-empty array.
    * Each of these should be treated differently.
    */
   @Test
   public void testSrcRoots() throws Exception {
-    // Create a project_config() with src_roots=None.
-    BuildRuleResolver ruleResolver1 =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-
-    BuildRule resBuildRule = ruleResolver1.addToIndex(
-        AndroidResourceRuleBuilder.newBuilder()
-            .setResolver(new SourcePathResolver(ruleResolver1))
-            .setBuildTarget(BuildTargetFactory.newInstance("//resources/com/example:res"))
-            .build());
-    ProjectConfig projectConfigNullSrcRoots = (ProjectConfig) ProjectConfigBuilder
-        .createBuilder(
-            BuildTargetFactory.newInstance("//resources/com/example:project_config"))
-        .setSrcRule(resBuildRule.getBuildTarget())
-        .setSrcRoots(null)
-        .build(ruleResolver1);
-    ProjectWithModules projectWithModules1 = getModulesForActionGraph(
-        ruleResolver1,
-        ImmutableSortedSet.of(projectConfigNullSrcRoots),
-        null /* javaPackageFinder */,
-        null /* intellijConfig */);
-
-    // Verify that the correct source folders are created.
-    assertEquals(1, projectWithModules1.modules.size());
-    SerializableModule moduleNoJavaSource = projectWithModules1.modules.get(0);
-    assertListEquals(
-        "Only source tmp should be gen/ when setSrcRoots(null) is specified.",
-        ImmutableList.of(SerializableModule.SourceFolder.GEN),
-        moduleNoJavaSource.sourceFolders);
-
     // Create a project_config() with src_roots=[].
     BuildRuleResolver ruleResolver2 =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());

@@ -25,10 +25,10 @@ import com.google.common.collect.ImmutableSortedSet;
 
 @SuppressFieldNotInitialized
 public class ReactNativeLibraryArgs extends AbstractDescriptionArg {
-  public Optional<ImmutableSortedSet<SourcePath>> srcs = Optional.of(ImmutableSortedSet.of());
+  public ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
   public SourcePath entryPath;
   public String bundleName;
   public Optional<String> packagerFlags;
 
-  public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+  public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
 }

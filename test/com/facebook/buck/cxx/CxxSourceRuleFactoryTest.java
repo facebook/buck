@@ -44,12 +44,12 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.shell.ShBinary;
 import com.facebook.buck.shell.ShBinaryBuilder;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -709,9 +709,9 @@ public class CxxSourceRuleFactoryTest {
           .setCxxPlatform(platform)
           .setCompilerFlags(
               CxxFlags.getLanguageFlags(
-                  Optional.of(expectedCompilerFlags),
-                  Optional.absent(),
-                  Optional.absent(),
+                  expectedCompilerFlags,
+                  PatternMatchedCollection.of(),
+                  ImmutableMap.of(),
                   platform))
           .setPicType(CxxSourceRuleFactory.PicType.PDC)
           .build();

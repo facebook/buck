@@ -199,7 +199,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
 
   @Override
   public ImmutableSet<String> getOptions(BuildTarget target, ThriftConstructorArg arg) {
-    return arg.javaOptions.or(ImmutableSet.of());
+    return arg.javaOptions;
   }
 
   @Override

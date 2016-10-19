@@ -76,7 +76,7 @@ public class XcodeWorkspaceConfigDescription
     Map<SchemeActionType, String> newActionConfigNames = new HashMap<>(
         SchemeActionType.DEFAULT_CONFIG_NAMES);
     // And override them with any provided in the "action_config_names" map.
-    newActionConfigNames.putAll(arg.actionConfigNames.get());
+    newActionConfigNames.putAll(arg.actionConfigNames);
 
     return ImmutableMap.copyOf(newActionConfigNames);
   }
@@ -84,15 +84,11 @@ public class XcodeWorkspaceConfigDescription
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public Optional<BuildTarget> srcTarget;
-    public Optional<ImmutableSortedSet<BuildTarget>> extraTests =
-        Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> extraTargets =
-        Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<BuildTarget> extraTests = ImmutableSortedSet.of();
+    public ImmutableSortedSet<BuildTarget> extraTargets = ImmutableSortedSet.of();
     public Optional<String> workspaceName;
-    public Optional<ImmutableMap<SchemeActionType, String>> actionConfigNames =
-        Optional.of(ImmutableMap.of());
-    public Optional<ImmutableSortedMap<String, BuildTarget>> extraSchemes =
-        Optional.of(ImmutableSortedMap.of());
+    public ImmutableMap<SchemeActionType, String> actionConfigNames = ImmutableMap.of();
+    public ImmutableSortedMap<String, BuildTarget> extraSchemes = ImmutableSortedMap.of();
     public Optional<Boolean> isRemoteRunnable;
     public Optional<String> explicitRunnablePath;
     public Optional<XCScheme.LaunchAction.LaunchStyle> launchStyle;

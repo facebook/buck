@@ -235,7 +235,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
             .addAll(deps)
             .addAll(
                 resolver.getAllRules(
-                    (cpp2 ? args.cpp2Deps : args.cppDeps).or(ImmutableSortedSet.of())))
+                    (cpp2 ? args.cpp2Deps : args.cppDeps)))
             .build();
 
     // Create language specific build params by using the deps we formed above.
@@ -247,16 +247,14 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     ImmutableSortedMap.Builder<String, SourcePath> headersBuilder =
         ImmutableSortedMap.naturalOrder();
     headersBuilder.putAll(spec.getHeaders());
-    if (args.cppExportedHeaders.isPresent()) {
-      if (args.cppExportedHeaders.get().getNamedSources().isPresent()) {
-        headersBuilder.putAll(args.cppExportedHeaders.get().getNamedSources().get());
-      } else {
-        headersBuilder.putAll(
-            pathResolver.getSourcePathNames(
-                params.getBuildTarget(),
-                "cpp_headers",
-                args.cppExportedHeaders.get().getUnnamedSources().get()));
-      }
+    if (args.cppExportedHeaders.getNamedSources().isPresent()) {
+      headersBuilder.putAll(args.cppExportedHeaders.getNamedSources().get());
+    } else {
+      headersBuilder.putAll(
+          pathResolver.getSourcePathNames(
+              params.getBuildTarget(),
+              "cpp_headers",
+              args.cppExportedHeaders.getUnnamedSources().get()));
     }
     ImmutableSortedMap<String, SourcePath> headers = headersBuilder.build();
 
@@ -264,17 +262,15 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     ImmutableSortedMap.Builder<String, SourceWithFlags> srcsBuilder =
         ImmutableSortedMap.naturalOrder();
     srcsBuilder.putAll(spec.getSources());
-    if (args.cppSrcs.isPresent()) {
-      if (args.cppSrcs.get().getNamedSources().isPresent()) {
-        srcsBuilder.putAll(args.cppSrcs.get().getNamedSources().get());
-      } else {
-        for (SourceWithFlags sourceWithFlags : args.cppSrcs.get().getUnnamedSources().get()) {
-          srcsBuilder.put(
-              pathResolver.getSourcePathName(
-                  params.getBuildTarget(),
-                  sourceWithFlags.getSourcePath()),
-              sourceWithFlags);
-        }
+    if (args.cppSrcs.getNamedSources().isPresent()) {
+      srcsBuilder.putAll(args.cppSrcs.getNamedSources().get());
+    } else {
+      for (SourceWithFlags sourceWithFlags : args.cppSrcs.getUnnamedSources().get()) {
+        srcsBuilder.put(
+            pathResolver.getSourcePathName(
+                params.getBuildTarget(),
+                sourceWithFlags.getSourcePath()),
+            sourceWithFlags);
       }
     }
     ImmutableSortedMap<String, SourceWithFlags> srcs = srcsBuilder.build();
@@ -282,17 +278,16 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
     // Construct the C/C++ library description argument to pass to the
     CxxLibraryDescription.Arg langArgs = CxxLibraryDescription.createEmptyConstructorArg();
     langArgs.headerNamespace = args.cppHeaderNamespace;
-    langArgs.srcs = Optional.of(ImmutableSortedSet.copyOf(srcs.values()));
-    langArgs.exportedHeaders = Optional.of(SourceList.ofNamedSources(headers));
+    langArgs.srcs = ImmutableSortedSet.copyOf(srcs.values());
+    langArgs.exportedHeaders = SourceList.ofNamedSources(headers);
     langArgs.canBeAsset = Optional.absent();
     langArgs.compilerFlags = cpp2 ? args.cpp2CompilerFlags : args.cppCompilerFlags;
 
     // Since thrift generated C/C++ code uses lots of templates, just use exported deps throughout.
     langArgs.exportedDeps =
-        Optional.of(
-            FluentIterable.from(allDeps)
-                .transform(HasBuildTarget::getBuildTarget)
-                .toSortedSet(Ordering.natural()));
+        FluentIterable.from(allDeps)
+            .transform(HasBuildTarget::getBuildTarget)
+            .toSortedSet(Ordering.natural());
 
     return cxxLibraryDescription.createBuildRule(targetGraph, langParams, resolver, langArgs);
   }
@@ -351,10 +346,10 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
   public ImmutableSet<BuildTarget> getImplicitDepsForTargetFromConstructorArg(
       BuildTarget target,
       ThriftConstructorArg arg) {
-    Optional<ImmutableSet<String>> options = cpp2 ? arg.cpp2Options : arg.cppOptions;
+    ImmutableSet<String> options = cpp2 ? arg.cpp2Options : arg.cppOptions;
     return getImplicitDepsFromOptions(
         target.getUnflavoredBuildTarget(),
-        options.or(ImmutableSet.of()));
+        options);
   }
 
   @Override
@@ -363,7 +358,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
       ThriftConstructorArg args) {
     return ImmutableSet.<String>builder()
         .add(String.format("include_prefix=%s", target.getBasePath()))
-        .addAll((cpp2 ? args.cpp2Options : args.cppOptions).or(ImmutableSet.of()))
+        .addAll((cpp2 ? args.cpp2Options : args.cppOptions))
         .build();
   }
 

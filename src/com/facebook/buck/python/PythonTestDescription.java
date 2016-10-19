@@ -57,6 +57,7 @@ import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 
 public class PythonTestDescription implements
     Description<PythonTestDescription.Arg>,
@@ -196,14 +197,14 @@ public class PythonTestDescription implements
                     pathResolver,
                     "srcs",
                     baseModule,
-                    args.srcs.asSet()))
+                    Collections.singleton(args.srcs)))
             .putAll(
                 PythonUtil.toModuleMap(
                     params.getBuildTarget(),
                     pathResolver,
                     "platformSrcs",
                     baseModule,
-                    args.platformSrcs.get()
+                    args.platformSrcs
                         .getMatchingValues(pythonPlatform.getFlavor().toString())))
             .build();
 
@@ -215,14 +216,14 @@ public class PythonTestDescription implements
                     pathResolver,
                     "resources",
                     baseModule,
-                    args.resources.asSet()))
+                    Collections.singleton(args.resources)))
             .putAll(
                 PythonUtil.toModuleMap(
                     params.getBuildTarget(),
                     pathResolver,
                     "platformResources",
                     baseModule,
-                    args.platformResources.get()
+                    args.platformResources
                         .getMatchingValues(pythonPlatform.getFlavor().toString())))
             .build();
 
@@ -275,7 +276,7 @@ public class PythonTestDescription implements
             pythonPlatform,
             cxxBuckConfig,
             cxxPlatform,
-            FluentIterable.from(args.linkerFlags.get())
+            FluentIterable.from(args.linkerFlags)
                 .transform(
                     MacroArg.toMacroArgFunction(
                         PythonUtil.MACRO_HANDLER,
@@ -284,7 +285,7 @@ public class PythonTestDescription implements
                         resolver))
                 .toList(),
             pythonBuckConfig.getNativeLinkStrategy(),
-            args.preloadDeps.get());
+            args.preloadDeps);
 
     // Build the PEX using a python binary rule with the minimum dependencies.
     BuildRuleParams binaryParams = params.copyWithChanges(
@@ -301,17 +302,17 @@ public class PythonTestDescription implements
             mainModule,
             args.extension,
             allComponents,
-            args.buildArgs.or(ImmutableList.of()),
+            args.buildArgs,
             args.packageStyle.or(pythonBuckConfig.getPackageStyle()),
             PythonUtil.getPreloadNames(
                 resolver,
                 cxxPlatform,
-                args.preloadDeps.get()));
+                args.preloadDeps));
     resolver.addToIndex(binary);
 
     ImmutableList.Builder<Pair<Float, ImmutableSet<Path>>> neededCoverageBuilder =
         ImmutableList.builder();
-    for (NeededCoverageSpec coverageSpec : args.neededCoverage.get()) {
+    for (NeededCoverageSpec coverageSpec : args.neededCoverage) {
         BuildRule buildRule = resolver.getRule(coverageSpec.getBuildTarget());
         if (params.getDeps().contains(buildRule) &&
             buildRule instanceof PythonLibrary) {
@@ -346,7 +347,7 @@ public class PythonTestDescription implements
     Supplier<ImmutableMap<String, String>> testEnv =
         () -> ImmutableMap.copyOf(
             Maps.transformValues(
-                args.env.or(ImmutableMap.of()),
+                args.env,
                 MACRO_HANDLER.getExpander(
                     params.getBuildTarget(),
                     params.getCellRoots(),
@@ -364,10 +365,10 @@ public class PythonTestDescription implements
         pathResolver,
         testEnv,
         binary,
-        args.labels.or(ImmutableSet.of()),
+        args.labels,
         neededCoverageBuilder.build(),
         args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
-        args.contacts.or(ImmutableSet.of()));
+        args.contacts);
   }
 
   @Override
@@ -394,19 +395,18 @@ public class PythonTestDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends PythonLibraryDescription.Arg {
     public Optional<String> mainModule;
-    public Optional<ImmutableSet<String>> contacts = Optional.of(ImmutableSet.of());
-    public Optional<ImmutableSet<Label>> labels = Optional.of(ImmutableSet.of());
+    public ImmutableSet<String> contacts = ImmutableSet.of();
+    public ImmutableSet<Label> labels = ImmutableSet.of();
     public Optional<String> platform;
     public Optional<String> extension;
     public Optional<PythonBuckConfig.PackageStyle> packageStyle;
-    public Optional<ImmutableSet<BuildTarget>> preloadDeps = Optional.of(ImmutableSet.of());
-    public Optional<ImmutableList<String>> linkerFlags = Optional.of(ImmutableList.of());
-    public Optional<ImmutableList<NeededCoverageSpec>> neededCoverage =
-        Optional.of(ImmutableList.of());
+    public ImmutableSet<BuildTarget> preloadDeps = ImmutableSet.of();
+    public ImmutableList<String> linkerFlags = ImmutableList.of();
+    public ImmutableList<NeededCoverageSpec> neededCoverage = ImmutableList.of();
 
-    public Optional<ImmutableList<String>> buildArgs = Optional.of(ImmutableList.of());
+    public ImmutableList<String> buildArgs = ImmutableList.of();
 
-    public Optional<ImmutableMap<String, String>> env = Optional.of(ImmutableMap.of());
+    public ImmutableMap<String, String> env = ImmutableMap.of();
     public Optional<Long> testRuleTimeoutMs;
   }
 

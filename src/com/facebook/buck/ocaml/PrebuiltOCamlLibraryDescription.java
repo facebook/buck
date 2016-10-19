@@ -70,7 +70,7 @@ public class PrebuiltOCamlLibraryDescription
 
     final String nativeLib = args.nativeLib.or(String.format("%s.cmxa", libName));
     final String bytecodeLib = args.bytecodeLib.or(String.format("%s.cma", libName));
-    final ImmutableList<String> cLibs = args.cLibs.get();
+    final ImmutableList<String> cLibs = args.cLibs;
 
     final Path libPath = target.getBasePath().resolve(libDir);
     final Path includeDir = libPath.resolve(args.includeDir.or(""));
@@ -111,8 +111,8 @@ public class PrebuiltOCamlLibraryDescription
     public Optional<String> libName;
     public Optional<String> nativeLib;
     public Optional<String> bytecodeLib;
-    public Optional<ImmutableList<String>> cLibs = Optional.of(ImmutableList.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public ImmutableList<String> cLibs = ImmutableList.of();
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public Optional<Boolean> bytecodeOnly;
   }
 

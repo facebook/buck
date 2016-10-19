@@ -100,7 +100,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
 
   private static ImmutableList<Path> getIncludeDirs(PrebuiltCxxLibraryDescription.Arg arg) {
     return FluentIterable
-        .from(arg.includeDirs.or(ImmutableList.of("include")))
+        .from(arg.includeDirs)
         .transform(
             input -> TARGET.getBasePath().resolve(input))
         .toList();

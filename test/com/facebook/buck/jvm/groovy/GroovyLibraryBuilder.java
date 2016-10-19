@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 
@@ -95,7 +94,7 @@ public class GroovyLibraryBuilder extends AbstractNodeBuilder<GroovyLibraryDescr
   }
 
   public GroovyLibraryBuilder setAnnotationProcessors(ImmutableSet<String> annotationProcessors) {
-    arg.annotationProcessors = Optional.of(annotationProcessors);
+    arg.annotationProcessors = annotationProcessors;
     return this;
   }
 }

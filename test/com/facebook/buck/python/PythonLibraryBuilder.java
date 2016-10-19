@@ -34,23 +34,23 @@ public class PythonLibraryBuilder extends AbstractNodeBuilder<PythonLibraryDescr
   }
 
   public PythonLibraryBuilder setSrcs(SourceList srcs) {
-    arg.srcs = Optional.of(srcs);
+    arg.srcs = srcs;
     return this;
   }
 
   public PythonLibraryBuilder setPlatformSrcs(PatternMatchedCollection<SourceList> platformSrcs) {
-    arg.platformSrcs = Optional.of(platformSrcs);
+    arg.platformSrcs = platformSrcs;
     return this;
   }
 
   public PythonLibraryBuilder setResources(SourceList resources) {
-    arg.resources = Optional.of(resources);
+    arg.resources = resources;
     return this;
   }
 
   public PythonLibraryBuilder setPlatformResources(
       PatternMatchedCollection<SourceList> platformResources) {
-    arg.platformResources = Optional.of(platformResources);
+    arg.platformResources = platformResources;
     return this;
   }
 
@@ -65,7 +65,7 @@ public class PythonLibraryBuilder extends AbstractNodeBuilder<PythonLibraryDescr
   }
 
   public PythonLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.fromNullable(deps);
+    arg.deps = deps;
     return this;
   }
 

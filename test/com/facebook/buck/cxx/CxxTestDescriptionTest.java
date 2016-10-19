@@ -110,12 +110,11 @@ public class CxxTestDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     CxxTestDescription.Arg constructorArg = desc.createUnpopulatedConstructorArg();
     constructorArg.framework = Optional.of(CxxTestType.GTEST);
-    constructorArg.env = Optional.of(ImmutableMap.<String, String>of());
-    constructorArg.args = Optional.of(ImmutableList.<String>of());
+    constructorArg.env = ImmutableMap.of();
+    constructorArg.args = ImmutableList.of();
     constructorArg.useDefaultTestMain = Optional.of(true);
-    constructorArg.linkerFlags = Optional.of(ImmutableList.<String>of());
-    constructorArg.platformLinkerFlags =
-        Optional.of(PatternMatchedCollection.<ImmutableList<String>>of());
+    constructorArg.linkerFlags = ImmutableList.of();
+    constructorArg.platformLinkerFlags = PatternMatchedCollection.of();
     Iterable<BuildTarget> implicit = desc.findDepsForTargetFromConstructorArgs(
         target,
         TestCellBuilder.createCellRoots(new FakeProjectFilesystem()),

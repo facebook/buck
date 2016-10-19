@@ -268,7 +268,7 @@ public class ThriftLibraryDescription
     ImmutableSortedSet<ThriftLibrary> thriftDeps =
         resolveThriftDeps(
             target,
-            resolver.getAllRules(args.deps.or(ImmutableSortedSet.of())));
+            resolver.getAllRules(args.deps));
 
     // The unflavored version of this rule is responsible for setting up the the various
     // build rules to facilitate dependents including it's thrift sources.
@@ -357,7 +357,7 @@ public class ThriftLibraryDescription
             params,
             resolver,
             enhancer.getCompilerType(),
-            args.flags.or(ImmutableList.of()),
+            args.flags,
             language,
             options,
             namedSources,
@@ -437,7 +437,7 @@ public class ThriftLibraryDescription
         BuildTargets.propagateFlavorDomains(
             buildTarget,
             ImmutableList.of(enhancers),
-            arg.deps.get()));
+            arg.deps));
 
     // Add the compiler target, if there is one.
     deps.addAll(

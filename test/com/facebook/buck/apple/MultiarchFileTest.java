@@ -50,7 +50,6 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -80,16 +79,16 @@ public class MultiarchFileTest {
             FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION,
             (NodeBuilderFactory) target -> AppleLibraryBuilder
                 .createBuilder(target.withAppendedFlavors(ImmutableFlavor.of("static")))
-                .setSrcs(Optional.of(ImmutableSortedSet.of(
-                    SourceWithFlags.of(new FakeSourcePath("foo.c")))))
+                .setSrcs(ImmutableSortedSet.of(
+                    SourceWithFlags.of(new FakeSourcePath("foo.c"))))
         },
         {
             "AppleLibraryDescription (shared)",
             FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION,
             (NodeBuilderFactory) target -> AppleLibraryBuilder
                 .createBuilder(target.withAppendedFlavors(ImmutableFlavor.of("shared")))
-                .setSrcs(Optional.of(ImmutableSortedSet.of(
-                    SourceWithFlags.of(new FakeSourcePath("foo.c")))))
+                .setSrcs(ImmutableSortedSet.of(
+                    SourceWithFlags.of(new FakeSourcePath("foo.c"))))
         },
     });
   }

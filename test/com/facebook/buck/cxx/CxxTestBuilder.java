@@ -53,12 +53,12 @@ public class CxxTestBuilder extends
   }
 
   public CxxTestBuilder setEnv(ImmutableMap<String, String> env) {
-    arg.env = Optional.of(env);
+    arg.env = env;
     return this;
   }
 
   public CxxTestBuilder setArgs(ImmutableList<String> args) {
-    arg.args = Optional.of(args);
+    arg.args = args;
     return this;
   }
 
@@ -78,7 +78,7 @@ public class CxxTestBuilder extends
   }
 
   public CxxTestBuilder setResources(ImmutableSortedSet<Path> resources) {
-    arg.resources = Optional.of(resources);
+    arg.resources = resources;
     return this;
   }
 

@@ -165,6 +165,6 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
     public Optional<String> mavenCoords;
     public Optional<Boolean> provided;
 
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
   }
 }

@@ -82,9 +82,9 @@ public class GoBinaryDescription implements
         resolver,
         goBuckConfig,
         args.srcs,
-        args.compilerFlags.get(),
-        args.assemblerFlags.get(),
-        args.linkerFlags.get(),
+        args.compilerFlags,
+        args.assemblerFlags,
+        args.linkerFlags,
         platform);
   }
 
@@ -111,9 +111,9 @@ public class GoBinaryDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public ImmutableSet<SourcePath> srcs;
-    public Optional<List<String>> compilerFlags = Optional.of(ImmutableList.of());
-    public Optional<List<String>> assemblerFlags = Optional.of(ImmutableList.of());
-    public Optional<List<String>> linkerFlags = Optional.of(ImmutableList.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public List<String> compilerFlags = ImmutableList.of();
+    public List<String> assemblerFlags = ImmutableList.of();
+    public List<String> linkerFlags = ImmutableList.of();
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
   }
 }

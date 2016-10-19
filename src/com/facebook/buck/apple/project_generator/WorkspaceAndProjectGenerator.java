@@ -662,7 +662,7 @@ public class WorkspaceAndProjectGenerator {
         extraTestNodesBuilder);
     addExtraWorkspaceSchemes(
         projectGraph,
-        workspaceArguments.extraSchemes.get(),
+        workspaceArguments.extraSchemes,
         schemeConfigsBuilder,
         schemeNameToSrcTargetNodeBuilder,
         extraTestNodesBuilder);
@@ -718,7 +718,7 @@ public class WorkspaceAndProjectGenerator {
           Optional.absent());
     }
 
-    for (BuildTarget extraTarget : schemeArguments.extraTargets.get()) {
+    for (BuildTarget extraTarget : schemeArguments.extraTargets) {
       schemeNameToSrcTargetNodeBuilder.putAll(
           schemeName,
           Iterables.transform(
@@ -732,7 +732,7 @@ public class WorkspaceAndProjectGenerator {
         schemeName,
         getExtraTestTargetNodes(
             projectGraph,
-            schemeArguments.extraTests.get()));
+            schemeArguments.extraTests));
   }
 
   private static void addExtraWorkspaceSchemes(

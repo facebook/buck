@@ -40,7 +40,7 @@ public class PrebuiltCxxLibraryBuilder
   }
 
   public PrebuiltCxxLibraryBuilder setIncludeDirs(ImmutableList<String> includeDirs) {
-    arg.includeDirs = Optional.of(includeDirs);
+    arg.includeDirs = includeDirs;
     return this;
   }
 
@@ -60,13 +60,13 @@ public class PrebuiltCxxLibraryBuilder
   }
 
   public PrebuiltCxxLibraryBuilder setExportedHeaders(SourceList exportedHeaders) {
-    arg.exportedHeaders = Optional.of(exportedHeaders);
+    arg.exportedHeaders = exportedHeaders;
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setExportedPlatformHeaders(
       PatternMatchedCollection<SourceList> collection) {
-    arg.exportedPlatformHeaders = Optional.of(collection);
+    arg.exportedPlatformHeaders = collection;
     return this;
   }
 
@@ -95,7 +95,7 @@ public class PrebuiltCxxLibraryBuilder
   }
 
   public PrebuiltCxxLibraryBuilder setExportedLinkerFlags(ImmutableList<String> linkerFlags) {
-    arg.exportedLinkerFlags = Optional.of(linkerFlags);
+    arg.exportedLinkerFlags = linkerFlags;
     return this;
   }
 
@@ -110,7 +110,7 @@ public class PrebuiltCxxLibraryBuilder
   }
 
   public PrebuiltCxxLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.of(deps);
+    arg.deps = deps;
     return this;
   }
 
@@ -120,7 +120,7 @@ public class PrebuiltCxxLibraryBuilder
   }
 
   public PrebuiltCxxLibraryBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> exportedDeps) {
-    arg.exportedDeps = Optional.of(exportedDeps);
+    arg.exportedDeps = exportedDeps;
     return this;
   }
 

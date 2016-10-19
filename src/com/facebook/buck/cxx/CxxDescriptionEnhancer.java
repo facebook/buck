@@ -215,9 +215,9 @@ public class CxxDescriptionEnhancer {
       Optional<CxxPlatform> cxxPlatform,
       CxxConstructorArg args) {
     ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
-    putAllHeaders(args.headers.get(), headers, resolver, "headers", buildTarget);
+    putAllHeaders(args.headers, headers, resolver, "headers", buildTarget);
     if (cxxPlatform.isPresent()) {
-      for (SourceList sourceList : args.platformHeaders.get().getMatchingValues(
+      for (SourceList sourceList : args.platformHeaders.getMatchingValues(
           cxxPlatform.get().getFlavor().toString())) {
         putAllHeaders(
             sourceList,
@@ -244,13 +244,13 @@ public class CxxDescriptionEnhancer {
       CxxLibraryDescription.Arg args) {
     ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
     putAllHeaders(
-        args.exportedHeaders.get(),
+        args.exportedHeaders,
         headers,
         resolver,
         "exported_headers",
         buildTarget);
     if (cxxPlatform.isPresent()) {
-      for (SourceList sourceList : args.exportedPlatformHeaders.get().getMatchingValues(
+      for (SourceList sourceList : args.exportedPlatformHeaders.getMatchingValues(
           cxxPlatform.get().getFlavor().toString())) {
         putAllHeaders(
             sourceList,
@@ -303,8 +303,8 @@ public class CxxDescriptionEnhancer {
         buildTarget,
         resolver,
         cxxPlatform,
-        args.srcs.get(),
-        args.platformSrcs.get());
+        args.srcs,
+        args.platformSrcs);
   }
 
   public static ImmutableMap<String, CxxSource> parseCxxSources(
@@ -586,17 +586,17 @@ public class CxxDescriptionEnhancer {
       ImmutableMap<Path, SourcePath> headers,
       Optional<StripStyle> stripStyle,
       Linker.LinkableDepType linkStyle,
-      Optional<ImmutableList<String>> preprocessorFlags,
-      Optional<PatternMatchedCollection<ImmutableList<String>>> platformPreprocessorFlags,
-      Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langPreprocessorFlags,
-      Optional<ImmutableSortedSet<FrameworkPath>> frameworks,
-      Optional<ImmutableSortedSet<FrameworkPath>> libraries,
-      Optional<ImmutableList<String>> compilerFlags,
-      Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langCompilerFlags,
-      Optional<PatternMatchedCollection<ImmutableList<String>>> platformCompilerFlags,
+      ImmutableList<String> preprocessorFlags,
+      PatternMatchedCollection<ImmutableList<String>> platformPreprocessorFlags,
+      ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags,
+      ImmutableSortedSet<FrameworkPath> frameworks,
+      ImmutableSortedSet<FrameworkPath> libraries,
+      ImmutableList<String> compilerFlags,
+      ImmutableMap<CxxSource.Type, ImmutableList<String>> langCompilerFlags,
+      PatternMatchedCollection<ImmutableList<String>> platformCompilerFlags,
       Optional<SourcePath> prefixHeader,
-      Optional<ImmutableList<String>> linkerFlags,
-      Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags,
+      ImmutableList<String> linkerFlags,
+      PatternMatchedCollection<ImmutableList<String>> platformLinkerFlags,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType)
       throws NoSuchBuildTargetException {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
@@ -623,7 +623,7 @@ public class CxxDescriptionEnhancer {
                 langPreprocessorFlags,
                 cxxPlatform),
             ImmutableList.of(headerSymlinkTree),
-            frameworks.get(),
+            frameworks,
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 cxxPlatform,
                 FluentIterable.from(params.getDeps())
@@ -761,8 +761,8 @@ public class CxxDescriptionEnhancer {
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType linkStyle,
-      Optional<ImmutableSortedSet<FrameworkPath>> frameworks,
-      Optional<ImmutableSortedSet<FrameworkPath>> libraries,
+      ImmutableSortedSet<FrameworkPath> frameworks,
+      ImmutableSortedSet<FrameworkPath> libraries,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       SourcePathResolver sourcePathResolver,
       Path linkOutput,
@@ -795,8 +795,8 @@ public class CxxDescriptionEnhancer {
               ImmutableSet.of(),
               NativeLinkableInput.builder()
                   .setArgs(argsBuilder.build())
-                  .setFrameworks(frameworks.or(ImmutableSortedSet.of()))
-                  .setLibraries(libraries.or(ImmutableSortedSet.of()))
+                  .setFrameworks(frameworks)
+                  .setLibraries(libraries)
                   .build());
       resolver.addToIndex(cxxLink);
     }
@@ -979,7 +979,7 @@ public class CxxDescriptionEnhancer {
         "Could not find cxx platform in:\n%s",
         Joiner.on(", ").join(buildTarget.getFlavors()));
     ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
-    for (BuildTarget dep : args.deps.get()) {
+    for (BuildTarget dep : args.deps) {
       Optional<CxxCompilationDatabaseDependencies> compilationDatabases =
           resolver.requireMetadata(
               BuildTarget.builder(dep)
@@ -1056,7 +1056,7 @@ public class CxxDescriptionEnhancer {
                 cxxPlatform,
                 exportedPreprocessorFlags,
                 exportedHeaders,
-                args.frameworks.or(ImmutableSortedSet.of())));
+                args.frameworks));
 
     // Create rule to build the object files.
     return CxxSourceRuleFactory.requirePreprocessAndCompileRules(

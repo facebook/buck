@@ -74,7 +74,7 @@ public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
         ScalacToJarStepFactory.collectScalacArguments(
             scalaBuckConfig,
             resolver,
-            arg.extraArguments.get()),
+            arg.extraArguments),
         ANDROID_CLASSPATH_FROM_CONTEXT);
   }
 

@@ -53,7 +53,7 @@ public class ApkGenruleBuilder extends AbstractNodeBuilder<ApkGenruleDescription
   }
 
   public ApkGenruleBuilder setSrcs(ImmutableList<SourcePath> srcs) {
-    arg.srcs = Optional.of(srcs);
+    arg.srcs = srcs;
     return this;
   }
 

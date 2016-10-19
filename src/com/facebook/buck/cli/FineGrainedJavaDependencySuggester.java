@@ -90,7 +90,7 @@ class FineGrainedJavaDependencySuggester {
     JavaFileParser javaFileParser = javaDepsFinder.getJavaFileParser();
     Multimap<String, String> providedSymbolToRequiredSymbols = HashMultimap.create();
     Map<String, PathSourcePath> providedSymbolToSrc = new HashMap<>();
-    for (SourcePath src : arg.srcs.get()) {
+    for (SourcePath src : arg.srcs) {
       extractProvidedSymbolInfoFromSourceFile(
           src,
           javaFileParser,

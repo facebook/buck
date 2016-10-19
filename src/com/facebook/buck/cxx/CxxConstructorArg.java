@@ -38,47 +38,42 @@ import com.google.common.collect.ImmutableSortedSet;
 public class CxxConstructorArg extends AbstractDescriptionArg
     implements HasDefaultFlavors, HasTests {
 
-  public Optional<ImmutableSortedSet<SourceWithFlags>> srcs = Optional.of(ImmutableSortedSet.of());
-  public Optional<PatternMatchedCollection<ImmutableSortedSet<SourceWithFlags>>> platformSrcs =
-      Optional.of(PatternMatchedCollection.of());
-  public Optional<SourceList> headers = Optional.of(SourceList.EMPTY);
-  public Optional<PatternMatchedCollection<SourceList>> platformHeaders =
-      Optional.of(PatternMatchedCollection.of());
+  public ImmutableSortedSet<SourceWithFlags> srcs = ImmutableSortedSet.of();
+  public PatternMatchedCollection<ImmutableSortedSet<SourceWithFlags>> platformSrcs =
+      PatternMatchedCollection.of();
+  public SourceList headers = SourceList.EMPTY;
+  public PatternMatchedCollection<SourceList> platformHeaders = PatternMatchedCollection.of();
   public Optional<SourcePath> prefixHeader;
-  public Optional<ImmutableList<String>> compilerFlags = Optional.of(ImmutableList.of());
-  public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langCompilerFlags =
-      Optional.of(ImmutableMap.of());
-  public Optional<PatternMatchedCollection<ImmutableList<String>>> platformCompilerFlags =
-      Optional.of(PatternMatchedCollection.of());
-  public Optional<ImmutableList<String>> preprocessorFlags = Optional.of(ImmutableList.of());
-  public Optional<PatternMatchedCollection<ImmutableList<String>>> platformPreprocessorFlags =
-      Optional.of(PatternMatchedCollection.of());
-  public Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> langPreprocessorFlags =
-      Optional.of(ImmutableMap.of());
-  public Optional<ImmutableList<String>> linkerFlags = Optional.of(ImmutableList.of());
-  public Optional<PatternMatchedCollection<ImmutableList<String>>> platformLinkerFlags =
-      Optional.of(PatternMatchedCollection.of());
-  public Optional<ImmutableSortedSet<FrameworkPath>> frameworks =
-      Optional.of(ImmutableSortedSet.of());
-  public Optional<ImmutableSortedSet<FrameworkPath>> libraries =
-      Optional.of(ImmutableSortedSet.of());
-  public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+  public ImmutableList<String> compilerFlags = ImmutableList.of();
+  public ImmutableMap<CxxSource.Type, ImmutableList<String>> langCompilerFlags = ImmutableMap.of();
+  public PatternMatchedCollection<ImmutableList<String>> platformCompilerFlags =
+      PatternMatchedCollection.of();
+  public ImmutableList<String> preprocessorFlags = ImmutableList.of();
+  public PatternMatchedCollection<ImmutableList<String>> platformPreprocessorFlags =
+      PatternMatchedCollection.of();
+  public ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags =
+      ImmutableMap.of();
+  public ImmutableList<String> linkerFlags = ImmutableList.of();
+  public PatternMatchedCollection<ImmutableList<String>> platformLinkerFlags =
+      PatternMatchedCollection.of();
+  public ImmutableSortedSet<FrameworkPath> frameworks = ImmutableSortedSet.of();
+  public ImmutableSortedSet<FrameworkPath> libraries = ImmutableSortedSet.of();
+  public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
   public Optional<String> headerNamespace;
   public Optional<Linker.CxxRuntimeType> cxxRuntimeType;
 
-  @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests =
-      Optional.of(ImmutableSortedSet.of());
-  public Optional<ImmutableMap<String, Flavor>> defaults = Optional.of(ImmutableMap.of());
+  @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
+  public ImmutableMap<String, Flavor> defaults = ImmutableMap.of();
 
   @Override
   public ImmutableSortedSet<BuildTarget> getTests() {
-    return tests.get();
+    return tests;
   }
 
   @Override
   public ImmutableSortedSet<Flavor> getDefaultFlavors() {
     // We don't (yet) use the keys in the default_flavors map, but we
     // plan to eventually support key-value flavors.
-    return ImmutableSortedSet.copyOf(defaults.get().values());
+    return ImmutableSortedSet.copyOf(defaults.values());
   }
 }

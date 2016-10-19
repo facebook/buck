@@ -40,14 +40,12 @@ public class XcodeWorkspaceConfigBuilder
     return this;
   }
 
-  public XcodeWorkspaceConfigBuilder setExtraTests(
-      Optional<ImmutableSortedSet<BuildTarget>> extraTests) {
+  public XcodeWorkspaceConfigBuilder setExtraTests(ImmutableSortedSet<BuildTarget> extraTests) {
     arg.extraTests = extraTests;
     return this;
   }
 
-  public XcodeWorkspaceConfigBuilder setExtraTargets(
-      Optional<ImmutableSortedSet<BuildTarget>> extraTargets) {
+  public XcodeWorkspaceConfigBuilder setExtraTargets(ImmutableSortedSet<BuildTarget> extraTargets) {
     arg.extraTargets = extraTargets;
     return this;
   }
@@ -58,13 +56,13 @@ public class XcodeWorkspaceConfigBuilder
   }
 
   public XcodeWorkspaceConfigBuilder setActionConfigNames(
-      Optional<ImmutableMap<SchemeActionType, String>> actionConfigNames) {
+      ImmutableMap<SchemeActionType, String> actionConfigNames) {
     arg.actionConfigNames = actionConfigNames;
     return this;
   }
 
   public XcodeWorkspaceConfigBuilder setExtraSchemes(
-      Optional<ImmutableSortedMap<String, BuildTarget>> extraSchemes) {
+      ImmutableSortedMap<String, BuildTarget> extraSchemes) {
     arg.extraSchemes = extraSchemes;
     return this;
   }

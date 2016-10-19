@@ -81,8 +81,8 @@ public class AndroidInstrumentationTestDescription
                         params.getDeclaredDeps().get())),
         new SourcePathResolver(resolver),
         (InstallableApk) apk,
-        args.labels.get(),
-        args.contacts.get(),
+        args.labels,
+        args.contacts,
         javaOptions.getJavaRuntimeLauncher(),
         args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs));
   }
@@ -90,8 +90,8 @@ public class AndroidInstrumentationTestDescription
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public BuildTarget apk;
-    public Optional<ImmutableSortedSet<Label>> labels = Optional.of(ImmutableSortedSet.of());
-    public Optional<ImmutableSortedSet<String>> contacts = Optional.of(ImmutableSortedSet.of());
+    public ImmutableSortedSet<Label> labels = ImmutableSortedSet.of();
+    public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
     public Optional<Long> testRuleTimeoutMs;
   }
 

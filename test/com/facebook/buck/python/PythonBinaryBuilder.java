@@ -90,17 +90,17 @@ public class PythonBinaryBuilder extends AbstractNodeBuilder<PythonBinaryDescrip
   }
 
   public PythonBinaryBuilder setBuildArgs(ImmutableList<String> buildArgs) {
-    arg.buildArgs = Optional.of(buildArgs);
+    arg.buildArgs = buildArgs;
     return this;
   }
 
   public PythonBinaryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.fromNullable(deps);
+    arg.deps = deps;
     return this;
   }
 
   public PythonBinaryBuilder setPreloadDeps(ImmutableSet<BuildTarget> deps) {
-    arg.preloadDeps = Optional.fromNullable(deps);
+    arg.preloadDeps = deps;
     return this;
   }
 
@@ -115,7 +115,7 @@ public class PythonBinaryBuilder extends AbstractNodeBuilder<PythonBinaryDescrip
   }
 
   public PythonBinaryBuilder setLinkerFlags(ImmutableList<String> linkerFlags) {
-    arg.linkerFlags = Optional.of(linkerFlags);
+    arg.linkerFlags = linkerFlags;
     return this;
   }
 

@@ -72,7 +72,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     return new Genrule(
         params,
         new SourcePathResolver(resolver),
-        args.srcs.get(),
+        args.srcs,
         cmd,
         bash,
         cmdExe,
@@ -113,7 +113,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         params.copyWithExtraDeps(
             Suppliers.ofInstance(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(pathResolver.filterBuildRuleInputs(args.srcs.get()))
+                    .addAll(pathResolver.filterBuildRuleInputs(args.srcs))
                     // Attach any extra dependencies found from macro expansion.
                     .addAll(
                         FluentIterable
@@ -165,14 +165,13 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     public Optional<String> bash;
     public Optional<String> cmd;
     public Optional<String> cmdExe;
-    public Optional<ImmutableList<SourcePath>> srcs = Optional.of(ImmutableList.of());
+    public ImmutableList<SourcePath> srcs = ImmutableList.of();
 
-    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests =
-        Optional.of(ImmutableSortedSet.of());
+    @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 
     @Override
     public ImmutableSortedSet<BuildTarget> getTests() {
-      return tests.get();
+      return tests;
     }
   }
 

@@ -172,14 +172,14 @@ public class HaskellBinaryDescription implements
                 depType,
                 args.main,
                 Optional.absent(),
-                args.compilerFlags.or(ImmutableList.of()),
+                args.compilerFlags,
                 HaskellSources.from(
                     params.getBuildTarget(),
                     resolver,
                     pathResolver,
                     cxxPlatform,
                     "srcs",
-                    args.srcs.or(SourceList.EMPTY))));
+                    args.srcs)));
     linkArgsBuilder.addAll(SourcePathArg.from(pathResolver, compileRule.getObjects()));
 
     ImmutableList<String> linkFlags = linkFlagsBuilder.build();
@@ -272,9 +272,9 @@ public class HaskellBinaryDescription implements
 
   @SuppressFieldNotInitialized
   public static class Arg {
-    public Optional<SourceList> srcs = Optional.of(SourceList.EMPTY);
-    public Optional<ImmutableList<String>> compilerFlags = Optional.of(ImmutableList.of());
-    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public SourceList srcs = SourceList.EMPTY;
+    public ImmutableList<String> compilerFlags = ImmutableList.of();
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public Optional<String> main;
     public Optional<Linker.LinkableDepType> linkStyle;
   }

@@ -47,7 +47,6 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.ShBinary;
 import com.facebook.buck.shell.ShBinaryBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -389,8 +388,8 @@ public class ThriftLibraryDescriptionTest {
     ThriftConstructorArg arg = desc.createUnpopulatedConstructorArg();
     arg.name = "thrift";
     arg.srcs = ImmutableMap.of(source, ImmutableList.<String>of());
-    arg.deps = Optional.of(ImmutableSortedSet.of(dep.getBuildTarget()));
-    arg.flags = Optional.absent();
+    arg.deps = ImmutableSortedSet.of(dep.getBuildTarget());
+    arg.flags = ImmutableList.of();
 
     // Build the thrift library rule and verify that it's setup correctly.
     BuildRule rule = desc.createBuildRule(TargetGraph.EMPTY, unflavoredParams, resolver, arg);
@@ -533,8 +532,8 @@ public class ThriftLibraryDescriptionTest {
     arg.srcs = ImmutableMap.of(
         thriftSource1, thriftServices1,
         thriftSource2, thriftServices2);
-    arg.deps = Optional.absent();
-    arg.flags = Optional.absent();
+    arg.deps = ImmutableSortedSet.of();
+    arg.flags = ImmutableList.of();
 
     // Setup the unflavored target, which should just produce a ThriftInclude, SymlinkTree, and
     // ThriftLibrary rule.
@@ -603,7 +602,7 @@ public class ThriftLibraryDescriptionTest {
         ImmutableList.of(enhancer));
 
     ThriftConstructorArg constructorArg = desc.createUnpopulatedConstructorArg();
-    constructorArg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
+    constructorArg.deps = ImmutableSortedSet.<BuildTarget>of();
 
     // Now call the find deps methods and verify it returns nothing.
     Iterable<BuildTarget> results = desc.findDepsForTargetFromConstructorArgs(

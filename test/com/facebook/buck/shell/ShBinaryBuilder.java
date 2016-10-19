@@ -19,7 +19,6 @@ package com.facebook.buck.shell;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -35,12 +34,12 @@ public class ShBinaryBuilder extends AbstractNodeBuilder<ShBinaryDescription.Arg
   }
 
   public ShBinaryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.of(deps);
+    arg.deps = deps;
     return this;
   }
 
   public ShBinaryBuilder setResources(ImmutableSet<SourcePath> resources) {
-    arg.resources = Optional.of(resources);
+    arg.resources = resources;
     return this;
   }
 

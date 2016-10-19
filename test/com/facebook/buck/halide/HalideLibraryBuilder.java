@@ -114,7 +114,7 @@ public class HalideLibraryBuilder extends
   }
 
   public HalideLibraryBuilder setCompilerInvocationFlags(ImmutableList<String> flags) {
-    arg.compilerInvocationFlags = Optional.of(flags);
+    arg.compilerInvocationFlags = flags;
     return this;
   }
 

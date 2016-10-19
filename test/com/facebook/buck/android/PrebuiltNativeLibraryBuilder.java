@@ -47,7 +47,7 @@ public class PrebuiltNativeLibraryBuilder
   }
 
   public PrebuiltNativeLibraryBuilder setDeps(@Nullable ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.fromNullable(deps);
+    arg.deps = Optional.fromNullable(deps).or(ImmutableSortedSet.of());
     return this;
   }
 }

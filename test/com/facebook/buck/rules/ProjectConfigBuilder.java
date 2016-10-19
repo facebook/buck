@@ -37,7 +37,7 @@ public class ProjectConfigBuilder extends AbstractNodeBuilder<ProjectConfigDescr
   }
 
   public ProjectConfigBuilder setSrcRoots(@Nullable ImmutableList<String> srcRoots) {
-    arg.srcRoots = Optional.fromNullable(srcRoots);
+    arg.srcRoots = Optional.fromNullable(srcRoots).or(ImmutableList.of());
     return this;
   }
 
@@ -47,7 +47,7 @@ public class ProjectConfigBuilder extends AbstractNodeBuilder<ProjectConfigDescr
   }
 
   public ProjectConfigBuilder setTestRoots(@Nullable ImmutableList<String> testRoots) {
-    arg.testRoots = Optional.fromNullable(testRoots);
+    arg.testRoots = Optional.fromNullable(testRoots).or(ImmutableList.of());
     return this;
   }
 }
