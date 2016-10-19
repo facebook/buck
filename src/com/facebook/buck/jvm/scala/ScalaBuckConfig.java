@@ -32,6 +32,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class ScalaBuckConfig {
+  public static final String EXTENSION = "scala";
+
   private static final String SECTION = "scala";
 
   private final BuckConfig delegate;

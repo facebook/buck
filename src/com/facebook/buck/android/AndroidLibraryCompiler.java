@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.AndroidLibraryDescription.JvmLanguage;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
@@ -34,7 +33,7 @@ import java.nio.file.Path;
  * Jvm compiler abstraction for android.
  * Implementations of this class are used in {@link AndroidLibraryDescription} to provide
  * the actual compilation step.
- * This allows us to use different compilers for different {@link JvmLanguage}.
+ * This allows us to use different compilers for different jvm languages.
  */
 @SuppressWarnings("unused")
 public abstract class AndroidLibraryCompiler

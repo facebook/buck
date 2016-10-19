@@ -1,0 +1,11 @@
+android_library(
+  name = 'lib_with_mixed_sources',
+  srcs = [
+    'Test.java',
+    'App.scala',
+    'Fragment.kt',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

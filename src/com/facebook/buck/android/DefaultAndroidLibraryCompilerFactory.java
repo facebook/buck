@@ -16,9 +16,14 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
+
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.io.Files;
 
 public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompilerFactory {
 
@@ -32,12 +37,68 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
   }
 
   @Override
-  public AndroidLibraryCompiler getCompiler(AndroidLibraryDescription.JvmLanguage language) {
-    switch (language) {
-      case JAVA: return new JavaAndroidLibraryCompiler();
-      case SCALA: return new ScalaAndroidLibraryCompiler(scalaConfig);
-      case KOTLIN: return new KotlinAndroidLibraryCompiler(kotlinBuckConfig);
+  public AndroidLibraryCompiler getCompiler(AndroidLibraryDescription.Arg args) {
+    JvmLanguage language = null;
+
+    // We currently expect all non-java languages to only contain files of that extension.
+    for (SourcePath sourcePath : args.srcs.get()) {
+      if (sourcePath instanceof PathSourcePath) {
+        String extension = Files.getFileExtension(sourcePath.toString()).toLowerCase();
+        if (extension.contains(KotlinBuckConfig.EXTENSION)) {
+          if (language == null) {
+            language = JvmLanguage.KOTLIN;
+          } else if (language != JvmLanguage.KOTLIN) {
+            throwMismatchedSourceException(language, extension);
+          }
+        } else if (extension.contains(ScalaBuckConfig.EXTENSION)) {
+          if (language == null) {
+            language = JvmLanguage.SCALA;
+          } else if (language != JvmLanguage.SCALA) {
+            throwMismatchedSourceException(language, extension);
+          }
+        }
+      }
     }
-    throw new HumanReadableException("Unsupported `language` parameter value: %s", language);
+
+    if (language == null) {
+      language = JvmLanguage.JAVA;
+    }
+
+    switch(language) {
+      case JAVA:
+        return new JavaAndroidLibraryCompiler();
+      case KOTLIN:
+        return new KotlinAndroidLibraryCompiler(kotlinBuckConfig);
+      case SCALA:
+        return new ScalaAndroidLibraryCompiler(scalaConfig);
+      default:
+        throw new IllegalStateException();
+    }
   }
+
+  private void throwMismatchedSourceException(JvmLanguage language, String extension) {
+    String previousExtension = "unknown";
+    switch (language) {
+      case JAVA:
+        previousExtension = JavaBuckConfig.EXTENSION;
+        break;
+      case KOTLIN:
+        previousExtension = KotlinBuckConfig.EXTENSION;
+        break;
+      case SCALA:
+        previousExtension = ScalaBuckConfig.EXTENSION;
+        break;
+    }
+    throw new HumanReadableException(
+        "Non-java jvm languages can only have sources of one filetype. Found .%s and .%s files",
+        previousExtension,
+        extension);
+  }
+
+  private enum JvmLanguage {
+    JAVA,
+    KOTLIN,
+    SCALA,
+  }
+
 }

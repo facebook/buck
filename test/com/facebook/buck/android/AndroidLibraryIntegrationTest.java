@@ -54,6 +54,13 @@ public class AndroidLibraryIntegrationTest {
     assertTrue(result.getStderr().contains("package R does not exist"));
   }
 
+  @Test(expected = HumanReadableException.class)
+  public void testAndroidLibraryMixedSources() throws IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    KotlinTestAssumptions.assumeCompilerAvailable();
+    workspace.runBuckBuild("//scala/com/sample/invalid:lib_with_mixed_sources");
+  }
+
   @Test
   public void testAndroidKotlinBinaryDoesNotUseTransitiveResources() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
@@ -73,7 +80,6 @@ public class AndroidLibraryIntegrationTest {
     result.assertSuccess();
   }
 
-
   @Test(timeout = (3 * 60 * 1000))
   public void testAndroidScalaLibraryDoesNotUseTransitiveResources() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
@@ -89,11 +95,5 @@ public class AndroidLibraryIntegrationTest {
     ProcessResult result =
         workspace.runBuckBuild("//scala/com/sample/lib:lib_depending_on_main_lib");
     result.assertSuccess();
-  }
-
-  @Test(expected = HumanReadableException.class)
-  public void testAndroidLibraryBuildFailsWithInvalidLanguageParam() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    workspace.runBuckBuild("//scala/com/sample/invalid_lang:lib_with_invalid_language_param");
   }
 }
