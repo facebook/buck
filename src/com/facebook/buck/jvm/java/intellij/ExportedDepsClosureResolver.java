@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.intellij;
 
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
+import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -63,6 +64,9 @@ public class ExportedDepsClosureResolver {
       AndroidLibraryDescription.Arg arg =
           (AndroidLibraryDescription.Arg) targetNode.getConstructorArg();
       exportedDeps = arg.exportedDeps.get();
+    } else if (targetNode.getType().equals(PrebuiltJarDescription.TYPE)) {
+      PrebuiltJarDescription.Arg arg = (PrebuiltJarDescription.Arg) targetNode.getConstructorArg();
+      exportedDeps = arg.deps.get();
     }
 
     ImmutableSet<BuildTarget> exportedDepsClosure = FluentIterable.from(exportedDeps)
