@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
@@ -147,6 +148,15 @@ public class WorkerProcess {
       Files.deleteIfExists(stdErr);
     } catch (Exception e) {
       LOG.debug(e, "Error closing worker process %s.", this.hashCode());
+
+      LOG.debug("Worker process stderr at %s", this.stdErr.toString());
+
+      String workerStderr = MoreStrings
+          .truncatePretty(filesystem.readFileIfItExists(this.stdErr).or(""))
+          .trim()
+          .replace("\n", "\nstderr: ");
+      LOG.error("stderr: %s", workerStderr);
+
       throw new HumanReadableException(e,
           "Error while trying to close the process %s at the end of the build.",
           Joiner.on(' ').join(processParams.getCommand()));
