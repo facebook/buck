@@ -69,11 +69,6 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
   }
 
   @Override
-  public Optional<FrameworkPath> getOptionalValue() {
-    return Optional.absent();
-  }
-
-  @Override
   public FrameworkPath coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,

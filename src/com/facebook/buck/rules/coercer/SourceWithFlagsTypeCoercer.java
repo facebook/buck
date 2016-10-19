@@ -21,7 +21,6 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -59,11 +58,6 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> 
   public void traverse(SourceWithFlags object, Traversal traversal) {
     sourcePathTypeCoercer.traverse(object.getSourcePath(), traversal);
     flagsTypeCoercer.traverse(ImmutableList.copyOf(object.getFlags()), traversal);
-  }
-
-  @Override
-  public Optional<SourceWithFlags> getOptionalValue() {
-    return Optional.absent();
   }
 
   @Override

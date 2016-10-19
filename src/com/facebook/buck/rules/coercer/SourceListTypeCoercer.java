@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -60,11 +59,6 @@ public class SourceListTypeCoercer implements TypeCoercer<SourceList> {
         namedHeadersTypeCoercer.traverse(object.getNamedSources().get(), traversal);
         break;
     }
-  }
-
-  @Override
-  public Optional<SourceList> getOptionalValue() {
-    return Optional.of(SourceList.ofUnnamedSources(ImmutableSortedSet.of()));
   }
 
   @Override

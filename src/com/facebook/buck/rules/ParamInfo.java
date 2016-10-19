@@ -18,7 +18,6 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.facebook.buck.rules.coercer.OptionalTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.base.CaseFormat;
@@ -113,10 +112,6 @@ public class ParamInfo implements Comparable<ParamInfo> {
    * Return the type parameter of Optional if wrapped in Optional.
    */
   public Class<?> getResultClass() {
-    // TODO(k21): Remove this once we get rid of optional collections in constructor args
-    if (typeCoercer instanceof OptionalTypeCoercer) {
-      return ((OptionalTypeCoercer<?>) typeCoercer).getInnerTypeCoercer().getOutputClass();
-    }
     return typeCoercer.getOutputClass();
   }
 

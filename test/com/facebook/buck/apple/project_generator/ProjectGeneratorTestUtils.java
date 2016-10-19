@@ -38,12 +38,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.Types;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -52,7 +47,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -75,11 +69,7 @@ public final class ProjectGeneratorTestUtils {
       } else if (field.getType().isAssignableFrom(ImmutableMap.class)) {
         value = ImmutableMap.of();
       } else if (field.getType().isAssignableFrom(Optional.class)) {
-        Type nonOptionalType = Types.getFirstNonOptionalType(field);
-        TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
-            ObjectMappers.newDefaultInstance());
-        TypeCoercer<?> typeCoercer = typeCoercerFactory.typeCoercerForType(nonOptionalType);
-        value = typeCoercer.getOptionalValue();
+        value = Optional.absent();
       } else if (field.getType().isAssignableFrom(String.class)) {
         value = "";
       } else if (field.getType().isAssignableFrom(Path.class)) {

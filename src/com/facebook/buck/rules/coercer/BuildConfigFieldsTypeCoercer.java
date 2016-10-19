@@ -20,7 +20,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 
 import java.nio.file.Path;
@@ -59,10 +58,5 @@ public class BuildConfigFieldsTypeCoercer extends LeafTypeCoercer<BuildConfigFie
       }
     }).toList();
     return BuildConfigFields.fromFieldDeclarations(values);
-  }
-
-  @Override
-  public Optional<BuildConfigFields> getOptionalValue() {
-    return Optional.of(BuildConfigFields.empty());
   }
 }

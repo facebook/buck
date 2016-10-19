@@ -64,14 +64,4 @@ public class OptionalTypeCoercer<T> implements TypeCoercer<Optional<T>> {
     }
     return Optional.of(coercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
   }
-
-  @Override
-  public Optional<Optional<T>> getOptionalValue() {
-    return Optional.absent();
-  }
-
-  public TypeCoercer<T> getInnerTypeCoercer() {
-    return coercer;
-  }
-
 }

@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
@@ -42,11 +41,6 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
   @Override
   public boolean hasElementClass(Class<?>... types) {
     return keyTypeCoercer.hasElementClass(types) || valueTypeCoercer.hasElementClass(types);
-  }
-
-  @Override
-  public Optional<ImmutableMap<K, V>> getOptionalValue() {
-    return Optional.of(ImmutableMap.<K, V>of());
   }
 
   @Override

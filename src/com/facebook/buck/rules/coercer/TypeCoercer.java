@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
-import com.google.common.base.Optional;
 
 import java.nio.file.Path;
 
@@ -57,14 +56,6 @@ public interface TypeCoercer<T> {
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException;
-
-  /**
-   * Get a value suitable for an Optional field. This will typically be {@link Optional#absent()},
-   * but may be some other value, such as an empty collection.
-   *
-   * @return A value suitable for fields of type Optional when no value has been set.
-   */
-  Optional<T> getOptionalValue();
 
   interface Traversal {
     void traverse(Object object);

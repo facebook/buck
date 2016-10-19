@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -62,13 +61,6 @@ public class SourceWithFlagsListTypeCoercer implements TypeCoercer<SourceWithFla
       default:
         throw new RuntimeException("Unhandled type: " + object.getType());
     }
-  }
-
-  @Override
-  public Optional<SourceWithFlagsList> getOptionalValue() {
-    return Optional.of(
-        SourceWithFlagsList.ofUnnamedSources(
-            ImmutableSortedSet.of()));
   }
 
   @Override

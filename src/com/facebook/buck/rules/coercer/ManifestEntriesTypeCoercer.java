@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -59,10 +58,5 @@ public class ManifestEntriesTypeCoercer extends LeafTypeCoercer<ManifestEntries>
     } catch (IllegalArgumentException e) {
       throw CoerceFailedException.simple(object, getOutputClass(), e.getLocalizedMessage());
     }
-  }
-
-  @Override
-  public Optional<ManifestEntries> getOptionalValue() {
-    return Optional.of(ManifestEntries.empty());
   }
 }

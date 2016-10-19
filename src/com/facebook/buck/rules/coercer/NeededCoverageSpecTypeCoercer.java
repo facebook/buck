@@ -66,11 +66,6 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
   }
 
   @Override
-  public Optional<NeededCoverageSpec> getOptionalValue() {
-    return Optional.absent();
-  }
-
-  @Override
   public NeededCoverageSpec coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,

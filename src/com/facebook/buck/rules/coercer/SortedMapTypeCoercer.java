@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedMap;
 
 import java.nio.file.Path;
@@ -43,11 +42,6 @@ public class SortedMapTypeCoercer<K extends Comparable<K>, V>
   @Override
   public boolean hasElementClass(Class<?>... types) {
     return keyTypeCoercer.hasElementClass(types) || valueTypeCoercer.hasElementClass(types);
-  }
-
-  @Override
-  public Optional<ImmutableSortedMap<K, V>> getOptionalValue() {
-    return Optional.of(ImmutableSortedMap.<K, V>of());
   }
 
   @Override

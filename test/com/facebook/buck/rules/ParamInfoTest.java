@@ -61,7 +61,7 @@ public class ParamInfoTest {
     ParamInfo info = new ParamInfo(typeCoercerFactory, OptionalWithWildcard.class, field);
 
     Class<?> type = info.getResultClass();
-    assertEquals(SourcePath.class, type);
+    assertEquals(Optional.class, type);
   }
 
   public static class UnboundedWildcard {

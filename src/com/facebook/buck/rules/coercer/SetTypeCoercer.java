@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
@@ -32,11 +31,6 @@ public class SetTypeCoercer<T> extends CollectionTypeCoercer<ImmutableSet<T>, T>
   @Override
   public Class<ImmutableSet<T>> getOutputClass() {
     return (Class<ImmutableSet<T>>) (Class<?>) ImmutableSet.class;
-  }
-
-  @Override
-  public Optional<ImmutableSet<T>> getOptionalValue() {
-    return Optional.of(ImmutableSet.<T>of());
   }
 
   @Override

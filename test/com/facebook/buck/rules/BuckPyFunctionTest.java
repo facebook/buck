@@ -143,7 +143,7 @@ public class BuckPyFunctionTest {
 
     assertTrue(
         definition,
-        definition.contains("do_stuff=None, targets=[], thing=None, version=None"));
+        definition.contains("do_stuff=None, targets=None, thing=None, version=None"));
   }
 
   public static class Either {

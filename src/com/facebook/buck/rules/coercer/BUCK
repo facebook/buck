@@ -1,9 +1,5 @@
 TYPES_SRCS = [
   'CoerceFailedException.java',
-
-  # TODO(k21): Remove this once we get rid of optional collections in constructor args
-  'OptionalTypeCoercer.java',
-
   'TypeCoercer.java',
   'TypeCoercerFactory.java',
 ]
