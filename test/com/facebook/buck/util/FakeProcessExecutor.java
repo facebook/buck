@@ -27,7 +27,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-public class FakeProcessExecutor extends ProcessExecutor {
+public class FakeProcessExecutor extends DefaultProcessExecutor {
 
   private final Function<? super ProcessExecutorParams, FakeProcess> processFunction;
   private final Set<ProcessExecutorParams> launchedProcesses;
@@ -97,6 +97,13 @@ public class FakeProcessExecutor extends ProcessExecutor {
               "FakeProcessExecutor not configured to run process with params %s",
               params));
     }
+  }
+
+  @Override
+  public LaunchedProcess launchProcess(
+      ProcessExecutorParams params,
+      ImmutableMap<String, String> context) throws IOException {
+    return launchProcess(params);
   }
 
   public boolean isProcessLaunched(ProcessExecutorParams params) {

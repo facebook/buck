@@ -19,6 +19,7 @@ package com.facebook.buck.util;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 
@@ -31,18 +32,18 @@ public class ProcessRegistryTest {
   public void testRegisterCallback() {
     final List<ProcessInfo> registeredProcesses = new ArrayList<>();
     ProcessRegistry.ProcessRegisterCallback callback =
-        (process, params) -> registeredProcesses.add(new ProcessInfo(process, params));
+        (process, params, context) -> registeredProcesses.add(new ProcessInfo(process, params));
     ProcessRegistry.setsProcessRegisterCallback(Optional.of(callback));
     assertEquals(0, registeredProcesses.size());
 
     ProcessInfo info1 = new ProcessInfo(new Object(), "Proc1");
-    ProcessRegistry.registerProcess(info1.process, info1.params);
+    ProcessRegistry.registerProcess(info1.process, info1.params, ImmutableMap.of());
     assertEquals(1, registeredProcesses.size());
     assertEquals(info1.params, registeredProcesses.get(0).params);
     assertEquals(info1.process, registeredProcesses.get(0).process);
 
     ProcessInfo info2 = new ProcessInfo(new Object(), "Proc2");
-    ProcessRegistry.registerProcess(info2.process, info2.params);
+    ProcessRegistry.registerProcess(info2.process, info2.params, ImmutableMap.of());
     assertEquals(2, registeredProcesses.size());
     assertEquals(info1.params, registeredProcesses.get(0).params);
     assertEquals(info1.process, registeredProcesses.get(0).process);
@@ -54,7 +55,7 @@ public class ProcessRegistryTest {
     assertEquals(2, registeredProcesses.size());
 
     ProcessInfo info3 = new ProcessInfo(new Object(), "Proc3");
-    ProcessRegistry.registerProcess(info3.process, info3.params);
+    ProcessRegistry.registerProcess(info3.process, info3.params, ImmutableMap.of());
     assertEquals(2, registeredProcesses.size());
   }
 

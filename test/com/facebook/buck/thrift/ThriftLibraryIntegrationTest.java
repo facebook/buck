@@ -50,7 +50,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -106,7 +106,7 @@ public class ThriftLibraryIntegrationTest {
         config,
         CellConfig.of(),
         new KnownBuildRuleTypesFactory(
-            new ProcessExecutor(new TestConsole()),
+            new DefaultProcessExecutor(new TestConsole()),
             new FakeAndroidDirectoryResolver()),
         new WatchmanDiagnosticCache()).getCellByPath(filesystem.getRootPath());
     BuildTarget target = BuildTargetFactory.newInstance(filesystem, "//thrift:exe");

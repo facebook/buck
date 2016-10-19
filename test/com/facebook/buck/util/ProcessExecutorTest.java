@@ -40,7 +40,7 @@ public class ProcessExecutorTest {
     CapturingPrintStream stdErr = new CapturingPrintStream();
     Ansi ansi = Ansi.forceTty();
     Console console = new Console(Verbosity.ALL, stdOut, stdErr, ansi);
-    ProcessExecutor executor = new ProcessExecutor(console);
+    ProcessExecutor executor = new DefaultProcessExecutor(console);
     String cmd = Platform.detect() == Platform.WINDOWS ?
         "cmd /C echo Hello" : "echo Hello";
     ProcessExecutorParams params = ProcessExecutorParams.ofCommand(makeCommandArray(cmd));
@@ -58,7 +58,7 @@ public class ProcessExecutorTest {
     Ansi ansi = Ansi.forceTty();
     Console console = new Console(
         Verbosity.ALL, stdOut, stdErr, ansi);
-    ProcessExecutor executor = new ProcessExecutor(console);
+    ProcessExecutor executor = new DefaultProcessExecutor(console);
     ProcessExecutorParams params = ProcessExecutorParams.ofCommand(makeCommandArray(cmd));
     ProcessExecutor.Result result = executor.launchAndExecute(
         params,
@@ -81,7 +81,7 @@ public class ProcessExecutorTest {
     Ansi ansi = Ansi.forceTty();
     Console console = new Console(
         Verbosity.ALL, stdOut, stdErr, ansi);
-    ProcessExecutor executor = new ProcessExecutor(console);
+    ProcessExecutor executor = new DefaultProcessExecutor(console);
     ProcessExecutorParams params = ProcessExecutorParams.ofCommand(makeCommandArray(cmd));
     executor.launchAndExecute(params);
     assertFalse(stdOut.isDirty());
@@ -91,7 +91,7 @@ public class ProcessExecutorTest {
   @Test
   public void testProcessTimeoutHandlerIsInvoked() throws IOException, InterruptedException {
     @SuppressWarnings("PMD.PrematureDeclaration")
-    ProcessExecutor executor = new ProcessExecutor(new TestConsole(Verbosity.ALL));
+    ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole(Verbosity.ALL));
 
     final AtomicBoolean called = new AtomicBoolean(false);
     Function<Process, Void> handler = input -> {
@@ -118,7 +118,7 @@ public class ProcessExecutorTest {
   @Test
   public void testProcessTimeoutHandlerThrowsException() throws IOException, InterruptedException {
     @SuppressWarnings("PMD.PrematureDeclaration")
-    ProcessExecutor executor = new ProcessExecutor(new TestConsole(Verbosity.ALL));
+    ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole(Verbosity.ALL));
 
     Function<Process, Void> handler = input -> {
       throw new RuntimeException("This shouldn't fail the test!");

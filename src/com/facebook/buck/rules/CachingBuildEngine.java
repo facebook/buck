@@ -45,6 +45,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.util.ContextualProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreFunctions;
@@ -121,6 +122,13 @@ public class CachingBuildEngine implements BuildEngine {
       0, 0, 1, 0);
   public static final ResourceAmounts SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS = ResourceAmounts.ZERO;
 
+  private static final String BUILD_RULE_TYPE_CONTEXT_KEY = "build_rule_type";
+  private static final String STEP_TYPE_CONTEXT_KEY = "step_type";
+  private static enum StepType {
+    BUILD_STEP,
+    POST_BUILD_STEP,
+    ;
+  };
 
   /**
    * These are the values returned by {@link #build(BuildContext, ExecutionContext, BuildRule)}.
@@ -1271,7 +1279,17 @@ public class CachingBuildEngine implements BuildEngine {
 
     Optional<BuildTarget> optionalTarget = Optional.of(rule.getBuildTarget());
     for (Step step : steps) {
-      stepRunner.runStepForBuildTarget(executionContext, step, optionalTarget);
+      stepRunner.runStepForBuildTarget(
+          executionContext.withProcessExecutor(
+              new ContextualProcessExecutor(
+                  executionContext.getProcessExecutor(),
+                  ImmutableMap.of(
+                      BUILD_RULE_TYPE_CONTEXT_KEY,
+                      rule.getType(),
+                      STEP_TYPE_CONTEXT_KEY,
+                      StepType.BUILD_STEP.toString()))),
+          step,
+          optionalTarget);
 
       // Check for interruptions that may have been ignored by step.
       if (Thread.interrupted()) {
@@ -1297,7 +1315,17 @@ public class CachingBuildEngine implements BuildEngine {
 
     Optional<BuildTarget> optionalTarget = Optional.of(rule.getBuildTarget());
     for (Step step : postBuildSteps) {
-      stepRunner.runStepForBuildTarget(context, step, optionalTarget);
+      stepRunner.runStepForBuildTarget(
+          context.withProcessExecutor(
+              new ContextualProcessExecutor(
+                  context.getProcessExecutor(),
+                  ImmutableMap.of(
+                      BUILD_RULE_TYPE_CONTEXT_KEY,
+                      rule.getType(),
+                      STEP_TYPE_CONTEXT_KEY,
+                      StepType.POST_BUILD_STEP.toString()))),
+          step,
+          optionalTarget);
 
       // Check for interruptions that may have been ignored by step.
       if (Thread.interrupted()) {

@@ -23,7 +23,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 
 import org.junit.Before;
@@ -48,7 +48,7 @@ public class PrebuiltPythonLibraryIntegrationTest {
     // EGGs are versioned to the version of Python they were built it, but the EGG for this test
     // doesn't actually matter.
     String version = new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder())
-        .getPythonEnvironment(new ProcessExecutor(new TestConsole(Verbosity.SILENT)))
+        .getPythonEnvironment(new DefaultProcessExecutor(new TestConsole(Verbosity.SILENT)))
         .getPythonVersion()
         .getVersionString();
     if (!version.startsWith("2.6")) {

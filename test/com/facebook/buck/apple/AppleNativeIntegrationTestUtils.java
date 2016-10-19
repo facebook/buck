@@ -20,6 +20,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -32,7 +33,7 @@ public class AppleNativeIntegrationTestUtils {
   private static ImmutableMap<AppleSdk, AppleSdkPaths> discoverSystemSdkPaths(
       BuckConfig buckConfig) {
     AppleConfig appleConfig = new AppleConfig(buckConfig);
-    ProcessExecutor executor = new ProcessExecutor(new TestConsole());
+    ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
     return appleConfig.getAppleSdkPaths(executor);
   }
 
@@ -64,7 +65,7 @@ public class AppleNativeIntegrationTestUtils {
         sdkPaths.get(anySdk),
         buckConfig,
         new AppleConfig(buckConfig),
-        Optional.of(new ProcessExecutor(Console.createNullConsole())),
+        Optional.of(new DefaultProcessExecutor(Console.createNullConsole())),
         Optional.absent());
     return appleCxxPlatform.getSwiftPlatform().isPresent();
   }

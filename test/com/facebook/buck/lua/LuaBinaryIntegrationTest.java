@@ -42,6 +42,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -125,7 +126,7 @@ public class LuaBinaryIntegrationTest {
             .build())
         .setRedirectInput(ProcessBuilder.Redirect.PIPE)
         .build();
-    ProcessExecutor executor = new ProcessExecutor(Console.createNullConsole());
+    ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
     ProcessExecutor.LaunchedProcess launchedProcess = executor.launchProcess(params);
     launchedProcess.getOutputStream().close();
     int exitCode = executor.waitForLaunchedProcess(launchedProcess).getExitCode();

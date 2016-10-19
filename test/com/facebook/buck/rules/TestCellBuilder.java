@@ -29,6 +29,7 @@ import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 
 import java.io.IOException;
@@ -85,7 +86,7 @@ public class TestCellBuilder {
   }
 
   public Cell build() throws IOException, InterruptedException {
-    ProcessExecutor executor = new ProcessExecutor(new TestConsole());
+    ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
 
     BuckConfig config = buckConfig == null ?
         FakeBuckConfig.builder().setFilesystem(filesystem).build() :

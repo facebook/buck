@@ -22,7 +22,7 @@ import com.facebook.buck.apple.ProvisioningProfileStore;
 import com.facebook.buck.apple.device.AppleDeviceHelper;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 
@@ -37,7 +37,7 @@ public class FakeAppleDeveloperEnvironment {
   private FakeAppleDeveloperEnvironment() { }
 
   private static final int numCodeSigningIdentities =
-      CodeSignIdentityStore.fromSystem(new ProcessExecutor(new TestConsole()))
+      CodeSignIdentityStore.fromSystem(new DefaultProcessExecutor(new TestConsole()))
           .getIdentities()
           .size();
 
@@ -70,7 +70,7 @@ public class FakeAppleDeveloperEnvironment {
   public static boolean hasDeviceCurrentlyConnected(Path pathToHelper)
       throws InterruptedException {
     AppleDeviceHelper helper = new AppleDeviceHelper(
-        new ProcessExecutor(new TestConsole()),
+        new DefaultProcessExecutor(new TestConsole()),
         pathToHelper);
     return (helper.getConnectedDevices().size() > 0);
   }

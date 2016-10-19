@@ -45,10 +45,6 @@
   },
   "testutil" : {
     "deps" : [
-      "//src/com/facebook/buck/rules/coercer:coercer",
-      "//src/com/facebook/buck/rules/coercer:types",
-      "//src/com/facebook/buck/util:object_mapper",
-      "//src/com/facebook/buck/util:util",
       "//test/com/facebook/buck/testutil:testutil",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/junit:junit"

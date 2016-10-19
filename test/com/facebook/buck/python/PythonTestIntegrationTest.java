@@ -28,7 +28,7 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.VersionStringComparator;
 
 import org.junit.Before;
@@ -151,7 +151,7 @@ public class PythonTestIntegrationTest {
       throws InterruptedException {
     PythonVersion actualVersion =
         new PythonBuckConfig(FakeBuckConfig.builder().build(), new ExecutableFinder())
-            .getPythonEnvironment(new ProcessExecutor(new TestConsole()))
+            .getPythonEnvironment(new DefaultProcessExecutor(new TestConsole()))
             .getPythonVersion();
     assumeTrue(
         String.format(

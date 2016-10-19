@@ -18,6 +18,7 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.zaxxer.nuprocess.NuAbstractProcessHandler;
 import com.zaxxer.nuprocess.NuProcess;
 import com.zaxxer.nuprocess.NuProcessBuilder;
@@ -268,7 +269,7 @@ public class ListeningProcessExecutor {
 
     // This should be set by onPreStart().
     Preconditions.checkState(processHandler.process != null);
-    ProcessRegistry.registerProcess(processHandler.process.nuProcess, params);
+    ProcessRegistry.registerProcess(processHandler.process.nuProcess, params, ImmutableMap.of());
     return processHandler.process;
   }
 

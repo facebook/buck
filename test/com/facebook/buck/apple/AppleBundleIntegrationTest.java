@@ -39,6 +39,7 @@ import com.facebook.buck.testutil.integration.FakeAppleDeveloperEnvironment;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
@@ -79,7 +80,7 @@ public class AppleBundleIntegrationTest {
     }
 
     return CodeSigning.hasValidSignature(
-        new ProcessExecutor(new TestConsole()),
+        new DefaultProcessExecutor(new TestConsole()),
         absoluteBundlePath);
   }
 

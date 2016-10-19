@@ -44,6 +44,7 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
   private static final org.apache.thrift.protocol.TField CPU_SYS_MS_FIELD_DESC = new org.apache.thrift.protocol.TField("cpuSysMs", org.apache.thrift.protocol.TType.I64, (short)6);
   private static final org.apache.thrift.protocol.TField IO_BYTES_READ_FIELD_DESC = new org.apache.thrift.protocol.TField("ioBytesRead", org.apache.thrift.protocol.TType.I64, (short)7);
   private static final org.apache.thrift.protocol.TField IO_BYTES_WRITTEN_FIELD_DESC = new org.apache.thrift.protocol.TField("ioBytesWritten", org.apache.thrift.protocol.TType.I64, (short)8);
+  private static final org.apache.thrift.protocol.TField CONTEXT_FIELD_DESC = new org.apache.thrift.protocol.TField("context", org.apache.thrift.protocol.TType.MAP, (short)9);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -59,6 +60,7 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
   public long cpuSysMs; // optional
   public long ioBytesRead; // optional
   public long ioBytesWritten; // optional
+  public Map<String,String> context; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -69,7 +71,8 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
     CPU_USER_MS((short)5, "cpuUserMs"),
     CPU_SYS_MS((short)6, "cpuSysMs"),
     IO_BYTES_READ((short)7, "ioBytesRead"),
-    IO_BYTES_WRITTEN((short)8, "ioBytesWritten");
+    IO_BYTES_WRITTEN((short)8, "ioBytesWritten"),
+    CONTEXT((short)9, "context");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -100,6 +103,8 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
           return IO_BYTES_READ;
         case 8: // IO_BYTES_WRITTEN
           return IO_BYTES_WRITTEN;
+        case 9: // CONTEXT
+          return CONTEXT;
         default:
           return null;
       }
@@ -148,7 +153,7 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
   private static final int __IOBYTESREAD_ISSET_ID = 5;
   private static final int __IOBYTESWRITTEN_ISSET_ID = 6;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.EXECUTABLE,_Fields.MEM_SIZE_BYTES,_Fields.MEM_RESIDENT_BYTES,_Fields.CPU_REAL_MS,_Fields.CPU_USER_MS,_Fields.CPU_SYS_MS,_Fields.IO_BYTES_READ,_Fields.IO_BYTES_WRITTEN};
+  private static final _Fields optionals[] = {_Fields.EXECUTABLE,_Fields.MEM_SIZE_BYTES,_Fields.MEM_RESIDENT_BYTES,_Fields.CPU_REAL_MS,_Fields.CPU_USER_MS,_Fields.CPU_SYS_MS,_Fields.IO_BYTES_READ,_Fields.IO_BYTES_WRITTEN,_Fields.CONTEXT};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -168,6 +173,10 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     tmpMap.put(_Fields.IO_BYTES_WRITTEN, new org.apache.thrift.meta_data.FieldMetaData("ioBytesWritten", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
+    tmpMap.put(_Fields.CONTEXT, new org.apache.thrift.meta_data.FieldMetaData("context", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.MapMetaData(org.apache.thrift.protocol.TType.MAP, 
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING), 
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(ProcessStatsRemoteLogEntry.class, metaDataMap);
   }
@@ -190,6 +199,10 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
     this.cpuSysMs = other.cpuSysMs;
     this.ioBytesRead = other.ioBytesRead;
     this.ioBytesWritten = other.ioBytesWritten;
+    if (other.isSetContext()) {
+      Map<String,String> __this__context = new HashMap<String,String>(other.context);
+      this.context = __this__context;
+    }
   }
 
   public ProcessStatsRemoteLogEntry deepCopy() {
@@ -213,6 +226,7 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
     this.ioBytesRead = 0;
     setIoBytesWrittenIsSet(false);
     this.ioBytesWritten = 0;
+    this.context = null;
   }
 
   public String getExecutable() {
@@ -400,6 +414,41 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
     __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __IOBYTESWRITTEN_ISSET_ID, value);
   }
 
+  public int getContextSize() {
+    return (this.context == null) ? 0 : this.context.size();
+  }
+
+  public void putToContext(String key, String val) {
+    if (this.context == null) {
+      this.context = new HashMap<String,String>();
+    }
+    this.context.put(key, val);
+  }
+
+  public Map<String,String> getContext() {
+    return this.context;
+  }
+
+  public ProcessStatsRemoteLogEntry setContext(Map<String,String> context) {
+    this.context = context;
+    return this;
+  }
+
+  public void unsetContext() {
+    this.context = null;
+  }
+
+  /** Returns true if field context is set (has been assigned a value) and false otherwise */
+  public boolean isSetContext() {
+    return this.context != null;
+  }
+
+  public void setContextIsSet(boolean value) {
+    if (!value) {
+      this.context = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case EXECUTABLE:
@@ -466,6 +515,14 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
       }
       break;
 
+    case CONTEXT:
+      if (value == null) {
+        unsetContext();
+      } else {
+        setContext((Map<String,String>)value);
+      }
+      break;
+
     }
   }
 
@@ -495,6 +552,9 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
     case IO_BYTES_WRITTEN:
       return getIoBytesWritten();
 
+    case CONTEXT:
+      return getContext();
+
     }
     throw new IllegalStateException();
   }
@@ -522,6 +582,8 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
       return isSetIoBytesRead();
     case IO_BYTES_WRITTEN:
       return isSetIoBytesWritten();
+    case CONTEXT:
+      return isSetContext();
     }
     throw new IllegalStateException();
   }
@@ -611,6 +673,15 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
         return false;
     }
 
+    boolean this_present_context = true && this.isSetContext();
+    boolean that_present_context = true && that.isSetContext();
+    if (this_present_context || that_present_context) {
+      if (!(this_present_context && that_present_context))
+        return false;
+      if (!this.context.equals(that.context))
+        return false;
+    }
+
     return true;
   }
 
@@ -657,6 +728,11 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
     list.add(present_ioBytesWritten);
     if (present_ioBytesWritten)
       list.add(ioBytesWritten);
+
+    boolean present_context = true && (isSetContext());
+    list.add(present_context);
+    if (present_context)
+      list.add(context);
 
     return list.hashCode();
   }
@@ -749,6 +825,16 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
         return lastComparison;
       }
     }
+    lastComparison = Boolean.valueOf(isSetContext()).compareTo(other.isSetContext());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetContext()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.context, other.context);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -818,6 +904,16 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
       if (!first) sb.append(", ");
       sb.append("ioBytesWritten:");
       sb.append(this.ioBytesWritten);
+      first = false;
+    }
+    if (isSetContext()) {
+      if (!first) sb.append(", ");
+      sb.append("context:");
+      if (this.context == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.context);
+      }
       first = false;
     }
     sb.append(")");
@@ -929,6 +1025,26 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 9: // CONTEXT
+            if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
+              {
+                org.apache.thrift.protocol.TMap _map16 = iprot.readMapBegin();
+                struct.context = new HashMap<String,String>(2*_map16.size);
+                String _key17;
+                String _val18;
+                for (int _i19 = 0; _i19 < _map16.size; ++_i19)
+                {
+                  _key17 = iprot.readString();
+                  _val18 = iprot.readString();
+                  struct.context.put(_key17, _val18);
+                }
+                iprot.readMapEnd();
+              }
+              struct.setContextIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -986,6 +1102,21 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
         oprot.writeI64(struct.ioBytesWritten);
         oprot.writeFieldEnd();
       }
+      if (struct.context != null) {
+        if (struct.isSetContext()) {
+          oprot.writeFieldBegin(CONTEXT_FIELD_DESC);
+          {
+            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, struct.context.size()));
+            for (Map.Entry<String, String> _iter20 : struct.context.entrySet())
+            {
+              oprot.writeString(_iter20.getKey());
+              oprot.writeString(_iter20.getValue());
+            }
+            oprot.writeMapEnd();
+          }
+          oprot.writeFieldEnd();
+        }
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -1028,7 +1159,10 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
       if (struct.isSetIoBytesWritten()) {
         optionals.set(7);
       }
-      oprot.writeBitSet(optionals, 8);
+      if (struct.isSetContext()) {
+        optionals.set(8);
+      }
+      oprot.writeBitSet(optionals, 9);
       if (struct.isSetExecutable()) {
         oprot.writeString(struct.executable);
       }
@@ -1053,12 +1187,22 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
       if (struct.isSetIoBytesWritten()) {
         oprot.writeI64(struct.ioBytesWritten);
       }
+      if (struct.isSetContext()) {
+        {
+          oprot.writeI32(struct.context.size());
+          for (Map.Entry<String, String> _iter21 : struct.context.entrySet())
+          {
+            oprot.writeString(_iter21.getKey());
+            oprot.writeString(_iter21.getValue());
+          }
+        }
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, ProcessStatsRemoteLogEntry struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
-      BitSet incoming = iprot.readBitSet(8);
+      BitSet incoming = iprot.readBitSet(9);
       if (incoming.get(0)) {
         struct.executable = iprot.readString();
         struct.setExecutableIsSet(true);
@@ -1090,6 +1234,21 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
       if (incoming.get(7)) {
         struct.ioBytesWritten = iprot.readI64();
         struct.setIoBytesWrittenIsSet(true);
+      }
+      if (incoming.get(8)) {
+        {
+          org.apache.thrift.protocol.TMap _map22 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.context = new HashMap<String,String>(2*_map22.size);
+          String _key23;
+          String _val24;
+          for (int _i25 = 0; _i25 < _map22.size; ++_i25)
+          {
+            _key23 = iprot.readString();
+            _val24 = iprot.readString();
+            struct.context.put(_key23, _val24);
+          }
+        }
+        struct.setContextIsSet(true);
       }
     }
   }

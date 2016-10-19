@@ -23,6 +23,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.LineProcessorRunnable;
 import com.facebook.buck.util.ManagedRunnable;
@@ -263,7 +264,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     CxxErrorTransformerFactory errorStreamTransformerFactory =
         createErrorTransformerFactory(context);
 
-    ProcessExecutor executor = new ProcessExecutor(Console.createNullConsole());
+    ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
     try {
       if (LOG.isDebugEnabled()) {
         LOG.debug(
@@ -390,7 +391,7 @@ public class CxxPreprocessAndCompileStep implements Step {
         getDescription(context));
 
     // Start the process.
-    ProcessExecutor executor = new ProcessExecutor(Console.createNullConsole());
+    ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
     ProcessExecutor.LaunchedProcess process = executor.launchProcess(params);
 
     // We buffer error messages in memory, as these are typically small.

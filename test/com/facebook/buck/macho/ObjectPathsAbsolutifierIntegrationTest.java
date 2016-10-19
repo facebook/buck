@@ -40,6 +40,7 @@ import com.facebook.buck.testutil.integration.FakeAppleDeveloperEnvironment;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
@@ -214,7 +215,7 @@ public class ObjectPathsAbsolutifierIntegrationTest {
     }
 
     return CodeSigning.hasValidSignature(
-        new ProcessExecutor(new TestConsole()),
+        new DefaultProcessExecutor(new TestConsole()),
         absoluteBundlePath);
   }
 
@@ -227,7 +228,7 @@ public class ObjectPathsAbsolutifierIntegrationTest {
       throw new NoSuchFileException(file2.toString());
     }
 
-    ProcessExecutor processExecutor = new ProcessExecutor(new TestConsole());
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
 
     ProcessExecutor.Result result1 = processExecutor.launchAndExecute(
         ProcessExecutorParams.builder()

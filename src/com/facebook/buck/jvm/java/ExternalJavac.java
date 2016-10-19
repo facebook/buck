@@ -28,6 +28,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -123,7 +124,7 @@ public class ExternalJavac implements Javac {
 
   @VisibleForTesting
   ProcessExecutor createProcessExecutor() {
-    return new ProcessExecutor(Console.createNullConsole());
+    return new DefaultProcessExecutor(Console.createNullConsole());
   }
 
   @Override

@@ -87,6 +87,7 @@
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:object_mapper",
+      "//src/com/facebook/buck/util:util",
       "//test/com/facebook/buck/android:utils",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/event:testutil",

@@ -29,6 +29,7 @@ import com.facebook.buck.util.ProcessResourceConsumption;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ServiceManager;
 
@@ -70,14 +71,15 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
 
   private void registerProcess(
       Object process,
-      ProcessExecutorParams params) {
+      ProcessExecutorParams params,
+      ImmutableMap<String, String> context) {
     Long pid = ProcessHelper.getPid(process);
     LOG.verbose("registerProcess: pid: %s, cmd: %s", pid, params.getCommand());
     if (pid == null) {
       return;
     }
     ProcessResourceConsumption res = ProcessHelper.getProcessResourceConsumption(pid);
-    ProcessInfo old = processesInfo.put(pid, new ProcessInfo(process, params, res));
+    ProcessInfo old = processesInfo.put(pid, new ProcessInfo(process, params, context, res));
     if (old != null) {
       old.close();
     }
@@ -131,14 +133,17 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
     final AtomicBoolean isClosed = new AtomicBoolean(false);
     final Object process;
     final ProcessExecutorParams params;
+    final ImmutableMap<String, String> context;
     ProcessResourceConsumption resourceConsumption;
 
     ProcessInfo(
         Object process,
         ProcessExecutorParams params,
+        ImmutableMap<String, String> context,
         ProcessResourceConsumption res) {
       this.process = process;
       this.params = params;
+      this.context = context;
       this.resourceConsumption = res;
     }
 
@@ -152,24 +157,31 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
         return;
       }
       LOG.verbose("Process resource consumption: %s\n%s", params.getCommand(), resourceConsumption);
-      eventBus.post(new ProcessResourceConsumptionEvent(params, resourceConsumption));
+      eventBus.post(new ProcessResourceConsumptionEvent(params, context, resourceConsumption));
     }
   }
 
   public static class ProcessResourceConsumptionEvent extends AbstractBuckEvent {
     private final ProcessExecutorParams params;
+    private final ImmutableMap<String, String> context;
     private final ProcessResourceConsumption resourceConsumption;
 
     public ProcessResourceConsumptionEvent(
         ProcessExecutorParams params,
+        ImmutableMap<String, String> context,
         ProcessResourceConsumption res) {
       super(EventKey.unique());
       this.params = params;
+      this.context = context;
       this.resourceConsumption = res;
     }
 
     public ProcessExecutorParams getParams() {
       return params;
+    }
+
+    public ImmutableMap<String, String> getContext() {
+      return context;
     }
 
     public ProcessResourceConsumption getResourceConsumption() {

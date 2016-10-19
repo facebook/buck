@@ -30,7 +30,7 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -119,7 +119,7 @@ public class WorkerProcessTest {
       script = "./script.py";
     }
     WorkerProcess workerProcess = new WorkerProcess(
-        new ProcessExecutor(console),
+        new DefaultProcessExecutor(console),
         ProcessExecutorParams.builder()
             .setCommand(ImmutableList.of(script))
             .setDirectory(workspace.getDestPath())

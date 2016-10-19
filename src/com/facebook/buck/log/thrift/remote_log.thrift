@@ -39,6 +39,7 @@ struct ProcessStatsRemoteLogEntry {
   6: optional i64 cpuSysMs;
   7: optional i64 ioBytesRead;
   8: optional i64 ioBytesWritten;
+  9: optional map<string, string> context;
 }
 
 struct RemoteLogEntry {

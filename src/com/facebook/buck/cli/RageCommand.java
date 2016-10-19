@@ -28,6 +28,7 @@ import com.facebook.buck.rage.InteractiveReport;
 import com.facebook.buck.rage.RageBuckConfig;
 import com.facebook.buck.rage.RageConfig;
 import com.facebook.buck.rage.VcsInfoCollector;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
@@ -55,7 +56,7 @@ public class RageCommand extends AbstractCommand {
     BuckConfig buckConfig = params.getBuckConfig();
     RageConfig rageConfig = RageBuckConfig.create(buckConfig);
     DirtyPrintStreamDecorator stdOut = params.getConsole().getStdOut();
-    ProcessExecutor processExecutor = new ProcessExecutor(params.getConsole());
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(params.getConsole());
 
     VersionControlCmdLineInterfaceFactory vcsFactory =
         new DefaultVersionControlCmdLineInterfaceFactory(

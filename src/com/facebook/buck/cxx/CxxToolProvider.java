@@ -24,6 +24,7 @@ import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
@@ -111,7 +112,7 @@ public abstract class CxxToolProvider<T> {
             .build();
     ProcessExecutor.Result result;
     try {
-      ProcessExecutor processExecutor = new ProcessExecutor(Console.createNullConsole());
+      ProcessExecutor processExecutor = new DefaultProcessExecutor(Console.createNullConsole());
       result = processExecutor.launchAndExecute(
           params,
           EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),

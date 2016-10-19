@@ -31,7 +31,6 @@
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/thrift:thrift",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util:util",
       "//test/com/facebook/buck/android:utils",

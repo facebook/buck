@@ -51,6 +51,7 @@ import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -334,7 +335,7 @@ public class ProjectWorkspace {
     ProcessExecutorParams params = ProcessExecutorParams.builder()
         .setCommand(command)
         .build();
-    ProcessExecutor executor = new ProcessExecutor(new TestConsole());
+    ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
     String currentDir = System.getProperty("user.dir");
     try {
       System.setProperty("user.dir", destPath.toAbsolutePath().toString());
@@ -623,7 +624,7 @@ public class ProjectWorkspace {
             new DefaultCellPathResolver(filesystem.getRootPath(), config)),
         CellConfig.of(),
         new KnownBuildRuleTypesFactory(
-            new ProcessExecutor(console),
+            new DefaultProcessExecutor(console),
             directoryResolver),
         new WatchmanDiagnosticCache()).getCellByPath(filesystem.getRootPath());
   }

@@ -36,7 +36,7 @@ import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -187,7 +187,7 @@ public class RageCommandIntegrationTest {
         TestBuildEnvironmentDescription.INSTANCE,
         VcsInfoCollector.create(new NoOpCmdLineInterface()),
         rageConfig,
-        new DefaultExtraInfoCollector(rageConfig, filesystem, new ProcessExecutor(console)));
+        new DefaultExtraInfoCollector(rageConfig, filesystem, new DefaultProcessExecutor(console)));
     automatedReport.collectAndSubmitResult();
     DefectReport defectReport = defectReporter.getDefectReport();
     assertThat(defectReport.getExtraInfo(), Matchers.equalTo(Optional.of("Extra\n")));

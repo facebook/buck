@@ -20,7 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableMap;
 
 public class DefaultProjectBuildFileParserFactory implements ProjectBuildFileParserFactory {
@@ -43,7 +43,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
         marshaller,
         environment,
         buckEventBus,
-        new ProcessExecutor(console),
+        new DefaultProcessExecutor(console),
         ignoreBuckAutodepsFiles,
         watchmanDiagnosticCache);
   }

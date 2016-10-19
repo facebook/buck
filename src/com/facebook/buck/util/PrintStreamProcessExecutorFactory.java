@@ -21,7 +21,7 @@ import java.io.PrintStream;
 public class PrintStreamProcessExecutorFactory implements ProcessExecutorFactory {
   @Override
   public ProcessExecutor createProcessExecutor(PrintStream stdout, PrintStream stderr) {
-    return new ProcessExecutor(
+    return new DefaultProcessExecutor(
         new Console(
             Verbosity.SILENT,
             stdout,

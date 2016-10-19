@@ -23,6 +23,7 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Optional;
@@ -79,7 +80,7 @@ public class InferBuckConfig implements RuleKeyAppendable {
           ProcessExecutor.Result result;
           try  {
             result =
-                new ProcessExecutor(Console.createNullConsole()).launchAndExecute(params);
+                new DefaultProcessExecutor(Console.createNullConsole()).launchAndExecute(params);
             if (result.getExitCode() != 0) {
               throw new RuntimeException(result.getMessageForUnexpectedResult("infer version"));
             }

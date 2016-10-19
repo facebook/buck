@@ -22,7 +22,7 @@ import com.facebook.buck.apple.AppleSdk;
 import com.facebook.buck.apple.AppleSdkPaths;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PackagedResource;
 import com.google.common.annotations.VisibleForTesting;
@@ -187,7 +187,7 @@ public class QuickstartCommand extends AbstractCommand {
         ImmutableMap<AppleSdk, AppleSdkPaths> appleSdkPaths;
         AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());
         appleSdkPaths = appleConfig.getAppleSdkPaths(
-            new ProcessExecutor(Console.createNullConsole()));
+            new DefaultProcessExecutor(Console.createNullConsole()));
         if (appleSdkPaths == null || appleSdkPaths.isEmpty()) {
           throw new HumanReadableException(
               "Could not find any Apple SDK, check your Xcode installation.");

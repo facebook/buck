@@ -42,6 +42,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
@@ -323,7 +324,7 @@ public class ProjectBuildFileParserTest {
           new ExecutableFinder());
       return new TestProjectBuildFileParser(
           config.getPythonInterpreter(),
-          new ProcessExecutor(console),
+          new DefaultProcessExecutor(console),
           BuckEventBusFactory.newInstance(),
           watchmanDiagnosticCache);
     }

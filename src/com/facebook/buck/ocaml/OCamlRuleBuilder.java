@@ -40,6 +40,7 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.OCamlSource;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -554,7 +555,7 @@ public class OCamlRuleBuilder {
       ImmutableList<String> cmd) throws IOException, InterruptedException {
     ImmutableSet.Builder<ProcessExecutor.Option> options = ImmutableSet.builder();
     options.add(ProcessExecutor.Option.EXPECTING_STD_OUT);
-    ProcessExecutor exe = new ProcessExecutor(Console.createNullConsole());
+    ProcessExecutor exe = new DefaultProcessExecutor(Console.createNullConsole());
     ProcessExecutorParams params = ProcessExecutorParams.builder()
         .setCommand(cmd)
         .setDirectory(baseDir)

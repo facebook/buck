@@ -93,6 +93,7 @@ import com.facebook.buck.util.AsyncCloseable;
 import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
 import com.facebook.buck.util.Libc;
@@ -878,7 +879,7 @@ public final class Main {
               androidBuckConfig.getBuildToolsVersion(),
               androidBuckConfig.getNdkVersion());
 
-      ProcessExecutor processExecutor = new ProcessExecutor(console);
+      ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
 
       Clock clock;
       if (BUCKD_LAUNCH_TIME_NANOS.isPresent()) {

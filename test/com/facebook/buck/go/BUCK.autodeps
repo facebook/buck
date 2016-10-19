@@ -5,6 +5,7 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:util",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/testutil:testutil",
       "//third-party/java/guava:guava",

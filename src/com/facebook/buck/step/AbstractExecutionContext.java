@@ -27,6 +27,7 @@ import com.facebook.buck.shell.WorkerProcessPool;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
@@ -136,7 +137,7 @@ abstract class AbstractExecutionContext implements Closeable {
 
   @Value.Default
   public ProcessExecutor getProcessExecutor() {
-    return new ProcessExecutor(getConsole());
+    return new DefaultProcessExecutor(getConsole());
   }
 
   @Value.Derived
@@ -210,7 +211,7 @@ abstract class AbstractExecutionContext implements Closeable {
     return ExecutionContext.builder()
         .from(this)
         .setConsole(console)
-        .setProcessExecutor(new ProcessExecutor(console))
+        .setProcessExecutor(new DefaultProcessExecutor(console))
         .setClassLoaderCache(getClassLoaderCache().addRef())
         .setWorkerProcessPools(new ConcurrentHashMap<String, WorkerProcessPool>())
         .build();

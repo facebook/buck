@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 
@@ -33,7 +34,7 @@ import java.io.IOException;
 public class HostnameFetchingTest {
   @Test
   public void fetchedHostnameMatchesCommandLineHostname() throws IOException, InterruptedException {
-    ProcessExecutor executor = new ProcessExecutor(new TestConsole());
+    ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
     ProcessExecutor.Result result = executor.launchAndExecute(
         ProcessExecutorParams.ofCommand("hostname"));
     assumeThat(

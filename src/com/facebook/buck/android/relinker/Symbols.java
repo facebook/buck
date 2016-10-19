@@ -18,6 +18,7 @@ package com.facebook.buck.android.relinker;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
@@ -167,7 +168,7 @@ public class Symbols {
         .setCommand(args)
         .setRedirectError(ProcessBuilder.Redirect.INHERIT)
         .build();
-    ProcessExecutor executor = new ProcessExecutor(Console.createNullConsole());
+    ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
     ProcessExecutor.LaunchedProcess p = executor.launchProcess(params);
     BufferedReader output = new BufferedReader(new InputStreamReader(p.getInputStream()));
     CharStreams.readLines(output, lineProcessor);
