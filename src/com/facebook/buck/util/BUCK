@@ -127,12 +127,25 @@ java_library(
   ],
 )
 
+MORE_STRINGS_SRCS = [
+ 'MoreStrings.java',
+]
+java_library(
+  name = 'more_strings',
+  srcs = MORE_STRINGS_SRCS,
+  autodeps = True,
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
 java_library(
   name = 'util',
   srcs = glob(
     includes = ['*.java'],
     excludes = CONSTANT_SRCS + ESCAPER_SRCS + EXCEPTION_SRCS + IO_SRCS +
-               WATCHMAN_WATCHER_SRCS + TRISTATE_SRCS + OBJECT_MAPPER_SRCS),
+               WATCHMAN_WATCHER_SRCS + TRISTATE_SRCS + OBJECT_MAPPER_SRCS +
+               MORE_STRINGS_SRCS),
   tests = [
     '//test/com/facebook/buck/util:util',
   ],
