@@ -295,6 +295,24 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
 
       @Override
       public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+
+        // If we both shared and static libs, we support any linkage.
+        if (!args.sharedLink.get().isEmpty() &&
+            !(args.staticLink.get().isEmpty() && args.staticPicLink.get().isEmpty())) {
+          return Linkage.ANY;
+        }
+
+        // Otherwise, if we have a shared library, we only support shared linkage.
+        if (!args.sharedLink.get().isEmpty()) {
+          return Linkage.SHARED;
+        }
+
+        // Otherwise, if we have a static library, we only support static linkage.
+        if (!(args.staticLink.get().isEmpty() && args.staticPicLink.get().isEmpty())) {
+          return Linkage.STATIC;
+        }
+
+        // Otherwise, header only libs use any linkage.
         return Linkage.ANY;
       }
 

@@ -206,4 +206,39 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         Matchers.equalTo(ImmutableMap.of("lib1.so", lib1)));
   }
 
+  @Test
+  public void preferredLinkage() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+
+    NativeLinkable any =
+        (NativeLinkable) new PrebuiltCxxLibraryGroupBuilder(
+            BuildTargetFactory.newInstance("//:any"))
+            .setSharedLink(ImmutableList.of("-something"))
+            .setStaticLink(ImmutableList.of("-something"))
+            .build(resolver);
+    assertThat(
+        any.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.equalTo(NativeLinkable.Linkage.ANY));
+
+    NativeLinkable staticOnly =
+        (NativeLinkable) new PrebuiltCxxLibraryGroupBuilder(
+            BuildTargetFactory.newInstance("//:static-only"))
+            .setStaticLink(ImmutableList.of("-something"))
+            .build(resolver);
+    assertThat(
+        staticOnly.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.equalTo(NativeLinkable.Linkage.STATIC));
+
+    NativeLinkable sharedOnly =
+        (NativeLinkable) new PrebuiltCxxLibraryGroupBuilder(
+            BuildTargetFactory.newInstance("//:shared-only"))
+            .setSharedLink(ImmutableList.of("-something"))
+            .build(resolver);
+    assertThat(
+        sharedOnly.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.equalTo(NativeLinkable.Linkage.SHARED));
+
+  }
+
 }
