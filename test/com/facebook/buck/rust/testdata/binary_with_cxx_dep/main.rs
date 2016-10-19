@@ -1,7 +1,4 @@
-#[cfg(feature = "static")]
-extern crate adder_static as adder;
-#[cfg(feature = "shared")]
-extern crate adder_shared as adder;
+extern crate adder;
 
 fn main() {
     let a = 10;

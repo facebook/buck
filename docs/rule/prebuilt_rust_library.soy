@@ -39,14 +39,7 @@
   {/param}
 {/call}
 
-{call buck.arg}
-  {param name: 'crate' /}
-  {param default: 'name' /}
-  {param desc}
-  The name of the crate satisfied by this dependency. Defaults to 'name' if not
-  specified.
-  {/param}
-{/call}
+{call rust_common.crate /}
 
 {call rust_common.deps_arg /}
 

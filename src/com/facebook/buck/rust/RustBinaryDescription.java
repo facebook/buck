@@ -66,6 +66,7 @@ public class RustBinaryDescription implements Description<RustBinaryDescription.
     return new RustBinary(
         params,
         new SourcePathResolver(resolver),
+        args.crate.or(params.getBuildTarget().getShortName()),
         ImmutableSortedSet.copyOf(args.srcs),
         ImmutableSortedSet.copyOf(args.features),
         ImmutableList.copyOf(args.rustcFlags),
@@ -81,5 +82,6 @@ public class RustBinaryDescription implements Description<RustBinaryDescription.
     public List<String> rustcFlags = ImmutableList.of();
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public Optional<Linker.LinkableDepType> linkStyle;
+    public Optional<String> crate;
   }
 }

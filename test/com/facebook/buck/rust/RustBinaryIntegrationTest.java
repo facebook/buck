@@ -64,6 +64,24 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void simpleAliasedBinary() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_binary", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:xyzzy_aliased").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:xyzzy_aliased");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result = workspace.runCommand(
+        workspace.resolve("buck-out/gen/xyzzy_aliased/xyzzy").toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), Matchers.containsString("Hello, world!"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
   public void buildAfterChangeWorks() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "simple_binary", tmp);
@@ -83,6 +101,19 @@ public class RustBinaryIntegrationTest {
 
     assertThat(
         workspace.runBuckCommand("run", "//:hello").assertSuccess().getStdout(),
+        Matchers.allOf(
+            Matchers.containsString("Hello, world!"),
+            Matchers.containsString("I have a message to deliver to you")));
+  }
+
+  @Test
+  public void binaryWithAliasedLibrary() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:hello_alias").assertSuccess().getStdout(),
         Matchers.allOf(
             Matchers.containsString("Hello, world!"),
             Matchers.containsString("I have a message to deliver to you")));

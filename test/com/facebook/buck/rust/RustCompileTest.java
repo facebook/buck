@@ -84,6 +84,7 @@ public class RustCompileTest {
               new BuildRuleResolver(
                   TargetGraph.EMPTY,
                   new DefaultTargetNodeToBuildRuleTransformer())),
+          "myname",
           srcs,
           /* flags */ ImmutableList.of(),
           /* features */ ImmutableSortedSet.of(),

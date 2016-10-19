@@ -69,6 +69,8 @@ abstract class RustCompile extends AbstractBuildRule {
   private final ImmutableSet<String> features;
   @AddToRuleKey
   private final Linker.LinkableDepType linkStyle;
+  @AddToRuleKey
+  private final String crate;
 
   private final ImmutableSortedSet<Path> nativePaths;
 
@@ -78,6 +80,7 @@ abstract class RustCompile extends AbstractBuildRule {
   RustCompile(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      String crate,
       ImmutableSet<SourcePath> srcs,
       ImmutableList<String> flags,
       ImmutableSet<String> features,
@@ -89,10 +92,11 @@ abstract class RustCompile extends AbstractBuildRule {
 
     this.srcs = srcs;
     this.flags = ImmutableList.<String>builder()
-        .add("--crate-name", getBuildTarget().getShortName())
+        .add("--crate-name", crate)
         .addAll(flags)
         .build();
     this.features = features;
+    this.crate = crate;
     this.output = output;
     this.compiler = compiler;
     this.linkStyle = linkStyle;
@@ -161,13 +165,13 @@ abstract class RustCompile extends AbstractBuildRule {
         FluentIterable.from(getResolver().deprecatedAllPaths(srcs))
             .filter(
                 path -> path.endsWith(getDefaultSource()) ||
-                    path.endsWith(String.format("%s.rs", getBuildTarget().getShortName()))));
+                    path.endsWith(String.format("%s.rs", crate))));
     if (candidates.size() != 1) {
       throw new HumanReadableException(
           "srcs of %s must contain either %s or %s.rs!",
           getBuildTarget().getFullyQualifiedName(),
           getDefaultSource(),
-          getBuildTarget().getShortName());
+          crate);
     }
     // We end up creating a symlink tree to ensure that the crate only uses the files that it
     // declares in the BUCK file.
@@ -181,5 +185,9 @@ abstract class RustCompile extends AbstractBuildRule {
 
   public Linker.LinkableDepType getLinkStyle() {
     return linkStyle;
+  }
+
+  public String getCrateName() {
+    return crate;
   }
 }

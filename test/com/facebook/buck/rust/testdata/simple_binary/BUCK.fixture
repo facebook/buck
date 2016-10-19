@@ -4,3 +4,11 @@ rust_binary(
     "main.rs",
   ],
 )
+
+rust_binary(
+  name = "xyzzy_aliased",
+  crate = "xyzzy",
+  srcs = [
+    "main.rs",
+  ],
+)

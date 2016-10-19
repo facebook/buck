@@ -63,6 +63,20 @@ Note: Buck is currently tested with (and therefore supports) version 1.11.0 of R
 {/template}
 
 /***/
+{template .crate}
+{call buck.arg}
+  {param name : 'crate' /}
+  {param default : 'rule name' /}
+  {param desc}
+  <p>
+    Set the generated crate name (for libraries) or executable name (for binaries), independent
+    of the rule name. Defaults to the rule name.
+  </p>
+ {/param}
+{/call}
+{/template}
+
+/***/
 {template .more_examples}
 <p>
   For more examples, check out our <a

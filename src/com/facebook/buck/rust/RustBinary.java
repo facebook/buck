@@ -36,6 +36,7 @@ public class RustBinary extends RustCompile implements BinaryBuildRule {
   public RustBinary(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      String crate,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<String> features,
       ImmutableList<String> rustcFlags,
@@ -45,6 +46,7 @@ public class RustBinary extends RustCompile implements BinaryBuildRule {
     super(
         RustLinkables.addNativeDependencies(params, resolver, cxxPlatform, linkStyle),
         resolver,
+        crate,
         srcs,
         ImmutableList.<String>builder()
             .add("--crate-type", "bin")
@@ -55,7 +57,7 @@ public class RustBinary extends RustCompile implements BinaryBuildRule {
         BuildTargets.getGenPath(
             params.getProjectFilesystem(),
             params.getBuildTarget(),
-            "%s/" + params.getBuildTarget().getShortName()),
+            "%s/" + crate),
         compiler,
         linkStyle);
   }

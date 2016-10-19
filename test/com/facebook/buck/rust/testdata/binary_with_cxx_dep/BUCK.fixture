@@ -29,20 +29,22 @@ rust_binary(
 rust_library(
     name = 'adder_static',
     link_style = 'static',
-    srcs = [ 'adder_static.rs' ],
+    crate = 'adder',
+    srcs = [ 'adder.rs' ],
     deps = [ ':simpleadder' ],
 )
 
 rust_library(
     name = 'adder_shared',
     link_style = 'shared',
-    srcs = [ 'adder_shared.rs' ],
+    crate = 'adder',
+    srcs = [ 'adder.rs' ],
     deps = [ ':simpleadder' ],
 )
 
 prebuilt_rust_library(
     name = 'prebuilt_adder_static',
-    crate = 'adder_static',
+    crate = 'adder',
     deps = [ ':simpleadder' ],
     link_style = 'static',
     rlib = ':generated_adder_static',
@@ -50,7 +52,7 @@ prebuilt_rust_library(
 
 prebuilt_rust_library(
     name = 'prebuilt_adder_shared',
-    crate = 'adder_shared',
+    crate = 'adder',
     deps = [ ':simpleadder' ],
     link_style = 'shared',
     rlib = ':generated_adder_shared',
@@ -64,14 +66,14 @@ cxx_library(
 # Generate .rlib files
 genrule(
   name = 'generated_adder_static',
-  srcs = [ 'adder_static.rs' ],
+  srcs = [ 'adder.rs' ],
   out = 'libadder_static.rlib',
   cmd = 'rustc --crate-type=lib --crate-name=adder_static -o $OUT $SRCS',
 )
 
 genrule(
   name = 'generated_adder_shared',
-  srcs = [ 'adder_shared.rs' ],
+  srcs = [ 'adder.rs' ],
   out = 'libadder_shared.rlib',
   cmd = 'rustc --crate-type=lib --crate-name=adder_shared -o $OUT $SRCS',
 )

@@ -32,6 +32,7 @@ public class RustLibrary extends RustCompile implements RustLinkable {
   public RustLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      String crate,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<String> features,
       ImmutableList<String> rustcFlags,
@@ -40,6 +41,7 @@ public class RustLibrary extends RustCompile implements RustLinkable {
     super(
         params,
         resolver,
+        crate,
         srcs,
         ImmutableList.<String>builder()
             .add("--crate-type", "rlib")
@@ -51,7 +53,7 @@ public class RustLibrary extends RustCompile implements RustLinkable {
         BuildTargets.getGenPath(
             params.getProjectFilesystem(),
             params.getBuildTarget(),
-            "%s/lib" + params.getBuildTarget().getShortName() + ".rlib"),
+            "%s/lib" + crate + ".rlib"),
         compiler,
         linkStyle);
   }
@@ -63,7 +65,7 @@ public class RustLibrary extends RustCompile implements RustLinkable {
 
   @Override
   public String getLinkTarget() {
-    return getBuildTarget().getShortName();
+    return getCrateName();
   }
 
   @Override

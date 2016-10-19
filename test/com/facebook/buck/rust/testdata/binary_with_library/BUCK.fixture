@@ -7,3 +7,13 @@ rust_binary(
     "//messenger:messenger",
   ],
 )
+
+rust_binary(
+  name = "hello_alias",
+  srcs = [
+    "main.rs",
+  ],
+  deps = [
+    "//messenger2:messenger2",
+  ],
+)
