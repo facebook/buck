@@ -28,7 +28,7 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:util",
+      "//src/com/facebook/buck/util:more_strings",
       "//third-party/java/immutables:processor",
       "//third-party/java/jna:jna-platform",
       "//third-party/java/oshi:oshi-core"
@@ -40,6 +40,12 @@
       "//third-party/java/jna:jna",
       "//third-party/java/jsr:jsr305",
       "//third-party/java/nuprocess:nuprocess"
+    ]
+  },
+  "more_strings" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//third-party/java/guava:guava"
     ]
   },
   "object_mapper" : {

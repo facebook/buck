@@ -79,7 +79,7 @@
     "deps" : [
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:util",
+      "//src/com/facebook/buck/util:more_strings",
       "//third-party/java/immutables:processor",
       "//third-party/java/jsr:jsr305"
     ],
@@ -94,8 +94,7 @@
   "worker_tool" : {
     "deps" : [ ],
     "exported_deps" : [
-      "//src/com/facebook/buck/rules:build_rule",
-      "//third-party/java/guava:guava"
+      "//src/com/facebook/buck/rules:build_rule"
     ]
   }
 }
