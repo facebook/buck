@@ -26,7 +26,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.io.LineReader;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
@@ -35,7 +34,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -153,7 +151,8 @@ public class WorkerProcess {
 
       LOG.debug("Worker process stderr at %s", this.stdErr.toString());
 
-      String workerStderr = MoreStrings.truncatePretty(filesystem.readFileIfItExists(this.stdErr).or(""))
+      String workerStderr = MoreStrings.truncatePretty(
+              filesystem.readFileIfItExists(this.stdErr).or(""))
           .trim().replace("\n", "\nstderr: ");
       LOG.error("stderr: %s", workerStderr);
 
