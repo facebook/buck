@@ -182,7 +182,7 @@ public class ConstructorArgMarshaller {
           if (Modifier.isFinal(field.getModifiers())) {
             continue;
           }
-          allInfo.add(new ParamInfo(typeCoercerFactory, field));
+          allInfo.add(new ParamInfo(typeCoercerFactory, argClass, field));
         }
 
         return allInfo.build();

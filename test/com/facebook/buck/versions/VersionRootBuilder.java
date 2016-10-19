@@ -116,8 +116,9 @@ class VersionRootBuilder extends AbstractNodeBuilder<VersionRootBuilder.Arg> {
 
   public static class Arg {
     public Optional<String> versionUniverse;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-    public Optional<ImmutableSortedMap<BuildTarget, Optional<Constraint>>> versionedDeps;
+    public Optional<ImmutableSortedSet<BuildTarget>> deps = Optional.of(ImmutableSortedSet.of());
+    public Optional<ImmutableSortedMap<BuildTarget, Optional<Constraint>>> versionedDeps =
+        Optional.of(ImmutableSortedMap.of());
   }
 
 }

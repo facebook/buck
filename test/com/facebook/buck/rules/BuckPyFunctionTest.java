@@ -33,7 +33,6 @@ import org.junit.Test;
 import java.util.List;
 import java.util.Set;
 
-@SuppressWarnings("unused") // Many unused fields in sample DTO objects.
 public class BuckPyFunctionTest {
 
   private BuckPyFunction buckPyFunction;
@@ -45,9 +44,12 @@ public class BuckPyFunctionTest {
             ObjectMappers.newDefaultInstance())));
   }
 
+  public static class NoName {
+    public String random;
+  }
+
   @Test
   public void nameWillBeAddedIfMissing() {
-    class NoName { public String random; }
 
     String definition = buckPyFunction.toPythonFunction(
         BuildRuleType.of("bad"),
@@ -56,10 +58,12 @@ public class BuckPyFunctionTest {
     assertTrue(definition.contains("name"));
   }
 
+  public static class NoVis {
+    public String random;
+  }
+
   @Test
   public void visibilityWillBeAddedIfMissing() {
-    class NoVis { public String random; }
-
     String definition = buckPyFunction.toPythonFunction(
         BuildRuleType.of("bad"),
         new NoVis());
@@ -67,10 +71,12 @@ public class BuckPyFunctionTest {
     assertTrue(definition.contains("visibility=[]"));
   }
 
+  public static class Named {
+    public String name;
+  }
+
   @Test
   public void shouldOnlyIncludeTheNameFieldOnce() {
-    class Named { public String name; }
-
     String definition = buckPyFunction.toPythonFunction(
         BuildRuleType.of("named"),
         new Named());
@@ -88,14 +94,17 @@ public class BuckPyFunctionTest {
     ), definition);
   }
 
+  @TargetName(name = "lollerskates")
+  public static class TargetNameOnly {
+    public String foobar;
+  }
+
   @Test
   public void testHasDefaultName() {
-    @TargetName(name = "lollerskates")
-    class NoName { public String foobar; }
 
     String definition = buckPyFunction.toPythonFunction(
         BuildRuleType.of("noname"),
-        new NoName());
+        new TargetNameOnly());
 
     assertEquals(Joiner.on("\n").join(
             "@provide_for_build",
@@ -111,37 +120,42 @@ public class BuckPyFunctionTest {
         ), definition);
   }
 
+  public static class BadName {
+    public int name;
+  }
+
   @Test(expected = HumanReadableException.class)
   public void theNameFieldMustBeAString() {
-    class BadName { public int name; }
-
     buckPyFunction.toPythonFunction(BuildRuleType.of("nope"), new BadName());
   }
 
-  @Test
-  public void optionalFieldsAreGivenSensibleDefaultValues() {
-    class LotsOfOptions {
-      public Optional<String> thing;
-      public Optional<List<BuildTarget>> targets;
-      public Optional<Integer> version;
-    }
+  public static class LotsOfOptions {
+    public Optional<String> thing;
+    public Optional<List<BuildTarget>> targets;
+    public Optional<Integer> version;
+    public Optional<Boolean> doStuff;
+  }
 
+  @Test
+  public void optionalFieldsDefaultToAbsent() {
     String definition = buckPyFunction.toPythonFunction(
         BuildRuleType.of("optional"), new LotsOfOptions());
 
-    assertTrue(definition, definition.contains("targets=[], thing=None, version=None"));
+    assertTrue(
+        definition,
+        definition.contains("do_stuff=None, targets=[], thing=None, version=None"));
+  }
+
+  public static class Either {
+    // Alphabetical ordering is deliberate.
+    public Optional<String> cat;
+    public String dog;
+    public String egg = "EGG";
+    public String fake;
   }
 
   @Test
   public void optionalFieldsAreListedAfterMandatoryOnes() {
-    class Either {
-      // Alphabetical ordering is deliberate.
-      public Optional<String> cat;
-      public String dog;
-      public Optional<String> egg;
-      public String fake;
-    }
-
     String definition = buckPyFunction.toPythonFunction(
         BuildRuleType.of("either"),
         new Either());
@@ -163,24 +177,24 @@ public class BuckPyFunctionTest {
     ), definition);
   }
 
+  public static class Visible {
+    public Set<BuildTargetPattern> visibility;
+  }
+
   @Test(expected = HumanReadableException.class)
   public void visibilityOptionsMustNotBeSetAsTheyArePassedInBuildRuleParamsLater() {
-    class Visible {
-      public Set<BuildTargetPattern> visibility;
-    }
-
     buckPyFunction.toPythonFunction(BuildRuleType.of("nope"), new Visible());
+  }
+
+  public static class Dto {
+    public String someField;
+
+    @Hint(name = "all_this_was_fields")
+    public String hintedField;
   }
 
   @Test
   public void shouldConvertCamelCaseFieldNameToSnakeCaseParameter() {
-    class Dto {
-      public String someField;
-
-      @Hint(name = "all_this_was_fields")
-      public String hintedField;
-    }
-
     String definition = buckPyFunction.toPythonFunction(
         BuildRuleType.of("case"),
         new Dto());
@@ -198,18 +212,5 @@ public class BuckPyFunctionTest {
         "",
         ""
     ), definition);
-  }
-
-  @Test
-  public void optionalBooleanValuesShouldBeRepresentedByNone() {
-    class Dto {
-      public Optional<Boolean> field;
-    }
-
-    String definition = buckPyFunction.toPythonFunction(
-        BuildRuleType.of("boolean"),
-        new Dto());
-
-    assertTrue(definition, definition.contains(", field=None,"));
   }
 }

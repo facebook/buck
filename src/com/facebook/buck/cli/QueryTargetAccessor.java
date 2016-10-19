@@ -48,8 +48,9 @@ public class QueryTargetAccessor {
       String attribute) {
     try {
       final ImmutableSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
-      Field field = node.getConstructorArg().getClass().getField(attribute);
-      ParamInfo info = new ParamInfo(typeCoercerFactory, field);
+      Class<?> constructorArgClass = node.getConstructorArg().getClass();
+      Field field = constructorArgClass.getField(attribute);
+      ParamInfo info = new ParamInfo(typeCoercerFactory, constructorArgClass, field);
       info.traverse(
           value -> {
             if (value instanceof Path) {
@@ -78,8 +79,9 @@ public class QueryTargetAccessor {
       final Predicate<Object> predicate) {
     try {
       final ImmutableSet.Builder<Object> builder = ImmutableSet.builder();
-      Field field = node.getConstructorArg().getClass().getField(attribute);
-      ParamInfo info = new ParamInfo(typeCoercerFactory, field);
+      Class<?> constructorArgClass = node.getConstructorArg().getClass();
+      Field field = constructorArgClass.getField(attribute);
+      ParamInfo info = new ParamInfo(typeCoercerFactory, constructorArgClass, field);
       info.traverse(
           value -> {
             if (predicate.apply(value)) {

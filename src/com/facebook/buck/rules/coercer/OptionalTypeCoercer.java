@@ -70,4 +70,8 @@ public class OptionalTypeCoercer<T> implements TypeCoercer<Optional<T>> {
     return Optional.absent();
   }
 
+  public TypeCoercer<T> getInnerTypeCoercer() {
+    return coercer;
+  }
+
 }

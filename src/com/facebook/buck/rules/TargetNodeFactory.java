@@ -80,7 +80,7 @@ public class TargetNodeFactory {
     // Scan the input to find possible BuildTargets, necessary for loading dependent rules.
     T arg = description.createUnpopulatedConstructorArg();
     for (Field field : arg.getClass().getFields()) {
-      ParamInfo info = new ParamInfo(typeCoercerFactory, field);
+      ParamInfo info = new ParamInfo(typeCoercerFactory, arg.getClass(), field);
       if (info.isDep() && info.isInput() &&
           info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)) {
         detectBuildTargetsAndPathsForConstructorArg(
