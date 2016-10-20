@@ -18,7 +18,6 @@ package com.facebook.buck.util;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Optional;
-import java.util.stream.StreamSupport;
 
 /**
  * Transitional helper functions for {@link java.util.Optional} that mimics functionality of
@@ -38,17 +37,5 @@ public final class OptionalCompat {
     } else {
       return ImmutableSet.of();
     }
-  }
-
-  /**
-   * @see com.google.common.base.Optional#presentInstances(Iterable)
-   */
-  public static final <T> Iterable<T> presentInstances(
-      Iterable<? extends Optional<T>> optionals) {
-    return (
-        StreamSupport.stream(optionals.spliterator(), false)
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-    )::iterator;
   }
 }

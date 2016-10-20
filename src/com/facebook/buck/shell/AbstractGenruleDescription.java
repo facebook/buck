@@ -40,16 +40,18 @@ import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.MavenCoordinatesMacroExpander;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.Optionals;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.util.Comparator;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescription.Arg>
     implements Description<T>, ImplicitDepsInferringDescription<T> {
@@ -113,18 +115,13 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     return createBuildRule(
         params.copyWithExtraDeps(
             Suppliers.ofInstance(
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(pathResolver.filterBuildRuleInputs(args.srcs))
-                    // Attach any extra dependencies found from macro expansion.
-                    .addAll(
-                        FluentIterable
-                            .from(OptionalCompat.presentInstances(ImmutableList.of(
-                                cmd,
-                                bash,
-                                cmdExe)))
-                            .transformAndConcat(
-                                com.facebook.buck.rules.args.Arg.getDepsFunction(pathResolver)))
-                    .build())),
+                Stream.concat(
+                    pathResolver.filterBuildRuleInputs(args.srcs).stream(),
+                    Stream.of(cmd, bash, cmdExe)
+                        .flatMap(Optionals::toStream)
+                        .flatMap(input -> input.getDeps(pathResolver).stream())
+                ).collect(
+                    MoreCollectors.toImmutableSortedSet(Comparator.<BuildRule>naturalOrder())))),
         resolver,
         args,
         cmd,

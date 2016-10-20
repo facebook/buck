@@ -44,7 +44,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -77,6 +77,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
 // import com.facebook.buck.io.ProjectFilesystem;
 
@@ -255,11 +256,12 @@ public class WorkspaceAndProjectGenerator {
     ImmutableSetMultimap<String, TargetNode<AppleTestDescription.Arg>> ungroupedTests =
         ungroupedTestsBuilder.build();
 
-    ImmutableSet<BuildTarget> targetsInRequiredProjects = FluentIterable
-        .from(OptionalCompat.presentInstances(schemeNameToSrcTargetNode.values()))
-        .append(buildForTestNodes.values())
-        .transform(HasBuildTarget::getBuildTarget)
-        .toSet();
+    ImmutableSet<BuildTarget> targetsInRequiredProjects =
+        Stream.concat(
+            schemeNameToSrcTargetNode.values().stream().flatMap(Optionals::toStream),
+            buildForTestNodes.values().stream())
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet());
     ImmutableMultimap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder =
         ImmutableMultimap.builder();
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder =
@@ -925,8 +927,9 @@ public class WorkspaceAndProjectGenerator {
           buildForTestNodesBuilder) {
     for (String schemeName : schemeNameToSrcTargetNode.keySet()) {
       ImmutableSet<TargetNode<?>> targetNodes =
-          ImmutableSet.copyOf(OptionalCompat.presentInstances(schemeNameToSrcTargetNode.get(
-              schemeName)));
+          schemeNameToSrcTargetNode.get(schemeName).stream()
+              .flatMap(Optionals::toStream)
+              .collect(MoreCollectors.toImmutableSet());
       ImmutableSet<TargetNode<AppleTestDescription.Arg>> testNodes =
           getOrderedTestNodes(
               mainTarget,
@@ -985,12 +988,11 @@ public class WorkspaceAndProjectGenerator {
       String schemeName = schemeConfigEntry.getKey();
       boolean isMainScheme = schemeName.equals(workspaceName);
       XcodeWorkspaceConfigDescription.Arg schemeConfigArg = schemeConfigEntry.getValue();
-      Iterable<PBXTarget> orderedBuildTargets = FluentIterable
-          .from(
-              ImmutableSet.copyOf(
-                  OptionalCompat.presentInstances(schemeNameToSrcTargetNode.get(schemeName))))
-          .transformAndConcat(targetNodeToPBXTargetTransformer)
-          .toSet();
+      Iterable<PBXTarget> orderedBuildTargets = schemeNameToSrcTargetNode.get(schemeName).stream()
+          .distinct()
+          .flatMap(Optionals::toStream)
+          .flatMap(targetNode -> targetNodeToPBXTargetTransformer.apply(targetNode).stream())
+          .collect(MoreCollectors.toImmutableSet());
       FluentIterable<PBXTarget> orderedBuildTestTargets = FluentIterable
           .from(buildForTestNodes.get(schemeName))
           .transformAndConcat(targetNodeToPBXTargetTransformer);

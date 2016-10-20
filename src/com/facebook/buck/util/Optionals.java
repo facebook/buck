@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class Optionals {
 
@@ -67,4 +68,24 @@ public class Optionals {
     }
   }
 
+  /**
+   * Returns a singleton stream of an {@code Optional}'s value if present, otherwise an empty
+   * stream.
+   *
+   * Useful for filtering present instances in a stream pipeline:
+   * <pre>{@code
+   * Stream.of(Optional.empty(), Optional.of(1), Optional.of(2))
+   *   .flatMap(Optionals::toStream)
+   *
+   * // Yields a stream of 2 elements, [1, 2]
+   * }
+   * </pre>
+   */
+  public static <T> Stream<T> toStream(Optional<T> optional) {
+    if (optional.isPresent()) {
+      return Stream.of(optional.get());
+    } else {
+      return Stream.empty();
+    }
+  }
 }

@@ -43,14 +43,14 @@ import com.facebook.buck.rules.VersionedTool;
 import com.facebook.buck.swift.SwiftPlatform;
 import com.facebook.buck.swift.SwiftPlatforms;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 
 import org.xml.sax.SAXException;
 
@@ -188,10 +188,11 @@ public class AppleCxxPlatforms {
     ImmutableList.Builder<String> versions = ImmutableList.builder();
     versions.add(targetSdk.getVersion());
 
-    ImmutableList<String> toolchainVersions = ImmutableList.copyOf(
-        OptionalCompat.presentInstances(Iterables.transform(
-            targetSdk.getToolchains(),
-            AppleToolchain::getVersion)));
+    ImmutableList<String> toolchainVersions =
+        targetSdk.getToolchains().stream()
+            .map(AppleToolchain::getVersion)
+            .flatMap(Optionals::toStream)
+            .collect(MoreCollectors.toImmutableList());
     if (toolchainVersions.isEmpty()) {
       if (!xcodeBuildVersion.isPresent()) {
         throw new HumanReadableException("Failed to read toolchain versions and Xcode version.");

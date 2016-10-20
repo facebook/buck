@@ -48,7 +48,8 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.StringExpander;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.Optionals;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -392,12 +393,13 @@ public class PrebuiltCxxLibraryDescription implements
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
-        params.appendExtraDeps(
-            getBuildRules(
-                params.getBuildTarget(),
-                params.getCellRoots(),
-                ruleResolver,
-                OptionalCompat.presentInstances(ImmutableList.of(args.libDir))))
+        params
+            .appendExtraDeps(
+                getBuildRules(
+                    params.getBuildTarget(),
+                    params.getCellRoots(),
+                    ruleResolver,
+                    Optionals.toStream(args.libDir).collect(MoreCollectors.toImmutableList())))
             .appendExtraDeps(
                 getBuildRules(
                     params.getBuildTarget(),
@@ -474,18 +476,19 @@ public class PrebuiltCxxLibraryDescription implements
     // get the real build rules via querying the action graph.
     final SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     return new PrebuiltCxxLibrary(
-        params.appendExtraDeps(
-            getBuildRules(
-                params.getBuildTarget(),
-                params.getCellRoots(),
-                ruleResolver,
-                OptionalCompat.presentInstances(ImmutableList.of(args.libDir))))
-        .appendExtraDeps(
-            getBuildRules(
-                params.getBuildTarget(),
-                params.getCellRoots(),
-                ruleResolver,
-                args.includeDirs)),
+        params
+            .appendExtraDeps(
+                getBuildRules(
+                    params.getBuildTarget(),
+                    params.getCellRoots(),
+                    ruleResolver,
+                    Optionals.toStream(args.libDir).collect(MoreCollectors.toImmutableList())))
+            .appendExtraDeps(
+                getBuildRules(
+                    params.getBuildTarget(),
+                    params.getCellRoots(),
+                    ruleResolver,
+                    args.includeDirs)),
         ruleResolver,
         pathResolver,
         FluentIterable.from(args.exportedDeps)
