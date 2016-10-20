@@ -239,8 +239,7 @@ class DaemonicParserState {
         // but they are not. However, I bet someone will try and treat it like a
         // target, so find the owning cell if necessary, and then fully resolve
         // the path against the owning cell's root.
-        int slashesIndex = include.indexOf("//");
-        Preconditions.checkState(slashesIndex != -1);
+        Preconditions.checkState(include.startsWith("//"));
         dependentsOfEveryNode.add(cell.getFilesystem().resolve(include.substring(2)));
       }
 
