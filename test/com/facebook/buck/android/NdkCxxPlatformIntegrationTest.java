@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
@@ -56,7 +57,7 @@ public class NdkCxxPlatformIntegrationTest {
   @Parameterized.Parameters(name = "{0},{1},{2},{3}")
   public static Collection<Object[]> data() {
     List<Object[]> data = Lists.newArrayList();
-    for (String arch : ImmutableList.of("arm", "armv7", "x86", "x86_64")) {
+    for (String arch : ImmutableList.of("arm", "armv7", "arm64", "x86", "x86_64")) {
       for (CxxPreprocessMode mode : CxxPreprocessMode.values()) {
         data.add(
             new Object[]{
@@ -65,7 +66,7 @@ public class NdkCxxPlatformIntegrationTest {
                 arch,
                 mode});
         // We don't support 64-bit clang yet.
-        if (!arch.equals("x86_64")) {
+        if (!arch.equals("arm64") && !arch.equals("x86_64")) {
           data.add(
               new Object[]{
                   NdkCxxPlatformCompiler.Type.CLANG,
@@ -109,7 +110,7 @@ public class NdkCxxPlatformIntegrationTest {
             "  compiler = %s\n" +
             "  gcc_version = 4.9\n" +
             "  cxx_runtime = %s\n" +
-            "  cpu_abis = arm, armv7, x86, x86_64\n" +
+            "  cpu_abis = arm, armv7, arm64, x86, x86_64\n" +
             "  app_platform = android-21\n",
             mode.toString().toLowerCase(),
             compiler,
@@ -149,7 +150,11 @@ public class NdkCxxPlatformIntegrationTest {
     assumeTrue("libcxx is unsupported with this ndk",
         NdkCxxPlatforms.isSupportedConfiguration(getNdkRoot(), cxxRuntime));
     // 64-bit only works with platform 21, so we can't change the platform to anything else.
-    assumeThat("skip this test for 64-bit, for now", arch, not(equalTo("x86_64")));
+    assumeThat(
+        "skip this test for 64-bit, for now",
+        arch,
+        not(anyOf(equalTo("arm64"), equalTo("x86_64")))
+    );
 
     ProjectWorkspace workspace = setupWorkspace("ndk_app_platform");
 
@@ -167,6 +172,12 @@ public class NdkCxxPlatformIntegrationTest {
   @Test
   public void testWorkingDirectoryAndNdkHeaderPathsAreSanitized() throws IOException {
     ProjectWorkspace workspace = setupWorkspace("ndk_debug_paths");
+    workspace.writeContentsToPath(
+        "[ndk]\n" +
+        "  cpu_abis = arm, armv7, arm64, x86, x86_64\n" +
+        "  gcc_version = 4.9\n" +
+        "  app_platform = android-21\n",
+        ".buckconfig");
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
     BuildTarget target =
         BuildTargetFactory.newInstance(String.format("//:lib#android-%s,static", arch));
