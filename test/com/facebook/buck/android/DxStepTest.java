@@ -206,60 +206,6 @@ public class DxStepTest extends EasyMockSupport {
     }
   }
 
-  @Test
-  public void testUseCustomDxOption() throws IOException {
-    // Context with --verbose 2.
-    try (ExecutionContext context = createExecutionContext(2)) {
-      ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-      Function<Path, Path> pathAbsolutifier = filesystem.getAbsolutifier();
-
-      DxStep dx = new DxStep(
-          filesystem,
-          SAMPLE_OUTPUT_PATH,
-          SAMPLE_FILES_TO_DEX,
-          EnumSet.of(Option.USE_CUSTOM_DX_IF_AVAILABLE),
-          () -> "/home/mbolin/dx");
-
-      String expected = String.format("%s --output %s %s",
-          EXPECTED_DX_PREFIX.replace(Paths.get("/usr/bin/dx").toString(), "/home/mbolin/dx"),
-          SAMPLE_OUTPUT_PATH,
-          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
-      MoreAsserts.assertShellCommands(
-          "/home/mbolin/dx should be used instead of /usr/bin/dx.",
-          ImmutableList.of(expected),
-          ImmutableList.of(dx),
-          context);
-      verifyAll();
-    }
-  }
-
-  @Test
-  public void testUseCustomDxOptionWithNullSupplier() throws IOException {
-    // Context with --verbose 2.
-    try (ExecutionContext context = createExecutionContext(2)) {
-      ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-      Function<Path, Path> pathAbsolutifier = filesystem.getAbsolutifier();
-
-      DxStep dx = new DxStep(
-          filesystem,
-          SAMPLE_OUTPUT_PATH,
-          SAMPLE_FILES_TO_DEX,
-          EnumSet.of(Option.USE_CUSTOM_DX_IF_AVAILABLE),
-          () -> null);
-
-      String expected = String.format("%s --output %s %s",
-          EXPECTED_DX_PREFIX,
-          SAMPLE_OUTPUT_PATH,
-          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
-      MoreAsserts.assertShellCommands(
-          "Should fall back to /usr/bin/dx even though USE_CUSTOM_DX_IF_AVAILABLE is used.",
-          ImmutableList.of(expected),
-          ImmutableList.of(dx),
-          context);
-      verifyAll();
-    }
-  }
-
   private ExecutionContext createExecutionContext(int verbosityLevel) throws IOException {
     Verbosity verbosity = VerbosityParser.getVerbosityForLevel(verbosityLevel);
     TestConsole console = new TestConsole(verbosity);

@@ -22,7 +22,6 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
@@ -108,22 +107,12 @@ public class DxStep extends ShellStep {
       Path outputDexFile,
       Iterable<Path> filesToDex,
       EnumSet<Option> options) {
-    this(filesystem, outputDexFile, filesToDex, options, DEFAULT_GET_CUSTOM_DX);
-  }
-
-  @VisibleForTesting
-  DxStep(
-      ProjectFilesystem filesystem,
-      Path outputDexFile,
-      Iterable<Path> filesToDex,
-      EnumSet<Option> options,
-      Supplier<String> getPathToCustomDx) {
     super(filesystem.getRootPath());
     this.filesystem = filesystem;
     this.outputDexFile = outputDexFile;
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
     this.options = Sets.immutableEnumSet(options);
-    this.getPathToCustomDx = getPathToCustomDx;
+    this.getPathToCustomDx = DEFAULT_GET_CUSTOM_DX;
 
     Preconditions.checkArgument(
         !options.contains(Option.RUN_IN_PROCESS) ||
