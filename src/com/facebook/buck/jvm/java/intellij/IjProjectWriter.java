@@ -37,6 +37,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 /**
  * Writes the serialized representations of IntelliJ project components to disk.
  */
@@ -127,10 +129,18 @@ public class IjProjectWriter {
         module.getSdkType().orElse(null));
     moduleContents.add(
         "languageLevel",
-        module.getLanguageLevel().orElse(null));
+        convertLanguageLevelToIjFormat(module.getLanguageLevel().orElse(null)));
 
     writeToFile(moduleContents, path);
     return path;
+  }
+
+  private @Nullable String convertLanguageLevelToIjFormat(@Nullable String languageLevel) {
+    if (languageLevel == null) {
+      return null;
+    }
+
+    return "JDK_" + languageLevel.replace('.', '_');
   }
 
   private void writeProjectSettings(
