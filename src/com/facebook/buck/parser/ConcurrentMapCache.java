@@ -16,8 +16,6 @@
 
 package com.facebook.buck.parser;
 
-import com.google.common.base.Preconditions;
-
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -49,15 +47,9 @@ class ConcurrentMapCache<K, V> {
         numThreads);
   }
 
-  public V get(K key, V newValue) {
-    V value = values.get(key);
-    if (value != null) {
-      return value;
-    }
-
-    value = Preconditions.checkNotNull(newValue);
-    V seen = values.putIfAbsent(key, value);
-    return seen == null ? value : seen;
+  public V putIfAbsentAndGet(K key, V newValue) {
+    V seen = values.putIfAbsent(key, newValue);
+    return seen == null ? newValue : seen;
   }
 
   @Nullable

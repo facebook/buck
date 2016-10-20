@@ -62,7 +62,7 @@ class DaemonicCellState {
         BuildTarget target,
         T targetNode) throws BuildTargetException {
       try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
-        T updatedNode = allComputedNodes.get(target, targetNode);
+        T updatedNode = allComputedNodes.putIfAbsentAndGet(target, targetNode);
         if (updatedNode.equals(targetNode)) {
           targetsCornucopia.put(target.getUnflavoredBuildTarget(), target);
         }
@@ -144,7 +144,7 @@ class DaemonicCellState {
       ImmutableMap<String, ImmutableMap<String, Optional<String>>> configs) {
     try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
       ImmutableSet<Map<String, Object>> updated =
-          allRawNodes.get(buildFile, withoutMetaIncludes);
+          allRawNodes.putIfAbsentAndGet(buildFile, withoutMetaIncludes);
       buildFileConfigs.put(buildFile, configs);
       if (updated == withoutMetaIncludes) {
         // We now know all the nodes. They all implicitly depend on everything in
