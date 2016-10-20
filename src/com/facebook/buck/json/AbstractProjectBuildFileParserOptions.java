@@ -35,6 +35,7 @@ abstract class AbstractProjectBuildFileParserOptions {
   abstract Path getProjectRoot();
   abstract ImmutableMap<String, Path> getCellRoots();
   abstract String getPythonInterpreter();
+  abstract Optional<String> getPythonModuleSearchPath();
   abstract boolean getAllowEmptyGlobs();
   abstract ImmutableSet<PathOrGlobMatcher> getIgnorePaths();
   abstract String getBuildFileName();

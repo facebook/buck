@@ -53,6 +53,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -194,9 +195,18 @@ public class ProjectBuildFileParser implements AutoCloseable {
         buckEventBus,
         PerfEventId.of("ParserInit"))) {
 
+      ImmutableMap<String, String> pythonEnvironment =
+          new ImmutableMap.Builder<String, String>()
+              .putAll(new HashMap<String, String>() {{
+                putAll(environment);
+                put("PYTHONPATH",
+                    options.getPythonModuleSearchPath().orElse(""));
+              }})
+              .build();
+
       ProcessExecutorParams params = ProcessExecutorParams.builder()
           .setCommand(buildArgs())
-          .setEnvironment(environment)
+          .setEnvironment(pythonEnvironment)
           .build();
 
       LOG.debug(

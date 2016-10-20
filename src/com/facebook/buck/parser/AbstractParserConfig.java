@@ -227,4 +227,16 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
     );
     return getPythonInterpreter(configPath, exeFinder);
   }
+
+  /**
+   * Returns the module search path PYTHONPATH to set for the parser, as
+   * specified by the 'python_path' key of the 'parser' section.
+   *
+   * @return The PYTHONPATH value or an empty string if not set.
+   */
+  @Value.Lazy
+  public Optional<String> getPythonModuleSearchPath() {
+    return getDelegate().getValue("parser", "python_path");
+  }
+
 }

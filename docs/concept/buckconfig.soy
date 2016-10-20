@@ -1859,6 +1859,17 @@ your <code>.buckjavaargs</code> file</a>:
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'parser' /}
+  {param name: 'python_path' /}
+  {param example_value: '/path1:/path2' /}
+  {param description}
+    The <code>PYTHONPATH</code> environment variable set for the python interpreter{sp}
+    used by the parser to use.
+    By default, this is unset.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'project' /}
   {param description}

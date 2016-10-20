@@ -235,4 +235,30 @@ public class ParserConfigTest {
         configPythonFile.toAbsolutePath().toString(),
         parserConfig.getPythonInterpreter(new ExecutableFinder()));
   }
+
+  @Test
+  public void whenParserPythonPathIsNotSetDefaultIsUsed() {
+    ParserConfig parserConfig = FakeBuckConfig.builder()
+        .build().getView(ParserConfig.class);
+    assertEquals(
+        "Should return an empty optional",
+        "<not set>",
+        parserConfig.getPythonModuleSearchPath().orElse("<not set>")
+    );
+  }
+
+  @Test
+  public void whenParserPythonPathIsSet() {
+    ParserConfig parserConfig = FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                "parser",
+                ImmutableMap.of("python_path", "foobar:spamham")))
+        .build().getView(ParserConfig.class);
+    assertEquals(
+        "Should return the configured string",
+        "foobar:spamham",
+        parserConfig.getPythonModuleSearchPath().orElse("<not set>")
+    );
+  }
 }

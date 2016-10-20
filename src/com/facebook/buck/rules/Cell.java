@@ -229,12 +229,14 @@ public class Cell {
     boolean useMercurialGlob =
         parserConfig.getGlobHandler() == ParserConfig.GlobHandler.MERCURIAL;
     String pythonInterpreter = parserConfig.getPythonInterpreter(new ExecutableFinder());
+    Optional<String> pythonModuleSearchPath = parserConfig.getPythonModuleSearchPath();
 
     return new DefaultProjectBuildFileParserFactory(
         ProjectBuildFileParserOptions.builder()
             .setProjectRoot(getFilesystem().getRootPath())
             .setCellRoots(getCellPathResolver().getCellPaths())
             .setPythonInterpreter(pythonInterpreter)
+            .setPythonModuleSearchPath(pythonModuleSearchPath)
             .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
             .setIgnorePaths(filesystem.getIgnorePaths())
             .setBuildFileName(getBuildFileName())
