@@ -1339,44 +1339,33 @@ public class ProjectGenerator {
             Joiner.on(' ').join(
                 collectRecursiveFrameworkSearchPaths(ImmutableList.of(targetNode))));
     if (isFocusedOnTarget) {
+      Iterable<String> otherCFlags = Iterables.concat(
+          cxxBuckConfig.getFlags("cflags").orElse(DEFAULT_CFLAGS),
+          collectRecursiveExportedPreprocessorFlags(
+              ImmutableList.of(targetNode)),
+          targetNode.getConstructorArg().compilerFlags,
+          targetNode.getConstructorArg().preprocessorFlags);
+      Iterable<String> otherCxxFlags = Iterables.concat(
+          cxxBuckConfig.getFlags("cxxflags").orElse(DEFAULT_CXXFLAGS),
+          collectRecursiveExportedPreprocessorFlags(
+              ImmutableList.of(targetNode)),
+          targetNode.getConstructorArg().compilerFlags,
+          targetNode.getConstructorArg().preprocessorFlags);
+      Iterable<String> otherLdFlags = Iterables.concat(
+          targetNode.getConstructorArg().linkerFlags,
+          collectRecursiveExportedLinkerFlags(
+               ImmutableList.of(targetNode)));
+
       appendConfigsBuilder
           .put(
               "OTHER_CFLAGS",
-              Joiner
-                  .on(' ')
-                  .join(
-                      Iterables.transform(
-                          Iterables.concat(
-                              cxxBuckConfig.getFlags("cflags").orElse(DEFAULT_CFLAGS),
-                              collectRecursiveExportedPreprocessorFlags(
-                                  ImmutableList.of(targetNode)),
-                              targetNode.getConstructorArg().compilerFlags,
-                              targetNode.getConstructorArg().preprocessorFlags),
-                          Escaper.BASH_ESCAPER)))
+              Joiner.on(' ').join(Iterables.transform(otherCFlags, Escaper.BASH_ESCAPER)))
           .put(
               "OTHER_CPLUSPLUSFLAGS",
-              Joiner
-                  .on(' ')
-                  .join(
-                      Iterables.transform(
-                          Iterables.concat(
-                              cxxBuckConfig.getFlags("cxxflags").orElse(DEFAULT_CXXFLAGS),
-                              collectRecursiveExportedPreprocessorFlags(
-                                  ImmutableList.of(targetNode)),
-                              targetNode.getConstructorArg().compilerFlags,
-                              targetNode.getConstructorArg().preprocessorFlags),
-                          Escaper.BASH_ESCAPER)))
+              Joiner.on(' ').join(Iterables.transform(otherCxxFlags, Escaper.BASH_ESCAPER)))
           .put(
               "OTHER_LDFLAGS",
-              Joiner
-                  .on(' ')
-                  .join(
-                      Iterables.transform(
-                          Iterables.concat(
-                              targetNode.getConstructorArg().linkerFlags,
-                              collectRecursiveExportedLinkerFlags(
-                                  ImmutableList.of(targetNode))),
-                          Escaper.BASH_ESCAPER)));
+              Joiner.on(' ').join(Iterables.transform(otherLdFlags, Escaper.BASH_ESCAPER)));
 
       ImmutableMultimap.Builder<String, ImmutableList<String>> platformFlagsBuilder =
           ImmutableMultimap.builder();
@@ -1398,13 +1387,13 @@ public class ProjectGenerator {
                 String.format("OTHER_CFLAGS[sdk=*%s*]", sdk),
                 Joiner.on(' ').join(
                     Iterables.transform(
-                        Iterables.concat(platformFlags.get(sdk)),
+                        Iterables.concat(otherCFlags, Iterables.concat(platformFlags.get(sdk))),
                         Escaper.BASH_ESCAPER)))
             .put(
                 String.format("OTHER_CPLUSPLUSFLAGS[sdk=*%s*]", sdk),
                 Joiner.on(' ').join(
                     Iterables.transform(
-                        Iterables.concat(platformFlags.get(sdk)),
+                        Iterables.concat(otherCxxFlags, Iterables.concat(platformFlags.get(sdk))),
                         Escaper.BASH_ESCAPER)));
       }
 
@@ -1427,7 +1416,9 @@ public class ProjectGenerator {
                 String.format("OTHER_LDFLAGS[sdk=*%s*]", sdk),
                 Joiner.on(' ').join(
                     Iterables.transform(
-                        Iterables.concat(platformLinkerFlags.get(sdk)),
+                        Iterables.concat(
+                            otherLdFlags,
+                            Iterables.concat(platformLinkerFlags.get(sdk))),
                         Escaper.BASH_ESCAPER)));
       }
     }

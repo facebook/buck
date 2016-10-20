@@ -1643,10 +1643,12 @@ public class ProjectGeneratorTest {
         settings.get("OTHER_LDFLAGS"));
 
     assertEquals(
-        "-ffoo-iphone -fbar-iphone -ffoo-iphone -fbar-iphone",
+        "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone " +
+        "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone",
         settings.get("OTHER_CFLAGS[sdk=*iphone*]"));
     assertEquals(
-        "-ffoo-iphone -fbar-iphone -ffoo-iphone -fbar-iphone",
+        "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone " +
+        "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone",
         settings.get("OTHER_CPLUSPLUSFLAGS[sdk=*iphone*]"));
     assertEquals(
         "-lbaz-iphone -lbaz-iphone",
@@ -1752,10 +1754,11 @@ public class ProjectGeneratorTest {
         projectFilesystem, buildTarget, target, "Debug");
 
     assertEquals(
-        "-fbar-iphone -fbar-iphone",
+        "-Wno-deprecated -Wno-conversion -fbar-iphone -Wno-deprecated -Wno-conversion -fbar-iphone",
         settings.get("OTHER_CFLAGS[sdk=*iphone*]"));
     assertEquals(
-        "-fbar-iphone -fbar-iphone",
+        "-Wundeclared-selector -Wno-objc-designated-initializers -fbar-iphone " +
+        "-Wundeclared-selector -Wno-objc-designated-initializers -fbar-iphone",
         settings.get("OTHER_CPLUSPLUSFLAGS[sdk=*iphone*]"));
     assertEquals(
         null,
@@ -1769,10 +1772,12 @@ public class ProjectGeneratorTest {
         projectFilesystem, dependentBuildTarget, dependentTarget, "Debug");
 
     assertEquals(
-        "-ffoo-iphone -fbar-iphone -ffoo-iphone -fbar-iphone",
+        "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone " +
+        "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone",
         dependentSettings.get("OTHER_CFLAGS[sdk=*iphone*]"));
     assertEquals(
-        "-ffoo-iphone -fbar-iphone -ffoo-iphone -fbar-iphone",
+        "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone " +
+        "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone",
         dependentSettings.get("OTHER_CPLUSPLUSFLAGS[sdk=*iphone*]"));
     assertEquals(
         null,
