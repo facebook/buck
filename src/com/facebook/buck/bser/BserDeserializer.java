@@ -313,6 +313,7 @@ public class BserDeserializer {
     return deserializeRecursiveWithType(buffer, type);
   }
 
+  @Nullable
   private Object deserializeRecursiveWithType(ByteBuffer buffer, byte type) throws IOException {
     switch (type) {
       case BSER_INT8:

@@ -123,6 +123,7 @@ final class SerializableModule {
 
   @Nullable
   Path assetFolder;
+  @Nullable
   @JsonProperty("assetFolder")
   public String getAssetFolder() {
     return Optional.ofNullable(assetFolder)

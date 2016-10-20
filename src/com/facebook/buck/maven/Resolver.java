@@ -474,6 +474,7 @@ public class Resolver {
         .toList();
   }
 
+  @Nullable
   private RepositoryPolicy toPolicy(org.apache.maven.model.RepositoryPolicy policy) {
     if (policy != null) {
       return new RepositoryPolicy(

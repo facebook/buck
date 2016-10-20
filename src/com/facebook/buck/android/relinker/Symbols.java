@@ -31,6 +31,8 @@ import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.annotation.Nullable;
+
 public class Symbols {
   public ImmutableSet<String> undefined;
   public ImmutableSet<String> global;
@@ -76,6 +78,7 @@ public class Symbols {
     }
   }
 
+  @Nullable
   public static SymbolInfo extractSymbolInfo(String line) {
     Matcher m = SYMBOL_RE.matcher(line);
     if (!m.matches()) {
