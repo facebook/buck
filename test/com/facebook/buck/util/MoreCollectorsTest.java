@@ -18,6 +18,8 @@ package com.facebook.buck.util;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -60,5 +62,17 @@ public class MoreCollectorsTest {
         sampleInput.stream().collect(MoreCollectors.toImmutableMap(
             x -> x + 1,
             x -> x + 2)));
+  }
+
+  @Test
+  public void toImmutableSortedSetOrderingAsRequested() {
+    ImmutableList<Integer> sampleInput = ImmutableList.of(4, 2, 3, 7, 1);
+    Assert.assertEquals(
+        ImmutableSortedSet.copyOf(Ordering.natural(), sampleInput),
+        sampleInput.stream().collect(MoreCollectors.toImmutableSortedSet(Ordering.natural())));
+    Assert.assertEquals(
+        ImmutableSortedSet.copyOf(Ordering.natural().reverse(), sampleInput),
+        sampleInput.stream().collect(
+            MoreCollectors.toImmutableSortedSet(Ordering.natural().reverse())));
   }
 }
