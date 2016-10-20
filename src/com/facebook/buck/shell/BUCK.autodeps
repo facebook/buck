@@ -10,6 +10,7 @@
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",
+      "//src/com/facebook/buck/zip:steps",
       "//third-party/java/jackson:jackson-databind"
     ],
     "exported_deps" : [

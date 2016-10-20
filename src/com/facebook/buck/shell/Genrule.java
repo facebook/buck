@@ -41,6 +41,7 @@ import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
@@ -370,6 +371,10 @@ public class Genrule extends AbstractBuildRule
       commands.add(createWorkerShellStep());
     } else {
       commands.add(createGenruleStep());
+    }
+
+    if (MorePaths.getFileExtension(getPathToOutput()).equals("zip")) {
+      commands.add(new ZipScrubberStep(getProjectFilesystem(), getPathToOutput()));
     }
 
     buildableContext.recordArtifact(pathToOutFile);

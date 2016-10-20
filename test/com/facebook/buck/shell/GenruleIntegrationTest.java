@@ -31,14 +31,19 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.io.CharStreams;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Enumeration;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class GenruleIntegrationTest {
 
@@ -273,6 +278,48 @@ public class GenruleIntegrationTest {
 
     ProcessResult buildResult = workspace.runBuckCommand("run", "//:binary");
     buildResult.assertSuccess();
+  }
+
+  @Test
+  public void genruleZipOutputsAreScrubbed() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "genrule_zip_scrubber",
+        temporaryFolder);
+    workspace.setUp();
+
+    Path outputOne = workspace.buildAndReturnOutput("//:genrule-one");
+    Path outputTwo = workspace.buildAndReturnOutput("//:genrule-two");
+
+    try (
+        ZipFile zipOne = new ZipFile(outputOne.toFile());
+        ZipFile zipTwo = new ZipFile(outputTwo.toFile())) {
+      Enumeration<? extends ZipEntry> entriesOne = zipOne.entries(),
+          entriesTwo = zipTwo.entries();
+
+      while (entriesOne.hasMoreElements()) {
+        assertTrue(entriesTwo.hasMoreElements());
+        ZipEntry entryOne = entriesOne.nextElement(),
+            entryTwo = entriesTwo.nextElement();
+        assertEquals(zipEntryDebugString(entryOne), zipEntryDebugString(entryTwo));
+        assertEquals(zipEntryData(zipOne, entryOne), zipEntryData(zipTwo, entryTwo));
+      }
+      assertFalse(entriesTwo.hasMoreElements());
+    }
+    assertEquals(
+        new String(Files.readAllBytes(outputOne)),
+        new String(Files.readAllBytes(outputTwo)));
+  }
+
+  private String zipEntryDebugString(ZipEntry entryOne) {
+    return "<ZE name=" + entryOne.getName() + " crc=" + entryOne.getCrc() +
+        " comment=" + entryOne.getComment() + " size=" + entryOne.getSize() +
+        " atime=" + entryOne.getLastAccessTime() + " mtime=" + entryOne.getLastModifiedTime() +
+        " ctime=" + entryOne.getCreationTime();
+  }
+
+  private String zipEntryData(ZipFile zip, ZipEntry entry) throws IOException {
+    return CharStreams.toString(new InputStreamReader(zip.getInputStream(entry)));
   }
 
 }

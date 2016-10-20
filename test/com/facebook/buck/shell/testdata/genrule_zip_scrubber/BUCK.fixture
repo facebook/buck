@@ -1,0 +1,20 @@
+script = 'create_zip.py'
+
+genrule(
+  name = 'genrule-one',
+  out = 'output-one.zip',
+  cmd = 'python $SRCS $OUT 0',
+  srcs = [
+    script
+  ],
+)
+
+genrule(
+  name = 'genrule-two',
+  out = 'output-two.zip',
+  cmd = 'python $SRCS $OUT 1',
+  srcs = [
+    script
+  ],
+)
+
