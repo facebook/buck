@@ -18,18 +18,16 @@ package com.facebook.buck.io;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleTuple;
 
 import org.immutables.value.Value;
 
 @Value.Immutable
-@BuckStyleImmutable
+@BuckStyleTuple
 abstract class AbstractWatchmanQuery {
 
-  @Value.Parameter
   abstract String getQueryPath();
 
-  @Value.Parameter
   abstract ImmutableMap<String, Object> getQueryParams();
 
   public ImmutableList<Object> toList(String sinceCursor) {
