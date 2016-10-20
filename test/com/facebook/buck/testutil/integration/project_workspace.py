@@ -36,12 +36,12 @@ class ProjectWorkspace(object):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        # shutil.rmtree(self._temp_dir)
-        pass
+        shutil.rmtree(self._temp_dir)
+
+    def resolve_path(self, path):
+        return os.path.join(self.test_data_directory, path)
 
     def run_buck(self, *command):
-        """ Tests that the default java.util.logging setup can maintain at least 'a couple'
-            of log files. """
         root_directory = os.getcwd()
         is_windows = platform.system() == 'Windows'
         if is_windows:

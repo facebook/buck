@@ -20,5 +20,6 @@ python_library(
   srcs = glob(['*.py']),
   visibility = [
     '//test/...',
+    '//scripts/...',
   ],
 )
