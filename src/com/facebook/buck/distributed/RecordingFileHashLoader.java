@@ -108,11 +108,16 @@ public class RecordingFileHashLoader implements FileHashLoader {
   // Note: when re-materializing symlinks we skip any intermediate symlinks inside the project
   // (in Example 2 we will re-materialize /a/b/symlink_to_c -> /e/f, and skip /a/b/c).
   private Pair<Path, Path> findSymlinkRoot(Path symlinkPath) {
-    for (int componentCount = 1; componentCount <= symlinkPath.getNameCount(); componentCount++) {
-      Path symlinkSubpath = symlinkPath.subpath(0, componentCount);
+    int projectPathComponents = projectFilesystem.getRootPath().getNameCount();
+    for (int pathEndIndex = (projectPathComponents + 1);
+         pathEndIndex <= symlinkPath.getNameCount();
+         pathEndIndex++) {
+      // Note: subpath(..) does not return a rooted path, so we need to prepend an additional '/'.
+      Path symlinkSubpath = symlinkPath.getRoot().resolve(symlinkPath.subpath(
+          0, pathEndIndex));
       Path realSymlinkSubpath = findRealPath(symlinkSubpath);
       boolean realPathOutsideProject =
-          projectFilesystem.getPathRelativeToProjectRoot(realSymlinkSubpath).isPresent();
+          !projectFilesystem.getPathRelativeToProjectRoot(realSymlinkSubpath).isPresent();
       if (realPathOutsideProject) {
         return new Pair<>(
             projectFilesystem.getPathRelativeToProjectRoot(
