@@ -40,6 +40,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -180,7 +181,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
               getProjectFilesystem().copyFile(getBaseLibPath(), getLibFilePath());
               buildableContext.recordArtifact(getLibFilePath());
             } else {
-              writeVersionScript(symbolsNeeded);
+              writeVersionScript(context.getProcessExecutor(), symbolsNeeded);
               for (Step s : relinkerSteps.build()) {
                 StepExecutionResult executionResult = s.execute(context);
                 if (!executionResult.isSuccess()) {
@@ -190,7 +191,9 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
             }
             writeSymbols(
                 getSymbolsNeededOutPath(),
-                Sets.union(symbolsNeeded, getSymbols(getLibFilePath()).undefined));
+                Sets.union(
+                    symbolsNeeded,
+                    getSymbols(context.getProcessExecutor(), getLibFilePath()).undefined));
             return StepExecutionResult.SUCCESS;
           }
         });
@@ -232,8 +235,10 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
     return getScratchDirPath().resolve(getBaseLibPath().getFileName());
   }
 
-  private Symbols getSymbols(Path path) throws IOException, InterruptedException {
+  private Symbols getSymbols(ProcessExecutor executor, Path path)
+      throws IOException, InterruptedException {
     return Symbols.getSymbols(
+        executor,
         objdump,
         getResolver(),
         absolutify(path));
@@ -243,9 +248,9 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
     return getScratchFilePath("__version.exp");
   }
 
-  private void writeVersionScript(
-      ImmutableSet<String> symbolsNeeded) throws IOException, InterruptedException {
-    Symbols sym = getSymbols(getBaseLibPath());
+  private void writeVersionScript(ProcessExecutor executor, ImmutableSet<String> symbolsNeeded)
+      throws IOException, InterruptedException {
+    Symbols sym = getSymbols(executor, getBaseLibPath());
     Set<String> defined = Sets.difference(sym.all, sym.undefined);
     String versionScript = getVersionScript(symbolsNeeded, defined);
 

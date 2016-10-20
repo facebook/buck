@@ -17,8 +17,6 @@ package com.facebook.buck.android.relinker;
 
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
@@ -90,6 +88,7 @@ public class Symbols {
   }
 
   public static Symbols getSymbols(
+      ProcessExecutor executor,
       Tool objdump,
       SourcePathResolver resolver,
       Path lib) throws IOException, InterruptedException {
@@ -97,7 +96,7 @@ public class Symbols {
     final ImmutableSet.Builder<String> global = ImmutableSet.builder();
     final ImmutableSet.Builder<String> all = ImmutableSet.builder();
 
-    runObjdump(objdump, resolver, lib, ImmutableList.of("-T"),
+    runObjdump(executor, objdump, resolver, lib, ImmutableList.of("-T"),
         new LineProcessor<Void>() {
           @Override
           public boolean processLine(String line) throws IOException {
@@ -124,6 +123,7 @@ public class Symbols {
   }
 
   public static ImmutableSet<String> getDtNeeded(
+      ProcessExecutor executor,
       Tool objdump,
       SourcePathResolver resolver,
       Path lib) throws IOException, InterruptedException {
@@ -131,7 +131,7 @@ public class Symbols {
 
     final Pattern re = Pattern.compile("^ *NEEDED *(\\S*)$");
 
-    runObjdump(objdump, resolver, lib, ImmutableList.of("-p"),
+    runObjdump(executor, objdump, resolver, lib, ImmutableList.of("-p"),
         new LineProcessor<Void>() {
           @Override
           public boolean processLine(String line) throws IOException {
@@ -153,6 +153,7 @@ public class Symbols {
   }
 
   private static void runObjdump(
+      ProcessExecutor executor,
       Tool objdump,
       SourcePathResolver resolver,
       Path lib,
@@ -168,7 +169,6 @@ public class Symbols {
         .setCommand(args)
         .setRedirectError(ProcessBuilder.Redirect.INHERIT)
         .build();
-    ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
     ProcessExecutor.LaunchedProcess p = executor.launchProcess(params);
     BufferedReader output = new BufferedReader(new InputStreamReader(p.getInputStream()));
     CharStreams.readLines(output, lineProcessor);

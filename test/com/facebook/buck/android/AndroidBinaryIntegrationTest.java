@@ -39,12 +39,15 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.ZipConstants;
 import com.google.common.collect.ImmutableCollection;
@@ -378,7 +381,12 @@ public class AndroidBinaryIntegrationTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
     Path tmpDir = tmpFolder.newFolder("merging_tmp");
-    SymbolGetter syms = new SymbolGetter(tmpDir, platform.getObjdump(), pathResolver);
+    SymbolGetter syms =
+        new SymbolGetter(
+            new DefaultProcessExecutor(new TestConsole()),
+            tmpDir,
+            platform.getObjdump(),
+            pathResolver);
     SymbolsAndDtNeeded info;
 
     workspace.replaceFileContents(
@@ -525,7 +533,12 @@ public class AndroidBinaryIntegrationTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
     Path tmpDir = tmpFolder.newFolder("xdso");
-    SymbolGetter syms = new SymbolGetter(tmpDir, platform.getObjdump(), pathResolver);
+    SymbolGetter syms =
+        new SymbolGetter(
+            new DefaultProcessExecutor(new TestConsole()),
+            tmpDir,
+            platform.getObjdump(),
+            pathResolver);
     Symbols sym;
 
     Path apkPath = workspace.buildAndReturnOutput("//apps/sample:app_xdso_dce");
@@ -591,11 +604,17 @@ public class AndroidBinaryIntegrationTest {
   }
 
   private static class SymbolGetter {
+    private final ProcessExecutor executor;
     private final Path tmpDir;
     private final Tool objdump;
     private final SourcePathResolver resolver;
 
-    private SymbolGetter(Path tmpDir, Tool objdump, SourcePathResolver resolver) {
+    private SymbolGetter(
+        ProcessExecutor executor,
+        Path tmpDir,
+        Tool objdump,
+        SourcePathResolver resolver) {
+      this.executor = executor;
       this.tmpDir = tmpDir;
       this.objdump = objdump;
       this.resolver = resolver;
@@ -608,14 +627,14 @@ public class AndroidBinaryIntegrationTest {
 
     Symbols getSymbols(Path apkPath, String libName) throws IOException, InterruptedException {
       Path lib = unpack(apkPath, libName);
-      return Symbols.getSymbols(objdump, resolver, lib);
+      return Symbols.getSymbols(executor, objdump, resolver, lib);
     }
 
     SymbolsAndDtNeeded getSymbolsAndDtNeeded(Path apkPath, String libName)
         throws IOException, InterruptedException {
       Path lib = unpack(apkPath, libName);
-      Symbols symbols = Symbols.getSymbols(objdump, resolver, lib);
-      ImmutableSet<String> dtNeeded = Symbols.getDtNeeded(objdump, resolver, lib);
+      Symbols symbols = Symbols.getSymbols(executor, objdump, resolver, lib);
+      ImmutableSet<String> dtNeeded = Symbols.getDtNeeded(executor, objdump, resolver, lib);
       return new SymbolsAndDtNeeded(symbols, dtNeeded);
     }
   }
