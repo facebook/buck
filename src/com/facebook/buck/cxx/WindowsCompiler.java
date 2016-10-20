@@ -58,4 +58,9 @@ public class WindowsCompiler extends DefaultCompiler {
   public ImmutableList<String> getPicFlags() {
     return ImmutableList.of();
   }
+
+  @Override
+  public boolean shouldSanitizeOutputBinary() {
+    return false;
+  }
 }

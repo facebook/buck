@@ -621,7 +621,8 @@ public class CxxPreprocessAndCompileStep implements Step {
   // building assembly code (which doesn't respect line-marker-re-writing to fixup the
   // DW_AT_comp_dir.
   private boolean shouldSanitizeOutputBinary() {
-    return operation == Operation.COMPILE_MUNGE_DEBUGINFO || inputType.isAssembly();
+    return inputType.isAssembly() ||
+        (operation == Operation.COMPILE_MUNGE_DEBUGINFO && compiler.shouldSanitizeOutputBinary());
   }
 
   public enum Operation {

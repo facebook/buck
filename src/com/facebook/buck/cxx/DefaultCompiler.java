@@ -106,4 +106,9 @@ public abstract class DefaultCompiler implements Compiler {
   public ImmutableList<String> getPicFlags() {
     return ImmutableList.of("-fPIC");
   }
+
+  @Override
+  public boolean shouldSanitizeOutputBinary() {
+    return true;
+  }
 }

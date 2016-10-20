@@ -40,4 +40,6 @@ public interface Compiler extends Tool {
   ImmutableList<String> getPicFlags();
 
   ImmutableList<String> getPdcFlags();
+
+  boolean shouldSanitizeOutputBinary();
 }
