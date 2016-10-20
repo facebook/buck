@@ -23,6 +23,7 @@ import com.facebook.buck.apple.device.AppleDeviceHelper;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Suppliers;
 
 import java.nio.file.Files;
@@ -43,13 +44,15 @@ public class FakeAppleDeveloperEnvironment {
 
   private static final boolean hasWildcardProvisioningProfile = Suppliers.memoize(
       () -> {
+        ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
         final Path searchPath = Paths.get(System.getProperty("user.home") +
                 "/Library/MobileDevice/Provisioning Profiles");
         if (!Files.exists(searchPath)) {
           LOG.warn("Provisioning profile search path " + searchPath + " doesn't exist!");
           return false;
         }
-        ProvisioningProfileStore store = ProvisioningProfileStore.fromSearchPath(searchPath);
+        ProvisioningProfileStore store =
+            ProvisioningProfileStore.fromSearchPath(executor, searchPath);
         Optional<ProvisioningProfileMetadata> profile =
             store.getBestProvisioningProfile(
                 "*",

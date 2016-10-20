@@ -558,7 +558,9 @@ public class KnownBuildRuleTypes {
     CodeSignIdentityStore codeSignIdentityStore =
         CodeSignIdentityStore.fromSystem(processExecutor);
     ProvisioningProfileStore provisioningProfileStore =
-        ProvisioningProfileStore.fromSearchPath(appleConfig.getProvisioningProfileSearchPath());
+        ProvisioningProfileStore.fromSearchPath(
+            processExecutor,
+            appleConfig.getProvisioningProfileSearchPath());
 
     AppleLibraryDescription appleLibraryDescription =
         new AppleLibraryDescription(

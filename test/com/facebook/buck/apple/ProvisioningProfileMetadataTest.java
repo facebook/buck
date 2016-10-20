@@ -25,7 +25,10 @@ import static org.junit.Assume.assumeTrue;
 
 import com.dd.plist.NSDate;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
@@ -67,11 +70,12 @@ public class ProvisioningProfileMetadataTest {
   @Test
   public void testParseProvisioningProfileFile() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
     Path testdataDir = TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles");
     Path testFile = testdataDir.resolve("sample.mobileprovision");
 
     ProvisioningProfileMetadata data =
-        ProvisioningProfileMetadata.fromProvisioningProfilePath(testFile);
+        ProvisioningProfileMetadata.fromProvisioningProfilePath(executor, testFile);
 
     assertThat(data.getExpirationDate(), is(equalTo(new NSDate("9999-03-05T01:33:40Z").getDate())));
     assertThat(data.getAppID(), is(equalTo(new Pair<>("ABCDE12345", "com.example.TestApp"))));
@@ -83,6 +87,7 @@ public class ProvisioningProfileMetadataTest {
 
     thrown.expect(IOException.class);
     ProvisioningProfileMetadata.fromProvisioningProfilePath(
+        executor,
         testdataDir.resolve("invalid.mobileprovision"));
   }
 
@@ -104,11 +109,12 @@ public class ProvisioningProfileMetadataTest {
   @Test
   public void testFilteredEntitlementsStripOut() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
+    ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
     Path testdataDir = TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles");
     Path testFile = testdataDir.resolve("sample.mobileprovision");
 
     ProvisioningProfileMetadata data =
-        ProvisioningProfileMetadata.fromProvisioningProfilePath(testFile);
+        ProvisioningProfileMetadata.fromProvisioningProfilePath(executor, testFile);
 
     assertTrue(data.getEntitlements().containsKey(
         "com.apple.developer.icloud-container-development-container-identifiers"));

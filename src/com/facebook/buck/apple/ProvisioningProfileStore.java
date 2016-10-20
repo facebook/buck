@@ -22,6 +22,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -189,7 +190,9 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
     sink.setReflectively("provisioning-profile-store", getProvisioningProfiles());
   }
 
-  public static ProvisioningProfileStore fromSearchPath(final Path searchPath) {
+  public static ProvisioningProfileStore fromSearchPath(
+      final ProcessExecutor executor,
+      final Path searchPath) {
     LOG.debug("Provisioning profile search path: " + searchPath);
     return new ProvisioningProfileStore(Suppliers.memoize(
         () -> {
@@ -204,7 +207,9 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
                     if (file.toString().endsWith(".mobileprovision")) {
                       try {
                         ProvisioningProfileMetadata profile =
-                            ProvisioningProfileMetadata.fromProvisioningProfilePath(file);
+                            ProvisioningProfileMetadata.fromProvisioningProfilePath(
+                                executor,
+                                file);
                         profilesBuilder.add(profile);
                       } catch (IOException | IllegalArgumentException e) {
                         LOG.error(e, "Ignoring invalid or malformed .mobileprovision file");
