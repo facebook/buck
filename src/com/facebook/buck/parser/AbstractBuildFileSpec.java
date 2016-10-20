@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanClient;
 import com.facebook.buck.log.Logger;
@@ -102,20 +103,21 @@ abstract class AbstractBuildFileSpec {
     boolean tryWatchman =
         buildFileSearchMethod == ParserConfig.BuildFileSearchMethod.WATCHMAN &&
         watchman.getWatchmanClient().isPresent() &&
-        watchman.getWatchRoot().isPresent();
+        !watchman.getProjectWatch().getWatchRoot().isEmpty();
     boolean walkComplete = false;
+    ProjectWatch projectWatch = watchman.getProjectWatch();
     if (tryWatchman) {
       LOG.debug(
           "Searching for %s files (watch root %s, project prefix %s, base path %s) with Watchman",
           buildFileName,
-          watchman.getWatchRoot().get(),
-          watchman.getProjectPrefix(),
+          projectWatch.getWatchRoot(),
+          projectWatch.getProjectPrefix(),
           getBasePath());
       walkComplete = forEachBuildFileWatchman(
           filesystem,
           watchman.getWatchmanClient().get(),
-          watchman.getWatchRoot().get(),
-          watchman.getProjectPrefix(),
+          projectWatch.getWatchRoot(),
+          projectWatch.getProjectPrefix(),
           getBasePath(),
           buildFileName,
           function);
@@ -124,7 +126,7 @@ abstract class AbstractBuildFileSpec {
           "Not using Watchman (search method %s, client present %s, root present %s)",
           buildFileSearchMethod,
           watchman.getWatchmanClient().isPresent(),
-          watchman.getWatchRoot().isPresent());
+          !projectWatch.getWatchRoot().isEmpty());
     }
 
     if (!walkComplete) {

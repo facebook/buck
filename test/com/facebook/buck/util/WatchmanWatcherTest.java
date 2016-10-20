@@ -35,6 +35,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.FakeWatchmanClient;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.PathOrGlobMatcher;
+import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanDiagnostic;
 import com.facebook.buck.io.WatchmanDiagnosticCache;
@@ -473,8 +474,7 @@ public class WatchmanWatcherTest {
   @Test
   public void watchmanQueryWithRepoRelativePrefix() {
     WatchmanQuery query = WatchmanWatcher.createQuery(
-        "path/to/repo",
-        Optional.of("project"),
+        ProjectWatch.of("path/to/repo", Optional.of("project")),
         ImmutableSet.of(),
         ImmutableSet.of(Watchman.Capability.DIRNAME));
 
@@ -486,8 +486,7 @@ public class WatchmanWatcherTest {
   @Test
   public void watchmanQueryWithExcludePathsAddsExpressionToQuery() {
     WatchmanQuery query = WatchmanWatcher.createQuery(
-        "/path/to/repo",
-        Optional.empty(),
+        ProjectWatch.of("/path/to/repo", Optional.empty()),
         ImmutableSet.of(
             new PathOrGlobMatcher(Paths.get("foo")),
             new PathOrGlobMatcher(Paths.get("bar/baz"))),
@@ -513,8 +512,7 @@ public class WatchmanWatcherTest {
   @Test
   public void watchmanQueryWithExcludePathsAddsMatchExpressionToQueryIfDirnameNotAvailable() {
     WatchmanQuery query = WatchmanWatcher.createQuery(
-        "/path/to/repo",
-        Optional.empty(),
+        ProjectWatch.of("/path/to/repo", Optional.empty()),
         ImmutableSet.of(
             new PathOrGlobMatcher(Paths.get("foo")),
             new PathOrGlobMatcher(Paths.get("bar/baz"))),
@@ -545,8 +543,7 @@ public class WatchmanWatcherTest {
   public void watchmanQueryRelativizesExcludePaths() {
     String watchRoot = Paths.get("/path/to/repo").toAbsolutePath().toString();
     WatchmanQuery query = WatchmanWatcher.createQuery(
-        watchRoot,
-        Optional.empty(),
+        ProjectWatch.of(watchRoot, Optional.empty()),
         ImmutableSet.of(
             new PathOrGlobMatcher(Paths.get("/path/to/repo/foo").toAbsolutePath()),
             new PathOrGlobMatcher(Paths.get("/path/to/repo/bar/baz").toAbsolutePath())),
@@ -572,8 +569,7 @@ public class WatchmanWatcherTest {
   @Test
   public void watchmanQueryWithExcludeGlobsAddsExpressionToQuery() {
     WatchmanQuery query = WatchmanWatcher.createQuery(
-        "/path/to/repo",
-        Optional.empty(),
+        ProjectWatch.of("/path/to/repo", Optional.empty()),
         ImmutableSet.of(
             new PathOrGlobMatcher("*.pbxproj")),
         ImmutableSet.of(Watchman.Capability.DIRNAME));

@@ -81,16 +81,14 @@ public class Watchman implements AutoCloseable {
 
   private static final Path WATCHMAN = Paths.get("watchman");
   public static final Watchman NULL_WATCHMAN = new Watchman(
-      Optional.empty(),
-      Optional.empty(),
+      ProjectWatch.of("", Optional.<String>empty()),
       ImmutableSet.of(),
       Optional.empty(),
       Optional.empty(),
       Optional.empty(),
       0);
 
-  private final Optional<String> projectName;
-  private final Optional<String> watchRoot;
+  private final ProjectWatch projectWatch;
   private final ImmutableSet<Capability> capabilities;
   private final Optional<Path> socketPath;
   private final Optional<WatchmanClient> watchmanClient;
@@ -199,8 +197,8 @@ public class Watchman implements AutoCloseable {
       Path absoluteRootPath = rootPath.toAbsolutePath();
       LOG.info("Adding watchman root: %s", absoluteRootPath);
 
-      long watchStartTimeNanos = clock.nanoTime();
-      remainingTimeNanos -= (watchStartTimeNanos - versionQueryStartTimeNanos);
+      long projectWatchTimeNanos = clock.nanoTime();
+      remainingTimeNanos -= (projectWatchTimeNanos - versionQueryStartTimeNanos);
       result = watchmanClient.get().queryWithTimeout(
           remainingTimeNanos,
           "watch-project",
@@ -211,15 +209,15 @@ public class Watchman implements AutoCloseable {
       // before the crawl is finished which causes the next
       // interaction to block. Calling watch-project a second time
       // properly attributes where we are spending time.
-      long secondWatchStartTimeNanos = clock.nanoTime();
-      remainingTimeNanos -= (secondWatchStartTimeNanos - watchStartTimeNanos);
+      long secondProjectWatchTimeNanos = clock.nanoTime();
+      remainingTimeNanos -= (secondProjectWatchTimeNanos - projectWatchTimeNanos);
       result = watchmanClient.get().queryWithTimeout(
           remainingTimeNanos,
           "watch-project",
           absoluteRootPath.toString());
       LOG.info(
           "Took %d ms to add root %s",
-          TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - watchStartTimeNanos),
+          TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - projectWatchTimeNanos),
           absoluteRootPath);
 
       if (!result.isPresent()) {
@@ -246,9 +244,12 @@ public class Watchman implements AutoCloseable {
       }
 
       Optional<String> initialClock = Optional.empty();
+      String watchRoot = (String) map.get("watch");
+      Optional<String> watchPrefix = Optional.ofNullable((String) map.get("relative_path"));
+
       if (capabilities.contains(Capability.CLOCK_SYNC_TIMEOUT)) {
         long clockStartTimeNanos = clock.nanoTime();
-        remainingTimeNanos -= (clockStartTimeNanos - secondWatchStartTimeNanos);
+        remainingTimeNanos -= (clockStartTimeNanos - secondProjectWatchTimeNanos);
         result = watchmanClient.get().queryWithTimeout(
             remainingTimeNanos,
             ImmutableList.of(
@@ -270,8 +271,7 @@ public class Watchman implements AutoCloseable {
       }
 
       return new Watchman(
-          Optional.ofNullable((String) map.get("relative_path")),
-          Optional.ofNullable((String) map.get("watch")),
+          ProjectWatch.of(watchRoot, watchPrefix),
           capabilities,
           initialClock,
           Optional.of(socketPath),
@@ -426,15 +426,13 @@ public class Watchman implements AutoCloseable {
   // the WatchmanClient separately.
   @VisibleForTesting
   public Watchman(
-      Optional<String> projectName,
-      Optional<String> watchRoot,
+      ProjectWatch projectWatch,
       ImmutableSet<Capability> capabilities,
       Optional<String> initialClockId,
       Optional<Path> socketPath,
       Optional<WatchmanClient> watchmanClient,
       long commandTimeoutMillis) {
-    this.projectName = projectName;
-    this.watchRoot = watchRoot;
+    this.projectWatch = projectWatch;
     this.capabilities = capabilities;
     this.initialClockId = initialClockId;
     this.socketPath = socketPath;
@@ -442,12 +440,8 @@ public class Watchman implements AutoCloseable {
     this.commandTimeoutMillis = commandTimeoutMillis;
   }
 
-  public Optional<String> getProjectPrefix() {
-    return projectName;
-  }
-
-  public Optional<String> getWatchRoot() {
-    return watchRoot;
+  public ProjectWatch getProjectWatch() {
+    return projectWatch;
   }
 
   public ImmutableSet<Capability> getCapabilities() {

@@ -21,6 +21,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.PathOrGlobMatcher;
+import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.Watchman.Capability;
 import com.facebook.buck.io.WatchmanClient;
@@ -95,13 +96,13 @@ public class WatchmanWatcher {
 
   /* Legacy interface to help switch to clockId */
   public WatchmanWatcher(
-      String watchRoot,
+      ProjectWatch projectWatch,
       EventBus fileChangeEventBus,
       ImmutableSet<PathOrGlobMatcher> ignorePaths,
       Watchman watchman,
       UUID queryUUID) {
     this(
-        watchRoot,
+        projectWatch,
         fileChangeEventBus,
         ignorePaths,
         watchman,
@@ -109,7 +110,7 @@ public class WatchmanWatcher {
   }
 
   public WatchmanWatcher(
-      String watchRoot,
+      ProjectWatch projectWatch,
       EventBus fileChangeEventBus,
       ImmutableSet<PathOrGlobMatcher> ignorePaths,
       Watchman watchman,
@@ -120,8 +121,7 @@ public class WatchmanWatcher {
         DEFAULT_OVERFLOW_THRESHOLD,
         DEFAULT_TIMEOUT_MILLIS,
         createQuery(
-            watchRoot,
-            watchman.getProjectPrefix(),
+            projectWatch,
             ignorePaths,
             watchman.getCapabilities()),
         sinceCursor);
@@ -144,10 +144,11 @@ public class WatchmanWatcher {
 
   @VisibleForTesting
   static WatchmanQuery createQuery(
-      String watchRoot,
-      Optional<String> watchPrefix,
+      ProjectWatch projectWatch,
       ImmutableSet<PathOrGlobMatcher> ignorePaths,
       Set<Capability> watchmanCapabilities) {
+    String watchRoot = projectWatch.getWatchRoot();
+    Optional<String> watchPrefix = projectWatch.getProjectPrefix();
 
     // Exclude any expressions added to this list.
     List<Object> excludeAnyOf = Lists.newArrayList("anyof");
@@ -156,9 +157,7 @@ public class WatchmanWatcher {
     excludeAnyOf.add(Lists.newArrayList("type", "d"));
 
     Path projectRoot = Paths.get(watchRoot);
-    if (watchPrefix.isPresent()) {
-      projectRoot = projectRoot.resolve(watchPrefix.get());
-    }
+    projectRoot = projectRoot.resolve(watchPrefix.orElse(""));
 
     // Exclude all files under directories in project.ignorePaths.
     //
@@ -214,9 +213,7 @@ public class WatchmanWatcher {
     if (watchPrefix.isPresent()) {
       sinceParams.put("relative_root", watchPrefix.get());
     }
-    return WatchmanQuery.of(
-        watchRoot,
-        sinceParams);
+    return WatchmanQuery.of(watchRoot, sinceParams);
   }
 
   @VisibleForTesting
@@ -246,7 +243,7 @@ public class WatchmanWatcher {
               getWatchmanQuery().toArray());
       if (!queryResponse.isPresent()) {
         LOG.warn(
-            "Could not get response from Watchman for query %s %s within %d ms",
+            "Could not get response from Watchman for query %s within %d ms",
             query,
             timeoutMillis);
         postWatchEvent(

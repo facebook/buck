@@ -23,6 +23,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.PathOrGlobMatcher;
+import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.WatchmanDiagnostic;
 import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.log.Logger;
@@ -370,11 +371,12 @@ public class ProjectBuildFileParser implements AutoCloseable {
     ImmutableList<Map<String, Object>> values = ImmutableList.of();
     String profile = "";
     try (AssertScopeExclusiveAccess.Scope scope = assertSingleThreadedParsing.scope()) {
+      ProjectWatch projectWatch = options.getWatchman().getProjectWatch();
       bserSerializer.serializeToStream(
           ImmutableMap.of(
               "buildFile", buildFile.toString(),
-              "watchRoot", options.getWatchman().getWatchRoot().orElse(""),
-              "projectPrefix", options.getWatchman().getProjectPrefix().orElse("")),
+              "watchRoot", projectWatch.getWatchRoot(),
+              "projectPrefix", projectWatch.getProjectPrefix().orElse("")),
           buckPyStdinWriter);
       buckPyStdinWriter.flush();
 

@@ -22,6 +22,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.PathOrGlobMatcher;
+import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.model.BuildId;
@@ -126,7 +127,7 @@ public class WatchmanWatcherIntegrationTest {
 
     WatchmanWatcher watcher =
         new WatchmanWatcher(
-            tmp.getRoot().toString(),
+            ProjectWatch.of(tmp.getRoot().toString(), Optional.empty()),
             eventBus,
             ImmutableSet.copyOf(ignorePaths),
             watchman,

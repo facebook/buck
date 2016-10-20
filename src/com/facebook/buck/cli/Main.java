@@ -57,6 +57,7 @@ import com.facebook.buck.io.BuckPaths;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -581,20 +582,20 @@ public final class Main {
 
   private WatchmanWatcher createWatchmanWatcher(
       Daemon daemon,
-      String watchRoot,
+      ProjectWatch projectWatch,
       EventBus fileChangeEventBus,
       ImmutableSet<PathOrGlobMatcher> ignorePaths,
       Watchman watchman) {
     if (daemon.getWatchmanQueryUUID().isPresent()) {
       return new WatchmanWatcher(
-          watchRoot,
+          projectWatch,
           fileChangeEventBus,
           ignorePaths,
           watchman,
           daemon.getWatchmanQueryUUID().get());
     } else if (watchman.getClockId().isPresent()) {
       return new WatchmanWatcher(
-          watchRoot,
+          projectWatch,
           fileChangeEventBus,
           ignorePaths,
           watchman,
@@ -1150,7 +1151,7 @@ public final class Main {
               Daemon daemon = getDaemon(rootCell, objectMapper);
               WatchmanWatcher watchmanWatcher = createWatchmanWatcher(
                   daemon,
-                  watchman.getWatchRoot().orElse(canonicalRootPath.toString()),
+                  watchman.getProjectWatch(),
                   daemon.getFileEventBus(),
                   ImmutableSet.<PathOrGlobMatcher>builder()
                       .addAll(filesystem.getIgnorePaths())
@@ -1357,11 +1358,10 @@ public final class Main {
           parserConfig.getWatchmanQueryTimeoutMs());
 
       LOG.debug(
-          "Watchman capabilities: %s Watch root: %s Project prefix: %s Glob handler config: %s " +
+          "Watchman capabilities: %s Project watch: %s Glob handler config: %s " +
           "Query timeout ms config: %s",
           watchman.getCapabilities(),
-          watchman.getWatchRoot(),
-          watchman.getProjectPrefix(),
+          watchman.getProjectWatch(),
           parserConfig.getGlobHandler(),
           parserConfig.getWatchmanQueryTimeoutMs());
 
