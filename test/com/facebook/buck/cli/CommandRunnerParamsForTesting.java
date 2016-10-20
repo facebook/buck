@@ -84,34 +84,39 @@ public class CommandRunnerParamsForTesting {
       throws IOException, InterruptedException {
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
         ObjectMappers.newDefaultInstance());
-    return new CommandRunnerParams(
-        console,
-        new ByteArrayInputStream("".getBytes("UTF-8")),
-        cell,
-        Main.createAndroidPlatformTargetSupplier(
-            androidDirectoryResolver,
-            new AndroidBuckConfig(FakeBuckConfig.builder().build(), platform),
-            eventBus),
-        artifactCache,
-        eventBus,
-        new Parser(
-            new BroadcastEventListener(),
-            cell.getBuckConfig().getView(ParserConfig.class),
-            typeCoercerFactory, new ConstructorArgMarshaller(typeCoercerFactory)),
-        platform,
-        environment,
-        javaPackageFinder,
-        objectMapper,
-        new DefaultClock(),
-        Optional.empty(),
-        webServer,
-        config,
-        new NullFileHashCache(),
-        ImmutableMap.of(
-            ExecutorPool.PROJECT,
-            MoreExecutors.newDirectExecutorService()),
-        BUILD_ENVIRONMENT_DESCRIPTION,
-        new ActionGraphCache(new BroadcastEventListener()));
+    return CommandRunnerParams.builder()
+        .setConsole(console)
+        .setStdIn(new ByteArrayInputStream("".getBytes("UTF-8")))
+        .setCell(cell)
+        .setAndroidPlatformTargetSupplier(
+            Main.createAndroidPlatformTargetSupplier(
+                androidDirectoryResolver,
+                new AndroidBuckConfig(FakeBuckConfig.builder().build(), platform),
+                eventBus))
+        .setArtifactCache(artifactCache)
+        .setBuckEventBus(eventBus)
+        .setParser(
+            new Parser(
+                new BroadcastEventListener(),
+                cell.getBuckConfig().getView(ParserConfig.class),
+                typeCoercerFactory,
+                new ConstructorArgMarshaller(typeCoercerFactory)))
+        .setPlatform(platform)
+        .setEnvironment(environment)
+        .setJavaPackageFinder(javaPackageFinder)
+        .setObjectMapper(objectMapper)
+        .setClock(new DefaultClock())
+        .setProcessManager(Optional.empty())
+        .setWebServer(webServer)
+        .setBuckConfig(config)
+        .setFileHashCache(new NullFileHashCache())
+        .setExecutors(
+            ImmutableMap.of(
+                ExecutorPool.PROJECT,
+                MoreExecutors.newDirectExecutorService()))
+        .setBuildEnvironmentDescription(BUILD_ENVIRONMENT_DESCRIPTION)
+        .setActionGraphCache(new ActionGraphCache(new BroadcastEventListener()))
+        .build();
   }
 
   public static Builder builder() {

@@ -1222,26 +1222,27 @@ public final class Main {
           }
 
           exitCode = command.run(
-              new CommandRunnerParams(
-                  console,
-                  stdIn,
-                  rootCell,
-                  androidPlatformTargetSupplier,
-                  artifactCache,
-                  buildEventBus,
-                  parser,
-                  platform,
-                  clientEnvironment,
-                  rootCell.getBuckConfig().createDefaultJavaPackageFinder(),
-                  objectMapper,
-                  clock,
-                  processManager,
-                  webServer,
-                  buckConfig,
-                  fileHashCache,
-                  executors,
-                  buildEnvironmentDescription,
-                  actionGraphCache));
+              CommandRunnerParams.builder()
+                  .setConsole(console)
+                  .setStdIn(stdIn)
+                  .setCell(rootCell)
+                  .setAndroidPlatformTargetSupplier(androidPlatformTargetSupplier)
+                  .setArtifactCache(artifactCache)
+                  .setBuckEventBus(buildEventBus)
+                  .setParser(parser)
+                  .setPlatform(platform)
+                  .setEnvironment(clientEnvironment)
+                  .setJavaPackageFinder(rootCell.getBuckConfig().createDefaultJavaPackageFinder())
+                  .setObjectMapper(objectMapper)
+                  .setClock(clock)
+                  .setProcessManager(processManager)
+                  .setWebServer(webServer)
+                  .setBuckConfig(buckConfig)
+                  .setFileHashCache(fileHashCache)
+                  .setExecutors(executors)
+                  .setBuildEnvironmentDescription(buildEnvironmentDescription)
+                  .setActionGraphCache(actionGraphCache)
+                  .build());
           // Wait for HTTP writes to complete.
           closeHttpExecutorService(
               cacheBuckConfig, Optional.of(buildEventBus), httpWriteExecutorService);
