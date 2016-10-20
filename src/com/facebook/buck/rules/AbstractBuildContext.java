@@ -26,7 +26,7 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.timing.Clock;
-import com.facebook.buck.util.immutables.DeprecatedBuckStyleImmutable;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
@@ -36,9 +36,8 @@ import org.immutables.value.Value;
 import java.util.Map;
 
 @Value.Immutable
-@DeprecatedBuckStyleImmutable
-@SuppressWarnings("deprecation")
-public abstract class BuildContext {
+@BuckStyleImmutable
+abstract class AbstractBuildContext {
 
   public abstract ActionGraph getActionGraph();
 

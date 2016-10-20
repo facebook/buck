@@ -24,10 +24,10 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -49,7 +49,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 
-import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -104,7 +103,8 @@ public class DummyRDotJavaTest {
         Optional.of("R2"));
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
-    List<Step> steps = dummyRDotJava.getBuildSteps(EasyMock.createMock(BuildContext.class),
+    List<Step> steps = dummyRDotJava.getBuildSteps(
+        FakeBuildContext.NOOP_CONTEXT,
         buildableContext);
     assertEquals("DummyRDotJava returns an incorrect number of Steps.", 10, steps.size());
 

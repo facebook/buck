@@ -16,17 +16,15 @@
 
 package com.facebook.buck.jvm.java;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
@@ -61,15 +59,11 @@ public class KeystoreTest {
 
   @Test
   public void testBuildInternal() throws Exception {
-    BuildContext buildContext = createMock(BuildContext.class);
-
-    replay(buildContext);
+    BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
 
     BuildRule keystore = createKeystoreRuleForTest();
     List<Step> buildSteps = keystore.getBuildSteps(buildContext,
         new FakeBuildableContext());
     assertEquals(ImmutableList.<Step>of(), buildSteps);
-
-    verify(buildContext);
   }
 }

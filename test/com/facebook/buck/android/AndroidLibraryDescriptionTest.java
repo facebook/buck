@@ -31,12 +31,12 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ActionGraph;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeExportDependenciesRule;
-import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.timing.Clock;
@@ -117,7 +117,7 @@ public class AndroidLibraryDescriptionTest {
 
   @Test
   public void bootClasspathAppenderAddsLibsFromAndroidPlatformTarget() {
-    ImmutableBuildContext.Builder builder = ImmutableBuildContext.builder();
+    BuildContext.Builder builder = BuildContext.builder();
 
     // Set to non-null values.
     builder.setActionGraph(createMock(ActionGraph.class));

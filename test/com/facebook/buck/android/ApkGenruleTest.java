@@ -44,7 +44,6 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -165,7 +164,7 @@ public class ApkGenruleTest {
             .from(apkGenrule.getDeps())
             .transform(Object::toString)
             .toSet());
-    BuildContext buildContext = ImmutableBuildContext.builder()
+    BuildContext buildContext = BuildContext.builder()
         .setActionGraph(EasyMock.createMock(ActionGraph.class))
         .setClock(EasyMock.createMock(Clock.class))
         .setBuildId(EasyMock.createMock(BuildId.class))

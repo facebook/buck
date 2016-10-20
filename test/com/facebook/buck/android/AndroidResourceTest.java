@@ -25,11 +25,11 @@ import com.facebook.buck.android.AndroidResource.BuildOutput;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
@@ -51,7 +51,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hashing;
 
-import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -172,9 +171,7 @@ public class AndroidResourceTest {
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     assertTrue(
         resourceRule3
-            .getBuildSteps(
-                EasyMock.createMock(BuildContext.class),
-                buildableContext)
+            .getBuildSteps(FakeBuildContext.NOOP_CONTEXT, buildableContext)
             .isEmpty());
 
     buildableContext.assertContainsMetadataMapping(

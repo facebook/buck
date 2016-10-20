@@ -30,7 +30,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -157,7 +156,7 @@ final class JavaBuildGraphProcessor {
           .setPlatform(params.getPlatform())
           .build();
 
-      BuildContext buildContext = ImmutableBuildContext.builder()
+      BuildContext buildContext = BuildContext.builder()
           // Note we do not create a real action graph because we do not need one.
           .setActionGraph(new ActionGraph(ImmutableList.of()))
           .setClock(params.getClock())

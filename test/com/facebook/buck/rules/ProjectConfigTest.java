@@ -42,9 +42,8 @@ public class ProjectConfigTest extends EasyMockSupport {
 
   @Test
   public void testBuildIsIdempotent() throws Exception {
-    BuildContext buildContext = createMock(BuildContext.class);
-    BuildableContext buildableContext = createMock(BuildableContext.class);
-    replayAll();
+    BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
+    BuildableContext buildableContext = new FakeBuildableContext();
 
     ProjectConfig projectConfig = createProjectConfig();
     List<Step> result1 =

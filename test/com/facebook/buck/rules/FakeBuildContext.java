@@ -41,13 +41,13 @@ public class FakeBuildContext {
       .build();
 
   /**
-   * User still needs to invoke {@link ImmutableBuildContext.Builder#setActionGraph(ActionGraph)}
-   * and {@link ImmutableBuildContext.Builder#setJavaPackageFinder(
+   * User still needs to invoke {@link BuildContext.Builder#setActionGraph(ActionGraph)}
+   * and {@link BuildContext.Builder#setJavaPackageFinder(
    * com.facebook.buck.jvm.core.JavaPackageFinder)}
-   * before the {@link ImmutableBuildContext.Builder#build()} method of the builder can be invoked.
+   * before the {@link BuildContext.Builder#build()} method of the builder can be invoked.
    */
-  public static ImmutableBuildContext.Builder newBuilder() {
-    return ImmutableBuildContext.builder()
+  public static BuildContext.Builder newBuilder() {
+    return BuildContext.builder()
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())
         .setObjectMapper(ObjectMappers.newDefaultInstance())

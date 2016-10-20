@@ -39,7 +39,7 @@ public class BuildContextTest {
 
   @Test(expected = HumanReadableException.class)
   public void testGetAndroidPlatformTargetSupplierWithNoneSpecified() {
-    ImmutableBuildContext.Builder builder = ImmutableBuildContext.builder();
+    BuildContext.Builder builder = BuildContext.builder();
 
     // Set to non-null values.
     builder.setActionGraph(createMock(ActionGraph.class));
@@ -63,7 +63,7 @@ public class BuildContextTest {
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
     CapturingConsoleEventListener listener = new CapturingConsoleEventListener();
     eventBus.register(listener);
-    BuildContext buildContext = ImmutableBuildContext.builder()
+    BuildContext buildContext = BuildContext.builder()
         .setActionGraph(createMock(ActionGraph.class))
         .setArtifactCache(createMock(ArtifactCache.class))
         .setJavaPackageFinder(createMock(JavaPackageFinder.class))

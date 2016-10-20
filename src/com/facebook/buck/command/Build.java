@@ -38,7 +38,6 @@ import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
@@ -235,7 +234,7 @@ public class Build implements Closeable {
       boolean isKeepGoing)
       throws IOException, ExecutionException, InterruptedException {
     BuildId buildId = executionContext.getBuildId();
-    buildContext = ImmutableBuildContext.builder()
+    buildContext = BuildContext.builder()
         .setActionGraph(actionGraph)
         .setClock(clock)
         .setArtifactCache(artifactCache)

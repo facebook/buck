@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -35,7 +36,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import org.easymock.EasyMock;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -62,8 +62,7 @@ public class AndroidManifestTest {
     AndroidManifest androidManifest = createSimpleAndroidManifestRule();
 
     // Mock out a BuildContext whose DependencyGraph will be traversed.
-    BuildContext buildContext = EasyMock.createMock(BuildContext.class);
-    EasyMock.replay(buildContext);
+    BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
 
     List<Step> steps = androidManifest.getBuildSteps(buildContext, new FakeBuildableContext());
     Step generateManifestStep = steps.get(2);
@@ -79,8 +78,6 @@ public class AndroidManifestTest {
                 BuildTargetFactory.newInstance(MANIFEST_TARGET),
                 "AndroidManifest__%s__.xml")),
         generateManifestStep);
-
-    EasyMock.verify(buildContext);
   }
 
   @Test

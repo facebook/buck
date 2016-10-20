@@ -49,6 +49,7 @@ java_immutables_library(
   name = 'build_rule',
   srcs = [
     'AbstractActionGraphAndResolver.java',
+    'AbstractBuildContext.java',
     'AbstractBuildRule.java',
     'AbstractBuildRuleType.java',
     'AbstractDescriptionArg.java',
@@ -66,7 +67,6 @@ java_immutables_library(
     'BinaryBuildRule.java',
     'BinaryBuildRuleToolProvider.java',
     'BuckPyFunction.java',
-    'BuildContext.java',
     'BuildEngine.java',
     'BuildInfo.java',
     'BuildInfoRecorder.java',
@@ -131,10 +131,10 @@ java_immutables_library(
   ],
   immutable_types = [
     'AbstractVersionedTool',
+    'BuildContext',
     'BuildRuleType',
     'ExopackageInfo',
     'ExternalTestRunnerTestSpec',
-    'ImmutableBuildContext',
     'Label',
     'SourceWithFlags',
   ],

@@ -184,7 +184,7 @@ public class CachingBuildEngineTest {
     protected InMemoryArtifactCache cache = new InMemoryArtifactCache();
     protected FakeProjectFilesystem filesystem;
     protected FileHashCache fileHashCache;
-    protected ImmutableBuildContext buildContext;
+    protected BuildContext buildContext;
     protected BuildRuleResolver resolver;
     protected SourcePathResolver pathResolver;
     protected DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory;
@@ -421,7 +421,7 @@ public class CachingBuildEngineTest {
               new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
 
       BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
-      BuildContext buildContext = ImmutableBuildContext.builder()
+      BuildContext buildContext = BuildContext.builder()
           .setActionGraph(new ActionGraph(ImmutableList.of(buildRule)))
           .setClock(new DefaultClock())
           .setBuildId(new BuildId())
@@ -495,7 +495,7 @@ public class CachingBuildEngineTest {
           .andDelegateTo(
               new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
 
-      BuildContext buildContext = ImmutableBuildContext.builder()
+      BuildContext buildContext = BuildContext.builder()
           .setActionGraph(new ActionGraph(ImmutableList.of(buildRule)))
           .setClock(new DefaultClock())
           .setBuildId(new BuildId())

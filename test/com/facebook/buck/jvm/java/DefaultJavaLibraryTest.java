@@ -50,7 +50,6 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.ImmutableBuildContext;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -1232,7 +1231,7 @@ public class DefaultJavaLibraryTest {
     replay(platformTarget);
 
     // TODO(bolinfest): Create a utility that populates a BuildContext.Builder with fakes.
-    return ImmutableBuildContext.builder()
+    return BuildContext.builder()
         .setActionGraph(new ActionGraph(ImmutableList.of(javaLibrary)))
         .setClock(new DefaultClock())
         .setBuildId(new BuildId())
