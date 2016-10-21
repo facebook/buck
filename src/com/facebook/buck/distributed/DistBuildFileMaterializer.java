@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -37,7 +38,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 class DistBuildFileMaterializer implements FileHashLoader {
   private static final Logger LOG = Logger.get(DistBuildFileMaterializer.class);
-  private final Map<Path, BuildJobStateFileHashEntry> remoteFileHashes;
+  private final Map<Path, BuildJobStateFileHashEntry> remoteFileHashesByPath;
+  private final Set<Path> symlinkedPaths;
   private final Set<Path> materializedPaths;
   private final FileContentsProvider provider;
   private final ProjectFilesystem projectFilesystem;
@@ -46,34 +48,49 @@ class DistBuildFileMaterializer implements FileHashLoader {
       final ProjectFilesystem projectFilesystem,
       BuildJobStateFileHashes remoteFileHashes,
       FileContentsProvider provider) {
-    this.remoteFileHashes = DistBuildFileHashes.indexEntriesByPath(
+    this.remoteFileHashesByPath = DistBuildFileHashes.indexEntriesByPath(
         projectFilesystem,
         remoteFileHashes);
+    this.symlinkedPaths = Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>());
     this.materializedPaths = Collections.newSetFromMap(new ConcurrentHashMap<Path, Boolean>());
     this.provider = provider;
     this.projectFilesystem = projectFilesystem;
   }
 
   public void preloadAllFiles() throws IOException {
-    for (Path path : remoteFileHashes.keySet()) {
-      materializeIfNeeded(path);
+    for (Path path : remoteFileHashesByPath.keySet()) {
+      LOG.info("Preloading: [%s]", path.toString());
+      BuildJobStateFileHashEntry fileHashEntry = remoteFileHashesByPath.get(path);
+      if (fileHashEntry == null || fileHashEntry.isPathIsAbsolute()) {
+        continue;
+      } else if (fileHashEntry.isSetRootSymLink()) {
+        materializeSymlink(fileHashEntry, symlinkedPaths);
+        symlinkedPaths.add(path);
+      } else {
+        // Touch file
+        projectFilesystem.createParentDirs(path);
+        projectFilesystem.touch(path);
+      }
     }
   }
 
-  private void materializeIfNeeded(Path path) throws IOException {
+  private synchronized void materializeIfNeeded(Path path) throws IOException {
     if (materializedPaths.contains(path)) {
       return;
     }
-    LOG.info("Materializing: %s", path.toAbsolutePath().toString());
 
-    BuildJobStateFileHashEntry fileHashEntry = remoteFileHashes.get(path);
+    LOG.info("Materializing: [%s]", path.toString());
+
+    BuildJobStateFileHashEntry fileHashEntry = remoteFileHashesByPath.get(path);
     if (fileHashEntry == null || fileHashEntry.isPathIsAbsolute()) {
       materializedPaths.add(path);
       return;
     }
 
     if (fileHashEntry.isSetRootSymLink()) {
-      materializeSymlink(fileHashEntry);
+      if (!symlinkedPaths.contains(path)) {
+        materializeSymlink(fileHashEntry, materializedPaths);
+      }
       materializedPaths.add(path);
       return;
     }
@@ -85,6 +102,9 @@ class DistBuildFileMaterializer implements FileHashLoader {
       return;
     }
 
+    projectFilesystem.createParentDirs(projectFilesystem.resolve(path));
+
+    // Write the actual file contents.
     Optional<InputStream> fileContents = provider.getFileContents(fileHashEntry);
     if (!fileContents.isPresent()) {
       throw new HumanReadableException(
@@ -93,20 +113,25 @@ class DistBuildFileMaterializer implements FileHashLoader {
               fileHashEntry.toString()));
     }
 
-    Files.createDirectories(path.getParent());
     try (InputStream sourceStream = fileContents.get()) {
-      Files.copy(sourceStream, path);
+      Files.copy(sourceStream, path, StandardCopyOption.REPLACE_EXISTING);
       // TODO(alisdair04,ruibm,shivanker): apply original file permissions
     }
   }
 
-  private void materializeSymlink(BuildJobStateFileHashEntry fileHashEntry) {
+
+  private synchronized void materializeSymlink(
+      BuildJobStateFileHashEntry fileHashEntry, Set<Path> processedPaths) {
     Path rootSymlink = projectFilesystem.resolve(fileHashEntry.getRootSymLink().getPath());
 
-    if (materializedPaths.contains(rootSymlink)) {
+    if (symlinkedPaths.contains(rootSymlink)) {
+      processedPaths.add(rootSymlink);
+    }
+
+    if (processedPaths.contains(rootSymlink)) {
       return;
     }
-    materializedPaths.add(rootSymlink);
+    processedPaths.add(rootSymlink);
 
     if (!projectFilesystem.getPathRelativeToProjectRoot(rootSymlink).isPresent()) {
       // RecordingFileHashLoader stored an absolute path (which was also a sym link).

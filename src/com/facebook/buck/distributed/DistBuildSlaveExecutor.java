@@ -175,8 +175,7 @@ public class DistBuildSlaveExecutor {
               }
             });
 
-    // Load all file up-front. This is needed as right now the action graph directly
-    // accesses the file system.
+    // Create all symlinks and touch all other files.
     // TODO(alisdair04): remove this once action graph doesn't read from file system.
     for (Cell cell : args.getState().getCells().values()) {
       try {
