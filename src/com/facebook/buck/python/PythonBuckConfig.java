@@ -314,6 +314,10 @@ public class PythonBuckConfig {
     return delegate.getBooleanValue(SECTION, "cache_binaries", true);
   }
 
+  public boolean legacyOutputPath() {
+    return delegate.getBooleanValue(SECTION, "legacy_output_path", false);
+  }
+
   public PackageStyle getPackageStyle() {
     return delegate.getEnum(
         SECTION,

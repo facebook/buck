@@ -16,6 +16,7 @@
 
 package com.facebook.buck.python;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -40,6 +41,8 @@ public abstract class PythonBinary
   private final ImmutableSet<String> preloadLibraries;
   @AddToRuleKey
   private final String pexExtension;
+  @AddToRuleKey
+  private final boolean legacyOutputPath;
 
   public PythonBinary(
       BuildRuleParams buildRuleParams,
@@ -48,17 +51,23 @@ public abstract class PythonBinary
       String mainModule,
       PythonPackageComponents components,
       ImmutableSet<String> preloadLibraries,
-      String pexExtension) {
+      String pexExtension,
+      boolean legacyOutputPath) {
     super(buildRuleParams, resolver);
     this.pythonPlatform = pythonPlatform;
     this.mainModule = mainModule;
     this.components = components;
     this.preloadLibraries = preloadLibraries;
     this.pexExtension = pexExtension;
+    this.legacyOutputPath = legacyOutputPath;
   }
 
   protected final Path getBinPath() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s" + pexExtension);
+    BuildTarget buildTarget = getBuildTarget();
+    if (!legacyOutputPath) {
+      buildTarget = buildTarget.withFlavors();
+    }
+    return BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "%s" + pexExtension);
   }
 
   @Override

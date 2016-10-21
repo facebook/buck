@@ -79,8 +79,17 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       PythonPackageComponents components,
       Tool python,
       String pexExtension,
-      ImmutableSet<String> preloadLibraries) {
-    super(params, resolver, pythonPlatform, mainModule, components, preloadLibraries, pexExtension);
+      ImmutableSet<String> preloadLibraries,
+      boolean legacyOutputPath) {
+    super(
+        params,
+        resolver,
+        pythonPlatform,
+        mainModule,
+        components,
+        preloadLibraries,
+        pexExtension,
+        legacyOutputPath);
     this.script =
         getScript(
             ruleResolver,

@@ -203,7 +203,8 @@ public class PythonBinaryDescription implements
         components,
         pythonPlatform.getEnvironment(),
         extension.orElse(pythonBuckConfig.getPexExtension()),
-        preloadLibraries);
+        preloadLibraries,
+        pythonBuckConfig.legacyOutputPath());
   }
 
   PythonBinary createPackageRule(
@@ -260,7 +261,8 @@ public class PythonBinaryDescription implements
             // the build.
             ImmutableSortedSet.copyOf(
                 Sets.difference(params.getDeclaredDeps().get(), componentDeps)),
-            pythonBuckConfig.shouldCacheBinaries());
+            pythonBuckConfig.shouldCacheBinaries(),
+            pythonBuckConfig.legacyOutputPath());
 
       default:
         throw new IllegalStateException();
