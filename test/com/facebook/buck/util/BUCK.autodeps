@@ -8,7 +8,6 @@
     "exported_deps" : [
       "//src/com/facebook/buck/log:log",
       "//src/com/facebook/buck/util:io",
-      "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//test/com/facebook/buck/timing:testutil",
       "//third-party/java/guava:guava",

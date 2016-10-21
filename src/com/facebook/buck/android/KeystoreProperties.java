@@ -14,9 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Strings;
 
 import java.io.IOException;

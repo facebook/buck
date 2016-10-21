@@ -2,10 +2,10 @@
   "impl" : {
     "deps" : [
       "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/util:io"
+      "//src/com/facebook/buck/util:util"
     ],
     "exported_deps" : [
-      "//src/com/facebook/buck/util:util",
+      "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
       "//third-party/java/guava:guava"
     ]

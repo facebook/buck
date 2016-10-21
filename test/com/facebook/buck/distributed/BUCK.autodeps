@@ -23,7 +23,6 @@
       "//src/com/facebook/buck/rules/coercer:types",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",
-      "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/android:utils",

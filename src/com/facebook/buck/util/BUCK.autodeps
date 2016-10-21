@@ -24,8 +24,8 @@
   },
   "io" : {
     "deps" : [
-      "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:more_strings",
       "//third-party/java/immutables:processor",
@@ -33,6 +33,8 @@
       "//third-party/java/oshi:oshi-core"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
@@ -68,15 +70,11 @@
   "util" : {
     "deps" : [
       "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util/environment:platform",
       "//third-party/java/aosp:aosp",
       "//third-party/java/jackson:jackson-core"
     ],
     "exported_deps" : [
-      "//src/com/facebook/buck/io:io",
-      "//src/com/facebook/buck/util:io",
       "//third-party/java/guava:guava",
       "//third-party/java/jackson:jackson-databind",
       "//third-party/java/jsr:jsr305"
