@@ -78,7 +78,7 @@ class DistBuildFileMaterializer implements FileHashLoader {
     }
   }
 
-  private synchronized void materializeIfNeeded(Path path) throws IOException {
+  private void materializeIfNeeded(Path path) throws IOException {
     if (materializedPaths.contains(path)) {
       return;
     }
@@ -100,27 +100,39 @@ class DistBuildFileMaterializer implements FileHashLoader {
       return;
     }
 
-    materializedPaths.add(path);
-
     // TODO(alisdair04,ruibm,shivanker): materialize directories
     if (fileHashEntry.isIsDirectory()) {
+      materializedPaths.add(path);
       return;
     }
 
-    projectFilesystem.createParentDirs(projectFilesystem.resolve(path));
-
-    // Write the actual file contents.
+    // Download contents outside of sync block, so that fetches happen in parallel.
+    // For a few cases we might get duplicate fetches, but this is much better than single
+    // threaded fetches.
     Optional<InputStream> fileContents = provider.getFileContents(fileHashEntry);
-    if (!fileContents.isPresent()) {
-      throw new HumanReadableException(
-          String.format(
-              "Input source file is missing from stampede. File=[%s]",
-              fileHashEntry.toString()));
-    }
+    synchronized (this) {
+      // Double check this path hasn't been materialized,
+      // as previous check wasn't inside sync block.
+      if (materializedPaths.contains(path)) {
+        return;
+      }
 
-    try (InputStream sourceStream = fileContents.get()) {
-      Files.copy(sourceStream, path, StandardCopyOption.REPLACE_EXISTING);
-      // TODO(alisdair04,ruibm,shivanker): apply original file permissions
+      projectFilesystem.createParentDirs(projectFilesystem.resolve(path));
+
+      // Write the actual file contents.
+      if (!fileContents.isPresent()) {
+        throw new HumanReadableException(
+            String.format(
+                "Input source file is missing from stampede. File=[%s]",
+                fileHashEntry.toString()));
+      }
+
+      try (InputStream sourceStream = fileContents.get()) {
+        Files.copy(sourceStream, path, StandardCopyOption.REPLACE_EXISTING);
+        // TODO(alisdair04,ruibm,shivanker): apply original file permissions
+      }
+
+      materializedPaths.add(path);
     }
   }
 
