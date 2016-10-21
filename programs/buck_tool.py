@@ -125,28 +125,6 @@ class BuckTool(object):
 
     def launch_buck(self, build_id):
         with Tracing('BuckRepo.launch_buck'):
-            if not is_java8_or_9():
-                WARNING = '\033[93m'
-                ENDC = '\033[0m'
-                print(WARNING + "::: Buck requires Java 8 or higher." + ENDC, file=sys.stderr)
-                if os_platform == 'darwin':
-                    print("::: Available Java homes:", file=sys.stderr)
-                    check_output(['/usr/libexec/java_home', '-V'])
-                    if not os.environ.get("JAVA_HOME"):
-                        print(WARNING + "::: No Java home selected" + ENDC, file=sys.stderr)
-                    else:
-                        print(WARNING + "::: Selected Java home:" + ENDC, file=sys.stderr)
-                        print(
-                            WARNING + "::: {0}".format(os.environ.get("JAVA_HOME")) + ENDC,
-                            file=sys.stderr)
-                    print(
-                        WARNING +
-                        "::: Select a Java home version 1.8 or higher by setting the JAVA_HOME " +
-                        "environment variable to point to one, and prepending the bin directory " +
-                        "in it to your PATH." + ENDC,
-                        file=sys.stderr)
-                return 1
-
             if self._command_line.command == "clean" and not self._command_line.is_help():
                 self.kill_buckd()
 
@@ -253,13 +231,9 @@ class BuckTool(object):
                 "-Djava.io.tmpdir={0}".format(buckd_tmp_dir),
                 "-Dcom.martiansoftware.nailgun.NGServer.outputPath={0}".format(
                     ngserver_output_path),
+                "-XX:+UseG1GC",
+                "-XX:MaxHeapFreeRatio=40",
             ]
-
-            if is_java8_or_9():
-                extra_default_options.extend([
-                    "-XX:+UseG1GC",
-                    "-XX:MaxHeapFreeRatio=40",
-                ])
 
             command.extend(self._get_java_args(buck_version_uid, extra_default_options))
             command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
@@ -383,8 +357,8 @@ class BuckTool(object):
         return []
 
     def _get_java_args(self, version_uid, extra_default_options=[]):
-        java_args = [] if is_java8_or_9() else ["-XX:MaxPermSize=256m"]
-        java_args.extend([
+        java_args = [
+            "-XX:MaxPermSize=256m",
             "-Xmx{0}m".format(JAVA_MAX_HEAP_SIZE_MB),
             "-Djava.awt.headless=true",
             "-Djava.util.logging.config.class=com.facebook.buck.cli.bootstrapper.LogConfig",
@@ -392,7 +366,7 @@ class BuckTool(object):
             "-Dbuck.version_uid={0}".format(version_uid),
             "-Dbuck.buckd_dir={0}".format(self._buck_project.buckd_dir),
             "-Dorg.eclipse.jetty.util.log.class=org.eclipse.jetty.util.log.JavaUtilLog",
-        ])
+        ]
         for resource in EXPORTED_RESOURCES:
             if self._has_resource(resource):
                 java_args.append(
@@ -431,25 +405,6 @@ class BuckTool(object):
         if sys.platform != 'cygwin':
             return path
         return subprocess.check_output(['cygpath', '-w', path]).strip()
-
-
-_java8_or_9 = None
-
-def is_java8_or_9():
-    global _java8_or_9
-    if _java8_or_9 is not None:
-        return _java8_or_9
-    try:
-        cmd = ['java', '-Xms64m', '-version']
-        output = check_output(cmd, stderr=subprocess.STDOUT, shell=sys.platform == "win32")
-        for version_line in output.strip().splitlines():
-            m = re.compile('(openjdk|java) version "(1\.(8|9)\.|9).*').match(version_line)
-            if bool(m):
-                return True
-        return False
-    except CalledProcessError as e:
-        print(e.output, file=sys.stderr)
-        raise e
 
 
 def install_signal_handlers():
