@@ -483,6 +483,10 @@ public class BuckConfig {
     return getBooleanValue(LOG_SECTION, "public_announcements", true);
   }
 
+  public boolean isProcessTrackerEnabled() {
+    return getBooleanValue(LOG_SECTION, "process_tracker_enabled", false);
+  }
+
   public boolean isRuleKeyLoggerEnabled() {
     return getBooleanValue(LOG_SECTION, "rule_key_logger_enabled", false);
   }

@@ -1057,7 +1057,9 @@ public final class Main {
             PerfStatsTracking perfStatsTracking = new PerfStatsTracking(
                 buildEventBus,
                 invocationInfo);
-            ProcessTracker processTracker = new ProcessTracker(buildEventBus, invocationInfo);
+            ProcessTracker processTracker =
+                buckConfig.isProcessTrackerEnabled() ?
+                    new ProcessTracker(buildEventBus, invocationInfo) : null;
         ) {
 
           LOG.debug(invocationInfo.toLogLine(args));
