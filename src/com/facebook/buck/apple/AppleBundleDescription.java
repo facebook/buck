@@ -280,5 +280,10 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     public Optional<String> getXcodeProductType() {
       return xcodeProductType;
     }
+
+    @Override
+    public Optional<String> getProductName() {
+      return productName;
+    }
   }
 }

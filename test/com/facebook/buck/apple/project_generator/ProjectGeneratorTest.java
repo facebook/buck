@@ -4334,6 +4334,7 @@ public class ProjectGeneratorTest {
         .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setBinary(framework2BinaryTarget)
+        .setProductName(Optional.of("framework_2_override"))
         .build();
 
     BuildTarget framework1Target = BuildTarget.builder(rootPath, "//foo", "framework_1")
@@ -4397,7 +4398,7 @@ public class ProjectGeneratorTest {
               .transform(input -> input.getFileRef().getName()).toSortedSet(Ordering.natural());
     assertThat(frameworkNames,
         Matchers.equalToObject(
-            ImmutableSortedSet.of("framework_1.framework", "framework_2.framework")));
+            ImmutableSortedSet.of("framework_1.framework", "framework_2_override.framework")));
   }
 
   @Test

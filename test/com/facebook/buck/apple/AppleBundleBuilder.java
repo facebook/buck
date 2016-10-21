@@ -42,6 +42,11 @@ public class AppleBundleBuilder
     return this;
   }
 
+  public AppleBundleBuilder setProductName(Optional<String> productName) {
+    arg.productName = productName;
+    return this;
+  }
+
   public AppleBundleBuilder setXcodeProductType(Optional<String> xcodeProductType) {
     arg.xcodeProductType = xcodeProductType;
     return this;

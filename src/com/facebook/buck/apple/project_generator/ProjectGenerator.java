@@ -2516,6 +2516,7 @@ public class ProjectGenerator {
     } else if (targetNode.getType().equals(AppleBundleDescription.TYPE) ||
         targetNode.getType().equals(AppleTestDescription.TYPE)) {
       HasAppleBundleFields arg = (HasAppleBundleFields) targetNode.getConstructorArg();
+      productName = arg.getProductName().orElse(productName);
       productOutputName = productName + "." + getExtensionString(arg.getExtension());
     } else if (targetNode.getType().equals(AppleBinaryDescription.TYPE)) {
       productOutputName = productName;

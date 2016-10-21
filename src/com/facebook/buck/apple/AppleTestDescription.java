@@ -484,6 +484,11 @@ public class AppleTestDescription implements
     }
 
     @Override
+    public Optional<String> getProductName() {
+      return Optional.empty();
+    }
+
+    @Override
     public Optional<String> getXcodeProductType() {
       return xcodeProductType;
     }

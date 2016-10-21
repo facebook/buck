@@ -24,5 +24,6 @@ import java.util.Optional;
 public interface HasAppleBundleFields {
   public Either<AppleBundleExtension, String> getExtension();
   public SourcePath getInfoPlist();
+  public Optional<String> getProductName();
   public Optional<String> getXcodeProductType();
 }
