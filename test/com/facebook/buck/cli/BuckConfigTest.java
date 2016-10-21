@@ -633,4 +633,18 @@ public class BuckConfigTest {
     }
     assertThat("IllegalArgumentException should be thrown", Matchers.equalTo(""));
   }
+
+  @Test
+  public void testGetMap() throws IOException {
+    Reader reader = new StringReader(Joiner.on('\n').join(
+        "[section]",
+        "args_map = key0=>val0,key1=>val1"));
+   BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
+       temporaryFolder,
+       reader);
+
+    assertEquals(
+        ImmutableMap.of("key0", "val0", "key1", "val1"),
+        config.getMap("section", "args_map"));
+  }
 }
