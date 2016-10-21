@@ -115,7 +115,7 @@ public class GenAidlTest {
             pathToFrameworkAidl,
             stubFilesystem.resolve(importPath),
             stubFilesystem.resolve(outputDirectory),
-            pathToAidl),
+            pathToAidl.getRelativePath()),
         aidlStep.getDescription(executionContext));
 
     assertEquals(5, steps.size());

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.shell.ShellStep;
@@ -70,14 +71,15 @@ public class AidlStep extends ShellStep {
 
     // search path for import statements
     for (String importDirectoryPath : importDirectoryPaths) {
-      Path resovled = filesystem.resolve(Paths.get(importDirectoryPath));
-      args.add("-I" + resovled);
+      Path resolved = filesystem.getPathForRelativePath(Paths.get(importDirectoryPath));
+      args.add("-I" + resolved);
     }
 
     // base output folder for generated files
     args.add("-o" + filesystem.resolve(destinationDirectory));
 
-    args.add(aidlFilePath.toString());
+    // aidl includes this path in the generated file and so it must not be absolute.
+    args.add(MorePaths.relativize(workingDirectory, aidlFilePath).toString());
 
     return args.build();
   }
