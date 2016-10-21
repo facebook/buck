@@ -319,7 +319,7 @@ public class OCamlRuleBuilder {
               .transform(OCamlSource::getSource)
               .transform(pathResolver::getAbsolutePath)
               .filter(OCamlUtil.ext(OCamlCompilables.OCAML_C))
-              .transform(ocamlContext.toCOutput())
+              .transform(ocamlContext::getCOutput)
               .transform(SourcePaths.getToBuildTargetSourcePath(compileParams.getBuildTarget()))
               .toList(),
           ocamlContext,

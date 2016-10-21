@@ -22,7 +22,6 @@ import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.MoreMaps;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -100,10 +99,6 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
       throw new NoSuchNodeException(target);
     }
     return node;
-  }
-
-  public Function<BuildTarget, TargetNode<?>> get() {
-    return this::get;
   }
 
   public Iterable<TargetNode<?>> getAll(Iterable<BuildTarget> targets) {

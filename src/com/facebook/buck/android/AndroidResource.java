@@ -179,7 +179,7 @@ public class AndroidResource extends AbstractBuildRule
       boolean resourceUnion) {
     super(
         buildRuleParams.appendExtraDeps(
-            Suppliers.compose(resolver.filterBuildRuleInputsFunction(), symbolFilesFromDeps)),
+            Suppliers.compose(resolver::filterBuildRuleInputs, symbolFilesFromDeps)),
         resolver);
     if (res != null && rDotJavaPackageArgument == null && manifestFile == null) {
       throw new HumanReadableException(

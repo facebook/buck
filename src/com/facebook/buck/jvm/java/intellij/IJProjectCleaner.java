@@ -48,7 +48,7 @@ public class IJProjectCleaner {
 
   private static final FilenameFilter XML_FILENAME_FILTER = (dir, name) -> name.endsWith(".xml");
 
-  private static final FileFilter SUBDIRECTORY_FILTER = pathname -> pathname.isDirectory();
+  private static final FileFilter SUBDIRECTORY_FILTER = File::isDirectory;
 
   private final ProjectFilesystem projectFilesystem;
 

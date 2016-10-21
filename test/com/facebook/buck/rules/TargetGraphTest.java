@@ -137,13 +137,6 @@ public class TargetGraphTest {
   }
 
   @Test
-  public void getFunctionReportsMissingNode() {
-    expectedException.expectMessage(
-        "Required target for rule '//foo:bar#baz' was not found in the target graph.");
-    targetGraph.get().apply(BuildTargetFactory.newInstance("//foo:bar#baz"));
-  }
-
-  @Test
   public void getAllReportsMissingNode() {
     expectedException.expectMessage(
         "Required target for rule '//foo:bar#baz' was not found in the target graph.");

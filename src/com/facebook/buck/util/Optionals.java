@@ -52,10 +52,6 @@ public class Optionals {
     return f.apply(optional.get());
   }
 
-  public static <T> Function<T, Optional<T>> toOptional() {
-    return Optional::of;
-  }
-
   public static <T extends Comparable<T>> int compare(Optional<T> first, Optional<T> second) {
     if (first.isPresent() && !second.isPresent()) {
       return +1;

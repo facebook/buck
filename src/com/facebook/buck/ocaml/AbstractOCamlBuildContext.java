@@ -34,7 +34,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -224,10 +223,6 @@ abstract class AbstractOCamlBuildContext implements RuleKeyAppendable {
             OCamlCompilables.OCAML_C_REGEX,
             OCamlCompilables.OCAML_O);
     return getCompileNativeOutputDir().resolve(outputFileName);
-  }
-
-  public Function<Path, Path> toCOutput() {
-    return this::getCOutput;
   }
 
   public ImmutableList<String> getIncludeDirectories(boolean isBytecode, boolean excludeDeps) {

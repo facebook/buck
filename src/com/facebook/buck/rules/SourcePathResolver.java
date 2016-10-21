@@ -304,9 +304,4 @@ public class SourcePathResolver {
     return filterBuildRuleInputs(Arrays.asList(sources));
   }
 
-  public Function<Iterable<? extends SourcePath>, ImmutableCollection<BuildRule>>
-      filterBuildRuleInputsFunction() {
-    return this::filterBuildRuleInputs;
-  }
-
 }

@@ -714,7 +714,7 @@ public class WorkspaceAndProjectGenerator {
                   projectGraph,
                   projectGraph.get(
                       schemeArguments.srcTarget.get().getBuildTarget())),
-              Optionals.toOptional()));
+              Optional::of));
     } else {
       schemeNameToSrcTargetNodeBuilder.put(
           XcodeWorkspaceConfigDescription.getWorkspaceNameFromArg(schemeArguments),
@@ -728,7 +728,7 @@ public class WorkspaceAndProjectGenerator {
               AppleBuildRules.getSchemeBuildableTargetNodes(
                   projectGraph,
                   Preconditions.checkNotNull(projectGraph.get(extraTarget))),
-              Optionals.toOptional()));
+              Optional::of));
     }
 
     extraTestNodesBuilder.putAll(

@@ -315,7 +315,7 @@ public class ProjectGenerator {
       CxxBuckConfig cxxBuckConfig,
       AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig) {
-    this.sourcePathResolver = input -> resolveSourcePath(input);
+    this.sourcePathResolver = this::resolveSourcePath;
 
     this.targetGraph = targetGraph;
     this.initialTargets = ImmutableSet.copyOf(initialTargets);
@@ -2479,7 +2479,7 @@ public class ProjectGenerator {
                 AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES))
         .filter(getLibraryWithSourcesToCompilePredicate())
         .transform(
-            input -> getLibraryFileReference(input)).toSet();
+            this::getLibraryFileReference).toSet();
   }
 
   private Function<
