@@ -23,6 +23,7 @@ import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.hash.HashCode;
 
 import java.io.IOException;
@@ -43,11 +44,14 @@ class DistBuildFileMaterializer implements FileHashLoader {
   private final Set<Path> materializedPaths;
   private final FileContentsProvider provider;
   private final ProjectFilesystem projectFilesystem;
+  private final FileHashCache directFileHashCacheDelegate;
 
   public DistBuildFileMaterializer(
       final ProjectFilesystem projectFilesystem,
       BuildJobStateFileHashes remoteFileHashes,
-      FileContentsProvider provider) {
+      FileContentsProvider provider,
+      FileHashCache directFileHashCacheDelegate) {
+    this.directFileHashCacheDelegate = directFileHashCacheDelegate;
     this.remoteFileHashesByPath = DistBuildFileHashes.indexEntriesByPath(
         projectFilesystem,
         remoteFileHashes);
@@ -91,6 +95,7 @@ class DistBuildFileMaterializer implements FileHashLoader {
       if (!symlinkedPaths.contains(path)) {
         materializeSymlink(fileHashEntry, materializedPaths);
       }
+      symlinkIntegrityCheck(fileHashEntry);
       materializedPaths.add(path);
       return;
     }
@@ -119,6 +124,18 @@ class DistBuildFileMaterializer implements FileHashLoader {
     }
   }
 
+  private void symlinkIntegrityCheck(BuildJobStateFileHashEntry fileHashEntry) throws IOException {
+    Path symlink = projectFilesystem.resolve(fileHashEntry.getPath().getPath());
+    HashCode expectedHash = HashCode.fromString(fileHashEntry.getHashCode());
+    HashCode actualHash = directFileHashCacheDelegate.get(symlink);
+    if (!expectedHash.equals(actualHash)) {
+      throw new RuntimeException(String.format(
+          "Symlink [%s] had hashcode [%s] during scheduling, but [%s] during build.",
+          symlink.toAbsolutePath(),
+          expectedHash,
+          actualHash));
+    }
+  }
 
   private synchronized void materializeSymlink(
       BuildJobStateFileHashEntry fileHashEntry, Set<Path> processedPaths) {

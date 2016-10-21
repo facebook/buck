@@ -198,25 +198,6 @@ public class DistBuildFileHashes {
     return new RemoteStateBasedFileHashCache(projectFilesystem, remoteFileHashes);
   }
 
-  /**
-   * Creates a {@link FileHashLoader} which creates the files that are being hashed but does
-   * not return a HashCode.
-   *
-   * @param projectFilesystem filesystem in which the new cache will be rooted. The serialized state
-   *                          only contains relative path, therefore this is needed to indicate
-   *                          where on the local machine we wish to transplant the files from the
-   *                          remote to.
-   * @param remoteFileHashes the serialized state.
-   * @param provider of the file contents.
-   * @return the loader.
-   */
-  public static DistBuildFileMaterializer createMaterializingLoader(
-      ProjectFilesystem projectFilesystem,
-      BuildJobStateFileHashes remoteFileHashes,
-      FileContentsProvider provider) {
-    return new DistBuildFileMaterializer(projectFilesystem, remoteFileHashes, provider);
-  }
-
   public static ImmutableMap<Path, BuildJobStateFileHashEntry> indexEntriesByPath(
       final ProjectFilesystem projectFilesystem,
       BuildJobStateFileHashes remoteFileHashes) {

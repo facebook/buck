@@ -22,14 +22,10 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.CachingBuildEngineDelegate;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import java.util.concurrent.ExecutionException;
 
@@ -51,15 +47,7 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
         .build(new CacheLoader<ProjectFilesystem, FileHashCache>() {
           @Override
           public FileHashCache load(@Nonnull ProjectFilesystem filesystem) {
-            FileHashCache remoteCache = remoteState.createFileHashLoader(filesystem);
-            FileHashCache cellCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
-            FileHashCache buckOutCache = DefaultFileHashCache.createBuckOutFileHashCache(
-                new ProjectFilesystem(
-                    filesystem.getRootPath(),
-                    ImmutableSet.of()),
-                filesystem.getBuckPaths().getBuckOut());
-            return new StackedFileHashCache(
-                ImmutableList.of(remoteCache, cellCache, buckOutCache));
+            return remoteState.createRemoteFileHashCache(filesystem);
           }
         });
     ruleKeyFactories = DistBuildFileHashes.createRuleKeyFactories(

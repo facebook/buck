@@ -28,6 +28,7 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.hash.HashCode;
 
@@ -35,6 +36,7 @@ import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.ByteArrayInputStream;
@@ -54,7 +56,11 @@ public class DistBuildFileMaterializerTest {
   @Rule
   public TemporaryFolder externalDir = new TemporaryFolder();
 
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
+
   private static final HashCode EXAMPLE_HASHCODE = HashCode.fromString("1234");
+  private static final HashCode EXAMPLE_HASHCODE_TWO = HashCode.fromString("3456");
   private static final String FILE_CONTENTS = "filecontents";
 
   interface MaterializeFunction {
@@ -82,8 +88,10 @@ public class DistBuildFileMaterializerTest {
         .andReturn(Optional.of(fileContentStream));
     replay(mockFileProvider);
 
+    FileHashCache mockFileHashCache = EasyMock.createMock(FileHashCache.class);
+
     DistBuildFileMaterializer fileMaterializer = new DistBuildFileMaterializer(
-        projectFilesystem, fileHashes, mockFileProvider);
+        projectFilesystem, fileHashes, mockFileProvider, mockFileHashCache);
     materializeFunction.execute(fileMaterializer, realFile);
 
     return realFile;
@@ -119,6 +127,16 @@ public class DistBuildFileMaterializerTest {
 
   public void testSymlinkToFileWithinExternalDirectory(
       MaterializeFunction materializeFunction) throws IOException {
+    testSymlinkToFileWithinExternalDirectory(
+        EXAMPLE_HASHCODE,
+        EXAMPLE_HASHCODE,
+        materializeFunction);
+  }
+
+  public void testSymlinkToFileWithinExternalDirectory(
+      HashCode fileHashEntryHashCode,
+      HashCode actualHashCode,
+      MaterializeFunction materializeFunction) throws IOException {
     // Scenario:
     //  path: /project/linktoexternaldir/externalfile
     //  symlink root: /project/linktoexternaldir -> /externalDir
@@ -137,14 +155,18 @@ public class DistBuildFileMaterializerTest {
     symlinkFileHashEntry.setRootSymLink(unixPath(relativeSymlinkRoot));
     symlinkFileHashEntry.setRootSymLinkTarget(unixPath(externalDir.getRoot().toPath()));
     symlinkFileHashEntry.setPath(unixPath(relativeSymlink));
-    symlinkFileHashEntry.setHashCode(EXAMPLE_HASHCODE.toString());
+    symlinkFileHashEntry.setHashCode(fileHashEntryHashCode.toString());
     BuildJobStateFileHashes fileHashes = new BuildJobStateFileHashes();
     fileHashes.addToEntries(symlinkFileHashEntry);
 
     FileContentsProvider mockFileProvider = EasyMock.createMock(FileContentsProvider.class);
+    FileHashCache mockFileHashCache = EasyMock.createMock(FileHashCache.class);
+    expect(mockFileHashCache.get(symlink)).andReturn(actualHashCode);
+    replay(mockFileHashCache);
 
     DistBuildFileMaterializer fileMaterializer = new DistBuildFileMaterializer(
-        projectFilesystem, fileHashes, mockFileProvider);
+        projectFilesystem, fileHashes, mockFileProvider,
+        mockFileHashCache);
 
     assertFalse(symlink.toFile().exists());
 
@@ -175,6 +197,15 @@ public class DistBuildFileMaterializerTest {
           fileMaterializer.preloadAllFiles();
           fileMaterializer.get(symlink);
         });
+  }
+
+  @Test
+  public void testMaterializeSymlinkWithDifferentHashCodeThrowsException() throws IOException {
+    thrown.expect(RuntimeException.class);
+    testSymlinkToFileWithinExternalDirectory(
+        EXAMPLE_HASHCODE, /* fileHashEntryHashCode */
+        EXAMPLE_HASHCODE_TWO, /* actualHashCode */
+        (fileMaterializer, symlink) -> fileMaterializer.get(symlink));
   }
 
   private static PathWithUnixSeparators unixPath(Path path) {

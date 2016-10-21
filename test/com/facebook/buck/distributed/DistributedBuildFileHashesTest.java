@@ -26,7 +26,6 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.HashingDeterministicJarWriter;
 import com.facebook.buck.io.MoreFiles;
@@ -60,6 +59,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -155,10 +155,14 @@ public class DistributedBuildFileHashesTest {
 
     ProjectFilesystem materializeProjectFilesystem =
         new ProjectFilesystem(tempDir.newFolder("read_hashes").getCanonicalFile().toPath());
-    FileHashLoader materializer = DistBuildFileHashes.createMaterializingLoader(
-        materializeProjectFilesystem,
-        fileHashes.get(0),
-        new FileContentsProviders.InlineContentsProvider());
+
+    FileHashCache fileHashLoader = EasyMock.createMock(FileHashCache.class);
+    DistBuildFileMaterializer materializer =
+        new DistBuildFileMaterializer(
+            materializeProjectFilesystem,
+            fileHashes.get(0),
+            new FileContentsProviders.InlineContentsProvider(),
+            fileHashLoader);
 
     materializer.get(materializeProjectFilesystem.resolve(f.javaSrcPath));
     assertThat(
