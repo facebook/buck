@@ -53,7 +53,7 @@ public class RustBinary extends RustCompile implements BinaryBuildRule {
             .addAll(rustcFlags)
             .build(),
         features,
-        RustLinkables.getNativePaths(params.getDeps(), resolver, linkStyle, cxxPlatform),
+        RustLinkables.getNativePaths(params.getDeps().stream(), resolver, linkStyle, cxxPlatform),
         BuildTargets.getGenPath(
             params.getProjectFilesystem(),
             params.getBuildTarget(),

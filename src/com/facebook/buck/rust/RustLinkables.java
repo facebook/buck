@@ -25,16 +25,16 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.stream.Stream;
 
 
 /**
@@ -97,16 +97,16 @@ public class RustLinkables {
   }
 
   static ImmutableSortedSet<Path> getNativePaths(
-      Iterable<BuildRule> deps,
+      Stream<BuildRule> deps,
       SourcePathResolver resolver,
       Linker.LinkableDepType linkStyle,
       CxxPlatform cxxPlatform) {
-    return FluentIterable.from(deps)
-      .transformAndConcat(rule -> getNativeLinkableInputs(rule, linkStyle, cxxPlatform))
-      .transformAndConcat(nli -> nli.getArgs())
-      .transformAndConcat(arg -> arg.getDeps(resolver))
-      .transform(dep -> dep.getPathToOutput())
-      .toSortedSet(Comparator.<Path>naturalOrder());
+    return deps
+        .flatMap(rule -> getNativeLinkableInputs(rule, linkStyle, cxxPlatform).stream())
+        .flatMap(nli -> nli.getArgs().stream())
+        .flatMap(arg -> arg.getDeps(resolver).stream())
+        .map(dep -> dep.getPathToOutput())
+        .collect(MoreCollectors.toImmutableSortedSet(Comparator.<Path>naturalOrder()));
   }
 
   static BuildRuleParams addNativeDependencies(
@@ -116,12 +116,13 @@ public class RustLinkables {
       Linker.LinkableDepType linkStyle) {
     return params.copyWithChanges(
         params.getBuildTarget(),
-        () -> FluentIterable.from(params.getDeps())
-            .transformAndConcat(rule -> getNativeLinkableInputs(rule, linkStyle, cxxPlatform))
-            .transformAndConcat(nli -> nli.getArgs())
-            .transformAndConcat(arg -> arg.getDeps(resolver))
-            .append(params.getDeps())
-            .toSortedSet(Ordering.natural()),
+        () -> Stream.concat(
+            params.getDeps().stream()
+                .flatMap(rule -> getNativeLinkableInputs(rule, linkStyle, cxxPlatform).stream())
+                .flatMap(nli -> nli.getArgs().stream())
+                .flatMap(arg -> arg.getDeps(resolver).stream()),
+            params.getDeps().stream())
+            .collect(MoreCollectors.toImmutableSortedSet(Comparator.<BuildRule>naturalOrder())),
         Suppliers.ofInstance(ImmutableSortedSet.of()));
   }
 }
