@@ -40,6 +40,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -136,9 +137,9 @@ public class AndroidInstrumentationApkDescription
         /* shouldPreDex */ false,
         primaryDexPath,
         DexSplitMode.NO_SPLIT,
-        FluentIterable.from(rulesToExcludeFromDex)
-            .transform(HasBuildTarget::getBuildTarget)
-            .toSet(),
+        rulesToExcludeFromDex.stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet()),
         resourcesToExclude,
         /* skipCrunchPngs */ false,
         args.includesVectorDrawables.orElse(false),

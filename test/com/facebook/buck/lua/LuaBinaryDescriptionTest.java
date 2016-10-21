@@ -50,7 +50,7 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -305,9 +305,9 @@ public class LuaBinaryDescriptionTest {
             .setDeps(ImmutableSortedSet.of(pythonLibrary.getBuildTarget()))
             .build(resolver);
     assertThat(
-        FluentIterable.from(luaBinary.getRuntimeDeps())
-            .transform(HasBuildTarget::getBuildTarget)
-            .toSet(),
+        luaBinary.getRuntimeDeps().stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet()),
         Matchers.hasItem(PythonBinaryDescription.getEmptyInitTarget(luaBinary.getBuildTarget())));
   }
 

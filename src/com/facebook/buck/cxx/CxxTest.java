@@ -36,10 +36,10 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -185,7 +185,9 @@ public abstract class CxxTest extends AbstractBuildRule implements TestRule, Has
           getBuildTarget(),
           summaries.build(),
           contacts,
-          FluentIterable.from(labels).transform(Object::toString).toSet());
+          labels.stream()
+              .map(Object::toString)
+              .collect(MoreCollectors.toImmutableSet()));
     };
   }
 

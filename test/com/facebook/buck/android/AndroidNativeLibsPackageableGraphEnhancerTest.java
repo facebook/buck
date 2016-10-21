@@ -36,6 +36,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
@@ -207,10 +208,9 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     );
     assertThat(copyNativeLibraries.getNativeLibDirectories(), Matchers.empty());
     ImmutableCollection<BuildRule> stripRules = sourcePathResolver.filterBuildRuleInputs(
-        FluentIterable.from(copyNativeLibraries.getStrippedObjectDescriptions())
-            .transform(
-                StrippedObjectDescription::getSourcePath)
-            .toSet());
+        copyNativeLibraries.getStrippedObjectDescriptions().stream()
+            .map(StrippedObjectDescription::getSourcePath)
+            .collect(MoreCollectors.toImmutableSet()));
     assertThat(
         stripRules,
         Matchers.contains(

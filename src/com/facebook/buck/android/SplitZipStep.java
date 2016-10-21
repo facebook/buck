@@ -26,6 +26,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -76,10 +77,6 @@ public class SplitZipStep implements Step {
 
   // Transform Function that calls String.trim()
   private static final Function<String, String> STRING_TRIM = line -> line.trim();
-
-  // Transform Function that appends ".class"
-  private static final Function<String, String> APPEND_CLASS_SUFFIX =
-      input -> input + ".class";
 
   // Predicate that rejects blank lines and lines starting with '#'.
   private static final Predicate<String> IS_NEITHER_EMPTY_NOR_COMMENT =
@@ -179,9 +176,9 @@ public class SplitZipStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context) {
     try {
-      Set<Path> inputJarPaths = FluentIterable.from(inputPathsToSplit)
-          .transform(filesystem.getAbsolutifier())
-          .toSet();
+      Set<Path> inputJarPaths = inputPathsToSplit.stream()
+          .map(filesystem.getAbsolutifier()::apply)
+          .collect(MoreCollectors.toImmutableSet());
       Supplier<ImmutableList<ClassNode>> classes =
           ClassNodeListSupplier.createMemoized(inputJarPaths);
       ProguardTranslatorFactory translatorFactory = ProguardTranslatorFactory.create(
@@ -377,9 +374,9 @@ public class SplitZipStep implements Step {
       addScenarioClasses(translatorFactory, classesSupplier, builder);
     }
 
-    return FluentIterable.from(builder.build())
-        .transform(APPEND_CLASS_SUFFIX)
-        .toSet();
+    return builder.build().stream()
+        .map(input -> input + ".class")
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   /**

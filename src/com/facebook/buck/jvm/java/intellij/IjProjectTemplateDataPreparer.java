@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.intellij;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -307,9 +308,9 @@ public class IjProjectTemplateDataPreparer {
   }
 
   public ImmutableSet<IjSourceFolder> getGeneratedSourceFolders(final IjModule module) {
-    return FluentIterable.from(module.getGeneratedSourceCodeFolders())
-        .transform(new IjFolderToIjSourceFolderTransform(module))
-        .toSet();
+    return module.getGeneratedSourceCodeFolders().stream()
+        .map(new IjFolderToIjSourceFolderTransform(module)::apply)
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   public ImmutableSet<DependencyEntry> getDependencies(IjModule module) {

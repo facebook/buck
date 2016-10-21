@@ -50,6 +50,7 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -273,9 +274,9 @@ public class TargetsCommand extends AbstractCommand {
    *         absent otherwise.
    */
   public ImmutableSet<Path> getTargetHashModifiedPaths() {
-    return FluentIterable.from(targetHashModifiedPaths.get())
-        .transform(Paths::get)
-        .toSet();
+    return targetHashModifiedPaths.get().stream()
+        .map(Paths::get)
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   @Override
@@ -571,10 +572,9 @@ public class TargetsCommand extends AbstractCommand {
     ImmutableSet<TargetNode<?>> directOwners;
     if (referencedFiles.isPresent()) {
       BuildFileTree buildFileTree = new InMemoryBuildFileTree(
-          FluentIterable
-              .from(graph.getNodes())
-              .transform(HasBuildTarget::getBuildTarget)
-              .toSet());
+          graph.getNodes().stream()
+              .map(HasBuildTarget::getBuildTarget)
+              .collect(MoreCollectors.toImmutableSet()));
       directOwners = FluentIterable
           .from(graph.getNodes())
           .filter(

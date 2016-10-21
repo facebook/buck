@@ -31,10 +31,10 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
@@ -98,13 +98,13 @@ public class AuditClasspathCommand extends AbstractCommand {
       throws IOException, InterruptedException {
     // Create a TargetGraph that is composed of the transitive closure of all of the dependent
     // BuildRules for the specified BuildTargets.
-    final ImmutableSet<BuildTarget> targets = FluentIterable
-        .from(getArgumentsFormattedAsBuildTargets(params.getBuckConfig()))
-        .transform(input -> BuildTargetParser.INSTANCE.parse(
-            input,
-            BuildTargetPatternParser.fullyQualified(),
-            params.getCell().getCellPathResolver()))
-        .toSet();
+    final ImmutableSet<BuildTarget> targets =
+        getArgumentsFormattedAsBuildTargets(params.getBuckConfig()).stream()
+            .map(input -> BuildTargetParser.INSTANCE.parse(
+                input,
+                BuildTargetPatternParser.fullyQualified(),
+                params.getCell().getCellPathResolver()))
+            .collect(MoreCollectors.toImmutableSet());
 
     if (targets.isEmpty()) {
       params.getBuckEventBus().post(ConsoleEvent.severe(

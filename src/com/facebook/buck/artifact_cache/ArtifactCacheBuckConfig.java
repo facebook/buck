@@ -19,6 +19,7 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.SlbBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.base.Joiner;
@@ -180,19 +181,18 @@ public class ArtifactCacheBuckConfig {
   }
 
   public ImmutableSet<ArtifactCacheMode> getArtifactCacheModes() {
-    return FluentIterable.from(getArtifactCacheModesRaw())
-        .transform(
-            input -> {
-              try {
-                return ArtifactCacheMode.valueOf(input);
-              } catch (IllegalArgumentException e) {
-                throw new HumanReadableException(
-                    "Unusable %s.mode: '%s'",
-                    CACHE_SECTION_NAME,
-                    input);
-              }
-            })
-        .toSet();
+    return getArtifactCacheModesRaw().stream()
+        .map(input -> {
+          try {
+            return ArtifactCacheMode.valueOf(input);
+          } catch (IllegalArgumentException e) {
+            throw new HumanReadableException(
+                "Unusable %s.mode: '%s'",
+                CACHE_SECTION_NAME,
+                input);
+          }
+        })
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   public Optional<DirCacheEntry> getServedLocalCache() {

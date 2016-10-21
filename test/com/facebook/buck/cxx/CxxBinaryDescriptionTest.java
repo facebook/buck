@@ -44,7 +44,7 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -146,9 +146,9 @@ public class CxxBinaryDescriptionTest {
             cxxSourceRuleFactory.createCompileBuildTarget("test/bar.cpp"),
             cxxSourceRuleFactory.createCompileBuildTarget(genSourceName),
             archiveTarget),
-        FluentIterable.from(rule.getDeps())
-            .transform(HasBuildTarget::getBuildTarget)
-            .toSet());
+        rule.getDeps().stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet()));
 
     // Verify that the preproces rule for our user-provided source has correct deps setup
     // for the various header rules.
@@ -174,9 +174,9 @@ public class CxxBinaryDescriptionTest {
     assertEquals(
         ImmutableSet.of(
             preprocessRule1.getBuildTarget()),
-        FluentIterable.from(compileRule1.getDeps())
-            .transform(HasBuildTarget::getBuildTarget)
-            .toSet());
+        compileRule1.getDeps().stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet()));
 
     // Verify that the preproces rule for our user-provided source has correct deps setup
     // for the various header rules.
@@ -203,9 +203,9 @@ public class CxxBinaryDescriptionTest {
     assertEquals(
         ImmutableSet.of(
             preprocessRule2.getBuildTarget()),
-        FluentIterable.from(compileRule2.getDeps())
-            .transform(HasBuildTarget::getBuildTarget)
-            .toSet());
+        compileRule2.getDeps().stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet()));
   }
 
   @Test

@@ -45,7 +45,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -357,10 +357,9 @@ public class IjModuleFactoryTest {
   }
 
   private ImmutableSet<Path> getFolderPaths(ImmutableSet<IjFolder> folders) {
-    return FluentIterable.from(folders)
-        .transform(
-            IjFolder::getPath)
-        .toSet();
+    return folders.stream()
+        .map(IjFolder::getPath)
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   @Test

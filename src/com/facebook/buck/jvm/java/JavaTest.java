@@ -52,6 +52,7 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -414,7 +415,9 @@ public class JavaTest
             getBuildTarget(),
             ImmutableList.of(),
             contacts,
-            FluentIterable.from(labels).transform(Object::toString).toSet());
+            labels.stream()
+                .map(Object::toString)
+                .collect(MoreCollectors.toImmutableSet()));
       }
 
       List<TestCaseSummary> summaries = Lists.newArrayListWithCapacity(testClassNames.size());
@@ -457,7 +460,9 @@ public class JavaTest
           .setBuildTarget(getBuildTarget())
           .setTestCases(summaries)
           .setContacts(contacts)
-          .setLabels(FluentIterable.from(labels).transform(Object::toString).toSet())
+          .setLabels(labels.stream()
+              .map(Object::toString)
+              .collect(MoreCollectors.toImmutableSet()))
           .addTestLogPaths(getProjectFilesystem().resolve(pathToTestLogs))
           .build();
     };

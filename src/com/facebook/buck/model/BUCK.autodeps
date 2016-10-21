@@ -24,6 +24,7 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/log/views:views",
       "//src/com/facebook/buck/util:constants",
+      "//src/com/facebook/buck/util:util",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [

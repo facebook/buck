@@ -22,6 +22,7 @@
       "//src/com/facebook/buck/shell:rules",
       "//src/com/facebook/buck/swift:swift",
       "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/apple:testutil",
       "//test/com/facebook/buck/apple/project_generator:testutil",

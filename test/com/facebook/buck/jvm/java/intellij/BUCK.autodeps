@@ -17,6 +17,7 @@
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:object_mapper",
+      "//src/com/facebook/buck/util:util",
       "//test/com/facebook/buck/android:testutil",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/cxx:testutil",

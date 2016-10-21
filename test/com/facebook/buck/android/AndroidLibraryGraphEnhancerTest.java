@@ -37,7 +37,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.DependencyMode;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -137,8 +137,9 @@ public class AndroidLibraryGraphEnhancerTest {
     assertEquals(
         "DummyRDotJava must depend on the two AndroidResourceRules.",
         ImmutableSet.of("//android_res/com/example:res1", "//android_res/com/example:res2"),
-        FluentIterable.from(dummyRDotJava.get().getDeps())
-            .transform(Object::toString).toSet());
+        dummyRDotJava.get().getDeps().stream()
+            .map(Object::toString)
+            .collect(MoreCollectors.toImmutableSet()));
   }
 
   @Test

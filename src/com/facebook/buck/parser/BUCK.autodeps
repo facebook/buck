@@ -2,6 +2,7 @@
   "config" : {
     "deps" : [
       "//src/com/facebook/buck/python:config",
+      "//src/com/facebook/buck/util:util",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
@@ -9,8 +10,7 @@
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/util/immutables:immutables",
-      "//third-party/java/guava:guava",
-      "//third-party/java/jsr:jsr305"
+      "//third-party/java/guava:guava"
     ]
   },
   "parser" : {

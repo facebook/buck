@@ -25,6 +25,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -257,13 +258,13 @@ public class PreDexedFilesSorter {
             dexesContents.get(index).get(0));
         Collection<Path> dexContentPaths = Collections2.transform(
             dexesContents.get(index),
-            DexWithClasses.TO_PATH);
+            DexWithClasses::getPathToDexFile);
         secondaryOutputToInputs.putAll(pathToSecondaryDex, dexContentPaths);
       }
 
-      ImmutableSet<Path> primaryDexInputs = FluentIterable.from(primaryDexContents)
-          .transform(DexWithClasses.TO_PATH)
-          .toSet();
+      ImmutableSet<Path> primaryDexInputs = primaryDexContents.stream()
+          .map(DexWithClasses::getPathToDexFile)
+          .collect(MoreCollectors.toImmutableSet());
 
       return new Result(
           apkModule,

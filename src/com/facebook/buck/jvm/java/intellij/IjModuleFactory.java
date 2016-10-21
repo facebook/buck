@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
@@ -345,9 +346,9 @@ public class IjModuleFactory {
     Preconditions.checkArgument(!targetNodes.isEmpty());
 
 
-    ImmutableSet<BuildTarget> moduleBuildTargets = FluentIterable.from(targetNodes)
-        .transform(HasBuildTarget::getBuildTarget)
-        .toSet();
+    ImmutableSet<BuildTarget> moduleBuildTargets = targetNodes.stream()
+        .map(HasBuildTarget::getBuildTarget)
+        .collect(MoreCollectors.toImmutableSet());
 
     ModuleBuildContext context = new ModuleBuildContext(moduleBuildTargets);
 

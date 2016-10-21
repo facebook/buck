@@ -43,9 +43,9 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.PackagedResource;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -251,7 +251,9 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
           getBuildTarget(),
           summaries.build(),
           contacts,
-          FluentIterable.from(labels).transform(Object::toString).toSet());
+          labels.stream()
+              .map(Object::toString)
+              .collect(MoreCollectors.toImmutableSet()));
     };
   }
 

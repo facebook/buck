@@ -19,7 +19,7 @@ package com.facebook.buck.testrunner;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -74,10 +74,9 @@ public class TimeoutTest {
 
     // The order in which the tests were run doesn't matter. What matters is that we see our
     // expected messages.
-    Set<String> messages = FluentIterable
-        .from(result.getFailures())
-        .transform(Failure::getMessage)
-        .toSet();
+    Set<String> messages = result.getFailures().stream()
+        .map(Failure::getMessage)
+        .collect(MoreCollectors.toImmutableSet());
     assertEquals(
         "Should contain explicit call to fail() from failingTestsAreReported() and " +
             "the timeout message from testsMayTimeOut().",

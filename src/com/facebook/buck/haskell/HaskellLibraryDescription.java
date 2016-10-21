@@ -44,6 +44,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -570,10 +571,9 @@ public class HaskellLibraryDescription implements
     ;
 
     public static final ImmutableSet<Flavor> FLAVOR_VALUES =
-        FluentIterable.from(ImmutableList.copyOf(Type.values()))
-            .transform(
-                Type::getFlavor)
-            .toSet();
+        ImmutableList.copyOf(Type.values()).stream()
+            .map(Type::getFlavor)
+            .collect(MoreCollectors.toImmutableSet());
 
     private final Flavor flavor;
 

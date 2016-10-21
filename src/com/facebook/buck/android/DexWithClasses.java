@@ -90,6 +90,4 @@ public interface DexWithClasses {
   Comparator<DexWithClasses> DEX_WITH_CLASSES_COMPARATOR =
       (o1, o2) -> o1.getPathToDexFile().compareTo(o2.getPathToDexFile());
 
-  Function <DexWithClasses, Path> TO_PATH =
-      DexWithClasses::getPathToDexFile;
 }

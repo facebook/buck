@@ -30,8 +30,8 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -70,11 +70,9 @@ public class TargetNodeTest {
     ImmutableList<String> depsStrings = ImmutableList.of(
         "//example/path:one",
         "//example/path:two");
-    ImmutableSet<BuildTarget> depsTargets = FluentIterable
-        .from(depsStrings)
-        .transform(
-            BuildTargetFactory::newInstance)
-        .toSet();
+    ImmutableSet<BuildTarget> depsTargets = depsStrings.stream()
+        .map(BuildTargetFactory::newInstance)
+        .collect(MoreCollectors.toImmutableSet());
     ImmutableMap<String, Object> rawNode = ImmutableMap.of(
         "deps", depsStrings,
         "sourcePaths", ImmutableList.of("//example/path:four", "MyClass.java"),

@@ -35,6 +35,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -442,9 +443,9 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
 
     return new BuildOutput(
         primaryDexHash.orElse(null),
-        FluentIterable.from(onDiskBuildInfo.getValues(SECONDARY_DEX_DIRECTORIES_KEY).get())
-            .transform(Paths::get)
-            .toSet());
+        onDiskBuildInfo.getValues(SECONDARY_DEX_DIRECTORIES_KEY).get().stream()
+            .map(Paths::get)
+            .collect(MoreCollectors.toImmutableSet()));
   }
 
   @Override

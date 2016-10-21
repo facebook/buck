@@ -260,9 +260,8 @@ public class Build implements Closeable {
     // build.getActionGraph().getNodesWithNoIncomingEdges() because, due to graph enhancement,
     // there could be disconnected subgraphs in the DependencyGraph that we do not want to build.
     ImmutableList<BuildRule> rulesToBuild = ImmutableList.copyOf(
-        FluentIterable
-            .from(targetsToBuild)
-            .transform(hasBuildTarget -> {
+        targetsToBuild.stream()
+            .map(hasBuildTarget -> {
               try {
                 return getRuleResolver().requireRule(hasBuildTarget.getBuildTarget());
               } catch (NoSuchBuildTargetException e) {
@@ -271,7 +270,7 @@ public class Build implements Closeable {
                     hasBuildTarget.getBuildTarget());
               }
             })
-            .toSet());
+            .collect(MoreCollectors.toImmutableSet()));
 
     // Calculate and post the number of rules that need to built.
     int numRules = buildEngine.getNumRulesToBuild(rulesToBuild);

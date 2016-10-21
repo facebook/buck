@@ -33,12 +33,11 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -49,13 +48,11 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.StreamSupport;
 
 public class JavaSymbolsRuleTest {
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
-
-  private static final Function<JsonNode, String> GET_STRING_LITERAL_VALUE_FROM_JSON_NODE =
-      node -> ((TextNode) node).textValue();
 
   @Test
   public void ensureJsonFilesGetWritten() throws IOException, InterruptedException {
@@ -117,15 +114,15 @@ public class JavaSymbolsRuleTest {
             "com.example.Example1",
             "com.example.Example2",
             "com.example.generated.Example"),
-        FluentIterable.from(jsonNode.get("provided"))
-            .transform(GET_STRING_LITERAL_VALUE_FROM_JSON_NODE)
-            .toSet());
+        StreamSupport.stream(jsonNode.get("provided").spliterator(), false)
+            .map(JsonNode::textValue)
+            .collect(MoreCollectors.toImmutableSet()));
     assertEquals(
         ImmutableSet.of(
             "com.example.other.Bar",
             "com.example.other.Foo"),
-        FluentIterable.from(jsonNode.get("required"))
-            .transform(GET_STRING_LITERAL_VALUE_FROM_JSON_NODE)
-            .toSet());
+        StreamSupport.stream(jsonNode.get("required").spliterator(), false)
+            .map(JsonNode::textValue)
+            .collect(MoreCollectors.toImmutableSet()));
   }
 }

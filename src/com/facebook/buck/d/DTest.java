@@ -38,8 +38,8 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -197,7 +197,9 @@ public class DTest extends AbstractBuildRule implements
                   ImmutableList.of(summary))
           ),
           contacts,
-          FluentIterable.from(labels).transform(Object::toString).toSet());
+          labels.stream()
+              .map(Object::toString)
+              .collect(MoreCollectors.toImmutableSet()));
     };
   }
 

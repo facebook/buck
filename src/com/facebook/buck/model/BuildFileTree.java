@@ -16,12 +16,12 @@
 
 package com.facebook.buck.model;
 
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.util.MoreCollectors;
 
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.StreamSupport;
 
 /**
  * Interface to allow looking up parents and children of build files.
@@ -60,8 +60,8 @@ public abstract class BuildFileTree {
    */
   protected static Collection<Path> collectBasePaths(Iterable<? extends BuildTarget> targets) {
 
-    return FluentIterable.from(targets).transform(
-        (Function<BuildTarget, Path>) AbstractBuildTarget::getBasePath)
-        .toSet();
+    return StreamSupport.stream(targets.spliterator(), false)
+        .map(BuildTarget::getBasePath)
+        .collect(MoreCollectors.toImmutableSet());
   }
 }

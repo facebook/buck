@@ -117,6 +117,7 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.timing.SettableFakeClock;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
@@ -145,6 +146,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -3705,7 +3707,9 @@ public class ProjectGeneratorTest {
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
     ProjectGenerator projectGenerator = new ProjectGenerator(
         targetGraph,
-        FluentIterable.from(nodes).transform(HasBuildTarget::getBuildTarget).toSet(),
+        nodes.stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet()),
         projectCell,
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
@@ -3809,7 +3813,9 @@ public class ProjectGeneratorTest {
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
     ProjectGenerator projectGenerator = new ProjectGenerator(
         targetGraph,
-        FluentIterable.from(nodes).transform(HasBuildTarget::getBuildTarget).toSet(),
+        nodes.stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet()),
         projectCell,
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
@@ -3888,7 +3894,9 @@ public class ProjectGeneratorTest {
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
     ProjectGenerator projectGenerator = new ProjectGenerator(
         targetGraph,
-        FluentIterable.from(nodes).transform(HasBuildTarget::getBuildTarget).toSet(),
+        nodes.stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet()),
         projectCell,
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
@@ -4519,14 +4527,14 @@ public class ProjectGeneratorTest {
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
-      Iterable<TargetNode<?>> nodes) {
+      Collection<TargetNode<?>> nodes) {
     return createProjectGeneratorForCombinedProject(
         nodes,
         ImmutableSet.of());
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
-      Iterable<TargetNode<?>> nodes,
+      Collection<TargetNode<?>> nodes,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions) {
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes));
     return createProjectGeneratorForCombinedProject(
@@ -4537,13 +4545,12 @@ public class ProjectGeneratorTest {
   }
 
   private ProjectGenerator createProjectGeneratorForCombinedProject(
-      Iterable<TargetNode<?>> nodes,
+      Collection<TargetNode<?>> nodes,
       ImmutableSet<ProjectGenerator.Option> projectGeneratorOptions,
       Function<? super TargetNode<?>, SourcePathResolver> sourcePathResolverForNode) {
-    ImmutableSet<BuildTarget> initialBuildTargets = FluentIterable
-        .from(nodes)
-        .transform(HasBuildTarget::getBuildTarget)
-        .toSet();
+    ImmutableSet<BuildTarget> initialBuildTargets = nodes.stream()
+        .map(HasBuildTarget::getBuildTarget)
+        .collect(MoreCollectors.toImmutableSet());
 
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes));
     return new ProjectGenerator(

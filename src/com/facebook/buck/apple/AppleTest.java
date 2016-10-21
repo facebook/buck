@@ -39,11 +39,11 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.OptionalCompat;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -397,7 +397,9 @@ public class AppleTest
           .setBuildTarget(getBuildTarget())
           .setTestCases(testCaseSummaries)
           .setContacts(contacts)
-          .setLabels(FluentIterable.from(labels).transform(Object::toString).toSet());
+          .setLabels(labels.stream()
+              .map(Object::toString)
+              .collect(MoreCollectors.toImmutableSet()));
       if (getProjectFilesystem().isDirectory(testLogsPath)) {
         for (Path testLogPath : getProjectFilesystem().getDirectoryContents(testLogsPath)) {
           testResultsBuilder.addTestLogPaths(testLogPath);

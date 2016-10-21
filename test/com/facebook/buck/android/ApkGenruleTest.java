@@ -59,9 +59,9 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -160,10 +160,9 @@ public class ApkGenruleTest {
     assertEquals(
         "The apk that this rule is modifying must have the apk in its deps.",
         ImmutableSet.of(apkTarget.toString()),
-        FluentIterable
-            .from(apkGenrule.getDeps())
-            .transform(Object::toString)
-            .toSet());
+        apkGenrule.getDeps().stream()
+            .map(Object::toString)
+            .collect(MoreCollectors.toImmutableSet()));
     BuildContext buildContext = BuildContext.builder()
         .setActionGraph(EasyMock.createMock(ActionGraph.class))
         .setClock(EasyMock.createMock(Clock.class))

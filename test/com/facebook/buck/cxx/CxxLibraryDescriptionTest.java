@@ -61,6 +61,7 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
@@ -265,9 +266,9 @@ public class CxxLibraryDescriptionTest {
         ImmutableSet.of(
             cxxSourceRuleFactory.createCompileBuildTarget("test/bar.cpp"),
             cxxSourceRuleFactory.createCompileBuildTarget(genSourceName)),
-        FluentIterable.from(archiveRule.getDeps())
-            .transform(HasBuildTarget::getBuildTarget)
-            .toSet());
+        archiveRule.getDeps().stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet()));
 
     // Verify that the preprocess rule for our user-provided source has correct deps setup
     // for the various header rules.
@@ -297,9 +298,9 @@ public class CxxLibraryDescriptionTest {
     assertEquals(
         ImmutableSet.of(
             preprocessRule1.getBuildTarget()),
-        FluentIterable.from(compileRule1.getDeps())
-            .transform(HasBuildTarget::getBuildTarget)
-            .toSet());
+        compileRule1.getDeps().stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet()));
 
     // Verify that the preprocess rule for our genrule-generated source has correct deps setup
     // for the various header rules and the generating genrule.
@@ -330,9 +331,9 @@ public class CxxLibraryDescriptionTest {
     assertEquals(
         ImmutableSet.of(
             preprocessRule2.getBuildTarget()),
-        FluentIterable.from(compileRule2.getDeps())
-            .transform(HasBuildTarget::getBuildTarget)
-            .toSet());
+        compileRule2.getDeps().stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet()));
   }
 
   @Test
@@ -550,9 +551,9 @@ public class CxxLibraryDescriptionTest {
         ImmutableSet.of(
             cxxSourceRuleFactoryPDC.createCompileBuildTarget("test/bar.cpp"),
             cxxSourceRuleFactoryPDC.createCompileBuildTarget(genSourceName)),
-        FluentIterable.from(staticRule.getDeps())
-            .transform(HasBuildTarget::getBuildTarget)
-            .toSet());
+        staticRule.getDeps().stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet()));
 
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
@@ -582,9 +583,9 @@ public class CxxLibraryDescriptionTest {
     assertNotNull(staticCompileRule1);
     assertEquals(
         ImmutableSet.of(staticPreprocessRule1.getBuildTarget()),
-        FluentIterable.from(staticCompileRule1.getDeps())
-            .transform(HasBuildTarget::getBuildTarget)
-            .toSet());
+        staticCompileRule1.getDeps().stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet()));
 
     // Verify that the compile rule for our genrule-generated source has correct deps setup
     // for the various header rules and the generating genrule.
@@ -615,9 +616,9 @@ public class CxxLibraryDescriptionTest {
     assertNotNull(staticCompileRule2);
     assertEquals(
         ImmutableSet.of(staticPreprocessRule2.getBuildTarget()),
-        FluentIterable.from(staticCompileRule2.getDeps())
-            .transform(HasBuildTarget::getBuildTarget)
-            .toSet());
+        staticCompileRule2.getDeps().stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet()));
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
     CxxSourceRuleFactory cxxSourceRuleFactoryPIC = CxxSourceRuleFactoryHelper.of(
@@ -637,9 +638,9 @@ public class CxxLibraryDescriptionTest {
             sharedLibraryDepTarget,
             cxxSourceRuleFactoryPIC.createCompileBuildTarget("test/bar.cpp"),
             cxxSourceRuleFactoryPIC.createCompileBuildTarget(genSourceName)),
-        FluentIterable.from(sharedRule.getDeps())
-            .transform(HasBuildTarget::getBuildTarget)
-            .toSet());
+        sharedRule.getDeps().stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet()));
 
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
@@ -669,9 +670,9 @@ public class CxxLibraryDescriptionTest {
     assertNotNull(sharedCompileRule1);
     assertEquals(
         ImmutableSet.of(sharedPreprocessRule1.getBuildTarget()),
-        FluentIterable.from(sharedCompileRule1.getDeps())
-            .transform(HasBuildTarget::getBuildTarget)
-            .toSet());
+        sharedCompileRule1.getDeps().stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet()));
 
     // Verify that the compile rule for our genrule-generated source has correct deps setup
     // for the various header rules and the generating genrule.
@@ -702,9 +703,9 @@ public class CxxLibraryDescriptionTest {
     assertNotNull(sharedCompileRule2);
     assertEquals(
         ImmutableSet.of(sharedPreprocessRule2.getBuildTarget()),
-        FluentIterable.from(sharedCompileRule2.getDeps())
-            .transform(HasBuildTarget::getBuildTarget)
-            .toSet());
+        sharedCompileRule2.getDeps().stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet()));
   }
 
   @Test
@@ -1243,9 +1244,9 @@ public class CxxLibraryDescriptionTest {
     cxxBinaryBuilder.build(resolver, filesystem);
     CxxLibrary cxxLibrary = (CxxLibrary) cxxLibraryBuilder.build(resolver, filesystem);
     assertThat(
-        FluentIterable.from(cxxLibrary.getRuntimeDeps())
-            .transform(HasBuildTarget::getBuildTarget)
-            .toSet(),
+        cxxLibrary.getRuntimeDeps().stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet()),
         hasItem(cxxBinaryBuilder.getTarget()));
   }
 

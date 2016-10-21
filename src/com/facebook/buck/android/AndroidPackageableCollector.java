@@ -26,6 +26,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -249,7 +250,9 @@ public class AndroidPackageableCollector {
     collectionBuilder.setBuildConfigs(ImmutableMap.copyOf(buildConfigs));
     final ImmutableSet<HasJavaClassHashes> javaClassProviders = javaClassHashesProviders.build();
     collectionBuilder.addAllJavaLibrariesToDex(
-        FluentIterable.from(javaClassProviders).transform(HasBuildTarget::getBuildTarget).toSet());
+        javaClassProviders.stream()
+            .map(HasBuildTarget::getBuildTarget)
+            .collect(MoreCollectors.toImmutableSet()));
     collectionBuilder.setClassNamesToHashesSupplier(Suppliers.memoize(
         () -> {
 

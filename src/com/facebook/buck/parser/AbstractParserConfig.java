@@ -19,11 +19,10 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.python.PythonBuckConfig;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -34,7 +33,6 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import javax.annotation.Nullable;
 
 @Value.Immutable(builder = false, copy = false)
 @BuckStyleImmutable
@@ -112,17 +110,9 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
 
   @Value.Lazy
   public ImmutableSet<Pattern> getTempFilePatterns() {
-    return FluentIterable
-        .from(getDelegate().getListWithoutComments("project", "temp_files"))
-        .transform(
-            new Function<String, Pattern>() {
-              @Nullable
-              @Override
-              public Pattern apply(String input) {
-                return Pattern.compile(input);
-              }
-            })
-        .toSet();
+    return getDelegate().getListWithoutComments("project", "temp_files").stream()
+        .map(Pattern::compile)
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   @Value.Lazy

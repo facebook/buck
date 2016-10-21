@@ -48,6 +48,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -255,10 +256,9 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.postprocessClassesCommands = postprocessClassesCommands;
     this.exportedDeps = exportedDeps;
     this.providedDeps = providedDeps;
-    this.additionalClasspathEntries = FluentIterable
-        .from(additionalClasspathEntries)
-        .transform(getProjectFilesystem().getAbsolutifier())
-        .toSet();
+    this.additionalClasspathEntries = additionalClasspathEntries.stream()
+        .map(getProjectFilesystem().getAbsolutifier()::apply)
+        .collect(MoreCollectors.toImmutableSet());
     this.resourcesRoot = resourcesRoot;
     this.manifestFile = manifestFile;
     this.mavenCoords = mavenCoords;

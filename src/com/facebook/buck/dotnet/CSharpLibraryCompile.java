@@ -21,8 +21,8 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -77,8 +77,9 @@ public class CSharpLibraryCompile extends ShellStep {
     }
 
     args.addAll(
-        FluentIterable.from(srcs).transform(
-            input -> Escaper.escapeAsShellString(input.toAbsolutePath().toString())).toSet());
+        srcs.stream()
+            .map(input -> Escaper.escapeAsShellString(input.toAbsolutePath().toString()))
+            .collect(MoreCollectors.toImmutableSet()));
 
     return args.build();
   }

@@ -40,8 +40,8 @@ import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -101,9 +101,9 @@ public class GenruleDescriptionTest {
             "//biz:baz",
             "//bin:executable",
             "//foo:arg"),
-        FluentIterable.from(targetNode.getExtraDeps())
-            .transform(Object::toString)
-            .toSet());
+        targetNode.getExtraDeps().stream()
+            .map(Object::toString)
+            .collect(MoreCollectors.toImmutableSet()));
   }
 
   @Test

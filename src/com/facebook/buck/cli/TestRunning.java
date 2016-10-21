@@ -53,6 +53,7 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -550,8 +551,9 @@ public class TestRunning {
                                 "",
                                 "")))),
                 testRule.getContacts(),
-                FluentIterable.from(
-                    testRule.getLabels()).transform(Object::toString).toSet());
+                testRule.getLabels().stream()
+                    .map(Object::toString)
+                    .collect(MoreCollectors.toImmutableSet()));
         TestResults newTestResults = postTestResults(testResults);
         transformedTestResults.set(newTestResults);
       }

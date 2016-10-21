@@ -946,10 +946,9 @@ public class ProjectCommand extends BuildCommand {
       throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> targets;
     if (passedInTargetsSet.isEmpty()) {
-      targets = FluentIterable
-          .from(targetGraphAndTargets.getProjectRoots())
-          .transform(HasBuildTarget::getBuildTarget)
-          .toSet();
+      targets = targetGraphAndTargets.getProjectRoots().stream()
+          .map(HasBuildTarget::getBuildTarget)
+          .collect(MoreCollectors.toImmutableSet());
     } else {
       targets = passedInTargetsSet;
     }
@@ -1264,9 +1263,9 @@ public class ProjectCommand extends BuildCommand {
             getEnableParserProfiling(),
             executor,
             Sets.union(
-                FluentIterable.from(projectGraph.getNodes())
-                    .transform(HasBuildTarget::getBuildTarget)
-                    .toSet(),
+                projectGraph.getNodes().stream()
+                    .map(HasBuildTarget::getBuildTarget)
+                    .collect(MoreCollectors.toImmutableSet()),
                 explicitTestTargets));
       }
     }

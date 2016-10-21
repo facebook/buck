@@ -499,9 +499,9 @@ public class AndroidBinary
         allAssetDirectories,
         nativeLibraryDirectoriesBuilder.build(),
         zipFiles.build(),
-        FluentIterable.from(packageableCollection.getPathsToThirdPartyJars())
-            .transform(getResolver()::deprecatedGetPath)
-            .toSet(),
+        packageableCollection.getPathsToThirdPartyJars().stream()
+            .map(getResolver()::deprecatedGetPath)
+            .collect(MoreCollectors.toImmutableSet()),
         getResolver().getAbsolutePath(keystore.getPathToStore()),
         getResolver().getAbsolutePath(keystore.getPathToPropertiesFile()),
         /* debugMode */ false,
@@ -733,9 +733,9 @@ public class AndroidBinary
               getProjectFilesystem().getRootPath(),
               classpathEntriesToDex,
               preprocessJavaClassesInDir));
-      classpathEntriesToDex = FluentIterable.from(classpathEntriesToDex)
-          .transform(preprocessJavaClassesOutDir::resolve)
-          .toSet();
+      classpathEntriesToDex = classpathEntriesToDex.stream()
+          .map(preprocessJavaClassesOutDir::resolve)
+          .collect(MoreCollectors.toImmutableSet());
 
       AbstractGenruleStep.CommandString commandString = new AbstractGenruleStep.CommandString(
           /* cmd */ Optional.empty(),

@@ -57,8 +57,8 @@ import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -332,10 +332,9 @@ public class AndroidBinaryGraphEnhancerTest {
                     enhancedBuildConfigTarget,
                     "lib__%s__output")
                 .resolve(enhancedBuildConfigTarget.getShortNameAndFlavorPostfix() + ".jar")),
-        FluentIterable
-            .from(result.getClasspathEntriesToDex())
-            .transform(pathResolver::deprecatedGetPath)
-        .toSet());
+        result.getClasspathEntriesToDex().stream()
+            .map(pathResolver::deprecatedGetPath)
+            .collect(MoreCollectors.toImmutableSet()));
     BuildRule enhancedBuildConfigRule = ruleResolver.getRule(enhancedBuildConfigTarget);
     assertTrue(enhancedBuildConfigRule instanceof AndroidBuildConfigJavaLibrary);
     AndroidBuildConfigJavaLibrary enhancedBuildConfigJavaLibrary =

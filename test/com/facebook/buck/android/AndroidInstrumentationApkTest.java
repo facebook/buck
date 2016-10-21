@@ -34,7 +34,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -139,10 +139,9 @@ public class AndroidInstrumentationApkTest {
                 javaLibrary3.getProjectFilesystem(),
                 javaLibrary3.getBuildTarget(),
                 "%s.jar")),
-        FluentIterable
-            .from(androidBinary.getAndroidPackageableCollection().getClasspathEntriesToDex())
-            .transform(pathResolver::deprecatedGetPath)
-            .toSet());
+        androidBinary.getAndroidPackageableCollection().getClasspathEntriesToDex().stream()
+            .map(pathResolver::deprecatedGetPath)
+            .collect(MoreCollectors.toImmutableSet()));
     assertEquals(
         "//apps:instrumentation should have one JAR file to dex.",
         ImmutableSet.of(
@@ -150,12 +149,10 @@ public class AndroidInstrumentationApkTest {
                 javaLibrary4.getProjectFilesystem(),
                 javaLibrary4.getBuildTarget(),
                 "%s.jar")),
-        FluentIterable
-            .from(
-                androidInstrumentationApk
-                    .getAndroidPackageableCollection()
-                    .getClasspathEntriesToDex())
-            .transform(pathResolver::deprecatedGetPath)
-            .toSet());
+        androidInstrumentationApk
+            .getAndroidPackageableCollection()
+            .getClasspathEntriesToDex().stream()
+            .map(pathResolver::deprecatedGetPath)
+            .collect(MoreCollectors.toImmutableSet()));
   }
 }

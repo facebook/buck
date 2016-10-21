@@ -30,10 +30,9 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
-import com.google.common.base.Function;
 import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -50,7 +49,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.annotation.Nullable;
 
 @SuppressWarnings("unused") // Many unused fields in sample DTO objects.
 public class ConstructorArgMarshallerTest {
@@ -612,16 +610,9 @@ public class ConstructorArgMarshallerTest {
             "srcs",
             ImmutableList.of("main.py", "lib/__init__.py", "lib/manifest.py")));
 
-    ImmutableSet<String> observedValues = FluentIterable.from(dto.srcs)
-        .transform(
-            new Function<SourcePath, String>() {
-              @Nullable
-              @Override
-              public String apply(SourcePath input) {
-                return ((PathSourcePath) input).getRelativePath().toString();
-              }
-            })
-        .toSet();
+    ImmutableSet<String> observedValues = dto.srcs.stream()
+        .map(input -> ((PathSourcePath) input).getRelativePath().toString())
+        .collect(MoreCollectors.toImmutableSet());
     assertEquals(
         ImmutableSet.of(
             Paths.get("example/path/main.py").toString(),
