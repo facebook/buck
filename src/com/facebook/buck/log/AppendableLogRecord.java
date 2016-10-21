@@ -47,7 +47,11 @@ public class AppendableLogRecord extends LogRecord {
       sb.append(" '");
       sb.append(getMessage());
       sb.append("' ");
-      sb.append(Arrays.asList(getParameters()).toString());
+      Object[] params = getParameters();
+      if (params == null) {
+        params = new Object[0];
+      }
+      sb.append(Arrays.asList(params).toString());
     } catch (ConcurrentModificationException originalException) {
       // This way we may be at least able to figure out where offending log was created.
       throw new ConcurrentModificationException(
