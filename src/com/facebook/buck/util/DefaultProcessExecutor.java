@@ -19,7 +19,6 @@ package com.facebook.buck.util;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -34,6 +33,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Executes a {@link Process} and blocks until it is finished.
@@ -81,7 +81,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       Set<Option> options,
       Optional<String> stdin,
       Optional<Long> timeOutMs,
-      Optional<Function<Process, Void>> timeOutHandler)
+      Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException, IOException {
     return launchAndExecute(params, ImmutableMap.of(), options, stdin, timeOutMs, timeOutHandler);
   }
@@ -93,7 +93,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       Set<Option> options,
       Optional<String> stdin,
       Optional<Long> timeOutMs,
-      Optional<Function<Process, Void>> timeOutHandler)
+      Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException, IOException {
     return execute(launchProcess(params, context), options, stdin, timeOutMs, timeOutHandler);
   }
@@ -163,7 +163,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   public Result waitForLaunchedProcessWithTimeout(
       LaunchedProcess launchedProcess,
       long millis,
-      final Optional<Function<Process, Void>> timeOutHandler) throws InterruptedException {
+      final Optional<Consumer<Process>> timeOutHandler) throws InterruptedException {
     Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
     final Process process = ((LaunchedProcessImpl) launchedProcess).process;
     boolean timedOut = waitForTimeoutInternal(process, millis, timeOutHandler);
@@ -184,7 +184,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   private boolean waitForTimeoutInternal(
       final Process process,
       long millis,
-      final Optional<Function<Process, Void>> timeOutHandler) throws InterruptedException {
+      final Optional<Consumer<Process>> timeOutHandler) throws InterruptedException {
     final AtomicBoolean timedOut = new AtomicBoolean(false);
     Thread waiter =
         new Thread(
@@ -195,7 +195,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
                 timedOut.set(true);
                 if (timeOutHandler.isPresent()) {
                   try {
-                    timeOutHandler.get().apply(process);
+                    timeOutHandler.get().accept(process);
                   } catch (RuntimeException e2) {
                     LOG.error(e2, "timeOutHandler threw an Exception!");
                   }
@@ -226,7 +226,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       Set<Option> options,
       Optional<String> stdin,
       Optional<Long> timeOutMs,
-      Optional<Function<Process, Void>> timeOutHandler) throws InterruptedException {
+      Optional<Consumer<Process>> timeOutHandler) throws InterruptedException {
     Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
     Process process = ((LaunchedProcessImpl) launchedProcess).process;
     // Read stdout/stderr asynchronously while running a Process.

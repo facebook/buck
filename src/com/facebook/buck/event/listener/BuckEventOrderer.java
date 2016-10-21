@@ -17,7 +17,6 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.BuckEvent;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 
 import java.util.ArrayDeque;
@@ -29,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * Orders {@link BuckEvent}s by the {@link BuckEvent#getNanoTime()} value. This is used to serialize
@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 public class BuckEventOrderer<T extends BuckEvent> implements AutoCloseable {
 
   private final long maximumSkewNanos;
-  private final Function<T, Void> eventSinkFunction;
+  private final Consumer<T> eventSinkFunction;
   private final Map<Long, Deque<T>> perThreadEventQueue;
   private final PriorityQueue<Deque<T>> oldestEventQueue;
   private long maximumNanoTime;
@@ -47,7 +47,7 @@ public class BuckEventOrderer<T extends BuckEvent> implements AutoCloseable {
    * @param maximumSkew this is how many events
    */
   public BuckEventOrderer(
-      Function<T, Void> eventSinkFunction,
+      Consumer<T> eventSinkFunction,
       long maximumSkew,
       TimeUnit maximumSkewUnit) {
     this.maximumSkewNanos = maximumSkewUnit.toNanos(maximumSkew);
@@ -100,7 +100,7 @@ public class BuckEventOrderer<T extends BuckEvent> implements AutoCloseable {
       }
       while (!queueWithOldestEvent.isEmpty() &&
           queueWithOldestEvent.getFirst().getNanoTime() <= upperTimeBoundForThisQueue) {
-        eventSinkFunction.apply(queueWithOldestEvent.removeFirst());
+        eventSinkFunction.accept(queueWithOldestEvent.removeFirst());
       }
       if (!queueWithOldestEvent.isEmpty()) {
         oldestEventQueue.add(queueWithOldestEvent);

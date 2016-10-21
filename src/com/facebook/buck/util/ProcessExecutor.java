@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
@@ -25,6 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public interface ProcessExecutor {
   /**
@@ -54,7 +54,7 @@ public interface ProcessExecutor {
       Set<Option> options,
       Optional<String> stdin,
       Optional<Long> timeOutMs,
-      Optional<Function<Process, Void>> timeOutHandler) throws InterruptedException, IOException;
+      Optional<Consumer<Process>> timeOutHandler) throws InterruptedException, IOException;
 
   Result launchAndExecute(
       ProcessExecutorParams params,
@@ -62,7 +62,7 @@ public interface ProcessExecutor {
       Set<Option> options,
       Optional<String> stdin,
       Optional<Long> timeOutMs,
-      Optional<Function<Process, Void>> timeOutHandler)
+      Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException, IOException;
 
   /**
@@ -96,7 +96,7 @@ public interface ProcessExecutor {
   Result waitForLaunchedProcessWithTimeout(
       LaunchedProcess launchedProcess,
       long millis,
-      Optional<Function<Process, Void>> timeOutHandler) throws InterruptedException;
+      Optional<Consumer<Process>> timeOutHandler) throws InterruptedException;
 
   /**
    * Options for {@link ProcessExecutor#launchAndExecute(ProcessExecutorParams, Set, Optional, Optional, Optional)}.

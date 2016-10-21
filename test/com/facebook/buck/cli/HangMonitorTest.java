@@ -75,10 +75,7 @@ public class HangMonitorTest {
 
       final SettableFuture<String> result = SettableFuture.create();
       HangMonitor hangMonitor = new HangMonitor(
-          (input) -> {
-            result.set(input);
-            return null;
-          },
+          result::set,
           new TimeSpan(10, TimeUnit.MILLISECONDS));
       hangMonitor.runOneIteration();
       assertThat(result.isDone(), Matchers.is(true));
@@ -93,10 +90,7 @@ public class HangMonitorTest {
   public void workAdvanceEventsSuppressReport() throws Exception {
     final AtomicBoolean didGetReport = new AtomicBoolean(false);
     HangMonitor hangMonitor = new HangMonitor(
-        (input) -> {
-          didGetReport.set(true);
-          return null;
-        },
+        input -> didGetReport.set(true),
         new TimeSpan(10, TimeUnit.MILLISECONDS));
     hangMonitor.onWorkAdvance(new WorkEvent());
     hangMonitor.runOneIteration();

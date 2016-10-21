@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 
 import org.junit.Test;
@@ -94,11 +93,6 @@ public class ProcessExecutorTest {
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole(Verbosity.ALL));
 
     final AtomicBoolean called = new AtomicBoolean(false);
-    Function<Process, Void> handler = input -> {
-      called.set(true);
-      return null;
-    };
-
     String cmd = (Platform.detect() == Platform.WINDOWS) ? "ping -n 50 0.0.0.0" : "sleep 50";
     ProcessExecutorParams params = ProcessExecutorParams.ofCommand(makeCommandArray(cmd));
     ProcessExecutor.Result result = executor.launchAndExecute(
@@ -106,7 +100,7 @@ public class ProcessExecutorTest {
         /* options */ ImmutableSet.<ProcessExecutor.Option>builder().build(),
         /* stdin */ Optional.empty(),
         /* timeOutMs */ Optional.of((long) 100),
-        /* timeOutHandler */ Optional.of(handler));
+        /* timeOutHandler */ Optional.of(ignored -> called.set(true)));
     assertTrue(
         "process was reported as timed out",
         result.isTimedOut());
@@ -120,10 +114,6 @@ public class ProcessExecutorTest {
     @SuppressWarnings("PMD.PrematureDeclaration")
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole(Verbosity.ALL));
 
-    Function<Process, Void> handler = input -> {
-      throw new RuntimeException("This shouldn't fail the test!");
-    };
-
     String cmd = (Platform.detect() == Platform.WINDOWS) ? "ping -n 50 0.0.0.0" : "sleep 50";
     ProcessExecutorParams params = ProcessExecutorParams.ofCommand(makeCommandArray(cmd));
     ProcessExecutor.Result result = executor.launchAndExecute(
@@ -131,7 +121,10 @@ public class ProcessExecutorTest {
         /* options */ ImmutableSet.<ProcessExecutor.Option>builder().build(),
         /* stdin */ Optional.empty(),
         /* timeOutMs */ Optional.of((long) 100),
-        /* timeOutHandler */ Optional.of(handler));
+        /* timeOutHandler */ Optional.of(
+            ignored -> {
+              throw new RuntimeException("This shouldn't fail the test!");
+            }));
     assertTrue(
         "process was reported as timed out",
         result.isTimedOut());

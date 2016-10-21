@@ -57,7 +57,6 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -79,6 +78,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Configures a PBXProject by adding a PBXNativeTarget and its associated dependencies into a
@@ -506,8 +506,8 @@ class NewNativeTargetProjectMutator {
         resourceFiles.build(),
         resourceDirs.build(),
         variantResourceFiles.build(),
-        Functions.constant(null),
-        Functions.constant(null));
+        ignored -> {},
+        ignored -> {});
   }
 
   private PBXBuildPhase addResourcesBuildPhase(PBXNativeTarget target, PBXGroup targetGroup) {
@@ -531,12 +531,10 @@ class NewNativeTargetProjectMutator {
         input -> {
           PBXBuildFile buildFile = new PBXBuildFile(input);
           phase.getFiles().add(buildFile);
-          return null;
         },
         input -> {
           PBXBuildFile buildFile = new PBXBuildFile(input);
           phase.getFiles().add(buildFile);
-          return null;
         });
     if (!phase.getFiles().isEmpty()) {
       target.getBuildPhases().add(phase);
@@ -568,8 +566,8 @@ class NewNativeTargetProjectMutator {
       ImmutableSet<Path> resourceFiles,
       ImmutableSet<Path> resourceDirs,
       ImmutableSet<Path> variantResourceFiles,
-      Function<? super PBXFileReference, Void> resourceCallback,
-      Function<? super PBXVariantGroup, Void> variantGroupCallback) {
+      Consumer<? super PBXFileReference> resourceCallback,
+      Consumer<? super PBXVariantGroup> variantGroupCallback) {
     if (resourceFiles.isEmpty() && resourceDirs.isEmpty() && variantResourceFiles.isEmpty()) {
       return;
     }
@@ -581,7 +579,7 @@ class NewNativeTargetProjectMutator {
               PBXReference.SourceTree.SOURCE_ROOT,
               pathRelativizer.outputDirToRootRelative(path),
               Optional.empty()));
-      resourceCallback.apply(fileReference);
+      resourceCallback.accept(fileReference);
     }
     for (Path path : resourceDirs) {
       PBXFileReference fileReference = resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
@@ -589,7 +587,7 @@ class NewNativeTargetProjectMutator {
               PBXReference.SourceTree.SOURCE_ROOT,
               pathRelativizer.outputDirToRootRelative(path),
               Optional.of("folder")));
-      resourceCallback.apply(fileReference);
+      resourceCallback.accept(fileReference);
     }
 
     Map<String, PBXVariantGroup> variantGroups = Maps.newHashMap();
@@ -609,7 +607,7 @@ class NewNativeTargetProjectMutator {
       PBXVariantGroup variantGroup = variantGroups.get(variantFileName);
       if (variantGroup == null) {
         variantGroup = resourcesGroup.getOrCreateChildVariantGroupByName(variantFileName);
-        variantGroupCallback.apply(variantGroup);
+        variantGroupCallback.accept(variantGroup);
         variantGroups.put(variantFileName, variantGroup);
       }
       SourceTreePath sourceTreePath = new SourceTreePath(

@@ -44,6 +44,7 @@ import java.lang.management.OperatingSystemMXBean;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
@@ -317,7 +318,7 @@ public abstract class ShellStep implements Step {
    * killed.
    */
   @SuppressWarnings("unused")
-  protected Optional<Function<Process, Void>> getTimeoutHandler(ExecutionContext context) {
+  protected Optional<Consumer<Process>> getTimeoutHandler(ExecutionContext context) {
     return Optional.empty();
   }
 }

@@ -289,7 +289,6 @@ public final class Main {
             LOG.info(
                 "No recent activity, dumping thread stacks (`tr , '\\n'` to decode): %s",
                 input);
-            return null;
           },
           HANG_DETECTOR_TIMEOUT);
 

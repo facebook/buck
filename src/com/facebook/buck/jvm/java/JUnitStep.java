@@ -24,7 +24,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -35,6 +34,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class JUnitStep extends ShellStep {
   private static final Logger LOG = Logger.get(JUnitStep.class);
@@ -107,7 +107,7 @@ public class JUnitStep extends ShellStep {
   }
 
   @Override
-  protected Optional<Function<Process, Void>> getTimeoutHandler(final ExecutionContext context) {
+  protected Optional<Consumer<Process>> getTimeoutHandler(final ExecutionContext context) {
     return Optional.of(
         process -> {
           Optional<Long> pid = Optional.empty();
@@ -148,7 +148,7 @@ public class JUnitStep extends ShellStep {
               .getOptionalExecutable(Paths.get("jstack"), context.getEnvironment());
           if (!pid.isPresent() || !jstack.isPresent()) {
             LOG.info("Unable to print a stack trace for timed out test!");
-            return null;
+            return;
           }
 
           context.getStdErr().print(
@@ -169,13 +169,11 @@ public class JUnitStep extends ShellStep {
                     input -> {
                       context.getStdErr().print(
                           "Printing the stack took longer than 30 seconds. No longer trying.");
-                      return null;
                     }
                 ));
           } catch (Exception e) {
             LOG.error(e);
           }
-          return null;
         });
   }
 

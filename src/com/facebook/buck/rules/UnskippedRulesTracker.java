@@ -20,7 +20,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -53,7 +52,7 @@ public class UnskippedRulesTracker {
         }
       };
 
-  private static final Function<Object, Void> NULL_FUNCTION = Functions.constant(null);
+  private static final Function<Object, Void> NULL_FUNCTION = ignored -> null;
 
   private final AsyncFunction<ImmutableSortedSet<BuildRule>, Void> acquireReferences =
       this::acquireReferences;

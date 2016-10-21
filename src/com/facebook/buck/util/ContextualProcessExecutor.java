@@ -16,12 +16,12 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.util.Set;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 public class ContextualProcessExecutor implements ProcessExecutor {
 
@@ -66,7 +66,7 @@ public class ContextualProcessExecutor implements ProcessExecutor {
       Set<Option> options,
       Optional<String> stdin,
       Optional<Long> timeOutMs,
-      Optional<Function<Process, Void>> timeOutHandler) throws InterruptedException, IOException {
+      Optional<Consumer<Process>> timeOutHandler) throws InterruptedException, IOException {
     return delegate.launchAndExecute(params, context, options, stdin, timeOutMs, timeOutHandler);
   }
 
@@ -77,7 +77,7 @@ public class ContextualProcessExecutor implements ProcessExecutor {
       Set<Option> options,
       Optional<String> stdin,
       Optional<Long> timeOutMs,
-      Optional<Function<Process, Void>> timeOutHandler) throws InterruptedException, IOException {
+      Optional<Consumer<Process>> timeOutHandler) throws InterruptedException, IOException {
     return delegate.launchAndExecute(
         params,
         MoreMaps.merge(this.context, context),
@@ -97,7 +97,7 @@ public class ContextualProcessExecutor implements ProcessExecutor {
   public Result waitForLaunchedProcessWithTimeout(
       LaunchedProcess launchedProcess,
       long millis,
-      Optional<Function<Process, Void>> timeOutHandler) throws InterruptedException {
+      Optional<Consumer<Process>> timeOutHandler) throws InterruptedException {
     return delegate.waitForLaunchedProcessWithTimeout(launchedProcess, millis, timeOutHandler);
   }
 

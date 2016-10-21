@@ -35,8 +35,6 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Nullable;
-
 
 public class BuckEventOrdererTest {
 
@@ -47,15 +45,8 @@ public class BuckEventOrdererTest {
       BuckEventExternalInterface::getTimestamp;
 
   private Deque<BuckEvent> serializedEvents = new ArrayDeque<>();
-  private Function<BuckEvent, Void> addToSerializedEventsFunction =
-      new Function<BuckEvent, Void>() {
-        @Nullable
-        @Override
-        public Void apply(BuckEvent input) {
-          serializedEvents.add(input);
-          return null;
-        }
-      };
+  private java.util.function.Consumer<BuckEvent> addToSerializedEventsFunction =
+    serializedEvents::add;
 
   @Test
   public void testMergesSingleSetOfSerialEvents() {

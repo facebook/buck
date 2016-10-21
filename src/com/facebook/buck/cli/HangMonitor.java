@@ -27,18 +27,18 @@ import com.google.common.util.concurrent.ServiceManager;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
+import java.util.function.Consumer;
 
 public class HangMonitor extends AbstractScheduledService {
   private static final Logger LOG = Logger.get(HangMonitor.class);
 
-  private final Function<String, Void> hangReportConsumer;
+  private final Consumer<String> hangReportConsumer;
   private final AtomicInteger eventsSeenSinceLastCheck;
   private final TimeSpan hangCheckTimeout;
   private volatile String mostRecentReport;
 
   public HangMonitor(
-      Function<String, Void> hangReportConsumer,
+      Consumer<String> hangReportConsumer,
       TimeSpan hangCheckTimeout) {
     this.hangReportConsumer = hangReportConsumer;
     this.eventsSeenSinceLastCheck = new AtomicInteger(0);
@@ -78,7 +78,7 @@ public class HangMonitor extends AbstractScheduledService {
     String currentReport = hangReportBuilder.toString();
     if (!currentReport.equals(mostRecentReport)) {
       mostRecentReport = currentReport;
-      hangReportConsumer.apply(currentReport);
+      hangReportConsumer.accept(currentReport);
     }
   }
 
@@ -95,7 +95,7 @@ public class HangMonitor extends AbstractScheduledService {
     private final ServiceManager serviceManager;
 
     public AutoStartInstance(
-        Function<String, Void> hangReportConsumer,
+        Consumer<String> hangReportConsumer,
         TimeSpan hangCheckTimeout) {
 
       LOG.info("HangMonitorAutoStart");

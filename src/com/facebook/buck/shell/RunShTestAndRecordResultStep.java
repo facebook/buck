@@ -26,7 +26,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -34,6 +33,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 public class RunShTestAndRecordResultStep implements Step {
 
@@ -132,13 +132,9 @@ public class RunShTestAndRecordResultStep implements Step {
         }
 
         @Override
-        protected Optional<Function<Process, Void>> getTimeoutHandler(
+        protected Optional<Consumer<Process>> getTimeoutHandler(
             final ExecutionContext context) {
-          return Optional.of(
-              process -> {
-                timedOut = true;
-                return null;
-              });
+          return Optional.of(process -> timedOut = true);
         }
 
         @Override
