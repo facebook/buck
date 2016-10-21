@@ -81,3 +81,4 @@ com.facebook.buck.log.LogFileHandler.count=25
 
 # Disable Jetty debug noise (logged at level FINE)
 org.eclipse.jetty.level=INFO
+oshi.level=WARNING
