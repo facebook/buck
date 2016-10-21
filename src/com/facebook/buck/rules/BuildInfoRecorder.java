@@ -389,4 +389,13 @@ public class BuildInfoRecorder {
   String getMetadataFor(String key) {
     return metadataToWrite.get(key);
   }
+
+  boolean hasBuildMetadata(String key) {
+    return buildMetadata.containsKey(key);
+  }
+
+  Optional<String> getBuildMetadataFor(String key) {
+    return Optional.ofNullable(buildMetadata.get(key));
+  }
+
 }

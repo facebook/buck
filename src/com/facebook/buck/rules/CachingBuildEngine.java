@@ -350,6 +350,19 @@ public class CachingBuildEngine implements BuildEngine {
     };
   }
 
+  private void fillMissingBuildMetadataFromCache(
+      CacheResult cacheResult,
+      BuildInfoRecorder buildInfoRecorder,
+      String... names) {
+    Preconditions.checkState(cacheResult.getType() == CacheResultType.HIT);
+    for (String name : names) {
+      String value = cacheResult.getMetadata().get(name);
+      if (value != null) {
+        buildInfoRecorder.addBuildMetadata(name, value);
+      }
+    }
+  }
+
   private AsyncFunction<List<BuildResult>, Optional<BuildResult>> checkCaches(
       final BuildRule rule,
       final BuildContext context,
@@ -495,6 +508,12 @@ public class CachingBuildEngine implements BuildEngine {
           buildContext);
 
       if (cacheResult.getType().isSuccess()) {
+        fillMissingBuildMetadataFromCache(
+            cacheResult,
+            buildInfoRecorder,
+            BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY,
+            BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY,
+            BuildInfo.METADATA_KEY_FOR_DEP_FILE);
         return Futures.transform(
             markRuleAsUsed(rule, buildContext.getEventBus()), Functions.constant(
                 BuildResult.success(
@@ -785,43 +804,67 @@ public class CachingBuildEngine implements BuildEngine {
 
                 // If the rule key has changed (and is not already in the cache), we need to push
                 // the artifact to cache using the new key.
-                if (success.shouldUploadResultingArtifact()) {
-                  ruleKeys.add(
-                      keyFactories.defaultRuleKeyBuilderFactory.build(rule));
-                }
+                ruleKeys.add(keyFactories.defaultRuleKeyBuilderFactory.build(rule));
 
                 // If the input-based rule key has changed, we need to push the artifact to cache
                 // using the new key.
-                if (rule instanceof SupportsInputBasedRuleKey &&
-                    success.shouldUploadResultingArtifactInputBased()) {
-                  ruleKeys.addAll(
-                      OptionalCompat.asSet(onDiskBuildInfo.getRuleKey(
-                          BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY)));
+                if (rule instanceof SupportsInputBasedRuleKey) {
+                  Optional<RuleKey> calculatedRuleKey =
+                      keyFactories.inputBasedRuleKeyBuilderFactory.build(rule);
+                  Optional<RuleKey> onDiskRuleKey =
+                      onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY);
+                  Optional<RuleKey> metaDataRuleKey =
+                      buildInfoRecorder
+                          .getBuildMetadataFor(BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY)
+                          .map(RuleKey::new);
+                  Preconditions.checkState(
+                      calculatedRuleKey.equals(onDiskRuleKey),
+                      "%s: %s: invalid on-disk input-based rule key: %s != %s",
+                      rule.getBuildTarget(),
+                      success,
+                      calculatedRuleKey,
+                      onDiskRuleKey);
+                  Preconditions.checkState(
+                      calculatedRuleKey.equals(metaDataRuleKey),
+                      "%s: %s: invalid meta-data input-based rule key: %s != %s",
+                      rule.getBuildTarget(),
+                      success,
+                      calculatedRuleKey,
+                      metaDataRuleKey);
+                  ruleKeys.addAll(OptionalCompat.asSet(calculatedRuleKey));
                 }
 
                 // If the manifest-based rule key has changed, we need to push the artifact to cache
                 // using the new key.
-                if (useManifestCaching(rule) &&
-                    success.shouldUploadResultingArtifactManifestBased()) {
-                  ruleKeys.addAll(
-                      OptionalCompat.asSet(onDiskBuildInfo.getRuleKey(
-                          BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY)));
+                if (useManifestCaching(rule)) {
+                  Optional<RuleKey> onDiskRuleKey =
+                      onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY);
+                  Optional<RuleKey> metaDataRuleKey =
+                      buildInfoRecorder
+                          .getBuildMetadataFor(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY)
+                          .map(RuleKey::new);
+                  Preconditions.checkState(
+                      onDiskRuleKey.equals(metaDataRuleKey),
+                      "%s: %s: inconsistent meta-data and on-disk dep-file rule key: %s != %s",
+                      rule.getBuildTarget(),
+                      success,
+                      onDiskRuleKey,
+                      metaDataRuleKey);
+                  ruleKeys.addAll(OptionalCompat.asSet(onDiskRuleKey));
                 }
 
-                // If we have any rule keys to push to the cache with, do the upload now.
-                if (!ruleKeys.isEmpty()) {
-                  try {
-                    buildInfoRecorder.performUploadToArtifactCache(
-                        ImmutableSet.copyOf(ruleKeys),
-                        buildContext.getArtifactCache(),
-                        buildContext.getEventBus());
-                  } catch (Throwable t) {
-                    buildContext.getEventBus().post(
-                        ThrowableConsoleEvent.create(
-                            t,
-                            "Error uploading to cache for %s.",
-                            rule));
-                  }
+                // Do the actual upload.
+                try {
+                  buildInfoRecorder.performUploadToArtifactCache(
+                      ImmutableSet.copyOf(ruleKeys),
+                      buildContext.getArtifactCache(),
+                      buildContext.getEventBus());
+                } catch (Throwable t) {
+                  buildContext.getEventBus().post(
+                      ThrowableConsoleEvent.create(
+                          t,
+                          "Error uploading to cache for %s.",
+                          rule));
                 }
 
               }
@@ -865,7 +908,9 @@ public class CachingBuildEngine implements BuildEngine {
                   }
 
                   // If this rule is cacheable, upload it to the cache.
-                  if (outputSize.isPresent() && shouldUploadToCache(rule, outputSize.get())) {
+                  if (success.shouldUploadResultingArtifact() &&
+                      outputSize.isPresent() &&
+                      shouldUploadToCache(rule, outputSize.get())) {
                     uploadToCache(success);
                   }
 
@@ -1595,10 +1640,16 @@ public class CachingBuildEngine implements BuildEngine {
             context);
 
     if (cacheResult.getType().isSuccess()) {
-      return Optional.of(BuildResult.success(
-          rule,
-          BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED,
-          cacheResult));
+      fillMissingBuildMetadataFromCache(
+          cacheResult,
+          buildInfoRecorder,
+          BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY,
+          BuildInfo.METADATA_KEY_FOR_DEP_FILE);
+      return Optional.of(
+          BuildResult.success(
+              rule,
+              BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED,
+              cacheResult));
     }
     return Optional.empty();
 
@@ -1646,11 +1697,18 @@ public class CachingBuildEngine implements BuildEngine {
           context);
 
     if (cacheResult.getType().isSuccess()) {
-      return Optional.of(BuildResult.success(
-          rule,
-          BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED,
-          cacheResult));
+      fillMissingBuildMetadataFromCache(
+          cacheResult,
+          buildInfoRecorder,
+          BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY,
+          BuildInfo.METADATA_KEY_FOR_DEP_FILE);
+      return Optional.of(
+          BuildResult.success(
+              rule,
+              BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED,
+              cacheResult));
     }
+
     return Optional.empty();
   }
 
