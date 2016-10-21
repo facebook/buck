@@ -26,7 +26,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
@@ -58,9 +58,9 @@ public class MergeAndroidResourceSources extends AbstractBuildRule {
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), destinationDirectory));
     steps.add(
         new MergeAndroidResourceSourcesStep(
-            FluentIterable.from(originalDirectories)
-                .transform(getResolver()::getAbsolutePath)
-                .toList(),
+            originalDirectories.stream()
+                .map(getResolver()::getAbsolutePath)
+                .collect(MoreCollectors.toImmutableList()),
             getProjectFilesystem().resolve(destinationDirectory)
         ));
     buildableContext.recordArtifact(destinationDirectory);

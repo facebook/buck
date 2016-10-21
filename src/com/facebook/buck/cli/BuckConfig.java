@@ -45,6 +45,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.PatternAndMessage;
 import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
@@ -231,11 +232,9 @@ public class BuckConfig {
 
     if (rawPaths.isPresent()) {
       ImmutableList<Path> paths =
-          FluentIterable
-              .from(rawPaths.get())
-              .transform(
-                  input -> convertPath(input, true))
-              .toList();
+          rawPaths.get().stream()
+              .map(input -> convertPath(input, true))
+              .collect(MoreCollectors.toImmutableList());
         return Optional.of(paths);
     }
 

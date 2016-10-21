@@ -30,6 +30,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.InputStreamConsumer;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -40,7 +41,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -141,9 +141,9 @@ public class ProjectBuildFileParser implements AutoCloseable {
                 try (OutputStream output =
                          new BufferedOutputStream(Files.newOutputStream(ignorePathsJson1))) {
                   bserSerializer.serializeToStream(
-                      FluentIterable.from(options.getIgnorePaths())
-                          .transform(PathOrGlobMatcher.toPathOrGlob())
-                          .toList(),
+                      options.getIgnorePaths().stream()
+                          .map(PathOrGlobMatcher.toPathOrGlob()::apply)
+                          .collect(MoreCollectors.toImmutableList()),
                       output);
                 }
                 return ignorePathsJson1;

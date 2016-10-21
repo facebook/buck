@@ -19,7 +19,7 @@ package com.facebook.buck.dalvik.firstorder;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.base.Function;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -37,11 +37,6 @@ import java.lang.annotation.RetentionPolicy;
 
 public class FirstOrderTest {
 
-  private static final Function<Class<?>, ClassNode> CLASS_NODE_FROM_CLASS =
-      FirstOrderTest::loadClassNode;
-
-  private static final Function<Class<?>, Type> TYPE_FROM_CLASS = Type::getType;
-
   private static final ImmutableList<Class<?>> KNOWN_TYPES = ImmutableList.of(
       DependencyEnum.class,
       AnnotationDependency.class,
@@ -52,9 +47,9 @@ public class FirstOrderTest {
       Derived.class);
 
   private static final ImmutableList<ClassNode> KNOWN_CLASS_NODES =
-      FluentIterable.from(KNOWN_TYPES)
-          .transform(CLASS_NODE_FROM_CLASS)
-          .toList();
+      KNOWN_TYPES.stream()
+          .map(FirstOrderTest::loadClassNode)
+          .collect(MoreCollectors.toImmutableList());
 
   enum DependencyEnum { DEFAULT }
   @Retention(RetentionPolicy.RUNTIME)
@@ -194,7 +189,7 @@ public class FirstOrderTest {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
     FirstOrderHelper.addTypesAndDependencies(
-        FluentIterable.from(types).transform(TYPE_FROM_CLASS),
+        FluentIterable.from(types).transform(Type::getType),
         loadAndMergeClasses(types, KNOWN_CLASS_NODES),
         builder);
 
@@ -207,7 +202,7 @@ public class FirstOrderTest {
     ImmutableList.Builder<ClassNode> builder = ImmutableList.builder();
 
     builder.addAll(alreadyLoaded);
-    builder.addAll(FluentIterable.from(classes).transform(CLASS_NODE_FROM_CLASS));
+    builder.addAll(FluentIterable.from(classes).transform(FirstOrderTest::loadClassNode));
 
     return builder.build();
   }

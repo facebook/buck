@@ -26,9 +26,8 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -84,10 +83,9 @@ public class PrebuiltOCamlLibraryDescription
         params.getProjectFilesystem(),
         libPath.resolve(bytecodeLib));
     final ImmutableList<SourcePath> staticCLibraryPaths =
-        FluentIterable.from(cLibs)
-          .transform((Function<String, SourcePath>) input -> new PathSourcePath(
-              params.getProjectFilesystem(),
-              libPath.resolve(input))).toList();
+        cLibs.stream()
+            .map(input -> new PathSourcePath(params.getProjectFilesystem(), libPath.resolve(input)))
+            .collect(MoreCollectors.toImmutableList());
 
     final SourcePath bytecodeLibraryPath = new PathSourcePath(
         params.getProjectFilesystem(),

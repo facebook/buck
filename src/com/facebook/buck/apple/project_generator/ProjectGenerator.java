@@ -161,6 +161,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * Generator for xcode project and associated files from a set of xcode/ios rules.
@@ -536,10 +538,9 @@ public class ProjectGenerator {
     PBXGroup group = project
         .getMainGroup()
         .getOrCreateDescendantGroupByPath(
-            FluentIterable
-                .from(buildTarget.getBasePath())
-                .transform(Object::toString)
-                .toList())
+            StreamSupport.stream(buildTarget.getBasePath().spliterator(), false)
+                .map(Object::toString)
+                .collect(MoreCollectors.toImmutableList()))
         .getOrCreateChildGroupByName(getXcodeTargetName(buildTarget));
     for (String configurationName : configs.keySet()) {
       XCBuildConfiguration configuration = configurationList
@@ -581,9 +582,9 @@ public class ProjectGenerator {
     if (!flags.contains(SHOW_OUTPUT)) {
       flags.add(0, SHOW_OUTPUT);
     }
-    flags = new ArrayList<String>(
-        FluentIterable.from(flags).transform(Escaper.BASH_ESCAPER).toList());
-    return Joiner.on(' ').join(flags);
+    return flags.stream()
+        .map(Escaper.BASH_ESCAPER::apply)
+        .collect(Collectors.joining(" "));
   }
 
   private String getBuildWithBuckShellScript(TargetNode<?> targetNode) {
@@ -1139,10 +1140,9 @@ public class ProjectGenerator {
 
     if (options.contains(Option.CREATE_DIRECTORY_STRUCTURE) && isFocusedOnTarget) {
       mutator.setTargetGroupPath(
-          FluentIterable
-              .from(buildTarget.getBasePath())
-              .transform(Object::toString)
-              .toList());
+          StreamSupport.stream(buildTarget.getBasePath().spliterator(), false)
+              .map(Object::toString)
+              .collect(MoreCollectors.toImmutableList()));
     }
 
     if (!recursiveAssetCatalogs.isEmpty() && isFocusedOnTarget) {

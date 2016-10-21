@@ -26,7 +26,7 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.Tool;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -59,9 +59,9 @@ public class DefaultWorkerTool extends NoopBuildRule implements HasRuntimeDeps, 
     Tool baseTool = this.exe.getExecutableCommand();
     CommandTool.Builder builder = new CommandTool.Builder(baseTool)
         .addInputs(
-            FluentIterable.from(this.getDeps())
-                .transform(SourcePaths.getToBuildTargetSourcePath())
-                .toList());
+            this.getDeps().stream()
+                .map(SourcePaths.getToBuildTargetSourcePath()::apply)
+                .collect(MoreCollectors.toImmutableList()));
     for (Map.Entry<String, String> e : env.entrySet()) {
       builder.addEnv(e.getKey(), e.getValue());
     }

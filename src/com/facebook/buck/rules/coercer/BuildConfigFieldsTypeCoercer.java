@@ -19,8 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.util.MoreCollectors;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -48,15 +47,17 @@ public class BuildConfigFieldsTypeCoercer extends LeafTypeCoercer<BuildConfigFie
     }
 
     List<?> list = (List<?>) object;
-    List<String> values = FluentIterable.from(list).transform((Function<Object, String>) input -> {
-      if (input instanceof String) {
-        return (String) input;
-      } else {
-        throw new HumanReadableException(
-            "Expected string for build config values but was: %s",
-            input);
-      }
-    }).toList();
+    List<String> values = list.stream()
+        .map(input -> {
+          if (input instanceof String) {
+            return (String) input;
+          } else {
+            throw new HumanReadableException(
+                "Expected string for build config values but was: %s",
+                input);
+          }
+        })
+        .collect(MoreCollectors.toImmutableList());
     return BuildConfigFields.fromFieldDeclarations(values);
   }
 }

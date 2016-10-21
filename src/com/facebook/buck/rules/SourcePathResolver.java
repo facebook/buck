@@ -22,6 +22,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
@@ -33,8 +34,10 @@ import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.StreamSupport;
 
 public class SourcePathResolver {
 
@@ -57,7 +60,9 @@ public class SourcePathResolver {
 
   public ImmutableList<Path> deprecatedAllPaths(Iterable<? extends SourcePath> sourcePaths) {
     // Maintain ordering and duplication if necessary.
-    return FluentIterable.from(sourcePaths).transform(this::deprecatedGetPath).toList();
+    return StreamSupport.stream(sourcePaths.spliterator(), false)
+        .map(this::deprecatedGetPath)
+        .collect(MoreCollectors.toImmutableList());
   }
 
   public <T> ImmutableMap<T, Path> getMappedPaths(Map<T, SourcePath> sourcePathMap) {
@@ -122,9 +127,11 @@ public class SourcePathResolver {
     return ArchiveMemberPath.of(archiveRelativePath, archiveMemberSourcePath.getMemberPath());
   }
 
-  public ImmutableList<Path> getAllAbsolutePaths(Iterable<? extends SourcePath> sourcePaths) {
+  public ImmutableList<Path> getAllAbsolutePaths(Collection<? extends SourcePath> sourcePaths) {
     // Maintain ordering and duplication if necessary.
-    return FluentIterable.from(sourcePaths).transform(this::getAbsolutePath).toList();
+    return sourcePaths.stream()
+        .map(this::getAbsolutePath)
+        .collect(MoreCollectors.toImmutableList());
   }
 
   /**

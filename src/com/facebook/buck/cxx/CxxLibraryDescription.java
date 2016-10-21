@@ -697,7 +697,7 @@ public class CxxLibraryDescription implements
         resolver,
         pathResolver,
         FluentIterable.from(args.exportedDeps)
-            .transform(resolver.getRuleFunction()),
+            .transform(resolver::getRule),
         hasExportedHeaders,
         Predicates.not(hasObjects),
         input -> CxxFlags.getLanguageFlags(

@@ -5,7 +5,8 @@
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/shell:worker_tool",
       "//src/com/facebook/buck/util:escaper",
-      "//src/com/facebook/buck/util:exceptions"
+      "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:util"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/jvm/java:support",

@@ -35,6 +35,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -151,13 +152,12 @@ public class CxxTestDescription implements
 
     // Supplier which expands macros in the passed in test arguments.
     Supplier<ImmutableList<String>> testArgs =
-        () -> FluentIterable.from(args.args)
-            .transform(
-                CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
-                    params.getBuildTarget(),
-                    params.getCellRoots(),
-                    resolver))
-            .toList();
+        () -> args.args.stream()
+            .map(CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
+                params.getBuildTarget(),
+                params.getCellRoots(),
+                resolver)::apply)
+            .collect(MoreCollectors.toImmutableList());
 
     Supplier<ImmutableSortedSet<BuildRule>> additionalDeps =
         () -> {

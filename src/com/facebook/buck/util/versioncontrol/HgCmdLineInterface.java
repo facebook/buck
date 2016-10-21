@@ -17,6 +17,7 @@
 package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorFactory;
@@ -36,6 +37,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.StreamSupport;
 
 public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   private static final Logger LOG = Logger.get(VersionControlCmdLineInterface.class);
@@ -308,11 +310,9 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
 
   private static Iterable<String> replaceTemplateValue(
       Iterable<String> values, final String template, final String replacement) {
-    return FluentIterable
-        .from(values)
-        .transform(
-            text -> text.contains(template) ? text.replace(template, replacement) : text)
-        .toList();
+    return StreamSupport.stream(values.spliterator(), false)
+        .map(text -> text.contains(template) ? text.replace(template, replacement) : text)
+        .collect(MoreCollectors.toImmutableList());
   }
 
   private static String commandAsString(Iterable<String> command) {

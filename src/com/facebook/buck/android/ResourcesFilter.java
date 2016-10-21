@@ -31,8 +31,8 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -165,14 +165,14 @@ public class ResourcesFilter extends AbstractBuildRule
       public StepExecutionResult execute(ExecutionContext context) {
         buildableContext.addMetadata(
             RES_DIRECTORIES_KEY,
-            FluentIterable.from(filteredResDirectories)
-                .transform(Object::toString)
-                .toList());
+            filteredResDirectories.stream()
+                .map(Object::toString)
+                .collect(MoreCollectors.toImmutableList()));
         buildableContext.addMetadata(
             STRING_FILES_KEY,
-            FluentIterable.from(stringFilesBuilder.build())
-                .transform(Object::toString)
-                .toList());
+            stringFilesBuilder.build().stream()
+                .map(Object::toString)
+                .collect(MoreCollectors.toImmutableList()));
         return StepExecutionResult.SUCCESS;
       }
     });
@@ -233,13 +233,13 @@ public class ResourcesFilter extends AbstractBuildRule
   @Override
   public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
     ImmutableList<Path> resDirectories =
-        FluentIterable.from(onDiskBuildInfo.getValues(RES_DIRECTORIES_KEY).get())
-            .transform(Paths::get)
-            .toList();
+        onDiskBuildInfo.getValues(RES_DIRECTORIES_KEY).get().stream()
+            .map(Paths::get)
+            .collect(MoreCollectors.toImmutableList());
     ImmutableList<Path> stringFiles =
-        FluentIterable.from(onDiskBuildInfo.getValues(STRING_FILES_KEY).get())
-            .transform(Paths::get)
-            .toList();
+        onDiskBuildInfo.getValues(STRING_FILES_KEY).get().stream()
+            .map(Paths::get)
+            .collect(MoreCollectors.toImmutableList());
 
     return new BuildOutput(resDirectories, stringFiles);
   }

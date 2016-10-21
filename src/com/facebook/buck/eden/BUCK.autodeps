@@ -2,7 +2,8 @@
   "eden" : {
     "deps" : [
       "//src/com/facebook/buck/io:DefaultProjectFilesystemDelegate",
-      "//src/com/facebook/buck/io/unixsocket:unixsocket"
+      "//src/com/facebook/buck/io/unixsocket:unixsocket",
+      "//src/com/facebook/buck/util:util"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/io:ProjectFilesystemDelegate",

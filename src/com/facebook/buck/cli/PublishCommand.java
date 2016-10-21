@@ -25,7 +25,7 @@ import com.facebook.buck.parser.BuildTargetSpec;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
-import com.google.common.base.Function;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -198,29 +198,23 @@ public class PublishCommand extends BuildCommand {
     }
 
     // Append "maven" flavor
-    specs = FluentIterable
-        .from(specs)
-        .transform(
-            new Function<TargetNodeSpec, TargetNodeSpec>() {
-              @Nullable
-              @Override
-              public TargetNodeSpec apply(@Nullable TargetNodeSpec input) {
-                if (!(input instanceof BuildTargetSpec)) {
-                  throw new IllegalArgumentException(
-                      "Need to specify build targets explicitly when publishing. " +
-                          "Cannot modify " + input);
-                }
-                BuildTargetSpec buildTargetSpec = (BuildTargetSpec) input;
-                BuildTarget buildTarget =
-                    Preconditions.checkNotNull(buildTargetSpec.getBuildTarget());
-                return buildTargetSpec.withBuildTarget(
-                    BuildTarget
-                        .builder(buildTarget)
-                        .addFlavors(JavaLibrary.MAVEN_JAR)
-                        .build());
-              }
-            })
-        .toList();
+    specs = specs.stream()
+        .map(input -> {
+          if (!(input instanceof BuildTargetSpec)) {
+            throw new IllegalArgumentException(
+                "Need to specify build targets explicitly when publishing. " +
+                    "Cannot modify " + input);
+          }
+          BuildTargetSpec buildTargetSpec = (BuildTargetSpec) input;
+          BuildTarget buildTarget =
+              Preconditions.checkNotNull(buildTargetSpec.getBuildTarget());
+          return buildTargetSpec.withBuildTarget(
+              BuildTarget
+                  .builder(buildTarget)
+                  .addFlavors(JavaLibrary.MAVEN_JAR)
+                  .build());
+        })
+        .collect(MoreCollectors.toImmutableList());
 
     return specs;
   }

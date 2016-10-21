@@ -22,7 +22,6 @@ import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -188,10 +187,6 @@ public class BuildRuleResolver {
 
   public <T> T getRuleWithType(BuildTarget buildTarget, Class<T> cls) {
     return fromNullable(buildTarget, getRuleOptionalWithType(buildTarget, cls).orElse(null));
-  }
-
-  public Function<BuildTarget, BuildRule> getRuleFunction() {
-    return this::getRule;
   }
 
   public ImmutableSortedSet<BuildRule> getAllRules(Iterable<BuildTarget> targets) {

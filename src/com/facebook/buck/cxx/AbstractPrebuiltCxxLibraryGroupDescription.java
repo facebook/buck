@@ -253,7 +253,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
       public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
           CxxPlatform cxxPlatform) {
         return FluentIterable.from(args.exportedDeps)
-            .transform(resolver.getRuleFunction())
+            .transform(resolver::getRule)
             .filter(NativeLinkable.class);
       }
 

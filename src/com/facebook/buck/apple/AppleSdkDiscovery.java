@@ -22,8 +22,8 @@ import com.dd.plist.NSString;
 import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.VersionStringComparator;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -211,11 +211,9 @@ public class AppleSdkDiscovery {
         NSArray settingsToolchains = (NSArray) sdkSettings.objectForKey("Toolchains");
         if (settingsToolchains != null) {
           toolchains = Optional.of(
-              FluentIterable
-                  .from(Arrays.asList(settingsToolchains.getArray()))
-                  .transform(
-                      Object::toString)
-                  .toList());
+              Arrays.asList(settingsToolchains.getArray()).stream()
+                  .map(Object::toString)
+                  .collect(MoreCollectors.toImmutableList()));
           }
       }
 

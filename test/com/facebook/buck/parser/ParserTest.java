@@ -62,6 +62,7 @@ import com.facebook.buck.testutil.WatchEventsForTests;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
@@ -1722,10 +1723,9 @@ public class ParserTest {
         testFooBuckFile);
     assertThat(targetNodes.size(), equalTo(2));
     assertThat(
-        FluentIterable.from(targetNodes)
-            .transform(
-                TargetNode::getBuildTarget)
-            .toList(),
+        targetNodes.stream()
+            .map(TargetNode::getBuildTarget)
+            .collect(MoreCollectors.toImmutableList()),
         hasItems(fooLib1Target, fooLib2Target));
   }
 

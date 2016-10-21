@@ -22,6 +22,7 @@ import static org.eclipse.aether.util.artifact.JavaScopes.TEST;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -146,9 +147,9 @@ public class Resolver {
     this.buckThirdPartyRelativePath = Paths.get(config.thirdParty);
     this.visibility = config.visibility;
 
-    this.repos = FluentIterable.from(config.repositories).transform(
-        AetherUtil::toRemoteRepository)
-        .toList();
+    this.repos = config.repositories.stream()
+        .map(AetherUtil::toRemoteRepository)
+        .collect(MoreCollectors.toImmutableList());
   }
 
   public void resolve(Collection<String> artifacts)
@@ -197,10 +198,10 @@ public class Resolver {
     @SuppressWarnings("unchecked")
     List<ListenableFuture<Map.Entry<Path, Prebuilt>>> results =
         (List<ListenableFuture<Map.Entry<Path, Prebuilt>>>) (List<?>)
-        exec.invokeAll(FluentIterable.from(graph.getNodes())
-            .transform(artifact ->
+        exec.invokeAll(graph.getNodes().stream()
+            .map(artifact ->
                 (Callable<Map.Entry<Path, Prebuilt>>) () -> downloadArtifact(artifact, graph))
-            .toList());
+            .collect(MoreCollectors.toImmutableList()));
 
     try {
       return ImmutableSetMultimap.<Path, Prebuilt>builder()
@@ -465,13 +466,13 @@ public class Resolver {
   }
 
   private ImmutableList<RemoteRepository> getReposFromPom(Model model) {
-    return FluentIterable.from(model.getRepositories())
-        .transform(input ->
+    return model.getRepositories().stream()
+        .map(input ->
             new RemoteRepository.Builder(input.getId(), input.getLayout(), input.getUrl())
                 .setReleasePolicy(toPolicy(input.getReleases()))
                 .setSnapshotPolicy(toPolicy(input.getSnapshots()))
                 .build())
-        .toList();
+        .collect(MoreCollectors.toImmutableList());
   }
 
   @Nullable
@@ -484,8 +485,8 @@ public class Resolver {
   }
 
   private ImmutableList<Dependency> getDependenciesFromPom(Model model) {
-    return FluentIterable.from(model.getDependencies())
-        .transform(dep -> {
+    return model.getDependencies().stream()
+        .map(dep -> {
           ArtifactType stereotype = session.getArtifactTypeRegistry().get(dep.getType());
           if (stereotype == null) {
             stereotype = new DefaultArtifactType(dep.getType());
@@ -516,7 +517,7 @@ public class Resolver {
               .toList();
           return new Dependency(artifact, dep.getScope(), dep.isOptional(), exclusions);
         })
-        .toList();
+        .collect(MoreCollectors.toImmutableList());
   }
 
   private Dependency getDependencyFromString(String artifact) {

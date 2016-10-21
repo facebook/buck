@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -86,9 +87,8 @@ public class AuditConfigCommand extends AbstractCommand {
 
     final BuckConfig buckConfig = params.getBuckConfig();
 
-    final ImmutableList<ConfigValue> configs = FluentIterable.from(
-        getArguments()).transform(
-        input -> {
+    final ImmutableList<ConfigValue> configs = getArguments().stream()
+        .map(input -> {
           String[] parts = input.split("\\.", 2);
           if (parts.length != 2) {
             params.getConsole().getStdErr().println(
@@ -100,7 +100,8 @@ public class AuditConfigCommand extends AbstractCommand {
               parts[0],
               parts[1],
               buckConfig.getValue(parts[0], parts[1]));
-        }).toList();
+        })
+        .collect(MoreCollectors.toImmutableList());
 
     if (shouldGenerateJsonOutput()) {
       printJsonOutput(params, configs);

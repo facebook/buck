@@ -19,8 +19,8 @@ package com.facebook.buck.zip;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePosixFilePermissions;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Charsets;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 
@@ -201,16 +201,13 @@ public class Unzip {
       ExistingFileMode existingFileMode) throws IOException {
     // Create output directory if it does not exist
     Files.createDirectories(destination);
-    return FluentIterable
-        .from(
-            extractZipFile(
-                zipFile,
-                new ProjectFilesystem(destination),
-                destination.getFileSystem().getPath(""),
-                existingFileMode))
-        .transform(
-            input -> destination.resolve(input).toAbsolutePath())
-        .toList();
+    return extractZipFile(
+        zipFile,
+        new ProjectFilesystem(destination),
+        destination.getFileSystem().getPath(""),
+        existingFileMode).stream()
+        .map(input -> destination.resolve(input).toAbsolutePath())
+        .collect(MoreCollectors.toImmutableList());
   }
 
 }

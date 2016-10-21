@@ -36,6 +36,7 @@ import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
@@ -94,9 +95,9 @@ public class ShTestDescription implements
             params.getCellRoots(),
             resolver);
     final ImmutableList<com.facebook.buck.rules.args.Arg> testArgs =
-        FluentIterable.from(args.args)
-            .transform(toArg)
-            .toList();
+        args.args.stream()
+            .map(toArg::apply)
+            .collect(MoreCollectors.toImmutableList());
     final ImmutableMap<String, com.facebook.buck.rules.args.Arg> testEnv =
         ImmutableMap.copyOf(
             Maps.transformValues(

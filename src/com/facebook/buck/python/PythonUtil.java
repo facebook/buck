@@ -293,7 +293,7 @@ public class PythonUtil {
     ImmutableSet.Builder<String> builder = ImmutableSortedSet.naturalOrder();
     for (NativeLinkable nativeLinkable :
          FluentIterable.from(preloadDeps)
-             .transform(resolver.getRuleFunction())
+             .transform(resolver::getRule)
              .filter(NativeLinkable.class)) {
       builder.addAll(nativeLinkable.getSharedLibraries(cxxPlatform).keySet());
     }

@@ -27,7 +27,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -74,9 +74,9 @@ public class GoTestMain extends AbstractBuildRule {
             /* coverageMode */ "",
             /* coverageVariables */ ImmutableMap.of(),
             testPackage,
-            FluentIterable.from(testSources)
-                .transform(getResolver()::getAbsolutePath)
-                .toList(),
+            testSources.stream()
+                .map(getResolver()::getAbsolutePath)
+                .collect(MoreCollectors.toImmutableList()),
             output
         )
     );

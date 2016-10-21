@@ -32,6 +32,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymCopyStep;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -125,9 +126,9 @@ public class CxxInferAnalyze extends AbstractBuildRule {
         .add(
             new SymCopyStep(
                 getProjectFilesystem(),
-                FluentIterable.from(captureAndAnalyzeRules.captureRules)
-                    .transform(
-                        CxxInferCapture::getPathToOutput).toList(),
+                captureAndAnalyzeRules.captureRules.stream()
+                    .map(CxxInferCapture::getPathToOutput)
+                    .collect(MoreCollectors.toImmutableList()),
                 resultsDir))
         .add(
             new AbstractExecutionStep("write_specs_path_list") {
@@ -135,9 +136,9 @@ public class CxxInferAnalyze extends AbstractBuildRule {
               public StepExecutionResult execute(ExecutionContext context) throws IOException {
                 try {
                   ImmutableList<String> specsDirsWithAbsolutePath =
-                      FluentIterable.from(getSpecsOfAllDeps()).transform(
-                          input -> getResolver().getAbsolutePath(input).toString()
-                      ).toList();
+                      getSpecsOfAllDeps().stream()
+                          .map(input -> getResolver().getAbsolutePath(input).toString())
+                          .collect(MoreCollectors.toImmutableList());
                   getProjectFilesystem().writeLinesToPath(specsDirsWithAbsolutePath, specsPathList);
                 } catch (IOException e) {
                   context.logError(e, "Error while writing specs path list file for the analyzer");

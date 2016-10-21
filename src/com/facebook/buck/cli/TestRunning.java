@@ -594,10 +594,9 @@ public class TestRunning {
     }
     return () -> {
       TestResults originalTestResults = originalCallable.call();
-      ImmutableList<TestCaseSummary> cachedTestResults = FluentIterable
-          .from(originalTestResults.getTestCases())
-          .transform(TestCaseSummary.TO_CACHED_TRANSFORMATION)
-          .toList();
+      ImmutableList<TestCaseSummary> cachedTestResults = originalTestResults.getTestCases().stream()
+          .map(TestCaseSummary.TO_CACHED_TRANSFORMATION::apply)
+          .collect(MoreCollectors.toImmutableList());
       return TestResults.of(
           originalTestResults.getBuildTarget(),
           cachedTestResults,

@@ -48,6 +48,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -101,11 +102,9 @@ public class PrebuiltCxxLibraryDescriptionTest {
   }
 
   private static ImmutableList<Path> getIncludeDirs(PrebuiltCxxLibraryDescription.Arg arg) {
-    return FluentIterable
-        .from(arg.includeDirs)
-        .transform(
-            input -> TARGET.getBasePath().resolve(input))
-        .toList();
+    return arg.includeDirs.stream()
+        .map(TARGET.getBasePath()::resolve)
+        .collect(MoreCollectors.toImmutableList());
   }
 
   private static ImmutableSet<BuildTarget> getInputRules(BuildRule buildRule) {

@@ -19,8 +19,8 @@ package com.facebook.buck.event;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 
@@ -86,7 +86,9 @@ public class BuckEventBusFactory {
     }
 
     public List<String> getLogMessages() {
-      return FluentIterable.from(logEvents).transform(Object::toString).toList();
+      return logEvents.stream()
+          .map(Object::toString)
+          .collect(MoreCollectors.toImmutableList());
     }
   }
 }

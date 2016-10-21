@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.intellij;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -35,6 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.StreamSupport;
 
 /**
  * Groups {@link IjFolder}s into sets which are of the same type and belong to the same package
@@ -129,10 +131,9 @@ public class IjSourceRootSimplifier {
      */
     private Optional<IjFolder> walk(Path currentPath) {
       ImmutableList<Optional<IjFolder>> children =
-          FluentIterable.from(tree.getOutgoingNodesFor(currentPath))
-              .transform(
-                  this::walk)
-              .toList();
+          StreamSupport.stream(tree.getOutgoingNodesFor(currentPath).spliterator(), false)
+              .map(this::walk)
+              .collect(MoreCollectors.toImmutableList());
 
       List<IjFolder> presentChildren = new ArrayList<>(children.size());
       for (Optional<IjFolder> folderOptional : children) {

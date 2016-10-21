@@ -44,6 +44,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -521,8 +522,9 @@ public class AndroidBinaryGraphEnhancer {
             ImmutableSet.<SourcePath>builder()
                 .addAll(packageableCollection.getClasspathEntriesToDex())
                 .addAll(
-                    FluentIterable.from(additionalJavaLibraries)
-                    .transform(rule -> new BuildTargetSourcePath(rule.getBuildTarget())).toList())
+                    additionalJavaLibraries.stream()
+                        .map(rule -> new BuildTargetSourcePath(rule.getBuildTarget()))
+                        .collect(MoreCollectors.toImmutableList()))
                 .build())
         .setFinalDeps(enhancedDeps.build())
         .setAPKModuleGraph(apkModuleGraph)
@@ -693,11 +695,10 @@ public class AndroidBinaryGraphEnhancer {
         .addAll(resourceRules)
         .addAll(
             getTargetsAsRules(
-                FluentIterable.from(
-                    packageableCollection.getResourceDetails()
-                        .getResourcesWithEmptyResButNonEmptyAssetsDir())
-                    .transform(HasBuildTarget::getBuildTarget)
-                    .toList()));
+                packageableCollection.getResourceDetails()
+                    .getResourcesWithEmptyResButNonEmptyAssetsDir().stream()
+                    .map(HasBuildTarget::getBuildTarget)
+                    .collect(MoreCollectors.toImmutableList())));
     Optional<BuildRule> manifestRule = resolver.getRule(manifest);
     if (manifestRule.isPresent()) {
       builder.add(manifestRule.get());
@@ -725,11 +726,11 @@ public class AndroidBinaryGraphEnhancer {
 
   private ImmutableList<HasAndroidResourceDeps> getTargetsAsResourceDeps(
       Collection<BuildTarget> targets) {
-    return FluentIterable.from(getTargetsAsRules(targets))
-        .transform(input -> {
+    return getTargetsAsRules(targets).stream()
+        .map(input -> {
           Preconditions.checkState(input instanceof HasAndroidResourceDeps);
           return (HasAndroidResourceDeps) input;
         })
-        .toList();
+        .collect(MoreCollectors.toImmutableList());
   }
 }

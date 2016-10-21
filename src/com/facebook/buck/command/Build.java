@@ -282,9 +282,9 @@ public class Build implements Closeable {
     // Setup symlinks required when configuring the output path.
     createConfiguredBuckOutSymlinks();
 
-    List<ListenableFuture<BuildResult>> futures = FluentIterable.from(rulesToBuild)
-        .transform(
-            rule -> buildEngine.build(buildContext, executionContext, rule)).toList();
+    List<ListenableFuture<BuildResult>> futures = rulesToBuild.stream()
+        .map(rule -> buildEngine.build(buildContext, executionContext, rule))
+        .collect(MoreCollectors.toImmutableList());
 
     // Get the Future representing the build and then block until everything is built.
     ListenableFuture<List<BuildResult>> buildFuture = Futures.allAsList(futures);

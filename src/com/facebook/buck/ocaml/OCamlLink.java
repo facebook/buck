@@ -27,7 +27,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -109,9 +109,9 @@ public class OCamlLink extends AbstractBuildRule {
             getProjectFilesystem().resolve(outputRelativePath),
             depInput,
             cDepInput,
-            FluentIterable.from(inputs)
-                .transform(getResolver()::getAbsolutePath)
-                .toList(),
+            inputs.stream()
+                .map(getResolver()::getAbsolutePath)
+                .collect(MoreCollectors.toImmutableList()),
             isLibrary,
             isBytecode)
     );

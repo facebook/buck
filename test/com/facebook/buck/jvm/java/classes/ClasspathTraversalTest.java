@@ -21,9 +21,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
@@ -47,10 +47,9 @@ public class ClasspathTraversalTest {
   public TemporaryFolder tempDir = new TemporaryFolder();
 
   private Map<FileLike, String> traverse(Collection<File> files) throws IOException {
-    Collection<Path> paths = FluentIterable.from(files)
-        .transform(
-            File::toPath)
-        .toList();
+    Collection<Path> paths = files.stream()
+        .map(File::toPath)
+        .collect(MoreCollectors.toImmutableList());
     final ImmutableMap.Builder<FileLike, String> completeList = ImmutableMap.builder();
     ClasspathTraverser traverser = new DefaultClasspathTraverser();
     ProjectFilesystem filesystem = new ProjectFilesystem(tempDir.getRoot().toPath());

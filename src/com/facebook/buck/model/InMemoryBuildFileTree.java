@@ -17,10 +17,10 @@
 package com.facebook.buck.model;
 
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -109,8 +109,9 @@ public class InMemoryBuildFileTree extends BuildFileTree {
     if (node.children == null) {
       return ImmutableList.of();
     } else {
-      return FluentIterable.from(node.children).transform(
-          child -> MorePaths.relativize(path, child.basePath)).toList();
+      return node.children.stream()
+          .map(child -> MorePaths.relativize(path, child.basePath))
+          .collect(MoreCollectors.toImmutableList());
     }
   }
 

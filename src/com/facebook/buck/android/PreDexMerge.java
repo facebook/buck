@@ -213,9 +213,9 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
 
     buildableContext.addMetadata(
         SECONDARY_DEX_DIRECTORIES_KEY,
-        FluentIterable.from(secondaryDexDirectories.build())
-            .transform(Object::toString)
-            .toList());
+        secondaryDexDirectories.build().stream()
+            .map(Object::toString)
+            .collect(MoreCollectors.toImmutableList()));
 
     buildableContext.recordArtifact(primaryDexPath);
     buildableContext.recordArtifact(paths.jarfilesSubdir);

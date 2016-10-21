@@ -2,6 +2,7 @@
   "firstorder" : {
     "deps" : [
       "//src/com/facebook/buck/dalvik/firstorder:firstorder",
+      "//src/com/facebook/buck/util:util",
       "//third-party/java/asm:asm",
       "//third-party/java/guava:guava",
       "//third-party/java/junit:junit"

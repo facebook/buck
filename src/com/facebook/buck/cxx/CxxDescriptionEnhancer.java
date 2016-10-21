@@ -49,6 +49,7 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -699,13 +700,12 @@ public class CxxDescriptionEnhancer {
 
     // Add object files into the args.
     ImmutableList<SourcePathArg> objectArgs =
-        FluentIterable
-            .from(SourcePathArg.from(sourcePathResolver, objects.values()))
-            .transform(input -> {
+        SourcePathArg.from(sourcePathResolver, objects.values()).stream()
+            .map(input -> {
               Preconditions.checkArgument(input instanceof SourcePathArg);
               return (SourcePathArg) input;
             })
-            .toList();
+            .collect(MoreCollectors.toImmutableList());
     argsBuilder.addAll(FileListableLinkerInputArg.from(objectArgs));
 
     BuildTarget linkRuleTarget = createCxxLinkTarget(params.getBuildTarget());

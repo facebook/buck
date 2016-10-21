@@ -23,6 +23,7 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -250,9 +251,9 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
         // And now include any transitive deps that contribute to the classpath.
         if (rule instanceof JavaLibrary) {
           builder.addAll(
-              FluentIterable.from(((JavaLibrary) rule).getDepsForTransitiveClasspathEntries())
-                  .transform(SourcePaths.getToBuildTargetSourcePath())
-                  .toList());
+              ((JavaLibrary) rule).getDepsForTransitiveClasspathEntries().stream()
+                  .map(SourcePaths.getToBuildTargetSourcePath()::apply)
+                  .collect(MoreCollectors.toImmutableList()));
         } else {
           builder.add(sourcePath);
         }

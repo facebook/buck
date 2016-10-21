@@ -27,13 +27,13 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -139,9 +139,9 @@ public class GoBuckConfig {
         delegate.getOptionalListWithoutComments(SECTION, "vendor_path", ':');
 
     if (vendorPaths.isPresent()) {
-      return FluentIterable
-          .from(vendorPaths.get())
-          .transform(Paths::get).toList();
+      return vendorPaths.get().stream()
+          .map(Paths::get)
+          .collect(MoreCollectors.toImmutableList());
     }
     return ImmutableList.of();
   }

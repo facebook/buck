@@ -708,9 +708,9 @@ public class ProjectCommand extends BuildCommand {
       ImmutableSet<BuildTarget> targets,
       boolean disableCaching)
       throws IOException, InterruptedException {
-    BuildCommand buildCommand = new BuildCommand(FluentIterable.from(targets)
-        .transform(Object::toString)
-        .toList());
+    BuildCommand buildCommand = new BuildCommand(targets.stream()
+        .map(Object::toString)
+        .collect(MoreCollectors.toImmutableList()));
     buildCommand.setKeepGoing(true);
     buildCommand.setArtifactCacheDisabled(disableCaching);
     return buildCommand.run(params);
@@ -869,10 +869,9 @@ public class ProjectCommand extends BuildCommand {
           projectGraph,
           ANNOTATION_PREDICATE);
     }
-    return FluentIterable
-        .from(buildTargets)
-        .transform(Object::toString)
-        .toList();
+    return buildTargets.stream()
+        .map(Object::toString)
+        .collect(MoreCollectors.toImmutableList());
   }
 
   /**
@@ -912,9 +911,9 @@ public class ProjectCommand extends BuildCommand {
         shouldBuildWithBuck,
         getCombineTestBundles());
     if (!requiredBuildTargets.isEmpty()) {
-      BuildCommand buildCommand = new BuildCommand(FluentIterable.from(requiredBuildTargets)
-          .transform(Object::toString)
-          .toList());
+      BuildCommand buildCommand = new BuildCommand(requiredBuildTargets.stream()
+          .map(Object::toString)
+          .collect(MoreCollectors.toImmutableList()));
       exitCode = buildCommand.runWithoutHelp(params);
     }
     return exitCode;

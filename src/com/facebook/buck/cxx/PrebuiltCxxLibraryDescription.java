@@ -492,7 +492,7 @@ public class PrebuiltCxxLibraryDescription implements
         ruleResolver,
         pathResolver,
         FluentIterable.from(args.exportedDeps)
-            .transform(ruleResolver.getRuleFunction())
+            .transform(ruleResolver::getRule)
             .filter(NativeLinkable.class),
         args.includeDirs,
         args.libDir,

@@ -37,7 +37,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -103,9 +102,9 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     assertThat(copyNativeLibraries.getStrippedObjectDescriptions(), Matchers.empty());
     assertThat(
-        FluentIterable.from(copyNativeLibraries.getNativeLibDirectories())
-            .transform(sourcePathResolver::deprecatedGetPath)
-            .toList(),
+        copyNativeLibraries.getNativeLibDirectories().stream()
+            .map(sourcePathResolver::deprecatedGetPath)
+            .collect(MoreCollectors.toImmutableList()),
         Matchers.contains(
             ndkLibrary.getLibraryPath()
         )

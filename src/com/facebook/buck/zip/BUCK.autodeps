@@ -44,6 +44,7 @@
   },
   "unzip" : {
     "deps" : [
+      "//src/com/facebook/buck/util:util",
       "//third-party/java/commons-compress:commons-compress"
     ],
     "exported_deps" : [

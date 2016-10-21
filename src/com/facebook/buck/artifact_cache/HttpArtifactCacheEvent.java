@@ -20,9 +20,9 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.util.MoreCollectors;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -30,6 +30,7 @@ import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.StreamSupport;
 
 /**
  * Event produced for HttpArtifactCache operations containing different stats.
@@ -236,9 +237,9 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
 
       public Builder setRuleKeys(Iterable<RuleKey> ruleKeys) {
         // Make sure we expand any lazy evaluation Iterators so Json serialization works correctly.
-        List<String> keysAsStrings = FluentIterable.from(ruleKeys)
-            .transform(Object::toString)
-            .toList();
+        List<String> keysAsStrings = StreamSupport.stream(ruleKeys.spliterator(), false)
+            .map(Object::toString)
+            .collect(MoreCollectors.toImmutableList());
         data.put("rule_keys", keysAsStrings);
         return this;
       }

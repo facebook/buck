@@ -3013,10 +3013,9 @@ public class CachingBuildEngineTest {
         Collections.sort(
             queue,
             (o1, o2) -> Long.compare(o1.getNanoTime(), o2.getNanoTime()));
-        ImmutableList<String> queueDescription = FluentIterable.from(queue)
-            .transform(
-                event -> String.format("%s@%s", event, event.getNanoTime()))
-            .toList();
+        ImmutableList<String> queueDescription = queue.stream()
+            .map(event -> String.format("%s@%s", event, event.getNanoTime()))
+            .collect(MoreCollectors.toImmutableList());
         Iterator<BuildRuleEvent> itr = queue.iterator();
 
         while (itr.hasNext()) {
