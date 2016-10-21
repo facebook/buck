@@ -54,7 +54,6 @@ public class Cell {
   private final Watchman watchman;
   private final BuckConfig config;
   private final KnownBuildRuleTypes knownBuildRuleTypes;
-  private final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory;
   private final CellProvider cellProvider;
   private final WatchmanDiagnosticCache watchmanDiagnosticCache;
 
@@ -83,7 +82,6 @@ public class Cell {
     this.watchman = watchman;
     this.config = config;
 
-    this.knownBuildRuleTypesFactory = knownBuildRuleTypesFactory;
     this.knownBuildRuleTypes = knownBuildRuleTypesFactory.create(config, filesystem);
     this.cellProvider = cellProvider;
     this.watchmanDiagnosticCache = watchmanDiagnosticCache;
@@ -99,10 +97,6 @@ public class Cell {
 
   public KnownBuildRuleTypes getKnownBuildRuleTypes() {
     return knownBuildRuleTypes;
-  }
-
-  public KnownBuildRuleTypesFactory getKnownBuildRuleTypesFactory() {
-    return knownBuildRuleTypesFactory;
   }
 
   public BuckConfig getBuckConfig() {

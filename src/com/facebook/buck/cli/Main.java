@@ -1245,6 +1245,7 @@ public final class Main {
                   .setExecutors(executors)
                   .setBuildEnvironmentDescription(buildEnvironmentDescription)
                   .setActionGraphCache(actionGraphCache)
+                  .setKnownBuildRuleTypesFactory(factory)
                   .build());
           // Wait for HTTP writes to complete.
           closeHttpExecutorService(

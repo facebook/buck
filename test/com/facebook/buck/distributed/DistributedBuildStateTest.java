@@ -18,6 +18,7 @@ package com.facebook.buck.distributed;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.config.ConfigBuilder;
@@ -42,6 +43,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -52,10 +54,13 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
@@ -86,6 +91,11 @@ public class DistributedBuildStateTest {
 
   @Rule
   public TemporaryPaths temporaryFolder = new TemporaryPaths();
+
+  private ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
+  private KnownBuildRuleTypesFactory knownBuildRuleTypesFactory = new KnownBuildRuleTypesFactory(
+      processExecutor,
+      new FakeAndroidDirectoryResolver());
 
   @Test
   public void canReconstructConfig() throws IOException, InterruptedException {
@@ -118,7 +128,7 @@ public class DistributedBuildStateTest {
         .setFilesystem(createJavaOnlyFilesystem("/loading"))
         .build();
     DistBuildState distributedBuildState =
-        DistBuildState.load(dump, rootCellWhenLoading);
+        DistBuildState.load(dump, rootCellWhenLoading, knownBuildRuleTypesFactory);
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
     assertThat(cells, Matchers.aMapWithSize(1));
     assertThat(
@@ -167,7 +177,7 @@ public class DistributedBuildStateTest {
         .setFilesystem(createJavaOnlyFilesystem("/loading"))
         .build();
     DistBuildState distributedBuildState =
-        DistBuildState.load(dump, rootCellWhenLoading);
+        DistBuildState.load(dump, rootCellWhenLoading, knownBuildRuleTypesFactory);
     TargetGraph reconstructedGraph = distributedBuildState.createTargetGraph(targetGraphCodec);
     assertThat(reconstructedGraph.getNodes(), Matchers.hasSize(1));
     TargetNode<JavaLibraryDescription.Arg> reconstructedJavaLibrary =
@@ -209,7 +219,7 @@ public class DistributedBuildStateTest {
         createTargetGraph(filesystem));
 
     expectedException.expect(IllegalStateException.class);
-    DistBuildState.load(dump, cell);
+    DistBuildState.load(dump, cell, knownBuildRuleTypesFactory);
   }
 
   @Test
@@ -250,7 +260,7 @@ public class DistributedBuildStateTest {
         .setFilesystem(createJavaOnlyFilesystem("/loading"))
         .build();
     DistBuildState distributedBuildState =
-        DistBuildState.load(dump, rootCellWhenLoading);
+        DistBuildState.load(dump, rootCellWhenLoading, knownBuildRuleTypesFactory);
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
     assertThat(cells, Matchers.aMapWithSize(2));
   }

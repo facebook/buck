@@ -23,6 +23,7 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.Console;
@@ -82,4 +83,6 @@ public interface AbstractCommandRunnerParams {
   BuildEnvironmentDescription getBuildEnvironmentDescription();
 
   ActionGraphCache getActionGraphCache();
+
+  KnownBuildRuleTypesFactory getKnownBuildRuleTypesFactory();
 }

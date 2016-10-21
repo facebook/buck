@@ -28,6 +28,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.CellProvider;
 import com.facebook.buck.rules.DefaultCellPathResolver;
+import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -110,16 +111,10 @@ public class DistBuildState {
     return jobState;
   }
 
-  public static DistBuildState load(BuildJobState jobState, Cell rootCell) throws IOException {
-    return new DistBuildState(jobState, createCells(jobState, rootCell));
-  }
-
-  public BuildJobState getRemoteState() {
-    return remoteState;
-  }
-
-  private static ImmutableBiMap<Integer, Cell> createCells(BuildJobState remoteState, Cell rootCell)
-      throws IOException {
+  public static DistBuildState load(
+      BuildJobState jobState,
+      Cell rootCell,
+      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory) throws IOException {
     ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
 
     ImmutableMap.Builder<Path, BuckConfig> cellConfigs = ImmutableMap.builder();
@@ -127,7 +122,7 @@ public class DistBuildState {
     ImmutableMap.Builder<Integer, Path> cellIndex = ImmutableMap.builder();
 
     for (Map.Entry<Integer, BuildJobStateCell> remoteCellEntry :
-        remoteState.getCells().entrySet()) {
+        jobState.getCells().entrySet()) {
       BuildJobStateCell remoteCell = remoteCellEntry.getValue();
       Path sandboxPath = rootCellFilesystem.getRootPath().resolve(
           rootCellFilesystem.getBuckPaths().getRemoteSandboxDir());
@@ -145,11 +140,16 @@ public class DistBuildState {
         CellProvider.createForDistributedBuild(
             cellConfigs.build(),
             cellFilesystems.build(),
-            rootCell.getKnownBuildRuleTypesFactory(),
+            knownBuildRuleTypesFactory,
             rootCell.getWatchmanDiagnosticCache());
 
-    return ImmutableBiMap.copyOf(
+    ImmutableBiMap<Integer, Cell> cells = ImmutableBiMap.copyOf(
         Maps.transformValues(cellIndex.build(), cellProvider::getCellByPath));
+    return new DistBuildState(jobState, cells);
+  }
+
+  public BuildJobState getRemoteState() {
+    return remoteState;
   }
 
   private static Config createConfig(BuildJobStateBuckConfig remoteBuckConfig) {

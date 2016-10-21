@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
+import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.listener.BroadcastEventListener;
@@ -29,10 +30,12 @@ import com.facebook.buck.jvm.java.intellij.Project;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.environment.Platform;
@@ -129,6 +132,10 @@ public class CleanCommandTest extends EasyMockSupport {
         .setBuildEnvironmentDescription(
             CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION)
         .setActionGraphCache(new ActionGraphCache(new BroadcastEventListener()))
+        .setKnownBuildRuleTypesFactory(
+            new KnownBuildRuleTypesFactory(
+                new FakeProcessExecutor(),
+                new FakeAndroidDirectoryResolver()))
         .build();
   }
 

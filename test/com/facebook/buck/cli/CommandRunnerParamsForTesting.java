@@ -32,12 +32,14 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.TriState;
 import com.facebook.buck.util.cache.NullFileHashCache;
@@ -116,6 +118,8 @@ public class CommandRunnerParamsForTesting {
                 MoreExecutors.newDirectExecutorService()))
         .setBuildEnvironmentDescription(BUILD_ENVIRONMENT_DESCRIPTION)
         .setActionGraphCache(new ActionGraphCache(new BroadcastEventListener()))
+        .setKnownBuildRuleTypesFactory(
+            new KnownBuildRuleTypesFactory(new FakeProcessExecutor(), androidDirectoryResolver))
         .build();
   }
 
