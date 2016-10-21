@@ -1,7 +1,7 @@
 {
   "unit" : {
     "deps" : [
-      "//src/com/facebook/buck/util:more_strings",
+      "//src/com/facebook/buck/util:util",
       "//third-party/java/guava:guava"
     ],
     "exported_deps" : [

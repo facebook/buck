@@ -4,7 +4,6 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/step/fs:fs",
-      "//src/com/facebook/buck/util:more_strings",
       "//src/com/facebook/buck/util:util"
     ],
     "exported_deps" : [

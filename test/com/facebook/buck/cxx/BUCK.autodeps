@@ -26,7 +26,6 @@
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/test:test",
       "//src/com/facebook/buck/test/selectors:selectors",
-      "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",

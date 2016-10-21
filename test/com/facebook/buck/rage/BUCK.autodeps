@@ -12,7 +12,7 @@
       "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",
-      "//src/com/facebook/buck/util:tristate",
+      "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/environment:environment",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
       "//test/com/facebook/buck/cli:FakeBuckConfig",

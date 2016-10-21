@@ -5,7 +5,6 @@
       "//src/com/facebook/buck/io:DefaultProjectFilesystemDelegate",
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/shell:steps",
-      "//src/com/facebook/buck/util:tristate",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/timing:testutil",

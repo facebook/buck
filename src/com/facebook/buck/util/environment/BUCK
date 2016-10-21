@@ -6,7 +6,10 @@ PLATFORM_SRCS = [
 java_library(
   name = 'platform',
   srcs = PLATFORM_SRCS,
-  autodeps = True,
+  # This library is deep in the dependency tree, keep its dependency list small.
+  deps = [
+    "//third-party/java/guava:guava"
+  ],
   visibility = [
     'PUBLIC',
   ],

@@ -3,7 +3,7 @@
     "deps" : [
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/util:escaper",
+      "//src/com/facebook/buck/util:util",
       "//third-party/java/xz-java-1.5:xz"
     ],
     "exported_deps" : [

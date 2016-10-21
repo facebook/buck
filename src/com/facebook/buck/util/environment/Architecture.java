@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util.environment;
 
-import com.facebook.buck.log.Logger;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -54,8 +53,6 @@ public enum Architecture {
   private Architecture(String name) {
     this.name = name;
   }
-
-  public static final Logger LOG = Logger.get(Architecture.class);
 
   public static Architecture detect() {
     String javaName = System.getProperty("os.arch");

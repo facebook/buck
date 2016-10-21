@@ -136,7 +136,6 @@
       "//src/com/facebook/buck/jvm/java:javac-internals",
       "//src/com/facebook/buck/jvm/java/tracing:tracing",
       "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/zip:unzip",

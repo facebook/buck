@@ -29,7 +29,6 @@
       "//src/com/facebook/buck/log:log",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:tristate",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/concurrent:concurrent"
     ],
@@ -77,9 +76,7 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/test/result/type:type",
-      "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:more_strings",
       "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util:packaged_resource",
       "//src/com/facebook/buck/zip:constants",
@@ -149,9 +146,7 @@
       "//src/com/facebook/buck/model:macros",
       "//src/com/facebook/buck/rules/macros:macros",
       "//src/com/facebook/buck/step/fs:fs",
-      "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:more_strings",
       "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/concurrent:concurrent",
@@ -194,7 +189,6 @@
   "utils" : {
     "deps" : [
       "//src/com/facebook/buck/android:exceptions",
-      "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/environment:platform"
