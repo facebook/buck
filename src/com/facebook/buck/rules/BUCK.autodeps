@@ -29,6 +29,7 @@
     "deps" : [
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/util:util",
       "//third-party/java/immutables:processor",
       "//third-party/java/stringtemplate:stringtemplate"
     ],
@@ -49,7 +50,7 @@
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:util",
+      "//src/com/facebook/buck/util:packaged_resource",
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//src/com/facebook/buck/util/sha1:sha1",

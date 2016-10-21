@@ -3,7 +3,7 @@
     "deps" : [
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:util",
+      "//src/com/facebook/buck/util:packaged_resource",
       "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [

@@ -139,13 +139,25 @@ java_library(
   ],
 )
 
+PACKAGED_RESOURCE_SRCS = [
+    'PackagedResource.java',
+]
+java_library(
+  name = 'packaged_resource',
+  srcs = PACKAGED_RESOURCE_SRCS,
+  autodeps = True,
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
 java_library(
   name = 'util',
   srcs = glob(
     includes = ['*.java'],
     excludes = CONSTANT_SRCS + ESCAPER_SRCS + EXCEPTION_SRCS + IO_SRCS +
                WATCHMAN_WATCHER_SRCS + TRISTATE_SRCS + OBJECT_MAPPER_SRCS +
-               MORE_STRINGS_SRCS),
+               MORE_STRINGS_SRCS + PACKAGED_RESOURCE_SRCS),
   tests = [
     '//test/com/facebook/buck/util:util',
   ],

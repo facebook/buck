@@ -9,6 +9,7 @@
       "//src/com/facebook/buck/shell:rules",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:util",
       "//third-party/java/dd-plist:dd-plist",
       "//third-party/java/immutables:processor",
       "//third-party/java/jsr:jsr305",
@@ -28,7 +29,7 @@
       "//src/com/facebook/buck/rules:types",
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/swift:swift",
-      "//src/com/facebook/buck/util:util",
+      "//src/com/facebook/buck/util:packaged_resource",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava"
     ]

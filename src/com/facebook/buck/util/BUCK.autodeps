@@ -56,13 +56,21 @@
       "//third-party/java/jackson:jackson-databind"
     ]
   },
+  "packaged_resource" : {
+    "deps" : [
+      "//src/com/facebook/buck/zip:unzip"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/io:io",
+      "//third-party/java/guava:guava"
+    ]
+  },
   "util" : {
     "deps" : [
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:escaper",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util/environment:platform",
-      "//src/com/facebook/buck/zip:unzip",
       "//third-party/java/aosp:aosp",
       "//third-party/java/jackson:jackson-core"
     ],
