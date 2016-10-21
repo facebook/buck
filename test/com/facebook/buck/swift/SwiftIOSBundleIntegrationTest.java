@@ -281,7 +281,7 @@ public class SwiftIOSBundleIntegrationTest {
   }
 
   @Test
-  public void swiftDependsOnObjCRunsAndPrintsMessageOnOSX() throws Exception {
+  public void swiftDependsOnObjCRunsAndPrintsMessage() throws Exception {
     assumeThat(
         AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR),
         is(true));
