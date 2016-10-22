@@ -2,6 +2,7 @@ java_library(
   name = 'testutil',
   srcs = [
     'FakeJavaLibrary.java',
+    'FakeStandardJavaFileManager.java',
     'JavaBinaryRuleBuilder.java',
     'JavaLibraryBuilder.java',
     'JavaTestBuilder.java',

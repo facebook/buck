@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
 
@@ -60,6 +61,10 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
       ImmutableSetMultimap<Path, Path> classUsageMap,
       ProjectFilesystem filesystem) {
     final ImmutableSetMultimap.Builder<Path, Path> builder = ImmutableSetMultimap.builder();
+
+    // Ensure deterministic ordering.
+    builder.orderKeysBy(Comparator.naturalOrder());
+    builder.orderValuesBy(Comparator.naturalOrder());
 
     for (Map.Entry<Path, Collection<Path>> jarClassesEntry : classUsageMap.asMap().entrySet()) {
       Path jarAbsolutePath = jarClassesEntry.getKey();
