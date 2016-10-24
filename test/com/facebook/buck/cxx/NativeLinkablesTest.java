@@ -30,7 +30,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -395,7 +394,7 @@ public class NativeLinkablesTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(a),
             Linker.LinkableDepType.STATIC,
-            Predicates.alwaysTrue()),
+            x -> true),
         Matchers.equalTo(
             ImmutableMap.<BuildTarget, NativeLinkable>of(
                 a.getBuildTarget(), a,

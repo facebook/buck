@@ -28,7 +28,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -557,7 +556,7 @@ public class ProjectFilesystem {
   }
 
   public ImmutableSet<Path> getFilesUnderPath(Path pathRelativeToProjectRoot) throws IOException {
-    return getFilesUnderPath(pathRelativeToProjectRoot, Predicates.alwaysTrue());
+    return getFilesUnderPath(pathRelativeToProjectRoot, x -> true);
   }
 
   public ImmutableSet<Path> getFilesUnderPath(

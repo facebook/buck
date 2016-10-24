@@ -26,7 +26,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -152,7 +151,7 @@ public class NativeLinkables {
 
     // Topologically sort the rules.
     Iterable<BuildTarget> ordered =
-        TopologicalSort.sort(graph, Predicates.alwaysTrue()).reverse();
+        TopologicalSort.sort(graph, x -> true).reverse();
 
     // Return a map of of the results.
     ImmutableMap.Builder<BuildTarget, NativeLinkable> result = ImmutableMap.builder();
@@ -166,7 +165,7 @@ public class NativeLinkables {
       final CxxPlatform cxxPlatform,
       Iterable<? extends NativeLinkable> inputs,
       final Linker.LinkableDepType linkStyle) {
-    return getNativeLinkables(cxxPlatform, inputs, linkStyle, Predicates.alwaysTrue());
+    return getNativeLinkables(cxxPlatform, inputs, linkStyle, x -> true);
   }
 
   public static Linker.LinkableDepType getLinkStyle(

@@ -30,7 +30,6 @@ import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.zip.ZipConstants;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -391,7 +390,7 @@ public class ProjectFilesystemTest {
     assertThat(
         filesystem.getFilesUnderPath(
             Paths.get("dir1"),
-            Predicates.alwaysTrue(),
+            x -> true,
             EnumSet.noneOf(FileVisitOption.class)),
         containsInAnyOrder(Paths.get("dir1/file2"), Paths.get("dir1/dir2/file3")));
 

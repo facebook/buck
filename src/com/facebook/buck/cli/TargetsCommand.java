@@ -61,7 +61,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -368,7 +367,7 @@ public class TargetsCommand extends AbstractCommand {
               executor,
               ImmutableList.of(
                   TargetNodePredicateSpec.of(
-                      Predicates.alwaysTrue(),
+                      x -> true,
                       BuildFileSpec.fromRecursivePath(
                           Paths.get(""),
                           params.getCell().getRoot()))),
@@ -483,7 +482,7 @@ public class TargetsCommand extends AbstractCommand {
                   executor,
                   ImmutableList.of(
                       TargetNodePredicateSpec.of(
-                          Predicates.alwaysTrue(),
+                          x -> true,
                           BuildFileSpec.fromRecursivePath(
                               Paths.get(""),
                               params.getCell().getRoot()))),

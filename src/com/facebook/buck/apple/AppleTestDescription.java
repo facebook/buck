@@ -57,7 +57,6 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.facebook.buck.zip.UnzipStep;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -424,7 +423,7 @@ public class AppleTestDescription implements
     ImmutableMap<BuildTarget, NativeLinkable> roots =
         NativeLinkables.getNativeLinkableRoots(
             testHostApp.getBinary().get().getDeps(),
-            Predicates.alwaysTrue());
+            x -> true);
 
     // Union the blacklist of all the platforms. This should give a superset for each particular
     // platform, which should be acceptable as items in the blacklist thare are unmatched are simply

@@ -21,7 +21,6 @@ import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleDependencyVisitors;
-import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -60,7 +59,7 @@ final class DefaultSuggestBuildRules implements SuggestBuildRules {
                         JavaLibrary.class::isInstance,
                         JavaLibrary.class::isInstance);
                 return FluentIterable
-                    .from(TopologicalSort.sort(graph, Predicates.alwaysTrue()))
+                    .from(TopologicalSort.sort(graph, x -> true))
                     .filter(JavaLibrary.class)
                     .filter(transitiveNotDeclaredDeps::contains)
                     .toList()

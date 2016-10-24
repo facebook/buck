@@ -46,7 +46,6 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -154,7 +153,7 @@ public class OCamlRuleBuilder {
             deps,
             OCamlLibrary.class::isInstance,
             OCamlLibrary.class::isInstance),
-        Predicates.alwaysTrue());
+        x -> true);
   }
 
   private static NativeLinkableInput getNativeLinkableInput(Iterable<BuildRule> deps) {

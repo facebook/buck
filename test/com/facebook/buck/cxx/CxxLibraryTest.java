@@ -36,7 +36,6 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Functions;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
@@ -187,8 +186,8 @@ public class CxxLibraryTest {
         ruleResolver,
         pathResolver,
         FluentIterable.from(params.getDeclaredDeps().get()),
-        /* hasExportedHeaders */ Predicates.alwaysTrue(),
-        /* headerOnly */ Predicates.alwaysTrue(),
+        /* hasExportedHeaders */ x -> true,
+        /* headerOnly */ x -> true,
         Functions.constant(ImmutableMultimap.of()),
         Functions.constant(StringArg.from("-ldl")),
         /* linkTargetInput */ Functions.constant(NativeLinkableInput.of()),

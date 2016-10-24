@@ -28,7 +28,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -140,7 +139,7 @@ public class CxxPreprocessables {
     return getTransitiveCxxPreprocessorInput(
         cxxPlatform,
         inputs,
-        Predicates.alwaysTrue());
+        x -> true);
   }
 
   /**

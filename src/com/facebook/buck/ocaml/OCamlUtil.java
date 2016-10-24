@@ -23,7 +23,6 @@ import com.facebook.buck.rules.BuildRuleDependencyVisitors;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -82,7 +81,7 @@ public class OCamlUtil {
 
     final ImmutableList<BuildRule> sorted = TopologicalSort.sort(
         graph,
-        Predicates.alwaysTrue());
+        x -> true);
 
     return FluentIterable
             .from(sorted)

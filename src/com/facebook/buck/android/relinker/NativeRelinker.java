@@ -34,7 +34,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -123,7 +122,7 @@ public class NativeRelinker {
     // non-linkable rules).
     final DirectedAcyclicGraph<BuildRule> graph = getBuildGraph(linkableRules);
     ImmutableList<BuildRule> sortedRules =
-        TopologicalSort.sort(graph, Predicates.alwaysTrue());
+        TopologicalSort.sort(graph, x -> true);
     // This maps a build rule to every rule in linkableRules that depends on it. This (added to the
     // copied libraries) is the set of linkables that could use a symbol from this build rule.
     ImmutableMap<BuildRule, ImmutableSet<BuildRule>> allDependentsMap =
@@ -187,7 +186,7 @@ public class NativeRelinker {
   private static DirectedAcyclicGraph<BuildRule> getBuildGraph(Set<BuildRule> rules) {
     // TODO(cjhopman): can this use .in(rules) instead of alwaysTrue()?
     return BuildRuleDependencyVisitors.getBuildRuleDirectedGraphFilteredBy(
-        rules, Predicates.alwaysTrue(), Predicates.alwaysTrue());
+        rules, x -> true, x -> true);
   }
 
   /**

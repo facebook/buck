@@ -17,7 +17,6 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.model.BuildTarget;
-import com.google.common.base.Predicates;
 
 import java.nio.file.Path;
 
@@ -36,14 +35,14 @@ public class BuildTargetPatternTargetNodeParser
   @Override
   public TargetNodeSpec createForDescendants(Path cellPath, Path basePath) {
     return TargetNodePredicateSpec.of(
-        Predicates.alwaysTrue(),
+        x -> true,
         BuildFileSpec.fromRecursivePath(cellPath.resolve(basePath), cellPath));
   }
 
   @Override
   public TargetNodeSpec createForChildren(Path cellPath, Path basePath) {
     return TargetNodePredicateSpec.of(
-        Predicates.alwaysTrue(),
+        x -> true,
         BuildFileSpec.fromPath(cellPath.resolve(basePath), cellPath));
   }
 

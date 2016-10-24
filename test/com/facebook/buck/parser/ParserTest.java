@@ -69,7 +69,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -515,7 +514,7 @@ public class ParserTest {
     ImmutableSet<BuildTarget> targets = filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.alwaysTrue(),
+        x -> true,
         BuckEventBusFactory.newInstance(),
         executorService);
 
@@ -532,13 +531,13 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.alwaysTrue(),
+        x -> true,
         eventBus,
         executorService);
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.alwaysTrue(),
+        x -> true,
         eventBus,
         executorService);
 
@@ -552,7 +551,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.alwaysTrue(),
+        x -> true,
         eventBus,
         executorService);
 
@@ -564,7 +563,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.alwaysTrue(),
+        x -> true,
         eventBus,
         executorService);
 
@@ -578,7 +577,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.alwaysTrue(),
+        x -> true,
         eventBus,
         executorService);
 
@@ -589,7 +588,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.alwaysTrue(),
+        x -> true,
         eventBus,
         executorService);
 
@@ -606,7 +605,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.alwaysTrue(),
+        x -> true,
         eventBus,
         executorService);
 
@@ -628,7 +627,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.alwaysTrue(),
+        x -> true,
         eventBus,
         executorService);
 
@@ -644,7 +643,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.alwaysTrue(),
+        x -> true,
         eventBus,
         executorService);
 
@@ -666,7 +665,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.alwaysTrue(),
+        x -> true,
         eventBus,
         executorService);
 
@@ -674,7 +673,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.alwaysTrue(),
+        x -> true,
         eventBus,
         executorService);
 
@@ -1384,7 +1383,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.alwaysTrue(),
+        x -> true,
         eventBus,
         executorService);
 
@@ -1403,7 +1402,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.alwaysTrue(),
+        x -> true,
         eventBus,
         executorService);
 
@@ -1416,7 +1415,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.alwaysTrue(),
+        x -> true,
         eventBus,
         executorService);
 
@@ -1440,7 +1439,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.alwaysTrue(),
+        x -> true,
         eventBus,
         executorService);
 
@@ -1453,7 +1452,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.alwaysTrue(),
+        x -> true,
         eventBus,
         executorService);
     BuildTarget foo = BuildTarget.builder(cellRoot, "//java/com/facebook", "foo").build();
@@ -1480,7 +1479,7 @@ public class ParserTest {
     filterAllTargetsInProject(
         parser,
         cell,
-        Predicates.alwaysTrue(),
+        x -> true,
         eventBus,
         executorService);
 
@@ -2217,12 +2216,12 @@ public class ParserTest {
         executorService,
         ImmutableList.of(
             TargetNodePredicateSpec.of(
-                Predicates.alwaysTrue(),
+                x -> true,
                 BuildFileSpec.fromRecursivePath(
                     Paths.get("bar"),
                     cell.getRoot())),
             TargetNodePredicateSpec.of(
-                Predicates.alwaysTrue(),
+                x -> true,
                 BuildFileSpec.fromRecursivePath(
                     Paths.get("foo"),
                     cell.getRoot()))),
@@ -2254,12 +2253,12 @@ public class ParserTest {
             executorService,
             ImmutableList.of(
                 TargetNodePredicateSpec.of(
-                    Predicates.alwaysTrue(),
+                    x -> true,
                     BuildFileSpec.fromRecursivePath(
                         Paths.get("bar"),
                         cell.getRoot())),
                 TargetNodePredicateSpec.of(
-                    Predicates.alwaysTrue(),
+                    x -> true,
                     BuildFileSpec.fromRecursivePath(
                         Paths.get("foo"),
                         cell.getRoot()))),
@@ -2277,12 +2276,12 @@ public class ParserTest {
             executorService,
             ImmutableList.of(
                 TargetNodePredicateSpec.of(
-                    Predicates.alwaysTrue(),
+                    x -> true,
                     BuildFileSpec.fromRecursivePath(
                         Paths.get("foo"),
                         cell.getRoot())),
                 TargetNodePredicateSpec.of(
-                    Predicates.alwaysTrue(),
+                    x -> true,
                     BuildFileSpec.fromRecursivePath(
                         Paths.get("bar"),
                         cell.getRoot()))),

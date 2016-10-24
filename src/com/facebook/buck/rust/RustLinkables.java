@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -82,7 +81,7 @@ public class RustLinkables {
                 cxxPlatform,
                 ImmutableList.of(rule),
                 linkStyle,
-                Predicates.alwaysTrue());
+                x -> true);
             builder.add(nli);
           } catch (NoSuchBuildTargetException e) {
             e.printStackTrace();

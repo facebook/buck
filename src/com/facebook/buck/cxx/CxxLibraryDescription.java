@@ -674,7 +674,7 @@ public class CxxLibraryDescription implements
     boolean hasObjectsForAnyPlatform = !args.srcs.isEmpty();
     Predicate<CxxPlatform> hasObjects;
     if (hasObjectsForAnyPlatform) {
-      hasObjects = Predicates.alwaysTrue();
+      hasObjects = x -> true;
     } else {
       hasObjects = input -> !args.platformSrcs.getMatchingValues(
           input.getFlavor().toString()).isEmpty();
@@ -682,7 +682,7 @@ public class CxxLibraryDescription implements
 
     Predicate<CxxPlatform> hasExportedHeaders;
     if (!args.exportedHeaders.isEmpty()) {
-      hasExportedHeaders = Predicates.alwaysTrue();
+      hasExportedHeaders = x -> true;
     } else {
       hasExportedHeaders =
           input -> !args.exportedPlatformHeaders

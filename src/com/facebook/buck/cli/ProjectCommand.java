@@ -1209,7 +1209,7 @@ public class ProjectCommand extends BuildCommand {
               executor,
               ImmutableList.of(
                   TargetNodePredicateSpec.of(
-                      Predicates.alwaysTrue(),
+                      x -> true,
                       BuildFileSpec.fromRecursivePath(
                           Paths.get(""),
                           params.getCell().getRoot()))),

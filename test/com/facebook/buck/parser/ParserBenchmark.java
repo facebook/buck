@@ -32,7 +32,6 @@ import com.google.caliper.AfterExperiment;
 import com.google.caliper.BeforeExperiment;
 import com.google.caliper.Param;
 import com.google.caliper.api.Macrobenchmark;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -147,7 +146,7 @@ public class ParserBenchmark {
         executorService,
         ImmutableList.of(
             TargetNodePredicateSpec.of(
-                Predicates.alwaysTrue(),
+                x -> true,
                 BuildFileSpec.fromRecursivePath(
                     Paths.get(""),
                     cell.getRoot()))),

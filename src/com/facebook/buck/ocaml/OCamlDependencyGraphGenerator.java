@@ -19,7 +19,6 @@ package com.facebook.buck.ocaml;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -46,7 +45,7 @@ public class OCamlDependencyGraphGenerator {
     parseDependencies(depToolOutput);
     Preconditions.checkNotNull(graph);
     final ImmutableList<String> sortedDeps = TopologicalSort.sort(
-        graph, Predicates.alwaysTrue());
+        graph, x -> true);
 
     // Two copies of dependencies as .cmo can map to .ml or .re
 

@@ -48,7 +48,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -331,7 +330,7 @@ class NativeLibraryMergeEnhancer {
               ": " + cycleString);
     }
 
-    return TopologicalSort.sort(graph, Predicates.<MergedNativeLibraryConstituents>alwaysTrue());
+    return TopologicalSort.sort(graph, x -> true);
   }
 
   /**

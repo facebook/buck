@@ -51,7 +51,6 @@ import com.google.common.base.CaseFormat;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -637,7 +636,7 @@ public class CxxGenruleDescription
                     .filter(NativeLinkable.class),
                 depType,
                 !filter.isPresent() ?
-                    Predicates.alwaysTrue() :
+                    x -> true :
                     input -> {
                       Preconditions.checkArgument(input instanceof BuildRule);
                       BuildRule rule = (BuildRule) input;

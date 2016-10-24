@@ -16,22 +16,21 @@
 
 package com.facebook.buck.util;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertThat;
 
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import java.nio.charset.StandardCharsets;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,7 +40,7 @@ public class LineIteratingTest {
 
   private static class TestLineHandler extends LineIterating.CharLineHandler {
     public List<String> lines = new ArrayList<>();
-    public Predicate<List<String>> shouldContinue = Predicates.alwaysTrue();
+    public Predicate<List<String>> shouldContinue = x -> true;
 
     public TestLineHandler() {
       super(/* initialBufferCapacity */ 20);
@@ -56,7 +55,7 @@ public class LineIteratingTest {
 
   private static class TestByteLineHandler extends LineIterating.ByteLineHandler {
     public List<String> lines = new ArrayList<>();
-    public Predicate<List<String>> shouldContinue = Predicates.alwaysTrue();
+    public Predicate<List<String>> shouldContinue = x -> true;
 
     public TestByteLineHandler() {
       super(/* initialBufferCapacity */ 20);
