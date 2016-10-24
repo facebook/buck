@@ -21,9 +21,9 @@ import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -37,15 +37,6 @@ import java.util.Set;
 
 final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
 
-  private static final Predicate<String> NOT_A_BUILT_IN_SYMBOL = symbol -> {
-    // We can ignore things in java.*, but not javax.*, unfortunately since sometimes those are
-    // provided by JSRs.
-    return !symbol.startsWith("java.");
-  };
-
-  private static final Predicate<Object> IS_PATH_SOURCE_PATH =
-      PathSourcePath.class::isInstance;
-
   private final ImmutableSortedSet<SourcePath> srcs;
 
   private final JavaFileParser javaFileParser;
@@ -57,9 +48,10 @@ final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
       JavaFileParser javaFileParser,
       boolean shouldRecordRequiredSymbols) {
     // Avoid all the construction in the common case where all srcs are instances of PathSourcePath.
-    this.srcs = Iterables.all(srcs, IS_PATH_SOURCE_PATH)
+    this.srcs = Iterables.all(srcs, PathSourcePath.class::isInstance)
         ? srcs
-        : FluentIterable.from(srcs).filter(IS_PATH_SOURCE_PATH).toSortedSet(Ordering.natural());
+        : srcs.stream().filter(PathSourcePath.class::isInstance)
+        .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
     this.javaFileParser = javaFileParser;
     this.shouldRecordRequiredSymbols = shouldRecordRequiredSymbols;
   }
@@ -96,8 +88,8 @@ final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
 
     return new Symbols(
         providedSymbols,
-        FluentIterable.from(requiredSymbols).filter(NOT_A_BUILT_IN_SYMBOL),
-        FluentIterable.from(exportedSymbols).filter(NOT_A_BUILT_IN_SYMBOL));
+        FluentIterable.from(requiredSymbols).filter(JavaLibrarySymbolsFinder::isNotABuiltInSymbol),
+        FluentIterable.from(exportedSymbols).filter(JavaLibrarySymbolsFinder::isNotABuiltInSymbol));
   }
 
   @Override
@@ -105,5 +97,11 @@ final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
     sink
         .setReflectively("srcs", srcs)
         .setReflectively("recordRequires", shouldRecordRequiredSymbols);
+  }
+
+  private static boolean isNotABuiltInSymbol(String symbol) {
+    // We can ignore things in java.*, but not javax.*, unfortunately since sometimes those are
+    // provided by JSRs.
+    return !symbol.startsWith("java.");
   }
 }

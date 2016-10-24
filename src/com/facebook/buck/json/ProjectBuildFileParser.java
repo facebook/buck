@@ -142,7 +142,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
                          new BufferedOutputStream(Files.newOutputStream(ignorePathsJson1))) {
                   bserSerializer.serializeToStream(
                       options.getIgnorePaths().stream()
-                          .map(PathOrGlobMatcher.toPathOrGlob()::apply)
+                          .map(PathOrGlobMatcher::getPathOrGlob)
                           .collect(MoreCollectors.toImmutableList()),
                       output);
                 }

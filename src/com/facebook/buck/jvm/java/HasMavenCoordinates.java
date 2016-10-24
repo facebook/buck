@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.rules.BuildRule;
-import com.google.common.base.Predicate;
 
 import java.util.Optional;
 
@@ -28,7 +27,7 @@ public interface HasMavenCoordinates extends BuildRule {
    */
   Optional<String> getMavenCoords();
 
-  public static final Predicate<BuildRule> MAVEN_COORDS_PRESENT_PREDICATE =
-      input -> input instanceof HasMavenCoordinates &&
-          ((HasMavenCoordinates) input).getMavenCoords().isPresent();
+  static boolean isMavenCoordsPresent(HasMavenCoordinates input) {
+    return input.getMavenCoords().isPresent();
+  }
 }

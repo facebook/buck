@@ -160,7 +160,7 @@ public class IjModuleGraph {
     ImmutableListMultimap<Path, TargetNode<?>> baseTargetPathMultimap =
         FluentIterable
           .from(targetGraph.getNodes())
-          .filter(IjModuleFactory.SUPPORTED_MODULE_TYPES_PREDICATE)
+          .filter(input -> IjModuleFactory.SUPPORTED_MODULE_TYPES.contains(input.getType()))
           .index(
               input -> {
                 Path basePath = input.getBuildTarget().getBasePath();

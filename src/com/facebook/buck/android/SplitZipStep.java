@@ -78,10 +78,6 @@ public class SplitZipStep implements Step {
   // Transform Function that calls String.trim()
   private static final Function<String, String> STRING_TRIM = line -> line.trim();
 
-  // Predicate that rejects blank lines and lines starting with '#'.
-  private static final Predicate<String> IS_NEITHER_EMPTY_NOR_COMMENT =
-      line -> !line.isEmpty() && !(line.charAt(0) == '#');
-
   // Transform Function that calls Type.GetObjectType.
   private static final Function<String, Type> TYPE_GET_OBJECT_TYPE =
       input -> Type.getObjectType(input);
@@ -299,7 +295,7 @@ public class SplitZipStep implements Step {
       Iterable<String> classes = FluentIterable
           .from(filesystem.readLines(primaryDexClassesFile.get()))
           .transform(STRING_TRIM)
-          .filter(IS_NEITHER_EMPTY_NOR_COMMENT);
+          .filter(SplitZipStep::isNeitherEmptyNorComment);
       builder.addAll(classes);
     }
 
@@ -326,7 +322,7 @@ public class SplitZipStep implements Step {
       Iterable<String> classes = FluentIterable
           .from(filesystem.readLines(secondaryDexHeadClassesFile.get()))
           .transform(STRING_TRIM)
-          .filter(IS_NEITHER_EMPTY_NOR_COMMENT)
+          .filter(SplitZipStep::isNeitherEmptyNorComment)
           .transform(translatorFactory.createObfuscationFunction());
       builder.addAll(classes);
     }
@@ -348,7 +344,7 @@ public class SplitZipStep implements Step {
       Iterable<String> classes = FluentIterable
           .from(filesystem.readLines(secondaryDexTailClassesFile.get()))
           .transform(STRING_TRIM)
-          .filter(IS_NEITHER_EMPTY_NOR_COMMENT)
+          .filter(SplitZipStep::isNeitherEmptyNorComment)
           .transform(translatorFactory.createObfuscationFunction());
       builder.addAll(classes);
     }
@@ -394,7 +390,7 @@ public class SplitZipStep implements Step {
     ImmutableList<Type> scenarioClasses = FluentIterable
         .from(filesystem.readLines(primaryDexScenarioFile.get()))
         .transform(STRING_TRIM)
-        .filter(IS_NEITHER_EMPTY_NOR_COMMENT)
+        .filter(SplitZipStep::isNeitherEmptyNorComment)
         .transform(translatorFactory.createObfuscationFunction())
         .transform(TYPE_GET_OBJECT_TYPE)
         .toList();
@@ -519,4 +515,10 @@ public class SplitZipStep implements Step {
       return builder.build();
     };
   }
+
+  // Predicate that rejects blank lines and lines starting with '#'.
+  private static boolean isNeitherEmptyNorComment(String line) {
+    return !line.isEmpty() && !(line.charAt(0) == '#');
+  }
+
 }

@@ -690,8 +690,8 @@ public class Project {
     // If in the root of the project, specify ignored paths.
     if (buildRule != null && buildRule.getBuildTarget().isInCellRoot()) {
       for (Path path : FluentIterable.from(projectFilesystem.getIgnorePaths())
-          .filter(PathOrGlobMatcher.isPath())
-          .transform(PathOrGlobMatcher.toPath())) {
+          .filter(input -> input.getType() == PathOrGlobMatcher.Type.PATH)
+          .transform(PathOrGlobMatcher::getPath)) {
         // It turns out that ignoring all of buck-out causes problems in IntelliJ: it forces an
         // extra "modules" folder to appear at the top of the navigation pane that competes with the
         // ordinary file tree, making navigation a real pain. The hypothesis is that this is because

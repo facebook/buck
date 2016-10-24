@@ -290,8 +290,8 @@ public class AndroidResource extends AbstractBuildRule
         manifestFile,
         () -> FluentIterable.from(buildRuleParams.getDeps())
             .filter(HasAndroidResourceDeps.class)
-            .filter(NON_EMPTY_RESOURCE)
-            .transform(GET_RES_SYMBOLS_TXT)
+            .filter(input -> input.getRes() != null)
+            .transform(HasAndroidResourceDeps::getPathToTextSymbolsFile)
             .toSortedSet(Ordering.natural()),
         hasWhitelistedStrings,
         resourceUnion);

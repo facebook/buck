@@ -16,9 +16,7 @@
 
 package com.facebook.buck.io;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -27,18 +25,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class PathOrGlobMatcher {
-
-  private static final Predicate<PathOrGlobMatcher> IS_PATH =
-      input -> input.getType() == Type.PATH;
-
-  private static final Function<PathOrGlobMatcher, Path> TO_PATH =
-      PathOrGlobMatcher::getPath;
-
-  private static final Function<Path, PathOrGlobMatcher> TO_PATH_MATCHER =
-      PathOrGlobMatcher::new;
-
-  private static final Function<PathOrGlobMatcher, String> TO_PATH_OR_GLOB =
-      PathOrGlobMatcher::getPathOrGlob;
 
   public enum Type {
     PATH,
@@ -139,21 +125,4 @@ public class PathOrGlobMatcher {
     }
     throw new RuntimeException(String.format("Unsupported type: '%s'", type));
   }
-
-  public static Predicate<PathOrGlobMatcher> isPath() {
-    return IS_PATH;
-  }
-
-  public static Function<PathOrGlobMatcher, Path> toPath() {
-    return TO_PATH;
-  }
-
-  public static Function<Path, PathOrGlobMatcher> toPathMatcher() {
-    return TO_PATH_MATCHER;
-  }
-
-  public static Function<PathOrGlobMatcher, String> toPathOrGlob() {
-    return TO_PATH_OR_GLOB;
-  }
-
 }

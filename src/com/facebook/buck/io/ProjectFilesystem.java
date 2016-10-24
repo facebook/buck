@@ -221,7 +221,7 @@ public class ProjectFilesystem {
                 ImmutableSet.of(
                     getCacheDir(root, Optional.of(buckPaths.getCacheDir().toString()), buckPaths)))
                 .append(ImmutableSet.of(buckPaths.getTrashDir()))
-                .transform(PathOrGlobMatcher.toPathMatcher()))
+                .transform(PathOrGlobMatcher::new))
         .toSet();
     this.buckPaths = buckPaths;
 
@@ -240,7 +240,7 @@ public class ProjectFilesystem {
         // TODO(#10068334) So we claim to ignore this path to preserve existing behaviour, but we
         // really don't end up ignoring it in reality (see extractIgnorePaths).
         .append(ImmutableSet.of(buckPaths.getBuckOut()))
-        .transform(PathOrGlobMatcher.toPathMatcher())
+        .transform(PathOrGlobMatcher::new)
         .append(
             Iterables.filter(
                 this.blackListedPaths,

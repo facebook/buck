@@ -167,7 +167,7 @@ public class DummyRDotJavaTest {
     assertEquals(ImmutableSet.of(Paths.get(rDotJavaBinFolder), Paths.get(rDotJavaOutputJar)),
         buildableContext.getRecordedArtifacts());
 
-    Sha1HashCode expectedSha1 = AndroidResource.ABI_HASHER.apply(
+    Sha1HashCode expectedSha1 = HasAndroidResourceDeps.hashAbi(
         ImmutableList.of(
             (HasAndroidResourceDeps) resourceRule1,
             (HasAndroidResourceDeps) resourceRule2));

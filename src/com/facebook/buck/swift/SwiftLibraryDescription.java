@@ -49,7 +49,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -78,9 +77,6 @@ public class SwiftLibraryDescription implements
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       SWIFT_COMPANION_FLAVOR,
       SWIFT_COMPILE_FLAVOR);
-
-  private static final Predicate<Flavor> IS_SUPPORTED_FLAVOR =
-      SUPPORTED_FLAVORS::contains;
 
   public enum Type implements FlavorConvertible {
     SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR),
@@ -133,7 +129,7 @@ public class SwiftLibraryDescription implements
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
     ImmutableSet<Flavor> currentUnsupportedFlavors = ImmutableSet.copyOf(Sets.filter(
-        flavors, Predicates.not(IS_SUPPORTED_FLAVOR)));
+        flavors, Predicates.not(SUPPORTED_FLAVORS::contains)));
     if (currentUnsupportedFlavors.isEmpty()) {
       return true;
     }

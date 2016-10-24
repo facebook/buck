@@ -197,7 +197,7 @@ public class DummyRDotJava extends AbstractBuildRule
 
   @Override
   public Sha1HashCode getAbiKeyForDeps(DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
-    return HasAndroidResourceDeps.ABI_HASHER.apply(androidResourceDeps);
+    return HasAndroidResourceDeps.hashAbi(androidResourceDeps);
   }
 
   public static Path getRDotJavaSrcFolder(BuildTarget buildTarget, ProjectFilesystem filesystem) {

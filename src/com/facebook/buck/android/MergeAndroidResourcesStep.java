@@ -27,10 +27,10 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -134,7 +134,7 @@ public class MergeAndroidResourcesStep implements Step {
 
   public ImmutableSortedSet<Path> getRDotJavaFiles() {
     return FluentIterable.from(androidResourceDeps)
-        .transform(HasAndroidResourceDeps.TO_R_DOT_JAVA_PACKAGE)
+        .transform(HasAndroidResourceDeps::getRDotJavaPackage)
         .transform(this::getPathToRDotJava)
         .toSortedSet(natural());
   }
@@ -325,7 +325,7 @@ public class MergeAndroidResourcesStep implements Step {
       try {
         linesInSymbolsFile =
             FluentIterable.from(filesystem.readLines(symbolsFile))
-                .filter(MoreStrings.NON_EMPTY)
+                .filter(input -> !Strings.isNullOrEmpty(input))
                 .toList();
       } catch (IOException e) {
         throw new RuntimeException(e);

@@ -240,7 +240,7 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
       }
       ImmutableSortedSet.Builder<JavaLibrary> removals = ImmutableSortedSet.naturalOrder();
       for (JavaLibrary javaLibrary : candidates.build()) {
-        if (HasMavenCoordinates.MAVEN_COORDS_PRESENT_PREDICATE.apply(javaLibrary)) {
+        if (HasMavenCoordinates.isMavenCoordsPresent(javaLibrary)) {
           depsCollector.add(javaLibrary);
           removals.addAll(javaLibrary.getTransitiveClasspathDeps());
         }

@@ -900,8 +900,8 @@ public class ProjectTest {
     expectedExcludeFolders.add(
         new SourceFolder("file://$MODULE_DIR$/buck-out/tmp", /* isTestSource */ false));
     for (Path ignorePath : FluentIterable.from(projectFilesystem.getIgnorePaths())
-        .filter(PathOrGlobMatcher.isPath())
-        .transform(PathOrGlobMatcher.toPath())) {
+        .filter(input -> input.getType() == PathOrGlobMatcher.Type.PATH)
+        .transform(PathOrGlobMatcher::getPath)) {
       if (!ignorePath.equals(projectFilesystem.getBuckPaths().getBuckOut()) &&
           !ignorePath.equals(projectFilesystem.getBuckPaths().getGenDir())) {
         expectedExcludeFolders.add(

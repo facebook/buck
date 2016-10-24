@@ -33,7 +33,6 @@ import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -44,12 +43,6 @@ import java.util.Optional;
 public class CxxLink
     extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, ProvidesLinkedBinaryDeps, OverrideScheduleRule {
-
-  private static final Predicate<BuildRule> ARCHIVE_RULES_PREDICATE =
-      input -> input instanceof Archive;
-
-  private static final Predicate<BuildRule> COMPILE_RULES_PREDICATE =
-      input -> input instanceof CxxPreprocessAndCompile;
 
   @AddToRuleKey
   private final Linker linker;
@@ -133,12 +126,12 @@ public class CxxLink
 
   @Override
   public ImmutableSet<BuildRule> getStaticLibraryDeps() {
-    return FluentIterable.from(getDeps()).filter(ARCHIVE_RULES_PREDICATE).toSet();
+    return FluentIterable.from(getDeps()).filter(Archive.class::isInstance).toSet();
   }
 
   @Override
   public ImmutableSet<BuildRule> getCompileDeps() {
-    return FluentIterable.from(getDeps()).filter(COMPILE_RULES_PREDICATE).toSet();
+    return FluentIterable.from(getDeps()).filter(CxxPreprocessAndCompile.class::isInstance).toSet();
   }
 
   @Override

@@ -605,8 +605,8 @@ public class ProjectFilesystemTest {
     Path rootPath = tmp.getRoot();
     ProjectFilesystem filesystem = new ProjectFilesystem(rootPath, config);
     ImmutableSet<Path> ignorePaths = FluentIterable.from(filesystem.getIgnorePaths())
-        .filter(PathOrGlobMatcher.isPath())
-        .transform(PathOrGlobMatcher.toPath())
+        .filter(input -> input.getType() == PathOrGlobMatcher.Type.PATH)
+        .transform(PathOrGlobMatcher::getPath)
         .toSet();
     assertThat(
         ImmutableSortedSet.copyOf(Ordering.natural(), ignorePaths),
@@ -632,8 +632,8 @@ public class ProjectFilesystemTest {
     Path rootPath = tmp.getRoot();
     ImmutableSet<Path> ignorePaths =
         FluentIterable.from(new ProjectFilesystem(rootPath, config).getIgnorePaths())
-            .filter(PathOrGlobMatcher.isPath())
-            .transform(PathOrGlobMatcher.toPath())
+            .filter(input -> input.getType() == PathOrGlobMatcher.Type.PATH)
+            .transform(PathOrGlobMatcher::getPath)
             .toSet();
     assertThat(
         "Cache directory should be in set of ignored paths",

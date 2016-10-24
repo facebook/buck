@@ -20,7 +20,6 @@ import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.rules.RuleKey;
 import com.google.common.base.Functions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -40,13 +39,11 @@ public class MultiArtifactCache implements ArtifactCache {
   private final ImmutableList<ArtifactCache> artifactCaches;
   private final ImmutableList<ArtifactCache> writableArtifactCaches;
   private final boolean isStoreSupported;
-  private static final Predicate<ArtifactCache> WRITABLE_CACHES_ONLY =
-      ArtifactCache::isStoreSupported;
 
   public MultiArtifactCache(ImmutableList<ArtifactCache> artifactCaches) {
     this.artifactCaches = artifactCaches;
     this.writableArtifactCaches = ImmutableList.copyOf(
-        Iterables.filter(artifactCaches, WRITABLE_CACHES_ONLY));
+        Iterables.filter(artifactCaches, ArtifactCache::isStoreSupported));
     this.isStoreSupported = this.writableArtifactCaches.size() > 0;
   }
 

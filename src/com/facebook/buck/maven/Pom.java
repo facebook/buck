@@ -114,7 +114,7 @@ public class Pom {
   }
 
   private void applyBuildRule() {
-    if (!HasMavenCoordinates.MAVEN_COORDS_PRESENT_PREDICATE.apply(publishable)) {
+    if (!HasMavenCoordinates.isMavenCoordsPresent(publishable)) {
       throw new IllegalArgumentException(
           "Cannot retrieve maven coordinates for target" +
               publishable.getBuildTarget().getFullyQualifiedName());
@@ -123,7 +123,7 @@ public class Pom {
 
     Iterable<Artifact> deps = FluentIterable
         .from(publishable.getMavenDeps())
-        .filter(HasMavenCoordinates.MAVEN_COORDS_PRESENT_PREDICATE)
+        .filter(HasMavenCoordinates::isMavenCoordsPresent)
         .transform(
             input -> new DefaultArtifact(input.getMavenCoords().get()));
 

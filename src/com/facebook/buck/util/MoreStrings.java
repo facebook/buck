@@ -18,17 +18,12 @@ package com.facebook.buck.util;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
 
 import java.util.Arrays;
 import java.util.Optional;
 
 
 public final class MoreStrings {
-
-  public static final Predicate<String> NON_EMPTY =
-      input -> !Strings.isNullOrEmpty(input);
 
   /** Utility class: do not instantiate. */
   private MoreStrings() {}

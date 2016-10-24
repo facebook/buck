@@ -88,7 +88,7 @@ public class AndroidLibraryGraphEnhancer {
       case FIRST_ORDER:
         androidResourceDeps = FluentIterable.from(originalDeps)
             .filter(HasAndroidResourceDeps.class)
-            .filter(HasAndroidResourceDeps.NON_EMPTY_RESOURCE)
+            .filter(input -> input.getRes() != null)
             .toSet();
         break;
       case TRANSITIVE:

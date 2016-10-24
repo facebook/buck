@@ -17,11 +17,11 @@
 package com.facebook.buck.android.aapt;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.FluentIterable;
 
@@ -183,7 +183,7 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
       Path rDotTxt)
       throws IOException {
     return FluentIterable.from(owningFilesystem.readLines(rDotTxt))
-        .filter(MoreStrings.NON_EMPTY)
+        .filter(input -> !Strings.isNullOrEmpty(input))
         .transform(RDotTxtEntry.TO_ENTRY);
   }
 

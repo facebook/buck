@@ -27,12 +27,11 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.XmlDomParser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -89,8 +88,6 @@ public class MiniAapt implements Step {
   private static final ImmutableSet<String> IGNORED_TAGS = ImmutableSet.of(
       "eat-comment",
       "skip");
-
-  private static final Predicate<Path> ENDS_WITH_XML = input -> input.toString().endsWith(".xml");
 
   private final SourcePathResolver resolver;
   private final ProjectFilesystem filesystem;
@@ -214,7 +211,7 @@ public class MiniAapt implements Step {
   public void resourceUnion() throws IOException {
     for (Path depRTxt : pathsToSymbolsOfDeps) {
       Iterable<String> lines = FluentIterable.from(filesystem.readLines(depRTxt))
-          .filter(MoreStrings.NON_EMPTY)
+          .filter(input -> !Strings.isNullOrEmpty(input))
           .toList();
       for (String line : lines) {
         Optional<RDotTxtEntry> entry = RDotTxtEntry.parse(line);
@@ -461,7 +458,8 @@ public class MiniAapt implements Step {
       throws IOException, XPathExpressionException, ResourceParseException {
     Path absoluteResDir = resolver.getAbsolutePath(resDirectory);
     Path relativeResDir = resolver.getRelativePath(resDirectory);
-    for (Path path : filesystem.getFilesUnderPath(absoluteResDir, ENDS_WITH_XML)) {
+    for (Path path :
+        filesystem.getFilesUnderPath(absoluteResDir, input -> input.toString().endsWith(".xml"))) {
       String dirname = relativeResDir.relativize(path).getName(0).toString();
       if (isAValuesDir(dirname)) {
         // Ignore files under values* directories.
@@ -568,7 +566,7 @@ public class MiniAapt implements Step {
     definitionsBuilder.addAll(resourceCollector.getResources());
     for (Path depRTxt : pathsToSymbolsOfDeps) {
       Iterable<String> lines = FluentIterable.from(filesystem.readLines(depRTxt))
-          .filter(MoreStrings.NON_EMPTY)
+          .filter(input -> !Strings.isNullOrEmpty(input))
           .toList();
       for (String line : lines) {
         Optional<RDotTxtEntry> entry = RDotTxtEntry.parse(line);
