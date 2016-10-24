@@ -34,7 +34,6 @@ class DexSplitMode implements RuleKeyAppendable {
       /* shouldSplitDex */ false,
       ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
       DexStore.JAR,
-      /* useLinearAllocSplitDex */ false,
       /* linearAllocHardLimit */ 0,
       /* primaryDexPatterns */ ImmutableSet.of(),
       /* primaryDexClassesFile */ Optional.empty(),
@@ -46,7 +45,6 @@ class DexSplitMode implements RuleKeyAppendable {
   private final boolean shouldSplitDex;
   private final DexStore dexStore;
   private final ZipSplitter.DexSplitStrategy dexSplitStrategy;
-  private final boolean useLinearAllocSplitDex;
   private final long linearAllocHardLimit;
   private final ImmutableSet<String> primaryDexPatterns;
 
@@ -130,14 +128,11 @@ class DexSplitMode implements RuleKeyAppendable {
    *     in the first secondary dexes.
    * @param secondaryDexTailClassesFile Path to a file containing a list of classes that are put
    *     in the last secondary dexes.
-   * @param useLinearAllocSplitDex If true, {@link com.facebook.buck.dalvik.DalvikAwareZipSplitter}
-   *     will be used. Also, {@code linearAllocHardLimit} must have a positive value in this case.
    */
   public DexSplitMode(
       boolean shouldSplitDex,
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
       DexStore dexStore,
-      boolean useLinearAllocSplitDex,
       long linearAllocHardLimit,
       Collection<String> primaryDexPatterns,
       Optional<SourcePath> primaryDexClassesFile,
@@ -148,7 +143,6 @@ class DexSplitMode implements RuleKeyAppendable {
     this.shouldSplitDex = shouldSplitDex;
     this.dexSplitStrategy = dexSplitStrategy;
     this.dexStore = dexStore;
-    this.useLinearAllocSplitDex = useLinearAllocSplitDex;
     this.linearAllocHardLimit = linearAllocHardLimit;
     this.primaryDexPatterns = ImmutableSet.copyOf(primaryDexPatterns);
     this.primaryDexClassesFile = primaryDexClassesFile;
@@ -170,10 +164,6 @@ class DexSplitMode implements RuleKeyAppendable {
   ZipSplitter.DexSplitStrategy getDexSplitStrategy() {
     Preconditions.checkState(isShouldSplitDex());
     return dexSplitStrategy;
-  }
-
-  public boolean useLinearAllocSplitDex() {
-    return useLinearAllocSplitDex;
   }
 
   public long getLinearAllocHardLimit() {
@@ -215,6 +205,5 @@ class DexSplitMode implements RuleKeyAppendable {
     sink.setReflectively("secondaryDexHeadClassesFile", secondaryDexHeadClassesFile);
     sink.setReflectively("secondaryDexTailClassesFile", secondaryDexTailClassesFile);
     sink.setReflectively("shouldSplitDex", shouldSplitDex);
-    sink.setReflectively("useLinearAllocSplitDex", useLinearAllocSplitDex);
   }
 }

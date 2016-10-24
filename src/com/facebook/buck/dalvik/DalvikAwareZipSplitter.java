@@ -48,7 +48,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * Alternative to {@link DefaultZipSplitter} that uses estimates from {@link DalvikStatsTool}
+ * Implementation of {@link ZipSplitter} that uses estimates from {@link DalvikStatsTool}
  * to determine how many classes to pack into a dex.
  * <p>
  * It does three passes through the .class files:

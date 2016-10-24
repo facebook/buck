@@ -141,6 +141,12 @@ public class AndroidBinaryDescription
         PerfEventId.of("AndroidBinaryDescription"),
         "target", params.getBuildTarget().toString())) {
 
+      if (args.useLinearAllocSplitDex.isPresent()) {
+        LOG.warn(
+            "Target %s specified use_linear_alloc_split_dex, which is now always enabled.",
+            params.getBuildTarget());
+      }
+
       ResourceCompressionMode compressionMode = getCompressionMode(args);
 
       BuildTarget target = params.getBuildTarget();
@@ -326,7 +332,6 @@ public class AndroidBinaryDescription
         args.useSplitDex.orElse(false),
         dexSplitStrategy,
         args.dexCompression.orElse(defaultDexStore),
-        args.useLinearAllocSplitDex.orElse(false),
         args.linearAllocHardLimit.orElse(DEFAULT_LINEAR_ALLOC_HARD_LIMIT),
         args.primaryDexPatterns,
         args.primaryDexClassesFile,

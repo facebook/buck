@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.dalvik.DalvikAwareZipSplitterFactory;
-import com.facebook.buck.dalvik.DefaultZipSplitterFactory;
 import com.facebook.buck.dalvik.ZipSplitter;
 import com.facebook.buck.dalvik.ZipSplitterFactory;
 import com.facebook.buck.dalvik.firstorder.FirstOrderHelper;
@@ -65,15 +64,6 @@ import javax.annotation.Nullable;
  * dx --dex.
  */
 public class SplitZipStep implements Step {
-
-  private static final int ZIP_SIZE_SOFT_LIMIT = 11 * 1024 * 1024;
-
-  /**
-   * The uncompressed class size is a very simple metric that we can use to roughly estimate
-   * whether we will hit the DexOpt LinearAlloc limit.  When we hit the limit, we were around
-   * 20 MB uncompressed, so use 13 MB as a safer upper limit.
-   */
-  private static final int ZIP_SIZE_HARD_LIMIT = ZIP_SIZE_SOFT_LIMIT + (2 * 1024 * 1024);
 
   // Transform Function that calls String.trim()
   private static final Function<String, String> STRING_TRIM = line -> line.trim();
@@ -194,14 +184,9 @@ public class SplitZipStep implements Step {
               filesystem);
 
       ZipSplitterFactory zipSplitterFactory;
-      if (dexSplitMode.useLinearAllocSplitDex()) {
-        zipSplitterFactory = new DalvikAwareZipSplitterFactory(
-            dexSplitMode.getLinearAllocHardLimit(),
-            wantedInPrimaryZip);
-      } else {
-        zipSplitterFactory = new DefaultZipSplitterFactory(ZIP_SIZE_SOFT_LIMIT,
-            ZIP_SIZE_HARD_LIMIT);
-      }
+      zipSplitterFactory = new DalvikAwareZipSplitterFactory(
+          dexSplitMode.getLinearAllocHardLimit(),
+          wantedInPrimaryZip);
 
       outputFiles = zipSplitterFactory.newInstance(
           filesystem,
@@ -480,8 +465,7 @@ public class SplitZipStep implements Step {
         secondaryJarMetaPath,
         primaryJarPath,
         secondaryJarDir,
-        secondaryJarPattern,
-        ZIP_SIZE_HARD_LIMIT);
+        secondaryJarPattern);
   }
 
   public Supplier<Multimap<Path, Path>> getOutputToInputsMapSupplier(
