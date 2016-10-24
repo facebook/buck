@@ -19,6 +19,7 @@ package com.facebook.buck.doctor;
 import static com.facebook.buck.doctor.config.DoctorEndpointResponse.StepStatus;
 import static org.hamcrest.junit.MatcherAssume.assumeThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuckConfig;
@@ -180,7 +181,10 @@ public class DoctorCommandIntegrationTest {
         requestBody.set(ByteStreams.toByteArray(httpRequest.getInputStream()));
 
         assertTrue(requestMethod.get().equalsIgnoreCase(expectedMethod));
-        assertTrue(new String(requestBody.get(), Charsets.UTF_8).contains(expectedBody));
+        assertThat(
+            "Request should contain the uuid.",
+            new String(requestBody.get(), Charsets.UTF_8),
+            Matchers.containsString(expectedBody));
 
         try (DataOutputStream out =
                  new DataOutputStream(httpResponse.getOutputStream())) {
