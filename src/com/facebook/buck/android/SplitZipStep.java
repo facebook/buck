@@ -65,13 +65,6 @@ import javax.annotation.Nullable;
  */
 public class SplitZipStep implements Step {
 
-  // Transform Function that calls String.trim()
-  private static final Function<String, String> STRING_TRIM = line -> line.trim();
-
-  // Transform Function that calls Type.GetObjectType.
-  private static final Function<String, Type> TYPE_GET_OBJECT_TYPE =
-      input -> Type.getObjectType(input);
-
   @VisibleForTesting
   static final Pattern CANARY_CLASS_FILE_PATTERN = Pattern.compile("^([\\w/$]+)\\.Canary\\.class");
   @VisibleForTesting
@@ -279,7 +272,7 @@ public class SplitZipStep implements Step {
     if (primaryDexClassesFile.isPresent()) {
       Iterable<String> classes = FluentIterable
           .from(filesystem.readLines(primaryDexClassesFile.get()))
-          .transform(STRING_TRIM)
+          .transform(String::trim)
           .filter(SplitZipStep::isNeitherEmptyNorComment);
       builder.addAll(classes);
     }
@@ -290,7 +283,7 @@ public class SplitZipStep implements Step {
       addScenarioClasses(translatorFactory, classesSupplier, builder);
     }
 
-    return ImmutableSet.copyOf(builder.build());
+    return builder.build();
   }
   /**
    * Construct a {@link Set} of internal class names that must go into the beginning of
@@ -306,13 +299,13 @@ public class SplitZipStep implements Step {
     if (secondaryDexHeadClassesFile.isPresent()) {
       Iterable<String> classes = FluentIterable
           .from(filesystem.readLines(secondaryDexHeadClassesFile.get()))
-          .transform(STRING_TRIM)
+          .transform(String::trim)
           .filter(SplitZipStep::isNeitherEmptyNorComment)
           .transform(translatorFactory.createObfuscationFunction());
       builder.addAll(classes);
     }
 
-    return ImmutableSet.copyOf(builder.build());
+    return builder.build();
   }
   /**
    * Construct a {@link Set} of internal class names that must go into the beginning of
@@ -328,13 +321,13 @@ public class SplitZipStep implements Step {
     if (secondaryDexTailClassesFile.isPresent()) {
       Iterable<String> classes = FluentIterable
           .from(filesystem.readLines(secondaryDexTailClassesFile.get()))
-          .transform(STRING_TRIM)
+          .transform(String::trim)
           .filter(SplitZipStep::isNeitherEmptyNorComment)
           .transform(translatorFactory.createObfuscationFunction());
       builder.addAll(classes);
     }
 
-    return ImmutableSet.copyOf(builder.build());
+    return builder.build();
   }
 
   /**
@@ -374,10 +367,10 @@ public class SplitZipStep implements Step {
 
     ImmutableList<Type> scenarioClasses = FluentIterable
         .from(filesystem.readLines(primaryDexScenarioFile.get()))
-        .transform(STRING_TRIM)
+        .transform(String::trim)
         .filter(SplitZipStep::isNeitherEmptyNorComment)
         .transform(translatorFactory.createObfuscationFunction())
-        .transform(TYPE_GET_OBJECT_TYPE)
+        .transform(Type::getObjectType)
         .toList();
 
     FirstOrderHelper.addTypesAndDependencies(
