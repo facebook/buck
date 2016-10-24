@@ -140,7 +140,8 @@ class SwiftLibrary
         .addAllFrameworks(frameworks)
         .addAllLibraries(libraries);
     boolean isDynamic;
-    switch (linkage) {
+    Linkage preferredLinkage = getPreferredLinkage(cxxPlatform);
+    switch (preferredLinkage) {
       case STATIC:
         isDynamic = false;
         break;
@@ -151,7 +152,7 @@ class SwiftLibrary
         isDynamic = type == Linker.LinkableDepType.SHARED;
         break;
       default:
-        throw new IllegalStateException("unhandled linkage type: " + linkage);
+        throw new IllegalStateException("unhandled linkage type: " + preferredLinkage);
     }
     if (isDynamic) {
       inputBuilder.addArgs(new SourcePathArg(getResolver(),
@@ -264,7 +265,13 @@ class SwiftLibrary
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
-    return transitiveCxxPreprocessorInputCache.getUnchecked(
-        ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
+    if (getBuildTarget().getFlavors().contains(SWIFT_COMPANION_FLAVOR)) {
+      return ImmutableMap.of(
+          getBuildTarget(),
+          getCxxPreprocessorInput(cxxPlatform, headerVisibility));
+    } else {
+      return transitiveCxxPreprocessorInputCache.getUnchecked(
+          ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
+    }
   }
 }
