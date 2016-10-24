@@ -200,17 +200,6 @@ public class PreDexedFilesSorter {
     }
 
     public void addDex(DexWithClasses dexWithClasses) {
-      // If the individual DexWithClasses exceeds the limit for a secondary dex, then we have done
-      // something horribly wrong.
-      if (dexWithClasses.getWeightEstimate() > dexWeightLimit) {
-        context.logError(
-            "DexWithClasses %s with cost %s exceeds the max cost %s for a secondary dex file.",
-            dexWithClasses.getPathToDexFile(),
-            dexWithClasses.getWeightEstimate(),
-            dexWeightLimit);
-        throw new HumanReadableException("Secondary dex exceeds linear alloc limit.");
-      }
-
       // If we're over the size threshold, start writing to a new dex
       if (dexWithClasses.getWeightEstimate() + currentDexSize > dexWeightLimit) {
         currentDexSize = 0;
