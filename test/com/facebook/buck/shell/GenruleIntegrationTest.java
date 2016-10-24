@@ -291,9 +291,27 @@ public class GenruleIntegrationTest {
     Path outputOne = workspace.buildAndReturnOutput("//:genrule-one");
     Path outputTwo = workspace.buildAndReturnOutput("//:genrule-two");
 
+    assertZipsAreEqual(outputOne, outputTwo);
+  }
+
+  @Test
+  public void genruleZipOutputsExtendedTimestampsAreScrubbed() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "genrule_zip_scrubber",
+        temporaryFolder);
+    workspace.setUp();
+
+    Path outputOne = workspace.buildAndReturnOutput("//:extended-time-one");
+    Path outputTwo = workspace.buildAndReturnOutput("//:extended-time-two");
+
+    assertZipsAreEqual(outputOne, outputTwo);
+  }
+
+  private void assertZipsAreEqual(Path zipPathOne, Path zipPathTwo) throws IOException {
     try (
-        ZipFile zipOne = new ZipFile(outputOne.toFile());
-        ZipFile zipTwo = new ZipFile(outputTwo.toFile())) {
+        ZipFile zipOne = new ZipFile(zipPathOne.toFile());
+        ZipFile zipTwo = new ZipFile(zipPathTwo.toFile())) {
       Enumeration<? extends ZipEntry> entriesOne = zipOne.entries(),
           entriesTwo = zipTwo.entries();
 
@@ -307,8 +325,8 @@ public class GenruleIntegrationTest {
       assertFalse(entriesTwo.hasMoreElements());
     }
     assertEquals(
-        new String(Files.readAllBytes(outputOne)),
-        new String(Files.readAllBytes(outputTwo)));
+        new String(Files.readAllBytes(zipPathOne)),
+        new String(Files.readAllBytes(zipPathTwo)));
   }
 
   private String zipEntryDebugString(ZipEntry entryOne) {

@@ -31,6 +31,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.zip.ZipEntry;
 
 public class ZipScrubberStep implements Step {
+  public static final int EXTENDED_TIMESTAMP_ID = 0x5455;
 
   private final ProjectFilesystem filesystem;
   private final Path zip;
@@ -81,9 +82,12 @@ public class ZipScrubberStep implements Step {
 
         entry.putInt(ZipEntry.CENTIM, ZipConstants.DOS_FAKE_TIME);
         scrubLocalEntry(slice(map, entry.getInt(ZipEntry.CENOFF)));
+        scrubExtraFields(
+            slice(entry, ZipEntry.CENHDR + entry.getShort(ZipEntry.CENNAM)),
+            entry.getShort(ZipEntry.CENEXT));
 
         cdOffset +=
-            46 +
+            ZipEntry.CENHDR +
             entry.getShort(ZipEntry.CENNAM) +
             entry.getShort(ZipEntry.CENEXT) +
             entry.getShort(ZipEntry.CENCOM);
@@ -107,6 +111,31 @@ public class ZipScrubberStep implements Step {
   private static void scrubLocalEntry(ByteBuffer entry) throws IOException {
     check(entry.getInt(0) == ZipEntry.LOCSIG, "expected local header signature");
     entry.putInt(ZipEntry.LOCTIM, ZipConstants.DOS_FAKE_TIME);
+    scrubExtraFields(
+        slice(entry, ZipEntry.LOCHDR + entry.getShort(ZipEntry.LOCNAM)),
+        entry.getShort(ZipEntry.LOCEXT));
+  }
+
+  private static void scrubExtraFields(ByteBuffer data, short length) {
+    // See http://mdfs.net/Docs/Comp/Archiving/Zip/ExtraField for structure of extra fields.
+    int end = data.position() + length;
+    while (data.position() < end) {
+      int id = data.getShort();
+      int size = data.getShort();
+
+      if (id == EXTENDED_TIMESTAMP_ID) {
+        // 1 byte flag
+        // 0-3 4-byte unix timestamps
+        data.get(); // ignore flags
+        size -= 1;
+        while (size > 0) {
+          data.putInt((int) (ZipConstants.getFakeTime() / 1000));
+          size -= 4;
+        }
+      } else {
+        data.position(data.position() + size);
+      }
+    }
   }
 
 }

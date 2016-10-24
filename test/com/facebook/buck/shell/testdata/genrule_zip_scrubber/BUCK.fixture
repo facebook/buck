@@ -18,3 +18,21 @@ genrule(
   ],
 )
 
+genrule(
+  name = 'extended-time-one',
+  out = 'output.zip',
+  cmd = 'cp $SRCS $OUT',
+  srcs = [
+    'extended_time.zip',
+  ],
+)
+
+genrule(
+  name = 'extended-time-two',
+  out = 'output.zip',
+  cmd = 'cp $SRCS $OUT',
+  srcs = [
+    'extended_time_2.zip',
+  ],
+)
+
