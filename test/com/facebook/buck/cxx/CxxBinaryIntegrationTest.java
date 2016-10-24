@@ -266,7 +266,7 @@ public class CxxBinaryIntegrationTest {
                         .contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)))
             .transform(Object::toString)
             // Filter out any rules that are explicitly built locally.
-            .filter(Predicates.not(Predicates.in(locallyBuiltTargets)))
+            .filter(Predicates.not(locallyBuiltTargets::contains))
             .toSet();
 
     // check that all the other targets are fetched from the cache

@@ -62,7 +62,7 @@ final class DefaultSuggestBuildRules implements SuggestBuildRules {
                 return FluentIterable
                     .from(TopologicalSort.sort(graph, Predicates.alwaysTrue()))
                     .filter(JavaLibrary.class)
-                    .filter(Predicates.in(transitiveNotDeclaredDeps))
+                    .filter(transitiveNotDeclaredDeps::contains)
                     .toList()
                     .reverse();
               }

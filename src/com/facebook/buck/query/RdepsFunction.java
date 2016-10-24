@@ -87,8 +87,7 @@ public class RdepsFunction implements QueryFunction {
       ListeningExecutorService executor) throws QueryException, InterruptedException {
     Set<QueryTarget> universeSet = args.get(0).getExpression().eval(env, executor);
     env.buildTransitiveClosure(universeSet, Integer.MAX_VALUE, executor);
-    final Predicate<QueryTarget> inUniversePredicate = Predicates.in(
-        env.getTransitiveClosure(universeSet));
+    Predicate<QueryTarget> inUniversePredicate = env.getTransitiveClosure(universeSet)::contains;
 
     // LinkedHashSet preserves the order of insertion when iterating over the values.
     // The order by which we traverse the result is meaningful because the dependencies are
@@ -105,7 +104,7 @@ public class RdepsFunction implements QueryFunction {
 
       // Filter nodes visited before.
       Collection<QueryTarget> next = env.getReverseDeps(
-          Iterables.filter(currentInUniverse, Predicates.not(Predicates.in(visited))));
+          Iterables.filter(currentInUniverse, Predicates.not(visited::contains)));
       Iterables.addAll(visited, currentInUniverse);
       if (next.isEmpty()) {
         break;

@@ -44,7 +44,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Function;
-import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -289,7 +288,7 @@ public class AndroidBinaryTest {
     Iterable<Class<?>> filteredObservedCommands = FluentIterable
         .from(steps)
         .transform((Function<Step, Class<?>>) Step::getClass)
-        .filter(Predicates.in(Sets.newHashSet(expectedCommands)));
+        .filter(Sets.newHashSet(expectedCommands)::contains);
     MoreAsserts.assertIterablesEquals(expectedCommands, filteredObservedCommands);
   }
 

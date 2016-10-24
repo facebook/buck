@@ -49,7 +49,6 @@ import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -943,7 +942,7 @@ public class WorkspaceAndProjectGenerator {
           schemeName,
           TopologicalSort.sort(
               projectGraph,
-              Predicates.in(getTransitiveDepsAndInputs(projectGraph, testNodes, targetNodes))));
+              getTransitiveDepsAndInputs(projectGraph, testNodes, targetNodes)::contains));
     }
   }
 

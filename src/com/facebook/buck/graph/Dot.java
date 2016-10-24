@@ -17,7 +17,6 @@
 package com.facebook.buck.graph;
 
 import com.google.common.base.Function;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -83,7 +82,7 @@ public class Dot<T> {
           return;
         }
         String source = nodeToName.apply(node);
-        for (T sink : Sets.filter(graph.getOutgoingNodesFor(node), Predicates.in(nodesToFilter))) {
+        for (T sink : Sets.filter(graph.getOutgoingNodesFor(node), nodesToFilter::contains)) {
           String sinkName = nodeToName.apply(sink);
           builder.add(String.format("  %s -> %s;\n", source, sinkName));
         }

@@ -979,7 +979,7 @@ public class BuckConfig {
 
       // Otherwise, filter out the ignored fields.
       ImmutableMap<String, String> remainingKeys = ImmutableMap.copyOf(
-          Maps.filterKeys(fields, Predicates.not(Predicates.in(ignoredFieldNames))));
+          Maps.filterKeys(fields, Predicates.not(ignoredFieldNames::contains)));
 
       if (!remainingKeys.isEmpty()) {
         filtered.put(sectionName, remainingKeys);

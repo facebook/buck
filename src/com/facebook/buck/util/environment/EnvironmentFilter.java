@@ -117,7 +117,7 @@ public class EnvironmentFilter {
   public static final Predicate<String> NOT_IGNORED_ENV_PREDICATE =
       Predicates.not(
           Predicates.or(
-              Predicates.in(ENV_TO_IGNORE),
+              ENV_TO_IGNORE::contains,
               value -> {
                 for (String prefix : ENV_PREFIXES_TO_IGNORE) {
                   if (value.startsWith(prefix)) {

@@ -149,7 +149,7 @@ public class NativeRelinker {
     // to the RelinkerRules of dependents.
     Iterable<Pair<TargetCpuType, SourcePath>> sortedPaths =
         FluentIterable.from(sortedRules)
-            .filter(Predicates.in(linkableRules))
+            .filter(linkableRules::contains)
             .transform(Functions.forMap(ruleMap))
             .toList()
             .reverse();

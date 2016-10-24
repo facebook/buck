@@ -95,7 +95,7 @@ public class DepsFunction implements QueryFunction {
     // Iterating depthBound+1 times because the first one processes the given argument set.
     for (int i = 0; i <= depthBound; i++) {
       Set<QueryTarget> next = env.getFwdDeps(
-          Iterables.filter(current, Predicates.not(Predicates.in(result))));
+          Iterables.filter(current, Predicates.not(result::contains)));
       result.addAll(current);
       if (next.isEmpty()) {
         break;

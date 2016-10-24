@@ -158,7 +158,7 @@ public class CxxLinkableEnhancer {
     nativeLinkableInputs.add(immediateLinkableInput);
     for (NativeLinkable nativeLinkable : Maps.filterKeys(
         NativeLinkables.getNativeLinkables(cxxPlatform, nativeLinkableDeps, depType),
-        Predicates.not(Predicates.in(blacklist))).values()) {
+        Predicates.not(blacklist::contains)).values()) {
       NativeLinkableInput input = NativeLinkables.getNativeLinkableInput(
           cxxPlatform, depType, nativeLinkable);
       LOG.verbose("Native linkable %s returned input %s", nativeLinkable, input);

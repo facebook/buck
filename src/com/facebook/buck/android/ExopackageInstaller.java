@@ -261,7 +261,7 @@ public class ExopackageInstaller {
       final Set<String> hashesToInstall = Sets.difference(requiredHashes, presentHashes);
 
       Map<String, Path> filesToInstallByHash =
-          Maps.filterKeys(hashToSources, Predicates.in(hashesToInstall));
+          Maps.filterKeys(hashToSources, hashesToInstall::contains);
 
       // This is a bit gross.  It was a late addition.  Ideally, we could eliminate this, but
       // it wouldn't be terrible if we don't.  We store the dexed jars on the device
@@ -340,7 +340,7 @@ public class ExopackageInstaller {
       ImmutableSet<String> presentHashes = prepareNativeLibsDir(abi, requiredHashes);
 
       Map<String, Path> filesToInstallByHash =
-          Maps.filterKeys(libraries, Predicates.not(Predicates.in(presentHashes)));
+          Maps.filterKeys(libraries, Predicates.not(presentHashes::contains));
 
       installFiles(
           "native_library",

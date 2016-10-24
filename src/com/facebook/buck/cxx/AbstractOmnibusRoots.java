@@ -153,7 +153,7 @@ abstract class AbstractOmnibusRoots {
     private ImmutableMap<BuildTarget, NativeLinkTarget> buildIncluded(
         ImmutableSet<BuildTarget> excluded) {
       return ImmutableMap.copyOf(
-          Maps.filterKeys(includedRoots, Predicates.not(Predicates.in(excluded))));
+          Maps.filterKeys(includedRoots, Predicates.not(excluded::contains)));
     }
 
     public boolean isEmpty() {
