@@ -121,7 +121,6 @@ public class RageCommandIntegrationTest {
           });
       httpd.start();
 
-
       RageConfig rageConfig = createRageConfig(httpd);
       ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
       ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();

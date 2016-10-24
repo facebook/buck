@@ -15,6 +15,8 @@
       "//src/com/facebook/buck/counters:counters",
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/cxx:rules",
+      "//src/com/facebook/buck/doctor:doctor",
+      "//src/com/facebook/buck/doctor/config:config",
       "//src/com/facebook/buck/event/listener:BroadcastEventListener",
       "//src/com/facebook/buck/event/listener:listener",
       "//src/com/facebook/buck/file:downloader",

@@ -1,0 +1,117 @@
+{namespace buck.command.doctor}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'buck doctor' /}
+    {param description}
+        A command to debug other buck invocations.
+    {/param}
+    {param content}
+
+
+{call buck.command}
+{param overview}
+
+<p>
+The purpose of this command is to help the user debug and solve and issue of another buck command.
+This command requires implementing custom server-side support to be fully functional. We do not
+provide a functional implementation with buck, however we have documented the protocol and the
+<code>DoctorCommandIntegrationTest</code> contains very simple examples of interactions between
+the doctor command and server.
+<p>
+  You can use this command after setting up the environment.
+</p>
+
+{literal}<pre>buck doctor</pre>{/literal}
+
+
+<h2>Command flow</h2>
+<p>
+The command supports the debugging of other commands except invocations of <code>buck rage</code>
+and <code>buck doctor</code>.
+At the start the user has to choose the buck invocation that they want to debug. In order for a
+ buck invocation to appear on the list it must have log files in <code>buck-out</code>.
+After choosing the command a report is generated and either stored locally or is uploaded to a
+remote endpoint defined under <code>[rage]</code> in buckconfig. Also, another Json report is
+generated structured after class <code>AbstractDoctorEndpointRequest</code> and is send to the
+remote endpoint defined under <code>[doctor]</code> in buckconfig. This report also contains a
+URL to the location of the rage report. Then, the doctor remote endpoint produces a response that
+contains information about the status of core components like parsing, environment and remote
+cache along with suggestions on how to solve potential problems.
+</p>
+
+<h2>Setup notes</h2>
+<ul>
+  <li>The command requires the creation of at least one remote endpoint that handles the Json
+  request and creates the fixing suggestions based on the Json format of
+  <code>AbstractDoctorEndpointResponse</code>.
+  <li>If you want to also have the data from the creation of the rage report you will need to define
+  another remote endpoint that can get the information, otherwise the zipped report will be saved
+  on disk</li>
+  <li>All the communication is sent using POST.</li>
+</ul>
+
+<h2>Formats & Structures</h2>
+<ul>
+    <li>
+        Request is based on the Json format of class <code>AbstractDoctorEndpointRequest</code>.
+    </li>
+    <li>
+        Response is based on the Json format of class <code>AbstractDoctorEndpointResponse</code>.
+    </li>
+    <li>
+        The rage report zip file contains a Json file will metadata and useful information along
+        with a list of log files and local configuration.
+    </li>
+</ul>
+<p>
+You can pass extra arguments to the doctor request by defining the <code>[doctor_extra_request_args]
+</code>. This will add them as extra parameters in the post request. In this case the main
+information will be under parameter <code>data</code>.
+</p>
+
+
+<h2>Buckconfig example</h2>
+<pre class="prettyprint lang-js">{literal}
+[rage]
+    report_upload_url = https://localhost:4546
+    report_max_size = 100MB
+
+[doctor]
+    endpoint_url = https://localhost:4545
+    extra_request_args = ref=>12ab,token=>42
+{/literal}</pre>
+
+
+<h2>Request example</h2>
+<pre class="prettyprint lang-js">{literal}
+{
+    buildId: "...",
+    ruleKeyLog: "...",
+    rageUrl: "...",
+    machineReadableLog: "...",
+}
+{/literal}</pre>
+
+<h2>Response example</h2>
+<pre class="prettyprint lang-js">{literal}
+{
+    errorMessage: "...",
+    parsingStatus: "...",
+    remoteCacheStatus: "...",
+    environmentStatus: "...",
+    suggestions: [
+                    "Issue 123 reported. Check link.",
+                    "Parsing too slow. Check BUCK file.",
+                 ]
+}
+{/literal}</pre>
+
+{/param}
+
+{/call}
+
+    {/param}  // content
+  {/call} // buck.page
+{/template}

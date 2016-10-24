@@ -48,6 +48,8 @@ java_immutables_library(
   deps = [
     # Autdeps is not finding this dep, but it is needed for the bootstrapper
     '//src/com/facebook/buck/log/memory:memory',
+    '//src/com/facebook/buck/doctor/config:config',
+    '//src/com/facebook/buck/doctor:doctor',
   ],
   provided_deps = [
     # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly

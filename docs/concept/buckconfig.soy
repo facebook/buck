@@ -107,6 +107,7 @@ The following sections are recognized by Buck:
     'credentials',
     'cxx',
     'd',
+    'doctor',
     'download',
     'go',
     'groovy',
@@ -1278,6 +1279,32 @@ $ buck targets --resolve-alias app#src_jar
 {/call}
 
 {call buckconfig.section}
+  {param name: 'doctor' /}
+  {param description}
+    This section defines variables that are associated with command <code>doctor</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'doctor' /}
+  {param name: 'endpoint_url' /}
+  {param example_value: 'http://localhost:4545' /}
+  {param description}
+    The address of the remote endpoint that the request will go. This needs to be defined in order
+    for the command to work.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param name: 'extra_request_args' /}
+  {param example_value: 'ref=>1245,token=>42 /}
+  {param description}
+    This sections of keys and values is added as parameters to the POST request send to the doctor
+    remote endpoint.
+  {/param}
+{/call}
+
+{call buckconfig.section
   {param name: 'go' /}
   {param description}
     This section defines the Go toolchain.  By default Buck will try to discovery the Go compiler

@@ -128,7 +128,7 @@ public class MainIntegrationTest {
         "  cache       makes calls to the artifact cache",
         "  clean       deletes any generated files",
         "  distbuild   attaches to a distributed build (experimental)",
-        "  doctor      create a defect report",
+        "  doctor      debug and fix issues of Buck commands",
         "  fetch       downloads remote resources to your local machine",
         "  install     builds and installs an application",
         "  machoutils  provides some utils for Mach O binary files",

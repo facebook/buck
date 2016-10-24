@@ -1,0 +1,11 @@
+java_library(
+  name = 'doctor',
+  srcs = glob(['*.java'],),
+  autodeps = True,
+  tests = [
+   '//test/com/facebook/buck/doctor:doctor',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)

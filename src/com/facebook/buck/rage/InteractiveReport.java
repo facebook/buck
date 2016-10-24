@@ -23,6 +23,7 @@ import com.facebook.buck.util.unit.SizeUnit;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Ordering;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -82,8 +83,9 @@ public class InteractiveReport extends AbstractReport {
     }
 
     // Sort the interesting builds based on time, reverse order so the most recent is first.
-    Collections.sort(interestingBuildLogs,
-        (o1, o2) -> -o1.getLastModifiedTime().compareTo(o2.getLastModifiedTime()));
+    Collections.sort(
+        interestingBuildLogs,
+        Ordering.natural().onResultOf(BuildLogEntry::getLastModifiedTime).reverse());
 
     return input.selectRange(
         "Which buck invocations would you like to report?",

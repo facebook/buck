@@ -39,7 +39,7 @@ public class BuckCommand extends AbstractContainerCommand {
       @SubCommand(name = "cache", impl = CacheCommand.class),
       @SubCommand(name = "clean", impl = CleanCommand.class),
       @SubCommand(name = "distbuild", impl = DistBuildCommand.class),
-      @SubCommand(name = "doctor", impl = RageCommand.class),
+      @SubCommand(name = "doctor", impl = DoctorCommand.class),
       @SubCommand(name = "fetch", impl = FetchCommand.class),
       @SubCommand(name = "install", impl = InstallCommand.class),
       @SubCommand(name = "machoutils", impl = MachOUtilsCommand.class),
