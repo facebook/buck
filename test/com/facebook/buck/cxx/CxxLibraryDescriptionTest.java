@@ -71,7 +71,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -274,9 +273,9 @@ public class CxxLibraryDescriptionTest {
     BuildRule preprocessRule1 = resolver.getRule(
         cxxSourceRuleFactory.createPreprocessBuildTarget("test/bar.cpp", CxxSource.Type.CXX));
     assertThat(
-        Iterables.transform(
-            DependencyAggregationTestUtil.getDisaggregatedDeps(preprocessRule1),
-            HasBuildTarget::getBuildTarget),
+        DependencyAggregationTestUtil.getDisaggregatedDeps(preprocessRule1)
+            .map(HasBuildTarget::getBuildTarget)
+            ::iterator,
         containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
@@ -306,9 +305,9 @@ public class CxxLibraryDescriptionTest {
     BuildRule preprocessRule2 = resolver.getRule(
         cxxSourceRuleFactory.createPreprocessBuildTarget(genSourceName, CxxSource.Type.CXX));
     assertThat(
-        Iterables.transform(
-            DependencyAggregationTestUtil.getDisaggregatedDeps(preprocessRule2),
-            HasBuildTarget::getBuildTarget),
+        DependencyAggregationTestUtil.getDisaggregatedDeps(preprocessRule2)
+            .map(HasBuildTarget::getBuildTarget)
+            ::iterator,
         containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,
@@ -559,9 +558,9 @@ public class CxxLibraryDescriptionTest {
         cxxSourceRuleFactoryPDC.createPreprocessBuildTarget("test/bar.cpp", CxxSource.Type.CXX));
     assertNotNull(staticPreprocessRule1);
     assertThat(
-        Iterables.transform(
-            DependencyAggregationTestUtil.getDisaggregatedDeps(staticPreprocessRule1),
-            HasBuildTarget::getBuildTarget),
+        DependencyAggregationTestUtil.getDisaggregatedDeps(staticPreprocessRule1)
+            .map(HasBuildTarget::getBuildTarget)
+            ::iterator,
         containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
@@ -591,9 +590,9 @@ public class CxxLibraryDescriptionTest {
         cxxSourceRuleFactoryPDC.createPreprocessBuildTarget(genSourceName, CxxSource.Type.CXX));
     assertNotNull(staticPreprocessRule2);
     assertThat(
-        Iterables.transform(
-            DependencyAggregationTestUtil.getDisaggregatedDeps(staticPreprocessRule2),
-            HasBuildTarget::getBuildTarget),
+        DependencyAggregationTestUtil.getDisaggregatedDeps(staticPreprocessRule2)
+            .map(HasBuildTarget::getBuildTarget)
+            ::iterator,
         containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,
@@ -646,9 +645,9 @@ public class CxxLibraryDescriptionTest {
         cxxSourceRuleFactoryPIC.createPreprocessBuildTarget("test/bar.cpp", CxxSource.Type.CXX));
     assertNotNull(sharedPreprocessRule1);
     assertThat(
-        Iterables.transform(
-            DependencyAggregationTestUtil.getDisaggregatedDeps(sharedPreprocessRule1),
-            HasBuildTarget::getBuildTarget),
+        DependencyAggregationTestUtil.getDisaggregatedDeps(sharedPreprocessRule1)
+            .map(HasBuildTarget::getBuildTarget)
+            ::iterator,
         containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
@@ -678,9 +677,9 @@ public class CxxLibraryDescriptionTest {
         cxxSourceRuleFactoryPIC.createPreprocessBuildTarget(genSourceName, CxxSource.Type.CXX));
     assertNotNull(sharedPreprocessRule2);
     assertThat(
-        Iterables.transform(
-            DependencyAggregationTestUtil.getDisaggregatedDeps(sharedPreprocessRule2),
-            HasBuildTarget::getBuildTarget),
+        DependencyAggregationTestUtil.getDisaggregatedDeps(sharedPreprocessRule2)
+            .map(HasBuildTarget::getBuildTarget)
+            ::iterator,
         containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,

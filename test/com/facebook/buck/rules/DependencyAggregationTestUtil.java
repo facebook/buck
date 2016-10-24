@@ -15,10 +15,7 @@
  */
 package com.facebook.buck.rules;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Iterables;
+import java.util.stream.Stream;
 
 public final class DependencyAggregationTestUtil {
   private DependencyAggregationTestUtil() {}
@@ -26,19 +23,10 @@ public final class DependencyAggregationTestUtil {
   /**
    * Return dependencies of a rule, traversing through any dependency aggregations.
    */
-  public static Iterable<BuildRule> getDisaggregatedDeps(BuildRule rule) {
+  public static Stream<BuildRule> getDisaggregatedDeps(BuildRule rule) {
     return
-        FluentIterable.from(rule.getDeps())
-            .filter(DependencyAggregation.class)
-            .transformAndConcat(new Function<DependencyAggregation, Iterable<BuildRule>>() {
-              @Override
-              public Iterable<BuildRule> apply(DependencyAggregation input) {
-                return input.getDeps();
-              }
-            })
-            .append(
-                Iterables.filter(
-                    rule.getDeps(),
-                    Predicates.not(Predicates.instanceOf(DependencyAggregation.class))));
+        rule.getDeps().stream()
+            .flatMap(
+                (x) -> x instanceof DependencyAggregation ? x.getDeps().stream() : Stream.of(x));
   }
 }

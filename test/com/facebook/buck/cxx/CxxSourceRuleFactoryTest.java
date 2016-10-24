@@ -134,7 +134,7 @@ public class CxxSourceRuleFactoryTest {
               name,
               cxxSource);
       assertThat(
-          DependencyAggregationTestUtil.getDisaggregatedDeps(cxxPreprocess),
+          DependencyAggregationTestUtil.getDisaggregatedDeps(cxxPreprocess)::iterator,
           contains((BuildRule) dep));
       cxxPreprocess =
           cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
@@ -142,7 +142,7 @@ public class CxxSourceRuleFactoryTest {
               cxxSource,
               CxxPreprocessMode.SEPARATE);
       assertThat(
-          DependencyAggregationTestUtil.getDisaggregatedDeps(cxxPreprocess),
+          DependencyAggregationTestUtil.getDisaggregatedDeps(cxxPreprocess)::iterator,
           contains((BuildRule) dep));
     }
 
@@ -243,7 +243,7 @@ public class CxxSourceRuleFactoryTest {
               cxxSourcePreprocessAndCompile,
               CxxPreprocessMode.SEPARATE);
       assertThat(
-          DependencyAggregationTestUtil.getDisaggregatedDeps(cxxPreprocessAndCompile),
+          DependencyAggregationTestUtil.getDisaggregatedDeps(cxxPreprocessAndCompile)::iterator,
           contains((BuildRule) dep));
     }
 

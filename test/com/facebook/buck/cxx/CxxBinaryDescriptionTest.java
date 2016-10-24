@@ -48,7 +48,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -154,9 +153,9 @@ public class CxxBinaryDescriptionTest {
     BuildRule preprocessRule1 = resolver.getRule(
         cxxSourceRuleFactory.createPreprocessBuildTarget("test/bar.cpp", CxxSource.Type.CXX));
     assertThat(
-        Iterables.transform(
-            DependencyAggregationTestUtil.getDisaggregatedDeps(preprocessRule1),
-            HasBuildTarget::getBuildTarget),
+        DependencyAggregationTestUtil.getDisaggregatedDeps(preprocessRule1)
+            .map(HasBuildTarget::getBuildTarget)
+            ::iterator,
         Matchers.containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
@@ -182,9 +181,9 @@ public class CxxBinaryDescriptionTest {
     BuildRule preprocessRule2 = resolver.getRule(
         cxxSourceRuleFactory.createPreprocessBuildTarget(genSourceName, CxxSource.Type.CXX));
     assertThat(
-        Iterables.transform(
-            DependencyAggregationTestUtil.getDisaggregatedDeps(preprocessRule2),
-            HasBuildTarget::getBuildTarget),
+        DependencyAggregationTestUtil.getDisaggregatedDeps(preprocessRule2)
+            .map(HasBuildTarget::getBuildTarget)
+            ::iterator,
         Matchers.containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,
