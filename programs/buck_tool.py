@@ -358,7 +358,6 @@ class BuckTool(object):
 
     def _get_java_args(self, version_uid, extra_default_options=[]):
         java_args = [
-            "-XX:MaxPermSize=256m",
             "-Xmx{0}m".format(JAVA_MAX_HEAP_SIZE_MB),
             "-Djava.awt.headless=true",
             "-Djava.util.logging.config.class=com.facebook.buck.cli.bootstrapper.LogConfig",
