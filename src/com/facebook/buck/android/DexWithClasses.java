@@ -47,7 +47,7 @@ public interface DexWithClasses {
    *     consistent with those used by {@link PreDexedFilesSorter} to determine how secondary DEX
    *     files should be packed.
    */
-  int getSizeEstimate();
+  int getWeightEstimate();
 
   Function<DexProducedFromJavaLibrary, DexWithClasses> TO_DEX_WITH_CLASSES =
       new Function<DexProducedFromJavaLibrary, DexWithClasses>() {
@@ -80,7 +80,7 @@ public interface DexWithClasses {
         }
 
         @Override
-        public int getSizeEstimate() {
+        public int getWeightEstimate() {
           return linearAllocEstimate;
         }
       };

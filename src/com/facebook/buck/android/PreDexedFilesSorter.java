@@ -184,13 +184,13 @@ public class PreDexedFilesSorter {
     }
 
     public void addPrimaryDex(DexWithClasses dexWithClasses) {
-      primaryDexSize += dexWithClasses.getSizeEstimate();
+      primaryDexSize += dexWithClasses.getWeightEstimate();
       if (primaryDexSize > linearAllocHardLimit) {
         context.logError(
             "DexWithClasses %s with cost %s puts the linear alloc estimate for the primary dex " +
                 "at %s, exceeding the maximum of %s.",
             dexWithClasses.getPathToDexFile(),
-            dexWithClasses.getSizeEstimate(),
+            dexWithClasses.getWeightEstimate(),
             primaryDexSize,
             linearAllocHardLimit);
         throw new HumanReadableException("Primary dex exceeds linear alloc limit.");
@@ -202,17 +202,17 @@ public class PreDexedFilesSorter {
     public void addDex(DexWithClasses dexWithClasses) {
       // If the individual DexWithClasses exceeds the limit for a secondary dex, then we have done
       // something horribly wrong.
-      if (dexWithClasses.getSizeEstimate() > linearAllocHardLimit) {
+      if (dexWithClasses.getWeightEstimate() > linearAllocHardLimit) {
         context.logError(
             "DexWithClasses %s with cost %s exceeds the max cost %s for a secondary dex file.",
             dexWithClasses.getPathToDexFile(),
-            dexWithClasses.getSizeEstimate(),
+            dexWithClasses.getWeightEstimate(),
             linearAllocHardLimit);
         throw new HumanReadableException("Secondary dex exceeds linear alloc limit.");
       }
 
       // If we're over the size threshold, start writing to a new dex
-      if (dexWithClasses.getSizeEstimate() + currentDexSize > linearAllocHardLimit) {
+      if (dexWithClasses.getWeightEstimate() + currentDexSize > linearAllocHardLimit) {
         currentDexSize = 0;
         currentDexContents = Lists.newArrayList();
       }
@@ -225,7 +225,7 @@ public class PreDexedFilesSorter {
             apkModule.getCanaryClassName(),
             dexesContents.size() + 1,
             steps);
-        currentDexSize += canary.getSizeEstimate();
+        currentDexSize += canary.getWeightEstimate();
         currentDexContents.add(canary);
 
         dexesContents.add(currentDexContents);
@@ -235,7 +235,7 @@ public class PreDexedFilesSorter {
       // Now add the contributions from the dexWithClasses entry.
       currentDexContents.add(dexWithClasses);
       dexInputsHashes.put(dexWithClasses.getPathToDexFile(), dexWithClasses.getClassesHash());
-      currentDexSize += dexWithClasses.getSizeEstimate();
+      currentDexSize += dexWithClasses.getWeightEstimate();
     }
 
     Result getResult() {
@@ -310,7 +310,7 @@ public class PreDexedFilesSorter {
       return new DexWithClasses() {
 
         @Override
-        public int getSizeEstimate() {
+        public int getWeightEstimate() {
           // Because we do not know the units being used for DEX size estimation and the canary
           // should be very small, assume the size is zero.
           return 0;

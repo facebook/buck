@@ -246,7 +246,7 @@ public class PreDexedFilesSorterTest {
   private DexWithClasses createFakeDexWithClasses(
       final Path pathToDex,
       final ImmutableSet<String> classNames,
-      final int sizeEstimate
+      final int weightEstimate
   ) {
     return new DexWithClasses() {
       @Override
@@ -265,8 +265,8 @@ public class PreDexedFilesSorterTest {
       }
 
       @Override
-      public int getSizeEstimate() {
-        return sizeEstimate;
+      public int getWeightEstimate() {
+        return weightEstimate;
       }
     };
   }
