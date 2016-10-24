@@ -48,8 +48,8 @@ public class PreDexedFilesSorterTest {
   public TemporaryFolder tempDir = new TemporaryFolder();
 
   private static final String PRIMARY_DEX_PATTERN = "primary";
-  private static final long LINEAR_ALLOC_LIMIT = 10 * 1024 * 1024;
-  private static final int STANDARD_DEX_FILE_ESTIMATE = (int) LINEAR_ALLOC_LIMIT / 10 - 1;
+  private static final long DEX_WEIGHT_LIMIT = 10 * 1024 * 1024;
+  private static final int STANDARD_DEX_FILE_ESTIMATE = (int) DEX_WEIGHT_LIMIT / 10 - 1;
 
   private APKModuleGraph moduleGraph;
   private APKModule extraModule;
@@ -231,7 +231,7 @@ public class PreDexedFilesSorterTest {
         ImmutableSet.of(PRIMARY_DEX_PATTERN),
         moduleGraph,
         tempDir.newFolder("scratch").toPath(),
-        LINEAR_ALLOC_LIMIT,
+        DEX_WEIGHT_LIMIT,
         DexStore.JAR,
         tempDir.newFolder("secondary").toPath(),
         tempDir.newFolder("additional").toPath());

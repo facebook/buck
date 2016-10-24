@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.DexProducedFromJavaLibrary.BuildOutput;
-import com.facebook.buck.dalvik.EstimateLinearAllocStep;
+import com.facebook.buck.dalvik.EstimateDexWeightStep;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
@@ -84,7 +84,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
       HashCode::fromString;
 
   @VisibleForTesting
-  static final String LINEAR_ALLOC_KEY_ON_DISK_METADATA = "linearalloc";
+  static final String WEIGHT_ESTIMATE = "weight_estimate";
   @VisibleForTesting
   static final String CLASSNAMES_TO_HASHES = "classnames_to_hashes";
   @VisibleForTesting
@@ -118,18 +118,18 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
     final ImmutableSortedMap<String, HashCode> classNamesToHashes =
         javaLibrary.getClassNamesToHashes();
     final boolean hasClassesToDx = !classNamesToHashes.isEmpty();
-    final Supplier<Integer> linearAllocEstimate;
+    final Supplier<Integer> weightEstimate;
 
     @Nullable
     final DxStep dx;
 
     if (hasClassesToDx) {
       Path pathToOutputFile = javaLibrary.getPathToOutput();
-      EstimateLinearAllocStep estimate = new EstimateLinearAllocStep(
+      EstimateDexWeightStep estimate = new EstimateDexWeightStep(
           getProjectFilesystem(),
           pathToOutputFile);
       steps.add(estimate);
-      linearAllocEstimate = estimate;
+      weightEstimate = estimate;
 
       // To be conservative, use --force-jumbo for these intermediate .dex files so that they can be
       // merged into a final classes.dex that uses jumbo instructions.
@@ -150,7 +150,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
 
     } else {
       dx = null;
-      linearAllocEstimate = Suppliers.ofInstance(0);
+      weightEstimate = Suppliers.ofInstance(0);
     }
 
     // Run a step to record artifacts and metadata. The values recorded depend upon whether dx was
@@ -171,8 +171,9 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
           }
         }
 
-        buildableContext.addMetadata(LINEAR_ALLOC_KEY_ON_DISK_METADATA,
-            String.valueOf(linearAllocEstimate.get()));
+        buildableContext.addMetadata(
+            WEIGHT_ESTIMATE,
+            String.valueOf(weightEstimate.get()));
 
         // Record the classnames to hashes map.
         buildableContext.addMetadata(
@@ -190,8 +191,8 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
 
   @Override
   public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
-    int linearAllocEstimate = Integer.parseInt(
-        onDiskBuildInfo.getValue(LINEAR_ALLOC_KEY_ON_DISK_METADATA).get());
+    int weightEstimate = Integer.parseInt(
+        onDiskBuildInfo.getValue(WEIGHT_ESTIMATE).get());
     Map<String, String> map =
         MAPPER.readValue(
             onDiskBuildInfo.getValue(CLASSNAMES_TO_HASHES).get(),
@@ -201,7 +202,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
     Optional<ImmutableList<String>> referencedResources =
         onDiskBuildInfo.getValues(REFERENCED_RESOURCES);
     return new BuildOutput(
-        linearAllocEstimate,
+        weightEstimate,
         ImmutableSortedMap.copyOf(classnamesToHashes),
         referencedResources);
   }
@@ -212,15 +213,15 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
   }
 
   static class BuildOutput {
-    private final int linearAllocEstimate;
+    private final int weightEstimate;
     private final ImmutableSortedMap<String, HashCode> classnamesToHashes;
     private final Optional<ImmutableList<String>> referencedResources;
 
     BuildOutput(
-        int linearAllocEstimate,
+        int weightEstimate,
         ImmutableSortedMap<String, HashCode> classnamesToHashes,
         Optional<ImmutableList<String>> referencedResources) {
-      this.linearAllocEstimate = linearAllocEstimate;
+      this.weightEstimate = weightEstimate;
       this.classnamesToHashes = classnamesToHashes;
       this.referencedResources = referencedResources;
     }
@@ -247,8 +248,8 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
     return buildOutputInitializer.getBuildOutput().classnamesToHashes;
   }
 
-  int getLinearAllocEstimate() {
-    return buildOutputInitializer.getBuildOutput().linearAllocEstimate;
+  int getWeightEstimate() {
+    return buildOutputInitializer.getBuildOutput().weightEstimate;
   }
 
   Optional<ImmutableList<String>> getReferencedResources() {

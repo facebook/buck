@@ -230,6 +230,8 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
         dexSplitMode.getPrimaryDexPatterns(),
         apkModuleGraph,
         paths.scratchDir,
+        // We kind of overload the "getLinearAllocHardLimit" parameter
+        // to set the dex weight limit during pre-dex merging.
         dexSplitMode.getLinearAllocHardLimit(),
         dexSplitMode.getDexStore(),
         paths.jarfilesSubdir,

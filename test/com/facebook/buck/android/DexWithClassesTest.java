@@ -56,7 +56,7 @@ public class DexWithClassesTest {
         new DexProducedFromJavaLibrary(params, resolver, javaLibrary);
     dexFromJavaLibrary.getBuildOutputInitializer().setBuildOutput(
         new DexProducedFromJavaLibrary.BuildOutput(
-            /* linearAllocEstimate */ 1600,
+            /* weightEstimate */ 1600,
             /* classNamesToHashes */ ImmutableSortedMap.of(
                 "com/example/Main",
                 HashCode.fromString(Strings.repeat("cafebabe", 5))),
@@ -84,7 +84,7 @@ public class DexWithClassesTest {
         new DexProducedFromJavaLibrary(params, resolver, javaLibrary);
     dexFromJavaLibrary.getBuildOutputInitializer().setBuildOutput(
         new DexProducedFromJavaLibrary.BuildOutput(
-            /* linearAllocEstimate */ 1600,
+            /* weightEstimate */ 1600,
             /* classNamesToHashes */ ImmutableSortedMap.of(),
             Optional.empty()));
 

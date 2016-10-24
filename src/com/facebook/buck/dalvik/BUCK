@@ -45,7 +45,7 @@ java_library(
 java_library(
   name = 'steps',
   srcs = [
-    'EstimateLinearAllocStep.java',
+    'EstimateDexWeightStep.java',
   ],
   tests = [
     '//test/com/facebook/buck/dalvik:dalvik',

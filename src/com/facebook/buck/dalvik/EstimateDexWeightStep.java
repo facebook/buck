@@ -32,46 +32,42 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 
-public class EstimateLinearAllocStep implements Step, Supplier<Integer> {
+public class EstimateDexWeightStep implements Step, Supplier<Integer> {
 
   @VisibleForTesting
-  static interface LinearAllocEstimator {
+  static interface DexWeightEstimator {
     public int getEstimate(FileLike fileLike) throws IOException;
   }
 
   /**
-   * This is a linear alloc estimator that uses the size of the {@code .class} file as the
-   * estimate. This should be used when speed is more important than accuracy. If accuracy is a
-   * priority, an estimator based on {@link DalvikStatsTool#getEstimate(java.io.InputStream)} should
-   * be used instead.
+   * This is an estimator that uses the size of the {@code .class} file as the
+   * estimate. This should be used when speed is more important than accuracy.
    */
-  private static final LinearAllocEstimator DEFAULT_LINEAR_ALLOC_ESTIMATOR =
+  private static final DexWeightEstimator DEFAULT_ESTIMATOR =
       fileLike -> (int) fileLike.getSize();
 
   private final ProjectFilesystem filesystem;
   private final Path pathToJarOrClassesDirectory;
-  private final LinearAllocEstimator linearAllocEstimator;
+  private final DexWeightEstimator dexWeightEstimator;
 
-  private int linearAllocEstimate = -1;
+  private int weightEstimate = -1;
 
   /**
-   * This uses a linear alloc estimator that uses the size of the {@code .class} file as the
-   * estimate. This should be used when speed is more important than accuracy. If accuracy is a
-   * priority, an estimator based on {@link DalvikStatsTool#getEstimate(java.io.InputStream)} should
-   * be used instead.
+   * This uses an estimator that uses the size of the {@code .class} file as the
+   * estimate. This should be used when speed is more important than accuracy.
    */
-  public EstimateLinearAllocStep(ProjectFilesystem filesystem, Path pathToJarOrClassesDirectory) {
-    this(filesystem, pathToJarOrClassesDirectory, DEFAULT_LINEAR_ALLOC_ESTIMATOR);
+  public EstimateDexWeightStep(ProjectFilesystem filesystem, Path pathToJarOrClassesDirectory) {
+    this(filesystem, pathToJarOrClassesDirectory, DEFAULT_ESTIMATOR);
   }
 
   @VisibleForTesting
-  EstimateLinearAllocStep(
+  EstimateDexWeightStep(
       ProjectFilesystem filesystem,
       Path pathToJarOrClassesDirectory,
-      LinearAllocEstimator linearAllocEstimator) {
+      DexWeightEstimator dexWeightEstimator) {
     this.filesystem = filesystem;
     this.pathToJarOrClassesDirectory = pathToJarOrClassesDirectory;
-    this.linearAllocEstimator = linearAllocEstimator;
+    this.dexWeightEstimator = dexWeightEstimator;
   }
 
   @Override
@@ -79,7 +75,7 @@ public class EstimateLinearAllocStep implements Step, Supplier<Integer> {
     Path path = filesystem.resolve(pathToJarOrClassesDirectory);
     ClasspathTraversal traversal = new ClasspathTraversal(Collections.singleton(path), filesystem) {
 
-      private int totalLinearAllocEstimate = 0;
+      private int totalWeightEstimate = 0;
 
       @Override
       public void visit(FileLike fileLike) throws IOException {
@@ -89,12 +85,12 @@ public class EstimateLinearAllocStep implements Step, Supplier<Integer> {
           return;
         }
 
-        totalLinearAllocEstimate += linearAllocEstimator.getEstimate(fileLike);
+        totalWeightEstimate += dexWeightEstimator.getEstimate(fileLike);
       }
 
       @Override
       public Integer getResult() {
-        return totalLinearAllocEstimate;
+        return totalWeightEstimate;
       }
     };
 
@@ -105,28 +101,28 @@ public class EstimateLinearAllocStep implements Step, Supplier<Integer> {
       return StepExecutionResult.ERROR;
     }
 
-    this.linearAllocEstimate = (Integer) traversal.getResult();
+    this.weightEstimate = (Integer) traversal.getResult();
     return StepExecutionResult.SUCCESS;
   }
 
   @Override
   public Integer get() {
-    Preconditions.checkState(linearAllocEstimate >= 0, "If less than zero, was not set.");
-    return linearAllocEstimate;
+    Preconditions.checkState(weightEstimate >= 0, "If less than zero, was not set.");
+    return weightEstimate;
   }
 
   @Override
   public String getShortName() {
-    return "estimate_linear_alloc";
+    return "estimate_dex_weight";
   }
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return "estimate_linear_alloc";
+    return "estimate_dex_weight";
   }
 
   @VisibleForTesting
-  public void setLinearAllocEstimateForTesting(int linearAllocEstimate) {
-    this.linearAllocEstimate = linearAllocEstimate;
+  public void setWeightEstimateForTesting(int weightEstimate) {
+    this.weightEstimate = weightEstimate;
   }
 }

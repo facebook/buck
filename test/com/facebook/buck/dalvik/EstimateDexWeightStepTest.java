@@ -19,7 +19,7 @@ package com.facebook.buck.dalvik;
 import static com.facebook.buck.io.MorePaths.pathWithPlatformSeparators;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.dalvik.EstimateLinearAllocStep.LinearAllocEstimator;
+import com.facebook.buck.dalvik.EstimateDexWeightStep.DexWeightEstimator;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.classes.FileLike;
 import com.facebook.buck.step.ExecutionContext;
@@ -37,12 +37,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
-public class EstimateLinearAllocStepTest {
+public class EstimateDexWeightStepTest {
 
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
 
-  private LinearAllocEstimator linearAllocEstimator = new FakeLinearAllocEstimator(
+  private DexWeightEstimator dexWeightEstimator = new FakeDexWeightEstimator(
       ImmutableMap.<String, Integer>builder()
       .put(pathWithPlatformSeparators("com/example/Foo.class"), 100)
       .put(pathWithPlatformSeparators("com/example/Bar.class"), 250)
@@ -50,7 +50,7 @@ public class EstimateLinearAllocStepTest {
       .build());
 
   @Test
-  public void testExecuteEstimateLinearAllocStep() throws IOException {
+  public void testExecuteEstimateDexWeightStep() throws IOException {
     // Create a directory.
     String name = "dir";
     tmp.newFolder(name);
@@ -68,10 +68,10 @@ public class EstimateLinearAllocStepTest {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     Path pathToJarOrClassesDirectory = Paths.get(name);
-    EstimateLinearAllocStep step = new EstimateLinearAllocStep(
+    EstimateDexWeightStep step = new EstimateDexWeightStep(
         filesystem,
         pathToJarOrClassesDirectory,
-        linearAllocEstimator);
+        dexWeightEstimator);
     int exitCode = step.execute(context).getExitCode();
     assertEquals(0, exitCode);
     assertEquals(Integer.valueOf(425), step.get());
@@ -81,10 +81,10 @@ public class EstimateLinearAllocStepTest {
   public void testGetBeforeExecuteThrowsException() {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path pathToJarOrClassesDirectory = Paths.get("out");
-    EstimateLinearAllocStep step = new EstimateLinearAllocStep(
+    EstimateDexWeightStep step = new EstimateDexWeightStep(
         filesystem,
         pathToJarOrClassesDirectory,
-        linearAllocEstimator);
+        dexWeightEstimator);
     step.get();
   }
 
@@ -92,29 +92,29 @@ public class EstimateLinearAllocStepTest {
   public void testGetShortName() {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path pathToJarOrClassesDirectory = Paths.get("out");
-    EstimateLinearAllocStep step = new EstimateLinearAllocStep(
+    EstimateDexWeightStep step = new EstimateDexWeightStep(
         filesystem,
         pathToJarOrClassesDirectory,
-        linearAllocEstimator);
-    assertEquals("estimate_linear_alloc", step.getShortName());
+        dexWeightEstimator);
+    assertEquals("estimate_dex_weight", step.getShortName());
   }
 
   @Test
   public void testGetDescription() {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path pathToJarOrClassesDirectory = Paths.get("out");
-    EstimateLinearAllocStep step = new EstimateLinearAllocStep(
+    EstimateDexWeightStep step = new EstimateDexWeightStep(
         filesystem,
         pathToJarOrClassesDirectory,
-        linearAllocEstimator);
-    assertEquals("estimate_linear_alloc", step.getDescription(TestExecutionContext.newInstance()));
+        dexWeightEstimator);
+    assertEquals("estimate_dex_weight", step.getDescription(TestExecutionContext.newInstance()));
   }
 
-  private static class FakeLinearAllocEstimator implements LinearAllocEstimator {
+  private static class FakeDexWeightEstimator implements DexWeightEstimator {
 
     private final Map<String, Integer> relativePathToCostMap;
 
-    public FakeLinearAllocEstimator(ImmutableMap<String, Integer> relativePathToCostMap) {
+    public FakeDexWeightEstimator(ImmutableMap<String, Integer> relativePathToCostMap) {
       this.relativePathToCostMap = relativePathToCostMap;
     }
 

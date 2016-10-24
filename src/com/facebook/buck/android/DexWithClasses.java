@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
 
 /**
  * Object that represents a {@code .dex.jar} file that knows what {@code .class} files went into it,
- * as well as its estimated linear alloc size.
+ * as well as its estimated dex weight.
  */
 public interface DexWithClasses {
 
@@ -62,7 +62,7 @@ public interface DexWithClasses {
       final ImmutableSet<String> classNames = preDex.getClassNames().keySet();
       final Sha1HashCode classesHash = Sha1HashCode.fromHashCode(
           Hashing.combineOrdered(preDex.getClassNames().values()));
-      final int linearAllocEstimate = preDex.getLinearAllocEstimate();
+      final int weightEstimate = preDex.getWeightEstimate();
       return new DexWithClasses() {
         @Override
         public Path getPathToDexFile() {
@@ -81,7 +81,7 @@ public interface DexWithClasses {
 
         @Override
         public int getWeightEstimate() {
-          return linearAllocEstimate;
+          return weightEstimate;
         }
       };
     }

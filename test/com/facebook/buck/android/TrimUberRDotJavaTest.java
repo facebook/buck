@@ -127,7 +127,7 @@ public class TrimUberRDotJavaTest {
         null);
     dexProducedFromJavaLibrary.getBuildOutputInitializer().setBuildOutput(
         dexProducedFromJavaLibrary.initializeFromDisk(new FakeOnDiskBuildInfo()
-            .putMetadata(DexProducedFromJavaLibrary.LINEAR_ALLOC_KEY_ON_DISK_METADATA, "1")
+            .putMetadata(DexProducedFromJavaLibrary.WEIGHT_ESTIMATE, "1")
             .putMetadata(DexProducedFromJavaLibrary.CLASSNAMES_TO_HASHES, "{}")
             .putMetadata(
                 DexProducedFromJavaLibrary.REFERENCED_RESOURCES,

@@ -25,7 +25,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.dalvik.EstimateLinearAllocStep;
+import com.facebook.buck.dalvik.EstimateDexWeightStep;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -138,7 +138,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         ImmutableList.of(
             String.format("rm -f %s", filesystem.resolve(dexOutput)),
             String.format("mkdir -p %s", filesystem.resolve(dexOutput).getParent()),
-            "estimate_linear_alloc",
+            "estimate_dex_weight",
             "(cd " + filesystem.getRootPath() + " && " + expectedDxCommand + ")",
             String.format("zip-scrub %s", dexOutput),
             "record_dx_success"),
@@ -150,7 +150,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
 
     replayAll();
 
-    ((EstimateLinearAllocStep) steps.get(2)).setLinearAllocEstimateForTesting(250);
+    ((EstimateDexWeightStep) steps.get(2)).setWeightEstimateForTesting(250);
     Step recordArtifactAndMetadataStep = steps.get(5);
     int exitCode = recordArtifactAndMetadataStep.execute(executionContext).getExitCode();
     assertEquals(0, exitCode);
@@ -159,7 +159,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         buildableContext.getRecordedArtifacts());
 
     buildableContext.assertContainsMetadataMapping(
-        DexProducedFromJavaLibrary.LINEAR_ALLOC_KEY_ON_DISK_METADATA, "250");
+        DexProducedFromJavaLibrary.WEIGHT_ESTIMATE, "250");
 
     verifyAll();
   }
@@ -287,7 +287,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
     FakeOnDiskBuildInfo onDiskBuildInfo =
         new FakeOnDiskBuildInfo()
             .putMetadata(
-                DexProducedFromJavaLibrary.LINEAR_ALLOC_KEY_ON_DISK_METADATA,
+                DexProducedFromJavaLibrary.WEIGHT_ESTIMATE,
                 "0")
             .putMetadata(
                 DexProducedFromJavaLibrary.CLASSNAMES_TO_HASHES,
