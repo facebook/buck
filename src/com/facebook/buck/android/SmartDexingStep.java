@@ -36,7 +36,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -269,7 +268,7 @@ public class SmartDexingStep implements Step {
           new DxPseudoRule(
               filesystem,
               dexInputHashes,
-              FluentIterable.from(outputToInputs.get(outputFile)).toSet(),
+              ImmutableSet.copyOf(outputToInputs.get(outputFile)),
               outputFile,
               successDir.resolve(outputFile.getFileName()),
               dxOptions,

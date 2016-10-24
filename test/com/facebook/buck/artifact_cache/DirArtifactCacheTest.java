@@ -45,7 +45,6 @@ import com.facebook.buck.util.DirectoryCleaner;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -528,7 +527,7 @@ public class DirArtifactCacheTest {
     List<Path> filesInCache = dirArtifactCache.getAllFilesInCache();
     assertEquals(
         ImmutableSet.of(fileZ, fileW),
-        FluentIterable.from(filesInCache).toSet());
+        ImmutableSet.copyOf(filesInCache));
   }
 
   private DirectoryCleaner.PathStats fakePathStats(long creationTime, long lastAccessTime) {

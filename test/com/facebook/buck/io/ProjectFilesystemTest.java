@@ -610,7 +610,7 @@ public class ProjectFilesystemTest {
         .transform(PathOrGlobMatcher.toPath())
         .toSet();
     assertThat(
-        FluentIterable.from(ignorePaths).toSortedSet(Ordering.natural()),
+        ImmutableSortedSet.copyOf(Ordering.natural(), ignorePaths),
         equalTo(
             ImmutableSortedSet.of(
                 filesystem.getBuckPaths().getBuckOut(),

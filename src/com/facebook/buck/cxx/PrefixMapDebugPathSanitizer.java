@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 
+
 /**
  * This sanitizer works by depending on the compiler's -fdebug-prefix-map flag to properly ensure
  * that the output only contains references to the mapped-to paths (i.e. the fake paths).
@@ -88,10 +89,7 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
   public ImmutableList<String> getCompilationFlags() {
     ImmutableList.Builder<String> flags = ImmutableList.builder();
     // Two -fdebug-prefix-map flags will be applied in the reverse order, so reverse allPaths.
-    Iterable<Map.Entry<Path, Path>> iter = FluentIterable
-        .from(allPaths.entrySet())
-        .toList()
-        .reverse();
+    Iterable<Map.Entry<Path, Path>> iter = ImmutableList.copyOf(allPaths.entrySet()).reverse();
     for (Map.Entry<Path, Path> mappings : iter) {
       flags.add(getDebugPrefixMapFlag(mappings.getKey(), mappings.getValue()));
     }

@@ -24,8 +24,8 @@ import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.Optionals;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -57,7 +57,7 @@ public abstract class ParsingJavaPackageFinder {
       ImmutableSet<Path> filesToParse,
       JavaPackageFinder fallbackPackageFinder) {
     PackagePathCache packagePathCache = new PackagePathCache();
-    for (Path path : FluentIterable.from(filesToParse).toSortedSet(new PathComponentCountOrder())) {
+    for (Path path : ImmutableSortedSet.copyOf(new PathComponentCountOrder(), filesToParse)) {
       Optional<String> packageNameFromSource = Optionals.bind(
           projectFilesystem.readFileIfItExists(path),
           javaFileParser::getPackageNameFromSource);

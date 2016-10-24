@@ -473,10 +473,10 @@ public class IjModuleFactory {
     for (Map.Entry<Path, Collection<Path>> entry : foldersToInputsIndex.asMap().entrySet()) {
       context.addSourceFolder(
           factory.create(
-            entry.getKey(),
-            wantsPackagePrefix,
-            FluentIterable.from(entry.getValue()).toSortedSet(Ordering.natural())
-        )
+              entry.getKey(),
+              wantsPackagePrefix,
+              ImmutableSortedSet.copyOf(Ordering.natural(), entry.getValue())
+          )
       );
     }
   }

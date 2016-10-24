@@ -37,6 +37,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
 import org.w3c.dom.Document;
@@ -192,7 +193,9 @@ public class MiniAapt implements Step {
     try (PrintWriter writer =
              new PrintWriter(filesystem.newFileOutputStream(pathToTextSymbolsFile))) {
       Set<RDotTxtEntry> sortedResources =
-          FluentIterable.from(resourceCollector.getResources()).toSortedSet(Ordering.natural());
+          ImmutableSortedSet.copyOf(
+              Ordering.natural(),
+              resourceCollector.getResources());
       for (RDotTxtEntry entry : sortedResources) {
         writer.printf("%s %s %s %s\n", entry.idType, entry.type, entry.name, entry.idValue);
       }

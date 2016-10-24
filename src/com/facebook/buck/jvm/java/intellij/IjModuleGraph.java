@@ -176,7 +176,7 @@ public class IjModuleGraph {
 
     for (Path baseTargetPath : baseTargetPathMultimap.keySet()) {
       ImmutableSet<TargetNode<?>> targets =
-          FluentIterable.from(baseTargetPathMultimap.get(baseTargetPath)).toSet();
+          ImmutableSet.copyOf(baseTargetPathMultimap.get(baseTargetPath));
 
       IjModule module = moduleFactory.createModule(baseTargetPath, targets);
 
@@ -272,7 +272,7 @@ public class IjModuleGraph {
         depsBuilder = ImmutableMap.builder();
     final Set<IjLibrary> referencedLibraries = new HashSet<>();
 
-    for (final IjModule module : FluentIterable.from(rulesToModules.values()).toSet()) {
+    for (final IjModule module : ImmutableSet.copyOf(rulesToModules.values())) {
       Map<IjProjectElement, DependencyType> moduleDeps = new HashMap<>();
 
       for (Map.Entry<BuildTarget, DependencyType> entry : module.getDependencies().entrySet()) {

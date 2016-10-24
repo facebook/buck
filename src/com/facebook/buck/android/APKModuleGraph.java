@@ -29,10 +29,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -72,10 +70,7 @@ public class APKModuleGraph {
               if (node.equals(rootAPKModuleSupplier.get())) {
                 return ImmutableSet.of();
               }
-              mapBuilder.putAll(
-                  FluentIterable
-                      .from(node.getBuildTargets())
-                      .toMap(Functions.constant(node)));
+              node.getBuildTargets().forEach(input -> mapBuilder.put(input, node));
               return getGraph().getOutgoingNodesFor(node);
             }
           }.start();

@@ -43,7 +43,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -104,12 +103,12 @@ public class AndroidInstrumentationApkDescription
     }
     AndroidBinary apkUnderTest = getUnderlyingApk((InstallableApk) installableApk);
 
-    ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex = FluentIterable.from(
+    ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex = ImmutableSortedSet.copyOf(
+        HasBuildTarget.BUILD_TARGET_COMPARATOR,
         ImmutableSet.<JavaLibrary>builder()
             .addAll(apkUnderTest.getRulesToExcludeFromDex())
             .addAll(getClasspathDeps(apkUnderTest.getClasspathDeps()))
-            .build())
-        .toSortedSet(HasBuildTarget.BUILD_TARGET_COMPARATOR);
+            .build());
 
     // TODO(natthu): Instrumentation APKs should also exclude native libraries and assets from the
     // apk under test.

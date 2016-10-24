@@ -67,8 +67,7 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
   private static BuildRuleParams adjustParams(BuildRuleParams params, TraversedDeps traversedDeps) {
     return params.copyWithDeps(
         Suppliers.ofInstance(
-            FluentIterable.from(traversedDeps.packagedDeps)
-                .toSortedSet(Ordering.natural())),
+            ImmutableSortedSet.copyOf(Ordering.natural(), traversedDeps.packagedDeps)),
         Suppliers.ofInstance(ImmutableSortedSet.of()));
   }
 
