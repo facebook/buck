@@ -50,7 +50,7 @@ public class ZipScrubberStep implements Step {
     return "zip-scrub " + zip;
   }
 
-  private void check(boolean expression, String msg) throws IOException {
+  private static void check(boolean expression, String msg) throws IOException {
     if (!expression) {
       throw new IOException(msg);
     }
@@ -66,44 +66,27 @@ public class ZipScrubberStep implements Step {
 
       // Search backwards from the end of the ZIP file, searching for the EOCD signature, which
       // designates the start of the EOCD.
-      map.position((int) channel.size() - ZipEntry.ENDCOM);
-      while (map.getInt() != ZipEntry.ENDSIG) {
-
-        // If we didn't find the magic header, back out the 4 bytes we just consumed for the `int`
-        // and an additional byte to continue the search going backwards.
-        map.position(map.position() - Integer.SIZE / Byte.SIZE - 1);
+      int eocdOffset = (int) channel.size() - ZipEntry.ENDHDR;
+      while (map.getInt(eocdOffset) != ZipEntry.ENDSIG) {
+        eocdOffset--;
       }
 
-      // Skip over unneeded info, grabbing just the number of central directory entries and
-      // it's starting location.
-      map.getShort();  // Number of this disk.
-      map.getShort();  // Disk where central directory starts.
-      map.getShort();  // Number of central directory records on this disk.
-      int cdEntries = map.getShort();  // Total number of central directory records;
-      map.getInt();  // Size of central directory (bytes).
-      int cdOffset = map.getInt();  // Offset of start of central directory.
+      int cdEntries = map.getShort(eocdOffset + ZipEntry.ENDTOT);
+      int cdOffset = map.getInt(eocdOffset + ZipEntry.ENDOFF);
 
-      // Position ourselves at the beginning of the central directory headers.  We'll iterate over
-      // these, sanitizing their mtimes (and the mtimes of their corresponding local headers).
-      map.position(cdOffset);
       for (int idx = 0; idx < cdEntries; idx++) {
-
         // Wrap the central directory header and zero out it's timestamp.
-        ByteBuffer entry = map.slice();
-        entry.order(ByteOrder.LITTLE_ENDIAN);
-        check(entry.getInt() == ZipEntry.CENSIG, "expected central directory header signature");
+        ByteBuffer entry = slice(map, cdOffset);
+        check(entry.getInt(0) == ZipEntry.CENSIG, "expected central directory header signature");
+
         entry.putInt(ZipEntry.CENTIM, ZipConstants.DOS_FAKE_TIME);
+        scrubLocalEntry(slice(map, entry.getInt(ZipEntry.CENOFF)));
 
-        // Find the local file header and zero it's timestamp out.
-        int locOff = entry.getInt(ZipEntry.CENOFF);
-        check(map.getInt(locOff) == ZipEntry.LOCSIG, "expected local header signature");
-        map.putInt(locOff + ZipEntry.LOCTIM, ZipConstants.DOS_FAKE_TIME);
-
-        // Advance to the next entry.
-        map.position(map.position() + 46);
-        map.position(map.position() + entry.getShort(ZipEntry.CENNAM));
-        map.position(map.position() + entry.getShort(ZipEntry.CENEXT));
-        map.position(map.position() + entry.getShort(ZipEntry.CENCOM));
+        cdOffset +=
+            46 +
+            entry.getShort(ZipEntry.CENNAM) +
+            entry.getShort(ZipEntry.CENEXT) +
+            entry.getShort(ZipEntry.CENCOM);
       }
 
     } catch (IOException e) {
@@ -111,6 +94,19 @@ public class ZipScrubberStep implements Step {
       return StepExecutionResult.ERROR;
     }
     return StepExecutionResult.SUCCESS;
+  }
+
+  private static ByteBuffer slice(ByteBuffer map, int offset) {
+    ByteBuffer result = map.duplicate();
+    result.position(offset);
+    result = result.slice();
+    result.order(ByteOrder.LITTLE_ENDIAN);
+    return result;
+  }
+
+  private static void scrubLocalEntry(ByteBuffer entry) throws IOException {
+    check(entry.getInt(0) == ZipEntry.LOCSIG, "expected local header signature");
+    entry.putInt(ZipEntry.LOCTIM, ZipConstants.DOS_FAKE_TIME);
   }
 
 }
