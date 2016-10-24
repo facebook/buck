@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.keys;
 
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -356,6 +357,45 @@ public class InputBasedRuleKeyBuilderFactoryTest {
         new InputBasedRuleKeyBuilderFactory(0, hashCache, pathResolver, 200)
             .build(rule);
     assertThat(inputKey, Matchers.equalTo(Optional.empty()));
+  }
+
+  @Test
+  public void ruleKeysForOversizedAndUndersizedRules() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+    final int sizeLimit = 200;
+    InputBasedRuleKeyBuilderFactory factory =
+        new InputBasedRuleKeyBuilderFactory(0, hashCache, pathResolver, sizeLimit);
+
+    // Create rule with inputs that make it go past the size limit, and verify the rule key factory
+    // doesn't create a rule key.
+    final int tooLargeRuleSize = 300;
+    assertThat(tooLargeRuleSize, Matchers.greaterThan(sizeLimit));
+    Path tooLargeInput = filesystem.getRootPath().getFileSystem().getPath("too_large_input");
+    filesystem.writeBytesToPath(new byte[tooLargeRuleSize], tooLargeInput);
+    BuildRule tooLargeRule =
+        ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:large_rule"))
+            .setOut("out")
+            .setSrc(new PathSourcePath(filesystem, tooLargeInput))
+            .build(resolver, filesystem);
+    Optional<RuleKey> tooLargeRuleKey = factory.build(tooLargeRule);
+    assertThat(tooLargeRuleKey, Matchers.equalTo(Optional.empty()));
+
+    // Now create a rule that doesn't pass the size limit and verify it creates a rule key.
+    final int smallEnoughRuleSize = 100;
+    assertThat(smallEnoughRuleSize, Matchers.lessThan(sizeLimit));
+    Path input = filesystem.getRootPath().getFileSystem().getPath("small_enough_input");
+    filesystem.writeBytesToPath(new byte[smallEnoughRuleSize], input);
+    BuildRule smallEnoughRule =
+        ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//:small_rule"))
+            .setOut("out")
+            .setSrc(new PathSourcePath(filesystem, input))
+            .build(resolver, filesystem);
+    Optional<RuleKey> smallEnoughRuleKey = factory.build(smallEnoughRule);
+    assertTrue(smallEnoughRuleKey.isPresent());
   }
 
   private static class RuleKeyAppendableWithInput implements RuleKeyAppendable {

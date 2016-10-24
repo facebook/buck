@@ -59,9 +59,6 @@ public class InputBasedRuleKeyBuilderFactory
   private final LoadingCache<RuleKeyAppendable, Result> cache;
   private final long inputSizeLimit;
 
-  private long inputSize = 0;
-  private boolean inputSizeLimitExceeded = false;
-
   protected InputBasedRuleKeyBuilderFactory(
       int seed,
       FileHashLoader hashLoader,
@@ -147,6 +144,9 @@ public class InputBasedRuleKeyBuilderFactory
 
     private final ImmutableList.Builder<Iterable<BuildRule>> deps = ImmutableList.builder();
     private final ImmutableList.Builder<Iterable<SourcePath>> inputs = ImmutableList.builder();
+
+    private long inputSize = 0;
+    private boolean inputSizeLimitExceeded = false;
 
     private Builder() {
       super(pathResolver, fileHashLoader);
