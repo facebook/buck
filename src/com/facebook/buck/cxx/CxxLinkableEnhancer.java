@@ -45,6 +45,7 @@ import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 import java.util.EnumSet;
+import java.util.Objects;
 import java.util.Optional;
 
 public class CxxLinkableEnhancer {
@@ -241,7 +242,7 @@ public class CxxLinkableEnhancer {
           public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
             ImmutableSortedSet<Path> searchPaths = FluentIterable.from(frameworkPaths)
                 .transform(frameworkPathToSearchPath)
-                .filter(Predicates.notNull())
+                .filter(Objects::nonNull)
                 .toSortedSet(Ordering.natural());
             for (Path searchPath : searchPaths) {
               builder.add("-L");

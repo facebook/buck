@@ -27,7 +27,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -37,6 +36,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
@@ -122,7 +122,7 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
                   return input.getProjectFilesystem().resolve(pathToOutput);
                 }
               })
-          .filter(Predicates.notNull())
+          .filter(Objects::nonNull)
           .toSortedSet(Ordering.natural());
   }
 

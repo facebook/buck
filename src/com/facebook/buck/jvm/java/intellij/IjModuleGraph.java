@@ -27,7 +27,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Ascii;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -37,6 +36,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -312,7 +312,7 @@ public class IjModuleGraph {
                       return libraryFactory.getLibrary(targetNode).orElse(null);
                     }
                   })
-              .filter(Predicates.notNull())
+              .filter(Objects::nonNull)
               .toSet();
         }
 

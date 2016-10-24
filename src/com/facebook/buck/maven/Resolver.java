@@ -27,7 +27,6 @@ import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -98,6 +97,7 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -325,7 +325,7 @@ public class Resolver {
             }
           }
         })
-        .filter(Predicates.notNull());
+        .filter(Objects::nonNull);
 
     List<Version> newestPresent = Ordering.natural().greatestOf(versionsPresent, 1);
     if (newestPresent.isEmpty() || newestPresent.get(0).compareTo(artifactToDownloadVersion) <= 0) {

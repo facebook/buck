@@ -27,13 +27,13 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -97,7 +97,7 @@ public class ClasspathMacroExpander
                               .resolve(input.getPathToOutput());
                   }
                 })
-            .filter(Predicates.notNull())
+            .filter(Objects::nonNull)
             .transform(Object::toString)
             .toSortedSet(Ordering.natural()));
   }

@@ -24,7 +24,6 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.util.concurrent.AssertScopeExclusiveAccess;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -43,6 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -274,7 +274,7 @@ public class ProjectBuildFileParserPoolTest {
     // normally, the rest should have been cancelled.
     int expectedCompletedJobs = 1;
     int completedJobs = FluentIterable.from(futureResults)
-        .filter(Predicates.notNull())
+        .filter(Objects::nonNull)
         .size();
     assertThat(completedJobs, Matchers.equalTo(expectedCompletedJobs));
 

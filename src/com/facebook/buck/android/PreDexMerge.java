@@ -39,7 +39,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.HashMultimap;
@@ -60,6 +59,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
@@ -370,7 +370,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
                 }
               }
             })
-        .filter(Predicates.notNull());
+        .filter(Objects::nonNull);
 
     // If this APK has Android resources, then the generated R.class files also need to be dexed.
     Optional<DexWithClasses> rDotJavaDexWithClasses = Optional.ofNullable(

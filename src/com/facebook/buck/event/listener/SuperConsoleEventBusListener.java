@@ -53,7 +53,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -70,6 +69,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
@@ -357,7 +357,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       }
       String suffix = Joiner.on(" ")
           .join(FluentIterable.of(new String[] {jobSummary, buildTrace})
-              .filter(Predicates.notNull()));
+              .filter(Objects::nonNull));
       Optional<String> suffixOptional =
           suffix.isEmpty() ? Optional.empty() : Optional.of(suffix);
       // Check to see if the build encompasses the time spent parsing. This is true for runs of

@@ -51,7 +51,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -69,6 +68,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -436,7 +436,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
                 return input.getOutputClasspaths();
               }
             })
-        .filter(Predicates.notNull())
+        .filter(Objects::nonNull)
         .toSet();
 
     ProjectFilesystem projectFilesystem = getProjectFilesystem(); // NOPMD confused by lambda

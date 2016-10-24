@@ -328,7 +328,7 @@ public class ProjectFilesystem {
           }
         })
         // And now remove any null patterns
-        .filter(Predicates.notNull())
+        .filter(Objects::nonNull)
         .toList());
 
     return builder.build();

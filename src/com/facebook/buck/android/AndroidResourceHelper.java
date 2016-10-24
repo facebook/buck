@@ -18,9 +18,10 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.rules.BuildRule;
 import com.google.common.base.Function;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -46,7 +47,7 @@ public class AndroidResourceHelper {
            return null;
          }
         })
-        .filter(Predicates.notNull())
+        .filter(Objects::nonNull)
         .toSortedSet(deps.comparator());
   }
 }
