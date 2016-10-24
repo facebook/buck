@@ -59,7 +59,6 @@ import java.util.regex.Pattern;
 public class CxxBinaryDescriptionTest {
 
   @Test
-  @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
   public void createBuildRule() throws Exception {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     CxxPlatform cxxPlatform = CxxBinaryBuilder.createDefaultPlatform();

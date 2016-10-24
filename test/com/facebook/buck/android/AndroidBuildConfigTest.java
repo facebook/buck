@@ -88,7 +88,6 @@ public class AndroidBuildConfigTest {
   }
 
   @Test
-  @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals") // PMD has a bad heuristic here.
   public void testReadValuesStep() throws IOException {
     Path pathToValues = Paths.get("src/values.txt");
 

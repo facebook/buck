@@ -248,7 +248,6 @@ public class CxxSourceRuleFactoryTest {
     }
 
     @Test
-    @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
     public void createCompileBuildRulePicOption() {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();

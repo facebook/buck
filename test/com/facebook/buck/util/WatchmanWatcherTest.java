@@ -65,7 +65,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-@SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
 public class WatchmanWatcherTest {
 
   private static final WatchmanQuery FAKE_QUERY =

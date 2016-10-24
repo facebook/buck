@@ -26,7 +26,6 @@ import org.junit.Test;
 public class AuditRulesCommandTest {
 
   @Test
-  @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
   public void testCreateDisplayString() {
     assertEquals("None", AuditRulesCommand.createDisplayString(null));
     assertEquals("True", AuditRulesCommand.createDisplayString(true));

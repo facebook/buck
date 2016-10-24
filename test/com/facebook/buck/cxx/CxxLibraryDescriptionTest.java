@@ -115,7 +115,6 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
   public void createBuildRule() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxPlatform cxxPlatform = CxxLibraryBuilder.createDefaultPlatform();
@@ -432,7 +431,6 @@ public class CxxLibraryDescriptionTest {
   }
 
   @Test
-  @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals")
   public void createCxxLibraryBuildRules() throws Exception {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxPlatform cxxPlatform = CxxLibraryBuilder.createDefaultPlatform();
