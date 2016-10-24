@@ -1,2 +1,0 @@
-InvocationInfo {"buildId":"3f874373-f040-448f-964d-e2eb459de37f","subCommand":"targetscommand","timestampMillis":1476719297537}
-ParseFinished {"timestamp":1476719302355,"buildTargets":[{"baseName":"//test/com/facebook/buck/artifact_cache","flavor":"","shortName":"testutil"},{"baseName":"//test/com/facebook/buck/artifact_cache","flavor":"","shortName":"artifact_cache"},]}
