@@ -326,10 +326,10 @@ public class HaskellDescriptionUtils {
                         .addAll(linker.getDeps(pathResolver))
                         .addAll(
                             FluentIterable.from(args)
-                                .transformAndConcat(Arg.getDepsFunction(pathResolver)))
+                                .transformAndConcat(arg1 -> arg1.getDeps(pathResolver)))
                         .addAll(
                             FluentIterable.from(linkerArgs)
-                                .transformAndConcat(Arg.getDepsFunction(pathResolver)))
+                                .transformAndConcat(arg -> arg.getDeps(pathResolver)))
                         .build()),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),
             pathResolver,

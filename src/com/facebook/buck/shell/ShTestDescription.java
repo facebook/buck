@@ -107,8 +107,7 @@ public class ShTestDescription implements
         params.appendExtraDeps(
             () -> FluentIterable.from(testArgs)
                 .append(testEnv.values())
-                .transformAndConcat(
-                    com.facebook.buck.rules.args.Arg.getDepsFunction(pathResolver))),
+                .transformAndConcat(arg -> arg.getDeps(pathResolver))),
         pathResolver,
         args.test,
         testArgs,

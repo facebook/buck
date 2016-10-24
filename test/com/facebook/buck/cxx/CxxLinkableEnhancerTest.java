@@ -647,6 +647,6 @@ public class CxxLinkableEnhancerTest {
         ImmutableList.of(
             "-framework", "XCTest",
             "-framework", "Bar"),
-        Arg.stringListFunction().apply(linkerFlags));
+        Arg.stringifyList(linkerFlags));
   }
 }

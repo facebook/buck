@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -238,10 +237,10 @@ public class OCamlBuildRulesGenerator {
                 .addAll(pathResolver.filterBuildRuleInputs(allInputs))
                 .addAll(
                     FluentIterable.from(ocamlContext.getNativeLinkableInput().getArgs())
-                        .transformAndConcat(Arg.getDepsFunction(pathResolver)))
+                        .transformAndConcat(arg -> arg.getDeps(pathResolver)))
                 .addAll(
                     FluentIterable.from(ocamlContext.getCLinkableInput().getArgs())
-                        .transformAndConcat(Arg.getDepsFunction(pathResolver)))
+                        .transformAndConcat(arg -> arg.getDeps(pathResolver)))
                 .addAll(cxxCompiler.getDeps(pathResolver))
                 .build()),
         Suppliers.ofInstance(
@@ -288,7 +287,7 @@ public class OCamlBuildRulesGenerator {
                 .addAll(
                     FluentIterable.from(ocamlContext.getBytecodeLinkableInput().getArgs())
                         .append(ocamlContext.getCLinkableInput().getArgs())
-                        .transformAndConcat(Arg.getDepsFunction(pathResolver))
+                        .transformAndConcat(arg -> arg.getDeps(pathResolver))
                         .filter(Predicates.not(Predicates.instanceOf(OCamlBuild.class))))
                 .addAll(cxxCompiler.getDeps(pathResolver))
                 .build()),

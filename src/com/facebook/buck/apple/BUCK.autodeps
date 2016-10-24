@@ -1,7 +1,6 @@
 {
   "platform" : {
     "deps" : [
-      "//src/com/facebook/buck/apple/xcode:xcode",
       "//src/com/facebook/buck/util:exceptions",
       "//third-party/java/immutables:processor"
     ],

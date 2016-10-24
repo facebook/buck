@@ -108,7 +108,7 @@ public class CxxLinkableEnhancer {
         params.copyWithChanges(
             target,
             () -> FluentIterable.from(allArgs)
-                .transformAndConcat(Arg.getDepsFunction(resolver))
+                .transformAndConcat(arg -> arg.getDeps(resolver))
                 .append(linker.getDeps(resolver))
                 .toSortedSet(Ordering.natural()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),

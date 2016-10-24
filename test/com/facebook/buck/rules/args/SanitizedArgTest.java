@@ -53,7 +53,7 @@ public class SanitizedArgTest {
   public void stringify() {
     SanitizedArg arg = new SanitizedArg(Functions.constant("sanitized"), "unsanitized");
     assertThat(
-        Arg.stringListFunction().apply(arg),
+        Arg.stringifyList(arg),
         Matchers.contains("unsanitized"));
   }
 

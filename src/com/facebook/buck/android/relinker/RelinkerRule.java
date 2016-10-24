@@ -104,7 +104,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
       SourcePathResolver resolver,
       ImmutableList<Arg> args) {
     return params.appendExtraDeps(
-        Iterables.concat(Iterables.transform(args, Arg.getDepsFunction(resolver))));
+        Iterables.concat(Iterables.transform(args, arg -> arg.getDeps(resolver))));
   }
 
   private static String getVersionScript(Set<String> needed, Set<String> provided) {

@@ -20,7 +20,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -33,16 +32,6 @@ import java.util.Map;
  * {@link BuildRule}.
  */
 public abstract class Arg implements RuleKeyAppendable {
-
-  private static final Function<Arg, ImmutableList<String>> STRINGIFY_LIST =
-      input -> {
-        ImmutableList.Builder<String> builder = ImmutableList.builder();
-        input.appendToCommandLine(builder);
-        return builder.build();
-      };
-
-  private static final Function<Arg, ImmutableCollection<SourcePath>> GET_INPUTS =
-      Arg::getInputs;
 
   /**
    * @return any {@link BuildRule}s that need to be built before this argument can be used.
@@ -73,17 +62,10 @@ public abstract class Arg implements RuleKeyAppendable {
   @Override
   public abstract int hashCode();
 
-  public static Function<Arg, ImmutableCollection<BuildRule>> getDepsFunction(
-      final SourcePathResolver resolver) {
-    return arg -> arg.getDeps(resolver);
-  }
-
-  public static Function<Arg, ImmutableCollection<SourcePath>> getInputsFunction() {
-    return GET_INPUTS;
-  }
-
-  public static Function<Arg, ImmutableList<String>> stringListFunction() {
-    return STRINGIFY_LIST;
+  public static ImmutableList<String> stringifyList(Arg input) {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    input.appendToCommandLine(builder);
+    return builder.build();
   }
 
   public static ImmutableList<String> stringify(ImmutableCollection<Arg> args) {

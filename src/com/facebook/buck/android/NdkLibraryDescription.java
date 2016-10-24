@@ -210,7 +210,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       // it technically should be added to the top-level rule.
       deps.addAll(
           FluentIterable.from(nativeLinkableInput.getArgs())
-              .transformAndConcat(com.facebook.buck.rules.args.Arg.getDepsFunction(pathResolver)));
+              .transformAndConcat(arg -> arg.getDeps(pathResolver)));
 
       // Add in the transitive native linkable flags contributed by C/C++ library rules into the
       // NDK build.

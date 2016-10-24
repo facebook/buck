@@ -262,7 +262,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Linker.LinkableDepType.SHARED);
     BuildRule rule =
         FluentIterable.from(nativeLinkableInput.getArgs())
-            .transformAndConcat(Arg.getDepsFunction(pathResolver))
+            .transformAndConcat(arg -> arg.getDeps(pathResolver))
             .toList()
             .get(0);
     assertTrue(rule instanceof CxxLink);
@@ -284,7 +284,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         Linker.LinkableDepType.SHARED);
     assertThat(
         FluentIterable.from(nativeLinkableInput.getArgs())
-            .transformAndConcat(Arg.getDepsFunction(pathResolver))
+            .transformAndConcat(arg -> arg.getDeps(pathResolver))
             .toList(),
         empty());
   }

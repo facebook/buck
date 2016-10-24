@@ -124,7 +124,7 @@ public class OCamlLinkStep extends ShellStep {
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-cclib"),
                 FluentIterable.from(cDepInput)
-                    .transformAndConcat(Arg.stringListFunction())))
+                    .transformAndConcat(Arg::stringifyList)))
         .build();
   }
 

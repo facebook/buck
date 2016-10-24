@@ -134,7 +134,7 @@ public class HaskellLibraryDescriptionTest {
     Linker linker = CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(resolver);
     ImmutableList<String> linkWholeFlags =
         FluentIterable.from(linker.linkWhole(new StringArg("sentinel")))
-            .transformAndConcat(Arg.stringListFunction())
+            .transformAndConcat(Arg::stringifyList)
             .filter(Predicates.not(Predicates.equalTo("sentinel")))
             .toList();
 
@@ -238,7 +238,7 @@ public class HaskellLibraryDescriptionTest {
             Linker.LinkableDepType.STATIC);
     assertThat(
         FluentIterable.from(staticInput.getArgs())
-            .transformAndConcat(Arg.getDepsFunction(new SourcePathResolver(resolver)))
+            .transformAndConcat(arg -> arg.getDeps(new SourcePathResolver(resolver)))
             .transform(HasBuildTarget::getBuildTarget)
             .toList(),
         Matchers.hasItem(

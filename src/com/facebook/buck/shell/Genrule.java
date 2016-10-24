@@ -265,8 +265,7 @@ public class Genrule extends AbstractBuildRule
   }
 
   private static Optional<String> flattenToSpaceSeparatedString(Optional<Arg> arg) {
-    return arg.map(Arg.stringListFunction()::apply)
-        .map(input -> Joiner.on(' ').join(input));
+    return arg.map(Arg::stringifyList).map(input -> Joiner.on(' ').join(input));
   }
 
   @VisibleForTesting

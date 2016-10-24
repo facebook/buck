@@ -18,10 +18,10 @@ package com.facebook.buck.rules.args;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -42,7 +42,7 @@ public class SourcePathArgTest {
      );
     SourcePathArg arg = new SourcePathArg(resolver, path);
     assertThat(
-        Arg.stringListFunction().apply(arg),
+        Arg.stringifyList(arg),
         Matchers.contains(resolver.getAbsolutePath(path).toString()));
   }
 

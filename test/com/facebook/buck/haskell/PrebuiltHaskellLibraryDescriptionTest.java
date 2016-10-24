@@ -62,7 +62,7 @@ public class PrebuiltHaskellLibraryDescriptionTest {
             Linker.LinkableDepType.STATIC);
     assertThat(
         FluentIterable.from(input.getArgs())
-            .transformAndConcat(Arg.getInputsFunction())
+            .transformAndConcat(Arg::getInputs)
             .toSet(),
         Matchers.contains(lib));
   }
@@ -85,7 +85,7 @@ public class PrebuiltHaskellLibraryDescriptionTest {
             Linker.LinkableDepType.SHARED);
     assertThat(
         FluentIterable.from(input.getArgs())
-            .transformAndConcat(Arg.getInputsFunction())
+            .transformAndConcat(Arg::getInputs)
             .toSet(),
         Matchers.contains(lib));
   }

@@ -46,7 +46,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -126,7 +125,7 @@ public class HalideLibraryDescriptionTest {
         Linker.LinkableDepType.STATIC);
     BuildRule buildRule =
         FluentIterable.from(input.getArgs())
-            .transformAndConcat(Arg.getDepsFunction(new SourcePathResolver(resolver)))
+            .transformAndConcat(arg -> arg.getDeps(new SourcePathResolver(resolver)))
             .get(0);
     assertThat(buildRule, is(instanceOf(Archive.class)));
   }

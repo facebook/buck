@@ -711,7 +711,7 @@ public class CxxGenruleDescription
       ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
       deps.addAll(
           FluentIterable.from(getLinkerArgs(resolver, rules, filter))
-              .transformAndConcat(com.facebook.buck.rules.args.Arg.getDepsFunction(pathResolver)));
+              .transformAndConcat(arg -> arg.getDeps(pathResolver)));
       if (depType == Linker.LinkableDepType.SHARED) {
         deps.add(requireSymlinkTree(resolver, rules));
       }

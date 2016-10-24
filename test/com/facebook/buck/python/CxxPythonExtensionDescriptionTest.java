@@ -218,7 +218,7 @@ public class CxxPythonExtensionDescriptionTest {
         rule.getDeps(),
         Matchers.hasItems(
             FluentIterable.from(depInput.getArgs())
-                .transformAndConcat(Arg.getDepsFunction(pathResolver))
+                .transformAndConcat(arg -> arg.getDeps(pathResolver))
                 .toArray(BuildRule.class)));
   }
 

@@ -389,7 +389,7 @@ public class CxxLibraryDescriptionTest {
     Linker linker = cxxPlatform.getLd().resolve(resolver);
     ImmutableList<String> linkWholeFlags =
         FluentIterable.from(linker.linkWhole(new StringArg("sentinel")))
-            .transformAndConcat(Arg.stringListFunction())
+            .transformAndConcat(Arg::stringifyList)
             .filter(Predicates.not(Predicates.equalTo("sentinel")))
             .toList();
 
@@ -976,7 +976,7 @@ public class CxxLibraryDescriptionTest {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     assertThat(
         FluentIterable.from(nativeLinkableInput.getArgs())
-            .transformAndConcat(Arg.getDepsFunction(pathResolver))
+            .transformAndConcat(arg -> arg.getDeps(pathResolver))
             .toSet(),
         hasItem(loc));
     assertThat(
@@ -1026,7 +1026,7 @@ public class CxxLibraryDescriptionTest {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     assertThat(
         FluentIterable.from(nativeLinkableInput.getArgs())
-            .transformAndConcat(Arg.getDepsFunction(pathResolver))
+            .transformAndConcat(arg -> arg.getDeps(pathResolver))
             .toSet(),
         hasItem(loc));
     assertThat(
@@ -1079,7 +1079,7 @@ public class CxxLibraryDescriptionTest {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     assertThat(
         FluentIterable.from(nativeLinkableInput.getArgs())
-            .transformAndConcat(Arg.getDepsFunction(pathResolver))
+            .transformAndConcat(arg -> arg.getDeps(pathResolver))
             .toSet(),
         Matchers.not(hasItem(loc)));
     assertThat(

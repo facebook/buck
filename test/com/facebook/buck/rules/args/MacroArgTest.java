@@ -18,10 +18,10 @@ package com.facebook.buck.rules.args;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -53,7 +53,7 @@ public class MacroArgTest {
             TestCellBuilder.createCellRoots(filesystem),
             resolver,
             "$(macro)");
-    assertThat(Arg.stringListFunction().apply(arg), Matchers.contains("expanded"));
+    assertThat(Arg.stringifyList(arg), Matchers.contains("expanded"));
   }
 
   @Test

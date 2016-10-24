@@ -37,7 +37,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
-import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.OCamlSource;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -233,7 +232,7 @@ public class OCamlRuleBuilder {
         FluentIterable.from(nativeLinkableInput.getArgs())
             .append(bytecodeLinkableInput.getArgs())
             .append(cLinkableInput.getArgs())
-            .transformAndConcat(Arg.getDepsFunction(pathResolver)));
+            .transformAndConcat(arg -> arg.getDeps(pathResolver)));
     for (OCamlLibrary library : ocamlInput) {
       allDepsBuilder.addAll(library.getNativeCompileDeps());
       allDepsBuilder.addAll(library.getBytecodeCompileDeps());
@@ -387,13 +386,13 @@ public class OCamlRuleBuilder {
                 .addAll(pathResolver.filterBuildRuleInputs(getInput(srcs)))
                 .addAll(
                     FluentIterable.from(nativeLinkableInput.getArgs())
-                        .transformAndConcat(Arg.getDepsFunction(pathResolver)))
+                        .transformAndConcat(arg -> arg.getDeps(pathResolver)))
                 .addAll(
                     FluentIterable.from(bytecodeLinkableInput.getArgs())
-                        .transformAndConcat(Arg.getDepsFunction(pathResolver)))
+                        .transformAndConcat(arg -> arg.getDeps(pathResolver)))
                 .addAll(
                     FluentIterable.from(cLinkableInput.getArgs())
-                        .transformAndConcat(Arg.getDepsFunction(pathResolver)))
+                        .transformAndConcat(arg -> arg.getDeps(pathResolver)))
                 .addAll(
                     pathResolver.filterBuildRuleInputs(
                         ocamlBuckConfig.getCCompiler().resolve(resolver).getInputs()))
