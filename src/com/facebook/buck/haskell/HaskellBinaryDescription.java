@@ -46,7 +46,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -138,7 +137,7 @@ public class HaskellBinaryDescription implements
                   pathResolver,
                   cxxPlatform,
                   params.getDeps(),
-                  Predicates.instanceOf(NativeLinkable.class)));
+                  NativeLinkable.class::isInstance));
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput

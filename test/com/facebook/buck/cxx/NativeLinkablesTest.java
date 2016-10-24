@@ -19,10 +19,10 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -251,7 +251,7 @@ public class NativeLinkablesTest {
         NativeLinkables.getTransitiveSharedLibraries(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(a),
-            Predicates.instanceOf(NativeLinkable.class));
+            NativeLinkable.class::isInstance);
     assertThat(
         sharedLibs,
         Matchers.equalTo(
@@ -340,7 +340,7 @@ public class NativeLinkablesTest {
     NativeLinkables.getTransitiveSharedLibraries(
         CxxPlatformUtils.DEFAULT_PLATFORM,
         ImmutableList.of(a, b),
-        Predicates.instanceOf(NativeLinkable.class));
+        NativeLinkable.class::isInstance);
   }
 
   @Test
@@ -366,7 +366,7 @@ public class NativeLinkablesTest {
         NativeLinkables.getTransitiveSharedLibraries(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableList.of(a, b),
-            Predicates.instanceOf(NativeLinkable.class));
+            NativeLinkable.class::isInstance);
     assertThat(
         sharedLibs,
         Matchers.equalTo(ImmutableSortedMap.<String, SourcePath>of("libc.so", path)));

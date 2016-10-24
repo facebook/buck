@@ -445,7 +445,7 @@ public class CxxGenruleDescription
         ImmutableList<BuildTarget> input)
         throws MacroException {
       return FluentIterable.from(super.resolve(resolver, input))
-          .filter(Predicates.instanceOf(CxxPreprocessorDep.class))
+          .filter(CxxPreprocessorDep.class::isInstance)
           .toList();
     }
 
@@ -589,7 +589,7 @@ public class CxxGenruleDescription
                       pathResolver,
                       cxxPlatform,
                       rules,
-                      Predicates.instanceOf(NativeLinkable.class)));
+                      NativeLinkable.class::isInstance));
         } catch (NoSuchBuildTargetException e) {
           throw new MacroException(
               String.format("cannot create shared library symlink tree: %s: %s", e, e.getMessage()),
@@ -666,7 +666,7 @@ public class CxxGenruleDescription
         ImmutableList<BuildTarget> input)
         throws MacroException {
       return FluentIterable.from(super.resolve(resolver, input))
-          .filter(Predicates.instanceOf(NativeLinkable.class))
+          .filter(NativeLinkable.class::isInstance)
           .toList();
     }
 

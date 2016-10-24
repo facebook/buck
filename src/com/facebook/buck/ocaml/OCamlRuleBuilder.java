@@ -152,8 +152,8 @@ public class OCamlRuleBuilder {
     return TopologicalSort.sort(
         BuildRuleDependencyVisitors.getBuildRuleDirectedGraphFilteredBy(
             deps,
-            Predicates.instanceOf(OCamlLibrary.class),
-            Predicates.instanceOf(OCamlLibrary.class)),
+            OCamlLibrary.class::isInstance,
+            OCamlLibrary.class::isInstance),
         Predicates.alwaysTrue());
   }
 
@@ -188,7 +188,7 @@ public class OCamlRuleBuilder {
         cxxPlatform,
         deps,
         Linker.LinkableDepType.STATIC,
-        Predicates.instanceOf(OCamlLibrary.class));
+        OCamlLibrary.class::isInstance);
   }
 
   public static AbstractBuildRule createBulkBuildRule(
@@ -205,7 +205,7 @@ public class OCamlRuleBuilder {
           CxxPreprocessables.getTransitiveCxxPreprocessorInput(
               ocamlBuckConfig.getCxxPlatform(),
               FluentIterable.from(params.getDeps())
-                  .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
+                  .filter(CxxPreprocessorDep.class::isInstance)));
 
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
@@ -354,7 +354,7 @@ public class OCamlRuleBuilder {
           CxxPreprocessables.getTransitiveCxxPreprocessorInput(
               ocamlBuckConfig.getCxxPlatform(),
               FluentIterable.from(params.getDeps())
-                  .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
+                  .filter(CxxPreprocessorDep.class::isInstance)));
 
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 

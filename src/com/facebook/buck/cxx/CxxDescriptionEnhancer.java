@@ -626,7 +626,7 @@ public class CxxDescriptionEnhancer {
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 cxxPlatform,
                 FluentIterable.from(params.getDeps())
-                    .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
+                    .filter(CxxPreprocessorDep.class::isInstance)));
 
     // Generate and add all the build rules to preprocess and compile the source to the
     // resolver and get the `SourcePath`s representing the generated object files.
@@ -676,7 +676,7 @@ public class CxxDescriptionEnhancer {
               sourcePathResolver,
               cxxPlatform,
               params.getDeps(),
-              Predicates.instanceOf(NativeLinkable.class));
+              NativeLinkable.class::isInstance);
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput

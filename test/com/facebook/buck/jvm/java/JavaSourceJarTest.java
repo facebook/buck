@@ -39,7 +39,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -104,7 +103,7 @@ public class JavaSourceJarTest {
 
     // There should be a CopyStep per file being copied. Count 'em.
     int copyStepsCount = FluentIterable.from(steps)
-        .filter(Predicates.instanceOf(CopyStep.class))
+        .filter(CopyStep.class::isInstance)
         .size();
 
     assertEquals(1, copyStepsCount);

@@ -49,7 +49,6 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -176,7 +175,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
               CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                   cxxPlatform,
                   params.getDeps(),
-                  Predicates.instanceOf(NdkLibrary.class)));
+                  NdkLibrary.class::isInstance));
 
       // We add any dependencies from the C/C++ preprocessor input to this rule, even though
       // it technically should be added to the top-level rule.
@@ -204,7 +203,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
               cxxPlatform,
               params.getDeps(),
               Linker.LinkableDepType.SHARED,
-              Predicates.instanceOf(NdkLibrary.class));
+              NdkLibrary.class::isInstance);
 
       // We add any dependencies from the native linkable input to this rule, even though
       // it technically should be added to the top-level rule.

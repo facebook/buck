@@ -288,7 +288,7 @@ public class OCamlBuildRulesGenerator {
                     FluentIterable.from(ocamlContext.getBytecodeLinkableInput().getArgs())
                         .append(ocamlContext.getCLinkableInput().getArgs())
                         .transformAndConcat(arg -> arg.getDeps(pathResolver))
-                        .filter(Predicates.not(Predicates.instanceOf(OCamlBuild.class))))
+                        .filter(Predicates.not(OCamlBuild.class::isInstance)))
                 .addAll(cxxCompiler.getDeps(pathResolver))
                 .build()),
     Suppliers.ofInstance(ImmutableSortedSet.of()));

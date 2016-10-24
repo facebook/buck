@@ -34,7 +34,6 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
@@ -90,7 +89,7 @@ public class CxxDescriptionEnhancerTest {
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 FluentIterable.from(testParams.getDeps())
-                    .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
+                    .filter(CxxPreprocessorDep.class::isInstance)));
 
     Set<SourcePath> roots = new HashSet<>();
     for (CxxHeaders headers : CxxPreprocessorInput.concat(combinedInput).getIncludes()) {
@@ -161,7 +160,7 @@ public class CxxDescriptionEnhancerTest {
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 FluentIterable.from(testParams.getDeps())
-                    .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
+                    .filter(CxxPreprocessorDep.class::isInstance)));
 
     Set<SourcePath> roots = new HashSet<>();
     for (CxxHeaders headers : CxxPreprocessorInput.concat(combinedInput).getIncludes()) {
@@ -219,7 +218,7 @@ public class CxxDescriptionEnhancerTest {
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 FluentIterable.from(otherLibDepParams.getDeps())
-                    .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
+                    .filter(CxxPreprocessorDep.class::isInstance)));
 
     Set<SourcePath> roots = new HashSet<>();
     for (CxxHeaders headers : CxxPreprocessorInput.concat(otherInput).getIncludes()) {

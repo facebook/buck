@@ -51,7 +51,6 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -520,7 +519,7 @@ public class CxxLinkableEnhancerTest {
             cxxPlatform,
             ImmutableList.of(top),
             Linker.LinkableDepType.STATIC,
-            Predicates.instanceOf(NativeLinkable.class));
+            NativeLinkable.class::isInstance);
     assertThat(
         Arg.stringify(bottomInput.getArgs()),
         hasItem(sentinel));

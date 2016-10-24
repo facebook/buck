@@ -57,8 +57,8 @@ final class DefaultSuggestBuildRules implements SuggestBuildRules {
                 DirectedAcyclicGraph<BuildRule> graph =
                     BuildRuleDependencyVisitors.getBuildRuleDirectedGraphFilteredBy(
                         buildRules,
-                        Predicates.instanceOf(JavaLibrary.class),
-                        Predicates.instanceOf(JavaLibrary.class));
+                        JavaLibrary.class::isInstance,
+                        JavaLibrary.class::isInstance);
                 return FluentIterable
                     .from(TopologicalSort.sort(graph, Predicates.alwaysTrue()))
                     .filter(JavaLibrary.class)

@@ -27,7 +27,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -334,7 +333,7 @@ public final class CxxInferEnhancer {
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
             cxxPlatform,
             FluentIterable.from(params.getDeps())
-                .filter(Predicates.instanceOf(CxxPreprocessorDep.class))));
+                .filter(CxxPreprocessorDep.class::isInstance)));
   }
 
   private static ImmutableList<CxxPreprocessorInput>

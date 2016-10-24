@@ -169,7 +169,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
             FluentIterable.from(deps)
                 .filter(BuildRule.class)));
     for (CxxPreprocessorDep dep :
-        Iterables.filter(deps, Predicates.not(Predicates.instanceOf(BuildRule.class)))) {
+        Iterables.filter(deps, Predicates.not(BuildRule.class::isInstance))) {
       inputs.add(dep.getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC));
     }
     return inputs.build();

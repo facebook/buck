@@ -296,8 +296,8 @@ public class JavaTestDescription implements
           cxxPlatform,
           buildRuleParams.getDeps(),
           Predicates.or(
-              Predicates.instanceOf(NativeLinkable.class),
-              Predicates.instanceOf(JavaLibrary.class)));
+              NativeLinkable.class::isInstance,
+              JavaLibrary.class::isInstance));
     }
   }
 }

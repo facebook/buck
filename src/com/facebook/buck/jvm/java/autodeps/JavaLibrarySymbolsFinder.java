@@ -24,7 +24,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -45,7 +44,7 @@ final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
   };
 
   private static final Predicate<Object> IS_PATH_SOURCE_PATH =
-      Predicates.instanceOf(PathSourcePath.class);
+      PathSourcePath.class::isInstance;
 
   private final ImmutableSortedSet<SourcePath> srcs;
 
