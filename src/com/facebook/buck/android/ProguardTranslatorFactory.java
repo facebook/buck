@@ -20,7 +20,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
@@ -72,7 +71,7 @@ class ProguardTranslatorFactory {
     // Proguard doesn't print a mapping when obfuscation is disabled.
     boolean obfuscationSkipped = Iterables.any(
         filesystem.readLines(pathToProguardConfig),
-        Predicates.equalTo("-dontobfuscate"));
+        "-dontobfuscate"::equals);
     if (obfuscationSkipped) {
       return Optional.empty();
     }

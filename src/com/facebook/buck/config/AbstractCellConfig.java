@@ -77,7 +77,7 @@ abstract class AbstractCellConfig {
 
     ImmutableSet<RelativeCellName> relativeNamesOfCellsWithOverrides =
         FluentIterable.from(getValues().keySet())
-            .filter(Predicates.not(Predicates.equalTo(ALL_CELLS_OVERRIDE)))
+            .filter(Predicates.not(ALL_CELLS_OVERRIDE::equals))
             .toSet();
     ImmutableSet.Builder<Path> pathsWithOverrides = ImmutableSet.builder();
     for (RelativeCellName cellWithOverride : relativeNamesOfCellsWithOverrides) {

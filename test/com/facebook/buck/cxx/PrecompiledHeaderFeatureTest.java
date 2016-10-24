@@ -44,7 +44,6 @@ import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
@@ -406,7 +405,7 @@ public class PrecompiledHeaderFeatureTest {
   private static boolean commandLineContainsPchFlag(CxxPreprocessAndCompile rule) {
     return Iterables.tryFind(
         rule.makeMainStep(Paths.get("/tmp/unused_scratch_dir"), false).getCommand(),
-        Predicates.equalTo("-include-pch")).isPresent();
+        "-include-pch"::equals).isPresent();
   }
 
   /**

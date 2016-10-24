@@ -390,7 +390,7 @@ public class CxxLibraryDescriptionTest {
     ImmutableList<String> linkWholeFlags =
         FluentIterable.from(linker.linkWhole(new StringArg("sentinel")))
             .transformAndConcat(Arg::stringifyList)
-            .filter(Predicates.not(Predicates.equalTo("sentinel")))
+            .filter(Predicates.not("sentinel"::equals))
             .toList();
 
     // Verify that the linker args contains the link whole flags.

@@ -999,7 +999,7 @@ public class ProjectGenerator {
       TargetNode<?> bundleLoader) {
     return FluentIterable
         .from(copiedRules)
-        .filter(Predicates.not(Predicates.equalTo(bundleLoader)))
+        .filter(Predicates.not(bundleLoader::equals))
         .toList();
   }
 

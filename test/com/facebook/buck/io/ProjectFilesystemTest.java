@@ -398,7 +398,7 @@ public class ProjectFilesystemTest {
     assertThat(
         filesystem.getFilesUnderPath(
             Paths.get("dir1"),
-            Predicates.equalTo(Paths.get("dir1/dir2/file3")),
+            Paths.get("dir1/dir2/file3")::equals,
             EnumSet.noneOf(FileVisitOption.class)),
         containsInAnyOrder(Paths.get("dir1/dir2/file3")));
 
@@ -409,7 +409,7 @@ public class ProjectFilesystemTest {
     assertThat(
         filesystem.getFilesUnderPath(
             Paths.get("dir1"),
-            Predicates.equalTo(Paths.get("dir1/file2"))),
+            Paths.get("dir1/file2")::equals),
         containsInAnyOrder(Paths.get("dir1/file2")));
   }
 

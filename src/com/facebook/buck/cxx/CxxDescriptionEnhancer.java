@@ -479,7 +479,7 @@ public class CxxDescriptionEnhancer {
                 .addAll(
                     FluentIterable.from(target.getBasePath())
                         .transform(Object::toString)
-                        .filter(Predicates.not(Predicates.equalTo(""))))
+                        .filter(Predicates.not(""::equals)))
                 .add(
                     target
                         .withoutFlavors(ImmutableSet.of(platform.getFlavor()))

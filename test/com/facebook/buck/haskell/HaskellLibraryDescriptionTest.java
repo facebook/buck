@@ -135,7 +135,7 @@ public class HaskellLibraryDescriptionTest {
     ImmutableList<String> linkWholeFlags =
         FluentIterable.from(linker.linkWhole(new StringArg("sentinel")))
             .transformAndConcat(Arg::stringifyList)
-            .filter(Predicates.not(Predicates.equalTo("sentinel")))
+            .filter(Predicates.not("sentinel"::equals))
             .toList();
 
     // Test static dep type.

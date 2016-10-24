@@ -194,7 +194,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     }
 
     FluentIterable<BuildTarget> depsExcludingBinary = FluentIterable.from(constructorArg.deps)
-        .filter(Predicates.not(Predicates.equalTo(constructorArg.binary)));
+        .filter(Predicates.not(constructorArg.binary::equals));
 
     // Propagate platform flavors.  Need special handling for watch to map the pseudo-flavor
     // watch to the actual watch platform (simulator or device) so can't use
