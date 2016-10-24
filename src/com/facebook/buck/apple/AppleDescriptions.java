@@ -48,7 +48,6 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.OptionalCompat;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -313,16 +312,6 @@ public class AppleDescriptions {
     output.supportedPlatformsRegex = arg.supportedPlatformsRegex;
     output.canBeAsset = arg.canBeAsset;
     output.exportedDeps = arg.exportedDeps;
-  }
-
-  @VisibleForTesting
-  static Function<
-      ImmutableList<String>,
-      ImmutableList<String>> expandSdkVariableReferencesFunction(
-      final AppleSdkPaths appleSdkPaths) {
-    return flags -> flags.stream()
-        .map(appleSdkPaths.replaceSourceTreeReferencesFunction()::apply)
-        .collect(MoreCollectors.toImmutableList());
   }
 
   public static Optional<AppleAssetCatalog> createBuildRuleForTransitiveAssetCatalogDependencies(

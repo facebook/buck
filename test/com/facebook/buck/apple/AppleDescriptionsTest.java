@@ -27,8 +27,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -37,7 +35,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class AppleDescriptionsTest {
@@ -167,35 +164,4 @@ public class AppleDescriptionsTest {
                 new FakeSourcePath("different/path/to/a_file.h"),
                 new FakeSourcePath("file.h"))));
   }
-
-  @Test
-  public void expandSdkVariableReferences() {
-    Path appleSdkRoot = Paths.get("Root");
-    AppleSdkPaths appleSdkPaths =
-        AppleSdkPaths.builder()
-            .setDeveloperPath(appleSdkRoot)
-            .addToolchainPaths(appleSdkRoot.resolve("Toolchain"))
-            .setPlatformPath(appleSdkRoot.resolve("Platform"))
-            .setSdkPath(appleSdkRoot.resolve("SDK"))
-            .build();
-
-    Function<ImmutableList<String>, ImmutableList<String>> expandSdkVariableRefs =
-        AppleDescriptions.expandSdkVariableReferencesFunction(appleSdkPaths);
-
-    ImmutableList<String> expandedRefs = expandSdkVariableRefs.apply(
-        ImmutableList.of(
-            "-Ifoo/bar/baz",
-            "-L$DEVELOPER_DIR/blech",
-            "-I$SDKROOT/quux",
-            "-F$PLATFORM_DIR/xyzzy"));
-
-    assertEquals(
-        ImmutableList.of(
-            "-Ifoo/bar/baz",
-            "-LRoot/blech",
-            "-IRoot/SDK/quux",
-            "-FRoot/Platform/xyzzy"),
-        expandedRefs);
-  }
-
 }
