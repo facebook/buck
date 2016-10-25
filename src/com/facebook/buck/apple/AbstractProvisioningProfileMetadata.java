@@ -185,9 +185,7 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
         "com.apple.developer.homekit",
         "com.apple.developer.healthkit",
         "com.apple.developer.in-app-payments",
-        "com.apple.developer.associated-domains",
         "com.apple.developer.maps",
-        "com.apple.developer.networking.vpn.api",
         "com.apple.external-accessory.wireless-configuration"
     );
 
