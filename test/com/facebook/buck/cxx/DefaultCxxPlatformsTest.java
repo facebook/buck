@@ -28,7 +28,7 @@ public class DefaultCxxPlatformsTest {
 
   @Test
   public void compilerFlagsPropagateToPreprocessorFlags() {
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(
         new CxxBuckConfig(
             FakeBuckConfig.builder().setSections(
                 ImmutableMap.of(

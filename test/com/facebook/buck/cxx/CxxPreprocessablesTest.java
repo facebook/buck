@@ -165,7 +165,7 @@ public class CxxPreprocessablesTest {
     SourcePathResolver pathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(
         new CxxBuckConfig(FakeBuckConfig.builder().setFilesystem(filesystem).build()));
 
     // Setup a simple CxxPreprocessorDep which contributes components to preprocessing.
@@ -263,7 +263,7 @@ public class CxxPreprocessablesTest {
     SourcePathResolver pathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     // Create a native linkable that sits at the bottom of the dep chain.

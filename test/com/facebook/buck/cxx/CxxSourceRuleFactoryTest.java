@@ -76,7 +76,7 @@ public class CxxSourceRuleFactoryTest {
 
   private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
 
-  private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
+  private static final CxxPlatform CXX_PLATFORM = CxxPlatformUtils.build(
       new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
   private static <T> void assertContains(ImmutableList<T> container, Iterable<T> items) {
@@ -155,7 +155,7 @@ public class CxxSourceRuleFactoryTest {
       SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
       ImmutableList<String> platformFlags = ImmutableList.of("-some", "-flags");
-      CxxPlatform platform = DefaultCxxPlatforms.build(
+      CxxPlatform platform = CxxPlatformUtils.build(
           new CxxBuckConfig(
               FakeBuckConfig.builder().setSections(
                   ImmutableMap.of(
@@ -338,7 +338,7 @@ public class CxxSourceRuleFactoryTest {
       Path scratchDir = Paths.get("scratchDir");
 
       BuckConfig buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).build();
-      CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
+      CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(buckConfig));
 
       String prefixHeaderName = "test.pch";
       SourcePath prefixHeaderSourcePath = new FakeSourcePath(filesystem, prefixHeaderName);
@@ -380,7 +380,7 @@ public class CxxSourceRuleFactoryTest {
       ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
       BuckConfig buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).build();
-      CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
+      CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(buckConfig));
 
       CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
           .setParams(params)
@@ -536,7 +536,7 @@ public class CxxSourceRuleFactoryTest {
       ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
       BuckConfig buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).build();
-      CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
+      CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(buckConfig));
 
       CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
           .setParams(params)
@@ -658,7 +658,7 @@ public class CxxSourceRuleFactoryTest {
                       .build()))
           .setFilesystem(PROJECT_FILESYSTEM)
           .build();
-      CxxPlatform platform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
+      CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(buckConfig));
 
       CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
           .setParams(params)
@@ -697,7 +697,7 @@ public class CxxSourceRuleFactoryTest {
                       .build()))
           .setFilesystem(PROJECT_FILESYSTEM)
           .build();
-      CxxPlatform platform = DefaultCxxPlatforms.build(
+      CxxPlatform platform = CxxPlatformUtils.build(
           new CxxBuckConfig(buckConfig));
 
       CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()

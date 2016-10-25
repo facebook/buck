@@ -29,7 +29,7 @@ import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.config.Configs;
 import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.DefaultCxxPlatforms;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.NativeLinkStrategy;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -201,7 +201,7 @@ public class PythonBinaryIntegrationTest {
         not(equalTo(Platform.MACOS)));
 
     String nativeLibsEnvVarName =
-        DefaultCxxPlatforms
+        CxxPlatformUtils
             .build(new CxxBuckConfig(FakeBuckConfig.builder().build()))
             .getLd()
             .resolve(resolver)

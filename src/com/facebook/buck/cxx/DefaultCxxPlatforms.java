@@ -49,10 +49,6 @@ public class DefaultCxxPlatforms {
   private static final Path DEFAULT_OSX_C_FRONTEND = Paths.get("/usr/bin/clang");
   private static final Path DEFAULT_OSX_CXX_FRONTEND = Paths.get("/usr/bin/clang++");
 
-  public static CxxPlatform build(CxxBuckConfig config) {
-    return build(Platform.detect(), config);
-  }
-
   public static CxxPlatform build(
       Platform platform,
       CxxBuckConfig config) {

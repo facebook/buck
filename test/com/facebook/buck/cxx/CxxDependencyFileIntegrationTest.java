@@ -78,7 +78,7 @@ public class CxxDependencyFileIntegrationTest {
 
     // Find the target used for preprocessing and verify it ran.
     target = BuildTargetFactory.newInstance(workspace.getDestPath(), "//:test");
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
         workspace.getDestPath(),

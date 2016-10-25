@@ -149,7 +149,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void inputBasedRuleKeyAvoidsRerunningIfGeneratedSourceDoesNotChange() throws Exception {
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget target = BuildTargetFactory.newInstance(
         workspace.getDestPath(),
@@ -203,7 +203,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void inputBasedRuleKeyAvoidsRerunningIfGeneratedHeaderDoesNotChange() throws Exception {
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_using_generated_header");
     String unusedGenruleInput = "unused.dat";
@@ -263,7 +263,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
         "only tests \"separate\" preprocess mode",
         mode == CxxPreprocessMode.SEPARATE);
 
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_unused_header");
     CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
@@ -303,7 +303,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void depfileBasedRuleKeyRebuildsAfterChangeToUsedHeader() throws Exception {
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_used_full_header");
     String usedHeaderName = "source_full_header.h";
@@ -346,7 +346,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   @Test
   public void depfileBasedRuleKeyRebuildsAfterChangeToUsedHeaderUsingFileRelativeInclusion()
       throws Exception {
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_used_relative_header");
     String usedHeaderName = "source_relative_header.h";
@@ -389,7 +389,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   @Test
   public void depfileBasedRuleKeyRebuildsAfterChangeToUsedParentHeaderUsingFileRelativeInclusion()
       throws Exception {
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget target =
         BuildTargetFactory.newInstance("//:binary_with_used_relative_parent_header");
@@ -432,7 +432,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void depfileBasedRuleKeyAvoidsRecompilingAfterChangeToUnusedHeader() throws Exception {
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_unused_header");
     String unusedHeaderName = "unused_header.h";
@@ -475,7 +475,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void manifestCachingRebuildsAfterChangeToUsedHeader() throws Exception {
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_used_full_header");
     String usedHeaderName = "source_full_header.h";
@@ -524,7 +524,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   @Test
   public void manifestCachingRebuildsAfterChangeToUsedHeaderUsingFileRelativeInclusion()
       throws Exception {
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_used_relative_header");
     String usedHeaderName = "source_relative_header.h";
@@ -572,7 +572,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void manifestCachingGetsHitAfterChangeToUnusedHeader() throws Exception {
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_unused_header");
     String unusedHeaderName = "unused_header.h";

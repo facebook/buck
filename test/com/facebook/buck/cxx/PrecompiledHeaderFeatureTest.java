@@ -446,7 +446,7 @@ public class PrecompiledHeaderFeatureTest {
           .build());
 
   private static final CxxPlatform PLATFORM_NOT_SUPPORTING_PCH =
-      DefaultCxxPlatforms.build(CXX_CONFIG_PCH_DISABLED);
+      CxxPlatformUtils.build(CXX_CONFIG_PCH_DISABLED);
 
   private static final CxxBuckConfig CXX_CONFIG_PCH_ENABLED =
       new CxxBuckConfig(
@@ -455,7 +455,7 @@ public class PrecompiledHeaderFeatureTest {
           .build());
 
   private static final CxxPlatform PLATFORM_SUPPORTING_PCH =
-      DefaultCxxPlatforms
+      CxxPlatformUtils
           .build(CXX_CONFIG_PCH_ENABLED)
           .withCpp(
               new PreprocessorProvider(

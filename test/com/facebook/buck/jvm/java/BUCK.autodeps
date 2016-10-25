@@ -100,6 +100,7 @@
     "deps" : [
       "//src/com/facebook/buck/cxx:rules",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
+      "//test/com/facebook/buck/cxx:testutil",
       "//test/com/facebook/buck/jvm/java:javac-env",
       "//test/com/facebook/buck/testutil:testutil"
     ],

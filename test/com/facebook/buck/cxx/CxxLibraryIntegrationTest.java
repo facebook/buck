@@ -169,7 +169,7 @@ public class CxxLibraryIntegrationTest {
   @Test
   public void thinArchivesDoNotContainAbsolutePaths() throws IOException {
     CxxPlatform cxxPlatform =
-        DefaultCxxPlatforms.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
     assumeTrue(cxxPlatform.getAr().supportsThinArchives());
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_library", tmp);

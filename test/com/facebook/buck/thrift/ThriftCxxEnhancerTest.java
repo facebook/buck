@@ -27,7 +27,6 @@ import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
-import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.InferBuckConfig;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
@@ -68,7 +67,7 @@ public class ThriftCxxEnhancerTest {
   private static final BuildTarget TARGET = BuildTargetFactory.newInstance("//:test#cpp");
   private static final BuckConfig BUCK_CONFIG = FakeBuckConfig.builder().build();
   private static final ThriftBuckConfig THRIFT_BUCK_CONFIG = new ThriftBuckConfig(BUCK_CONFIG);
-  private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
+  private static final CxxPlatform CXX_PLATFORM = CxxPlatformUtils.build(
       new CxxBuckConfig(BUCK_CONFIG));
   private static final FlavorDomain<CxxPlatform> CXX_PLATFORMS =
       FlavorDomain.of("C/C++ Platform", CXX_PLATFORM);

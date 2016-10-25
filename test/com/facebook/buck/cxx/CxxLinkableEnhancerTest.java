@@ -78,7 +78,7 @@ public class CxxLinkableEnhancerTest {
           new FakeSourcePath("b.o"),
           new FakeSourcePath("c.o"));
   private static final ImmutableSortedSet<NativeLinkable> EMPTY_DEPS = ImmutableSortedSet.of();
-  private static final CxxPlatform CXX_PLATFORM = DefaultCxxPlatforms.build(
+  private static final CxxPlatform CXX_PLATFORM = CxxPlatformUtils.build(
       new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
   private static class FakeNativeLinkable extends FakeBuildRule implements NativeLinkable {
@@ -487,7 +487,7 @@ public class CxxLinkableEnhancerTest {
   @Test
   public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables()
       throws Exception {
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
     SourcePathResolver pathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())

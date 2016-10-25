@@ -22,6 +22,7 @@ import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableBiMap;
 
@@ -86,4 +87,7 @@ public class CxxPlatformUtils {
     public static final FlavorDomain<CxxPlatform> DEFAULT_PLATFORMS =
         FlavorDomain.of("C/C++ Platform", DEFAULT_PLATFORM);
 
+  public static CxxPlatform build(CxxBuckConfig config) {
+    return DefaultCxxPlatforms.build(Platform.detect(), config);
+  }
 }

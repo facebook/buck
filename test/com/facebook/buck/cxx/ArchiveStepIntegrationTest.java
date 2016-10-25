@@ -60,7 +60,7 @@ public class ArchiveStepIntegrationTest {
   public void thatGeneratedArchivesAreDeterministic() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
-    CxxPlatform platform = DefaultCxxPlatforms.build(
+    CxxPlatform platform = CxxPlatformUtils.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     // Build up the paths to various files the archive step will use.
@@ -114,7 +114,7 @@ public class ArchiveStepIntegrationTest {
   public void emptyArchives() throws IOException, InterruptedException {
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
     CxxPlatform platform =
-        DefaultCxxPlatforms.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     // Build up the paths to various files the archive step will use.
     SourcePathResolver sourcePathResolver = new SourcePathResolver(
@@ -153,7 +153,7 @@ public class ArchiveStepIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
     CxxPlatform platform =
-        DefaultCxxPlatforms.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     // Build up the paths to various files the archive step will use.
     SourcePathResolver sourcePathResolver =
@@ -199,7 +199,7 @@ public class ArchiveStepIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
     CxxPlatform platform =
-        DefaultCxxPlatforms.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
     assumeTrue(platform.getAr().supportsThinArchives());
 
     // Build up the paths to various files the archive step will use.

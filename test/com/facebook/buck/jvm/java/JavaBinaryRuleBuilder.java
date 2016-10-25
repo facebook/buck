@@ -21,7 +21,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_O
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.DefaultCxxPlatforms;
+import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.google.common.collect.ImmutableSortedSet;
@@ -35,7 +35,7 @@ public class JavaBinaryRuleBuilder extends AbstractNodeBuilder<JavaBinaryDescrip
         new JavaBinaryDescription(
             DEFAULT_JAVA_OPTIONS,
             DEFAULT_JAVAC_OPTIONS,
-            DefaultCxxPlatforms.build(new CxxBuckConfig(FakeBuckConfig.builder().build()))),
+            CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()))),
         target);
   }
 

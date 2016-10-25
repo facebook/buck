@@ -100,7 +100,7 @@ public class CxxTestDescriptionTest {
             )
         )).build();
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(new CxxBuckConfig(buckConfig));
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(buckConfig));
     CxxTestDescription desc = new CxxTestDescription(
         cxxBuckConfig,
         cxxPlatform,

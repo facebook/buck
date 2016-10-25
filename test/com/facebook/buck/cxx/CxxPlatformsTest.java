@@ -118,7 +118,7 @@ public class CxxPlatformsTest {
     CxxBuckConfig buckConfig =
         new CxxBuckConfig(FakeBuckConfig.builder().setSections(sections).build());
 
-    CxxPlatform platform = DefaultCxxPlatforms.build(buckConfig);
+    CxxPlatform platform = CxxPlatformUtils.build(buckConfig);
 
     assertThat(
         platform.getCflags(),
@@ -153,7 +153,7 @@ public class CxxPlatformsTest {
                 new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path"))))
             .build());
 
-    return DefaultCxxPlatforms.build(buckConfig).getLd();
+    return CxxPlatformUtils.build(buckConfig).getLd();
   }
 
   @Test
@@ -180,7 +180,7 @@ public class CxxPlatformsTest {
             .build());
 
     expectedException.expect(RuntimeException.class);
-    DefaultCxxPlatforms.build(buckConfig);
+    CxxPlatformUtils.build(buckConfig);
   }
 
   public Archiver getPlatformArchiver(Platform archiverPlatform) {
@@ -195,7 +195,7 @@ public class CxxPlatformsTest {
             .setFilesystem(new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path"))))
             .build());
 
-    Archiver archiver = DefaultCxxPlatforms.build(buckConfig).getAr();
+    Archiver archiver = CxxPlatformUtils.build(buckConfig).getAr();
     if (archiver instanceof LazyDelegatingArchiver) {
       return ((LazyDelegatingArchiver) archiver).getDelegate();
     } else {
@@ -227,7 +227,7 @@ public class CxxPlatformsTest {
             .build());
 
     expectedException.expect(RuntimeException.class);
-    ((LazyDelegatingArchiver) DefaultCxxPlatforms.build(buckConfig).getAr()).getDelegate();
+    ((LazyDelegatingArchiver) CxxPlatformUtils.build(buckConfig).getAr()).getDelegate();
   }
 
 }
