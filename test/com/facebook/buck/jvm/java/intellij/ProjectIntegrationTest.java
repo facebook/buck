@@ -620,6 +620,11 @@ public class ProjectIntegrationTest {
     assertFalse(workspace.resolve(".idea/libraries/library_libs_jsr305.xml").toFile().exists());
   }
 
+  @Test
+  public void testVersion2BuckProjectWithExcludedResources() throws IOException {
+    runBuckProjectAndVerify("experimental_project_with_excluded_resources");
+  }
+
   private ProcessResult runBuckProjectAndVerify(
       String folderWithTestData,
       String... commandArgs) throws IOException {

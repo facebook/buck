@@ -48,6 +48,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -665,10 +666,17 @@ public class IjModuleFactory {
 
         androidFacetBuilder.addAllResourcePaths(resourceFolders);
 
+        List<String> excludedResourcePaths = projectConfig.getExcludedResourcePaths();
+
         for (Path resourceFolder : resourceFolders) {
           context.addSourceFolder(
               new AndroidResourceFolder(resourceFolder)
           );
+
+          excludedResourcePaths
+              .stream()
+              .map((file) -> resourceFolder.resolve(file))
+              .forEach((folder) -> context.addSourceFolder(new ExcludeFolder(folder)));
         }
       } else {
         resourceFolders = ImmutableSet.of();

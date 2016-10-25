@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
 
+import java.util.List;
 import java.util.Optional;
 
 @Value.Immutable
@@ -48,4 +49,7 @@ abstract class AbstractIjProjectConfig {
   public abstract Optional<String> getProjectJdkType();
 
   public abstract Optional<String> getProjectLanguageLevel();
+
+  public abstract List<String> getExcludedResourcePaths();
+
 }

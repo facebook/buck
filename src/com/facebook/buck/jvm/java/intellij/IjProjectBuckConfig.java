@@ -15,10 +15,10 @@
  */
 package com.facebook.buck.jvm.java.intellij;
 
-
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Sets;
 
 import java.util.Collections;
 import java.util.Map;
@@ -48,6 +48,20 @@ public class IjProjectBuckConfig {
       javaLibrarySdkNames = Collections.emptyMap();
     }
 
+    Optional<String> excludedResourcePathsOption = buckConfig.getValue(
+        INTELLIJ_BUCK_CONFIG_SECTION,
+        "excluded_resource_paths");
+
+    Iterable<String> excludedResourcePaths;
+    if (excludedResourcePathsOption.isPresent()) {
+      excludedResourcePaths = Sets.newHashSet(Splitter.on(',')
+          .omitEmptyStrings()
+          .trimResults()
+          .split(excludedResourcePathsOption.get()));
+    } else {
+      excludedResourcePaths = Collections.emptyList();
+    }
+
     return IjProjectConfig.builder()
         .setAutogenerateAndroidFacetSourcesEnabled(
             !buckConfig.getBooleanValue(
@@ -64,6 +78,7 @@ public class IjProjectBuckConfig {
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "jdk_type"))
         .setProjectLanguageLevel(
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "language_level"))
+        .setExcludedResourcePaths(excludedResourcePaths)
         .build();
   }
 }
