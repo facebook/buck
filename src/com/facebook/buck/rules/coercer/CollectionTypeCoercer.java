@@ -51,7 +51,7 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      C.Builder<T> builder,
+      ImmutableCollection.Builder<T> builder,
       Object object) throws CoerceFailedException {
     if (object instanceof Collection) {
       for (Object element : (Iterable<?>) object) {
