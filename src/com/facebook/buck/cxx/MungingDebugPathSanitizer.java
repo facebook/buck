@@ -30,6 +30,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
@@ -97,6 +98,11 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
         "PWD", shouldSanitize ?
             getExpandedPath(workingDir) :
             workingDir.toString());
+  }
+
+  @Override
+  ImmutableList<String> getCompilationFlags() {
+    return ImmutableList.of();
   }
 
   // Construct the replacer, giving the expanded current directory and the desired directory.

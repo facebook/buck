@@ -60,9 +60,9 @@ public abstract class DebugPathSanitizer {
     return Strings.padEnd(path.toString(), pathSize, separator);
   }
 
-  abstract Map<String, String> getCompilationEnvironment(
-      Path workingDir,
-      boolean shouldSanitize);
+  abstract Map<String, String> getCompilationEnvironment(Path workingDir, boolean shouldSanitize);
+
+  abstract ImmutableList<String> getCompilationFlags();
 
   protected abstract ImmutableBiMap<Path, Path> getAllPaths(Optional<Path> workingDir);
 

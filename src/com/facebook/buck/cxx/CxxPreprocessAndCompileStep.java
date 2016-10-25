@@ -189,6 +189,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     return ImmutableList.<String>builder()
         .addAll(compilerCommand.get().getArguments(allowColorsInDiagnostics))
         .addAll(getLanguageArgs(inputLanguage))
+        .addAll(sanitizer.getCompilationFlags())
         .add("-c")
         .addAll(
             preprocessable ?
