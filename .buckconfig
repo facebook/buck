@@ -45,7 +45,7 @@
     ; cache every time it encounters one.
     allow_symlinks = forbid
     enable_build_file_sandboxing = true
-    watchman_cursor = clock_id
+    watchman_cursor = named
 [test]
     ; Maximum timeout of 1 minute per test.
     timeout = 60000
