@@ -112,44 +112,44 @@ public class Sha1HashCodeTest {
   @SuppressWarnings("PMD.UseAssertEqualsInsteadOfAssertTrue")
   public void testFromTrustedBytesWithValidInput() {
     byte[] bytes = new byte[] {
-      (byte) 0xfa,
-      (byte) 0xce,
-      (byte) 0xb0,
-      (byte) 0x0c,
-      (byte) 0xfa,
-      (byte) 0xce,
-      (byte) 0xb0,
-      (byte) 0x0c,
-      (byte) 0xfa,
-      (byte) 0xce,
-      (byte) 0xb0,
-      (byte) 0x0c,
-      (byte) 0xfa,
-      (byte) 0xce,
-      (byte) 0xb0,
-      (byte) 0x0c,
-      (byte) 0xfa,
-      (byte) 0xce,
-      (byte) 0xb0,
-      (byte) 0x0c,
+        (byte) 0xa0,
+        (byte) 0x02,
+        (byte) 0xb3,
+        (byte) 0x9a,
+        (byte) 0xf2,
+        (byte) 0x04,
+        (byte) 0xcd,
+        (byte) 0xfa,
+        (byte) 0xa5,
+        (byte) 0xfd,
+        (byte) 0xb6,
+        (byte) 0x78,
+        (byte) 0x16,
+        (byte) 0xb1,
+        (byte) 0x38,
+        (byte) 0x67,
+        (byte) 0xc3,
+        (byte) 0x2a,
+        (byte) 0xc5,
+        (byte) 0x2c,
     };
     Sha1HashCode hashCodeFromRawBytes = Sha1HashCode.fromBytes(bytes);
     assertEquals(
         "firstFourBytes should be in reverse order. See Sha1HashCode.BYTE_ORDER_FOR_FIELDS.",
-        0x0cb0cefa,
+        0x9ab302a0,
         hashCodeFromRawBytes.firstFourBytes);
     assertEquals(
         "nextEightBytes should be in reverse order. See Sha1HashCode.BYTE_ORDER_FOR_FIELDS.",
-        0x0cb0cefa0cb0cefaL,
+        0x78b6fda5facd04f2L,
         hashCodeFromRawBytes.nextEightBytes);
     assertEquals(
         "lastEightBytes should be in reverse order. See Sha1HashCode.BYTE_ORDER_FOR_FIELDS.",
-        0x0cb0cefa0cb0cefaL,
+        0x2cc52ac36738b116L,
         hashCodeFromRawBytes.lastEightBytes);
 
-    Sha1HashCode hashCodeFromString = Sha1HashCode.of(Strings.repeat("faceb00c", 5));
+    Sha1HashCode hashCodeFromString = Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c");
     assertEquals(hashCodeFromString, hashCodeFromRawBytes);
-    assertEquals(0x0cb0cefa, hashCodeFromRawBytes.hashCode());
+    assertEquals(0x9ab302a0, hashCodeFromRawBytes.hashCode());
   }
 
   @Test(expected = IllegalArgumentException.class)
