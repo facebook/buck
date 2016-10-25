@@ -133,10 +133,14 @@ public class DistBuildService implements Closeable {
                 "File with path [%s] has already been uploaded. Skipping..",
                 fileHashEntry.path.getPath());
             continue;
-          }
-          if (fileHashEntry.isSetRootSymLink()) {
+          } else if (fileHashEntry.isSetRootSymLink()) {
             LOG.info(
                 "File with path [%s] is a symlink. Skipping upload..",
+                fileHashEntry.path.getPath());
+            continue;
+          } else if (fileHashEntry.isIsDirectory()) {
+            LOG.info(
+                "Path [%s] is a directory. Skipping upload..",
                 fileHashEntry.path.getPath());
             continue;
           }
