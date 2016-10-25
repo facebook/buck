@@ -234,6 +234,10 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
   }
 
+  // This is used by the logging infrastructure to add a line to the console in a way that doesn't
+  // break rendering.
+  public abstract void printSevereWarningDirectly(String line);
+
   /**
    * Filter a list of events and return the subset that fall between the given start and end
    * timestamps. Preserves ordering if the given iterable was ordered. Will replace event pairs

@@ -779,6 +779,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     logEvents.add(event);
   }
 
+  @Override
+  public void printSevereWarningDirectly(String line) {
+    logEvents.add(ConsoleEvent.severe(line));
+  }
+
   @Subscribe
   public void bytesReceived(NetworkEvent.BytesReceivedEvent bytesReceivedEvent) {
     networkStatsKeeper.bytesReceived(bytesReceivedEvent);

@@ -1045,7 +1045,7 @@ public final class Main {
             // This makes calls to LOG.error(...) post to the EventBus, instead of writing to
             // stderr.
             Closeable logErrorToEventBus = loggerThreadMappingScope.setWriter(
-                createWriterForEventBus(buildEventBus));
+                createWriterForConsole(consoleListener));
 
             // NOTE: This will only run during the lifetime of the process and will flush on close.
             CounterRegistry counterRegistry = new CounterRegistryImpl(
@@ -1488,12 +1488,12 @@ public final class Main {
   }
 
 
-  private static ConsoleHandlerState.Writer createWriterForEventBus(
-      final BuckEventBus buckEventBus) {
+  private static ConsoleHandlerState.Writer createWriterForConsole(
+      final AbstractConsoleEventBusListener console) {
     return new ConsoleHandlerState.Writer() {
       @Override
       public void write(String line) throws IOException {
-        buckEventBus.post(ConsoleEvent.severe(line.trim()));
+        console.printSevereWarningDirectly(line);
       }
 
       @Override
