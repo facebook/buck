@@ -17,7 +17,7 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.SlbBuckConfig;
+import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;

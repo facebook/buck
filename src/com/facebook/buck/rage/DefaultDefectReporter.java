@@ -18,7 +18,7 @@ package com.facebook.buck.rage;
 
 import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
 
-import com.facebook.buck.cli.SlbBuckConfig;
+import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.CommandThreadFactory;

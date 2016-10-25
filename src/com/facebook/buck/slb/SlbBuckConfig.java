@@ -14,12 +14,11 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.slb;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.CommandThreadFactory;
-import com.facebook.buck.slb.ClientSideSlb;
-import com.facebook.buck.slb.ClientSideSlbConfig;
 import com.facebook.buck.timing.Clock;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;

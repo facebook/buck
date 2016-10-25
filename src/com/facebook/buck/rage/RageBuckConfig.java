@@ -17,7 +17,7 @@
 package com.facebook.buck.rage;
 
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.SlbBuckConfig;
+import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.util.unit.SizeUnit;
 
 public class RageBuckConfig {

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rage;
 
-import com.facebook.buck.cli.SlbBuckConfig;
+import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 
