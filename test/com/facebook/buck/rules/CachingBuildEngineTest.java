@@ -72,9 +72,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
-import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
@@ -182,7 +180,8 @@ public class CachingBuildEngineTest {
     @Rule
     public TemporaryPaths tmp = new TemporaryPaths();
 
-    protected InMemoryArtifactCache cache = new InMemoryArtifactCache();
+    protected final InMemoryArtifactCache cache = new InMemoryArtifactCache();
+    protected final FakeBuckEventListener listener = new FakeBuckEventListener();
     protected FakeProjectFilesystem filesystem;
     protected FileHashCache fileHashCache;
     protected BuildContext buildContext;
@@ -200,7 +199,9 @@ public class CachingBuildEngineTest {
           .setArtifactCache(cache)
           .setJavaPackageFinder(new FakeJavaPackageFinder())
           .setActionGraph(new ActionGraph(ImmutableList.of()))
+          .setEventBus(BuckEventBusFactory.newInstance())
           .build();
+      buildContext.getEventBus().register(listener);
       resolver =
           new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
       pathResolver = new SourcePathResolver(resolver);
@@ -219,6 +220,10 @@ public class CachingBuildEngineTest {
       return new CachingBuildEngineFactory(resolver)
           .setCachingBuildEngineDelegate(new LocalCachingBuildEngineDelegate(fileHashCache));
     }
+
+    List<BuckEvent> getEvents() {
+      return listener.getEvents();
+    }
   }
 
   public static class OtherTests extends CommonFixture {
@@ -227,7 +232,8 @@ public class CachingBuildEngineTest {
      * RuleKey, nor should it have any artifact in the ArtifactCache. The sequence of events should
      * be as follows:
      * <ol>
-     *   <li>The build engine invokes the {@link CachingBuildEngine#build(BuildContext, BuildRule)}
+     *   <li>The build engine invokes the
+     *   {@link CachingBuildEngine#build(BuildContext, ExecutionContext, BuildRule)}
      *   method on each of the transitive deps.
      *   <li>The rule computes its own {@link RuleKey}.
      *   <li>The engine compares its {@link RuleKey} to the one on disk, if present.
@@ -266,13 +272,7 @@ public class CachingBuildEngineTest {
       resetAll();
 
       // The BuildContext that will be used by the rule's build() method.
-      BuildContext buildContext =
-          FakeBuildContext.newBuilder()
-              .setEventBus(buckEventBus)
-              .setArtifactCache(cache)
-              .setJavaPackageFinder(new FakeJavaPackageFinder())
-              .setActionGraph(new ActionGraph(ImmutableList.of()))
-              .build();
+      BuildContext buildContext = this.buildContext.withEventBus(buckEventBus);
 
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
 
@@ -336,32 +336,22 @@ public class CachingBuildEngineTest {
           buildRuleParams,
           pathResolver);
 
-      // The EventBus should be updated with events indicating how the rule was built.
-      BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
-      FakeBuckEventListener listener = new FakeBuckEventListener();
-      buckEventBus.register(listener);
-
       // The BuildContext that will be used by the rule's build() method.
-      BuildContext buildContext =
-          FakeBuildContext.newBuilder()
-              .setArtifactCache(
-                  new NoopArtifactCache() {
-                    @Override
-                    public ListenableFuture<Void> store(
-                        ArtifactInfo info,
-                        BorrowablePath output) {
-                      try {
-                        Thread.sleep(500);
-                      } catch (InterruptedException e) {
-                        throw Throwables.propagate(e);
-                      }
-                      return Futures.immediateFuture(null);
-                    }
-                  })
-              .setEventBus(buckEventBus)
-              .setJavaPackageFinder(new FakeJavaPackageFinder())
-              .setActionGraph(new ActionGraph(ImmutableList.of()))
-              .build();
+      BuildContext buildContext = this.buildContext
+          .withArtifactCache(
+              new NoopArtifactCache() {
+                @Override
+                public ListenableFuture<Void> store(
+                    ArtifactInfo info,
+                    BorrowablePath output) {
+                  try {
+                    Thread.sleep(500);
+                  } catch (InterruptedException e) {
+                    throw Throwables.propagate(e);
+                  }
+                  return Futures.immediateFuture(null);
+                }
+              });
 
       ListeningExecutorService service = listeningDecorator(Executors.newFixedThreadPool(2));
 
@@ -532,11 +522,6 @@ public class CachingBuildEngineTest {
 
     @Test
     public void testMatchingTopLevelRuleKeyAvoidsProcessingDepInShallowMode() throws Exception {
-      // The EventBus should be updated with events indicating how the rule was built.
-      BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
-      FakeBuckEventListener listener = new FakeBuckEventListener();
-      buckEventBus.register(listener);
-
       // Create a dep for the build rule.
       BuildTarget depTarget = BuildTargetFactory.newInstance("//src/com/facebook/orca:lib");
       FakeBuildRule dep = new FakeBuildRule(depTarget, pathResolver);
@@ -552,13 +537,8 @@ public class CachingBuildEngineTest {
               .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
       // The BuildContext that will be used by the rule's build() method.
-      BuildContext context =
-          FakeBuildContext.newBuilder()
-              .setEventBus(buckEventBus)
-              .setArtifactCache(new NoopArtifactCache())
-              .setJavaPackageFinder(new FakeJavaPackageFinder())
-              .setActionGraph(new ActionGraph(ImmutableList.of()))
-              .build();
+      BuildContext context = this.buildContext
+          .withArtifactCache(new NoopArtifactCache());
 
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
@@ -591,11 +571,6 @@ public class CachingBuildEngineTest {
 
     @Test
     public void testMatchingTopLevelRuleKeyStillProcessesDepInDeepMode() throws Exception {
-      // The EventBus should be updated with events indicating how the rule was built.
-      BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
-      FakeBuckEventListener listener = new FakeBuckEventListener();
-      buckEventBus.register(listener);
-
       // Create a dep for the build rule.
       BuildTarget depTarget = BuildTargetFactory.newInstance("//src/com/facebook/orca:lib");
       BuildRuleParams ruleParams = new FakeBuildRuleParamsBuilder(depTarget)
@@ -622,15 +597,6 @@ public class CachingBuildEngineTest {
           BuildInfo.getPathToMetadataDirectory(BUILD_TARGET, filesystem)
               .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
-      // The BuildContext that will be used by the rule's build() method.
-      BuildContext context =
-          FakeBuildContext.newBuilder()
-              .setArtifactCache(cache)
-              .setEventBus(buckEventBus)
-              .setJavaPackageFinder(new FakeJavaPackageFinder())
-              .setActionGraph(new ActionGraph(ImmutableList.of()))
-              .build();
-
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
           .setBuildMode(CachingBuildEngine.BuildMode.DEEP)
@@ -638,7 +604,8 @@ public class CachingBuildEngineTest {
 
       // Run the build.
       BuildResult result =
-          cachingBuildEngine.build(context, TestExecutionContext.newInstance(), ruleToTest).get();
+          cachingBuildEngine.build(buildContext, TestExecutionContext.newInstance(), ruleToTest)
+              .get();
       assertEquals(BuildRuleSuccessType.MATCHING_RULE_KEY, result.getSuccess());
 
       // Verify the events logged to the BuckEventBus.
@@ -675,11 +642,6 @@ public class CachingBuildEngineTest {
 
     @Test
     public void testMatchingTopLevelRuleKeyStillProcessesRuntimeDeps() throws Exception {
-      // The EventBus should be updated with events indicating how the rule was built.
-      BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
-      FakeBuckEventListener listener = new FakeBuckEventListener();
-      buckEventBus.register(listener);
-
       // Setup a runtime dependency that is found transitively from the top-level rule.
       BuildRuleParams ruleParams = new FakeBuildRuleParamsBuilder("//:transitive_dep")
           .setProjectFilesystem(filesystem)
@@ -729,21 +691,13 @@ public class CachingBuildEngineTest {
           BuildInfo.getPathToMetadataDirectory(ruleToTest.getBuildTarget(), filesystem)
               .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
-      // The BuildContext that will be used by the rule's build() method.
-      BuildContext context =
-          FakeBuildContext.newBuilder()
-              .setArtifactCache(cache)
-              .setEventBus(buckEventBus)
-              .setJavaPackageFinder(new FakeJavaPackageFinder())
-              .setActionGraph(new ActionGraph(ImmutableList.of()))
-              .build();
-
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
 
       // Run the build.
       BuildResult result =
-          cachingBuildEngine.build(context, TestExecutionContext.newInstance(), ruleToTest).get();
+          cachingBuildEngine.build(buildContext, TestExecutionContext.newInstance(), ruleToTest)
+              .get();
       assertEquals(BuildRuleSuccessType.MATCHING_RULE_KEY, result.getSuccess());
 
       // Verify the events logged to the BuckEventBus.
@@ -794,11 +748,6 @@ public class CachingBuildEngineTest {
 
     @Test
     public void matchingRuleKeyDoesNotRunPostBuildSteps() throws Exception {
-      // The EventBus should be updated with events indicating how the rule was built.
-      BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
-      FakeBuckEventListener listener = new FakeBuckEventListener();
-      buckEventBus.register(listener);
-
       // Add a post build step so we can verify that it's steps are executed.
       Step failingStep =
           new AbstractExecutionStep("test") {
@@ -823,21 +772,13 @@ public class CachingBuildEngineTest {
           BuildInfo.getPathToMetadataDirectory(ruleToTest.getBuildTarget(), filesystem)
               .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
-      // The BuildContext that will be used by the rule's build() method.
-      BuildContext context =
-          FakeBuildContext.newBuilder()
-              .setArtifactCache(cache)
-              .setEventBus(buckEventBus)
-              .setJavaPackageFinder(new FakeJavaPackageFinder())
-              .setActionGraph(new ActionGraph(ImmutableList.of()))
-              .build();
-
       // Create the build engine.
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
 
       // Run the build.
       BuildResult result =
-          cachingBuildEngine.build(context, TestExecutionContext.newInstance(), ruleToTest).get();
+          cachingBuildEngine.build(buildContext, TestExecutionContext.newInstance(), ruleToTest)
+              .get();
       assertEquals(BuildRuleSuccessType.MATCHING_RULE_KEY, result.getSuccess());
     }
 
@@ -853,12 +794,7 @@ public class CachingBuildEngineTest {
           };
 
       // Use the artifact cache when running a simple rule that will build locally.
-      BuildContext buildContext =
-          FakeBuildContext.newBuilder()
-              .setArtifactCache(cache)
-              .setJavaPackageFinder(new FakeJavaPackageFinder())
-              .setActionGraph(new ActionGraph(ImmutableList.of()))
-              .build();
+      BuildContext buildContext = this.buildContext.withArtifactCache(cache);
 
       BuildRule rule =
           new EmptyBuildRule(
@@ -876,14 +812,6 @@ public class CachingBuildEngineTest {
 
     @Test
     public void testDelegateCalledBeforeRuleCreation() throws Exception {
-      // Use the artifact cache when running a simple rule that will build locally.
-      BuildContext buildContext =
-          FakeBuildContext.newBuilder()
-              .setArtifactCache(cache)
-              .setJavaPackageFinder(new FakeJavaPackageFinder())
-              .setActionGraph(new ActionGraph(ImmutableList.of()))
-              .build();
-
       BuildRule rule =
           new EmptyBuildRule(
               new FakeBuildRuleParamsBuilder("//:rule")
@@ -1025,7 +953,7 @@ public class CachingBuildEngineTest {
     @Test
     public void runningWithKeepGoingBuildsAsMuchAsPossible() throws Exception {
       ListeningExecutorService service = listeningDecorator(Executors.newFixedThreadPool(2));
-      buildContext = FakeBuildContext.newBuilder().from(buildContext).setKeepGoing(true).build();
+      buildContext = this.buildContext.withKeepGoing(true);
 
       // Create a dep chain comprising one side of the dep tree of the main rule, where the first-
       // running rule fails immediately, canceling the second rule, and ophaning at least one rule
@@ -1171,9 +1099,6 @@ public class CachingBuildEngineTest {
 
     @Test
     public void fetchingFromCacheSeedsFileHashCache() throws Throwable {
-      ArtifactCache artifactCache = new InMemoryArtifactCache();
-      BuildContext buildContext = this.buildContext.withArtifactCache(artifactCache);
-
       // Create a simple rule which just writes something new to the output file.
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
       Path output = filesystem.getRootPath().getFileSystem().getPath("output/path");
@@ -2842,11 +2767,6 @@ public class CachingBuildEngineTest {
 
     @Test
     public void eventsForBuiltLocallyRuleAreOnCorrectThreads() throws Exception {
-      Clock clock = new IncrementingFakeClock();
-      BuckEventBus buckEventBus = BuckEventBusFactory.newInstance(clock);
-      FakeBuckEventListener listener = new FakeBuckEventListener();
-      buckEventBus.register(listener);
-
       // Create a noop simple rule.
       BuildRule rule =
           new EmptyBuildRule(
@@ -2868,17 +2788,9 @@ public class CachingBuildEngineTest {
                       NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
 
-      // The BuildContext that will be used by the rule's build() method.
-      BuildContext context =
-          FakeBuildContext.newBuilder()
-              .setEventBus(buckEventBus)
-              .setJavaPackageFinder(new FakeJavaPackageFinder())
-              .setActionGraph(new ActionGraph(ImmutableList.of()))
-              .build();
-
       // Run the build.
       BuildResult result =
-          cachingBuildEngine.build(context, TestExecutionContext.newInstance(), rule).get();
+          cachingBuildEngine.build(buildContext, TestExecutionContext.newInstance(), rule).get();
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
 
       // Verify that events have correct thread IDs
@@ -2889,11 +2801,6 @@ public class CachingBuildEngineTest {
 
     @Test
     public void eventsForMatchingRuleKeyRuleAreOnCorrectThreads() throws Exception {
-      Clock clock = new IncrementingFakeClock();
-      BuckEventBus buckEventBus = BuckEventBusFactory.newInstance(clock);
-      FakeBuckEventListener listener = new FakeBuckEventListener();
-      buckEventBus.register(listener);
-
       // Create a simple rule and set it up so that it has a matching rule key.
       BuildRule rule =
           new EmptyBuildRule(
@@ -2923,17 +2830,9 @@ public class CachingBuildEngineTest {
                       NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
 
-      // The BuildContext that will be used by the rule's build() method.
-      BuildContext context =
-          FakeBuildContext.newBuilder()
-              .setEventBus(buckEventBus)
-              .setJavaPackageFinder(new FakeJavaPackageFinder())
-              .setActionGraph(new ActionGraph(ImmutableList.of()))
-              .build();
-
       // Run the build.
       BuildResult result =
-          cachingBuildEngine.build(context, TestExecutionContext.newInstance(), rule).get();
+          cachingBuildEngine.build(buildContext, TestExecutionContext.newInstance(), rule).get();
       assertEquals(BuildRuleSuccessType.MATCHING_RULE_KEY, result.getSuccess());
 
       // Verify that events have correct thread IDs
@@ -2944,11 +2843,6 @@ public class CachingBuildEngineTest {
 
     @Test
     public void eventsForBuiltLocallyRuleAndDepAreOnCorrectThreads() throws Exception {
-      Clock clock = new IncrementingFakeClock();
-      BuckEventBus buckEventBus = BuckEventBusFactory.newInstance(clock);
-      FakeBuckEventListener listener = new FakeBuckEventListener();
-      buckEventBus.register(listener);
-
       // Create a simple rule and dep.
       BuildRule dep =
           new EmptyBuildRule(
@@ -2977,17 +2871,9 @@ public class CachingBuildEngineTest {
                       NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
 
-      // The BuildContext that will be used by the rule's build() method.
-      BuildContext context =
-          FakeBuildContext.newBuilder()
-              .setEventBus(buckEventBus)
-              .setJavaPackageFinder(new FakeJavaPackageFinder())
-              .setActionGraph(new ActionGraph(ImmutableList.of()))
-              .build();
-
       // Run the build.
       BuildResult result =
-          cachingBuildEngine.build(context, TestExecutionContext.newInstance(), rule).get();
+          cachingBuildEngine.build(buildContext, TestExecutionContext.newInstance(), rule).get();
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
 
       // Verify that events have correct thread IDs
