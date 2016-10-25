@@ -32,12 +32,10 @@ import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.rules.BinaryBuildRuleToolProvider;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.ResourceAwareSchedulingInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.ToolProvider;
@@ -703,48 +701,6 @@ public class BuckConfig {
     }
     return value.split(separator);
   }
-
-  /**
-   * @return the mode with which to run the build engine.
-   */
-  public CachingBuildEngine.BuildMode getBuildEngineMode() {
-    return getEnum(
-        "build",
-        "engine",
-        CachingBuildEngine.BuildMode.class).orElse(CachingBuildEngine.BuildMode.SHALLOW);
-  }
-
-  /**
-   * @return the mode with which to run the build engine.
-   */
-  public CachingBuildEngine.DepFiles getBuildDepFiles() {
-    return getEnum(
-        "build",
-        "depfiles",
-        CachingBuildEngine.DepFiles.class).orElse(CachingBuildEngine.DepFiles.ENABLED);
-  }
-
-  /**
-   * @return the maximum number of entries to support in the depfile cache.
-   */
-  public long getBuildMaxDepFileCacheEntries() {
-    return getLong("build", "max_depfile_cache_entries").orElse(256L);
-  }
-
-  /**
-   * @return the maximum size an artifact can be for the build engine to cache it.
-   */
-  public Optional<Long> getBuildArtifactCacheSizeLimit() {
-    return getLong("build", "artifact_cache_size_limit");
-  }
-
-  /**
-   * @return the maximum size of files input based rule keys will be willing to hash.
-   */
-  public long getBuildInputRuleKeyFileSizeLimit() {
-    return getLong("build", "input_rule_key_file_size_limit").orElse(Long.MAX_VALUE);
-  }
-
   /**
    * @return the local cache directory
    */
@@ -1017,13 +973,6 @@ public class BuckConfig {
         RESOURCES_SECTION_HEADER,
         "resource_aware_scheduling_enabled",
         false);
-  }
-
-  public ResourceAwareSchedulingInfo getResourceAwareSchedulingInfo() {
-    return ResourceAwareSchedulingInfo.of(
-        isResourceAwareSchedulingEnabled(),
-        getDefaultResourceAmounts(),
-        getResourceAmountsPerRuleType());
   }
 
   public ImmutableMap<String, ResourceAmounts> getResourceAmountsPerRuleType() {

@@ -185,6 +185,7 @@ java_library(
 java_immutables_library(
   name = 'rules',
   srcs = [
+    'AbstractCachingBuildEngineBuckConfig.java',
     'AbstractBuildRuleKeys.java',
     'AbstractResourceAwareSchedulingInfo.java',
     'AbstractRuleScheduleInfo.java',

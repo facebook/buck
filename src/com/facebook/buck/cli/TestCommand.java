@@ -29,6 +29,7 @@ import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.CachingBuildEngine;
+import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.Label;
@@ -500,20 +501,22 @@ public class TestCommand extends BuildCommand {
         printMatchingTestRules(params.getConsole(), testRules);
       }
 
+      CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
+          params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
       CachingBuildEngine cachingBuildEngine =
           new CachingBuildEngine(
               new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
               pool.getExecutor(),
               new DefaultStepRunner(),
-              getBuildEngineMode().orElse(params.getBuckConfig().getBuildEngineMode()),
-              params.getBuckConfig().getBuildDepFiles(),
-              params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
-              params.getBuckConfig().getBuildArtifactCacheSizeLimit(),
-              params.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
+              getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
+              cachingBuildEngineBuckConfig.getBuildDepFiles(),
+              cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
+              cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
+              cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
               params.getObjectMapper(),
               actionGraphAndResolver.getResolver(),
               params.getBuckConfig().getKeySeed(),
-              params.getBuckConfig().getResourceAwareSchedulingInfo());
+              cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo());
       try (Build build = createBuild(
           params.getBuckConfig(),
           actionGraphAndResolver.getActionGraph(),

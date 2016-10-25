@@ -28,6 +28,7 @@ import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.CachingBuildEngine;
+import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -74,19 +75,21 @@ public class DistBuildSlaveExecutor {
   public int buildAndReturnExitCode() throws IOException, InterruptedException {
     createBuildEngineDelegate();
     BuckConfig config = args.getRemoteRootCellConfig();
+    CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
+        config.getView(CachingBuildEngineBuckConfig.class);
     BuildEngine buildEngine = new CachingBuildEngine(
         Preconditions.checkNotNull(cachingBuildEngineDelegate),
         args.getExecutorService(),
         new DefaultStepRunner(),
-        config.getBuildEngineMode(),
-        config.getBuildDepFiles(),
-        config.getBuildMaxDepFileCacheEntries(),
-        config.getBuildArtifactCacheSizeLimit(),
-        config.getBuildInputRuleKeyFileSizeLimit(),
+        cachingBuildEngineBuckConfig.getBuildEngineMode(),
+        cachingBuildEngineBuckConfig.getBuildDepFiles(),
+        cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
+        cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
+        cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
         args.getObjectMapper(),
         Preconditions.checkNotNull(actionGraphAndResolver).getResolver(),
         config.getKeySeed(),
-        config.getResourceAwareSchedulingInfo());
+        cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo());
 
     // TODO(ruibm): Fix this to work with Android.
     try (Build build = new Build(

@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
+import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
@@ -125,19 +126,21 @@ final class JavaBuildGraphProcessor {
       BuildRuleResolver buildRuleResolver = new BuildRuleResolver(
           graph,
           new DefaultTargetNodeToBuildRuleTransformer());
+      CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
+          params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
       BuildEngine buildEngine = new CachingBuildEngine(
           new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
           executorService,
           new DefaultStepRunner(),
           CachingBuildEngine.BuildMode.SHALLOW,
-          params.getBuckConfig().getBuildDepFiles(),
-          params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
-          params.getBuckConfig().getBuildArtifactCacheSizeLimit(),
-          params.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
+          cachingBuildEngineBuckConfig.getBuildDepFiles(),
+          cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
+          cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
+          cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
           params.getObjectMapper(),
           buildRuleResolver,
           params.getBuckConfig().getKeySeed(),
-          params.getBuckConfig().getResourceAwareSchedulingInfo());
+          cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo());
 
       // Create a BuildEngine because we store symbol information as build artifacts.
       BuckEventBus eventBus = params.getBuckEventBus();

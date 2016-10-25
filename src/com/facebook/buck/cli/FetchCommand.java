@@ -30,6 +30,7 @@ import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.CachingBuildEngine;
+import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
@@ -95,6 +96,8 @@ public class FetchCommand extends BuildCommand {
         return 1;
       }
 
+      CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
+          params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
       try (Build build = createBuild(
           params.getBuckConfig(),
           actionGraphAndResolver.getActionGraph(),
@@ -105,15 +108,15 @@ public class FetchCommand extends BuildCommand {
               new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
               pool.getExecutor(),
               new DefaultStepRunner(),
-              getBuildEngineMode().orElse(params.getBuckConfig().getBuildEngineMode()),
-              params.getBuckConfig().getBuildDepFiles(),
-              params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
-              params.getBuckConfig().getBuildArtifactCacheSizeLimit(),
-              params.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
+              getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
+              cachingBuildEngineBuckConfig.getBuildDepFiles(),
+              cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
+              cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
+              cachingBuildEngineBuckConfig.getBuildInputRuleKeyFileSizeLimit(),
               params.getObjectMapper(),
               actionGraphAndResolver.getResolver(),
               params.getBuckConfig().getKeySeed(),
-              params.getBuckConfig().getResourceAwareSchedulingInfo()),
+              cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo()),
           params.getArtifactCache(),
           params.getConsole(),
           params.getBuckEventBus(),
