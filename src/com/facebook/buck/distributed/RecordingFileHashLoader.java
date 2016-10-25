@@ -206,6 +206,7 @@ public class RecordingFileHashLoader implements FileHashLoader {
       try {
         // TODO(shivanker, ruibm): Don't read everything in memory right away.
         fileHashEntry.setContents(Files.readAllBytes(path));
+        fileHashEntry.setIsExecutable(path.toFile().canExecute());
       } catch (IOException e) {
         throw new RuntimeException(e);
       }

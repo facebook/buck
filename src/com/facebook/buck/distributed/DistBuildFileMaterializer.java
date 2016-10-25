@@ -138,7 +138,7 @@ class DistBuildFileMaterializer implements FileHashLoader {
 
       try (InputStream sourceStream = fileContents.get()) {
         Files.copy(sourceStream, path, StandardCopyOption.REPLACE_EXISTING);
-        // TODO(alisdair04,ruibm,shivanker): apply original file permissions
+        path.toFile().setExecutable(fileHashEntry.isExecutable);
       }
 
       materializedPaths.add(path);
