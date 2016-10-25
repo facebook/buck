@@ -92,7 +92,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     PreprocessorDelegate preprocessorDelegate = new PreprocessorDelegate(
         sourcePathResolver,
-        CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER,
+        CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
         CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
         Paths.get("whatever"),
         new DefaultPreprocessor(preprocessorTool),
@@ -110,7 +110,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         Paths.get("src.o"),
         preprocessorDelegate,
         inferBuckConfig,
-        CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER);
+        CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
   }
 
   @Test

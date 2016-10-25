@@ -288,7 +288,7 @@ public class AppleCxxPlatforms {
       sanitizerPaths.put(sdkPaths.getDeveloperPath().get(), Paths.get("APPLE_DEVELOPER_DIR"));
     }
 
-    DebugPathSanitizer debugPathSanitizer = new MungingDebugPathSanitizer(
+    DebugPathSanitizer compilerDebugPathSanitizer = new MungingDebugPathSanitizer(
         config.getDebugPathSanitizerLimit(),
         File.separatorChar,
         Paths.get("."),
@@ -385,7 +385,7 @@ public class AppleCxxPlatforms {
         "%s.dylib",
         "a",
         "o",
-        Optional.of(debugPathSanitizer),
+        Optional.of(compilerDebugPathSanitizer),
         macros);
 
     ApplePlatform applePlatform = targetSdk.getApplePlatform();

@@ -160,12 +160,13 @@ public class PrecompiledHeaderFeatureTest {
       class TestData {
         public CxxPrecompiledHeader generate(Path from) {
           CxxSourceRuleFactory factory = preconfiguredSourceRuleFactoryBuilder()
-              .setCxxPlatform(PLATFORM_SUPPORTING_PCH.withDebugPathSanitizer(
-                  new MungingDebugPathSanitizer(
-                      250,
-                      File.separatorChar,
-                      Paths.get("."),
-                      ImmutableBiMap.of(from, Paths.get("melon")))))
+              .setCxxPlatform(
+                  PLATFORM_SUPPORTING_PCH.withCompilerDebugPathSanitizer(
+                      new MungingDebugPathSanitizer(
+                          250,
+                          File.separatorChar,
+                          Paths.get("."),
+                          ImmutableBiMap.of(from, Paths.get("melon")))))
               .setPrefixHeader(new FakeSourcePath(("foo.pch")))
               .build();
           BuildRule rule = factory.createPreprocessAndCompileBuildRule(

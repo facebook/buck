@@ -112,7 +112,7 @@ public class CxxPreprocessAndCompileTest {
               .putNameToPathMap(Paths.get("test.h"), new FakeSourcePath("foo/test.h"))
               .build());
   private static final DebugPathSanitizer DEFAULT_SANITIZER =
-      CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER;
+      CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER;
   private static final Path DEFAULT_WORKING_DIR = Paths.get(System.getProperty("user.dir"));
   private static final
   RuleKeyAppendableFunction<FrameworkPath, Path> DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION =

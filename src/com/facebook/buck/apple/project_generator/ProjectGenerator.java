@@ -613,7 +613,7 @@ public class ProjectGenerator {
 
     ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(targetNode.getBuildTarget().getFlavors());
     CxxPlatform cxxPlatform = cxxPlatforms.getValue(flavors).orElse(defaultCxxPlatform);
-    String oldCompDir = cxxPlatform.getDebugPathSanitizer().getCompilationDirectory();
+    String oldCompDir = cxxPlatform.getCompilerDebugPathSanitizer().getCompilationDirectory();
     // Use the hostname for padding instead of the directory, this way the directory matches without
     // having to resolve it.
     String dsymPaddedCompDirWithHost = Strings.padStart(

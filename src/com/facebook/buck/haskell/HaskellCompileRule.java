@@ -185,7 +185,7 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    ppFlags.appendToRuleKey(sink, cxxPlatform.getDebugPathSanitizer());
+    ppFlags.appendToRuleKey(sink, cxxPlatform.getCompilerDebugPathSanitizer());
     sink.setReflectively("headers", ppFlags.getIncludes());
   }
 

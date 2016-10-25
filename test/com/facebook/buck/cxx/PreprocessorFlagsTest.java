@@ -115,12 +115,12 @@ public class PreprocessorFlagsTest {
       RuleKeyBuilder<RuleKey> builder;
       builder = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver)
           .newInstance(fakeBuildRule);
-      defaultFlags.appendToRuleKey(builder, CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER);
+      defaultFlags.appendToRuleKey(builder, CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
       RuleKey defaultRuleKey = builder.build();
 
       builder = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver)
           .newInstance(fakeBuildRule);
-      alteredFlags.appendToRuleKey(builder, CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER);
+      alteredFlags.appendToRuleKey(builder, CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
       RuleKey alteredRuleKey = builder.build();
 
       if (shouldDiffer) {

@@ -74,7 +74,7 @@ public class CxxPlatforms {
       String sharedLibraryVersionedExtensionFormat,
       String staticLibraryExtension,
       String objectFileExtension,
-      Optional<DebugPathSanitizer> debugPathSanitizer,
+      Optional<DebugPathSanitizer> compilerDebugPathSanitizer,
       ImmutableMap<String, String> flagMacros) {
     // TODO(bhamiltoncx, andrewjcg): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
@@ -106,12 +106,13 @@ public class CxxPlatforms {
         .setSharedLibraryVersionedExtensionFormat(sharedLibraryVersionedExtensionFormat)
         .setStaticLibraryExtension(staticLibraryExtension)
         .setObjectFileExtension(objectFileExtension)
-        .setDebugPathSanitizer(
-            debugPathSanitizer.orElse(new MungingDebugPathSanitizer(
-                config.getDebugPathSanitizerLimit(),
-                File.separatorChar,
-                Paths.get("."),
-                ImmutableBiMap.of())))
+        .setCompilerDebugPathSanitizer(
+            compilerDebugPathSanitizer.orElse(
+                new MungingDebugPathSanitizer(
+                    config.getDebugPathSanitizerLimit(),
+                    File.separatorChar,
+                    Paths.get("."),
+                    ImmutableBiMap.of())))
         .setFlagMacros(flagMacros);
 
 
@@ -165,7 +166,7 @@ public class CxxPlatforms {
       defaultPlatform.getSharedLibraryVersionedExtensionFormat(),
       defaultPlatform.getStaticLibraryExtension(),
       defaultPlatform.getObjectFileExtension(),
-      Optional.of(defaultPlatform.getDebugPathSanitizer()),
+      Optional.of(defaultPlatform.getCompilerDebugPathSanitizer()),
       defaultPlatform.getFlagMacros());
   }
 

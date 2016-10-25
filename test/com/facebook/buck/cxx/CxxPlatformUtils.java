@@ -49,7 +49,7 @@ public class CxxPlatformUtils {
           CxxToolProvider.Type.GCC);
 
   @VisibleForTesting
-  static final DebugPathSanitizer DEFAULT_DEBUG_PATH_SANITIZER =
+  static final DebugPathSanitizer DEFAULT_COMPILER_DEBUG_PATH_SANITIZER =
       new MungingDebugPathSanitizer(
           250,
           File.separatorChar,
@@ -81,7 +81,7 @@ public class CxxPlatformUtils {
           .setSharedLibraryVersionedExtensionFormat("so.%s")
           .setStaticLibraryExtension("a")
           .setObjectFileExtension("o")
-          .setDebugPathSanitizer(DEFAULT_DEBUG_PATH_SANITIZER)
+          .setCompilerDebugPathSanitizer(DEFAULT_COMPILER_DEBUG_PATH_SANITIZER)
           .build();
 
     public static final FlavorDomain<CxxPlatform> DEFAULT_PLATFORMS =

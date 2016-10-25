@@ -62,7 +62,7 @@ public class CxxPrecompiledHeaderTest {
         Paths.get("foo.pch"),
         new PreprocessorDelegate(
             sourcePathResolver,
-            CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER,
+            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
             CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
             Paths.get("./"),
             preprocessorSupportingPch,
@@ -73,14 +73,14 @@ public class CxxPrecompiledHeaderTest {
             ImmutableList.of()),
         new CompilerDelegate(
             sourcePathResolver,
-            CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER,
+            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
             compiler,
             CxxToolFlags.of()
         ),
         CxxToolFlags.of(),
         new FakeSourcePath("foo.h"),
         CxxSource.Type.C,
-        CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER);
+        CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
     ImmutableList<Step> postBuildSteps = precompiledHeader.getBuildSteps(
         FakeBuildContext.NOOP_CONTEXT,
         new FakeBuildableContext());

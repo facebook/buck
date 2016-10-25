@@ -529,7 +529,7 @@ public class CxxGenruleDescription
           getCxxPreprocessorInput(resolve(resolver, input.targets));
       final PreprocessorFlags ppFlags = getPreprocessorFlags(transitivePreprocessorInput);
       return (RuleKeyAppendable) sink -> {
-        ppFlags.appendToRuleKey(sink, cxxPlatform.getDebugPathSanitizer());
+        ppFlags.appendToRuleKey(sink, cxxPlatform.getCompilerDebugPathSanitizer());
         sink.setReflectively(
             "headers",
             FluentIterable.from(transitivePreprocessorInput)

@@ -481,7 +481,7 @@ public class NdkCxxPlatforms {
     PreprocessorProvider cxxpp = new PreprocessorProvider(cxxTool, type);
 
     CxxPlatform.Builder cxxPlatformBuilder = CxxPlatform.builder();
-    PrefixMapDebugPathSanitizer debugPathSanitizer = new PrefixMapDebugPathSanitizer(
+    PrefixMapDebugPathSanitizer compilerDebugPathSanitizer = new PrefixMapDebugPathSanitizer(
         config.getDebugPathSanitizerLimit(),
         File.separatorChar,
         Paths.get("."),
@@ -540,7 +540,7 @@ public class NdkCxxPlatforms {
         .setRanlib(
             getGccTool(toolchainPaths, "ranlib", version, executableFinder))
         // NDK builds are cross compiled, so the header is the same regardless of the host platform.
-        .setDebugPathSanitizer(debugPathSanitizer)
+        .setCompilerDebugPathSanitizer(compilerDebugPathSanitizer)
         .setSharedLibraryExtension("so")
         .setSharedLibraryVersionedExtensionFormat("so.%s")
         .setStaticLibraryExtension("a")

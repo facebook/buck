@@ -188,7 +188,7 @@ public class CxxCompileStepIntegrationTest {
                     ImmutableMap.of(),
                     Optional.empty())),
             HeaderPathNormalizer.empty(pathResolver),
-            CxxPlatformUtils.DEFAULT_DEBUG_PATH_SANITIZER,
+            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
             CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
             scratchDir,
             true,

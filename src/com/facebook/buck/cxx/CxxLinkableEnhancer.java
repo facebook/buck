@@ -87,7 +87,7 @@ public class CxxLinkableEnhancer {
     // Pass any platform specific or extra linker flags.
     argsBuilder.addAll(
         SanitizedArg.from(
-            cxxPlatform.getDebugPathSanitizer().sanitize(Optional.empty()),
+            cxxPlatform.getCompilerDebugPathSanitizer().sanitize(Optional.empty()),
             cxxPlatform.getLdflags()));
 
     argsBuilder.addAll(args);

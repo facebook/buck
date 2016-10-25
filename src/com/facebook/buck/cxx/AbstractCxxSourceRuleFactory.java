@@ -263,13 +263,13 @@ abstract class AbstractCxxSourceRuleFactory {
             preprocessorDelegateValue.getPreprocessorDelegate(),
             new CompilerDelegate(
                 getPathResolver(),
-                getCxxPlatform().getDebugPathSanitizer(),
+                getCxxPlatform().getCompilerDebugPathSanitizer(),
                 compiler,
                 computeCompilerFlags(source.getType(), source.getFlags())),
             getPreprocessOutputPath(target, source.getType(), name),
             source.getPath(),
             source.getType(),
-            getCxxPlatform().getDebugPathSanitizer());
+            getCxxPlatform().getCompilerDebugPathSanitizer());
     getResolver().addToIndex(result);
     return result;
   }
@@ -402,13 +402,13 @@ abstract class AbstractCxxSourceRuleFactory {
         getPathResolver(),
         new CompilerDelegate(
             getPathResolver(),
-            getCxxPlatform().getDebugPathSanitizer(),
+            getCxxPlatform().getCompilerDebugPathSanitizer(),
             compiler,
             flags),
         getCompileOutputPath(target, name),
         source.getPath(),
         source.getType(),
-        getCxxPlatform().getDebugPathSanitizer());
+        getCxxPlatform().getCompilerDebugPathSanitizer());
     getResolver().addToIndex(result);
     return result;
   }
@@ -509,7 +509,7 @@ abstract class AbstractCxxSourceRuleFactory {
         getCompileOutputPath(target, name),
         preprocessorDelegateValue.getPreprocessorDelegate(),
         inferConfig,
-        getCxxPlatform().getDebugPathSanitizer());
+        getCxxPlatform().getCompilerDebugPathSanitizer());
     getResolver().addToIndex(result);
     return result;
   }
@@ -562,14 +562,14 @@ abstract class AbstractCxxSourceRuleFactory {
         preprocessorDelegate,
         new CompilerDelegate(
             getPathResolver(),
-            getCxxPlatform().getDebugPathSanitizer(),
+            getCxxPlatform().getCompilerDebugPathSanitizer(),
             compiler,
             computeCompilerFlags(source.getType(), source.getFlags())),
         getCompileOutputPath(target, name),
         source.getPath(),
         source.getType(),
         precompiledHeaderReference,
-        getCxxPlatform().getDebugPathSanitizer(),
+        getCxxPlatform().getCompilerDebugPathSanitizer(),
         strategy);
     getResolver().addToIndex(result);
     return result;
@@ -643,7 +643,7 @@ abstract class AbstractCxxSourceRuleFactory {
     CompilerDelegate compilerDelegate =
         new CompilerDelegate(
             getPathResolver(),
-            getCxxPlatform().getDebugPathSanitizer(),
+            getCxxPlatform().getCompilerDebugPathSanitizer(),
             compiler,
             computeCompilerFlags(source.getType(), source.getFlags()));
     SourcePath path = Preconditions.checkNotNull(preprocessorDelegate.getPrefixHeader().get());
@@ -664,7 +664,7 @@ abstract class AbstractCxxSourceRuleFactory {
         compilerFlags,
         path,
         source.getType(),
-        getCxxPlatform().getDebugPathSanitizer());
+        getCxxPlatform().getCompilerDebugPathSanitizer());
     getResolver().addToIndex(rule);
     return rule;
   }
@@ -867,7 +867,7 @@ abstract class AbstractCxxSourceRuleFactory {
               .resolve(getResolver());
       PreprocessorDelegate delegate = new PreprocessorDelegate(
           getPathResolver(),
-          getCxxPlatform().getDebugPathSanitizer(),
+          getCxxPlatform().getCompilerDebugPathSanitizer(),
           getCxxBuckConfig().getHeaderVerification(),
           getParams().getProjectFilesystem().getRootPath(),
           preprocessor,

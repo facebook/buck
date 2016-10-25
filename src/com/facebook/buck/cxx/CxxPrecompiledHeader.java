@@ -79,7 +79,7 @@ public class CxxPrecompiledHeader
   @AddToRuleKey
   private final CxxSource.Type inputType;
 
-  private final DebugPathSanitizer sanitizer;
+  private final DebugPathSanitizer compilerSanitizer;
 
   public CxxPrecompiledHeader(
       BuildRuleParams buildRuleParams,
@@ -90,7 +90,7 @@ public class CxxPrecompiledHeader
       CxxToolFlags compilerFlags,
       SourcePath input,
       CxxSource.Type inputType,
-      DebugPathSanitizer sanitizer) {
+      DebugPathSanitizer compilerSanitizer) {
     super(buildRuleParams, resolver);
     this.preprocessorDelegate = preprocessorDelegate;
     this.compilerDelegate = compilerDelegate;
@@ -98,18 +98,18 @@ public class CxxPrecompiledHeader
     this.output = output;
     this.input = input;
     this.inputType = inputType;
-    this.sanitizer = sanitizer;
+    this.compilerSanitizer = compilerSanitizer;
   }
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("compilationDirectory", sanitizer.getCompilationDirectory());
+    sink.setReflectively("compilationDirectory", compilerSanitizer.getCompilationDirectory());
     sink.setReflectively(
         "compilerFlagsPlatform",
-        sanitizer.sanitizeFlags(compilerFlags.getPlatformFlags()));
+        compilerSanitizer.sanitizeFlags(compilerFlags.getPlatformFlags()));
     sink.setReflectively(
         "compilerFlagsRule",
-        sanitizer.sanitizeFlags(compilerFlags.getRuleFlags()));
+        compilerSanitizer.sanitizeFlags(compilerFlags.getRuleFlags()));
   }
 
   @Override
@@ -183,7 +183,7 @@ public class CxxPrecompiledHeader
                 preprocessorDelegate.getFlagsForColorDiagnostics())),
         Optional.empty(),
         preprocessorDelegate.getHeaderPathNormalizer(),
-        sanitizer,
+        compilerSanitizer,
         preprocessorDelegate.getHeaderVerification(),
         scratchDir,
         true,

@@ -47,7 +47,7 @@ public class CxxFlags {
       public void appendToRuleKey(RuleKeyObjectSink sink) {
         SortedMap<String, String> sanitizedMap = Maps.transformValues(
             flagMacros,
-            cxxPlatform.getDebugPathSanitizer().sanitize(Optional.empty()));
+            cxxPlatform.getCompilerDebugPathSanitizer().sanitize(Optional.empty()));
         sink.setReflectively("flagMacros", sanitizedMap);
       }
 
