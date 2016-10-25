@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.log.Logger;
+import com.google.common.annotations.VisibleForTesting;
 import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.platform.win32.WinNT;
@@ -33,10 +34,10 @@ import oshi.software.os.OSProcess;
 import oshi.software.os.OperatingSystem;
 
 /**
- * A helper that provides facilities such as extracting the native process id of a {@link Process}
- * or gathering the process resource consumption.
+ * A helper singleton that provides facilities such as extracting the native process id of a
+ * {@link Process} or gathering the process resource consumption.
  */
-public abstract class ProcessHelper {
+public class ProcessHelper {
 
   private static final Logger LOG = Logger.get(ProcessHelper.class);
 
@@ -45,16 +46,26 @@ public abstract class ProcessHelper {
 
   private static final SystemInfo OSHI = new SystemInfo();
 
+  private static final ProcessHelper INSTANCE = new ProcessHelper();
+
   /**
-   * This is a static helper class.
+   * Gets the singleton instance of this class.
    */
-  private ProcessHelper() {}
+  public static ProcessHelper getInstance() {
+    return INSTANCE;
+  }
+
+  /**
+   * This is a helper singleton.
+   */
+  @VisibleForTesting
+  ProcessHelper() {}
 
   /**
    * Gets resource consumption of the process for the given pid.
    */
   @Nullable
-  public static ProcessResourceConsumption getProcessResourceConsumption(long pid) {
+  public ProcessResourceConsumption getProcessResourceConsumption(long pid) {
     try {
       OperatingSystem os = OSHI.getOperatingSystem();
       OSProcess process = os.getProcess((int) pid);
@@ -78,7 +89,7 @@ public abstract class ProcessHelper {
   /**
    * @return whether the process has finished executing or not.
    */
-  public static boolean hasProcessFinished(Object process) {
+  public boolean hasProcessFinished(Object process) {
     if (process instanceof NuProcess) {
       return !((NuProcess) process).isRunning();
     } else if (process instanceof Process) {
@@ -97,7 +108,7 @@ public abstract class ProcessHelper {
    * Gets the native process identifier for the given process instance.
    */
   @Nullable
-  public static Long getPid(Object process) {
+  public Long getPid(Object process) {
     if (process instanceof NuProcess) {
       return (long) ((NuProcess) process).getPID();
     } else if (process instanceof Process) {
@@ -117,7 +128,7 @@ public abstract class ProcessHelper {
     }
   }
 
-  private static Long jdk9ProcessId(Object process) {
+  private Long jdk9ProcessId(Object process) {
     if (IS_JDK9) {
       try {
         // Invoking via reflection to avoid a strong dependency on JDK 9
@@ -130,7 +141,7 @@ public abstract class ProcessHelper {
     return null;
   }
 
-  private static Long unixLikeProcessId(Object process) {
+  private Long unixLikeProcessId(Object process) {
     Class<?> clazz = process.getClass();
     try {
       if (clazz.getName().equals("java.lang.UNIXProcess")) {
@@ -144,7 +155,7 @@ public abstract class ProcessHelper {
     return null;
   }
 
-  private static Long windowsProcessId(Object process) {
+  private Long windowsProcessId(Object process) {
     Class<?> clazz = process.getClass();
     if (clazz.getName().equals("java.lang.Win32Process") ||
         clazz.getName().equals("java.lang.ProcessImpl")) {

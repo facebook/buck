@@ -241,6 +241,12 @@ public class ListeningProcessExecutor {
     }
   }
 
+  private final ProcessRegistry processRegistry;
+
+  public ListeningProcessExecutor() {
+    processRegistry = ProcessRegistry.getInstance();
+  }
+
   /**
    * Launches a process and asynchronously sends notifications to {@code listener} on a
    * background thread when the process starts, has I/O, or exits.
@@ -269,7 +275,7 @@ public class ListeningProcessExecutor {
 
     // This should be set by onPreStart().
     Preconditions.checkState(processHandler.process != null);
-    ProcessRegistry.registerProcess(processHandler.process.nuProcess, params, ImmutableMap.of());
+    processRegistry.registerProcess(processHandler.process.nuProcess, params, ImmutableMap.of());
     return processHandler.process;
   }
 

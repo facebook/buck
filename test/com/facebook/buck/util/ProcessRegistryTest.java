@@ -20,57 +20,105 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableMap;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class ProcessRegistryTest {
 
-  @Test
-  public void testRegisterCallback() {
-    final List<ProcessInfo> registeredProcesses = new ArrayList<>();
-    ProcessRegistry.ProcessRegisterCallback callback =
-        (process, params, context) -> registeredProcesses.add(new ProcessInfo(process, params));
-    ProcessRegistry.setsProcessRegisterCallback(Optional.of(callback));
-    assertEquals(0, registeredProcesses.size());
+  private static final ImmutableMap<String, String> CONTEXT = ImmutableMap.of("aaa", "bbb");
 
-    ProcessInfo info1 = new ProcessInfo(new Object(), "Proc1");
-    ProcessRegistry.registerProcess(info1.process, info1.params, ImmutableMap.of());
-    assertEquals(1, registeredProcesses.size());
-    assertEquals(info1.params, registeredProcesses.get(0).params);
-    assertEquals(info1.process, registeredProcesses.get(0).process);
+  private ProcessRegistry processRegistry;
 
-    ProcessInfo info2 = new ProcessInfo(new Object(), "Proc2");
-    ProcessRegistry.registerProcess(info2.process, info2.params, ImmutableMap.of());
-    assertEquals(2, registeredProcesses.size());
-    assertEquals(info1.params, registeredProcesses.get(0).params);
-    assertEquals(info1.process, registeredProcesses.get(0).process);
-    assertEquals(info2.params, registeredProcesses.get(1).params);
-    assertEquals(info2.process, registeredProcesses.get(1).process);
-
-    ProcessRegistry.setsProcessRegisterCallback(
-        Optional.empty());
-    assertEquals(2, registeredProcesses.size());
-
-    ProcessInfo info3 = new ProcessInfo(new Object(), "Proc3");
-    ProcessRegistry.registerProcess(info3.process, info3.params, ImmutableMap.of());
-    assertEquals(2, registeredProcesses.size());
+  @Before
+  public void setUp() {
+    processRegistry = new ProcessRegistry();
   }
 
+  @Test
+  public void testInteraction() {
+    final List<ProcessInfo> registeredProcesses1 = new ArrayList<>();
+    final List<ProcessInfo> registeredProcesses2 = new ArrayList<>();
+    ProcessRegistry.ProcessRegisterCallback callback1 =
+        (process, params, context) ->
+            registeredProcesses1.add(new ProcessInfo(process, params, context));
+    ProcessRegistry.ProcessRegisterCallback callback2 =
+        (process, params, context) ->
+            registeredProcesses2.add(new ProcessInfo(process, params, context));
+    processRegistry.subscribe(callback1);
+    processRegistry.subscribe(callback2);
+    assertInfosEqual(registeredProcesses1);
+    assertInfosEqual(registeredProcesses2);
+
+    ProcessInfo info1 = new ProcessInfo(new Object(), "Proc1", CONTEXT);
+    processRegistry.registerProcess(info1.process, info1.params, CONTEXT);
+    assertInfosEqual(registeredProcesses1, info1);
+    assertInfosEqual(registeredProcesses2, info1);
+
+    ProcessInfo info2 = new ProcessInfo(new Object(), "Proc2", CONTEXT);
+    processRegistry.registerProcess(info2.process, info2.params, CONTEXT);
+    assertInfosEqual(registeredProcesses1, info1, info2);
+    assertInfosEqual(registeredProcesses2, info1, info2);
+
+    processRegistry.unsubscribe(callback1);
+    assertInfosEqual(registeredProcesses1, info1, info2);
+    assertInfosEqual(registeredProcesses2, info1, info2);
+
+    ProcessInfo info3 = new ProcessInfo(new Object(), "Proc3", CONTEXT);
+    processRegistry.registerProcess(info3.process, info3.params, CONTEXT);
+    assertInfosEqual(registeredProcesses1, info1, info2);
+    assertInfosEqual(registeredProcesses2, info1, info2, info3);
+
+    processRegistry.unsubscribe(callback2);
+    processRegistry.subscribe(callback1);
+
+    ProcessInfo info4 = new ProcessInfo(new Object(), "Proc4", CONTEXT);
+    processRegistry.registerProcess(info4.process, info4.params, CONTEXT);
+    assertInfosEqual(registeredProcesses1, info1, info2, info4);
+    assertInfosEqual(registeredProcesses2, info1, info2, info3);
+  }
+
+  private static void assertInfosEqual(List<ProcessInfo> list, ProcessInfo... infos) {
+    assertEquals(list.size(), infos.length);
+    for (int i = 0; i < infos.length; i++) {
+      assertEquals(list.get(i), infos[i]);
+    }
+  }
 
   private static class ProcessInfo {
-    Object process;
-    ProcessExecutorParams params;
+    final Object process;
+    final ProcessExecutorParams params;
+    final ImmutableMap<String, String> context;
 
-    ProcessInfo(Object process, ProcessExecutorParams params) {
+    ProcessInfo(
+        Object process,
+        ProcessExecutorParams params,
+        ImmutableMap<String, String> context) {
       this.process = process;
       this.params = params;
+      this.context = context;
     }
 
-    ProcessInfo(Object process, String executable) {
-      this(process, ProcessExecutorParams.ofCommand(executable));
+    ProcessInfo(Object process, String executable, ImmutableMap<String, String> context) {
+      this(process, ProcessExecutorParams.ofCommand(executable), context);
+    }
+
+    @Override
+    public int hashCode() {
+      return (process.hashCode() * 31 + params.hashCode()) * 31 + context.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (!(obj instanceof ProcessInfo)) {
+        return false;
+      }
+      ProcessInfo that = (ProcessInfo) obj;
+      return process.equals(that.process) &&
+          params.equals(that.params) &&
+          context.equals(that.context);
     }
   }
 }

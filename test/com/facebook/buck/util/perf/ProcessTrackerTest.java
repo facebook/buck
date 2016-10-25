@@ -29,12 +29,16 @@ import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.util.FakeInvocationInfoFactory;
 import com.facebook.buck.util.FakeNuProcess;
 import com.facebook.buck.util.FakeProcess;
+import com.facebook.buck.util.FakeProcessHelper;
+import com.facebook.buck.util.FakeProcessRegistry;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.ProcessHelper;
 import com.facebook.buck.util.ProcessRegistry;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 import com.zaxxer.nuprocess.NuProcess;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Map;
@@ -45,19 +49,29 @@ import java.util.concurrent.TimeUnit;
 
 public class ProcessTrackerTest {
 
+  private static final ImmutableMap<String, String> CONTEXT = ImmutableMap.of("aaa", "bbb");
+
+  private ProcessHelper processHelper;
+  private ProcessRegistry processRegistry;
+
+  @Before
+  public void setUp() {
+    processHelper = new FakeProcessHelper();
+    processRegistry = new FakeProcessRegistry();
+  }
+
   private static final Map<String, String> ENVIRONMENT = ImmutableMap.of("ProcessTrackerTest", "1");
 
   @Test
   public void testInteraction() throws Exception {
     BlockingQueue<ProcessResourceConsumptionEvent> events = new LinkedBlockingQueue<>();
     try (ProcessTrackerForTest processTracker = createProcessTracker(events)) {
-      // Verify that ProcessTracker installs its callback to ProcessHelper
-      // and that calling ProcessHelper.registerProcess causes ProcessTracker
-      // to start tracking the process.
+      // Verify that ProcessTracker subscribes to ProcessRegistry and that calling
+      // registerProcess causes ProcessTracker to start tracking the process.
       FakeNuProcess proc41 = new FakeNuProcess(41);
       processTracker.verifyNoProcessInfo(41);
       assertEquals(0, processTracker.processesInfo.size());
-      ProcessRegistry.registerProcess(proc41, createParams("proc41"), ImmutableMap.of());
+      processRegistry.registerProcess(proc41, createParams("proc41"), CONTEXT);
       processTracker.verifyProcessInfo(41, proc41, createParams("proc41"));
       assertEquals(1, processTracker.processesInfo.size());
       dumpEvents(events);
@@ -65,7 +79,7 @@ public class ProcessTrackerTest {
 
       // Verify that after registering a new process, both are being tracked
       FakeNuProcess proc42 = new FakeNuProcess(42);
-      ProcessRegistry.registerProcess(proc42, createParams("proc42"), ImmutableMap.of());
+      processRegistry.registerProcess(proc42, createParams("proc42"), CONTEXT);
       processTracker.verifyProcessInfo(41, proc41, createParams("proc41"));
       processTracker.verifyProcessInfo(42, proc42, createParams("proc42"));
       assertEquals(2, processTracker.processesInfo.size());
@@ -75,7 +89,7 @@ public class ProcessTrackerTest {
       // Verify that after registering a process with an already tracked pid,
       // the old process info gets discarded.
       FakeNuProcess proc41b = new FakeNuProcess(41);
-      ProcessRegistry.registerProcess(proc41b, createParams("proc41b"), ImmutableMap.of());
+      processRegistry.registerProcess(proc41b, createParams("proc41b"), CONTEXT);
       processTracker.verifyProcessInfo(42, proc42, createParams("proc42"));
       processTracker.verifyProcessInfo(41, proc41b, createParams("proc41b"));
       assertEquals(2, processTracker.processesInfo.size());
@@ -87,10 +101,7 @@ public class ProcessTrackerTest {
       assertTrue(events.isEmpty());
 
       // Verify that processes whose pid cannot be obtained are ignored
-      ProcessRegistry.registerProcess(
-          new FakeProcess(0),
-          createParams("proc0"),
-          ImmutableMap.of());
+      processRegistry.registerProcess(new FakeProcess(0), createParams("proc0"), CONTEXT);
       processTracker.verifyProcessInfo(42, proc42, createParams("proc42"));
       processTracker.verifyProcessInfo(41, proc41b, createParams("proc41b"));
       assertEquals(2, processTracker.processesInfo.size());
@@ -119,10 +130,7 @@ public class ProcessTrackerTest {
       assertTrue(events.isEmpty());
     }
     // verify no events are sent after closing ProcessTracker
-    ProcessRegistry.registerProcess(
-        new FakeNuProcess(43),
-        createParams("proc43"),
-        ImmutableMap.of());
+    processRegistry.registerProcess(new FakeNuProcess(43), createParams("proc43"), CONTEXT);
     assertTrue(events.isEmpty());
   }
 
@@ -150,14 +158,20 @@ public class ProcessTrackerTest {
         }
       }
     });
-    return new ProcessTrackerForTest(eventBus, FakeInvocationInfoFactory.create());
+    return new ProcessTrackerForTest(
+        eventBus,
+        FakeInvocationInfoFactory.create(),
+        processHelper,
+        processRegistry);
   }
 
   private static class ProcessTrackerForTest extends ProcessTracker {
-    public ProcessTrackerForTest(
+    ProcessTrackerForTest(
         BuckEventBus eventBus,
-        InvocationInfo invocationInfo) {
-      super(eventBus, invocationInfo);
+        InvocationInfo invocationInfo,
+        ProcessHelper processHelper,
+        ProcessRegistry processRegistry) {
+      super(eventBus, invocationInfo, processHelper, processRegistry);
     }
 
     @Override
@@ -165,15 +179,15 @@ public class ProcessTrackerTest {
       super.runOneIteration();
     }
 
-    public void verifyNoProcessInfo(long pid) throws Exception {
+    void verifyNoProcessInfo(long pid) throws Exception {
       assertFalse(processesInfo.containsKey(pid));
     }
 
-    public void verifyProcessInfo(
+    void verifyProcessInfo(
         long pid,
         NuProcess process,
         ProcessExecutorParams params) throws Exception {
-      ProcessTracker.ProcessInfo info = processesInfo.get(pid);
+      ProcessInfo info = processesInfo.get(pid);
       assertNotNull(info);
       assertEquals(params.getCommand().get(0), info.params.getCommand().get(0));
       assertEquals(params, info.params);

@@ -16,13 +16,31 @@
 
 package com.facebook.buck.util;
 
-import java.util.Optional;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 /**
- * A static helper class for process registration.
+ * A singleton helper class for process registration.
  */
-public abstract class ProcessRegistry {
+public class ProcessRegistry {
+
+  private static final ProcessRegistry INSTANCE = new ProcessRegistry();
+
+  /**
+   * Gets the singleton instance of this class.
+   */
+  public static ProcessRegistry getInstance() {
+    return INSTANCE;
+  }
+
+  /**
+   * This is a helper singleton.
+   */
+  @VisibleForTesting
+  ProcessRegistry() {}
 
   /**
    * A callback to be called upon registering a process.
@@ -32,24 +50,30 @@ public abstract class ProcessRegistry {
   }
 
   /**
-   * Sets the process register callback.
+   * Subscribes the process register callback.
    */
-  public static void setsProcessRegisterCallback(
-      Optional<ProcessRegisterCallback> processRegisterCallback) {
-    sProcessRegisterCallback = processRegisterCallback;
+  public void subscribe(ProcessRegisterCallback processRegisterCallback) {
+    processRegisterCallbacks.add(processRegisterCallback);
   }
 
   /**
-   * Registers process for resource consumption tracking.
+   * Unsubscribes the process register callback.
    */
-  public static void registerProcess(
+  public void unsubscribe(ProcessRegisterCallback processRegisterCallback) {
+    processRegisterCallbacks.remove(processRegisterCallback);
+  }
+
+  /**
+   * Registers the process and notifies the subscribers.
+   */
+  public void registerProcess(
       Object process,
       ProcessExecutorParams params,
       ImmutableMap<String, String> context) {
-    if (sProcessRegisterCallback.isPresent()) {
-      sProcessRegisterCallback.get().call(process, params, context);
+    for (ProcessRegisterCallback callback : processRegisterCallbacks) {
+      callback.call(process, params, context);
     }
   }
 
-  private static Optional<ProcessRegisterCallback> sProcessRegisterCallback = Optional.empty();
+  private Queue<ProcessRegisterCallback> processRegisterCallbacks = new ConcurrentLinkedQueue<>();
 }

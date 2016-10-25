@@ -45,6 +45,8 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   private final PrintStream stdOutStream;
   private final PrintStream stdErrStream;
   private final Ansi ansi;
+  private final ProcessHelper processHelper;
+  private final ProcessRegistry processRegistry;
 
   /**
    * Creates a new {@link DefaultProcessExecutor} with the specified parameters used for writing the output
@@ -54,6 +56,8 @@ public class DefaultProcessExecutor implements ProcessExecutor {
     this.stdOutStream = console.getStdOut();
     this.stdErrStream = console.getStdErr();
     this.ansi = console.getAnsi();
+    this.processHelper = ProcessHelper.getInstance();
+    this.processRegistry = ProcessRegistry.getInstance();
   }
 
   @Override
@@ -136,7 +140,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       pb.redirectErrorStream(params.getRedirectErrorStream().get());
     }
     Process process = BgProcessKiller.startProcess(pb);
-    ProcessRegistry.registerProcess(process, params, context);
+    processRegistry.registerProcess(process, params, context);
     return new LaunchedProcessImpl(process);
   }
 
@@ -283,7 +287,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       // the regular `waitFor` method.
       if (timeOutMs.isPresent()) {
         timedOut = waitForTimeoutInternal(process, timeOutMs.get(), timeOutHandler);
-        if (!ProcessHelper.hasProcessFinished(process)) {
+        if (!processHelper.hasProcessFinished(process)) {
           process.destroy();
         }
       } else {

@@ -23,19 +23,27 @@ import static org.junit.Assert.assertTrue;
 
 import com.zaxxer.nuprocess.NuProcess;
 
+import org.junit.Before;
 import org.junit.Test;
 
 public class ProcessHelperTest {
 
+  private ProcessHelper processHelper;
+
+  @Before
+  public void setUp() {
+    processHelper = ProcessHelper.getInstance();
+  }
+
   @Test(expected = IllegalArgumentException.class)
   public void testGetPidThrowsForUnknownProcessClass() {
-    ProcessHelper.getPid(new Object());
+    processHelper.getPid(new Object());
   }
 
   @Test
   public void testGetPidNuProcess() {
     NuProcess nuProcess = new FakeNuProcess(1234);
-    assertEquals(Long.valueOf(1234), ProcessHelper.getPid(nuProcess));
+    assertEquals(Long.valueOf(1234), processHelper.getPid(nuProcess));
   }
 
   @Test
@@ -43,27 +51,27 @@ public class ProcessHelperTest {
     // There are multiple platform-specific implementations of {@link Process}, so here we only
     // test that the method doesn't throw.
     Process process = new FakeProcess(0);
-    assertNull(ProcessHelper.getPid(process));
+    assertNull(processHelper.getPid(process));
   }
 
   @Test
   public void testHasNuProcessFinished() {
     FakeNuProcess nuProcess = new FakeNuProcess(1234);
-    assertFalse(ProcessHelper.hasProcessFinished(nuProcess));
+    assertFalse(processHelper.hasProcessFinished(nuProcess));
     nuProcess.finish(0);
-    assertTrue(ProcessHelper.hasProcessFinished(nuProcess));
+    assertTrue(processHelper.hasProcessFinished(nuProcess));
   }
 
   @Test
   public void testHasJavaProcessFinished() throws Exception {
     Process process = new FakeProcess(42);
-    assertFalse(ProcessHelper.hasProcessFinished(process));
+    assertFalse(processHelper.hasProcessFinished(process));
     process.waitFor();
-    assertTrue(ProcessHelper.hasProcessFinished(process));
+    assertTrue(processHelper.hasProcessFinished(process));
   }
 
   @Test
   public void testGetProcessResourceConsumptionDoesNotThrow() {
-    assertNull(ProcessHelper.getProcessResourceConsumption(-100));
+    assertNull(processHelper.getProcessResourceConsumption(-100));
   }
 }

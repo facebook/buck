@@ -34,7 +34,6 @@ import com.google.common.util.concurrent.ServiceManager;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -57,28 +56,44 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
   private final BuckEventBus eventBus;
   private final InvocationInfo invocationInfo;
   private final ServiceManager serviceManager;
+  private final ProcessHelper processHelper;
+  private final ProcessRegistry processRegistry;
+
+  private final ProcessRegistry.ProcessRegisterCallback processRegisterCallback =
+      this::registerProcess;
 
   // Map pid -> info
   @VisibleForTesting final Map<Long, ProcessInfo> processesInfo = new ConcurrentHashMap<>();
 
   public ProcessTracker(BuckEventBus buckEventBus, InvocationInfo invocationInfo) {
+    this(buckEventBus, invocationInfo, ProcessHelper.getInstance(), ProcessRegistry.getInstance());
+  }
+
+  @VisibleForTesting
+  ProcessTracker(
+      BuckEventBus buckEventBus,
+      InvocationInfo invocationInfo,
+      ProcessHelper processHelper,
+      ProcessRegistry processRegistry) {
     this.eventBus = buckEventBus;
     this.invocationInfo = invocationInfo;
     this.serviceManager = new ServiceManager(ImmutableList.of(this));
+    this.processHelper = processHelper;
+    this.processRegistry = processRegistry;
     serviceManager.startAsync();
-    ProcessRegistry.setsProcessRegisterCallback(Optional.of(this::registerProcess));
+    this.processRegistry.subscribe(processRegisterCallback);
   }
 
   private void registerProcess(
       Object process,
       ProcessExecutorParams params,
       ImmutableMap<String, String> context) {
-    Long pid = ProcessHelper.getPid(process);
+    Long pid = processHelper.getPid(process);
     LOG.verbose("registerProcess: pid: %s, cmd: %s", pid, params.getCommand());
     if (pid == null) {
       return;
     }
-    ProcessResourceConsumption res = ProcessHelper.getProcessResourceConsumption(pid);
+    ProcessResourceConsumption res = processHelper.getProcessResourceConsumption(pid);
     ProcessInfo old = processesInfo.put(pid, new ProcessInfo(process, params, context, res));
     if (old != null) {
       old.close();
@@ -92,10 +107,11 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
       Map.Entry<Long, ProcessInfo> entry = it.next();
       Long pid = entry.getKey();
       ProcessInfo info = entry.getValue();
-      ProcessResourceConsumption res = ProcessHelper.getProcessResourceConsumption(pid);
+      ProcessResourceConsumption res = processHelper.getProcessResourceConsumption(pid);
       if (res != null) {
         info.update(res);
-      } else if (ProcessHelper.hasProcessFinished(info.process)) {
+      }
+      if (processHelper.hasProcessFinished(info.process)) {
         info.close();
         it.remove();
       }
@@ -118,13 +134,12 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
 
   @Override
   protected Scheduler scheduler() {
-    return Scheduler.newFixedRateSchedule(0L, 100L, TimeUnit.MILLISECONDS);
+    return Scheduler.newFixedRateSchedule(0L, 1000L, TimeUnit.MILLISECONDS);
   }
 
   @Override
   public void close() {
-    ProcessRegistry.setsProcessRegisterCallback(
-        Optional.empty());
+    processRegistry.unsubscribe(processRegisterCallback);
     serviceManager.stopAsync();
   }
 
