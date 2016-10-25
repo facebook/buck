@@ -1296,15 +1296,16 @@ $ buck targets --resolve-alias app#src_jar
 {/call}
 
 {call buckconfig.entry}
+  {param section: 'doctor' /}
   {param name: 'extra_request_args' /}
-  {param example_value: 'ref=>1245,token=>42 /}
+  {param example_value: 'ref=>1245,token=>42' /}
   {param description}
     This sections of keys and values is added as parameters to the POST request send to the doctor
     remote endpoint.
   {/param}
 {/call}
 
-{call buckconfig.section
+{call buckconfig.section}
   {param name: 'go' /}
   {param description}
     This section defines the Go toolchain.  By default Buck will try to discovery the Go compiler
