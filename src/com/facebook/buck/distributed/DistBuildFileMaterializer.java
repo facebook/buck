@@ -18,6 +18,7 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
+import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -30,10 +31,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -70,15 +74,19 @@ class DistBuildFileMaterializer implements FileHashLoader {
       } else if (fileHashEntry.isSetRootSymLink()) {
         materializeSymlink(fileHashEntry, symlinkedPaths);
         symlinkedPaths.add(path);
-      } else {
+      } else if (!fileHashEntry.isDirectory) {
         // Touch file
         projectFilesystem.createParentDirs(path);
         projectFilesystem.touch(path);
+      } else {
+        // Create directory
+        // No need to materialize sub-dirs/files here, as there will be separate entries for those.
+        projectFilesystem.mkdirs(path);
       }
     }
   }
 
-  private void materializeIfNeeded(Path path) throws IOException {
+  private void materializeIfNeeded(Path path, Queue<Path> remainingPaths) throws IOException {
     if (materializedPaths.contains(path)) {
       return;
     }
@@ -102,6 +110,7 @@ class DistBuildFileMaterializer implements FileHashLoader {
 
     // TODO(alisdair04,ruibm,shivanker): materialize directories
     if (fileHashEntry.isIsDirectory()) {
+      materializeDirectory(path, fileHashEntry, remainingPaths);
       materializedPaths.add(path);
       return;
     }
@@ -133,6 +142,21 @@ class DistBuildFileMaterializer implements FileHashLoader {
       }
 
       materializedPaths.add(path);
+    }
+  }
+
+  private synchronized void materializeDirectory(
+      Path path,
+      BuildJobStateFileHashEntry fileHashEntry,
+      Queue<Path> remainingPaths) throws IOException {
+    if (materializedPaths.contains(path)) {
+      return;
+    }
+
+    projectFilesystem.mkdirs(path);
+
+    for (PathWithUnixSeparators unixPath : fileHashEntry.getChildren()) {
+      remainingPaths.add(projectFilesystem.resolve(Paths.get(unixPath.getPath())));
     }
   }
 
@@ -189,7 +213,11 @@ class DistBuildFileMaterializer implements FileHashLoader {
 
   @Override
   public HashCode get(Path path) throws IOException {
-    materializeIfNeeded(path);
+    Queue<Path> remainingPaths = new LinkedList<>();
+    remainingPaths.add(path);
+    while (remainingPaths.size() > 0) {
+      materializeIfNeeded(remainingPaths.remove(), remainingPaths);
+    }
     return HashCode.fromInt(0);
   }
 
@@ -200,7 +228,7 @@ class DistBuildFileMaterializer implements FileHashLoader {
 
   @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-    materializeIfNeeded(archiveMemberPath.getArchivePath());
+    materializeIfNeeded(archiveMemberPath.getArchivePath(), new LinkedList<>());
     return HashCode.fromInt(0);
   }
 }

@@ -30,6 +30,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 
 import org.easymock.EasyMock;
@@ -62,9 +63,150 @@ public class DistBuildFileMaterializerTest {
   private static final HashCode EXAMPLE_HASHCODE = HashCode.fromString("1234");
   private static final HashCode EXAMPLE_HASHCODE_TWO = HashCode.fromString("3456");
   private static final String FILE_CONTENTS = "filecontents";
+  private static final String FILE_CONTENTS_TWO = "filecontentstwo";
 
   interface MaterializeFunction {
-    void execute(DistBuildFileMaterializer materializer, Path symlink) throws IOException;
+    void execute(DistBuildFileMaterializer materializer, Path path) throws IOException;
+  }
+
+  private void testMaterializeDirectoryHelper(MaterializeFunction materializeFunction)
+      throws IOException {
+    // Scenario:
+    // file hash entries for:
+    // /a - folder
+    // /a/b - folder
+    // /a/b/c - file
+    // /a/b/d - folder
+    // /a/e - file
+    // => preload: ensure all folders created and files touched
+    // => materialize(/a): ensure all folders and sub-directories/files created
+
+    assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
+
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
+    Path pathDirA = projectFilesystem.resolve("a");
+    Path pathDirAb = projectFilesystem.resolve("a/b");
+    Path pathFileAbc = projectFilesystem.resolve("a/b/c");
+    Path pathDirAbd = projectFilesystem.resolve("a/b/d");
+    Path pathFileAe = projectFilesystem.resolve("a/e");
+
+    Path relativePathDirA = Paths.get("a");
+    Path relativePathDirAb = Paths.get("a/b");
+    Path relativePathFileAbc = Paths.get("a/b/c");
+    Path relativePathDirAbd = Paths.get("a/b/d");
+    Path relativePathFileAe = Paths.get("a/e");
+
+    BuildJobStateFileHashes fileHashes = new BuildJobStateFileHashes();
+    BuildJobStateFileHashEntry dirAFileHashEntry = new BuildJobStateFileHashEntry();
+    dirAFileHashEntry.setPath(unixPath(relativePathDirA));
+    dirAFileHashEntry.setHashCode(EXAMPLE_HASHCODE.toString());
+    dirAFileHashEntry.setIsDirectory(true);
+    dirAFileHashEntry.setChildren(ImmutableList.of(
+        unixPath(relativePathDirAb),
+        unixPath(relativePathFileAe)
+    ));
+    fileHashes.addToEntries(dirAFileHashEntry);
+
+    BuildJobStateFileHashEntry dirAbFileHashEntry = new BuildJobStateFileHashEntry();
+    dirAbFileHashEntry.setPath(unixPath(relativePathDirAb));
+    dirAbFileHashEntry.setHashCode(EXAMPLE_HASHCODE.toString());
+    dirAbFileHashEntry.setIsDirectory(true);
+    dirAbFileHashEntry.setChildren(ImmutableList.of(
+        unixPath(relativePathFileAbc),
+        unixPath(relativePathDirAbd)
+    ));
+    fileHashes.addToEntries(dirAbFileHashEntry);
+
+    BuildJobStateFileHashEntry fileAbcFileHashEntry = new BuildJobStateFileHashEntry();
+    fileAbcFileHashEntry.setPath(unixPath(relativePathFileAbc));
+    fileAbcFileHashEntry.setHashCode(EXAMPLE_HASHCODE.toString());
+    fileAbcFileHashEntry.setIsDirectory(false);
+    fileHashes.addToEntries(fileAbcFileHashEntry);
+
+    BuildJobStateFileHashEntry dirAbdFileHashEntry = new BuildJobStateFileHashEntry();
+    dirAbdFileHashEntry.setPath(unixPath(relativePathDirAbd));
+    dirAbdFileHashEntry.setHashCode(EXAMPLE_HASHCODE.toString());
+    dirAbdFileHashEntry.setIsDirectory(true);
+    dirAbdFileHashEntry.setChildren(ImmutableList.of());
+    fileHashes.addToEntries(dirAbdFileHashEntry);
+
+    BuildJobStateFileHashEntry fileAeFileHashEntry = new BuildJobStateFileHashEntry();
+    fileAeFileHashEntry.setPath(unixPath(relativePathFileAe));
+    fileAeFileHashEntry.setHashCode(EXAMPLE_HASHCODE.toString());
+    fileAeFileHashEntry.setIsDirectory(false);
+    fileHashes.addToEntries(fileAeFileHashEntry);
+
+    FileContentsProvider mockFileProvider = EasyMock.createMock(FileContentsProvider.class);
+    InputStream fileAbcContentStream =
+        new ByteArrayInputStream(FILE_CONTENTS.getBytes(StandardCharsets.UTF_8));
+    InputStream fileAeContentStream =
+        new ByteArrayInputStream(FILE_CONTENTS_TWO.getBytes(StandardCharsets.UTF_8));
+    expect(mockFileProvider.getFileContents(fileAbcFileHashEntry))
+        .andReturn(Optional.of(fileAbcContentStream));
+    expect(mockFileProvider.getFileContents(fileAeFileHashEntry))
+        .andReturn(Optional.of(fileAeContentStream));
+    replay(mockFileProvider);
+
+    FileHashCache mockFileHashCache = EasyMock.createMock(FileHashCache.class);
+
+    DistBuildFileMaterializer fileMaterializer = new DistBuildFileMaterializer(
+        projectFilesystem, fileHashes, mockFileProvider, mockFileHashCache);
+
+    assertFalse(pathDirA.toFile().exists());
+    assertFalse(pathDirAb.toFile().exists());
+    assertFalse(pathFileAbc.toFile().exists());
+    assertFalse(pathDirAbd.toFile().exists());
+    assertFalse(pathFileAe.toFile().exists());
+
+    materializeFunction.execute(fileMaterializer, pathDirA);
+
+    assertTrue(pathDirA.toFile().exists());
+    assertTrue(pathDirAb.toFile().exists());
+    assertTrue(pathFileAbc.toFile().exists());
+    assertTrue(pathDirAbd.toFile().exists());
+    assertTrue(pathFileAe.toFile().exists());
+  }
+
+  @Test
+  public void testMaterializeDirectory() throws IOException {
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
+
+    testMaterializeDirectoryHelper((m, p) -> m.get(p));
+
+    String fileAbcContents = new String(Files.readAllBytes(projectFilesystem.resolve("a/b/c")));
+    assertThat(
+        fileAbcContents,
+        Matchers.equalTo(FILE_CONTENTS));
+
+    String fileAeContents = new String(Files.readAllBytes(projectFilesystem.resolve("a/e")));
+    assertThat(
+        fileAeContents,
+        Matchers.equalTo(FILE_CONTENTS_TWO));
+  }
+
+  @Test
+  public void testPreloadDirectory() throws IOException {
+    testMaterializeDirectoryHelper((m, p) -> m.preloadAllFiles());
+  }
+
+  @Test
+  public void testPreloadThenMaterializeDirectory() throws IOException {
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
+
+    testMaterializeDirectoryHelper((m, p) -> {
+      m.preloadAllFiles();
+      m.get(p);
+    });
+
+    String fileAbcContents = new String(Files.readAllBytes(projectFilesystem.resolve("a/b/c")));
+    assertThat(
+        fileAbcContents,
+        Matchers.equalTo(FILE_CONTENTS));
+
+    String fileAeContents = new String(Files.readAllBytes(projectFilesystem.resolve("a/e")));
+    assertThat(
+        fileAeContents,
+        Matchers.equalTo(FILE_CONTENTS_TWO));
   }
 
   private Path testEntryForRealFile(MaterializeFunction materializeFunction) throws IOException {
