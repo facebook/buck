@@ -121,13 +121,19 @@ public class DistBuildState {
     ImmutableMap.Builder<Path, ProjectFilesystem> cellFilesystems = ImmutableMap.builder();
     ImmutableMap.Builder<Integer, Path> cellIndex = ImmutableMap.builder();
 
+    Path sandboxPath = rootCellFilesystem.getRootPath().resolve(
+        rootCellFilesystem.getBuckPaths().getRemoteSandboxDir());
+    rootCellFilesystem.mkdirs(sandboxPath);
+
+    Path uniqueBuildRoot = Files.createTempDirectory(sandboxPath, "build");
+
     for (Map.Entry<Integer, BuildJobStateCell> remoteCellEntry :
         jobState.getCells().entrySet()) {
       BuildJobStateCell remoteCell = remoteCellEntry.getValue();
-      Path sandboxPath = rootCellFilesystem.getRootPath().resolve(
-          rootCellFilesystem.getBuckPaths().getRemoteSandboxDir());
-      rootCellFilesystem.mkdirs(sandboxPath);
-      Path cellRoot = Files.createTempDirectory(sandboxPath, remoteCell.getNameHint());
+
+      Path cellRoot = uniqueBuildRoot.resolve(remoteCell.getNameHint());
+      Files.createDirectories(cellRoot);
+
       Config config = createConfig(remoteCell.getConfig());
       ProjectFilesystem projectFilesystem = new ProjectFilesystem(cellRoot, config);
       BuckConfig buckConfig = createBuckConfig(config, projectFilesystem, remoteCell.getConfig());
