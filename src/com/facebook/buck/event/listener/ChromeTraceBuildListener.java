@@ -672,10 +672,14 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void processResourceConsumption(ProcessTracker.ProcessResourceConsumptionEvent event) {
-    ProcessResourceConsumption res = event.getResourceConsumption();
+    Optional<ProcessResourceConsumption> resourceConsumption = event.getResourceConsumption();
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-    if (res != null) {
-      builder.put("executable", event.getParams().getCommand().get(0));
+    builder.put("executable", event.getExecutableName());
+    if (event.getContext().isPresent()) {
+      builder.put("context", event.getContext().get().toString());
+    }
+    if (resourceConsumption.isPresent()) {
+      ProcessResourceConsumption res = resourceConsumption.get();
       builder.put(
           "mem_size_mb",
           Long.toString(SizeUnit.BYTES.toMegabytes(res.getMemSize())));

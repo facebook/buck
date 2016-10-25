@@ -75,5 +75,6 @@ public class ProcessRegistry {
     }
   }
 
-  private Queue<ProcessRegisterCallback> processRegisterCallbacks = new ConcurrentLinkedQueue<>();
+  @VisibleForTesting
+  Queue<ProcessRegisterCallback> processRegisterCallbacks = new ConcurrentLinkedQueue<>();
 }

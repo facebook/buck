@@ -8,7 +8,9 @@
       "//test/com/facebook/buck/event:testutil",
       "//test/com/facebook/buck/util:testutil",
       "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:hamcrest-junit",
       "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/jsr:jsr305",
       "//third-party/java/junit:junit",
       "//third-party/java/nuprocess:nuprocess"
     ],

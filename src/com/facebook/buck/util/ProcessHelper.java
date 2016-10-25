@@ -105,6 +105,19 @@ public class ProcessHelper {
   }
 
   /**
+   * Gets the native process identifier for the current process.
+   */
+  @Nullable
+  public Long getPid() {
+    try {
+      return (long) OSHI.getOperatingSystem().getProcessId();
+    } catch (Exception e) {
+      LOG.warn(e, "Cannot get the current process id!");
+      return null;
+    }
+  }
+
+  /**
    * Gets the native process identifier for the given process instance.
    */
   @Nullable

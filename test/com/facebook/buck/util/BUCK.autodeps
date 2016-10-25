@@ -12,6 +12,7 @@
       "//test/com/facebook/buck/timing:testutil",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/jsr:jsr305",
       "//third-party/java/nuprocess:nuprocess"
     ]
   },

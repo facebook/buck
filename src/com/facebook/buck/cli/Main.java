@@ -1058,7 +1058,7 @@ public final class Main {
                 invocationInfo);
             ProcessTracker processTracker =
                 buckConfig.isProcessTrackerEnabled() ?
-                    new ProcessTracker(buildEventBus, invocationInfo) : null;
+                    new ProcessTracker(buildEventBus, invocationInfo, isDaemon) : null;
         ) {
 
           LOG.debug(invocationInfo.toLogLine(args));

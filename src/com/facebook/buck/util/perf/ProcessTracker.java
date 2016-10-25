@@ -27,6 +27,7 @@ import com.facebook.buck.util.ProcessHelper;
 import com.facebook.buck.util.ProcessRegistry;
 import com.facebook.buck.util.ProcessResourceConsumption;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.AbstractScheduledService;
@@ -34,9 +35,11 @@ import com.google.common.util.concurrent.ServiceManager;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.annotation.Nullable;
 
 /**
  * A tracker that periodically probes for external processes resource consumption.
@@ -58,6 +61,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
   private final ServiceManager serviceManager;
   private final ProcessHelper processHelper;
   private final ProcessRegistry processRegistry;
+  private final boolean isDaemon;
 
   private final ProcessRegistry.ProcessRegisterCallback processRegisterCallback =
       this::registerProcess;
@@ -65,8 +69,16 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
   // Map pid -> info
   @VisibleForTesting final Map<Long, ProcessInfo> processesInfo = new ConcurrentHashMap<>();
 
-  public ProcessTracker(BuckEventBus buckEventBus, InvocationInfo invocationInfo) {
-    this(buckEventBus, invocationInfo, ProcessHelper.getInstance(), ProcessRegistry.getInstance());
+  public ProcessTracker(
+      BuckEventBus buckEventBus,
+      InvocationInfo invocationInfo,
+      boolean isDaemon) {
+    this(
+        buckEventBus,
+        invocationInfo,
+        ProcessHelper.getInstance(),
+        ProcessRegistry.getInstance(),
+        isDaemon);
   }
 
   @VisibleForTesting
@@ -74,14 +86,26 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
       BuckEventBus buckEventBus,
       InvocationInfo invocationInfo,
       ProcessHelper processHelper,
-      ProcessRegistry processRegistry) {
+      ProcessRegistry processRegistry,
+      boolean isDaemon) {
     this.eventBus = buckEventBus;
     this.invocationInfo = invocationInfo;
     this.serviceManager = new ServiceManager(ImmutableList.of(this));
     this.processHelper = processHelper;
     this.processRegistry = processRegistry;
+    this.isDaemon = isDaemon;
     serviceManager.startAsync();
     this.processRegistry.subscribe(processRegisterCallback);
+  }
+
+  private void registerThisProcess() {
+    Long pid = processHelper.getPid();
+    LOG.verbose("registerThisProcess: pid: %s, isDaemon: %s", pid, isDaemon);
+    if (pid == null) {
+      return;
+    }
+    String name = isDaemon ? "<buck-daemon-process>" : "<buck-process>";
+    processesInfo.put(pid, new ThisProcessInfo(pid, name));
   }
 
   private void registerProcess(
@@ -93,26 +117,21 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
     if (pid == null) {
       return;
     }
-    ProcessResourceConsumption res = processHelper.getProcessResourceConsumption(pid);
-    ProcessInfo old = processesInfo.put(pid, new ProcessInfo(process, params, context, res));
+    ProcessInfo info = new ExternalProcessInfo(pid, process, params, context);
+    ProcessInfo old = processesInfo.put(pid, info);
     if (old != null) {
-      old.close();
+      old.postEvent();
     }
   }
 
-  private void refreshProcessesInfo() {
+  private void refreshProcessesInfo(boolean isTrackerShuttingDown) {
     LOG.verbose("refreshProcessesInfo: processes before: %d", processesInfo.size());
     Iterator<Map.Entry<Long, ProcessInfo>> it;
     for (it = processesInfo.entrySet().iterator(); it.hasNext(); ) {
-      Map.Entry<Long, ProcessInfo> entry = it.next();
-      Long pid = entry.getKey();
-      ProcessInfo info = entry.getValue();
-      ProcessResourceConsumption res = processHelper.getProcessResourceConsumption(pid);
-      if (res != null) {
-        info.update(res);
-      }
-      if (processHelper.hasProcessFinished(info.process)) {
-        info.close();
+      ProcessInfo info = it.next().getValue();
+      info.updateResourceConsumption();
+      if (isTrackerShuttingDown || info.hasProcessFinished()) {
+        info.postEvent();
         it.remove();
       }
     }
@@ -120,16 +139,23 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
   }
 
   @Override
+  protected void startUp() throws Exception {
+    LOG.debug("startUp");
+    registerThisProcess();
+  }
+
+  @Override
   protected void runOneIteration() throws Exception {
-    try {
-      GlobalStateManager.singleton().getThreadToCommandRegister().register(
-          Thread.currentThread().getId(),
-          invocationInfo.getCommandId());
-      refreshProcessesInfo();
-    } catch (Exception e) {
-      LOG.warn(e, "Failed to refresh process info.");
-      throw e;
-    }
+    GlobalStateManager.singleton().getThreadToCommandRegister().register(
+        Thread.currentThread().getId(),
+        invocationInfo.getCommandId());
+    refreshProcessesInfo(/* isShuttingDown */ false);
+  }
+
+  @Override
+  protected void shutDown() throws Exception {
+    LOG.debug("shutDown");
+    refreshProcessesInfo(/* isShuttingDown */ true);
   }
 
   @Override
@@ -144,62 +170,127 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
   }
 
   @VisibleForTesting
-  class ProcessInfo {
-    final AtomicBoolean isClosed = new AtomicBoolean(false);
+  interface ProcessInfo {
+    boolean hasProcessFinished();
+    void updateResourceConsumption();
+    void postEvent();
+  }
+
+  @VisibleForTesting
+  class ExternalProcessInfo implements ProcessInfo {
+    final long pid;
     final Object process;
     final ProcessExecutorParams params;
     final ImmutableMap<String, String> context;
-    ProcessResourceConsumption resourceConsumption;
+    @Nullable ProcessResourceConsumption resourceConsumption;
 
-    ProcessInfo(
+    ExternalProcessInfo(
+        long pid,
         Object process,
         ProcessExecutorParams params,
-        ImmutableMap<String, String> context,
-        ProcessResourceConsumption res) {
-      this.process = process;
-      this.params = params;
-      this.context = context;
-      this.resourceConsumption = res;
+        ImmutableMap<String, String> context) {
+      this.pid = pid;
+      this.process = Preconditions.checkNotNull(process);
+      this.params = Preconditions.checkNotNull(params);
+      this.context = Preconditions.checkNotNull(context);
+      updateResourceConsumption();
     }
 
-    void update(ProcessResourceConsumption res) {
+    @Override
+    public boolean hasProcessFinished() {
+      // It would be perhaps nicer to do something like {@code !processHelper.isProcessRunning(pid)}
+      // because we wouldn't need the {@link Process} instance here. However, going through
+      // {@link Process} is more reliable.
+      return processHelper.hasProcessFinished(process);
+    }
+
+    @Override
+    public void updateResourceConsumption() {
+      ProcessResourceConsumption res = processHelper.getProcessResourceConsumption(pid);
       resourceConsumption = ProcessResourceConsumption.getPeak(resourceConsumption, res);
-      // update stats, but don't send events as that could be costly
     }
 
-    void close() {
-      if (isClosed.getAndSet(true)) {
-        return;
-      }
-      LOG.verbose("Process resource consumption: %s\n%s", params.getCommand(), resourceConsumption);
-      eventBus.post(new ProcessResourceConsumptionEvent(params, context, resourceConsumption));
+    @Override
+    public void postEvent() {
+      LOG.verbose("Process resource consumption: %s\n%s", params, resourceConsumption);
+      eventBus.post(
+          new ProcessResourceConsumptionEvent(
+              params.getCommand().get(0),
+              Optional.of(params),
+              Optional.of(context),
+              Optional.ofNullable(resourceConsumption)));
+    }
+  }
+
+  @VisibleForTesting
+  class ThisProcessInfo implements ProcessInfo {
+    final long pid;
+    final String name;
+    @Nullable ProcessResourceConsumption resourceConsumption;
+
+    ThisProcessInfo(
+        long pid,
+        String name) {
+      this.pid = pid;
+      this.name = Preconditions.checkNotNull(name);
+      updateResourceConsumption();
+    }
+
+    @Override
+    public boolean hasProcessFinished() {
+      // We wouldn't be here if this process has finished :)
+      return false;
+    }
+
+    @Override
+    public void updateResourceConsumption() {
+      ProcessResourceConsumption res = processHelper.getProcessResourceConsumption(pid);
+      resourceConsumption = ProcessResourceConsumption.getPeak(resourceConsumption, res);
+    }
+
+    @Override
+    public void postEvent() {
+      LOG.verbose("Process resource consumption: %s\n%s", name, resourceConsumption);
+      eventBus.post(
+          new ProcessResourceConsumptionEvent(
+              name,
+              Optional.empty(),
+              Optional.empty(),
+              Optional.ofNullable(resourceConsumption)));
     }
   }
 
   public static class ProcessResourceConsumptionEvent extends AbstractBuckEvent {
-    private final ProcessExecutorParams params;
-    private final ImmutableMap<String, String> context;
-    private final ProcessResourceConsumption resourceConsumption;
+    private final String executableName;
+    private final Optional<ProcessExecutorParams> params;
+    private final Optional<ImmutableMap<String, String>> context;
+    private final Optional<ProcessResourceConsumption> resourceConsumption;
 
     public ProcessResourceConsumptionEvent(
-        ProcessExecutorParams params,
-        ImmutableMap<String, String> context,
-        ProcessResourceConsumption res) {
+        String executableName,
+        Optional<ProcessExecutorParams> params,
+        Optional<ImmutableMap<String, String>> context,
+        Optional<ProcessResourceConsumption> resourceConsumption) {
       super(EventKey.unique());
+      this.executableName = Preconditions.checkNotNull(executableName);
       this.params = params;
       this.context = context;
-      this.resourceConsumption = res;
+      this.resourceConsumption = resourceConsumption;
     }
 
-    public ProcessExecutorParams getParams() {
+    public String getExecutableName() {
+      return executableName;
+    }
+
+    public Optional<ProcessExecutorParams> getParams() {
       return params;
     }
 
-    public ImmutableMap<String, String> getContext() {
+    public Optional<ImmutableMap<String, String>> getContext() {
       return context;
     }
 
-    public ProcessResourceConsumption getResourceConsumption() {
+    public Optional<ProcessResourceConsumption> getResourceConsumption() {
       return resourceConsumption;
     }
 

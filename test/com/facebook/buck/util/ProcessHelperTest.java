@@ -35,6 +35,11 @@ public class ProcessHelperTest {
     processHelper = ProcessHelper.getInstance();
   }
 
+  @Test
+  public void testGetPidDoesNotThrow() {
+    processHelper.getPid();
+  }
+
   @Test(expected = IllegalArgumentException.class)
   public void testGetPidThrowsForUnknownProcessClass() {
     processHelper.getPid(new Object());

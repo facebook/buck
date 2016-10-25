@@ -16,9 +16,15 @@
 
 package com.facebook.buck.util;
 
+import java.util.Queue;
+
 /**
  * A fake for {@link ProcessRegistry}.
  */
 public class FakeProcessRegistry extends ProcessRegistry {
   public FakeProcessRegistry() {}
+
+  Queue<ProcessRegisterCallback> getCallbacks() {
+    return processRegisterCallbacks;
+  }
 }
