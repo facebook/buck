@@ -22,15 +22,11 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.BuckEventBusFactory.CapturingConsoleEventListener;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.model.BuildId;
-import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Supplier;
 
 import org.junit.Test;
@@ -43,12 +39,8 @@ public class BuildContextTest {
 
     // Set to non-null values.
     builder.setActionGraph(createMock(ActionGraph.class));
-    builder.setArtifactCache(createMock(ArtifactCache.class));
     builder.setJavaPackageFinder(createMock(JavaPackageFinder.class));
     builder.setEventBus(BuckEventBusFactory.newInstance());
-    builder.setClock(createMock(Clock.class));
-    builder.setBuildId(createMock(BuildId.class));
-    builder.setObjectMapper(ObjectMappers.newDefaultInstance());
 
     BuildContext context = builder.build();
     Supplier<AndroidPlatformTarget> supplier = context.getAndroidPlatformTargetSupplier();
@@ -65,12 +57,8 @@ public class BuildContextTest {
     eventBus.register(listener);
     BuildContext buildContext = BuildContext.builder()
         .setActionGraph(createMock(ActionGraph.class))
-        .setArtifactCache(createMock(ArtifactCache.class))
         .setJavaPackageFinder(createMock(JavaPackageFinder.class))
-        .setClock(createMock(Clock.class))
-        .setBuildId(createMock(BuildId.class))
         .setEventBus(eventBus)
-        .setObjectMapper(ObjectMappers.newDefaultInstance())
         .build();
 
     buildContext.logError(new RuntimeException(), "Error detail: %s", "BUILD_ID");

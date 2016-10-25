@@ -19,14 +19,12 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
-import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
@@ -58,9 +56,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -165,10 +161,6 @@ public class ApkGenruleTest {
             .collect(MoreCollectors.toImmutableSet()));
     BuildContext buildContext = BuildContext.builder()
         .setActionGraph(EasyMock.createMock(ActionGraph.class))
-        .setClock(EasyMock.createMock(Clock.class))
-        .setBuildId(EasyMock.createMock(BuildId.class))
-        .setObjectMapper(ObjectMappers.newDefaultInstance())
-        .setArtifactCache(EasyMock.createMock(ArtifactCache.class))
         .setJavaPackageFinder(EasyMock.createNiceMock(JavaPackageFinder.class))
         .setEventBus(BuckEventBusFactory.newInstance())
         .build();

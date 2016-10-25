@@ -22,11 +22,9 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ActionGraph;
@@ -47,15 +45,12 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -296,11 +291,7 @@ public class ExportFileTest {
 
   private BuildContext getBuildContext() {
     return BuildContext.builder()
-        .setArtifactCache(EasyMock.createMock(ArtifactCache.class))
         .setEventBus(BuckEventBusFactory.newInstance())
-        .setClock(new DefaultClock())
-        .setBuildId(new BuildId())
-        .setObjectMapper(ObjectMappers.newDefaultInstance())
         .setJavaPackageFinder(
             new JavaPackageFinder() {
               @Override

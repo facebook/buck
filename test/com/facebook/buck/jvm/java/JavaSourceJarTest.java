@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ActionGraph;
@@ -30,7 +31,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -93,9 +93,10 @@ public class JavaSourceJarTest {
         ImmutableSortedSet.of(fileBased, ruleBased),
         Optional.empty());
 
-    BuildContext buildContext = FakeBuildContext.newBuilder()
+    BuildContext buildContext = BuildContext.builder()
         .setActionGraph(new ActionGraph(ImmutableList.of()))
         .setJavaPackageFinder(finderStub)
+        .setEventBus(BuckEventBusFactory.newInstance())
         .build();
     ImmutableList<Step> steps = rule.getBuildSteps(
         buildContext,

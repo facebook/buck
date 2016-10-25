@@ -30,8 +30,8 @@ import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
+import com.facebook.buck.rules.BuildEngineBuildContext;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CellPathResolver;
@@ -79,7 +79,7 @@ public class JavaDepsFinder {
 
   private final JavaFileParser javaFileParser;
   private final ObjectMapper objectMapper;
-  private final BuildContext buildContext;
+  private final BuildEngineBuildContext buildContext;
   private final ExecutionContext executionContext;
   private final BuildEngine buildEngine;
 
@@ -87,7 +87,7 @@ public class JavaDepsFinder {
       ImmutableSortedMap<String, BuildTarget> javaPackageMapping,
       JavaFileParser javaFileParser,
       ObjectMapper objectMapper,
-      BuildContext buildContext,
+      BuildEngineBuildContext buildContext,
       ExecutionContext executionContext,
       BuildEngine buildEngine) {
     this.javaPackageMapping = javaPackageMapping;
@@ -106,7 +106,7 @@ public class JavaDepsFinder {
       BuckConfig buckConfig,
       final CellPathResolver cellNames,
       ObjectMapper objectMapper,
-      BuildContext buildContext,
+      BuildEngineBuildContext buildContext,
       ExecutionContext executionContext,
       BuildEngine buildEngine) {
     Optional<String> javaPackageMappingOption = buckConfig.getValue(

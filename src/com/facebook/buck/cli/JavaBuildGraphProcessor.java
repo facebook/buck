@@ -26,6 +26,7 @@ import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
+import com.facebook.buck.rules.BuildEngineBuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CachingBuildEngine;
 import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
@@ -158,18 +159,20 @@ final class JavaBuildGraphProcessor {
           .setPlatform(params.getPlatform())
           .build();
 
-      BuildContext buildContext = BuildContext.builder()
-          // Note we do not create a real action graph because we do not need one.
-          .setActionGraph(new ActionGraph(ImmutableList.of()))
+      BuildEngineBuildContext buildContext = BuildEngineBuildContext.builder()
+          .setBuildContext(BuildContext.builder()
+              // Note we do not create a real action graph because we do not need one.
+              .setActionGraph(new ActionGraph(ImmutableList.of()))
+              .setJavaPackageFinder(executionContext.getJavaPackageFinder())
+              .setEventBus(eventBus)
+              .setShouldReportAbsolutePaths(false)
+              .build())
           .setClock(params.getClock())
           .setArtifactCache(params.getArtifactCache())
-          .setJavaPackageFinder(executionContext.getJavaPackageFinder())
-          .setEventBus(eventBus)
           .setBuildId(eventBus.getBuildId())
           .setObjectMapper(params.getObjectMapper())
-          .putAllEnvironment(executionContext.getEnvironment())
+          .setEnvironment(executionContext.getEnvironment())
           .setKeepGoing(false)
-          .setShouldReportAbsolutePaths(false)
           .build();
 
       // Traverse the TargetGraph to find all of the auto-generated dependencies.

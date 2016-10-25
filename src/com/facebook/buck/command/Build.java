@@ -33,6 +33,7 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildEngine;
+import com.facebook.buck.rules.BuildEngineBuildContext;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
@@ -79,7 +80,6 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.StreamSupport;
 
-import javax.annotation.Nullable;
 
 public class Build implements Closeable {
 
@@ -94,10 +94,6 @@ public class Build implements Closeable {
   private final JavaPackageFinder javaPackageFinder;
   private final Clock clock;
   private final ObjectMapper objectMapper;
-
-  /** Not set until {@link #executeBuild(Iterable, boolean)} is invoked. */
-  @Nullable
-  private BuildContext buildContext;
 
   public Build(
       ActionGraph actionGraph,
@@ -162,12 +158,6 @@ public class Build implements Closeable {
     return executionContext;
   }
 
-  /** Returns null until {@link #executeBuild(Iterable, boolean)} is invoked. */
-  @Nullable
-  public BuildContext getBuildContext() {
-    return buildContext;
-  }
-
   private void collectAllCells(Cell cell, Map<Path, Cell> collector)  {
     if (!collector.containsKey(cell.getRoot())) {
       collector.put(cell.getRoot(), cell);
@@ -230,18 +220,20 @@ public class Build implements Closeable {
       boolean isKeepGoing)
       throws IOException, ExecutionException, InterruptedException {
     BuildId buildId = executionContext.getBuildId();
-    buildContext = BuildContext.builder()
-        .setActionGraph(actionGraph)
+    BuildEngineBuildContext buildContext = BuildEngineBuildContext.builder()
+        .setBuildContext(BuildContext.builder()
+            .setActionGraph(actionGraph)
+            .setJavaPackageFinder(javaPackageFinder)
+            .setEventBus(executionContext.getBuckEventBus())
+            .setAndroidPlatformTargetSupplier(executionContext.getAndroidPlatformTargetSupplier())
+            .setShouldReportAbsolutePaths(executionContext.shouldReportAbsolutePaths())
+            .build())
         .setClock(clock)
         .setArtifactCache(artifactCache)
-        .setJavaPackageFinder(javaPackageFinder)
-        .setEventBus(executionContext.getBuckEventBus())
-        .setAndroidPlatformTargetSupplier(executionContext.getAndroidPlatformTargetSupplier())
         .setBuildId(buildId)
         .setObjectMapper(objectMapper)
         .putAllEnvironment(executionContext.getEnvironment())
         .setKeepGoing(isKeepGoing)
-        .setShouldReportAbsolutePaths(executionContext.shouldReportAbsolutePaths())
         .build();
 
     // It is important to use this logic to determine the set of rules to build rather than

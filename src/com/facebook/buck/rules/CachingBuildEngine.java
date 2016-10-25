@@ -132,7 +132,7 @@ public class CachingBuildEngine implements BuildEngine {
   };
 
   /**
-   * These are the values returned by {@link #build(BuildContext, ExecutionContext, BuildRule)}.
+   * These are the values returned by {@link BuildEngine#build(BuildEngineBuildContext, ExecutionContext, BuildRule)}.
    * This must always return the same value for the build of each target.
    */
   private final ConcurrentMap<BuildTarget, ListenableFuture<BuildResult>> results =
@@ -291,7 +291,7 @@ public class CachingBuildEngine implements BuildEngine {
   // Dispatch and return a future resolving to a list of all results of this rules dependencies.
   private ListenableFuture<List<BuildResult>> getDepResults(
       BuildRule rule,
-      BuildContext buildContext,
+      BuildEngineBuildContext buildContext,
       ExecutionContext executionContext,
       ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks) {
     List<ListenableFuture<BuildResult>> depResults =
@@ -311,7 +311,7 @@ public class CachingBuildEngine implements BuildEngine {
 
   private AsyncFunction<Optional<BuildResult>, BuildResult> buildLocally(
       final BuildRule rule,
-      final BuildContext buildContext,
+      final BuildEngineBuildContext buildContext,
       final ExecutionContext executionContext,
       final RuleKeyFactories ruleKeyFactory,
       final BuildableContext buildableContext,
@@ -365,7 +365,7 @@ public class CachingBuildEngine implements BuildEngine {
 
   private AsyncFunction<List<BuildResult>, Optional<BuildResult>> checkCaches(
       final BuildRule rule,
-      final BuildContext context,
+      final BuildEngineBuildContext context,
       final OnDiskBuildInfo onDiskBuildInfo,
       final BuildInfoRecorder buildInfoRecorder,
       final RuleKeyFactories ruleKeyFactory) {
@@ -461,7 +461,7 @@ public class CachingBuildEngine implements BuildEngine {
 
   private ListenableFuture<BuildResult> processBuildRule(
       final BuildRule rule,
-      final BuildContext buildContext,
+      final BuildEngineBuildContext buildContext,
       final ExecutionContext executionContext,
       final OnDiskBuildInfo onDiskBuildInfo,
       final BuildInfoRecorder buildInfoRecorder,
@@ -558,7 +558,7 @@ public class CachingBuildEngine implements BuildEngine {
 
   private ListenableFuture<BuildResult> processBuildRule(
       BuildRule rule,
-      BuildContext buildContext,
+      BuildEngineBuildContext buildContext,
       ExecutionContext executionContext,
       ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks) {
 
@@ -630,7 +630,7 @@ public class CachingBuildEngine implements BuildEngine {
               executePostBuildSteps(
                   rule,
                   ((HasPostBuildSteps) rule).getPostBuildSteps(
-                      buildContext,
+                      buildContext.getBuildContext(),
                       buildableContext),
                   executionContext);
             }
@@ -1013,7 +1013,7 @@ public class CachingBuildEngine implements BuildEngine {
   // dependencies.
   private ListenableFuture<BuildResult> getBuildRuleResultWithRuntimeDepsUnlocked(
       final BuildRule rule,
-      final BuildContext buildContext,
+      final BuildEngineBuildContext buildContext,
       final ExecutionContext executionContext,
       final ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks) {
 
@@ -1061,7 +1061,7 @@ public class CachingBuildEngine implements BuildEngine {
 
   private ListenableFuture<BuildResult> getBuildRuleResultWithRuntimeDeps(
       BuildRule rule,
-      BuildContext buildContext,
+      BuildEngineBuildContext buildContext,
       ExecutionContext executionContext,
       ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks) {
 
@@ -1115,7 +1115,7 @@ public class CachingBuildEngine implements BuildEngine {
 
   private synchronized ListenableFuture<RuleKey> calculateRuleKey(
       final BuildRule rule,
-      final BuildContext context) {
+      final BuildEngineBuildContext context) {
     ListenableFuture<RuleKey> ruleKey = ruleKeys.get(rule.getBuildTarget());
     if (ruleKey == null) {
 
@@ -1163,7 +1163,7 @@ public class CachingBuildEngine implements BuildEngine {
 
   @Override
   public ListenableFuture<BuildResult> build(
-      BuildContext buildContext,
+      BuildEngineBuildContext buildContext,
       ExecutionContext executionContext,
       BuildRule rule) {
     // Keep track of all jobs that run asynchronously with respect to the build dep chain.  We want
@@ -1188,7 +1188,7 @@ public class CachingBuildEngine implements BuildEngine {
       final BuildInfoRecorder buildInfoRecorder,
       final ArtifactCache artifactCache,
       final ProjectFilesystem filesystem,
-      final BuildContext buildContext) {
+      final BuildEngineBuildContext buildContext) {
 
     if (!rule.isCacheable()) {
       return CacheResult.ignored();
@@ -1224,7 +1224,7 @@ public class CachingBuildEngine implements BuildEngine {
       BuildRule rule,
       RuleKey ruleKey,
       LazyPath lazyZipPath,
-      BuildContext buildContext,
+      BuildEngineBuildContext buildContext,
       ProjectFilesystem filesystem,
       CacheResult cacheResult) {
     if (!cacheResult.getType().isSuccess()) {
@@ -1308,7 +1308,7 @@ public class CachingBuildEngine implements BuildEngine {
    */
   private void executeCommandsNowThatDepsAreBuilt(
       BuildRule rule,
-      BuildContext buildContext,
+      BuildEngineBuildContext buildContext,
       ExecutionContext executionContext,
       BuildableContext buildableContext)
       throws InterruptedException, StepFailedException {
@@ -1321,7 +1321,7 @@ public class CachingBuildEngine implements BuildEngine {
     cachingBuildEngineDelegate.onRuleAboutToBeBuilt(rule);
 
     // Get and run all of the commands.
-    List<Step> steps = rule.getBuildSteps(buildContext, buildableContext);
+    List<Step> steps = rule.getBuildSteps(buildContext.getBuildContext(), buildableContext);
 
     Optional<BuildTarget> optionalTarget = Optional.of(rule.getBuildTarget());
     for (Step step : steps) {
@@ -1562,7 +1562,7 @@ public class CachingBuildEngine implements BuildEngine {
   // Fetch an artifact from the cache using manifest-based caching.
   private Optional<BuildResult> performManifestBasedCacheFetch(
       final BuildRule rule,
-      final BuildContext context,
+      final BuildEngineBuildContext context,
       final BuildInfoRecorder buildInfoRecorder)
       throws IOException {
     if (!useManifestCaching(rule)) {
@@ -1657,7 +1657,7 @@ public class CachingBuildEngine implements BuildEngine {
 
   private Optional<BuildResult> performInputBasedCacheFetch(
       final BuildRule rule,
-      final BuildContext context,
+      final BuildEngineBuildContext context,
       final OnDiskBuildInfo onDiskBuildInfo,
       BuildInfoRecorder buildInfoRecorder,
       final RuleKeyFactories ruleKeyFactory) {

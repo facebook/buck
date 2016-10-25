@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableSet;
 
@@ -24,7 +23,7 @@ import java.util.EnumSet;
 
 /**
  * Token provided by the result of
- * {@link BuildEngine#build(BuildContext, com.facebook.buck.step.ExecutionContext, BuildRule)},
+ * {@link BuildEngine#build(BuildEngineBuildContext, com.facebook.buck.step.ExecutionContext, BuildRule)},
  * demonstrating that the associated {@link BuildRule} was built successfully.
  */
 public enum BuildRuleSuccessType {
@@ -37,7 +36,7 @@ public enum BuildRuleSuccessType {
       Property.OUTPUTS_HAVE_CHANGED
   ),
 
-  /** Fetched via the {@link ArtifactCache}. */
+  /** Fetched via the {@link com.facebook.buck.artifact_cache.ArtifactCache}. */
   FETCHED_FROM_CACHE(
       "CACHE",
       Property.OUTPUTS_HAVE_CHANGED
@@ -48,7 +47,8 @@ public enum BuildRuleSuccessType {
       "FOUND"
   ),
 
-  /** Fetched via the {@link ArtifactCache} using an input-based rule key. */
+  /** Fetched via the {@link com.facebook.buck.artifact_cache.ArtifactCache} using an input-based
+   * rule key. */
   FETCHED_FROM_CACHE_INPUT_BASED(
       "CACHE",
       Property.SHOULD_UPLOAD_RESULTING_ARTIFACT,
@@ -56,7 +56,8 @@ public enum BuildRuleSuccessType {
       Property.OUTPUTS_HAVE_CHANGED
   ),
 
-  /** Fetched via the {@link ArtifactCache} using an input-based rule key. */
+  /** Fetched via the {@link com.facebook.buck.artifact_cache.ArtifactCache} using an input-based
+   * rule key. */
   FETCHED_FROM_CACHE_MANIFEST_BASED(
       "CACHE",
       Property.SHOULD_UPLOAD_RESULTING_ARTIFACT,

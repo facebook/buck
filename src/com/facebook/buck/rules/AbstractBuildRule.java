@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.CaseFormat;
@@ -29,7 +28,7 @@ import java.util.Objects;
 /**
  * Abstract implementation of a {@link BuildRule} that can be cached. If its current {@link RuleKey}
  * matches the one on disk, then it has no work to do. It should also try to fetch its output from
- * an {@link ArtifactCache} to avoid doing any computation.
+ * an {@link com.facebook.buck.artifact_cache.ArtifactCache} to avoid doing any computation.
  */
 public abstract class AbstractBuildRule implements BuildRule {
 

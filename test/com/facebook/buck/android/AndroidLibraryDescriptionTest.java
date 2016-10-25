@@ -23,11 +23,9 @@ import static org.easymock.EasyMock.verify;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ActionGraph;
@@ -39,8 +37,6 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeExportDependenciesRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.timing.Clock;
-import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 
@@ -121,12 +117,8 @@ public class AndroidLibraryDescriptionTest {
 
     // Set to non-null values.
     builder.setActionGraph(createMock(ActionGraph.class));
-    builder.setArtifactCache(createMock(ArtifactCache.class));
     builder.setJavaPackageFinder(createMock(JavaPackageFinder.class));
     builder.setEventBus(BuckEventBusFactory.newInstance());
-    builder.setClock(createMock(Clock.class));
-    builder.setBuildId(createMock(BuildId.class));
-    builder.setObjectMapper(ObjectMappers.newDefaultInstance());
 
     AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
     List<Path> entries = ImmutableList.of(

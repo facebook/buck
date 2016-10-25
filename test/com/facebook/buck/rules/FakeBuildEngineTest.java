@@ -22,9 +22,13 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.timing.DefaultClock;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
@@ -46,7 +50,13 @@ public class FakeBuildEngineTest {
     assertThat(
         fakeEngine
             .build(
-                FakeBuildContext.NOOP_CONTEXT,
+                BuildEngineBuildContext.builder()
+                    .setBuildContext(FakeBuildContext.NOOP_CONTEXT)
+                    .setArtifactCache(new NoopArtifactCache())
+                    .setBuildId(new BuildId())
+                    .setObjectMapper(ObjectMappers.newDefaultInstance())
+                    .setClock(new DefaultClock())
+                    .build(),
                 TestExecutionContext.newInstance(),
                 fakeBuildRule)
             .get(),

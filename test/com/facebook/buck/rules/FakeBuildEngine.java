@@ -42,7 +42,7 @@ public class FakeBuildEngine implements BuildEngine {
 
   @Override
   public ListenableFuture<BuildResult> build(
-      BuildContext buildContext,
+      BuildEngineBuildContext buildContext,
       ExecutionContext executionContext,
       BuildRule rule) {
     SettableFuture<BuildResult> future = SettableFuture.create();

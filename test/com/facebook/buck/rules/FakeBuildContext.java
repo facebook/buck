@@ -16,12 +16,8 @@
 
 package com.facebook.buck.rules;
 
-import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
-import com.facebook.buck.model.BuildId;
-import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -33,25 +29,9 @@ public class FakeBuildContext {
   private FakeBuildContext() {}
 
   /** A BuildContext which doesn't touch the host filesystem or actually execute steps. */
-  public static final BuildContext NOOP_CONTEXT = newBuilder()
+  public static final BuildContext NOOP_CONTEXT = BuildContext.builder()
       .setActionGraph(new ActionGraph(ImmutableList.of()))
       .setJavaPackageFinder(new FakeJavaPackageFinder())
-      .setArtifactCache(new NoopArtifactCache())
-      .setObjectMapper(ObjectMappers.newDefaultInstance())
+      .setEventBus(BuckEventBusFactory.newInstance())
       .build();
-
-  /**
-   * User still needs to invoke {@link BuildContext.Builder#setActionGraph(ActionGraph)}
-   * and {@link BuildContext.Builder#setJavaPackageFinder(
-   * com.facebook.buck.jvm.core.JavaPackageFinder)}
-   * before the {@link BuildContext.Builder#build()} method of the builder can be invoked.
-   */
-  public static BuildContext.Builder newBuilder() {
-    return BuildContext.builder()
-        .setClock(new DefaultClock())
-        .setBuildId(new BuildId())
-        .setObjectMapper(ObjectMappers.newDefaultInstance())
-        .setArtifactCache(new NoopArtifactCache())
-        .setEventBus(BuckEventBusFactory.newInstance());
-  }
 }

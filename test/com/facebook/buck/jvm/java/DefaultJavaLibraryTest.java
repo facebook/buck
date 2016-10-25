@@ -30,12 +30,10 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.HashingDeterministicJarWriter;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -66,11 +64,9 @@ import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -1233,10 +1229,6 @@ public class DefaultJavaLibraryTest {
     // TODO(bolinfest): Create a utility that populates a BuildContext.Builder with fakes.
     return BuildContext.builder()
         .setActionGraph(new ActionGraph(ImmutableList.of(javaLibrary)))
-        .setClock(new DefaultClock())
-        .setBuildId(new BuildId())
-        .setObjectMapper(ObjectMappers.newDefaultInstance())
-        .setArtifactCache(new NoopArtifactCache())
         .setJavaPackageFinder(EasyMock.createMock(JavaPackageFinder.class))
         .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(platformTarget))
         .setEventBus(BuckEventBusFactory.newInstance())

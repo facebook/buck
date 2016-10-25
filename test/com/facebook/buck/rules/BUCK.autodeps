@@ -83,10 +83,7 @@
   },
   "testutil" : {
     "deps" : [
-      "//src/com/facebook/buck/artifact_cache:artifact_cache",
-      "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/rules/coercer:coercer",
-      "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:object_mapper",
       "//test/com/facebook/buck/android:utils",
       "//test/com/facebook/buck/cli:FakeBuckConfig",

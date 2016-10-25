@@ -37,7 +37,7 @@ public interface BuildEngine {
    * Build the given build rule and return a future to the build rule success.
    */
   ListenableFuture<BuildResult> build(
-      BuildContext buildContext,
+      BuildEngineBuildContext buildContext,
       ExecutionContext executionContext,
       BuildRule rule);
 

@@ -184,7 +184,7 @@ public class CachingBuildEngineTest {
     protected final FakeBuckEventListener listener = new FakeBuckEventListener();
     protected FakeProjectFilesystem filesystem;
     protected FileHashCache fileHashCache;
-    protected BuildContext buildContext;
+    protected BuildEngineBuildContext buildContext;
     protected BuildRuleResolver resolver;
     protected SourcePathResolver pathResolver;
     protected DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory;
@@ -195,11 +195,17 @@ public class CachingBuildEngineTest {
     public void setUp() {
       filesystem = new FakeProjectFilesystem(tmp.getRoot());
       fileHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
-      buildContext = FakeBuildContext.newBuilder()
+      buildContext = BuildEngineBuildContext.builder()
+          .setBuildContext(BuildContext.builder()
+              .setJavaPackageFinder(new FakeJavaPackageFinder())
+              .setActionGraph(new ActionGraph(ImmutableList.of()))
+              .setEventBus(BuckEventBusFactory.newInstance())
+              .build()
+          )
           .setArtifactCache(cache)
-          .setJavaPackageFinder(new FakeJavaPackageFinder())
-          .setActionGraph(new ActionGraph(ImmutableList.of()))
-          .setEventBus(BuckEventBusFactory.newInstance())
+          .setBuildId(new BuildId())
+          .setClock(new DefaultClock())
+          .setObjectMapper(ObjectMappers.newDefaultInstance())
           .build();
       buildContext.getEventBus().register(listener);
       resolver =
@@ -233,7 +239,7 @@ public class CachingBuildEngineTest {
      * be as follows:
      * <ol>
      *   <li>The build engine invokes the
-     *   {@link CachingBuildEngine#build(BuildContext, ExecutionContext, BuildRule)}
+     *   {@link CachingBuildEngine#build(BuildEngineBuildContext, ExecutionContext, BuildRule)}
      *   method on each of the transitive deps.
      *   <li>The rule computes its own {@link RuleKey}.
      *   <li>The engine compares its {@link RuleKey} to the one on disk, if present.
@@ -272,7 +278,8 @@ public class CachingBuildEngineTest {
       resetAll();
 
       // The BuildContext that will be used by the rule's build() method.
-      BuildContext buildContext = this.buildContext.withEventBus(buckEventBus);
+      BuildEngineBuildContext buildContext = this.buildContext
+          .withBuildContext(this.buildContext.getBuildContext().withEventBus(buckEventBus));
 
       CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
 
@@ -337,7 +344,7 @@ public class CachingBuildEngineTest {
           pathResolver);
 
       // The BuildContext that will be used by the rule's build() method.
-      BuildContext buildContext = this.buildContext
+      BuildEngineBuildContext buildContext = this.buildContext
           .withArtifactCache(
               new NoopArtifactCache() {
                 @Override
@@ -412,13 +419,16 @@ public class CachingBuildEngineTest {
               new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
 
       BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();
-      BuildContext buildContext = BuildContext.builder()
-          .setActionGraph(new ActionGraph(ImmutableList.of(buildRule)))
+      BuildEngineBuildContext buildContext = BuildEngineBuildContext.builder()
+          .setBuildContext(
+              BuildContext.builder()
+                  .setActionGraph(new ActionGraph(ImmutableList.of(buildRule)))
+                  .setJavaPackageFinder(createMock(JavaPackageFinder.class))
+                  .setEventBus(buckEventBus)
+                  .build())
           .setClock(new DefaultClock())
           .setBuildId(new BuildId())
           .setArtifactCache(artifactCache)
-          .setJavaPackageFinder(createMock(JavaPackageFinder.class))
-          .setEventBus(buckEventBus)
           .setObjectMapper(ObjectMappers.newDefaultInstance())
           .build();
 
@@ -486,13 +496,15 @@ public class CachingBuildEngineTest {
           .andDelegateTo(
               new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries));
 
-      BuildContext buildContext = BuildContext.builder()
-          .setActionGraph(new ActionGraph(ImmutableList.of(buildRule)))
+      BuildEngineBuildContext buildContext = BuildEngineBuildContext.builder()
+          .setBuildContext(BuildContext.builder()
+              .setActionGraph(new ActionGraph(ImmutableList.of(buildRule)))
+              .setJavaPackageFinder(createMock(JavaPackageFinder.class))
+              .setEventBus(buckEventBus)
+              .build())
           .setClock(new DefaultClock())
           .setBuildId(new BuildId())
           .setArtifactCache(artifactCache)
-          .setJavaPackageFinder(createMock(JavaPackageFinder.class))
-          .setEventBus(buckEventBus)
           .setObjectMapper(ObjectMappers.newDefaultInstance())
           .build();
 
@@ -537,7 +549,7 @@ public class CachingBuildEngineTest {
               .resolve(BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS));
 
       // The BuildContext that will be used by the rule's build() method.
-      BuildContext context = this.buildContext
+      BuildEngineBuildContext context = this.buildContext
           .withArtifactCache(new NoopArtifactCache());
 
       // Create the build engine.
@@ -794,7 +806,7 @@ public class CachingBuildEngineTest {
           };
 
       // Use the artifact cache when running a simple rule that will build locally.
-      BuildContext buildContext = this.buildContext.withArtifactCache(cache);
+      BuildEngineBuildContext buildContext = this.buildContext.withArtifactCache(cache);
 
       BuildRule rule =
           new EmptyBuildRule(

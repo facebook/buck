@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -25,7 +26,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
@@ -142,9 +142,10 @@ public class TrimUberRDotJavaTest {
         ImmutableList.of(dexProducedFromJavaLibrary),
         keepResourcePattern);
 
-    BuildContext buildContext = FakeBuildContext.newBuilder()
+    BuildContext buildContext = BuildContext.builder()
         .setActionGraph(new ActionGraph(ImmutableList.of()))
         .setJavaPackageFinder(new FakeJavaPackageFinder())
+        .setEventBus(BuckEventBusFactory.newInstance())
         .build();
     BuildableContext buildableContext = new FakeBuildableContext();
     ExecutionContext executionContext = TestExecutionContext.newInstance();
