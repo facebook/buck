@@ -25,13 +25,18 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
+import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Set;
 
 import javax.annotation.concurrent.GuardedBy;
@@ -60,15 +65,37 @@ public class RecordingFileHashLoader implements FileHashLoader {
   }
 
   @Override
-  public HashCode get(Path path) throws IOException {
-    HashCode hashCode = delegate.get(path);
-    synchronized (this) {
-      if (!seenPaths.contains(path)) {
-        seenPaths.add(path);
-        record(path, Optional.empty(), hashCode);
+  public HashCode get(Path rootPath) throws IOException {
+    Queue<Path> remainingPaths = new LinkedList<>();
+    remainingPaths.add(rootPath);
+    while (remainingPaths.size() > 0) {
+      Path nextPath = remainingPaths.remove();
+      HashCode hashCode = delegate.get(nextPath);
+      List<PathWithUnixSeparators> children = ImmutableList.of();
+      if (projectFilesystem.isDirectory(nextPath)) {
+        children = processDirectory(nextPath, remainingPaths);
+      }
+      synchronized (this) {
+        if (!seenPaths.contains(nextPath)) {
+          seenPaths.add(nextPath);
+          record(nextPath, Optional.empty(), hashCode, children);
+        }
       }
     }
-    return hashCode;
+
+    return delegate.get(rootPath);
+  }
+
+  private List<PathWithUnixSeparators> processDirectory(Path path, Queue<Path> remainingPaths)
+      throws IOException {
+    List<PathWithUnixSeparators> childrenRelativePaths = new ArrayList<>();
+    for (Path relativeChildPath : projectFilesystem.getDirectoryContents(path)) {
+      childrenRelativePaths.add(
+          new PathWithUnixSeparators(MorePaths.pathWithUnixSeparators(relativeChildPath)));
+      remainingPaths.add(projectFilesystem.resolve(relativeChildPath));
+    }
+
+    return childrenRelativePaths;
   }
 
   @Override
@@ -132,7 +159,11 @@ public class RecordingFileHashLoader implements FileHashLoader {
 
   }
 
-  private synchronized void record(Path path, Optional<String> memberPath, HashCode hashCode) {
+  private synchronized void record(
+      Path path,
+      Optional<String> memberPath,
+      HashCode hashCode,
+      List<PathWithUnixSeparators> children) {
     LOG.info("Recording path: %s", path.toAbsolutePath());
 
     Optional<Path> pathRelativeToProjectRoot =
@@ -178,9 +209,13 @@ public class RecordingFileHashLoader implements FileHashLoader {
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
+    } else if (isDirectory && !pathIsAbsolute && realPathInsideProject) {
+      fileHashEntry.setChildren(children);
     }
+    // TODO(alisdair04): handling for symlink to internal directory (including infinite loop).
     remoteFileHashes.addToEntries(fileHashEntry);
   }
+
 
   @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
@@ -191,7 +226,8 @@ public class RecordingFileHashLoader implements FileHashLoader {
         record(
             archiveMemberPath.getArchivePath(),
             Optional.of(archiveMemberPath.getMemberPath().toString()),
-            hashCode);
+            hashCode,
+            new LinkedList<>());
       }
     }
     return hashCode;

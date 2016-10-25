@@ -11,6 +11,7 @@
       "//third-party/java/jimfs:jimfs"
     ],
     "exported_deps" : [
+      "//src-gen:thrift",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",

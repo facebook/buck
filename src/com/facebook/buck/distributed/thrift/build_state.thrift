@@ -48,6 +48,8 @@ struct BuildJobStateFileHashEntry {
 
   7: optional PathWithUnixSeparators rootSymLink;
   8: optional PathWithUnixSeparators rootSymLinkTarget;
+
+  9: optional list<PathWithUnixSeparators> children;
 }
 
 struct BuildJobStateFileHashes {

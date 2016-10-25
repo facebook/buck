@@ -16,6 +16,9 @@
 
 package com.facebook.buck.distributed;
 
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -27,11 +30,14 @@ import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.testutil.FileHashEntryMatcher;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 
+import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
+import org.hamcrest.core.IsCollectionContaining;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -129,6 +135,54 @@ public class RecordingFileHashLoaderTest {
     assertThat(
         fileHashEntry.getRootSymLinkTarget(),
         Matchers.equalTo((unixPath(externalDir.getRoot().toPath().toRealPath().toString()))));
+  }
+
+  @Test
+  public void testRecordsDirectoryAndRecursivelyRecordsChildren() throws IOException {
+    // Scenario:
+    // /a - folder
+    // /a/b - folder
+    // /a/b/c - file
+    // /a/b/d - folder
+    // /a/e - file
+    // => entries for all files and folders.
+    // => entries for dirs /a and /a/b list their direct children
+
+    assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
+
+    ProjectFilesystem fs = new ProjectFilesystem(projectDir.getRoot().toPath());
+    Path pathDirA = Files.createDirectories(fs.getRootPath().resolve("a"));
+    Files.createDirectories(fs.getRootPath().resolve("a/b"));
+    Files.createFile(fs.getRootPath().resolve("a/b/c"));
+    Files.createDirectories(fs.getRootPath().resolve("a/b/d"));
+    Files.createFile(fs.getRootPath().resolve("a/e"));
+
+    ProjectFilesystem projectFilesystem =
+        new ProjectFilesystem(projectDir.getRoot().toPath().toRealPath());
+
+    BuildJobStateFileHashes fileHashes = new BuildJobStateFileHashes();
+    FileHashLoader delegateHashLoaderMock = EasyMock.createMock(FileHashLoader.class);
+    expect(
+        delegateHashLoaderMock.get(anyObject(Path.class))).andReturn(EXAMPLE_HASHCODE).anyTimes();
+    replay(delegateHashLoaderMock);
+
+    RecordingFileHashLoader recordingLoader = new RecordingFileHashLoader(
+        delegateHashLoaderMock,
+        projectFilesystem,
+        fileHashes);
+
+    recordingLoader.get(pathDirA.toRealPath());
+
+    assertThat(
+        fileHashes.getEntries().size(),
+        Matchers.equalTo(5)); // all folders and files
+
+    assertThat(fileHashes.getEntries(), IsCollectionContaining.hasItems(
+        new FileHashEntryMatcher("a", true),
+        new FileHashEntryMatcher("a/b", true),
+        new FileHashEntryMatcher("a/b/c", false),
+        new FileHashEntryMatcher("a/b/d", true),
+        new FileHashEntryMatcher("a/e", false)));
   }
 
   private static PathWithUnixSeparators unixPath(String path) {
