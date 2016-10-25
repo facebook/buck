@@ -5,7 +5,7 @@
       "//src/com/facebook/buck/util:exceptions",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/jvm/kotlin:testutil",
-      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/testutil/integration:util",
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]

@@ -3,7 +3,7 @@
     "deps" : [
       "//src/com/facebook/buck/android:utils",
       "//src/com/facebook/buck/android/agent/util:util",
-      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/testutil/integration:util",
       "//third-party/java/guava:guava",
       "//third-party/java/junit:junit"
     ],

@@ -1,4 +1,3 @@
-#@# GENERATED FILE: DO NOT MODIFY 0c801f64f7a9b67d9f29847c2a85084a10fe62c5 #@#
 {
   "offline" : {
     "deps" : [
@@ -9,7 +8,7 @@
       "//src/com/facebook/buck/util/network:network",
       "//src/com/facebook/buck/util/network/offline:offline",
       "//test/com/facebook/buck/event:testutil",
-      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/testutil/integration:util",
       "//test/com/facebook/buck/util/network:testutil",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",

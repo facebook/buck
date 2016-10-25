@@ -28,7 +28,7 @@
       "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/rules:testutil",
       "//test/com/facebook/buck/testutil:testutil",
-      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/testutil/integration:util",
       "//third-party/java/aether:aether-api",
       "//third-party/java/args4j:args4j",
       "//third-party/java/guava:guava",
@@ -44,7 +44,7 @@
     "deps" : [ ],
     "exported_deps" : [
       "//src/com/facebook/buck/maven:maven",
-      "//test/com/facebook/buck/testutil/integration:integration"
+      "//test/com/facebook/buck/testutil/integration:util"
     ]
   }
 }

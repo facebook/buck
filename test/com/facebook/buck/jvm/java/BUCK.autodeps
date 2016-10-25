@@ -9,7 +9,7 @@
   "integration-slow" : {
     "deps" : [
       "//src/com/facebook/buck/util/environment:platform",
-      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/testutil/integration:util",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/junit:junit"
@@ -76,7 +76,7 @@
       "//test/com/facebook/buck/shell:testutil",
       "//test/com/facebook/buck/step:testutil",
       "//test/com/facebook/buck/testutil:testutil",
-      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/testutil/integration:util",
       "//test/com/facebook/buck/util:testutil",
       "//third-party/java/commons-compress:commons-compress",
       "//third-party/java/easymock:easymock",
@@ -101,8 +101,7 @@
       "//src/com/facebook/buck/cxx:rules",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/jvm/java:javac-env",
-      "//test/com/facebook/buck/testutil:testutil",
-      "//third-party/java/jsr:jsr305"
+      "//test/com/facebook/buck/testutil:testutil"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/android:packageable",
@@ -112,7 +111,8 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//test/com/facebook/buck/rules:testutil",
-      "//third-party/java/guava:guava"
+      "//third-party/java/guava:guava",
+      "//third-party/java/jsr:jsr305"
     ]
   }
 }

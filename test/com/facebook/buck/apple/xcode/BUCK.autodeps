@@ -6,7 +6,7 @@
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/apple:testutil",
-      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/testutil/integration:util",
       "//third-party/java/dd-plist:dd-plist",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",

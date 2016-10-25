@@ -1,19 +1,15 @@
 {
   "dalvik" : {
     "deps" : [
-      "//src/com/facebook/buck/android:apkmodule",
-      "//src/com/facebook/buck/dalvik:dalvik",
       "//src/com/facebook/buck/dalvik:dalvik_stats_tool",
       "//src/com/facebook/buck/dalvik:steps",
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/java/classes:classes",
-      "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/step:step",
-      "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/step:testutil",
       "//test/com/facebook/buck/testutil:testutil",
-      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/testutil/integration:util",
       "//third-party/java/asm:asm",
       "//third-party/java/guava:guava",
       "//third-party/java/junit:junit"

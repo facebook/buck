@@ -2,7 +2,7 @@
   "xcspec" : {
     "deps" : [
       "//src/com/facebook/buck/apple/xcode/xcspec:xcspec",
-      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/testutil/integration:util",
       "//third-party/java/guava:guava",
       "//third-party/java/junit:junit"
     ],

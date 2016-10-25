@@ -4,7 +4,7 @@
       "//src/com/facebook/buck/apple/simulator:simulator",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/environment:platform",
-      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/testutil/integration:util",
       "//test/com/facebook/buck/util:testutil",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",

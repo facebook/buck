@@ -7,7 +7,7 @@
       "//src/com/facebook/buck/util/sha1:sha1",
       "//src/com/facebook/buck/zip:unzip",
       "//test/com/facebook/buck/jvm/java/abi:testutil",
-      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/testutil/integration:util",
       "//third-party/java/asm:asm",
       "//third-party/java/guava:guava",
       "//third-party/java/junit:junit"

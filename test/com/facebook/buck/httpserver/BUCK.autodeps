@@ -34,7 +34,7 @@
       "//test/com/facebook/buck/artifact_cache:testutil",
       "//test/com/facebook/buck/cli:testutil",
       "//test/com/facebook/buck/event:testutil",
-      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/testutil/integration:util",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/jackson:jackson-databind",

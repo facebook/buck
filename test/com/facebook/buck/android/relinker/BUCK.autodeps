@@ -1,7 +1,7 @@
 {
-  "gwt" : {
+  "relinker" : {
     "deps" : [
-      "//test/com/facebook/buck/testutil/integration:util",
+      "//src/com/facebook/buck/android:rules",
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]

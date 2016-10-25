@@ -7,7 +7,7 @@
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
       "//src/com/facebook/buck/zip:unzip",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
-      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/testutil/integration:util",
       "//test/com/facebook/buck/util:testutil",
       "//third-party/java/easymock:easymock",
       "//third-party/java/guava:guava",

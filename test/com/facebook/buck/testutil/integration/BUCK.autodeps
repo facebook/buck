@@ -1,6 +1,14 @@
 {
   "integration" : {
     "deps" : [
+      "//test/com/facebook/buck/testutil/integration:util",
+      "//third-party/java/guava:guava",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  },
+  "util" : {
+    "deps" : [
       "//src/com/facebook/buck/android:utils",
       "//src/com/facebook/buck/apple:rules",
       "//src/com/facebook/buck/apple/device:device",

@@ -6,7 +6,7 @@
       "//src/com/facebook/buck/util/cache:cache",
       "//test/com/facebook/buck/config:testutil",
       "//test/com/facebook/buck/testutil:testutil",
-      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/testutil/integration:util",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:hamcrest-junit",
       "//third-party/java/hamcrest:java-hamcrest",

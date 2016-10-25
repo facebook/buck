@@ -49,7 +49,7 @@
       "//test/com/facebook/buck/rules:testutil",
       "//test/com/facebook/buck/test:testutil",
       "//test/com/facebook/buck/testutil:testutil",
-      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/testutil/integration:util",
       "//test/com/facebook/buck/timing:testutil",
       "//test/com/facebook/buck/util/environment:testutil",
       "//test/com/facebook/buck/util/network:testutil",

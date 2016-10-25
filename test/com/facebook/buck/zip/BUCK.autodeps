@@ -13,7 +13,7 @@
       "//src/com/facebook/buck/zip:unzip",
       "//test/com/facebook/buck/step:testutil",
       "//test/com/facebook/buck/testutil:testutil",
-      "//test/com/facebook/buck/testutil/integration:integration",
+      "//test/com/facebook/buck/testutil/integration:util",
       "//third-party/java/commons-compress:commons-compress",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
