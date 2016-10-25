@@ -31,7 +31,12 @@ target from the same source revision across different machines).
 
 Finally you would invoke this tool on the two log files obtained this way along
 with a build_target that you'd like to analyze (it's fine if this is simply
-the top-level target you've built."""
+the top-level target you've built.
+
+Make sure to do a 'buck kill', as the changes are JVM settings. Once you're done,
+you may want to undo the .bucklogging.properties changes, otherwise builds will be
+slower due to the extra logging.
+"""
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument(
         'left_log',
