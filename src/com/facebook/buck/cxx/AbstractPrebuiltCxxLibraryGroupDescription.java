@@ -269,7 +269,11 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
                 getStaticLinkArgs(
                     getBuildTarget(),
                     pathResolver,
-                    args.staticLibs,
+                    CxxGenruleDescription.fixupSourcePaths(
+                        resolver,
+                        pathResolver,
+                        cxxPlatform,
+                        args.staticLibs),
                     args.staticLink));
             break;
           case STATIC_PIC:
@@ -277,7 +281,11 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
                 getStaticLinkArgs(
                     getBuildTarget(),
                     pathResolver,
-                    args.staticPicLibs,
+                    CxxGenruleDescription.fixupSourcePaths(
+                        resolver,
+                        pathResolver,
+                        cxxPlatform,
+                        args.staticPicLibs),
                     args.staticPicLink));
             break;
           case SHARED:
@@ -285,10 +293,14 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
                 getSharedLinkArgs(
                     getBuildTarget(),
                     pathResolver,
-                    ImmutableMap.<String, SourcePath>builder()
-                        .putAll(args.sharedLibs)
-                        .putAll(args.providedSharedLibs)
-                        .build(),
+                    CxxGenruleDescription.fixupSourcePaths(
+                        resolver,
+                        pathResolver,
+                        cxxPlatform,
+                        ImmutableMap.<String, SourcePath>builder()
+                            .putAll(args.sharedLibs)
+                            .putAll(args.providedSharedLibs)
+                            .build()),
                     args.sharedLink));
             break;
         }

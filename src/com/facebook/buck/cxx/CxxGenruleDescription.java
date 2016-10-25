@@ -61,6 +61,7 @@ import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -96,6 +97,38 @@ public class CxxGenruleDescription
     return path;
   }
 
+  public static ImmutableList<SourcePath> fixupSourcePaths(
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
+      ImmutableList<SourcePath> paths)
+      throws NoSuchBuildTargetException {
+    ImmutableList.Builder<SourcePath> fixed = ImmutableList.builder();
+    for (SourcePath path : paths) {
+      fixed.add(
+          fixupSourcePath(ruleResolver, pathResolver, cxxPlatform, path));
+    }
+    return fixed.build();
+  }
+
+  public static <T> ImmutableMap<T, SourcePath> fixupSourcePaths(
+      BuildRuleResolver ruleResolver,
+      SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
+      ImmutableMap<T, SourcePath> paths)
+      throws NoSuchBuildTargetException {
+    ImmutableMap.Builder<T, SourcePath> fixed = ImmutableMap.builder();
+    for (Map.Entry<T, SourcePath> ent : paths.entrySet()) {
+      fixed.put(
+          ent.getKey(),
+          fixupSourcePath(
+              ruleResolver,
+              pathResolver,
+              cxxPlatform,
+              ent.getValue()));
+    }
+    return fixed.build();
+  }
 
   private static String shquoteJoin(Iterable<String> args) {
     return Joiner.on(' ').join(Iterables.transform(args, Escaper.SHELL_ESCAPER));

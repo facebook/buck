@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
@@ -30,6 +31,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -239,7 +241,33 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
     assertThat(
         sharedOnly.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
         Matchers.equalTo(NativeLinkable.Linkage.SHARED));
+  }
 
+  @Test
+  public void cxxGenruleLib() throws Exception {
+    CxxGenruleBuilder cxxGenruleBuilder =
+        new CxxGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("libtest.so");
+    PrebuiltCxxLibraryGroupBuilder builder =
+        new PrebuiltCxxLibraryGroupBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setStaticLink(ImmutableList.of("$(lib 0)"))
+            .setStaticLibs(
+                ImmutableList.of(new BuildTargetSourcePath(cxxGenruleBuilder.getTarget())));
+
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(cxxGenruleBuilder.build(), builder.build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    CxxGenrule cxxGenrule = (CxxGenrule) cxxGenruleBuilder.build(resolver);
+    NativeLinkable library = (NativeLinkable) builder.build(resolver);
+    NativeLinkableInput input =
+        library.getNativeLinkableInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            Linker.LinkableDepType.STATIC);
+    SourcePath lib = cxxGenrule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM);
+    assertThat(input.getArgs(), Matchers.contains(new SourcePathArg(pathResolver, lib)));
   }
 
 }
