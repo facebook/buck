@@ -40,7 +40,7 @@ public class CxxWriteArgsToFileStep implements Step {
   private final ImmutableList<Arg> args;
   private final Optional<Function<String, String>> escaper;
 
-  CxxWriteArgsToFileStep(
+  public CxxWriteArgsToFileStep(
       Path argFilePath,
       ImmutableList<Arg> args,
       Optional<Function<String, String>> escaper) {
