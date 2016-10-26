@@ -136,6 +136,8 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
         return "armeabi";
       case ARMV7:
         return "armeabi-v7a";
+      case ARM64:
+        return "arm64-v8a";
       case X86:
         return "x86";
       case X86_64:

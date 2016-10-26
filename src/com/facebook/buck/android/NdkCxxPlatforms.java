@@ -206,6 +206,26 @@ public class NdkCxxPlatforms {
       ndkCxxPlatformBuilder.put(TargetCpuType.ARMV7, armeabiv7);
     }
 
+    // ARM64 Platform
+    if (cpuAbis.contains("arm64")) {
+      NdkCxxPlatformTargetConfiguration targetConfiguration = getTargetConfiguration(
+          TargetCpuType.ARM64,
+          compiler,
+          androidPlatform);
+      NdkCxxPlatform arm64 =
+          build(
+              config,
+              filesystem,
+              ImmutableFlavor.of("android-arm64"),
+              platform,
+              ndkRoot,
+              targetConfiguration,
+              cxxRuntime,
+              executableFinder,
+              strictToolchainPaths);
+      ndkCxxPlatformBuilder.put(TargetCpuType.ARM64, arm64);
+    }
+
     // x86 Platform
     if (cpuAbis.contains("x86")) {
       NdkCxxPlatformTargetConfiguration targetConfiguration = getTargetConfiguration(
@@ -341,6 +361,51 @@ public class NdkCxxPlatforms {
             .putLinkerFlags(
                 NdkCxxPlatformCompiler.Type.CLANG,
                 ImmutableList.of("-target", "armv7-none-linux-androideabi"))
+            .build();
+      case ARM64:
+        ImmutableList<String> arm64ArchFlags =
+            ImmutableList.of(
+                "-march=armv8-a"
+            );
+        return NdkCxxPlatformTargetConfiguration.builder()
+            .setToolchain(Toolchain.AARCH64_LINUX_ANDROID)
+            .setTargetArch(TargetArch.ARM64)
+            .setTargetArchAbi(TargetArchAbi.ARM64_V8A)
+            .setTargetAppPlatform(androidPlatform)
+            .setCompiler(compiler)
+            .setToolchainTarget(ToolchainTarget.AARCH64_LINUX_ANDROID)
+            .putAssemblerFlags(NdkCxxPlatformCompiler.Type.GCC, arm64ArchFlags)
+            .putAssemblerFlags(
+                NdkCxxPlatformCompiler.Type.CLANG,
+                ImmutableList.<String>builder()
+                    .add("-target", "aarch64-none-linux-android")
+                    .addAll(arm64ArchFlags)
+                    .build())
+            .putCompilerFlags(
+                NdkCxxPlatformCompiler.Type.GCC,
+                ImmutableList.<String>builder()
+                    .add("-O2")
+                    .add("-fomit-frame-pointer")
+                    .add("-fstrict-aliasing")
+                    .add("-funswitch-loops")
+                    .add("-finline-limit=300")
+                    .addAll(arm64ArchFlags)
+                    .build())
+            .putCompilerFlags(
+                NdkCxxPlatformCompiler.Type.CLANG,
+                ImmutableList.<String>builder()
+                    .add("-target", "aarch64-none-linux-android")
+                    .add("-O2")
+                    .add("-fomit-frame-pointer")
+                    .add("-fstrict-aliasing")
+                    .addAll(arm64ArchFlags)
+                    .build())
+            .putLinkerFlags(
+                NdkCxxPlatformCompiler.Type.GCC,
+                ImmutableList.<String>of())
+            .putLinkerFlags(
+                NdkCxxPlatformCompiler.Type.CLANG,
+                ImmutableList.of("-target", "aarch64-none-linux-android"))
             .build();
       case X86:
         return NdkCxxPlatformTargetConfiguration.builder()
@@ -912,6 +977,7 @@ public class NdkCxxPlatforms {
   public enum TargetCpuType {
     ARM,
     ARMV7,
+    ARM64,
     X86,
     X86_64,
     MIPS,
@@ -925,6 +991,7 @@ public class NdkCxxPlatforms {
     X86("x86"),
     X86_64("x86_64"),
     ARM_LINUX_ANDROIDEABI("arm-linux-androideabi"),
+    AARCH64_LINUX_ANDROID("aarch64-linux-android"),
     ;
 
     private final String value;
@@ -948,6 +1015,7 @@ public class NdkCxxPlatforms {
     X86("x86"),
     X86_64("x86_64"),
     ARM("arm"),
+    ARM64("arm64"),
     ;
 
     private final String value;
@@ -972,6 +1040,7 @@ public class NdkCxxPlatforms {
     X86_64("x86_64"),
     ARMEABI("armeabi"),
     ARMEABI_V7A("armeabi-v7a"),
+    ARM64_V8A("arm64-v8a"),
     ;
 
     private final String value;
@@ -1063,6 +1132,7 @@ public class NdkCxxPlatforms {
     I686_LINUX_ANDROID("i686-linux-android"),
     X86_64_LINUX_ANDROID("x86_64-linux-android"),
     ARM_LINUX_ANDROIDEABI("arm-linux-androideabi"),
+    AARCH64_LINUX_ANDROID("aarch64-linux-android"),
     ;
 
     private final String value;
