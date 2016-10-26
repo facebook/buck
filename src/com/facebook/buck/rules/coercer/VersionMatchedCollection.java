@@ -1,0 +1,101 @@
+/*
+ * Copyright 2015-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.rules.coercer;
+
+import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Pair;
+import com.facebook.buck.versions.Version;
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
+import java.util.Map;
+
+public class VersionMatchedCollection<T> {
+
+  private final ImmutableList<Pair<ImmutableMap<BuildTarget, Version>, T>> values;
+
+  public VersionMatchedCollection(
+      ImmutableList<Pair<ImmutableMap<BuildTarget, Version>, T>> values) {
+    this.values = values;
+  }
+
+  private boolean matches(
+      ImmutableMap<BuildTarget, Version> universe,
+      ImmutableMap<BuildTarget, Version> versions) {
+    for (Map.Entry<BuildTarget, Version> ent : versions.entrySet()) {
+      Version existing = universe.get(ent.getKey());
+      if (existing != null && !existing.equals(ent.getValue())) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public ImmutableList<T> getMatchingValues(ImmutableMap<BuildTarget, Version> selected) {
+    ImmutableList.Builder<T> matchingValues = ImmutableList.builder();
+    for (Pair<ImmutableMap<BuildTarget, Version>, T> pair : values) {
+      if (matches(selected, pair.getFirst())) {
+        matchingValues.add(pair.getSecond());
+      }
+    }
+    return matchingValues.build();
+  }
+
+  public ImmutableList<T> getValues() {
+    ImmutableList.Builder<T> vals = ImmutableList.builder();
+    for (Pair<?, T> value : values) {
+      vals.add(value.getSecond());
+    }
+    return vals.build();
+  }
+
+  public ImmutableList<Pair<ImmutableMap<BuildTarget, Version>, T>> getValuePairs() {
+    return values;
+  }
+
+  public static <T> VersionMatchedCollection<T> of() {
+    return new VersionMatchedCollection<>(
+        ImmutableList.<Pair<ImmutableMap<BuildTarget, Version>, T>>of());
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(VersionMatchedCollection.class)
+        .add("values", values)
+        .toString();
+  }
+
+  public static <T> Builder<T> builder() {
+    return new Builder<>();
+  }
+
+  public static final class Builder<T> {
+
+    private final ImmutableList.Builder<Pair<ImmutableMap<BuildTarget, Version>, T>> builder =
+        ImmutableList.builder();
+
+    public Builder<T> add(ImmutableMap<BuildTarget, Version> versions, T value) {
+      builder.add(new Pair<>(versions, value));
+      return this;
+    }
+
+    public VersionMatchedCollection<T> build() {
+      return new VersionMatchedCollection<>(builder.build());
+    }
+  }
+}

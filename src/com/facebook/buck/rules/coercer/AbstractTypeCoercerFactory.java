@@ -226,6 +226,10 @@ public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
         return new PatternMatchedCollectionTypeCoercer<>(
             patternTypeCoercer,
             typeCoercerForType(getSingletonTypeParameter(parameterizedType)));
+      } else if (rawClass.isAssignableFrom(VersionMatchedCollection.class)) {
+        return new VersionMatchedCollectionTypeCoercer<>(
+            new MapTypeCoercer<>(new BuildTargetTypeCoercer(), new VersionTypeCoercer()),
+            typeCoercerForType(getSingletonTypeParameter(parameterizedType)));
       } else if (rawClass.isAssignableFrom(Optional.class)) {
         return new OptionalTypeCoercer<>(
             typeCoercerForType(getSingletonTypeParameter(parameterizedType)));
