@@ -39,30 +39,29 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.MoreCollectors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
@@ -114,9 +113,14 @@ public class JavaDepsFinder {
         "java-package-mappings");
     ImmutableSortedMap<String, BuildTarget> javaPackageMapping;
     if (javaPackageMappingOption.isPresent()) {
-      // Function that returns the key of the entry ending in `.` if it does not do so already.
-      Function<Map.Entry<String, String>, Map.Entry<String, BuildTarget>> normalizePackageMapping =
-          entry -> {
+      Stream<Map.Entry<String, BuildTarget>> entries = Splitter.on(',')
+          .omitEmptyStrings()
+          .withKeyValueSeparator("=>")
+          .split(javaPackageMappingOption.get())
+          .entrySet()
+          .stream()
+          // returns the key of the entry ending in `.` if it does not do so already.
+          .map(entry -> {
             String originalKey = entry.getKey().trim();
             // If the key corresponds to a Java package (not an entity), then make sure that it
             // ends with a `.` so the prefix matching will work as expected in
@@ -130,16 +134,10 @@ public class JavaDepsFinder {
                 BuildTargetPatternParser.fullyQualified(),
                 cellNames);
             return Maps.immutableEntry(key, buildTarget);
-          };
-
-      Iterable<Map.Entry<String, BuildTarget>> entries = FluentIterable.from(
-          Splitter.on(',')
-              .omitEmptyStrings()
-              .withKeyValueSeparator("=>")
-              .split(javaPackageMappingOption.get())
-              .entrySet()
-      ).transform(normalizePackageMapping);
-      javaPackageMapping = ImmutableSortedMap.copyOf(entries, Ordering.natural().reverse());
+          });
+      javaPackageMapping = ImmutableSortedMap.copyOf(
+          (Iterable<Map.Entry<String, BuildTarget>>) entries::iterator,
+          Comparator.reverseOrder());
     } else {
       javaPackageMapping = ImmutableSortedMap.of();
     }
@@ -307,9 +305,10 @@ public class JavaDepsFinder {
           }
 
           Set<TargetNode<?>> providers = dependencyInfo.symbolToProviders.get(requiredSymbol);
-          SortedSet<TargetNode<?>> candidateProviders = FluentIterable.from(providers)
+          SortedSet<TargetNode<?>> candidateProviders = providers.stream()
               .filter(isVisibleDepNotAlreadyInProvidedDeps)
-              .toSortedSet(Ordering.natural());
+              .collect(
+                  MoreCollectors.toImmutableSortedSet(Comparator.<TargetNode<?>>naturalOrder()));
 
           int numCandidates = candidateProviders.size();
           if (numCandidates == 1) {
@@ -336,16 +335,13 @@ public class JavaDepsFinder {
             // the symbol via its exported_deps. We make this a secondary check because we prefer to
             // depend on the rule that defines the symbol directly rather than one of possibly many
             // rules that provides it via its exported_deps.
-            SortedSet<TargetNode<?>> newCandidates = new TreeSet<>();
-            for (TargetNode<?> candidate : providers) {
-              Set<TargetNode<?>> rulesThatExportCandidate = dependencyInfo.ruleToRulesThatExportIt
-                  .get(candidate);
-              for (TargetNode<?> ruleThatExportsCandidate : rulesThatExportCandidate) {
-                if (ruleThatExportsCandidate.isVisibleTo(graph, rule)) {
-                  newCandidates.add(ruleThatExportsCandidate);
-                }
-              }
-            }
+            ImmutableSortedSet<TargetNode<?>> newCandidates = providers.stream()
+                .flatMap(candidate ->
+                    dependencyInfo.ruleToRulesThatExportIt.get(candidate).stream())
+                .filter(ruleThatExportsCandidate ->
+                    ruleThatExportsCandidate.isVisibleTo(graph, rule))
+                .collect(
+                    MoreCollectors.toImmutableSortedSet(Comparator.<TargetNode<?>>naturalOrder()));
 
             int numNewCandidates = newCandidates.size();
             if (numNewCandidates == 1) {
