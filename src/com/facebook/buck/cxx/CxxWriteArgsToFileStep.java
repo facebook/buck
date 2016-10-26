@@ -21,8 +21,8 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
@@ -40,7 +40,7 @@ public class CxxWriteArgsToFileStep implements Step {
   private final ImmutableList<Arg> args;
   private final Optional<Function<String, String>> escaper;
 
-  public CxxWriteArgsToFileStep(
+  CxxWriteArgsToFileStep(
       Path argFilePath,
       ImmutableList<Arg> args,
       Optional<Function<String, String>> escaper) {
@@ -55,9 +55,9 @@ public class CxxWriteArgsToFileStep implements Step {
     }
     ImmutableList<String> argFileContents = Arg.stringify(args);
     if (escaper.isPresent()) {
-      argFileContents = FluentIterable.from(argFileContents)
-          .transform(escaper.get())
-          .toList();
+      argFileContents = argFileContents.stream()
+          .map(escaper.get()::apply)
+          .collect(MoreCollectors.toImmutableList());
     }
     MoreFiles.writeLinesToFile(argFileContents, argFilePath);
   }
