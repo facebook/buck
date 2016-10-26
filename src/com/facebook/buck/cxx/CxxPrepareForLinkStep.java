@@ -55,15 +55,17 @@ public class CxxPrepareForLinkStep extends CompositeStep {
         .addAll(linkerArgsToSupportFileList)
         .build();
 
+    boolean hasLinkArgsToSupportFileList = linkerArgsToSupportFileList.iterator().hasNext();
+
     CxxWriteArgsToFileStep createArgFileStep = new CxxWriteArgsToFileStep(
         argFilePath,
-        allArgs.stream()
+        hasLinkArgsToSupportFileList ? allArgs.stream()
             .filter(input -> !(input instanceof FileListableLinkerInputArg))
-            .collect(MoreCollectors.toImmutableList()),
+            .collect(MoreCollectors.toImmutableList()) : allArgs,
         Optional.of(Javac.ARGFILES_ESCAPER));
 
-    if (!linkerArgsToSupportFileList.iterator().hasNext()) {
-      LOG.verbose("linkerArgsToSupportFileList are empty, filelist feature is not supported");
+    if (!hasLinkArgsToSupportFileList) {
+      LOG.verbose("linkerArgsToSupportFileList is empty, filelist feature is not supported");
       return new CxxPrepareForLinkStep(ImmutableList.of(createArgFileStep));
     }
 
