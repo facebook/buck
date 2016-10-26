@@ -44,7 +44,7 @@ public class CxxWriteArgsToFileStep implements Step {
   private final Optional<Function<String, String>> escaper;
   private final Path currentCellPath;
 
-  CxxWriteArgsToFileStep(
+  public CxxWriteArgsToFileStep(
       Path argFilePath,
       ImmutableList<Arg> args,
       Optional<Function<String, String>> escaper,
