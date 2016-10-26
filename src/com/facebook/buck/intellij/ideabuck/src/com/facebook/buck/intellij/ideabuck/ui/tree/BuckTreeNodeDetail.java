@@ -21,66 +21,66 @@ import java.util.Enumeration;
 
 public class BuckTreeNodeDetail implements TreeNode {
 
-    public enum DetailType {
-        ERROR,
-        WARNING,
-        INFO
-    }
+  public enum DetailType {
+    ERROR,
+    WARNING,
+    INFO
+  }
 
-    protected DetailType mType;
-    protected String mDetail;
-    protected TreeNode mParent;
+  protected DetailType mType;
+  protected String mDetail;
+  protected TreeNode mParent;
 
-    public BuckTreeNodeDetail(TreeNode parent, DetailType type, String detail) {
-        mType = type;
-        mDetail = detail;
-        mParent = parent;
-    }
+  public BuckTreeNodeDetail(TreeNode parent, DetailType type, String detail) {
+    mType = type;
+    mDetail = detail;
+    mParent = parent;
+  }
 
-    @Override
-    public TreeNode getChildAt(int childIndex) {
-        return null;
-    }
+  @Override
+  public TreeNode getChildAt(int childIndex) {
+    return null;
+  }
 
-    @Override
-    public int getChildCount() {
-        return 0;
-    }
+  @Override
+  public int getChildCount() {
+    return 0;
+  }
 
-    @Override
-    public TreeNode getParent() {
-        return mParent;
-    }
+  @Override
+  public TreeNode getParent() {
+    return mParent;
+  }
 
-    @Override
-    public int getIndex(TreeNode node) {
-        return 0;
-    }
+  @Override
+  public int getIndex(TreeNode node) {
+    return 0;
+  }
 
-    @Override
-    public boolean getAllowsChildren() {
-        return false;
-    }
+  @Override
+  public boolean getAllowsChildren() {
+    return false;
+  }
 
-    @Override
-    public boolean isLeaf() {
-        return true;
-    }
+  @Override
+  public boolean isLeaf() {
+    return true;
+  }
 
-    @Override
-    public Enumeration children() {
-        return null;
-    }
+  @Override
+  public Enumeration children() {
+    return null;
+  }
 
-    public String getDetail() {
-        return mDetail;
-    }
+  public String getDetail() {
+    return mDetail;
+  }
 
-    public void setDetail(String detail) {
-        mDetail = detail;
-    }
+  public void setDetail(String detail) {
+    mDetail = detail;
+  }
 
-    public DetailType getType() {
-        return mType;
-    }
+  public DetailType getType() {
+    return mType;
+  }
 }

@@ -19,5 +19,5 @@ package com.facebook.buck.intellij.ideabuck.ui.tree.renderers;
 import java.awt.Component;
 
 public interface BuildElementRenderer {
-    Component render(Object value);
+  Component render(Object value);
 }

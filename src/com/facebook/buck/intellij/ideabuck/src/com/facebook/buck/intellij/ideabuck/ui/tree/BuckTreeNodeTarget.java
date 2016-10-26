@@ -23,70 +23,70 @@ import java.util.List;
 
 public class BuckTreeNodeTarget implements TreeNode {
 
-    private String mTarget;
-    private List<BuckTreeNodeFileError> mFileError;
-    private BuckTreeNodeBuild mParent;
+  private String mTarget;
+  private List<BuckTreeNodeFileError> mFileError;
+  private BuckTreeNodeBuild mParent;
 
-    public BuckTreeNodeTarget(BuckTreeNodeBuild build, String target) {
-        mTarget = target;
-        mParent = build;
-        mFileError = new ArrayList<BuckTreeNodeFileError>();
-    }
+  public BuckTreeNodeTarget(BuckTreeNodeBuild build, String target) {
+    mTarget = target;
+    mParent = build;
+    mFileError = new ArrayList<BuckTreeNodeFileError>();
+  }
 
-    public void addFileError(BuckTreeNodeFileError error) {
-        mFileError.add(error);
-    }
+  public void addFileError(BuckTreeNodeFileError error) {
+    mFileError.add(error);
+  }
 
-    @Override
-    public TreeNode getChildAt(int childIndex) {
-        return mFileError.get(childIndex);
-    }
+  @Override
+  public TreeNode getChildAt(int childIndex) {
+    return mFileError.get(childIndex);
+  }
 
-    @Override
-    public int getChildCount() {
-        return mFileError.size();
-    }
+  @Override
+  public int getChildCount() {
+    return mFileError.size();
+  }
 
-    @Override
-    public TreeNode getParent() {
-        return mParent;
-    }
+  @Override
+  public TreeNode getParent() {
+    return mParent;
+  }
 
-    @Override
-    public int getIndex(TreeNode node) {
-        return 0;
-    }
+  @Override
+  public int getIndex(TreeNode node) {
+    return 0;
+  }
 
-    @Override
-    public boolean getAllowsChildren() {
+  @Override
+  public boolean getAllowsChildren() {
+    return true;
+  }
+
+  @Override
+  public boolean isLeaf() {
+    return false;
+  }
+
+  @Override
+  public Enumeration children() {
+    return new Enumeration<TreeNode>() {
+      private int currentIndex = 0;
+      @Override
+      public boolean hasMoreElements() {
+        if (currentIndex >= BuckTreeNodeTarget.this.mFileError.size()) {
+          return false;
+        }
         return true;
-    }
+      }
 
-    @Override
-    public boolean isLeaf() {
-        return false;
-    }
+      @Override
+      public TreeNode nextElement() {
+        return BuckTreeNodeTarget.this.mFileError.get(++currentIndex);
+      }
+    };
+  }
 
-    @Override
-    public Enumeration children() {
-        return new Enumeration<TreeNode>() {
-            private int currentIndex = 0;
-            @Override
-            public boolean hasMoreElements() {
-                if (currentIndex >= BuckTreeNodeTarget.this.mFileError.size()) {
-                    return false;
-                }
-                return true;
-            }
-
-            @Override
-            public TreeNode nextElement() {
-                return BuckTreeNodeTarget.this.mFileError.get(++currentIndex);
-            }
-        };
-    }
-
-    public String getTarget() {
-        return mTarget;
-    }
+  public String getTarget() {
+    return mTarget;
+  }
 }

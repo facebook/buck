@@ -25,29 +25,29 @@ import javax.swing.SwingConstants;
 import java.awt.Component;
 
 public class DetailNodeRenderer implements BuildElementRenderer {
-    @Override
-    public Component render(Object value) {
-        BuckTreeNodeDetail node = (BuckTreeNodeDetail ) value;
+  @Override
+  public Component render(Object value) {
+    BuckTreeNodeDetail node = (BuckTreeNodeDetail ) value;
 
-        Icon icon = AllIcons.Ide.Info_notifications;
-        if (node.getType() == BuckTreeNodeDetail.DetailType.ERROR) {
-            icon = AllIcons.Ide.Error;
-        } else if (node.getType() == BuckTreeNodeDetail.DetailType.WARNING) {
-            icon = AllIcons.Ide.Warning_notifications;
-        }
-
-        String message = "<html><pre style='margin:0px'>" +
-            HtmlEscapers.htmlEscaper().escape(node.getDetail()) +
-            "</pre></html>";
-
-        JBLabel result = new JBLabel(
-                message,
-                icon,
-                SwingConstants.HORIZONTAL
-        );
-
-        result.setToolTipText("<pre>" + node.getDetail() + "</pre>");
-
-        return result;
+    Icon icon = AllIcons.Ide.Info_notifications;
+    if (node.getType() == BuckTreeNodeDetail.DetailType.ERROR) {
+      icon = AllIcons.Ide.Error;
+    } else if (node.getType() == BuckTreeNodeDetail.DetailType.WARNING) {
+      icon = AllIcons.Ide.Warning_notifications;
     }
+
+    String message = "<html><pre style='margin:0px'>" +
+        HtmlEscapers.htmlEscaper().escape(node.getDetail()) +
+        "</pre></html>";
+
+    JBLabel result = new JBLabel(
+        message,
+        icon,
+        SwingConstants.HORIZONTAL
+    );
+
+    result.setToolTipText("<pre>" + node.getDetail() + "</pre>");
+
+    return result;
+  }
 }

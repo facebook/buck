@@ -19,9 +19,9 @@ package com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers;
 import com.intellij.util.messages.Topic;
 
 public interface BuckBuildStartConsumer {
-    Topic<BuckBuildStartConsumer> BUCK_BUILD_START = Topic.create(
-            "buck.build.start",
-            BuckBuildStartConsumer.class
-    );
-    void consumeBuildStart(long timestamp);
+  Topic<BuckBuildStartConsumer> BUCK_BUILD_START = Topic.create(
+      "buck.build.start",
+      BuckBuildStartConsumer.class
+  );
+  void consumeBuildStart(long timestamp);
 }

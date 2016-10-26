@@ -16,7 +16,6 @@
 
 package com.facebook.buck.intellij.ideabuck.actions;
 
-
 import com.facebook.buck.intellij.ideabuck.build.BuckQueryCommandHandler;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommandHandler;
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;

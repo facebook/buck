@@ -19,5 +19,5 @@ package com.facebook.buck.intellij.ideabuck.ws.buckevents;
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 
 public interface BuckEventsQueueInterface {
-    void add(String rawMessage, BuckEventExternalInterface event);
+  void add(String rawMessage, BuckEventExternalInterface event);
 }

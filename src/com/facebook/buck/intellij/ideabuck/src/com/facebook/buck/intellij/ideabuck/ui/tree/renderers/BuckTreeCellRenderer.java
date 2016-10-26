@@ -30,32 +30,32 @@ import java.awt.Component;
 
 public class BuckTreeCellRenderer implements TreeCellRenderer {
 
-    private ImmutableMap<Class<?>, BuildElementRenderer> mRenderers;
+  private ImmutableMap<Class<?>, BuildElementRenderer> mRenderers;
 
-    public BuckTreeCellRenderer() {
-        mRenderers = new ImmutableMap.Builder<Class<?>, BuildElementRenderer>()
-                .put(BuckTreeNodeBuild.class, new BuildNodeRenderer())
-                .put(BuckTreeNodeTarget.class, new TargetNodeRenderer())
-                .put(BuckTreeNodeFileError.class, new FileErrorNodeRenderer())
-                .put(BuckTreeNodeDetail.class, new DetailNodeRenderer())
-                .put(BuckTreeNodeDetailError.class, new DetailNodeRenderer())
-                .build();
+  public BuckTreeCellRenderer() {
+    mRenderers = new ImmutableMap.Builder<Class<?>, BuildElementRenderer>()
+        .put(BuckTreeNodeBuild.class, new BuildNodeRenderer())
+        .put(BuckTreeNodeTarget.class, new TargetNodeRenderer())
+        .put(BuckTreeNodeFileError.class, new FileErrorNodeRenderer())
+        .put(BuckTreeNodeDetail.class, new DetailNodeRenderer())
+        .put(BuckTreeNodeDetailError.class, new DetailNodeRenderer())
+        .build();
+  }
+
+  @Override
+  public Component getTreeCellRendererComponent(JTree tree,
+      Object value,
+      boolean selected,
+      boolean expanded,
+      boolean leaf,
+      int row,
+      boolean hasFocus) {
+
+    Class<?> cc = value.getClass();
+    if (mRenderers.containsKey(cc)) {
+      BuildElementRenderer renderer = mRenderers.get(value.getClass());
+      return renderer.render(value);
     }
-
-    @Override
-    public Component getTreeCellRendererComponent(JTree tree,
-                                                  Object value,
-                                                  boolean selected,
-                                                  boolean expanded,
-                                                  boolean leaf,
-                                                  int row,
-                                                  boolean hasFocus) {
-
-        Class<?> cc = value.getClass();
-        if (mRenderers.containsKey(cc)) {
-            BuildElementRenderer renderer = mRenderers.get(value.getClass());
-            return renderer.render(value);
-        }
-        return new JBLabel("unknown kind of element");
-    }
+    return new JBLabel("unknown kind of element");
+  }
 }

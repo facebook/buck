@@ -20,12 +20,13 @@ import com.google.common.collect.ImmutableSet;
 import com.intellij.util.messages.Topic;
 
 public interface CompilerErrorConsumer {
-    Topic<CompilerErrorConsumer> COMPILER_ERROR_CONSUMER = Topic.create(
-            "buck.compiler.error",
-            CompilerErrorConsumer.class
-    );
-    void consumeCompilerError(String target,
-                              long timestamp,
-                              String error,
-                              ImmutableSet<String> suggestions);
+  Topic<CompilerErrorConsumer> COMPILER_ERROR_CONSUMER = Topic.create(
+      "buck.compiler.error",
+      CompilerErrorConsumer.class
+  );
+  void consumeCompilerError(
+      String target,
+      long timestamp,
+      String error,
+      ImmutableSet<String> suggestions);
 }

@@ -25,23 +25,23 @@ import java.awt.Color;
 import java.awt.Component;
 
 public class FileErrorNodeRenderer implements BuildElementRenderer {
-    @Override
-    public Component render(Object value) {
+  @Override
+  public Component render(Object value) {
 
-        JBLabel result = new JBLabel(
-                ((BuckTreeNodeFileError ) value).getFilePath(),
-                AllIcons.Ide.Warning_notifications,
-                SwingConstants.HORIZONTAL);
+    JBLabel result = new JBLabel(
+        ((BuckTreeNodeFileError ) value).getFilePath(),
+        AllIcons.Ide.Warning_notifications,
+        SwingConstants.HORIZONTAL);
 
-        BuckTreeNodeFileError buckNode = (BuckTreeNodeFileError ) value;
-        for (int i = 0; i < buckNode.getChildCount(); i++) {
-            BuckTreeNodeDetail childNode = (BuckTreeNodeDetail ) buckNode.getChildAt(i);
-            if (childNode.getType() == BuckTreeNodeDetail.DetailType.ERROR) {
-                result.setIcon(AllIcons.Ide.Error);
-                result.setForeground(Color.RED);
-                break;
-            }
-        }
-        return result;
+    BuckTreeNodeFileError buckNode = (BuckTreeNodeFileError ) value;
+    for (int i = 0; i < buckNode.getChildCount(); i++) {
+      BuckTreeNodeDetail childNode = (BuckTreeNodeDetail ) buckNode.getChildAt(i);
+      if (childNode.getType() == BuckTreeNodeDetail.DetailType.ERROR) {
+        result.setIcon(AllIcons.Ide.Error);
+        result.setForeground(Color.RED);
+        break;
+      }
     }
+    return result;
+  }
 }

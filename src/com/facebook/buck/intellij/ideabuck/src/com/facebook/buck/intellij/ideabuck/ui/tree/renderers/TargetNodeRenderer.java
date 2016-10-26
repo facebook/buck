@@ -25,12 +25,12 @@ import java.awt.Component;
 
 
 public class TargetNodeRenderer implements BuildElementRenderer {
-    @Override
-    public Component render(Object value) {
-        return new JBLabel(
-                ((BuckTreeNodeTarget) value).getTarget(),
-                AllIcons.Ide.Error,
-                SwingConstants.HORIZONTAL
-        );
-    }
+  @Override
+  public Component render(Object value) {
+    return new JBLabel(
+        ((BuckTreeNodeTarget) value).getTarget(),
+        AllIcons.Ide.Error,
+        SwingConstants.HORIZONTAL
+    );
+  }
 }

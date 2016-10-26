@@ -30,48 +30,46 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-/**
- * Created by theodordidii on 1/27/16.
- */
 public class BuckQueryCommandHandler extends BuckCommandHandler {
-    private Function<List<String>, Void> actionsToExecute;
-    public BuckQueryCommandHandler(
-        final Project project,
-        final VirtualFile root,
-        final BuckCommand command,
-        Function<List<String>, Void> actionsToExecute) {
-        super(project, VfsUtil.virtualToIoFile(root), command);
-        this.actionsToExecute = actionsToExecute;
-    }
 
-    @Override
-    protected void notifyLines(Key outputType, Iterator<String> lines, StringBuilder lineBuilder) {
-        super.notifyLines(outputType, lines, lineBuilder);
-        if (outputType == ProcessOutputTypes.STDOUT) {
-            List<String> targetList = new LinkedList<String>();
-            while (lines.hasNext()) {
-                String outputLine = lines.next();
-                if (!outputLine.isEmpty()) {
-                    JsonElement jsonElement = new JsonParser().parse(outputLine);
-                    if (jsonElement.isJsonArray()) {
-                        JsonArray targets = jsonElement.getAsJsonArray();
+  private Function<List<String>, Void> actionsToExecute;
+  public BuckQueryCommandHandler(
+      final Project project,
+      final VirtualFile root,
+      final BuckCommand command,
+      Function<List<String>, Void> actionsToExecute) {
+    super(project, VfsUtil.virtualToIoFile(root), command);
+    this.actionsToExecute = actionsToExecute;
+  }
 
-                        for (JsonElement target : targets) {
-                            targetList.add(target.getAsString());
-                        }
-                    }
-                }
+  @Override
+  protected void notifyLines(Key outputType, Iterator<String> lines, StringBuilder lineBuilder) {
+    super.notifyLines(outputType, lines, lineBuilder);
+    if (outputType == ProcessOutputTypes.STDOUT) {
+      List<String> targetList = new LinkedList<String>();
+      while (lines.hasNext()) {
+        String outputLine = lines.next();
+        if (!outputLine.isEmpty()) {
+          JsonElement jsonElement = new JsonParser().parse(outputLine);
+          if (jsonElement.isJsonArray()) {
+            JsonArray targets = jsonElement.getAsJsonArray();
+
+            for (JsonElement target : targets) {
+              targetList.add(target.getAsString());
             }
-            actionsToExecute.apply(targetList);
+          }
         }
+      }
+      actionsToExecute.apply(targetList);
     }
+  }
 
-    @Override
-    protected boolean beforeCommand() {
-        return true;
-    }
+  @Override
+  protected boolean beforeCommand() {
+    return true;
+  }
 
-    @Override
-    protected void afterCommand() {
-    }
+  @Override
+  protected void afterCommand() {
+  }
 }

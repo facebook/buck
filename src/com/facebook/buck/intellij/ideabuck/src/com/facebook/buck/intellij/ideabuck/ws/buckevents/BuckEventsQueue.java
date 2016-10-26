@@ -27,46 +27,46 @@ import java.io.IOException;
 
 public class BuckEventsQueue implements BuckEventsQueueInterface {
 
-    private static final Logger LOG = Logger.getInstance(BuckEventsQueue.class);
+  private static final Logger LOG = Logger.getInstance(BuckEventsQueue.class);
 
-    private final BuckEventsConsumerFactory mFactory;
-    private ObjectMapper mObjectMapper;
-    private BuckEventsAdapter mBuckEventsAdapter;
+  private final BuckEventsConsumerFactory mFactory;
+  private ObjectMapper mObjectMapper;
+  private BuckEventsAdapter mBuckEventsAdapter;
 
-    public BuckEventsQueue(ObjectMapper objectMapper, BuckEventsConsumerFactory factory) {
-        mFactory = factory;
-        mObjectMapper = objectMapper;
-        mBuckEventsAdapter = new BuckEventsAdapter();
-    }
+  public BuckEventsQueue(ObjectMapper objectMapper, BuckEventsConsumerFactory factory) {
+    mFactory = factory;
+    mObjectMapper = objectMapper;
+    mBuckEventsAdapter = new BuckEventsAdapter();
+  }
 
-    @Override
-    public void add(String rawMessage, BuckEventExternalInterface event) {
-        handleEvent(rawMessage, event);
-    }
+  @Override
+  public void add(String rawMessage, BuckEventExternalInterface event) {
+    handleEvent(rawMessage, event);
+  }
 
-    private void handleEvent(final String rawMessage, final BuckEventExternalInterface event) {
-        ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
-            @Override
-            public void run() {
-                synchronized (BuckEventsQueue.this.mFactory) {
-                    try {
-                        String eventName = event.getEventName();
-                        BuckEventHandler buckEventHandler = mBuckEventsAdapter.get(eventName);
-                        if (buckEventHandler == null) {
-                            LOG.warn("Unhandled event '" + eventName + "': " + rawMessage);
-                        } else {
-                            buckEventHandler.handleEvent(
-                                rawMessage,
-                                event,
-                                mFactory,
-                                mObjectMapper);
-                        }
-                    } catch (IOException e) {
-                        // TODO(cosmin1123) Handle exception
-                        e.printStackTrace();
-                    }
-                }
+  private void handleEvent(final String rawMessage, final BuckEventExternalInterface event) {
+    ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
+      @Override
+      public void run() {
+        synchronized (BuckEventsQueue.this.mFactory) {
+          try {
+            String eventName = event.getEventName();
+            BuckEventHandler buckEventHandler = mBuckEventsAdapter.get(eventName);
+            if (buckEventHandler == null) {
+              LOG.warn("Unhandled event '" + eventName + "': " + rawMessage);
+            } else {
+              buckEventHandler.handleEvent(
+                  rawMessage,
+                  event,
+                  mFactory,
+                  mObjectMapper);
             }
-        });
-    }
+          } catch (IOException e) {
+            // TODO(cosmin1123) Handle exception
+            e.printStackTrace();
+          }
+        }
+      }
+    });
+  }
 }

@@ -27,29 +27,29 @@ import javax.swing.Icon;
 
 abstract class BuckBaseAction extends DumbAwareAction {
 
-    public BuckBaseAction(String title, String desc, Icon icon) {
-        super(title, desc, icon);
-    }
+  public BuckBaseAction(String title, String desc, Icon icon) {
+    super(title, desc, icon);
+  }
 
-    public abstract void executeOnPooledThread(final AnActionEvent e);
+  public abstract void executeOnPooledThread(final AnActionEvent e);
 
-    @Override
-    public void actionPerformed(final AnActionEvent e) {
-        ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
-            @Override
-            public void run() {
-                executeOnPooledThread(e);
-            }
-        });
-    }
+  @Override
+  public void actionPerformed(final AnActionEvent e) {
+    ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
+      @Override
+      public void run() {
+        executeOnPooledThread(e);
+      }
+    });
+  }
 
-    @Override
-    public void update(AnActionEvent e) {
-        Project project = e.getProject();
-        if (project != null) {
-            e.getPresentation().setEnabled(
-                !BuckBuildManager.getInstance(project).isBuilding() &&
-                project.getComponent(BuckModule.class).isConnected());
-        }
+  @Override
+  public void update(AnActionEvent e) {
+    Project project = e.getProject();
+    if (project != null) {
+      e.getPresentation().setEnabled(
+          !BuckBuildManager.getInstance(project).isBuilding() &&
+              project.getComponent(BuckModule.class).isConnected());
     }
+  }
 }

@@ -24,60 +24,60 @@ import java.util.List;
 
 public class BuckTreeNodeBuild implements TreeNode {
 
-    private final String mTarget;
-    private final List<TreeNode> mChilds;
+  private final String mTarget;
+  private final List<TreeNode> mChilds;
 
-    public BuckTreeNodeBuild(String target) {
-        mTarget = target;
-        mChilds = new ArrayList<TreeNode>();
-    }
+  public BuckTreeNodeBuild(String target) {
+    mTarget = target;
+    mChilds = new ArrayList<TreeNode>();
+  }
 
-    public void addChild(TreeNode node) {
-        mChilds.add(node);
-    }
+  public void addChild(TreeNode node) {
+    mChilds.add(node);
+  }
 
-    public void removeChild(TreeNode node) {
-        if (mChilds.contains(node)) {
-            mChilds.remove(node);
-        }
+  public void removeChild(TreeNode node) {
+    if (mChilds.contains(node)) {
+      mChilds.remove(node);
     }
+  }
 
-    @Override
-    public TreeNode getChildAt(int childIndex) {
-        return mChilds.get(childIndex);
-    }
+  @Override
+  public TreeNode getChildAt(int childIndex) {
+    return mChilds.get(childIndex);
+  }
 
-    @Override
-    public int getChildCount() {
-        return mChilds.size();
-    }
+  @Override
+  public int getChildCount() {
+    return mChilds.size();
+  }
 
-    @Override
-    public TreeNode getParent() {
-        return null;
-    }
+  @Override
+  public TreeNode getParent() {
+    return null;
+  }
 
-    @Override
-    public int getIndex(TreeNode node) {
-        return 0;
-    }
+  @Override
+  public int getIndex(TreeNode node) {
+    return 0;
+  }
 
-    @Override
-    public boolean getAllowsChildren() {
-        return true;
-    }
+  @Override
+  public boolean getAllowsChildren() {
+    return true;
+  }
 
-    @Override
-    public boolean isLeaf() {
-        return false;
-    }
+  @Override
+  public boolean isLeaf() {
+    return false;
+  }
 
-    @Override
-    public Enumeration children() {
-        return Collections.enumeration(mChilds);
-    }
+  @Override
+  public Enumeration children() {
+    return Collections.enumeration(mChilds);
+  }
 
-    public String getTarget() {
-        return mTarget;
-    }
+  public String getTarget() {
+    return mTarget;
+  }
 }

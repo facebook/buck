@@ -35,102 +35,102 @@ import unit.util.MockSession;
 
 public class BuckClientTest {
 
-    public class TestBuckEventHandler implements BuckEventsHandlerInterface {
+  public class TestBuckEventHandler implements BuckEventsHandlerInterface {
 
-        private String lastMessage = "";
-        public String getLastMessage() {
-            return this.lastMessage;
-        }
-
-        @Override
-        public void onConnect() {
-        }
-
-        @Override
-        public void onDisconnect() {
-        }
-
-        @Override
-        public void onMessage(String message) {
-            this.lastMessage = message;
-        }
+    private String lastMessage = "";
+    public String getLastMessage() {
+      return this.lastMessage;
     }
 
-    @Test
-    public void testConnectDisconnect() {
-        Extensions.registerAreaClass("IDEA_PROJECT", null);
-        MockDisposable mockDisposable = new MockDisposable();
-
-        MockApplication application = new MockApplicationEx(mockDisposable);
-        ApplicationManager.setApplication(application, mockDisposable);
-
-        Project project = new MockProjectEx(new MockDisposable());
-
-        TestBuckEventHandler handler = new TestBuckEventHandler();
-        BuckSocket buckSocket = new BuckSocket(handler);
-        BuckClient.getOrInstantiate(project, handler).setBuckSocket(buckSocket);
-
-        BuckClient.getOrInstantiate(project, handler).connect();
-        buckSocket.onConnect(new MockSession());
-
-        BuckClient.getOrInstantiate(project, handler).disconnectWithoutRetry();
-        buckSocket.onClose(0, "FOO");
-
-        assertFalse(BuckClient.getOrInstantiate(project, handler).isConnected());
+    @Override
+    public void onConnect() {
     }
 
-    @Test
-    public void hasBuckDisconnectedThenWeReconnectIfSoSpecified() {
-        Extensions.registerAreaClass("IDEA_PROJECT", null);
-        MockDisposable mockDisposable = new MockDisposable();
-
-        MockApplication application = new MockApplicationEx(mockDisposable);
-        ApplicationManager.setApplication(application, mockDisposable);
-
-        Project project = new MockProjectEx(new MockDisposable());
-
-        TestBuckEventHandler handler = new TestBuckEventHandler();
-        BuckSocket buckSocket = new BuckSocket(handler);
-        BuckClient.getOrInstantiate(project, handler).setBuckSocket(buckSocket);
-
-        BuckClient.getOrInstantiate(project, handler).connect();
-        buckSocket.onConnect(new MockSession());
-
-        BuckClient.getOrInstantiate(project, handler).disconnectWithRetry();
-        buckSocket.onClose(0, "FOO");
-        buckSocket.onConnect(new MockSession());
-
-        assertTrue(BuckClient.getOrInstantiate(project, handler).isConnected());
+    @Override
+    public void onDisconnect() {
     }
 
-    @Test
-    public void testMessages() {
-        Extensions.registerAreaClass("IDEA_PROJECT", null);
-        MockDisposable mockDisposable = new MockDisposable();
-
-        MockApplication application = new MockApplicationEx(mockDisposable);
-        ApplicationManager.setApplication(application, mockDisposable);
-        Project project = new MockProjectEx(new MockDisposable());
-
-        TestBuckEventHandler handler = new TestBuckEventHandler();
-        BuckClient client = BuckClient.getOrInstantiate(project, handler);
-
-        // Set the socket we control
-        BuckSocket socket = new BuckSocket(handler);
-
-        client.setBuckSocket(socket);
-
-        client.connect();
-
-        assertEquals("", handler.getLastMessage());
-
-        socket.onMessage("some text");
-        assertEquals("some text", handler.getLastMessage());
-
-        socket.onMessage("some text 1");
-        socket.onMessage("some text 2");
-        socket.onMessage("some text 3");
-        socket.onMessage("some text 4");
-        assertEquals("some text 4", handler.getLastMessage());
+    @Override
+    public void onMessage(String message) {
+      this.lastMessage = message;
     }
+  }
+
+  @Test
+  public void testConnectDisconnect() {
+    Extensions.registerAreaClass("IDEA_PROJECT", null);
+    MockDisposable mockDisposable = new MockDisposable();
+
+    MockApplication application = new MockApplicationEx(mockDisposable);
+    ApplicationManager.setApplication(application, mockDisposable);
+
+    Project project = new MockProjectEx(new MockDisposable());
+
+    TestBuckEventHandler handler = new TestBuckEventHandler();
+    BuckSocket buckSocket = new BuckSocket(handler);
+    BuckClient.getOrInstantiate(project, handler).setBuckSocket(buckSocket);
+
+    BuckClient.getOrInstantiate(project, handler).connect();
+    buckSocket.onConnect(new MockSession());
+
+    BuckClient.getOrInstantiate(project, handler).disconnectWithoutRetry();
+    buckSocket.onClose(0, "FOO");
+
+    assertFalse(BuckClient.getOrInstantiate(project, handler).isConnected());
+  }
+
+  @Test
+  public void hasBuckDisconnectedThenWeReconnectIfSoSpecified() {
+    Extensions.registerAreaClass("IDEA_PROJECT", null);
+    MockDisposable mockDisposable = new MockDisposable();
+
+    MockApplication application = new MockApplicationEx(mockDisposable);
+    ApplicationManager.setApplication(application, mockDisposable);
+
+    Project project = new MockProjectEx(new MockDisposable());
+
+    TestBuckEventHandler handler = new TestBuckEventHandler();
+    BuckSocket buckSocket = new BuckSocket(handler);
+    BuckClient.getOrInstantiate(project, handler).setBuckSocket(buckSocket);
+
+    BuckClient.getOrInstantiate(project, handler).connect();
+    buckSocket.onConnect(new MockSession());
+
+    BuckClient.getOrInstantiate(project, handler).disconnectWithRetry();
+    buckSocket.onClose(0, "FOO");
+    buckSocket.onConnect(new MockSession());
+
+    assertTrue(BuckClient.getOrInstantiate(project, handler).isConnected());
+  }
+
+  @Test
+  public void testMessages() {
+    Extensions.registerAreaClass("IDEA_PROJECT", null);
+    MockDisposable mockDisposable = new MockDisposable();
+
+    MockApplication application = new MockApplicationEx(mockDisposable);
+    ApplicationManager.setApplication(application, mockDisposable);
+    Project project = new MockProjectEx(new MockDisposable());
+
+    TestBuckEventHandler handler = new TestBuckEventHandler();
+    BuckClient client = BuckClient.getOrInstantiate(project, handler);
+
+    // Set the socket we control
+    BuckSocket socket = new BuckSocket(handler);
+
+    client.setBuckSocket(socket);
+
+    client.connect();
+
+    assertEquals("", handler.getLastMessage());
+
+    socket.onMessage("some text");
+    assertEquals("some text", handler.getLastMessage());
+
+    socket.onMessage("some text 1");
+    socket.onMessage("some text 2");
+    socket.onMessage("some text 3");
+    socket.onMessage("some text 4");
+    assertEquals("some text 4", handler.getLastMessage());
+  }
 }

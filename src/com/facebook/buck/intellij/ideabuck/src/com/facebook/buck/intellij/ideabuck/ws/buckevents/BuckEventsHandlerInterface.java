@@ -17,7 +17,7 @@
 package com.facebook.buck.intellij.ideabuck.ws.buckevents;
 
 public interface BuckEventsHandlerInterface {
-    void onConnect();
-    void onDisconnect();
-    void onMessage(String message);
+  void onConnect();
+  void onDisconnect();
+  void onMessage(String message);
 }

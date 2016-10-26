@@ -17,48 +17,48 @@
 package com.facebook.buck.intellij.ideabuck.ui.utils;
 
 public class CompilerErrorItem {
-    public enum Type {
-        ERROR,
-        WARNING
-    }
-    private String mError;
-    private String mFilePath;
-    private int mColumn;
-    private int mLine;
-    private Type mType;
+  public enum Type {
+    ERROR,
+    WARNING
+  }
+  private String mError;
+  private String mFilePath;
+  private int mColumn;
+  private int mLine;
+  private Type mType;
 
-    public CompilerErrorItem(
-            String filePath,
-            int line,
-            Type type
-    ) {
-        mFilePath = filePath;
-        mColumn = -1;
-        mLine = line;
-        mType = type;
-        mError = "";
-    }
+  public CompilerErrorItem(
+      String filePath,
+      int line,
+      Type type
+  ) {
+    mFilePath = filePath;
+    mColumn = -1;
+    mLine = line;
+    mType = type;
+    mError = "";
+  }
 
-    public void setError(String error) {
-        mError = error;
-    }
-    public void setColumn(int column) {
-        mColumn = column;
-    }
+  public void setError(String error) {
+    mError = error;
+  }
+  public void setColumn(int column) {
+    mColumn = column;
+  }
 
-    public String getError() {
-        return mError;
-    }
-    public String getFilePath() {
-        return mFilePath;
-    }
-    public int getColumn() {
-        return mColumn;
-    }
-    public int getLine() {
-        return mLine;
-    }
-    public Type getType() {
-        return mType;
-    }
+  public String getError() {
+    return mError;
+  }
+  public String getFilePath() {
+    return mFilePath;
+  }
+  public int getColumn() {
+    return mColumn;
+  }
+  public int getLine() {
+    return mLine;
+  }
+  public Type getType() {
+    return mType;
+  }
 }

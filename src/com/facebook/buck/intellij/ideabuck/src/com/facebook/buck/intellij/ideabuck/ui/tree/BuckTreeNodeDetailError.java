@@ -19,22 +19,22 @@ package com.facebook.buck.intellij.ideabuck.ui.tree;
 import javax.swing.tree.TreeNode;
 
 public class BuckTreeNodeDetailError extends BuckTreeNodeDetail {
-    private final int mLine;
-    private final int mColumn;
+  private final int mLine;
+  private final int mColumn;
 
-    public BuckTreeNodeDetailError(TreeNode parent, String detail, int line, int column) {
-        super(parent, DetailType.ERROR, detail);
-        mLine = line;
-        mColumn = column;
-    }
+  public BuckTreeNodeDetailError(TreeNode parent, String detail, int line, int column) {
+    super(parent, DetailType.ERROR, detail);
+    mLine = line;
+    mColumn = column;
+  }
 
-    public String getError() {
-        return mDetail;
-    }
-    public int getLine() {
-        return mLine;
-    }
-    public int getColumn() {
-        return mColumn;
-    }
+  public String getError() {
+    return mDetail;
+  }
+  public int getLine() {
+    return mLine;
+  }
+  public int getColumn() {
+    return mColumn;
+  }
 }

@@ -26,49 +26,49 @@ import com.fasterxml.jackson.module.mrbean.MrBeanModule;
 import java.io.IOException;
 
 public class BuckEventHandler implements BuckEventsHandlerInterface {
-    private final BuckEventsQueueInterface mQueue;
-    private final ObjectMapper mObjectMapper;
+  private final BuckEventsQueueInterface mQueue;
+  private final ObjectMapper mObjectMapper;
 
-    private Runnable mOnConnectHandler = null;
-    private Runnable mOnDisconnectHandler = null;
+  private Runnable mOnConnectHandler = null;
+  private Runnable mOnDisconnectHandler = null;
 
-    public BuckEventHandler(BuckEventsConsumerFactory consumerFactory,
-                            Runnable onConnectHandler,
-                            Runnable onDisconnectHandler) {
-        mOnConnectHandler = onConnectHandler;
-        mOnDisconnectHandler = onDisconnectHandler;
+  public BuckEventHandler(BuckEventsConsumerFactory consumerFactory,
+      Runnable onConnectHandler,
+      Runnable onDisconnectHandler) {
+    mOnConnectHandler = onConnectHandler;
+    mOnDisconnectHandler = onDisconnectHandler;
 
-        mObjectMapper = new ObjectMapper();
-        mObjectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        mObjectMapper.registerModule(new MrBeanModule());
-        mObjectMapper.registerModule(new GuavaModule());
+    mObjectMapper = new ObjectMapper();
+    mObjectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    mObjectMapper.registerModule(new MrBeanModule());
+    mObjectMapper.registerModule(new GuavaModule());
 
-        mQueue = new BuckEventsQueue(mObjectMapper, consumerFactory);
+    mQueue = new BuckEventsQueue(mObjectMapper, consumerFactory);
+  }
+
+  @Override
+  public void onConnect() {
+    if (mOnConnectHandler != null) {
+      mOnConnectHandler.run();
     }
+  }
 
-    @Override
-    public void onConnect() {
-        if (mOnConnectHandler != null) {
-            mOnConnectHandler.run();
-        }
+  @Override
+  public void onDisconnect() {
+    if (mOnDisconnectHandler != null) {
+      mOnDisconnectHandler.run();
     }
+  }
 
-    @Override
-    public void onDisconnect() {
-        if (mOnDisconnectHandler != null) {
-            mOnDisconnectHandler.run();
-        }
+  @Override
+  public void onMessage(final String message) {
+    final BuckEventExternalInterface buckEventExternalInterface;
+    try {
+      buckEventExternalInterface =
+          mObjectMapper.readValue(message, BuckEventExternalInterface.class);
+      mQueue.add(message, buckEventExternalInterface);
+    } catch (IOException e) {
+      e.printStackTrace();
     }
-
-    @Override
-    public void onMessage(final String message) {
-        final BuckEventExternalInterface buckEventExternalInterface;
-        try {
-            buckEventExternalInterface =
-                mObjectMapper.readValue(message, BuckEventExternalInterface.class);
-            mQueue.add(message, buckEventExternalInterface);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+  }
 }

@@ -23,12 +23,12 @@ import javax.swing.SwingConstants;
 import java.awt.Component;
 
 public class BuildNodeRenderer implements BuildElementRenderer {
-    @Override
-    public Component render(Object value) {
-        return new JBLabel(
-                "Building " + ((BuckTreeNodeBuild) value).getTarget(),
-                AllIcons.Ide.Info_notifications,
-                SwingConstants.HORIZONTAL
-        );
-    }
+  @Override
+  public Component render(Object value) {
+    return new JBLabel(
+        "Building " + ((BuckTreeNodeBuild) value).getTarget(),
+        AllIcons.Ide.Info_notifications,
+        SwingConstants.HORIZONTAL
+    );
+  }
 }

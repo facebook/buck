@@ -37,122 +37,122 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class BuckModule implements ProjectComponent {
 
-    private Project mProject;
-    private BuckEventsHandler mEventHandler;
-    private BuckEventsConsumer mBuckEventsConsumer;
-    private AtomicBoolean projectClosed;
+  private Project mProject;
+  private BuckEventsHandler mEventHandler;
+  private BuckEventsConsumer mBuckEventsConsumer;
+  private AtomicBoolean projectClosed;
 
-    public BuckModule(final Project project) {
-        mProject = project;
-        mEventHandler = new BuckEventsHandler(
-            new BuckEventsConsumerFactory(mProject),
-            new ExecuteOnBuckPluginConnect(),
-            new ExecuteOnBuckPluginDisconnect()
-        );
+  public BuckModule(final Project project) {
+    mProject = project;
+    mEventHandler = new BuckEventsHandler(
+        new BuckEventsConsumerFactory(mProject),
+        new ExecuteOnBuckPluginConnect(),
+        new ExecuteOnBuckPluginDisconnect()
+    );
+  }
+
+  @Override
+  public String getComponentName() {
+    return "ideabuck - " + mProject.getName();
+  }
+
+  @Override
+  public void initComponent() {}
+
+  @Override
+  public void disposeComponent() {}
+
+  @Override
+  public void projectOpened() {
+    projectClosed = new AtomicBoolean(false);
+    BuckFileUtil.setBuckFileType();
+    // connect to the Buck client
+    BuckClient.getOrInstantiate(mProject, mEventHandler).connect();
+
+    if (!UISettings.getInstance().SHOW_MAIN_TOOLBAR) {
+      BuckPluginNotifications.notifyActionToolbar(mProject);
     }
 
+    mBuckEventsConsumer = new BuckEventsConsumer(mProject);
+
+    PsiDocumentManager manager = PsiDocumentManager.getInstance(mProject);
+    manager.addListener(new BuckAutoDepsContributor(mProject));
+  }
+
+  @Override
+  public void projectClosed() {
+    projectClosed.set(true);
+    BuckClient.getOrInstantiate(mProject, mEventHandler).disconnectWithoutRetry();
+    AndroidDebugger.disconnect();
+    if (mBuckEventsConsumer != null) {
+      mBuckEventsConsumer.detach();
+    }
+  }
+
+  public boolean isConnected() {
+    return BuckClient.getOrInstantiate(mProject, mEventHandler).isConnected();
+  }
+
+  public void attachIfDetached() {
+    attachIfDetached("");
+  }
+
+  public void attachIfDetached(String target) {
+    if (!mBuckEventsConsumer.isAttached()) {
+      attach(target);
+    }
+  }
+
+  public void attach(String target) {
+    mBuckEventsConsumer.detach();
+
+    mBuckEventsConsumer.attach(target, BuckUIManager.getInstance(mProject).getTreeModel());
+  }
+
+  public BuckEventsConsumer getBuckEventsConsumer() {
+    return mBuckEventsConsumer;
+  }
+
+  private class ExecuteOnBuckPluginDisconnect implements Runnable {
     @Override
-    public String getComponentName() {
-        return "ideabuck - " + mProject.getName();
-    }
-
-    @Override
-    public void initComponent() {}
-
-    @Override
-    public void disposeComponent() {}
-
-    @Override
-    public void projectOpened() {
-        projectClosed = new AtomicBoolean(false);
-        BuckFileUtil.setBuckFileType();
-        // connect to the Buck client
-        BuckClient.getOrInstantiate(mProject, mEventHandler).connect();
-
-        if (!UISettings.getInstance().SHOW_MAIN_TOOLBAR) {
-            BuckPluginNotifications.notifyActionToolbar(mProject);
-        }
-
-        mBuckEventsConsumer = new BuckEventsConsumer(mProject);
-
-        PsiDocumentManager manager = PsiDocumentManager.getInstance(mProject);
-        manager.addListener(new BuckAutoDepsContributor(mProject));
-    }
-
-    @Override
-    public void projectClosed() {
-        projectClosed.set(true);
-        BuckClient.getOrInstantiate(mProject, mEventHandler).disconnectWithoutRetry();
-        AndroidDebugger.disconnect();
-        if (mBuckEventsConsumer != null) {
-            mBuckEventsConsumer.detach();
-        }
-    }
-
-    public boolean isConnected() {
-        return BuckClient.getOrInstantiate(mProject, mEventHandler).isConnected();
-    }
-
-    public void attachIfDetached() {
-        attachIfDetached("");
-    }
-
-    public void attachIfDetached(String target) {
-        if (!mBuckEventsConsumer.isAttached()) {
-            attach(target);
-        }
-    }
-
-    public void attach(String target) {
-        mBuckEventsConsumer.detach();
-
-        mBuckEventsConsumer.attach(target, BuckUIManager.getInstance(mProject).getTreeModel());
-    }
-
-    public BuckEventsConsumer getBuckEventsConsumer() {
-        return mBuckEventsConsumer;
-    }
-
-    private class ExecuteOnBuckPluginDisconnect implements Runnable {
-        @Override
-        public void run() {
-            ApplicationManager.getApplication().invokeLater(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        // If we haven't closed the project, then we show the message
-                        if (!mProject.isDisposed()) {
-                            BuckToolWindowFactory.outputConsoleMessage(
-                                mProject,
-                                "Disconnected from buck!\n",
-                                ConsoleViewContentType.SYSTEM_OUTPUT);
-                        }
-                    }
-                });
-            if (!projectClosed.get()) {
-                // Tell the client that we got disconnected, but we can retry
-                BuckClient.getOrInstantiate(mProject, mEventHandler).disconnectWithRetry();
+    public void run() {
+      ApplicationManager.getApplication().invokeLater(
+          new Runnable() {
+            @Override
+            public void run() {
+              // If we haven't closed the project, then we show the message
+              if (!mProject.isDisposed()) {
+                BuckToolWindowFactory.outputConsoleMessage(
+                    mProject,
+                    "Disconnected from buck!\n",
+                    ConsoleViewContentType.SYSTEM_OUTPUT);
+              }
             }
-        }
+          });
+      if (!projectClosed.get()) {
+        // Tell the client that we got disconnected, but we can retry
+        BuckClient.getOrInstantiate(mProject, mEventHandler).disconnectWithRetry();
+      }
     }
+  }
 
-    private class ExecuteOnBuckPluginConnect implements Runnable {
-        @Override
-        public void run() {
-            ApplicationManager.getApplication().invokeLater(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        // If we connected to Buck and then closed the project, before getting
-                        // the success message
-                        if (!mProject.isDisposed()) {
-                            BuckToolWindowFactory.outputConsoleMessage(
-                                mProject,
-                                "Connected to buck!\n",
-                                ConsoleViewContentType.SYSTEM_OUTPUT);
-                        }
-                    }
-                });
-        }
+  private class ExecuteOnBuckPluginConnect implements Runnable {
+    @Override
+    public void run() {
+      ApplicationManager.getApplication().invokeLater(
+          new Runnable() {
+            @Override
+            public void run() {
+              // If we connected to Buck and then closed the project, before getting
+              // the success message
+              if (!mProject.isDisposed()) {
+                BuckToolWindowFactory.outputConsoleMessage(
+                    mProject,
+                    "Connected to buck!\n",
+                    ConsoleViewContentType.SYSTEM_OUTPUT);
+              }
+            }
+          });
     }
+  }
 }

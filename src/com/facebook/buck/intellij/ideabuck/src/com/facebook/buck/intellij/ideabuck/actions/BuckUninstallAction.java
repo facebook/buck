@@ -25,7 +25,7 @@ import com.intellij.openapi.project.Project;
 
 import icons.BuckIcons;
 
-/**git st
+/**
  * Run buck uninstall command.
  */
 public class BuckUninstallAction extends BuckBaseAction {
