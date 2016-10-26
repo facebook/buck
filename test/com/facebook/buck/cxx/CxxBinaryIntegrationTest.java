@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import static com.facebook.buck.cxx.CxxFlavorSanitizer.sanitize;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
@@ -48,19 +47,17 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
-import org.ini4j.Ini;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -615,12 +612,13 @@ public class CxxBinaryIntegrationTest {
       ProjectWorkspace cellToModifyConfigOf,
       String cellName,
       ProjectWorkspace cellToRegisterAsCellName) throws IOException {
-    String config = cellToModifyConfigOf.getFileContents(".buckconfig");
-    Ini ini = new Ini(new StringReader(config));
-    ini.put("repositories", cellName, cellToRegisterAsCellName.getPath(".").normalize());
-    StringWriter writer = new StringWriter();
-    ini.store(writer);
-    Files.write(cellToModifyConfigOf.getPath(".buckconfig"), writer.toString().getBytes(UTF_8));
+    TestDataHelper.overrideBuckconfig(
+        cellToModifyConfigOf,
+        ImmutableMap.of(
+            "repositories",
+            ImmutableMap.of(
+                cellName,
+                cellToRegisterAsCellName.getPath(".").normalize().toString())));
   }
 
   @Test

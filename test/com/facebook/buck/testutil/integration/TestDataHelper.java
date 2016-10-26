@@ -16,13 +16,19 @@
 
 package com.facebook.buck.testutil.integration;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.martiansoftware.nailgun.NGContext;
 
+import org.ini4j.Ini;
+
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.FileSystems;
@@ -30,6 +36,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.tools.ToolProvider;
@@ -95,6 +102,22 @@ public class TestDataHelper {
       Path temporaryRoot) {
     Path templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
     return new CacheClearingProjectWorkspace(templateDir, temporaryRoot);
+  }
+
+  public static void overrideBuckconfig(
+      ProjectWorkspace projectWorkspace,
+      Map<String, ? extends Map<String, String>> buckconfigOverrides) throws IOException {
+    String config = projectWorkspace.getFileContents(".buckconfig");
+    Ini ini = new Ini(new StringReader(config));
+    for (Map.Entry<String, ? extends Map<String, String>> section :
+           buckconfigOverrides.entrySet()) {
+      for (Map.Entry<String, String> entry : section.getValue().entrySet()) {
+        ini.put(section.getKey(), entry.getKey(), entry.getValue());
+      }
+    }
+    StringWriter writer = new StringWriter();
+    ini.store(writer);
+    Files.write(projectWorkspace.getPath(".buckconfig"), writer.toString().getBytes(UTF_8));
   }
 
   private static class CacheClearingProjectWorkspace extends ProjectWorkspace {

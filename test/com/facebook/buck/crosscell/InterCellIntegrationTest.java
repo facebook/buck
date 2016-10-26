@@ -55,14 +55,11 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import org.ini4j.Ini;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -386,11 +383,9 @@ public class InterCellIntegrationTest {
         "inter-cell/export-file/secondary");
     ProjectWorkspace primary = cells.getFirst();
     ProjectWorkspace secondary = cells.getSecond();
-    putConfigValue(
+    TestDataHelper.overrideBuckconfig(
         secondary,
-        "cxx",
-        "cc",
-        "/does/not/exist");
+        ImmutableMap.of("cxx", ImmutableMap.of("cc", "/does/not/exist")));
 
     try {
       primary.runBuckBuild("//:cxxbinary");
@@ -448,23 +443,12 @@ public class InterCellIntegrationTest {
       ProjectWorkspace cellToModifyConfigOf,
       String cellName,
       ProjectWorkspace cellToRegisterAsCellName) throws IOException {
-    putConfigValue(
+    TestDataHelper.overrideBuckconfig(
         cellToModifyConfigOf,
-        "repositories",
-        cellName,
-        cellToRegisterAsCellName.getPath(".").normalize().toString());
-  }
-
-  private void putConfigValue(
-      ProjectWorkspace cellToModifyConfigOf,
-      String section,
-      String key,
-      String value) throws IOException {
-    String config = cellToModifyConfigOf.getFileContents(".buckconfig");
-    Ini ini = new Ini(new StringReader(config));
-    ini.put(section, key, value);
-    StringWriter writer = new StringWriter();
-    ini.store(writer);
-    Files.write(cellToModifyConfigOf.getPath(".buckconfig"), writer.toString().getBytes(UTF_8));
+        ImmutableMap.of(
+            "repositories",
+            ImmutableMap.of(
+                cellName,
+                cellToRegisterAsCellName.getPath(".").normalize().toString())));
   }
 }

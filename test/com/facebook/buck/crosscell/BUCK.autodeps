@@ -22,7 +22,6 @@
       "//test/com/facebook/buck/testutil/integration:util",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",
-      "//third-party/java/ini4j:ini4j",
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]
