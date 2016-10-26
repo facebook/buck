@@ -35,6 +35,9 @@ public final class Sha1HashCode {
   private static final Pattern SHA1_PATTERN = Pattern.compile(
       String.format("[a-f0-9]{%d}", NUM_BYTES_IN_HEX_REPRESENTATION));
 
+  private static final char[] HEX_DIGITS =
+      {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+
   /**
    * Because Guava's AbstractStreamingHasher uses a ByteBuffer with ByteOrder.LITTLE_ENDIAN:
    *
@@ -113,32 +116,28 @@ public final class Sha1HashCode {
    * @return the hash as a 40-character string from the alphabet [a-f0-9].
    */
   public String getHash() {
-    int firstFour =
-        ((firstFourBytes & 0x000000FF) << 24) |
-        ((firstFourBytes & 0x0000FF00) << 8) |
-        ((firstFourBytes & 0x00FF0000) >>> 8) |
-        ((firstFourBytes & 0xFF000000) >>> 24);
-    long nextEight =
-        ((nextEightBytes & 0x00000000000000FFL) << 56) |
-        ((nextEightBytes & 0x000000000000FF00L) << 40) |
-        ((nextEightBytes & 0x0000000000FF0000L) << 24) |
-        ((nextEightBytes & 0x00000000FF000000L) << 8) |
-        ((nextEightBytes & 0x000000FF00000000L) >>> 8) |
-        ((nextEightBytes & 0x0000FF0000000000L) >>> 24) |
-        ((nextEightBytes & 0x00FF000000000000L) >>> 40) |
-        ((nextEightBytes & 0xFF00000000000000L) >>> 56);
-    long lastEight =
-        ((lastEightBytes & 0x00000000000000FFL) << 56) |
-        ((lastEightBytes & 0x000000000000FF00L) << 40) |
-        ((lastEightBytes & 0x0000000000FF0000L) << 24) |
-        ((lastEightBytes & 0x00000000FF000000L) << 8) |
-        ((lastEightBytes & 0x000000FF00000000L) >>> 8) |
-        ((lastEightBytes & 0x0000FF0000000000L) >>> 24) |
-        ((lastEightBytes & 0x00FF000000000000L) >>> 40) |
-        ((lastEightBytes & 0xFF00000000000000L) >>> 56);
-    return String.format("%08x", firstFour) +
-        String.format("%016x", nextEight) +
-        String.format("%016x", lastEight);
+    StringBuilder sb = new StringBuilder(NUM_BYTES_IN_HEX_REPRESENTATION);
+    appendInt(sb, firstFourBytes);
+    appendLong(sb, nextEightBytes);
+    appendLong(sb, lastEightBytes);
+    return sb.toString();
+  }
+
+  private static void appendLong(StringBuilder sb, long bytes) {
+    appendInt(sb, (int) bytes);
+    appendInt(sb, (int) (bytes >>> 32));
+  }
+
+  private static void appendInt(StringBuilder sb, int bytes) {
+    appendByte(sb, (byte) bytes);
+    appendByte(sb, (byte) (bytes >>> 8));
+    appendByte(sb, (byte) (bytes >>> 16));
+    appendByte(sb, (byte) (bytes >>> 24));
+  }
+
+  private static void appendByte(StringBuilder sb, byte b) {
+    sb.append(HEX_DIGITS[(b >>> 4) & 0xF]);
+    sb.append(HEX_DIGITS[b & 0xF]);
   }
 
   /** Same as {@link #getHash()}. */
