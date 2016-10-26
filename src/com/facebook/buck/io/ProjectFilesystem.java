@@ -147,7 +147,7 @@ public class ProjectFilesystem {
   protected boolean ignoreValidityOfPaths;
 
   public ProjectFilesystem(Path root) {
-    this(root, ImmutableSet.of());
+    this(root.getFileSystem(), root, ImmutableSet.of(), getDefaultBuckPaths(root));
   }
 
   /**
@@ -162,10 +162,6 @@ public class ProjectFilesystem {
         ImmutableSet.of(),
         getDefaultBuckPaths(root),
         delegate);
-  }
-
-  public ProjectFilesystem(Path root, ImmutableSet<PathOrGlobMatcher> blackListedPaths) {
-    this(root.getFileSystem(), root, blackListedPaths, getDefaultBuckPaths(root));
   }
 
   public ProjectFilesystem(Path root, Config config) {
@@ -335,6 +331,16 @@ public class ProjectFilesystem {
 
   public final Path getRootPath() {
     return projectRoot;
+  }
+
+  public ProjectFilesystem replaceBlacklistedPaths(
+      ImmutableSet<PathOrGlobMatcher> blackListedPaths) {
+    return new ProjectFilesystem(
+        projectRoot.getFileSystem(),
+        projectRoot,
+        blackListedPaths,
+        buckPaths,
+        delegate);
   }
 
   /**

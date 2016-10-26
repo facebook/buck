@@ -86,9 +86,7 @@ public class DistBuildState {
           public FileHashCache load(@Nonnull ProjectFilesystem filesystem) {
             FileHashCache cellCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
             FileHashCache buckOutCache = DefaultFileHashCache.createBuckOutFileHashCache(
-                new ProjectFilesystem(
-                    filesystem.getRootPath(),
-                    ImmutableSet.of()),
+                filesystem.replaceBlacklistedPaths(ImmutableSet.of()),
                 filesystem.getBuckPaths().getBuckOut());
             return new StackedFileHashCache(
                 ImmutableList.of(cellCache, buckOutCache));
