@@ -467,7 +467,7 @@ public class AndroidBinaryGraphEnhancer {
     BuildRuleParams paramsForDexUberRDotJava = buildRuleParams.copyWithChanges(
         createBuildTargetWithFlavor(DEX_UBER_R_DOT_JAVA_FLAVOR),
         Suppliers.ofInstance(ImmutableSortedSet.of(compileUberRDotJava)),
-          /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
+        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
     DexProducedFromJavaLibrary dexUberRDotJava =
         new DexProducedFromJavaLibrary(paramsForDexUberRDotJava, pathResolver, compileUberRDotJava);
     ruleResolver.addToIndex(dexUberRDotJava);
