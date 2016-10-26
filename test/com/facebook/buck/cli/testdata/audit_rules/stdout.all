@@ -2,6 +2,7 @@
 
 genrule(
   name = "example",
+  autodeps = False,
   bash = "cat $SRCS > $OUT",
   cmd = None,
   cmdExe = None,
@@ -23,6 +24,7 @@ genrule(
 
 keystore(
   name = "debug_keystore",
+  autodeps = False,
   licenses = [
   ],
   properties = "debug.keystore.properties",

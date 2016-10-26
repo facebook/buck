@@ -5,7 +5,7 @@
   "annotationProcessorParams" : [ ],
   "annotationProcessors" : [ ],
   "buck.base_path" : "",
-  "autodeps": null,
+  "autodeps": false,
   "buck.direct_dependencies" : [ ],
   "buck.type" : "java_library",
   "compiler": null,

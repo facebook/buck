@@ -2,6 +2,7 @@
 
 genrule(
   name = "example",
+  autodeps = False,
   bash = "bar",
   cmd = None,
   cmdExe = None,

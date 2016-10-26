@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -85,6 +86,7 @@ public class BuckPyFunction {
         mandatory.add(new StParamInfo(param.getName(), param.getPythonName(), null));
       }
     }
+    optional.add(new StParamInfo("autodeps", "autodeps", "False"));
     optional.add(new StParamInfo("visibility", "visibility", "[]"));
 
     STGroup group = buckPyFunctionTemplate.get();
@@ -129,6 +131,18 @@ public class BuckPyFunction {
     if ("name".equals(param.getName())) {
       if (!String.class.equals(param.getResultClass())) {
         throw new HumanReadableException("'name' parameter must be a java.lang.String");
+      }
+      return true;
+    }
+
+    // Normally, the implicit "autodeps" parameter is all a rule needs, but some Descriptions will
+    // also declare it explicitly as a field on its Arg. Normally, this happens when Buck needs
+    // access to the value in Java, such as the JavaDepsFinder that powers `buck autodeps`.
+    if ("autodeps".equals(param.getName())) {
+      if (!Optional.class.equals(param.getResultClass())) {
+        throw new HumanReadableException(
+            "'autodeps' parameter must be a java.util.Optional<Boolean> but was %s",
+            param.getResultClass());
       }
       return true;
     }

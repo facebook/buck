@@ -1,5 +1,6 @@
 {
   "example" : {
+    "autodeps" : false,
     "bash" : "cat $SRCS > $OUT",
     "buck.base_path" : "example",
     "buck.type" : "genrule",

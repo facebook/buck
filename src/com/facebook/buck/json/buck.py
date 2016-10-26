@@ -192,17 +192,19 @@ def add_rule(rule, build_env):
             # possible. For example, if a user-defined macro creates a library that hardcodes a dep
             # and the tooling to produce BUCK.autodeps also infers the need for that dep and adds
             # it to BUCK.autodeps, then it will appear in both places.
-            explicit_deps = rule.get('deps', [])
-            auto_deps = build_env.autodeps[rule_name]['deps']
-            deps = set(explicit_deps)
-            deps.update(auto_deps)
-            rule['deps'] = list(deps)
+            auto_deps = build_env.autodeps[rule_name].get('deps', None)
+            if auto_deps:
+                explicit_deps = rule.get('deps', [])
+                deps = set(explicit_deps)
+                deps.update(auto_deps)
+                rule['deps'] = list(deps)
 
-            explicit_exported_deps = rule.get('exportedDeps', [])
-            auto_exported_deps = build_env.autodeps[rule_name]['exported_deps']
-            exported_deps = set(explicit_exported_deps)
-            exported_deps.update(auto_exported_deps)
-            rule['exportedDeps'] = list(exported_deps)
+            auto_exported_deps = build_env.autodeps[rule_name].get('exported_deps', None)
+            if auto_exported_deps:
+                explicit_exported_deps = rule.get('exportedDeps', [])
+                exported_deps = set(explicit_exported_deps)
+                exported_deps.update(auto_exported_deps)
+                rule['exportedDeps'] = list(exported_deps)
         else:
             # If there is an entry in the .autodeps file for the rule, but the rule has autodeps
             # set to False, then the .autodeps file is likely out of date. Ideally, we would warn

@@ -1,5 +1,6 @@
 [
 {
+  "autodeps":false,
   "bash":null,
   "buck.base_path":"",
   "buck.direct_dependencies":[],
@@ -17,6 +18,7 @@
   "visibility":[]
 },
 {
+  "autodeps":false,
   "bash":null,
   "buck.base_path":"",
   "buck.direct_dependencies":[],
