@@ -262,7 +262,7 @@ public class AndroidBinaryIntegrationTest {
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
     buildLog = workspace.getBuildLog();
     buildLog.assertNotTargetBuiltLocally("//java/com/sample/lib:lib#dex");
-    buildLog.assertTargetHadMatchingDepsAbi("//java/com/sample/lib:lib#dex");
+    buildLog.assertTargetHadMatchingInputRuleKey("//java/com/sample/lib:lib#dex");
 
     workspace.replaceFileContents(
         "java/com/sample/lib/Sample.java",

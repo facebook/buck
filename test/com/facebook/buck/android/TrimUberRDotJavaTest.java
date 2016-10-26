@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.ActionGraph;
@@ -124,7 +125,7 @@ public class TrimUberRDotJavaTest {
             .setProjectFilesystem(filesystem)
             .build(),
         null,
-        null);
+        new FakeJavaLibrary(BuildTargetFactory.newInstance("//:lib"), null));
     dexProducedFromJavaLibrary.getBuildOutputInitializer().setBuildOutput(
         dexProducedFromJavaLibrary.initializeFromDisk(new FakeOnDiskBuildInfo()
             .putMetadata(DexProducedFromJavaLibrary.WEIGHT_ESTIMATE, "1")

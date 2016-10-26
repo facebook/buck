@@ -24,7 +24,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.dalvik.EstimateDexWeightStep;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
@@ -37,10 +36,12 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
+import com.facebook.buck.rules.FakeSourcePathResolver;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -76,7 +77,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
   public void testGetBuildStepsWhenThereAreClassesToDex() throws IOException, InterruptedException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    FakeSourcePathResolver pathResolver = new FakeSourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
     FakeJavaLibrary javaLibraryRule = new FakeJavaLibrary(
@@ -89,6 +90,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
         return ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe"));
       }
     };
+    pathResolver.addRule(javaLibraryRule);
     Path jarOutput =
         BuildTargets.getGenPath(filesystem, javaLibraryRule.getBuildTarget(), "%s.jar");
     javaLibraryRule.setOutputFile(jarOutput.toString());
@@ -177,6 +179,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
   public void testGetBuildStepsWhenThereAreNoClassesToDex()
       throws IOException, InterruptedException {
     JavaLibrary javaLibrary = createMock(JavaLibrary.class);
+    expect(javaLibrary.getBuildTarget()).andReturn(BuildTargetFactory.newInstance("//foo:bar"));
     expect(javaLibrary.getClassNamesToHashes()).andReturn(
         ImmutableSortedMap.of());
 
@@ -234,6 +237,9 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
   @Test
   public void testObserverMethods() {
     JavaLibrary accumulateClassNames = createMock(JavaLibrary.class);
+    expect(accumulateClassNames.getBuildTarget())
+        .andReturn(BuildTargetFactory.newInstance("//foo:bar"))
+        .anyTimes();
     expect(accumulateClassNames.getClassNamesToHashes())
         .andReturn(ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe")))
         .anyTimes();
