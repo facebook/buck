@@ -197,6 +197,43 @@ so dex merging does not depend on running a full <code>aapt package</code>.
 It can also move dependency edges,
 so compiling Android libraries does not depend on dexing their dependencies.
 
+<h2>Dependency files to trim overspecified inputs</h2>
+
+<p>
+
+Buck's low-level build rules specify all inputs (e.g. sources, or outputs from other rules)
+that may be used when the build rule is executed, so that changes to any of these inputs
+will trigger rebuilds and use a new cache key.
+However, in practice, it's not uncommon for these build rules to over-specify their inputs.
+A good example of this is the C/C++ compilation rules Buck generates.
+C/C++ compilation rules specify all headers found from the transitive closure of C/C++ library dependencies
+as inputs, even though in almost all cases only a small subset of these headers are actually
+used (e.g. a C/C++ source may only use one of many headers exported by a C/C++ library dependency).
+However, there's not enough information available before running the step to know if any given
+input is used, and so all inputs must be considered, which can lead to substantial unnecessary
+rebuilding.
+
+<p>
+
+In some cases, we can figure out the exact subset of the listed inputs which were actually used after
+the build.
+In C/C++, compilers like <code>gcc</code> provide a <code>-M</code> option which produces a
+dependency file which contains the exact headers that were actually used by during compilation.
+For supported rules, Buck uses this dependency file before the build, to try avoid an unnecessary rebuild:
+  <ul>
+    <li>
+      If no dependency file is initially available before the build, the rule is run as normal and also produces
+      a dependency file for next time, which lists the inputs that were used.
+    </li>
+    <li>
+      If the dependency file is available before the build, Buck will read this in and use this to filter out unused
+      inputs when constructing it's rule key.
+    </li>
+  </ul>
+
+It should be noted that dependency files are only used if the standard rule key (which considers all inputs) doesn't
+match.
+
     {/param}
   {/call}
 {/template}
