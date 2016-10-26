@@ -101,6 +101,13 @@ def reset(revision, cwd):
         cwd=cwd)
 
 
+def ant_clean(buck_repo):
+    log('Running ant clean.')
+    subprocess.check_call(
+        ['ant', 'clean'],
+        cwd=buck_repo)
+
+
 def buck_clean(args, cwd):
     log('Running buck clean.')
     subprocess.check_call(
@@ -283,9 +290,17 @@ def check_cache_results(result, expected_keys, message, exception_message, last_
         raise Exception(exception_message)
 
 
+def get_buck_repo_root(path):
+    while (path is not None and
+           not os.path.exists(os.path.join(path, '.buckconfig'))):
+        path = os.path.dirname(path)
+    return path
+
+
 def main():
     args = createArgParser().parse_args()
     log('Running Performance Test!')
+    ant_clean(get_buck_repo_root(args.path_to_buck))
     clean(args.repo_under_test)
     log('=== Warming up cache ===')
     cwd = os.path.join(args.repo_under_test, args.project_under_test)
