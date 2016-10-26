@@ -158,6 +158,7 @@ public class DefaultCxxPlatforms {
         staticLibraryExtension,
         objectFileExtension,
         Optional.empty(),
+        Optional.empty(),
         ImmutableMap.of());
   }
 

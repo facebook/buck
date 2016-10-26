@@ -80,6 +80,7 @@ public class CxxPrecompiledHeader
   private final CxxSource.Type inputType;
 
   private final DebugPathSanitizer compilerSanitizer;
+  private final DebugPathSanitizer assemblerSanitizer;
 
   public CxxPrecompiledHeader(
       BuildRuleParams buildRuleParams,
@@ -90,7 +91,8 @@ public class CxxPrecompiledHeader
       CxxToolFlags compilerFlags,
       SourcePath input,
       CxxSource.Type inputType,
-      DebugPathSanitizer compilerSanitizer) {
+      DebugPathSanitizer compilerSanitizer,
+      DebugPathSanitizer assemblerSanitizer) {
     super(buildRuleParams, resolver);
     this.preprocessorDelegate = preprocessorDelegate;
     this.compilerDelegate = compilerDelegate;
@@ -99,6 +101,7 @@ public class CxxPrecompiledHeader
     this.input = input;
     this.inputType = inputType;
     this.compilerSanitizer = compilerSanitizer;
+    this.assemblerSanitizer = assemblerSanitizer;
   }
 
   @Override
@@ -184,6 +187,7 @@ public class CxxPrecompiledHeader
         Optional.empty(),
         preprocessorDelegate.getHeaderPathNormalizer(),
         compilerSanitizer,
+        assemblerSanitizer,
         preprocessorDelegate.getHeaderVerification(),
         scratchDir,
         true,

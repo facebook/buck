@@ -25,6 +25,7 @@ import com.facebook.buck.cxx.GnuArchiver;
 import com.facebook.buck.cxx.GnuLinker;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.LinkerProvider;
+import com.facebook.buck.cxx.MungingDebugPathSanitizer;
 import com.facebook.buck.cxx.PosixNmSymbolNameTool;
 import com.facebook.buck.cxx.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.cxx.PreprocessorProvider;
@@ -450,12 +451,14 @@ public class NdkCxxPlatforms {
     NdkCxxToolchainPaths sanitizedPaths = toolchainPaths.getSanitizedPaths();
 
     // Build up the map of paths that must be sanitized.
-    ImmutableBiMap.Builder<Path, Path> sanitizePaths = ImmutableBiMap.builder();
-    sanitizePaths.put(toolchainPaths.getNdkToolRoot(), sanitizedPaths.getNdkToolRoot());
+    ImmutableBiMap.Builder<Path, Path> sanitizePathsBuilder = ImmutableBiMap.builder();
+    sanitizePathsBuilder.put(toolchainPaths.getNdkToolRoot(), sanitizedPaths.getNdkToolRoot());
     if (compilerType != NdkCxxPlatformCompiler.Type.GCC) {
-      sanitizePaths.put(toolchainPaths.getNdkGccToolRoot(), sanitizedPaths.getNdkGccToolRoot());
+      sanitizePathsBuilder.put(
+          toolchainPaths.getNdkGccToolRoot(),
+          sanitizedPaths.getNdkGccToolRoot());
     }
-    sanitizePaths.put(ndkRoot, Paths.get(ANDROID_NDK_ROOT));
+    sanitizePathsBuilder.put(ndkRoot, Paths.get(ANDROID_NDK_ROOT));
 
     CxxToolProvider.Type type =
         compilerType == NdkCxxPlatformCompiler.Type.CLANG ?
@@ -481,13 +484,19 @@ public class NdkCxxPlatforms {
     PreprocessorProvider cxxpp = new PreprocessorProvider(cxxTool, type);
 
     CxxPlatform.Builder cxxPlatformBuilder = CxxPlatform.builder();
+    ImmutableBiMap<Path, Path> sanitizePaths = sanitizePathsBuilder.build();
     PrefixMapDebugPathSanitizer compilerDebugPathSanitizer = new PrefixMapDebugPathSanitizer(
         config.getDebugPathSanitizerLimit(),
         File.separatorChar,
         Paths.get("."),
-        sanitizePaths.build(),
+        sanitizePaths,
         filesystem.getRootPath().toAbsolutePath(),
         type);
+    MungingDebugPathSanitizer assemblerDebugPathSanitizer = new MungingDebugPathSanitizer(
+        config.getDebugPathSanitizerLimit(),
+        File.separatorChar,
+        Paths.get("."),
+        sanitizePaths);
     cxxPlatformBuilder
         .setFlavor(flavor)
         .setAs(cc)
@@ -541,6 +550,7 @@ public class NdkCxxPlatforms {
             getGccTool(toolchainPaths, "ranlib", version, executableFinder))
         // NDK builds are cross compiled, so the header is the same regardless of the host platform.
         .setCompilerDebugPathSanitizer(compilerDebugPathSanitizer)
+        .setAssemblerDebugPathSanitizer(assemblerDebugPathSanitizer)
         .setSharedLibraryExtension("so")
         .setSharedLibraryVersionedExtensionFormat("so.%s")
         .setStaticLibraryExtension("a")

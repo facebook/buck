@@ -133,8 +133,8 @@ public class CxxCompilationDatabaseTest {
                 Paths.get("test.ii"),
                 new FakeSourcePath(filesystem, "test.cpp"),
                 CxxSource.Type.CXX,
-                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER
-            );
+                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+                CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER);
         rules.add(preprocessRule);
         compileBuildRuleParams = new FakeBuildRuleParamsBuilder(compileTarget)
             .setProjectFilesystem(filesystem)
@@ -152,8 +152,8 @@ public class CxxCompilationDatabaseTest {
                 Paths.get("test.o"),
                 new FakeSourcePath(filesystem, "test.ii"),
                 CxxSource.Type.CXX_CPP_OUTPUT,
-                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER
-            ));
+                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+                CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER));
         break;
       case COMBINED:
       case PIPED:
@@ -193,8 +193,8 @@ public class CxxCompilationDatabaseTest {
                 CxxSource.Type.CXX,
                 Optional.empty(),
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                strategy
-            ));
+                CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
+                strategy));
         break;
       default:
         throw new RuntimeException("Invalid strategy");

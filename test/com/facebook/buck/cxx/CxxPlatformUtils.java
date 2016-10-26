@@ -23,7 +23,6 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableBiMap;
 
 import java.io.File;
@@ -48,8 +47,14 @@ public class CxxPlatformUtils {
           new ConstantToolProvider(DEFAULT_TOOL),
           CxxToolProvider.Type.GCC);
 
-  @VisibleForTesting
   static final DebugPathSanitizer DEFAULT_COMPILER_DEBUG_PATH_SANITIZER =
+      new MungingDebugPathSanitizer(
+          250,
+          File.separatorChar,
+          Paths.get("."),
+          ImmutableBiMap.of());
+
+  static final DebugPathSanitizer DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER =
       new MungingDebugPathSanitizer(
           250,
           File.separatorChar,
@@ -82,6 +87,7 @@ public class CxxPlatformUtils {
           .setStaticLibraryExtension("a")
           .setObjectFileExtension("o")
           .setCompilerDebugPathSanitizer(DEFAULT_COMPILER_DEBUG_PATH_SANITIZER)
+          .setAssemblerDebugPathSanitizer(DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER)
           .build();
 
     public static final FlavorDomain<CxxPlatform> DEFAULT_PLATFORMS =

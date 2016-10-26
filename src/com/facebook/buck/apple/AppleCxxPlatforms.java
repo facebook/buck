@@ -293,6 +293,11 @@ public class AppleCxxPlatforms {
         File.separatorChar,
         Paths.get("."),
         sanitizerPaths.build());
+    DebugPathSanitizer assemblerDebugPathSanitizer = new MungingDebugPathSanitizer(
+        config.getDebugPathSanitizerLimit(),
+        File.separatorChar,
+        Paths.get("."),
+        sanitizerPaths.build());
 
     ImmutableList<String> cflags = cflagsBuilder.build();
 
@@ -386,6 +391,7 @@ public class AppleCxxPlatforms {
         "a",
         "o",
         Optional.of(compilerDebugPathSanitizer),
+        Optional.of(assemblerDebugPathSanitizer),
         macros);
 
     ApplePlatform applePlatform = targetSdk.getApplePlatform();

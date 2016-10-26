@@ -81,6 +81,7 @@ public class CxxPlatformsTest {
           .setStaticLibraryExtension("a")
           .setObjectFileExtension("so")
           .setCompilerDebugPathSanitizer(CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER)
+          .setAssemblerDebugPathSanitizer(CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER)
           .build();
 
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
