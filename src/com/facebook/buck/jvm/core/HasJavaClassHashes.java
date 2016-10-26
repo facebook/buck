@@ -20,6 +20,11 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
 
+/**
+ * This should be considered deprecated.  It comes from a time before the target/action graph split
+ * and input-based rule keys.  It will be a lot of work to eliminate (including getting rid of
+ * SmartDexingStep), but we should do it at some point.
+ */
 public interface HasJavaClassHashes extends HasBuildTarget {
 
   /**
