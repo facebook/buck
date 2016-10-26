@@ -250,6 +250,28 @@ public class AndroidBinaryIntegrationTest {
         ImmutableSet.copyOf(resourcesFromMetadata.get()));
   }
 
+  @Test
+  public void testDexingIsInputBased() throws IOException {
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib#dex");
+
+    workspace.replaceFileContents(
+        "java/com/sample/lib/Sample.java",
+        "import",
+        "import /* no output change */");
+    workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
+    buildLog = workspace.getBuildLog();
+    buildLog.assertNotTargetBuiltLocally("//java/com/sample/lib:lib#dex");
+    buildLog.assertTargetHadMatchingDepsAbi("//java/com/sample/lib:lib#dex");
+
+    workspace.replaceFileContents(
+        "java/com/sample/lib/Sample.java",
+        "import",
+        "import /* \n some output change */");
+    workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
+    buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib#dex");
+  }
 
   @Test
   public void testCxxLibraryDep() throws IOException {
