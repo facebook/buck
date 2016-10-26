@@ -32,6 +32,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.RmStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -105,7 +106,9 @@ public class CxxLink
     return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
         new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),
-        new CxxPrepareForLinkStep(
+        new RmStep(getProjectFilesystem(), argFilePath, true),
+        new RmStep(getProjectFilesystem(), fileListPath, true),
+        CxxPrepareForLinkStep.create(
             argFilePath,
             fileListPath,
             linker.fileList(fileListPath),

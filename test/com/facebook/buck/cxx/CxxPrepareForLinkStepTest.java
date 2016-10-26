@@ -29,6 +29,7 @@ import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -44,6 +45,54 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class CxxPrepareForLinkStepTest {
+
+  @Test
+  public void testCreateCxxPrepareForLinkStep() throws Exception {
+    Path dummyPath = Paths.get("dummy");
+    BuildRuleResolver buildRuleResolver = new BuildRuleResolver(
+        TargetGraph.EMPTY,
+        new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(
+        buildRuleResolver);
+
+    // Setup some dummy values for inputs to the CxxLinkStep
+    ImmutableList<Arg> dummyArgs = ImmutableList.of(
+        FileListableLinkerInputArg.withSourcePathArg(
+            new SourcePathArg(pathResolver, new FakeSourcePath("libb.a"))));
+
+    CxxPrepareForLinkStep cxxPrepareForLinkStepSupportFileList = CxxPrepareForLinkStep.create(
+        dummyPath,
+        dummyPath,
+        ImmutableList.of(
+            new StringArg("-filelist"),
+            new StringArg(dummyPath.toString())),
+        dummyPath,
+        dummyArgs,
+        CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver));
+
+    ImmutableList<Step> containingSteps = ImmutableList.copyOf(
+        cxxPrepareForLinkStepSupportFileList.iterator());
+    assertThat(containingSteps.size(), Matchers.equalTo(2));
+    Step firstStep = containingSteps.get(0);
+    Step secondStep = containingSteps.get(1);
+    assertThat(firstStep, Matchers.instanceOf(CxxWriteArgsToFileStep.class));
+    assertThat(secondStep, Matchers.instanceOf(CxxWriteArgsToFileStep.class));
+    assertThat(firstStep, Matchers.not(secondStep));
+
+    CxxPrepareForLinkStep cxxPrepareForLinkStepNoSupportFileList = CxxPrepareForLinkStep.create(
+        dummyPath,
+        dummyPath,
+        ImmutableList.of(),
+        dummyPath,
+        dummyArgs,
+        CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver));
+
+    containingSteps = ImmutableList.copyOf(
+        cxxPrepareForLinkStepNoSupportFileList.iterator());
+    assertThat(containingSteps.size(), Matchers.equalTo(1));
+    assertThat(containingSteps.get(0), Matchers.instanceOf(CxxWriteArgsToFileStep.class));
+  }
+
   @Test
   public void cxxLinkStepPassesLinkerOptionsViaArgFile() throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
@@ -105,7 +154,7 @@ public class CxxPrepareForLinkStepTest {
         new StringArg("-lz"));
 
     // Create our CxxLinkStep to test.
-    CxxPrepareForLinkStep step = new CxxPrepareForLinkStep(
+    CxxPrepareForLinkStep step = CxxPrepareForLinkStep.create(
         argFilePath,
         fileListPath,
         ImmutableList.of(
