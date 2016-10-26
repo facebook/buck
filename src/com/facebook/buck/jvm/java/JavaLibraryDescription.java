@@ -34,6 +34,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -43,11 +44,13 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Optional;
 
 public class JavaLibraryDescription implements Description<JavaLibraryDescription.Arg>, Flavored {
 
   public static final ImmutableSet<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
+      Javadoc.DOC_JAR,
       JavaLibrary.SRC_JAR,
       JavaLibrary.MAVEN_JAR);
 
@@ -89,6 +92,35 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
       // without the maven flavor to prevent output-path conflict
       params = params.copyWithBuildTarget(
           params.getBuildTarget().withoutFlavors(JavaLibrary.MAVEN_JAR));
+    }
+
+    if (flavors.contains(Javadoc.DOC_JAR)) {
+      BuildTarget unflavored = BuildTarget.of(target.getUnflavoredBuildTarget());
+
+      Optional<BuildRule> optionalBaseLibrary = resolver.getRuleOptional(unflavored);
+      BuildRule baseLibrary;
+      if (!optionalBaseLibrary.isPresent()) {
+        baseLibrary = resolver.addToIndex(
+            createBuildRule(
+                targetGraph,
+                params.copyWithBuildTarget(unflavored),
+                resolver,
+                args));
+      } else {
+        baseLibrary = optionalBaseLibrary.get();
+      }
+
+      JarShape shape = params.getBuildTarget().getFlavors().contains(JavaLibrary.MAVEN_JAR) ?
+          JarShape.MAVEN : JarShape.SINGLE;
+
+      JarShape.Summary summary = shape.gatherDeps(baseLibrary);
+      ImmutableSet<SourcePath> sources = summary.getPackagedRules().stream()
+          .filter(HasSources.class::isInstance)
+          .map(rule -> ((HasSources) rule).getSources())
+          .flatMap(Collection::stream)
+          .collect(MoreCollectors.toImmutableSet());
+
+      return new Javadoc(params, new SourcePathResolver(resolver), sources);
     }
 
     if (flavors.contains(JavaLibrary.SRC_JAR)) {
