@@ -63,7 +63,7 @@ public interface HasAndroidResourceDeps extends HasBuildTarget {
       hasher.putUnencodedChars(dep.getPathToTextSymbolsFile().toString());
       // Avoid collisions by marking end of path explicitly.
       hasher.putChar('\0');
-      hasher.putUnencodedChars(dep.getTextSymbolsAbiKey().getHash());
+      dep.getTextSymbolsAbiKey().update(hasher);
       hasher.putUnencodedChars(dep.getRDotJavaPackage());
       hasher.putChar('\0');
     }

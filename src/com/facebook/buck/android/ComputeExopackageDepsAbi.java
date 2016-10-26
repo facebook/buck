@@ -110,21 +110,20 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
               final Hasher hasher = Hashing.sha1().newHasher();
               // The first input to apkbuilder is the ap_ produced by aapt package.
               // Get its hash from the buildable that created it.
-              String resourceApkHash = aaptPackageResources.getResourcePackageHash().toString();
-              LOG.verbose("resource apk = %s", resourceApkHash);
-              hasher.putUnencodedChars(resourceApkHash);
+              Sha1HashCode resourceApkHash = aaptPackageResources.getResourcePackageHash();
+              LOG.verbose("resource apk = %s", resourceApkHash.getHash());
+              resourceApkHash.update(hasher);
               // Next is the primary dex.  Same plan.
-              String primaryDexHash = Preconditions.checkNotNull(
-                  preDexMerge.get().getPrimaryDexHash())
-                  .toString();
+              Sha1HashCode primaryDexHash = Preconditions.checkNotNull(
+                  preDexMerge.get().getPrimaryDexHash());
               LOG.verbose("primary dex = %s", primaryDexHash);
-              hasher.putUnencodedChars(primaryDexHash);
+              primaryDexHash.update(hasher);
               // Non-english strings packaged as assets.
               if (packageStringAssets.isPresent()) {
-                String stringAssetsHash =
-                    packageStringAssets.get().getStringAssetsZipHash().toString();
-                LOG.verbose("string assets = %s", stringAssetsHash);
-                hasher.putUnencodedChars(stringAssetsHash);
+                Sha1HashCode stringAssetsHash =
+                    packageStringAssets.get().getStringAssetsZipHash();
+                LOG.verbose("string assets = %s", stringAssetsHash.getHash());
+                stringAssetsHash.update(hasher);
               }
 
               // We currently don't use any resource directories, so nothing to add there.

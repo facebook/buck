@@ -31,7 +31,6 @@ import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipCompressionLevel;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -342,9 +341,8 @@ public class SmartDexingStep implements Step {
             dexInputHashes.containsKey(src),
             "no hash key exists for path %s",
             src.toString());
-        hasher.putBytes(
-            Preconditions.checkNotNull(dexInputHashes.get(src))
-                .getHash().getBytes(Charsets.UTF_8));
+        Sha1HashCode hash = Preconditions.checkNotNull(dexInputHashes.get(src));
+        hash.update(hasher);
       }
       return hasher.hash().toString();
     }
