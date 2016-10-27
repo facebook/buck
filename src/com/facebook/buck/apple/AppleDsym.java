@@ -142,8 +142,7 @@ public class AppleDsym
   }
 
   @Override
-  public ImmutableList<Step> getPostBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
+  public ImmutableList<Step> getPostBuildSteps() {
     return ImmutableList.of(
         new Step() {
           @Override

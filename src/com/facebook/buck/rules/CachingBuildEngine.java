@@ -629,9 +629,7 @@ public class CachingBuildEngine implements BuildEngine {
             if (rule instanceof HasPostBuildSteps) {
               executePostBuildSteps(
                   rule,
-                  ((HasPostBuildSteps) rule).getPostBuildSteps(
-                      buildContext.getBuildContext(),
-                      buildableContext),
+                  ((HasPostBuildSteps) rule).getPostBuildSteps(),
                   executionContext);
             }
 

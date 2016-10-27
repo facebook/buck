@@ -120,9 +120,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableList<Step> getPostBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+  public ImmutableList<Step> getPostBuildSteps() {
     // We don't want to cache the output of this rule because it contains absolute paths.
     // Since the step to generate the commands json output is super fast, it's ok if we always build
     // this rule locally.

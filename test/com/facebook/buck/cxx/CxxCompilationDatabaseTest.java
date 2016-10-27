@@ -24,14 +24,10 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKeyObjectSink;
@@ -232,9 +228,7 @@ public class CxxCompilationDatabaseTest {
         BuildTargets.getGenPath(filesystem, testBuildTarget, "__%s.json"),
         compilationDatabase.getPathToOutput());
 
-    BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
-    BuildableContext buildableContext = new FakeBuildableContext();
-    List<Step> buildSteps = compilationDatabase.getPostBuildSteps(buildContext, buildableContext);
+    List<Step> buildSteps = compilationDatabase.getPostBuildSteps();
     assertEquals(2, buildSteps.size());
     assertTrue(buildSteps.get(0) instanceof MkdirStep);
     assertTrue(buildSteps.get(1) instanceof

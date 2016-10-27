@@ -662,9 +662,7 @@ public class JavaTest
   }
 
   @Override
-  public ImmutableList<Step> getPostBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+  public ImmutableList<Step> getPostBuildSteps() {
     return ImmutableList.<Step>builder()
         .add(new MkdirStep(getProjectFilesystem(), getClassPathFile().getParent()))
         .add(
