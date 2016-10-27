@@ -538,7 +538,7 @@ public class ObjectPathsAbsolutifier {
     // only object source files need to have a timestamp as their values
     if (nlist.getN_type().equals(Stab.N_OSO) && path.toFile().isFile()) {
       long lastModificationDate = path.toFile().lastModified() / 1000;
-      LOG.debug("Updating modification date: %u", lastModificationDate);
+      LOG.debug("Updating modification date: %d", lastModificationDate);
       updatedNlist = updatedNlist.withN_value(UnsignedLong.valueOf(lastModificationDate));
     }
     NlistUtils.updateNlistEntry(buffer, nlist, updatedNlist, magicInfo.is64Bit());
