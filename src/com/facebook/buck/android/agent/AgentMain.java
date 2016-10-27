@@ -17,7 +17,6 @@
 package com.facebook.buck.android.agent;
 
 import com.facebook.buck.android.agent.util.AgentUtil;
-import com.facebook.buck.log.Logger;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -32,6 +31,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Main class for an agent that runs on an Android device to aid app installation.
@@ -48,11 +49,11 @@ public class AgentMain {
   public static final int CONNECT_TIMEOUT_MS = 5000;
   public static final int RECEIVE_TIMEOUT_MS = 20000;
 
-  private static final Logger LOG = Logger.get(AgentMain.class);
+  private static final Logger LOG = Logger.getLogger(AgentMain.class.getName());
 
   public static void main(String args[]) {
     if (args.length == 0) {
-      LOG.error("No command specified");
+      LOG.severe("No command specified");
       System.exit(1);
     }
 
@@ -71,7 +72,7 @@ public class AgentMain {
         throw new IllegalArgumentException("Unknown command: " + command);
       }
     } catch (Exception e) {
-      LOG.error(e, "Command failed");
+      LOG.log(Level.SEVERE, "Command failed", e);
       System.exit(1);
     }
     System.exit(0);
