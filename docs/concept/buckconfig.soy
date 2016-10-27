@@ -2480,12 +2480,24 @@ your <code>.buckjavaargs</code> file</a>:
 
 {call buckconfig.entry}
   {param section: 'test' /}
+  {param name: 'incl_no_location_classes' /}
+  {param example_value: 'true' /}
+  {param description}
+    This specifies whether jacoco code coverage is enabled on classes without source location.
+    The default is false.  Set to true to enable code coverage with robolectric tests.
+    Note that setting to true will include dynamically created sources in code coverage, such as
+    that created by mocking (e.g. jmockit) or persistence frameworks.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'test' /}
   {param name: 'timeout' /}
   {param example_value: '300000' /}
   {param description}
     The number of miliseconds per test to allow before stopping the test and reporting a failure.
     The default is no timeout.  Not all <code>*_test</code> rules utilize this value.  A JUnit test
-    can overide this via the <code>@Test</code> annotation.
+    can override this via the <code>@Test</code> annotation.
   {/param}
 {/call}
 
@@ -2494,7 +2506,7 @@ your <code>.buckjavaargs</code> file</a>:
   {param name: 'rule_timeout' /}
   {param example_value: '1200000' /}
   {param description}
-    The number of miliseconds per <code>*_test</code> rule to allow before stopping it and reporting
+    The number of milliseconds per <code>*_test</code> rule to allow before stopping it and reporting
     a failure.  The default is no timeout.
   {/param}
 {/call}

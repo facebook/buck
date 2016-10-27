@@ -302,6 +302,7 @@ public class BuildCommand extends AbstractCommand {
         console,
         buckConfig.getDefaultTestTimeoutMillis(),
         isCodeCoverageEnabled(),
+        buckConfig.getBooleanValue("test", "incl_no_location_classes", false),
         isDebugEnabled(),
         shouldReportAbsolutePaths(),
         eventBus,

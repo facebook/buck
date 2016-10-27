@@ -89,6 +89,16 @@ abstract class AbstractJUnitJvmArgs {
   }
 
   /**
+   * @return If true, passes inclNoLocationClassesEnabled=true to the jacoco java agent.
+   *
+   * Defaults to false.
+   */
+  @Value.Default
+  boolean isInclNoLocationClassesEnabled() {
+    return false;
+  }
+
+  /**
    * @return The filesystem path to a JVM agent (i.e., a profiler).
    */
   abstract Optional<String> getPathToJavaAgent();
@@ -156,10 +166,11 @@ abstract class AbstractJUnitJvmArgs {
     args.add(String.format("-Dbuck.testrunner_classes=%s", getTestRunnerClasspath()));
 
     if (isCodeCoverageEnabled()) {
-      args.add(String.format("-javaagent:%s=destfile=%s/%s,append=true",
+      args.add(String.format("-javaagent:%s=destfile=%s/%s,append=true,inclnolocationclasses=%b",
           JacocoConstants.PATH_TO_JACOCO_AGENT_JAR,
           JacocoConstants.getJacocoOutputDir(filesystem),
-          JacocoConstants.JACOCO_EXEC_COVERAGE_FILE));
+          JacocoConstants.JACOCO_EXEC_COVERAGE_FILE,
+          isInclNoLocationClassesEnabled()));
     }
 
     if (getPathToJavaAgent().isPresent()) {

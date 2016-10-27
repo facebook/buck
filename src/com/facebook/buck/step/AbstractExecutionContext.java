@@ -105,6 +105,11 @@ abstract class AbstractExecutionContext implements Closeable {
   }
 
   @Value.Default
+  public boolean isInclNoLocationClassesEnabled() {
+    return false;
+  }
+
+  @Value.Default
   public boolean shouldReportAbsolutePaths() {
     return false;
   }
