@@ -871,6 +871,109 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'load_balancing_type' /}
+  {param example_value: 'SINGLE_SERVER, CLIENT_SLB' /}
+  {param description}
+    Decides whether the distributed cache connects to a single url or
+    it has a pool of servers and chooses which one to use based on
+    client side load balancing.
+
+    NOTE: 'slb_*' configs only apply when CLIENT_SLB is enabled.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'slb_server_pool' /}
+  {param example_value: 'http://my.server.one/,http://my.server.two' /}
+  {param description}
+  A comma separated list of server URLs of valid servers. The client
+  side loadbalancer will try to pick the best server to connect to for every
+  single connection.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'slb_ping_endpoint' /}
+  {param example_value: '/ping.php' /}
+  {param description}
+  The client side loadbalancer will use this endpoint to check whether the
+  server is in healthy state or not. It will also be used to measure request
+  latency.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'slb_health_check_internal_millis' /}
+  {param example_value: '1000' /}
+  {param description}
+  The timeout in milliseconds between two consecutive client side loadbalancer
+  health checks to the slb_server_pool.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'slb_timeout_millis' /}
+  {param example_value: '1000' /}
+  {param description}
+  The connection timeout per health request made to each of the slb_server_pool
+  servers. Any server that fails to respond within this period will be
+  deemed unhealthy and not be used for cache requests.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'slb_error_check_time_range_millis' /}
+  {param example_value: '300000' /}
+  {param description}
+  The error rate to each individual server taking part in the slb_server_pool
+  will be measured in the time range/window specified by this config.
+  In different words, 'errors per second' is computed only for the last
+  slb_error_check_time_range_millis.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'slb_max_error_percentage' /}
+  {param example_value: '0.1' /}
+  {param description}
+  The max error percentage allowed within the last
+  slb_error_check_time_range_millis that is acceptable to keep a particular
+  server marked as healthy and usable by the loadbalancer.
+
+  Expects a float value in the interval [0, 1].
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'slb_latency_check_time_range_millis' /}
+  {param example_value: '300000' /}
+  {param description}
+  The latency to each individual server taking part in the slb_server_pool
+  will be measured in the time range/window specified by this config.
+  In different words, 'server latency' is computed only for the last
+  slb_latency_check_time_range_millis.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'slb_max_acceptable_latency_millis' /}
+  {param example_value: '1000' /}
+  {param description}
+  If the latency of a ping request to a server in slb_server_pool is higher than
+  this, the server is deemed unhealthy and not used for cache operations.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'credentials' /}
   {param description}
@@ -2211,7 +2314,7 @@ your <code>.buckjavaargs</code> file</a>:
     The settings to control how Buck uses resources to schedule the work.
     When resource-aware scheduler is enabled, Buck will create more threads in attempt to
     run resource-independent work in parallel. Number of build threads is still controlled
-    by <code>num_threads</code> option. Buck will also create a number of additional 
+    by <code>num_threads</code> option. Buck will also create a number of additional
     threads that will be used for tasks that don't require CPU: network fetches,
     disk operations, etc. Total number of threads that Buck will operate is controlled by
     <code>managed_thread_count</code> option, that is, it includes build threads and
@@ -2233,7 +2336,7 @@ your <code>.buckjavaargs</code> file</a>:
   {param name: 'managed_thread_count' /}
   {param example_value: '40' /}
   {param description}
-    Buck will use <code>num_threads</code> threads for CPU intensive tasks 
+    Buck will use <code>num_threads</code> threads for CPU intensive tasks
     (e.g. local building) and it will use <code>managed_thread_count - num_threads</code>
     for other purposes. Thus, <code>managed_thread_count</code> value must be greater or
     equal to  <code>num_threads</code> value. If you don't specify this value, Buck will
@@ -2261,7 +2364,7 @@ your <code>.buckjavaargs</code> file</a>:
   {param description}
     Amount of memory resource required by arbitrary job which has no specific setting for
     its resource amounts. By default is 1 - a single memory resource is required for the
-    job to be completed. A single memory resource is an abstract value, currently it 
+    job to be completed. A single memory resource is an abstract value, currently it
     equals to 100 Mb.
   {/param}
 {/call}
@@ -2286,10 +2389,10 @@ your <code>.buckjavaargs</code> file</a>:
   {param name: 'default_network_io_amount' /}
   {param example_value: '1' /}
   {param description}
-    A single network resource is an abstract value. Think about it as Ethernet can handle 
+    A single network resource is an abstract value. Think about it as Ethernet can handle
     50 parallel network jobs with weight 1. Slower network interfaces can handle less
     amount of jobs. If job needs to send  or receive a lot of data, it is better to assign
-    a higher value for its network I/O amount. 
+    a higher value for its network I/O amount.
   {/param}
 {/call}
 
@@ -2308,7 +2411,7 @@ your <code>.buckjavaargs</code> file</a>:
   {param name: 'max_disk_io_resource' /}
   {param example_value: '30' /}
   {param description}
-    Maximum disk I/O resource available to Buck. By default the value is 50. Think about 
+    Maximum disk I/O resource available to Buck. By default the value is 50. Think about
     it as like SSD can handle 50 parallel disk jobs with weight 1, while HDD can handle only
     20. Thus, if job needs to read or write a lot of data, it should require higher disk I/O
     resource.
@@ -2322,7 +2425,7 @@ your <code>.buckjavaargs</code> file</a>:
   {param description}
     Maximum disk I/O resource available to Buck. By default the value is 30. Think about it
     as Ethernet can handle 50 parallel network jobs with weight 1.
-    Slower network interfaces can handle less amount of jobs. If job needs to send or 
+    Slower network interfaces can handle less amount of jobs. If job needs to send or
     receive a lot of data, it should require higher network I/O resource.
   {/param}
 {/call}
@@ -2335,8 +2438,8 @@ your <code>.buckjavaargs</code> file</a>:
       some build rule is not specified in this section, then amount of 1 (CPU), 1 (Memory),
       0 (disk i/o) and 0 (network i/o) is used. Amounts are used in local building, so in most
       cases build rule will require 0 for network I/O unless it fetches any data from network.
-      Rule's name is constructed by converting the camel-style class name of the <code>BuildRule</code> 
-      in Buck's source code (e.g. <code>MyBuildRule</code>) into 
+      Rule's name is constructed by converting the camel-style class name of the <code>BuildRule</code>
+      in Buck's source code (e.g. <code>MyBuildRule</code>) into
       lower underscored name (e.g. <code>my_build_rule</code>).
     </p>
     {literal}<pre class="prettyprint lang-ini">
