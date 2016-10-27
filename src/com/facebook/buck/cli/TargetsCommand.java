@@ -57,7 +57,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -96,9 +95,6 @@ import java.util.SortedMap;
 public class TargetsCommand extends AbstractCommand {
 
   private static final Logger LOG = Logger.get(TargetsCommand.class);
-
-  private static final Function<TargetNode<?>, Iterable<BuildTarget>> NODE_TO_TEST_TARGETS =
-      TargetNodes::getTestTargetsForNode;
 
   // TODO(bolinfest): Use org.kohsuke.args4j.spi.PathOptionHandler. Currently, we resolve paths
   // manually, which is likely the path to madness.
@@ -1004,7 +1000,7 @@ public class TargetsCommand extends AbstractCommand {
 
     if (isDetectTestChanges()) {
       for (BuildTarget targetToHash :
-          Preconditions.checkNotNull(NODE_TO_TEST_TARGETS.apply(node))) {
+          Preconditions.checkNotNull(TargetNodes.getTestTargetsForNode(node))) {
         HashCode testNodeHashCode = getHashCodeOrThrow(buildTargetHashes, targetToHash);
         hasher.putBytes(testNodeHashCode.asBytes());
       }

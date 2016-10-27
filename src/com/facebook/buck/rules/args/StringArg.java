@@ -20,7 +20,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -31,9 +30,6 @@ import java.util.Objects;
 public class StringArg extends Arg {
 
   private final String arg;
-
-  private static final Function<String, Arg> CONVERT =
-      StringArg::new;
 
   public StringArg(String arg) {
     this.arg = arg;
@@ -82,7 +78,7 @@ public class StringArg extends Arg {
   }
 
   public static Iterable<Arg> from(Iterable<String> args) {
-    return Iterables.transform(args, CONVERT);
+    return Iterables.transform(args, StringArg::new);
   }
 
   public static Iterable<Arg> from(String... args) {

@@ -26,9 +26,6 @@ import com.google.common.base.Preconditions;
  */
 public class BuildIdSampler implements Function<BuildId, Boolean> {
 
-  public static final Function<SampleRate, BuildIdSampler> CREATE_FUNCTION =
-      BuildIdSampler::new;
-
   private SampleRate sampleRate;
 
   /**

@@ -22,7 +22,6 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -39,9 +38,6 @@ import java.util.Optional;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractIjModule implements IjProjectElement {
-
-  public static final Function<IjModule, Path> TO_MODULE_BASE_PATH =
-      IjModule::getModuleBasePath;
 
   @Override
   @Value.Derived

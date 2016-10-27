@@ -67,7 +67,7 @@ public class BuildIdSamplerTest {
 
   @Test
   public void testAcceptHalf() {
-    BuildIdSampler sampler = BuildIdSampler.CREATE_FUNCTION.apply(SampleRate.of(0.5f));
+    BuildIdSampler sampler = new BuildIdSampler(SampleRate.of(0.5f));
     for (BuildId buildId : buildIdToExpectedHashMap.keySet()) {
       boolean shouldAccept = buildIdToExpectedHashMap.get(buildId) < 0.5f;
       assertThat(

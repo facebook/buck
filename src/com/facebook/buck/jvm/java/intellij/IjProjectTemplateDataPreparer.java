@@ -107,7 +107,7 @@ public class IjProjectTemplateDataPreparer {
   public static ImmutableSet<Path> createFilesystemTraversalBoundaryPathSet(
       ImmutableSet<IjModule> modules) {
     return FluentIterable.from(modules)
-        .transform(IjModule.TO_MODULE_BASE_PATH)
+        .transform(IjModule::getModuleBasePath)
         .append(IjProjectWriter.IDEA_CONFIG_DIR_PREFIX)
         .toSet();
   }
@@ -135,7 +135,7 @@ public class IjProjectTemplateDataPreparer {
   private static ImmutableSet<IjModule> createModulesToBeWritten(IjModuleGraph graph) {
     Path rootModuleBasePath = Paths.get("");
     boolean hasRootModule = FluentIterable.from(graph.getModuleNodes())
-        .transform(IjModule.TO_MODULE_BASE_PATH)
+        .transform(IjModule::getModuleBasePath)
         .contains(rootModuleBasePath);
 
     ImmutableSet<IjModule> supplementalModules = ImmutableSet.of();

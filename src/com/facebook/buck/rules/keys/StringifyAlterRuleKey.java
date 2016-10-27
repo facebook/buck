@@ -21,7 +21,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -36,9 +35,6 @@ import java.util.Optional;
 class StringifyAlterRuleKey extends AbstractAlterRuleKey {
 
   private static final Logger LOG = Logger.get(StringifyAlterRuleKey.class);
-
-  private static final Function<Object, Iterable<Path>> FIND_ABSOLUTE_PATHS =
-      StringifyAlterRuleKey::findAbsolutePaths;
 
   public StringifyAlterRuleKey(Field field) {
     super(field);
@@ -55,12 +51,12 @@ class StringifyAlterRuleKey extends AbstractAlterRuleKey {
       return findAbsolutePaths(((PathSourcePath) val).getRelativePath());
     } else if (val instanceof Iterable) {
       return FluentIterable.from((Iterable<?>) val)
-          .transformAndConcat(FIND_ABSOLUTE_PATHS);
+          .transformAndConcat(StringifyAlterRuleKey::findAbsolutePaths);
     } else if (val instanceof Map) {
       Map<?, ?> map = (Map<?, ?>) val;
       Iterable<?> allSubValues = Iterables.concat(map.keySet(), map.values());
       return FluentIterable.from(allSubValues)
-          .transformAndConcat(FIND_ABSOLUTE_PATHS);
+          .transformAndConcat(StringifyAlterRuleKey::findAbsolutePaths);
     } else if (val instanceof Optional) {
       Optional<?> optional = (Optional<?>) val;
       if (optional.isPresent()) {

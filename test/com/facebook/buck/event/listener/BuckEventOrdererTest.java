@@ -24,7 +24,6 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 
@@ -41,8 +40,6 @@ public class BuckEventOrdererTest {
   private static final long THREAD_ONE = 1;
   private static final long THREAD_TWO = 2;
   private static final long MAX_SKEW = 10;
-  private static final Function<BuckEvent, Long> TO_EVENT_TIMESTAMP_FUNCTION =
-      BuckEventExternalInterface::getTimestamp;
 
   private Deque<BuckEvent> serializedEvents = new ArrayDeque<>();
   private java.util.function.Consumer<BuckEvent> addToSerializedEventsFunction =
@@ -206,18 +203,18 @@ public class BuckEventOrdererTest {
       orderer.add(createUniqueEvent(MAX_SKEW + 1, TimeUnit.MILLISECONDS, THREAD_TWO));
 
       assertThat(
-          FluentIterable.from(serializedEvents).transform(TO_EVENT_TIMESTAMP_FUNCTION),
+          FluentIterable.from(serializedEvents).transform(BuckEventExternalInterface::getTimestamp),
           Matchers.contains(0L));
 
       orderer.add(createUniqueEvent(5 + MAX_SKEW + 1, TimeUnit.MILLISECONDS, THREAD_ONE));
 
       assertThat(
-          FluentIterable.from(serializedEvents).transform(TO_EVENT_TIMESTAMP_FUNCTION),
+          FluentIterable.from(serializedEvents).transform(BuckEventExternalInterface::getTimestamp),
           Matchers.contains(0L, 5L));
     }
 
     assertThat(
-        FluentIterable.from(serializedEvents).transform(TO_EVENT_TIMESTAMP_FUNCTION),
+        FluentIterable.from(serializedEvents).transform(BuckEventExternalInterface::getTimestamp),
         Matchers.contains(0L, 5L, MAX_SKEW + 1, 5 + MAX_SKEW + 1));
   }
 

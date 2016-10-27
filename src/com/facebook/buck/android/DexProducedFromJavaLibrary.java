@@ -46,7 +46,6 @@ import com.facebook.buck.zip.ZipScrubberStep;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -82,8 +81,6 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, HasBuildTarget, InitializableFromDisk<BuildOutput> {
 
   private static final ObjectMapper MAPPER = ObjectMappers.newDefaultInstance();
-  private static final Function<String, HashCode> TO_HASHCODE =
-      HashCode::fromString;
 
   @VisibleForTesting
   static final String WEIGHT_ESTIMATE = "weight_estimate";
@@ -203,7 +200,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
             onDiskBuildInfo.getValue(CLASSNAMES_TO_HASHES).get(),
             new TypeReference<Map<String, String>>() {
             });
-    Map<String, HashCode> classnamesToHashes = Maps.transformValues(map, TO_HASHCODE);
+    Map<String, HashCode> classnamesToHashes = Maps.transformValues(map, HashCode::fromString);
     Optional<ImmutableList<String>> referencedResources =
         onDiskBuildInfo.getValues(REFERENCED_RESOURCES);
     return new BuildOutput(

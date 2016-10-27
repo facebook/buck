@@ -93,10 +93,6 @@ class SwiftCompile
 
   private final Iterable<CxxPreprocessorInput> cxxPreprocessorInputs;
 
-  // Prepend "-I" before the input with no space (this is required by swift).
-  private static final Function<String, String> PREPEND_INCLUDE_FLAG =
-      INCLUDE_FLAG::concat;
-
   SwiftCompile(
       CxxPlatform cxxPlatform,
       SwiftBuckConfig swiftBuckConfig,
@@ -251,10 +247,10 @@ class SwiftCompile
 
     // Apply the header maps first, so that headers that matching there avoid falling back to
     // stat'ing files in the normal include roots.
-    args.addAll(Iterables.transform(headerMaps, PREPEND_INCLUDE_FLAG));
+    args.addAll(Iterables.transform(headerMaps, INCLUDE_FLAG::concat));
 
     // Apply the regular includes last.
-    args.addAll(Iterables.transform(roots, PREPEND_INCLUDE_FLAG));
+    args.addAll(Iterables.transform(roots, INCLUDE_FLAG::concat));
 
     return args.build();
   }
