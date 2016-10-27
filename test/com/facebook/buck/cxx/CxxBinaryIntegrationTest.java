@@ -29,6 +29,7 @@ import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
+import com.facebook.buck.android.NdkCxxPlatforms;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -50,6 +51,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -1842,22 +1844,52 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void ndkCxxPlatforms() throws IOException {
+  public void defaultNdkCxxPlatforms() throws IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "simple", tmp);
     workspace.setUp();
+
+    // Should build default ABIs.
+    for (String platform : NdkCxxPlatforms.DEFAULT_CPU_ABIS) {
+      workspace.runBuckCommand("build", "//foo:simple#android-" + platform).assertSuccess();
+    }
+
+    // Should not build others.
+    final Sets.SetView<String> nonDefaultABIs = Sets.difference(
+        NdkCxxPlatforms.SUPPORTED_CPU_ABIS,
+        NdkCxxPlatforms.DEFAULT_CPU_ABIS);
+    for (String platform : nonDefaultABIs) {
+      workspace.runBuckCommand("build", "//foo:simple#android-" + platform).assertFailure();
+    }
+  }
+
+  @Test
+  public void customNdkCxxPlatforms() throws IOException {
+    AssumeAndroidPlatform.assumeNdkIsAvailable();
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple", tmp);
+    workspace.setUp();
+
+    final ImmutableSet<String> testABIs = ImmutableSet.of("arm64", "x86_64");
+
     workspace.writeContentsToPath(
         "[ndk]\n" +
         "  gcc_version = 4.9\n" +
-        "  cpu_abis = arm, armv7, arm64, x86\n" +
+        "  cpu_abis = " + String.join(", ", testABIs) + "\n" +
         "  app_platform = android-21\n",
         ".buckconfig");
 
-    workspace.runBuckCommand("build", "//foo:simple#android-arm").assertSuccess();
-    workspace.runBuckCommand("build", "//foo:simple#android-armv7").assertSuccess();
-    workspace.runBuckCommand("build", "//foo:simple#android-arm64").assertSuccess();
-    workspace.runBuckCommand("build", "//foo:simple#android-x86").assertSuccess();
+    // Should not build unspecified ABIs.
+    for (String platform : Sets.difference(NdkCxxPlatforms.SUPPORTED_CPU_ABIS, testABIs)) {
+      workspace.runBuckCommand("build", "//foo:simple#android-" + platform).assertFailure();
+    }
+
+    // Should build specified custom ABIs.
+    for (String platform : testABIs) {
+      workspace.runBuckCommand("build", "//foo:simple#android-" + platform).assertSuccess();
+    }
+
   }
 
   @Test

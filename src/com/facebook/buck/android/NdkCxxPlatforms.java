@@ -80,6 +80,11 @@ public class NdkCxxPlatforms {
   public static final String DEFAULT_TARGET_APP_PLATFORM = "android-9";
   public static final ImmutableSet<String> DEFAULT_CPU_ABIS =
       ImmutableSet.of("arm", "armv7", "x86");
+  public static final ImmutableSet<String> SUPPORTED_CPU_ABIS =
+      ImmutableSet.<String>builder()
+          .addAll(DEFAULT_CPU_ABIS)
+          .add("arm64", "x86_64", "mips")
+          .build();
   public static final NdkCxxPlatforms.CxxRuntime DEFAULT_CXX_RUNTIME =
       NdkCxxPlatforms.CxxRuntime.GNUSTL;
 
