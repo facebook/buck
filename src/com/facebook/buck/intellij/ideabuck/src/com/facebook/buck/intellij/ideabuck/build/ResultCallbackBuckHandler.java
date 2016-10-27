@@ -23,8 +23,6 @@ import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 
-import java.util.Iterator;
-
 public class ResultCallbackBuckHandler extends BuckCommandHandler {
   private final FutureCallback futureCallback;
   private StringBuilder stdout;
@@ -40,11 +38,11 @@ public class ResultCallbackBuckHandler extends BuckCommandHandler {
   }
 
   @Override
-  protected void notifyLines(Key outputType, Iterator<String> lines, StringBuilder lineBuilder) {
-    super.notifyLines(outputType, lines, lineBuilder);
+  protected void notifyLines(Key outputType, Iterable<String> lines) {
+    super.notifyLines(outputType, lines);
     if (outputType == ProcessOutputTypes.STDOUT) {
-      while (lines.hasNext()) {
-        stdout.append(lines.next());
+      for (String line : lines) {
+        stdout.append(line);
       }
     }
   }

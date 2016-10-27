@@ -26,7 +26,6 @@ import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -43,12 +42,11 @@ public class BuckQueryCommandHandler extends BuckCommandHandler {
   }
 
   @Override
-  protected void notifyLines(Key outputType, Iterator<String> lines, StringBuilder lineBuilder) {
-    super.notifyLines(outputType, lines, lineBuilder);
+  protected void notifyLines(Key outputType, Iterable<String> lines) {
+    super.notifyLines(outputType, lines);
     if (outputType == ProcessOutputTypes.STDOUT) {
       List<String> targetList = new LinkedList<String>();
-      while (lines.hasNext()) {
-        String outputLine = lines.next();
+      for (String outputLine : lines) {
         if (!outputLine.isEmpty()) {
           JsonElement jsonElement = new JsonParser().parse(outputLine);
           if (jsonElement.isJsonArray()) {

@@ -36,7 +36,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.nio.charset.Charset;
-import java.util.Iterator;
 import java.util.regex.Pattern;
 
 /**
@@ -290,29 +289,21 @@ public abstract class BuckCommandHandler {
   }
 
   protected void onTextAvailable(final String text, final Key outputType) {
-    Iterator<String> lines = LineHandlerHelper.splitText(text).iterator();
-
-    notifyLines(outputType, lines, stderrLine);
+    notifyLines(outputType, LineHandlerHelper.splitText(text));
   }
 
   /**
    * Notify listeners for each complete line. Note that in the case of stderr,
    * the last line is saved.
-   *
-   * @param outputType  output type
-   * @param lines       line iterator
-   * @param lineBuilder a line builder
    */
   protected void notifyLines(
       final Key outputType,
-      final Iterator<String> lines,
-      final StringBuilder lineBuilder) {
+      final Iterable<String> lines) {
     BuckEventsConsumer buckEventsConsumer =
         project.getComponent(BuckModule.class).getBuckEventsConsumer();
     if (outputType == ProcessOutputTypes.STDERR) {
       StringBuilder stderr = new StringBuilder();
-      while (lines.hasNext()) {
-        String line = lines.next();
+      for (String line : lines) {
         // Check if the line has at least one character or digit
         if (CHARACTER_DIGITS_PATTERN.matcher(line).matches()) {
           stderr.append(line);
