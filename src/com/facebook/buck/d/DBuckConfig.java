@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.stream.StreamSupport;
 
 public class DBuckConfig {
   private static final Path DEFAULT_D_COMPILER = Paths.get("dmd");
@@ -75,10 +76,9 @@ public class DBuckConfig {
       // No flags configured; generate them based on library paths.
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       builder.addAll(
-          FluentIterable
-            .from(getBaseLibraryPaths())
-            .transform(
-                input -> "-L" + input));
+          StreamSupport.stream(getBaseLibraryPaths().spliterator(), false)
+              .map(input -> "-L" + input)
+              .iterator());
       builder.add("-lphobos2", "-lpthread", "-lm");
       return builder.build();
     }

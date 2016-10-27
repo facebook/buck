@@ -117,7 +117,7 @@ public class OCamlLinkStep extends ShellStep {
         .add("-o", output.toString())
         .addAll(flags)
         .addAll(ocamlInput)
-        .addAll(FluentIterable.from(input).transform(Object::toString))
+        .addAll(input.stream().map(Object::toString).iterator())
         .addAll(
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-cclib"),

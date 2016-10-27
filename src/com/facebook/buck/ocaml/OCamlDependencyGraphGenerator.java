@@ -18,15 +18,16 @@ package com.facebook.buck.ocaml;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
@@ -44,23 +45,14 @@ public class OCamlDependencyGraphGenerator {
   public ImmutableList<String> generate(String depToolOutput) {
     parseDependencies(depToolOutput);
     Preconditions.checkNotNull(graph);
-    final ImmutableList<String> sortedDeps = TopologicalSort.sort(
-        graph, x -> true);
+    final ImmutableList<String> sortedDeps = TopologicalSort.sort(graph, x -> true);
 
     // Two copies of dependencies as .cmo can map to .ml or .re
 
-    FluentIterable<String> dependenciesML =
-        FluentIterable.from(sortedDeps).transform(
-            input -> replaceObjExtWithSourceExt(input, false /* isReason */));
-
-    FluentIterable<String> dependenciesRE =
-        FluentIterable.from(sortedDeps).transform(
-            input -> replaceObjExtWithSourceExt(input, true /* isReason */));
-
-    return new ImmutableList.Builder<String>()
-        .addAll(dependenciesML)
-        .addAll(dependenciesRE)
-        .build();
+    return Stream.concat(
+        sortedDeps.stream().map(input -> replaceObjExtWithSourceExt(input, false /* isReason */)),
+        sortedDeps.stream().map(input -> replaceObjExtWithSourceExt(input, true /* isReason */)))
+        .collect(MoreCollectors.toImmutableList());
   }
 
   private String replaceObjExtWithSourceExt(String name, boolean isReason) {
@@ -86,34 +78,19 @@ public class OCamlDependencyGraphGenerator {
             sourceML.endsWith(OCamlCompilables.OCAML_MLI)) {
 
           // Two copies of dependencies as .cmo can map to .ml or .re
-
-          FluentIterable<Path> dependenciesML = FluentIterable
-              .from(
-                Splitter.on(OCAML_DEPS_SEPARATOR)
-                  .trimResults().splitToList(sourceAndDeps.get(1)))
+          ImmutableList<Path> dependencies = Splitter.on(OCAML_DEPS_SEPARATOR)
+              .trimResults()
+              .splitToList(sourceAndDeps.get(1))
+              .stream()
               .filter(input -> !input.isEmpty())
-              .transform(
-                  input -> Paths.get(replaceObjExtWithSourceExt(input, /* isReason */ false)));
-
-          FluentIterable<Path> dependenciesRE = FluentIterable
-              .from(
-                  Splitter.on(OCAML_DEPS_SEPARATOR)
-                      .trimResults().splitToList(sourceAndDeps.get(1)))
-              .filter(input -> !input.isEmpty())
-              .transform(
-                  input -> Paths.get(replaceObjExtWithSourceExt(input, /* isReason */ true)));
-          ImmutableList<Path> dependencies =
-              new ImmutableList.Builder<Path>()
-                  .addAll(dependenciesML)
-                  .addAll(dependenciesRE)
-                  .build();
+              .flatMap(input ->
+                  Stream.of(
+                      Paths.get(replaceObjExtWithSourceExt(input, /* isReason */ false)),
+                      Paths.get(replaceObjExtWithSourceExt(input, /* isReason */ true))))
+              .collect(MoreCollectors.toImmutableList());
           mapBuilder
-              .put(
-                  Paths.get(sourceML),
-                  dependencies)
-              .put(
-                  Paths.get(sourceRE),
-                  dependencies);
+              .put(Paths.get(sourceML), dependencies)
+              .put(Paths.get(sourceRE), dependencies);
         }
       }
     }

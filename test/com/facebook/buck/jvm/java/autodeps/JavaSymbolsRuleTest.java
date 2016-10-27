@@ -38,7 +38,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -48,6 +47,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class JavaSymbolsRuleTest {
@@ -65,10 +65,10 @@ public class JavaSymbolsRuleTest {
 
     ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.<SourcePath>naturalOrder()
         .addAll(
-            FluentIterable.from(ImmutableSet.of("Example1.java", "Example2.java"))
-                .transform(Paths::get)
-                .transform(SourcePaths.toSourcePath(projectFilesystem))
-        )
+            Stream.of("Example1.java", "Example2.java")
+                .map(Paths::get)
+                .map(SourcePaths.toSourcePath(projectFilesystem)::apply)
+                .iterator())
         .add(new BuildTargetSourcePath(BuildTargetFactory.newInstance("//foo:bar")))
         .build();
     JavaFileParser javaFileParser = JavaFileParser.createJavaFileParser(

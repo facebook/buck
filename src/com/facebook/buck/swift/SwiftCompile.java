@@ -153,9 +153,10 @@ class SwiftCompile
         CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, getResolver());
 
     compilerCommand.addAll(
-        FluentIterable.from(frameworks)
-        .transform(frameworkPathToSearchPath)
-        .transformAndConcat(searchPath -> ImmutableSet.of("-F", searchPath.toString())));
+        frameworks.stream()
+            .map(frameworkPathToSearchPath::apply)
+            .flatMap(searchPath -> ImmutableSet.of("-F", searchPath.toString()).stream())
+            .iterator());
 
     compilerCommand.addAll(
         MoreIterables.zipAndConcat(Iterables.cycle("-Xcc"),

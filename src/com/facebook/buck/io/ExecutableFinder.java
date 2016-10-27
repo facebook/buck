@@ -24,7 +24,6 @@ import com.facebook.buck.util.environment.EnvironmentFilter;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -36,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.stream.StreamSupport;
 
 /**
  * Given the name of an executable, search a set of (possibly platform-specific) known locations for
@@ -157,8 +157,11 @@ public class ExecutableFinder {
     if (pathEnv != null) {
       pathEnv = pathEnv.trim();
       paths.addAll(
-          FluentIterable.from(Splitter.on(pathSeparator).omitEmptyStrings().split(pathEnv))
-              .transform(Paths::get));
+          StreamSupport.stream(
+              Splitter.on(pathSeparator).omitEmptyStrings().split(pathEnv).spliterator(),
+              false)
+              .map(Paths::get)
+              .iterator());
     }
 
     if (platform == Platform.MACOS) {
@@ -166,8 +169,9 @@ public class ExecutableFinder {
       if (Files.exists(osXPaths)) {
         try {
           paths.addAll(
-              FluentIterable.from(Files.readAllLines(osXPaths, Charset.defaultCharset()))
-                  .transform(Paths::get));
+              Files.readAllLines(osXPaths, Charset.defaultCharset()).stream()
+                  .map(Paths::get)
+                  .iterator());
         } catch (IOException e) {
           LOG.warn("Unable to read mac-specific paths. Skipping");
         }

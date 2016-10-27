@@ -58,6 +58,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Compute transitive dependencies and generate ocaml build rules
@@ -228,10 +229,10 @@ public class OCamlRuleBuilder {
     ImmutableSortedSet.Builder<BuildRule> allDepsBuilder = ImmutableSortedSet.naturalOrder();
     allDepsBuilder.addAll(pathResolver.filterBuildRuleInputs(getInput(srcs)));
     allDepsBuilder.addAll(
-        FluentIterable.from(nativeLinkableInput.getArgs())
-            .append(bytecodeLinkableInput.getArgs())
-            .append(cLinkableInput.getArgs())
-            .transformAndConcat(arg -> arg.getDeps(pathResolver)));
+        Stream.of(nativeLinkableInput, bytecodeLinkableInput, cLinkableInput)
+            .flatMap(input -> input.getArgs().stream())
+            .flatMap(arg -> arg.getDeps(pathResolver).stream())
+            .iterator());
     for (OCamlLibrary library : ocamlInput) {
       allDepsBuilder.addAll(library.getNativeCompileDeps());
       allDepsBuilder.addAll(library.getBytecodeCompileDeps());
@@ -384,14 +385,10 @@ public class OCamlRuleBuilder {
             ImmutableSortedSet.<BuildRule>naturalOrder()
                 .addAll(pathResolver.filterBuildRuleInputs(getInput(srcs)))
                 .addAll(
-                    FluentIterable.from(nativeLinkableInput.getArgs())
-                        .transformAndConcat(arg -> arg.getDeps(pathResolver)))
-                .addAll(
-                    FluentIterable.from(bytecodeLinkableInput.getArgs())
-                        .transformAndConcat(arg -> arg.getDeps(pathResolver)))
-                .addAll(
-                    FluentIterable.from(cLinkableInput.getArgs())
-                        .transformAndConcat(arg -> arg.getDeps(pathResolver)))
+                    Stream.of(nativeLinkableInput, bytecodeLinkableInput, cLinkableInput)
+                    .flatMap(input -> input.getArgs().stream())
+                    .flatMap(arg -> arg.getDeps(pathResolver).stream())
+                    .iterator())
                 .addAll(
                     pathResolver.filterBuildRuleInputs(
                         ocamlBuckConfig.getCCompiler().resolve(resolver).getInputs()))

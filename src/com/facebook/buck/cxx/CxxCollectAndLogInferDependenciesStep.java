@@ -20,7 +20,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
@@ -89,9 +88,7 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
             analysisRule.getBuildTarget(), analysisRule.getAbsolutePathToResultsDir())
             .toString());
     accumulator.addAll(
-        FluentIterable.from(analysisRule.getCaptureRules()).transform(
-            this::processCaptureRule
-        ));
+        analysisRule.getCaptureRules().stream().map(this::processCaptureRule).iterator());
   }
 
   private ImmutableList<String> processAnalysisRule(CxxInferAnalyze analyzeRule) {

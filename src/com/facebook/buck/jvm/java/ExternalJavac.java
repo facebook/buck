@@ -258,9 +258,9 @@ public class ExternalJavac implements Javac {
             projectFilesystem.resolve(workingDirectory.get()),
             Unzip.ExistingFileMode.OVERWRITE);
         sources.addAll(
-            FluentIterable.from(zipPaths)
-                .filter(
-                    input -> input.toString().endsWith(".java")));
+            zipPaths.stream()
+                .filter(input -> input.toString().endsWith(".java"))
+                .iterator());
       }
     }
     return sources.build();

@@ -49,7 +49,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -60,6 +59,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 
 public class HaskellDescriptionUtils {
 
@@ -325,11 +325,10 @@ public class HaskellDescriptionUtils {
                     ImmutableSortedSet.<BuildRule>naturalOrder()
                         .addAll(linker.getDeps(pathResolver))
                         .addAll(
-                            FluentIterable.from(args)
-                                .transformAndConcat(arg1 -> arg1.getDeps(pathResolver)))
-                        .addAll(
-                            FluentIterable.from(linkerArgs)
-                                .transformAndConcat(arg -> arg.getDeps(pathResolver)))
+                            Stream.of(args, linkerArgs)
+                                .flatMap(Collection::stream)
+                                .flatMap(arg -> arg.getDeps(pathResolver).stream())
+                                .iterator())
                         .build()),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),
             pathResolver,

@@ -38,7 +38,6 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Charsets;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -54,6 +53,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.StreamSupport;
 
 /**
  * A {@link SymbolNameTool} implementation using a POSIX-compliant `nm` utility
@@ -140,9 +140,10 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
                   // Only list undefined symbols.
                   .add("-u")
                   .addAll(
-                      FluentIterable.from(inputs)
-                          .transform(getResolver()::getAbsolutePath)
-                          .transform(Object::toString))
+                      StreamSupport.stream(inputs.spliterator(), false)
+                          .map(getResolver()::getAbsolutePath)
+                          .map(Object::toString)
+                          .iterator())
                   .build(),
               nm.getEnvironment(getResolver())) {
             @Override

@@ -45,7 +45,6 @@ import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -57,6 +56,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class JavaLibrarySymbolsFinderTest {
   @Rule
@@ -79,10 +79,10 @@ public class JavaLibrarySymbolsFinderTest {
 
     ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.<SourcePath>naturalOrder()
         .addAll(
-            FluentIterable.from(ImmutableSet.of("Example1.java", "Example2.java"))
-                .transform(Paths::get)
-                .transform(SourcePaths.toSourcePath(projectFilesystem))
-        )
+            Stream.of("Example1.java", "Example2.java")
+                .map(Paths::get)
+                .map(SourcePaths.toSourcePath(projectFilesystem)::apply)
+                .iterator())
         .add(new BuildTargetSourcePath(BuildTargetFactory.newInstance("//foo:bar")))
         .build();
 

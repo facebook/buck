@@ -234,9 +234,10 @@ public class MavenUberJar extends AbstractBuildRule implements MavenPublishable 
       ImmutableSortedSet.Builder<JavaLibrary> candidates = ImmutableSortedSet.naturalOrder();
       for (final BuildRule root : roots) {
         Preconditions.checkState(root instanceof HasClasspathEntries);
-        candidates.addAll(FluentIterable
-            .from(((HasClasspathEntries) root).getTransitiveClasspathDeps())
-            .filter(buildRule -> !root.equals(buildRule)));
+        candidates.addAll(
+            ((HasClasspathEntries) root).getTransitiveClasspathDeps().stream()
+                .filter(buildRule -> !root.equals(buildRule))
+                .iterator());
       }
       ImmutableSortedSet.Builder<JavaLibrary> removals = ImmutableSortedSet.naturalOrder();
       for (JavaLibrary javaLibrary : candidates.build()) {

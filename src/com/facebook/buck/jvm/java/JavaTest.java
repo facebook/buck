@@ -56,8 +56,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -625,8 +623,9 @@ public class JavaTest
         // By the end of the build, all the transitive Java library dependencies *must* be available
         // on disk, so signal this requirement via the {@link HasRuntimeDeps} interface.
         .addAll(
-            FluentIterable.from(compiledTestsLibrary.getTransitiveClasspathDeps())
-                .filter(Predicates.not(this::equals)))
+            compiledTestsLibrary.getTransitiveClasspathDeps().stream()
+                .filter(rule -> !this.equals(rule))
+                .iterator())
         // It's possible that the user added some tool as a dependency, so make sure we promote
         // this rules first-order deps to runtime deps, so that these potential tools are available
         // when this test runs.

@@ -32,9 +32,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -44,6 +42,7 @@ import com.google.common.io.Files;
 
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * A generator of fine-grained OCaml build rules
@@ -236,11 +235,13 @@ public class OCamlBuildRulesGenerator {
             ImmutableSortedSet.<BuildRule>naturalOrder()
                 .addAll(pathResolver.filterBuildRuleInputs(allInputs))
                 .addAll(
-                    FluentIterable.from(ocamlContext.getNativeLinkableInput().getArgs())
-                        .transformAndConcat(arg -> arg.getDeps(pathResolver)))
+                    ocamlContext.getNativeLinkableInput().getArgs().stream()
+                        .flatMap(arg -> arg.getDeps(pathResolver).stream())
+                        .iterator())
                 .addAll(
-                    FluentIterable.from(ocamlContext.getCLinkableInput().getArgs())
-                        .transformAndConcat(arg -> arg.getDeps(pathResolver)))
+                    ocamlContext.getCLinkableInput().getArgs().stream()
+                        .flatMap(arg -> arg.getDeps(pathResolver).stream())
+                        .iterator())
                 .addAll(cxxCompiler.getDeps(pathResolver))
                 .build()),
         Suppliers.ofInstance(
@@ -285,10 +286,12 @@ public class OCamlBuildRulesGenerator {
                 .addAll(pathResolver.filterBuildRuleInputs(allInputs))
                 .addAll(ocamlContext.getBytecodeLinkDeps())
                 .addAll(
-                    FluentIterable.from(ocamlContext.getBytecodeLinkableInput().getArgs())
-                        .append(ocamlContext.getCLinkableInput().getArgs())
-                        .transformAndConcat(arg -> arg.getDeps(pathResolver))
-                        .filter(Predicates.not(OCamlBuild.class::isInstance)))
+                    Stream.concat(
+                        ocamlContext.getBytecodeLinkableInput().getArgs().stream(),
+                        ocamlContext.getCLinkableInput().getArgs().stream())
+                        .flatMap(arg -> arg.getDeps(pathResolver).stream())
+                        .filter(rule -> !(rule instanceof OCamlBuild))
+                        .iterator())
                 .addAll(cxxCompiler.getDeps(pathResolver))
                 .build()),
     Suppliers.ofInstance(ImmutableSortedSet.of()));

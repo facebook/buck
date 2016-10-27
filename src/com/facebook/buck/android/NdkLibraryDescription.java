@@ -49,7 +49,6 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -210,8 +209,9 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       // We add any dependencies from the native linkable input to this rule, even though
       // it technically should be added to the top-level rule.
       deps.addAll(
-          FluentIterable.from(nativeLinkableInput.getArgs())
-              .transformAndConcat(arg -> arg.getDeps(pathResolver)));
+          nativeLinkableInput.getArgs().stream()
+              .flatMap(arg -> arg.getDeps(pathResolver).stream())
+              .iterator());
 
       // Add in the transitive native linkable flags contributed by C/C++ library rules into the
       // NDK build.

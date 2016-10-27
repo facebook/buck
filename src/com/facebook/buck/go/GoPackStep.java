@@ -18,7 +18,6 @@ package com.facebook.buck.go;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -67,7 +66,7 @@ public class GoPackStep extends ShellStep {
         .addAll(packCommandPrefix)
         .add(op.getOpCode(context.getVerbosity().shouldUseVerbosityFlagIfAvailable()))
         .add(output.toString())
-        .addAll(FluentIterable.from(srcs).transform(Object::toString))
+        .addAll(srcs.stream().map(Object::toString).iterator())
         .build();
   }
 

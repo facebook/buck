@@ -23,7 +23,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
@@ -70,9 +69,10 @@ abstract class AbstractGlobArg extends Arg {
       throw Throwables.propagate(e);
     }
     builder.addAll(
-        FluentIterable.from(paths)
-            .transform(filesystem::resolve)
-            .transform(Object::toString));
+        paths.stream()
+            .map(filesystem::resolve)
+            .map(Object::toString)
+            .iterator());
   }
 
   @Override

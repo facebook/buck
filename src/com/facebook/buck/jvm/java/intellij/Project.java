@@ -274,8 +274,8 @@ public class Project {
             androidBinary.getAndroidPackageableCollection();
         ImmutableList<Path> dxAbsolutePaths =
             resolver.getAllAbsolutePaths(packageableCollection.getNoDxClasspathEntries());
-        noDxJarsBuilder.addAll(FluentIterable.from(dxAbsolutePaths)
-                .transform(projectFilesystem::relativize));
+        noDxJarsBuilder.addAll(
+            dxAbsolutePaths.stream().map(projectFilesystem::relativize).iterator());
       }
 
       final Optional<Path> rJava;

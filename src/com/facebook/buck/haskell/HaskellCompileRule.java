@@ -44,7 +44,6 @@ import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.OptionalCompat;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
-import com.google.common.base.Joiner;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -58,6 +57,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppendable {
 
@@ -311,15 +311,17 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
                 .add("-odir", getProjectFilesystem().resolve(getObjectDir()).toString())
                 .add("-hidir", getProjectFilesystem().resolve(getInterfaceDir()).toString())
                 .add("-stubdir", getProjectFilesystem().resolve(getStubDir()).toString())
-                .add("-i" + Joiner.on(':').join(
-                    FluentIterable.from(includes)
-                        .transform(getResolver()::getAbsolutePath)
-                        .transform(Object::toString)))
+                .add("-i" +
+                    includes.stream()
+                        .map(getResolver()::getAbsolutePath)
+                        .map(Object::toString)
+                        .collect(Collectors.joining(":")))
                 .addAll(getPackageArgs())
                 .addAll(
-                    FluentIterable.from(sources.getSourcePaths())
-                        .transform(getResolver()::getAbsolutePath)
-                        .transform(Object::toString))
+                    sources.getSourcePaths().stream()
+                        .map(getResolver()::getAbsolutePath)
+                        .map(Object::toString)
+                        .iterator())
                 .build();
           }
 

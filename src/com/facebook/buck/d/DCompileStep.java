@@ -18,7 +18,6 @@ package com.facebook.buck.d;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -55,7 +54,7 @@ public class DCompileStep extends ShellStep {
         .addAll(flags)
         .add("-c")
         .add("-of" + output.toString())
-        .addAll(FluentIterable.from(inputs).transform(Object::toString))
+        .addAll(inputs.stream().map(Object::toString).iterator())
         .build();
   }
 

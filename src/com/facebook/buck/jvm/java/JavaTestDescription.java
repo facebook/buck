@@ -39,10 +39,8 @@ import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -50,6 +48,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 
 
@@ -272,9 +271,10 @@ public class JavaTestDescription implements
             // (2) They affect the JavaTest's RuleKey, so changing them will invalidate
             // the test results cache.
             .addAll(
-                FluentIterable.from(
-                    pathResolver.filterBuildRuleInputs(nativeLibsSymlinkTree.getLinks().values()))
-                    .filter(shouldInclude))
+                pathResolver.filterBuildRuleInputs(nativeLibsSymlinkTree.getLinks().values())
+                    .stream()
+                    .filter(shouldInclude)
+                    .iterator())
             .build());
         nativeLibsEnvironment =
             ImmutableMap.of(

@@ -34,6 +34,7 @@ import org.objectweb.asm.tree.ClassNode;
 import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.stream.StreamSupport;
 
 public class FirstOrderTest {
 
@@ -202,7 +203,10 @@ public class FirstOrderTest {
     ImmutableList.Builder<ClassNode> builder = ImmutableList.builder();
 
     builder.addAll(alreadyLoaded);
-    builder.addAll(FluentIterable.from(classes).transform(FirstOrderTest::loadClassNode));
+    builder.addAll(
+        StreamSupport.stream(classes.spliterator(), false)
+            .map(FirstOrderTest::loadClassNode)
+            .iterator());
 
     return builder.build();
   }

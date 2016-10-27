@@ -178,7 +178,7 @@ public class CxxGenruleDescription
   }
 
   @Override
-  protected <A extends AbstractGenruleDescription.Arg> MacroHandler getMacroHandler(
+  protected <A extends Arg> MacroHandler getMacroHandler(
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
@@ -229,7 +229,7 @@ public class CxxGenruleDescription
   }
 
   @Override
-  public <A extends AbstractGenruleDescription.Arg> BuildRule createBuildRule(
+  public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -742,8 +742,9 @@ public class CxxGenruleDescription
       SourcePathResolver pathResolver = new SourcePathResolver(resolver);
       ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
       deps.addAll(
-          FluentIterable.from(getLinkerArgs(resolver, rules, filter))
-              .transformAndConcat(arg -> arg.getDeps(pathResolver)));
+          getLinkerArgs(resolver, rules, filter).stream()
+              .flatMap(arg -> arg.getDeps(pathResolver).stream())
+              .iterator());
       if (depType == Linker.LinkableDepType.SHARED) {
         deps.add(requireSymlinkTree(resolver, rules));
       }
