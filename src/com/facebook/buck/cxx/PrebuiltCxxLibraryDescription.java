@@ -187,7 +187,7 @@ public class PrebuiltCxxLibraryDescription implements
     if (addedPathString.isPresent()) {
       p = p.resolve(addedPathString.get());
     }
-    p = filesystem.getRelativizer().apply(p);
+    p = filesystem.relativize(p);
     return new BuildTargetSourcePath(deps.iterator().next().getBuildTarget(), p);
   }
 

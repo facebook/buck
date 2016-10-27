@@ -129,8 +129,6 @@ public class ProjectFilesystem {
   private final Path projectRoot;
   private final BuckPaths buckPaths;
 
-  private final Function<Path, Path> pathRelativizer;
-
   private final ImmutableSet<PathOrGlobMatcher> blackListedPaths;
   private final ImmutableSet<PathOrGlobMatcher> blackListedDirectories;
 
@@ -205,7 +203,6 @@ public class ProjectFilesystem {
     }
     this.projectRoot = MorePaths.normalize(root);
     this.delegate = delegate;
-    this.pathRelativizer = projectRoot::relativize;
     this.ignoreValidityOfPaths = false;
     this.blackListedPaths = FluentIterable.from(blackListedPaths)
         .append(
@@ -352,8 +349,11 @@ public class ProjectFilesystem {
     return MorePaths.normalize(getRootPath().resolve(path).toAbsolutePath());
   }
 
-  public Function<Path, Path> getRelativizer() {
-    return pathRelativizer;
+  /**
+   * Construct a relative path between the project root and a given path.
+   */
+  public Path relativize(Path path) {
+    return projectRoot.relativize(path);
   }
 
   /**
@@ -617,9 +617,8 @@ public class ProjectFilesystem {
     Path path = getPathForRelativePath(pathToUse);
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
       return FluentIterable.from(stream)
-          .filter(input -> !isIgnored(pathRelativizer.apply(input)))
-          .transform(
-              absolutePath -> MorePaths.relativize(projectRoot, absolutePath))
+          .filter(input -> !isIgnored(relativize(input)))
+          .transform(absolutePath -> MorePaths.relativize(projectRoot, absolutePath))
           .toList();
     }
   }
@@ -1205,7 +1204,7 @@ public class ProjectFilesystem {
 
       private Path relativize(Path path) {
         if (path.startsWith(getRootPath())) {
-          return pathRelativizer.apply(path);
+          return ProjectFilesystem.this.relativize(path);
         }
         return path;
       }

@@ -30,6 +30,7 @@ import com.facebook.buck.android.AndroidPrebuiltAar;
 import com.facebook.buck.android.AndroidPrebuiltAarCollection;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.DummyRDotJava;
+import com.facebook.buck.android.KeystoreProperties;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
@@ -55,7 +56,6 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.android.KeystoreProperties;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
@@ -275,7 +275,7 @@ public class Project {
         ImmutableList<Path> dxAbsolutePaths =
             resolver.getAllAbsolutePaths(packageableCollection.getNoDxClasspathEntries());
         noDxJarsBuilder.addAll(FluentIterable.from(dxAbsolutePaths)
-                .transform(projectFilesystem.getRelativizer()));
+                .transform(projectFilesystem::relativize));
       }
 
       final Optional<Path> rJava;
@@ -422,7 +422,7 @@ public class Project {
             createRelativeResourcesPath(
                 Optional.ofNullable(androidResource.getRes())
                     .map(resolver::getAbsolutePath)
-                    .map(projectFilesystem.getRelativizer()::apply)
+                    .map(projectFilesystem::relativize)
                     .orElse(null),
                 target);
         module.isAndroidLibraryProject = true;
@@ -764,7 +764,7 @@ public class Project {
                 noDxJars,
                 FluentIterable.from(packageableCollection.getClasspathEntriesToDex())
                     .transform(resolver::getAbsolutePath)
-                    .transform(projectFilesystem.getRelativizer())
+                    .transform(projectFilesystem::relativize)
                     .toSet()));
       } else {
         classpathEntriesToDex = ImmutableSet.of();
@@ -1037,10 +1037,9 @@ public class Project {
 
       Path binaryJarAbsolutePath = resolver.getAbsolutePath(prebuiltJar.getBinaryJar());
       String binaryJar = MorePaths.pathWithUnixSeparators(
-          projectFilesystem.getRelativizer().apply(binaryJarAbsolutePath)
-      );
+          projectFilesystem.relativize(binaryJarAbsolutePath));
       String sourceJar = prebuiltJar.getSourceJar().map(resolver::getAbsolutePath)
-          .map(projectFilesystem.getRelativizer()::apply)
+          .map(projectFilesystem::relativize)
           .map(MorePaths::pathWithUnixSeparators)
           .orElse(null);
       String javadocUrl = prebuiltJar.getJavadocUrl().orElse(null);
