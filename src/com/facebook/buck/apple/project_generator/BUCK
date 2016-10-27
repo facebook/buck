@@ -1,6 +1,6 @@
 standard_java_library(
   immutable_types = [
-    'AppleTestBundleParamsKey'
+    'GenerationResult',
   ],
   resources = [
     'build-with-buck.st',

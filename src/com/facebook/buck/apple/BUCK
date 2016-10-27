@@ -31,7 +31,6 @@ java_immutables_library(
   immutable_types = [
     'ApplePackageConfig',
     'AppleBundleDestinations',
-    'AppleTestBundleParamsKey',
     'CodeSignIdentity',
     'FrameworkDependencies',
     'GroupedSource',

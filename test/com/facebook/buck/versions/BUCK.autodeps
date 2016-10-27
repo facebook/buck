@@ -17,6 +17,7 @@
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/versions:versions",
       "//test/com/facebook/buck/cli:FakeBuckConfig",

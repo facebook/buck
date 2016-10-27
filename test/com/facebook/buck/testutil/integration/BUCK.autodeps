@@ -12,6 +12,7 @@
       "//src/com/facebook/buck/android:utils",
       "//src/com/facebook/buck/apple:rules",
       "//src/com/facebook/buck/apple/device:device",
+      "//src/com/facebook/buck/artifact_cache:artifact_cache",
       "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/config:config",
@@ -37,7 +38,6 @@
       "//third-party/java/ini4j:ini4j"
     ],
     "exported_deps" : [
-      "//src/com/facebook/buck/artifact_cache:artifact_cache",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:types",
