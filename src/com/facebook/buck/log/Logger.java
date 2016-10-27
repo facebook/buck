@@ -373,8 +373,8 @@ public class Logger
         Object... args)
     {
       if (logger.isLoggable(level)) {
-          AppendableLogRecord lr = new AppendableLogRecord(level, displayLevel, format);
-          lr.setParameters(args);
+          String formatted = String.format(format, args);
+          AppendableLogRecord lr = new AppendableLogRecord(level, displayLevel, formatted);
           lr.setThrown(exception);
           lr.setLoggerName(logger.getName());
           logger.log(lr);
