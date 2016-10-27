@@ -105,6 +105,7 @@ public class DistBuildSlaveExecutor {
         args.getConsole(),
         /* defaultTestTimeoutMillis */ 1000,
         /* isCodeCoverageEnabled */ false,
+        /* isInclNoLocationClassesEnabled */ false,
         /* isDebugEnabled */ false,
         /* shouldReportAbsolutePaths */ false,
         args.getBuckEventBus(),

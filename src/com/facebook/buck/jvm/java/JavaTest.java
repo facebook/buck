@@ -222,6 +222,7 @@ public class JavaTest
         .setClasspathFile(getClassPathFile())
         .setTestRunnerClasspath(TESTRUNNER_CLASSES)
         .setCodeCoverageEnabled(executionContext.isCodeCoverageEnabled())
+        .setInclNoLocationClassesEnabled(executionContext.isInclNoLocationClassesEnabled())
         .setDebugEnabled(executionContext.isDebugEnabled())
         .setPathToJavaAgent(options.getPathToJavaAgent())
         .setBuildId(buildId)

@@ -43,8 +43,8 @@
 	<classpathentry kind="lib" path="third-party/java/jackson/jackson-databind-2.5.5.jar"/>
 	<classpathentry kind="lib" path="third-party/java/jackson/jackson-datatype-jdk7-2.5.0.jar"/>
 	<classpathentry kind="lib" path="third-party/java/jackson-datatype-guava/jackson-datatype-guava-2.5.5.jar"/>
-	<classpathentry kind="lib" path="third-party/java/jacoco/org.jacoco.core-0.7.5.201505241946.jar"/>
-	<classpathentry kind="lib" path="third-party/java/jacoco/org.jacoco.report-0.7.5.201505241946.jar"/>
+	<classpathentry kind="lib" path="third-party/java/jacoco/org.jacoco.core-0.7.7.201606060606.jar"/>
+	<classpathentry kind="lib" path="third-party/java/jacoco/org.jacoco.report-0.7.7.201606060606.jar"/>
 	<classpathentry kind="lib" path="third-party/java/jetty/jetty-all-9.2.10.v20150310.jar"/>
 	<classpathentry kind="lib" path="third-party/java/jna/jna-4.2.0.jar" sourcepath="third-party/java/jna/jna-4.2.0-sources.jar"/>
 	<classpathentry kind="lib" path="third-party/java/jna/jna-platform-4.2.0.jar" sourcepath="third-party/java/jna/jna-platform-4.2.0-sources.jar"/>

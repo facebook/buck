@@ -14,8 +14,8 @@ java_library(
 
 prebuilt_jar(
   name = 'core',
-  binary_jar = 'org.jacoco.core-0.7.5.201505241946.jar',
-  source_jar = 'org.jacoco.core-0.7.5.201505241946-sources.jar',
+  binary_jar = 'org.jacoco.core-0.7.7.201606060606.jar',
+  source_jar = 'org.jacoco.core-0.7.7.201606060606-sources.jar',
   licenses = [
     'license.html',
   ],
@@ -23,8 +23,8 @@ prebuilt_jar(
 
 prebuilt_jar(
   name = 'report',
-  binary_jar = 'org.jacoco.report-0.7.5.201505241946.jar',
-  source_jar = 'org.jacoco.report-0.7.5.201505241946-sources.jar',
+  binary_jar = 'org.jacoco.report-0.7.7.201606060606.jar',
+  source_jar = 'org.jacoco.report-0.7.7.201606060606-sources.jar',
   licenses = [
     'license.html',
   ],

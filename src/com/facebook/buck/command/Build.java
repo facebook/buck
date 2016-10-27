@@ -109,6 +109,7 @@ public class Build implements Closeable {
       Console console,
       long defaultTestTimeoutMillis,
       boolean isCodeCoverageEnabled,
+      boolean isInclNoLocationClassesEnabled,
       boolean isDebugEnabled,
       boolean shouldReportAbsolutePaths,
       BuckEventBus eventBus,
@@ -130,6 +131,7 @@ public class Build implements Closeable {
         .setTargetDevice(targetDevice)
         .setDefaultTestTimeoutMillis(defaultTestTimeoutMillis)
         .setCodeCoverageEnabled(isCodeCoverageEnabled)
+        .setInclNoLocationClassesEnabled(isInclNoLocationClassesEnabled)
         .setDebugEnabled(isDebugEnabled)
         .setShouldReportAbsolutePaths(shouldReportAbsolutePaths)
         .setBuckEventBus(eventBus)
