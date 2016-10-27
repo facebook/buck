@@ -458,7 +458,6 @@ public class AppleTestDescription implements
   public static class Arg extends AppleNativeTargetDescriptionArg implements HasAppleBundleFields {
     public ImmutableSortedSet<String> contacts = ImmutableSortedSet.of();
     public ImmutableSortedSet<Label> labels = ImmutableSortedSet.of();
-    public Optional<Boolean> canGroup;
     public Optional<Boolean> runTestSeparately;
     public Optional<Boolean> isUiTest;
     public Optional<BuildTarget> testHostApp;
@@ -490,10 +489,6 @@ public class AppleTestDescription implements
     @Override
     public Optional<String> getXcodeProductType() {
       return xcodeProductType;
-    }
-
-    public boolean canGroup() {
-      return canGroup.orElse(false);
     }
 
     public boolean getRunTestSeparately() {

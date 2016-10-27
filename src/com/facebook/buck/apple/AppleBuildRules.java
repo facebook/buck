@@ -272,22 +272,6 @@ public final class AppleBuildRules {
             input -> isXcodeTargetBuildRuleType(input.getType())));
   }
 
-  /**
-   * Given a list of nodes, return AppleTest nodes that can be grouped with other tests.
-   */
-  public static ImmutableSet<TargetNode<AppleTestDescription.Arg>> filterGroupableTests(
-      Iterable<? extends TargetNode<?>> tests) {
-    ImmutableSet.Builder<TargetNode<AppleTestDescription.Arg>> builder = ImmutableSet.builder();
-    for (TargetNode<?> node : tests) {
-      Optional<TargetNode<AppleTestDescription.Arg>> testNode =
-          node.castArg(AppleTestDescription.Arg.class);
-      if (testNode.isPresent() && testNode.get().getConstructorArg().canGroup()) {
-        builder.add(testNode.get());
-      }
-    }
-    return builder.build();
-  }
-
   public static Function<TargetNode<?>, Iterable<TargetNode<?>>>
     newRecursiveRuleDependencyTransformer(
       final TargetGraph targetGraph,

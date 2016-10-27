@@ -333,8 +333,7 @@ public class ProjectCommandXcodeTest {
         isWithDependenciesTests,
         /* isReadonly = */ false,
         /* isBuildWithBuck = */ false,
-        /* isCombinedProjects = */ false,
-        /* isCombinesTestBundles = */ false);
+        /* isCombinedProjects = */ false);
   }
 
   @Test

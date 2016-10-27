@@ -44,9 +44,7 @@ import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleResourceBuilder;
-import com.facebook.buck.apple.AppleResourceDescription;
 import com.facebook.buck.apple.AppleTestBuilder;
-import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.CoreDataModelBuilder;
 import com.facebook.buck.apple.FakeAppleRuleDescriptions;
 import com.facebook.buck.apple.XcodePostbuildScriptBuilder;
@@ -123,7 +121,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -131,8 +128,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.io.ByteStreams;
 
-import org.hamcrest.FeatureMatcher;
-import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -3316,169 +3311,6 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
   }
 
-  @Test
-  public void testGeneratingTestsAsStaticLibraries() throws IOException {
-    TargetNode<AppleTestDescription.Arg> libraryTestStatic =
-        AppleTestBuilder.createBuilder(
-            BuildTarget.builder(
-                rootPath,
-                "//foo",
-                "libraryTestStatic").build())
-            .setInfoPlist(new FakeSourcePath("Info.plist"))
-            .build();
-    TargetNode<AppleTestDescription.Arg> libraryTestNotStatic =
-        AppleTestBuilder.createBuilder(
-            BuildTarget.builder(
-                rootPath,
-                "//foo",
-                "libraryTestNotStatic").build())
-            .setInfoPlist(new FakeSourcePath("Info.plist"))
-            .build();
-
-    ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableList.of(libraryTestStatic, libraryTestNotStatic));
-    projectGenerator
-        .setTestsToGenerateAsStaticLibraries(ImmutableSet.of(libraryTestStatic))
-        .createXcodeProjects();
-
-    PBXProject project = projectGenerator.getGeneratedProject();
-    PBXTarget libraryTestStaticTarget =
-        assertTargetExistsAndReturnTarget(project, "//foo:libraryTestStatic");
-    PBXTarget libraryTestNotStaticTarget =
-        assertTargetExistsAndReturnTarget(project, "//foo:libraryTestNotStatic");
-    assertThat(
-        libraryTestStaticTarget.getProductType(),
-        equalTo(ProductType.STATIC_LIBRARY));
-    assertThat(
-        libraryTestNotStaticTarget.getProductType(),
-        equalTo(ProductType.UNIT_TEST));
-  }
-
-  @Test
-  public void testGeneratingCombinedTests() throws IOException {
-    TargetNode<AppleResourceDescription.Arg> testLibDepResource =
-        AppleResourceBuilder.createBuilder(
-            BuildTarget.builder(
-                rootPath,
-                "//lib",
-                "deplibresource").build())
-            .setFiles(ImmutableSet.of(new FakeSourcePath("bar.png")))
-            .setDirs(ImmutableSet.of())
-            .build();
-    TargetNode<AppleLibraryDescription.Arg> testLibDepLib =
-        AppleLibraryBuilder.createBuilder(BuildTarget.builder(rootPath, "//libs", "deplib").build())
-            .setFrameworks(
-                ImmutableSortedSet.of(
-                    FrameworkPath.ofSourceTreePath(
-                        new SourceTreePath(
-                            PBXReference.SourceTree.SDKROOT,
-                            Paths.get("DeclaredInTestLibDep.framework"),
-                            Optional.empty()))))
-            .setDeps(ImmutableSortedSet.of(testLibDepResource.getBuildTarget()))
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("e.m"))))
-            .build();
-    TargetNode<AppleLibraryDescription.Arg> dep1 =
-        AppleLibraryBuilder.createBuilder(BuildTarget.builder(rootPath, "//foo", "dep1").build())
-            .setDeps(ImmutableSortedSet.of(testLibDepLib.getBuildTarget()))
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("e.m"))))
-            .setFrameworks(
-                ImmutableSortedSet.of(
-                    FrameworkPath.ofSourceTreePath(
-                        new SourceTreePath(
-                            PBXReference.SourceTree.SDKROOT,
-                            Paths.get("DeclaredInTestLib.framework"),
-                            Optional.empty()))))
-            .build();
-    TargetNode<AppleLibraryDescription.Arg> dep2 =
-        AppleLibraryBuilder.createBuilder(BuildTarget.builder(rootPath, "//foo", "dep2").build())
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("e.m"))))
-            .build();
-    TargetNode<AppleTestDescription.Arg> xctest1 =
-        AppleTestBuilder.createBuilder(BuildTarget.builder(rootPath, "//foo", "xctest1").build())
-            .setInfoPlist(new FakeSourcePath("Info.plist"))
-            .setDeps(ImmutableSortedSet.of(dep1.getBuildTarget()))
-            .setFrameworks(
-                ImmutableSortedSet.of(
-                    FrameworkPath.ofSourceTreePath(
-                        new SourceTreePath(
-                            PBXReference.SourceTree.SDKROOT,
-                            Paths.get("DeclaredInTest.framework"),
-                            Optional.empty()))))
-            .build();
-    TargetNode<AppleTestDescription.Arg> xctest2 =
-        AppleTestBuilder.createBuilder(BuildTarget.builder(rootPath, "//foo", "xctest2").build())
-            .setInfoPlist(new FakeSourcePath("Info.plist"))
-            .setDeps(ImmutableSortedSet.of(dep2.getBuildTarget()))
-            .build();
-
-    final TargetGraph targetGraph =
-        TargetGraphFactory.newInstance(
-            testLibDepResource,
-            testLibDepLib,
-            dep1,
-            dep2,
-            xctest1,
-            xctest2);
-
-    ProjectGenerator projectGenerator = new ProjectGenerator(
-        targetGraph,
-        ImmutableSet.of(),
-        projectCell,
-        OUTPUT_DIRECTORY,
-        PROJECT_NAME,
-        "BUCK",
-        ProjectGenerator.SEPARATED_PROJECT_OPTIONS,
-        Optional.empty(),
-        ImmutableList.of(),
-        ImmutableList.of(),
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
-        DEFAULT_PLATFORM,
-        getSourcePathResolverForNodeFunction(targetGraph),
-        getFakeBuckEventBus(),
-        halideBuckConfig,
-        cxxBuckConfig,
-        appleConfig,
-        swiftBuckConfig)
-        .setTestsToGenerateAsStaticLibraries(ImmutableSet.of(xctest1, xctest2))
-        .setAdditionalCombinedTestTargets(
-            ImmutableMultimap.of(
-                AppleTestBundleParamsKey.fromAppleTestDescriptionArg(xctest1.getConstructorArg()),
-                xctest1,
-                AppleTestBundleParamsKey.fromAppleTestDescriptionArg(xctest2.getConstructorArg()),
-                xctest2));
-    projectGenerator.createXcodeProjects();
-
-    ImmutableSet<PBXTarget> combinedTestTargets =
-        projectGenerator.getBuildableCombinedTestTargets();
-    assertThat(combinedTestTargets, hasSize(1));
-    assertThat(combinedTestTargets, hasItem(targetWithName("_BuckCombinedTest-xctest-0")));
-
-    PBXProject project = projectGenerator.getGeneratedProject();
-    PBXTarget target = assertTargetExistsAndReturnTarget(project, "_BuckCombinedTest-xctest-0");
-    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
-        target,
-        ImmutableMap.of(
-            projectFilesystem.getBuckPaths().getGenDir().resolve("xcode-scripts/emptyFile.c")
-                .toString(),
-            Optional.empty()));
-    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
-        target,
-        ImmutableList.of(
-            "$BUILT_PRODUCTS_DIR/libxctest1.a",
-            "$BUILT_PRODUCTS_DIR/libxctest2.a",
-            "$BUILT_PRODUCTS_DIR/libdeplib.a",
-            "$BUILT_PRODUCTS_DIR/libdep1.a",
-            "$BUILT_PRODUCTS_DIR/libdep2.a",
-            "$SDKROOT/DeclaredInTestLib.framework",
-            "$SDKROOT/DeclaredInTestLibDep.framework",
-            "$SDKROOT/DeclaredInTest.framework"));
-    assertHasSingletonResourcesPhaseWithEntries(
-        target,
-        "bar.png");
-  }
-
   private BuckEventBus getFakeBuckEventBus() {
     return BuckEventBusFactory.newInstance(new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1)));
   }
@@ -4749,17 +4581,5 @@ public class ProjectGeneratorTest {
     assertHasConfigurations(target, config);
     return ProjectGeneratorTestUtils.getBuildSettings(
         projectFilesystem, buildTarget, target, config);
-  }
-
-  private Matcher<PBXTarget> targetWithName(String name) {
-    return new FeatureMatcher<PBXTarget, String>(
-        Matchers.equalTo(name),
-        "target with name",
-        "name") {
-      @Override
-      protected String featureValueOf(PBXTarget pbxTarget) {
-        return pbxTarget.getName();
-      }
-    };
   }
 }

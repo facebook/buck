@@ -95,7 +95,6 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -105,7 +104,6 @@ import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.PackagedResource;
 import com.google.common.annotations.VisibleForTesting;
@@ -120,7 +118,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -130,8 +127,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -262,11 +257,6 @@ public class ProjectGenerator {
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
   private final CxxPlatform defaultCxxPlatform;
 
-  private ImmutableSet<TargetNode<AppleTestDescription.Arg>> testsToGenerateAsStaticLibraries =
-      ImmutableSet.of();
-  private ImmutableMultimap<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
-      additionalCombinedTestTargets = ImmutableMultimap.of();
-
   // These fields are created/filled when creating the projects.
   private final PBXProject project;
   private final LoadingCache<TargetNode<?>, Optional<PBXTarget>> targetNodeToProjectTarget;
@@ -274,8 +264,6 @@ public class ProjectGenerator {
       targetNodeToGeneratedProjectTargetBuilder;
   private boolean projectGenerated;
   private final List<Path> headerSymlinkTrees;
-  private final ImmutableSet.Builder<PBXTarget> buildableCombinedTestTargets =
-      ImmutableSet.builder();
   private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
       ImmutableSet.builder();
   private final Function<? super TargetNode<?>, SourcePathResolver> sourcePathResolverForNode;
@@ -372,26 +360,6 @@ public class ProjectGenerator {
     }
   }
 
-  /**
-   * Sets the set of tests which should be generated as static libraries instead of test bundles.
-   */
-  public ProjectGenerator setTestsToGenerateAsStaticLibraries(
-      Set<TargetNode<AppleTestDescription.Arg>> set) {
-    Preconditions.checkState(!projectGenerated);
-    this.testsToGenerateAsStaticLibraries = ImmutableSet.copyOf(set);
-    return this;
-  }
-
-  /**
-   * Sets combined test targets which should be generated in this project.
-   */
-  public ProjectGenerator setAdditionalCombinedTestTargets(
-      Multimap<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>> targets) {
-    Preconditions.checkState(!projectGenerated);
-    this.additionalCombinedTestTargets = ImmutableMultimap.copyOf(targets);
-    return this;
-  }
-
   @VisibleForTesting
   PBXProject getGeneratedProject() {
     return project;
@@ -442,11 +410,6 @@ public class ProjectGenerator {
     return buildTargetToPbxTargetMap.build();
   }
 
-  public ImmutableSet<PBXTarget> getBuildableCombinedTestTargets() {
-    Preconditions.checkState(projectGenerated, "Must have called createXcodeProjects");
-    return buildableCombinedTestTargets.build();
-  }
-
   public ImmutableSet<BuildTarget> getRequiredBuildTargets() {
     Preconditions.checkState(projectGenerated, "Must have called createXcodeProjects");
     return requiredBuildTargetsBuilder.build();
@@ -475,14 +438,6 @@ public class ProjectGenerator {
 
       if (targetToBuildWithBuck.isPresent()) {
         generateBuildWithBuckTarget(targetGraph.get(targetToBuildWithBuck.get()));
-      }
-
-      int combinedTestIndex = 0;
-      for (AppleTestBundleParamsKey key : additionalCombinedTestTargets.keySet()) {
-        generateCombinedTestTarget(
-            deriveCombinedTestTargetNameFromKey(combinedTestIndex++),
-            key,
-            additionalCombinedTestTargets.get(key));
       }
 
       for (String configName : targetConfigNamesBuilder.build()) {
@@ -725,7 +680,8 @@ public class ProjectGenerator {
                   targetGraph.get(bundleTargetNode.getConstructorArg().binary),
               Optional.empty()));
     } else if (targetNode.getType().equals(AppleTestDescription.TYPE)) {
-      result = generateAppleTestTarget((TargetNode<AppleTestDescription.Arg>) targetNode);
+      result = Optional.of(
+          generateAppleTestTarget((TargetNode<AppleTestDescription.Arg>) targetNode));
     } else if (targetNode.getType().equals(AppleResourceDescription.TYPE)) {
       checkAppleResourceTargetNodeReferencingValidContents(
           (TargetNode<AppleResourceDescription.Arg>) targetNode);
@@ -842,7 +798,7 @@ public class ProjectGenerator {
   }
 
   @SuppressWarnings("unchecked")
-  private Optional<PBXTarget> generateAppleTestTarget(
+  private PBXTarget generateAppleTestTarget(
       TargetNode<AppleTestDescription.Arg> testTargetNode) throws IOException {
     Optional<TargetNode<AppleBundleDescription.Arg>> testHostBundle;
     if (testTargetNode.getConstructorArg().testHostApp.isPresent()) {
@@ -859,20 +815,11 @@ public class ProjectGenerator {
     } else {
       testHostBundle = Optional.empty();
     }
-    if (testsToGenerateAsStaticLibraries.contains(testTargetNode)) {
-      return Optional.of(
-          generateAppleLibraryTarget(
-              project,
-              testTargetNode,
-              testHostBundle));
-    } else {
-      return Optional.of(
-          generateAppleBundleTarget(
-              project,
-              testTargetNode,
-              testTargetNode,
-              testHostBundle));
-    }
+    return generateAppleBundleTarget(
+        project,
+        testTargetNode,
+        testTargetNode,
+        testHostBundle);
   }
 
   private void checkAppleResourceTargetNodeReferencingValidContents(
@@ -1594,86 +1541,6 @@ public class ProjectGenerator {
     } else {
       return headers.getNamedSources().get().values();
     }
-  }
-
-  private void generateCombinedTestTarget(
-      final String productName,
-      AppleTestBundleParamsKey key,
-      ImmutableCollection<TargetNode<AppleTestDescription.Arg>> tests)
-      throws IOException {
-    ImmutableSet.Builder<PBXFileReference> testLibs = ImmutableSet.builder();
-    for (TargetNode<AppleTestDescription.Arg> test : tests) {
-      testLibs.add(getOrCreateTestLibraryFileReference(test));
-    }
-    NewNativeTargetProjectMutator mutator = new NewNativeTargetProjectMutator(
-        pathRelativizer,
-        sourcePathResolver)
-        .setTargetName(productName)
-        .setProduct(
-            dylibProductTypeByBundleExtension(AppleBundleExtension.XCTEST).get(),
-            productName,
-            Paths.get(productName + "." + AppleBundleExtension.XCTEST.toFileExtension()))
-        .setSourcesWithFlags(
-            ImmutableSet.of(
-                SourceWithFlags.of(
-                    new PathSourcePath(projectFilesystem, emptyFileWithExtension("c")))))
-        .setArchives(Sets.union(collectRecursiveLibraryDependencies(tests), testLibs.build()))
-        .setRecursiveResources(AppleResources.collectRecursiveResources(targetGraph, tests))
-        .setRecursiveAssetCatalogs(
-            AppleBuildRules.collectRecursiveAssetCatalogs(targetGraph, tests));
-
-    ImmutableSet.Builder<FrameworkPath> frameworksBuilder = ImmutableSet.builder();
-    frameworksBuilder.addAll(collectRecursiveFrameworkDependencies(tests));
-    for (TargetNode<AppleTestDescription.Arg> test : tests) {
-      frameworksBuilder.addAll(test.getConstructorArg().frameworks);
-      frameworksBuilder.addAll(test.getConstructorArg().libraries);
-    }
-    mutator.setFrameworks(frameworksBuilder.build());
-
-    NewNativeTargetProjectMutator.Result result;
-    result = mutator.buildTargetAndAddToProject(project);
-
-    ImmutableMap.Builder<String, String> overrideBuildSettingsBuilder =
-        ImmutableMap.<String, String>builder()
-            .put("GCC_PREFIX_HEADER", "")
-            .put("USE_HEADERMAP", "NO");
-    if (key.getInfoPlist().isPresent()) {
-      overrideBuildSettingsBuilder.put(
-          "INFOPLIST_FILE",
-          pathRelativizer.outputDirToRootRelative(
-              sourcePathResolver.apply(key.getInfoPlist().get())).toString());
-    }
-    setTargetBuildConfigurations(
-        input -> outputDirectory.resolve(
-            String.format("xcconfigs/%s-%s.xcconfig", productName, input)),
-        result.target,
-        project.getMainGroup(),
-        key.getConfigs().get(),
-        overrideBuildSettingsBuilder.build(),
-        ImmutableMap.of(
-            PRODUCT_NAME, productName,
-            "WRAPPER_EXTENSION", AppleBundleExtension.XCTEST.toFileExtension()),
-        ImmutableMap.of(
-            "FRAMEWORK_SEARCH_PATHS",
-            Joiner.on(' ').join(collectRecursiveFrameworkSearchPaths(tests)),
-            "LIBRARY_SEARCH_PATHS",
-            Joiner.on(' ').join(collectRecursiveLibrarySearchPaths(tests)),
-            "OTHER_LDFLAGS",
-            Joiner.on(' ').join(
-                MoreIterables.zipAndConcat(
-                    Iterables.cycle("-Xlinker"),
-                    Iterables.concat(
-                        key.getLinkerFlags(),
-                        collectRecursiveExportedLinkerFlags(tests))))));
-    buildableCombinedTestTargets.add(result.target);
-  }
-
-  private String deriveCombinedTestTargetNameFromKey(int combinedTestIndex) {
-    return Joiner.on("-").join(
-        "_BuckCombinedTest",
-        AppleBundleExtension.XCTEST.toFileExtension(),
-        combinedTestIndex);
-
   }
 
   /**
@@ -2556,23 +2423,6 @@ public class ProjectGenerator {
   }
 
   /**
-   * Return a file reference to a test assuming it's built as a static library.
-   */
-  private PBXFileReference getOrCreateTestLibraryFileReference(
-      TargetNode<AppleTestDescription.Arg> test) {
-    SourceTreePath path = new SourceTreePath(
-        PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-        Paths.get(getBuiltProductsRelativeTargetOutputPath(test)).resolve(
-            String.format(
-                AppleBuildRules.getOutputFileNameFormatForLibrary(false),
-                getProductNameForBuildTarget(test.getBuildTarget()))),
-        Optional.empty());
-    return project.getMainGroup()
-        .getOrCreateChildGroupByName("Test Libraries")
-        .getOrCreateFileReferenceBySourceTreePath(path);
-  }
-
-  /**
    * Whether a given build target is built by the project being generated, or being build elsewhere.
    */
   private boolean isBuiltByCurrentProject(BuildTarget buildTarget) {
@@ -2649,21 +2499,6 @@ public class ProjectGenerator {
   private static boolean bundleRequiresAllTransitiveFrameworks(
       TargetNode<? extends AppleNativeTargetDescriptionArg> binaryNode) {
     return binaryNode.castArg(AppleBinaryDescription.Arg.class).isPresent();
-  }
-
-  private Path emptyFileWithExtension(String extension) {
-    Path path =
-        projectFilesystem.getBuckPaths().getGenDir()
-            .resolve("xcode-scripts/emptyFile." + extension);
-    if (!projectFilesystem.exists(path)) {
-      try {
-        projectFilesystem.createParentDirs(path);
-        projectFilesystem.newFileOutputStream(path).close();
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    }
-    return path;
   }
 
   private Path resolveSourcePath(SourcePath sourcePath) {

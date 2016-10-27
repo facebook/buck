@@ -22,10 +22,8 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
@@ -34,20 +32,17 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.apple.AppleBinaryBuilder;
-import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleTestBuilder;
-import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigBuilder;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXAggregateTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
-import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxBuckConfig;
@@ -82,13 +77,10 @@ import com.facebook.buck.timing.IncrementingFakeClock;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import org.hamcrest.FeatureMatcher;
@@ -779,301 +771,6 @@ public class WorkspaceAndProjectGeneratorTest {
     fail("Project generation should fail because there is no " + fooLib + " target in the graph!");
   }
 
-  @Test
-  public void combinedTestBundle() throws IOException, InterruptedException {
-    TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
-        .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//foo", "combinableTest1").build())
-        .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setCanGroup(Optional.of(true))
-        .build();
-    TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
-        .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//bar", "combinableTest2").build())
-        .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setCanGroup(Optional.of(true))
-        .build();
-    TargetNode<AppleTestDescription.Arg> testMarkedUncombinable = AppleTestBuilder
-        .createBuilder(
-            BuildTarget.builder(rootCell.getRoot(), "//foo", "testMarkedUncombinable").build())
-        .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setCanGroup(Optional.of(false))
-        .build();
-    TargetNode<AppleTestDescription.Arg> anotherTest = AppleTestBuilder
-        .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//foo", "anotherTest").build())
-        .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setCanGroup(Optional.of(true))
-        .build();
-    TargetNode<AppleLibraryDescription.Arg> library = AppleLibraryBuilder
-        .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//foo", "lib").build())
-        .setTests(
-            ImmutableSortedSet.of(
-                combinableTest1.getBuildTarget(),
-                combinableTest2.getBuildTarget(),
-                testMarkedUncombinable.getBuildTarget(),
-                anotherTest.getBuildTarget()))
-        .build();
-    TargetNode<XcodeWorkspaceConfigDescription.Arg> workspace = XcodeWorkspaceConfigBuilder
-        .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//foo", "workspace").build())
-        .setSrcTarget(Optional.of(library.getBuildTarget()))
-        .setWorkspaceName(Optional.of("workspace"))
-        .build();
-
-    TargetGraph targetGraph =
-        TargetGraphFactory.newInstance(
-            library,
-            combinableTest1,
-            combinableTest2,
-            testMarkedUncombinable,
-            anotherTest,
-            workspace);
-
-    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
-        rootCell,
-        targetGraph,
-        workspace.getConstructorArg(),
-        workspaceNode.getBuildTarget(),
-        ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS,
-            ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
-        false /* combinedProject */,
-        false /* buildWithBuck */,
-        ImmutableList.of(),
-        ImmutableList.of(),
-        false /* parallelizeBuild */,
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
-        DEFAULT_PLATFORM,
-        "BUCK",
-        getSourcePathResolverForNodeFunction(targetGraph),
-        getFakeBuckEventBus(),
-        halideBuckConfig,
-        cxxBuckConfig,
-        appleConfig,
-        swiftBuckConfig);
-    generator.setGroupableTests(AppleBuildRules.filterGroupableTests(targetGraph.getNodes()));
-    Map<Path, ProjectGenerator> projectGenerators = Maps.newHashMap();
-    generator.generateWorkspaceAndDependentProjects(
-        projectGenerators,
-        MoreExecutors.newDirectExecutorService());
-
-    // Tests should become libraries
-    PBXTarget combinableTestTarget1 = ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        projectGenerators.get(Paths.get("foo")).getGeneratedProject(),
-        "//foo:combinableTest1");
-    assertEquals(
-        "Test in the bundle should be built as a static library.",
-        ProductType.STATIC_LIBRARY,
-        combinableTestTarget1.getProductType());
-
-    PBXTarget combinableTestTarget2 = ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        projectGenerators.get(Paths.get("bar")).getGeneratedProject(),
-        "//bar:combinableTest2");
-    assertEquals(
-        "Other test in the bundle should be built as a static library.",
-        ProductType.STATIC_LIBRARY,
-        combinableTestTarget2.getProductType());
-
-    // Test not bundled with any others should retain behavior.
-    PBXTarget notCombinedTest = ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        projectGenerators.get(Paths.get("foo")).getGeneratedProject(),
-        "//foo:anotherTest");
-    assertEquals(
-        "Test that is not combined with other tests should also generate a test bundle.",
-        ProductType.STATIC_LIBRARY,
-        notCombinedTest.getProductType());
-
-    // Test not bundled with any others should retain behavior.
-    PBXTarget uncombinableTest = ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        projectGenerators.get(Paths.get("foo")).getGeneratedProject(),
-        "//foo:testMarkedUncombinable");
-    assertEquals(
-        "Test marked uncombinable should not be combined",
-        ProductType.UNIT_TEST,
-        uncombinableTest.getProductType());
-
-    // Combined test project should be generated with a combined test bundle.
-    PBXTarget combinedTestBundle = ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        generator.getCombinedTestsProjectGenerator().get().getGeneratedProject(),
-        "_BuckCombinedTest-xctest-0");
-    assertEquals(
-        "Combined test project target should be test bundle.",
-        ProductType.UNIT_TEST,
-        combinedTestBundle.getProductType());
-
-    // Main scheme should contain generated test targets.
-    XCScheme scheme = generator.getSchemeGenerators().get("workspace").getOutputScheme().get();
-    XCScheme.TestAction testAction = scheme.getTestAction().get();
-    assertThat(
-        "Combined test target should be a testable",
-        testAction.getTestables(),
-        hasItem(testableWithName("_BuckCombinedTest-xctest-0")));
-    assertThat(
-        "Bundled test library is not a testable",
-        testAction.getTestables(),
-        not(hasItem(testableWithName("combinableTest1"))));
-
-    XCScheme.BuildAction buildAction = scheme.getBuildAction().get();
-    assertThat(
-        "Bundled test library should be built for tests",
-        buildAction.getBuildActionEntries(),
-        hasItem(
-            withNameAndBuildingFor(
-                "combinableTest1",
-                equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY))));
-    assertThat(
-        "Combined test library should be built for tests",
-        buildAction.getBuildActionEntries(),
-        hasItem(
-            withNameAndBuildingFor(
-                "_BuckCombinedTest-xctest-0",
-                equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY))));
-  }
-
-  @Test
-  public void groupTests() {
-    TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
-        .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//foo", "test1").build())
-        .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setCanGroup(Optional.of(true))
-        .build();
-    TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
-        .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//bar", "test2").build())
-        .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setCanGroup(Optional.of(true))
-        .build();
-
-    ImmutableMultimap.Builder<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
-        groupedTestsMapBuilder = ImmutableMultimap.builder();
-    ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg>>
-        ungroupedTestsMapBuilder = ImmutableSetMultimap.builder();
-
-    WorkspaceAndProjectGenerator.groupSchemeTests(
-        ImmutableSet.of(
-            combinableTest1,
-            combinableTest2),
-        ImmutableSetMultimap.of(
-            "workspace", combinableTest1,
-            "workspace", combinableTest2),
-        groupedTestsMapBuilder,
-        ungroupedTestsMapBuilder);
-
-    ImmutableMultimap<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
-        groupedTestsMap = groupedTestsMapBuilder.build();
-
-    assertThat(
-        ungroupedTestsMapBuilder.build().entries(),
-        empty());
-    assertEquals(
-        ImmutableSortedSet.of(
-            combinableTest1,
-            combinableTest2),
-        ImmutableSortedSet.copyOf(
-            groupedTestsMap.values()));
-    ImmutableList<Map.Entry<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>>
-        groupedTests = ImmutableList.copyOf(groupedTestsMap.entries());
-    assertEquals(2, groupedTests.size());
-    assertEquals(groupedTests.get(0).getKey(), groupedTests.get(1).getKey());
-  }
-
-  @Test
-  public void doNotGroupTestsWithDifferentConfigs() {
-    ImmutableSortedMap<String, ImmutableMap<String, String>> configs = ImmutableSortedMap.of(
-        "Debug",
-        ImmutableMap.of("KEY", "VALUE"));
-
-    TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
-        .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//foo", "test1").build())
-        .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setCanGroup(Optional.of(true))
-        .build();
-    TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
-        .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//bar", "test2").build())
-        .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setConfigs(configs)
-        .setCanGroup(Optional.of(true))
-        .build();
-
-    ImmutableMultimap.Builder<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
-        groupedTestsMapBuilder = ImmutableMultimap.builder();
-    ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg>>
-        ungroupedTestsMapBuilder = ImmutableSetMultimap.builder();
-
-    WorkspaceAndProjectGenerator.groupSchemeTests(
-        ImmutableSet.of(
-            combinableTest1,
-            combinableTest2),
-        ImmutableSetMultimap.of(
-            "workspace", combinableTest1,
-            "workspace", combinableTest2),
-        groupedTestsMapBuilder,
-        ungroupedTestsMapBuilder);
-
-    ImmutableMultimap<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
-        groupedTestsMap = groupedTestsMapBuilder.build();
-
-    assertThat(
-        ungroupedTestsMapBuilder.build().entries(),
-        empty());
-    assertEquals(
-        ImmutableSortedSet.of(
-            combinableTest1,
-            combinableTest2),
-        ImmutableSortedSet.copyOf(
-            groupedTestsMap.values()));
-    ImmutableList<Map.Entry<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>>
-        groupedTests = ImmutableList.copyOf(groupedTestsMap.entries());
-    assertEquals(2, groupedTests.size());
-    assertNotEquals(groupedTests.get(0).getKey(), groupedTests.get(1).getKey());
-  }
-
-  @Test
-  public void doNotGroupTestsWithDifferentLinkerFlags() {
-    TargetNode<AppleTestDescription.Arg> combinableTest1 = AppleTestBuilder
-        .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//foo", "test1").build())
-        .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setCanGroup(Optional.of(true))
-        .build();
-    TargetNode<AppleTestDescription.Arg> combinableTest2 = AppleTestBuilder
-        .createBuilder(BuildTarget.builder(rootCell.getRoot(), "//bar", "test2").build())
-        .setInfoPlist(new FakeSourcePath("Info.plist"))
-        .setLinkerFlags(ImmutableList.of("-flag"))
-        .setExportedLinkerFlags(ImmutableList.of("-exported-flag"))
-        .setCanGroup(Optional.of(true))
-        .build();
-
-
-    ImmutableMultimap.Builder<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
-        groupedTestsMapBuilder = ImmutableMultimap.builder();
-    ImmutableSetMultimap.Builder<String, TargetNode<AppleTestDescription.Arg>>
-        ungroupedTestsMapBuilder = ImmutableSetMultimap.builder();
-
-    WorkspaceAndProjectGenerator.groupSchemeTests(
-        ImmutableSet.of(
-            combinableTest1,
-            combinableTest2),
-        ImmutableSetMultimap.of(
-            "workspace", combinableTest1,
-            "workspace", combinableTest2),
-        groupedTestsMapBuilder,
-        ungroupedTestsMapBuilder);
-
-    ImmutableMultimap<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>
-        groupedTestsMap = groupedTestsMapBuilder.build();
-
-    assertThat(
-        ungroupedTestsMapBuilder.build().entries(),
-        empty());
-    assertEquals(
-        ImmutableSortedSet.of(
-            combinableTest1,
-            combinableTest2),
-        ImmutableSortedSet.copyOf(
-            groupedTestsMap.values()));
-    ImmutableList<Map.Entry<AppleTestBundleParamsKey, TargetNode<AppleTestDescription.Arg>>>
-        groupedTests = ImmutableList.copyOf(groupedTestsMap.entries());
-    assertEquals(2, groupedTests.size());
-    assertNotEquals(groupedTests.get(0).getKey(), groupedTests.get(1).getKey());
-  }
-
   private void setUpWorkspaceWithSchemeAndProjects() {
     // Create the following dep tree:
     // FooBin -has-test-> FooBinTest
@@ -1551,16 +1248,6 @@ public class WorkspaceAndProjectGeneratorTest {
       @Override
       protected String featureValueOf(XCScheme.BuildActionEntry buildActionEntry) {
         return buildActionEntry.getBuildableReference().blueprintName;
-      }
-    };
-  }
-
-  private Matcher<XCScheme.TestableReference> testableWithName(String name) {
-    return new FeatureMatcher<XCScheme.TestableReference, String>(
-        equalTo(name), "TestableReference named", "name") {
-      @Override
-      protected String featureValueOf(XCScheme.TestableReference testableReference) {
-        return testableReference.getBuildableReference().blueprintName;
       }
     };
   }

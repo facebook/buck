@@ -59,11 +59,6 @@ public final class AppleTestBuilder
     return this;
   }
 
-  public AppleTestBuilder setCanGroup(Optional<Boolean> value) {
-    arg.canGroup = value;
-    return this;
-  }
-
   public AppleTestBuilder isUiTest(Optional<Boolean> value) {
     arg.isUiTest = value;
     return this;

@@ -97,8 +97,7 @@ public class ProjectCommandTests {
       boolean isWithDependenciesTests,
       boolean isReadonly,
       boolean isBuildWithBuck,
-      boolean isCombinedProjects,
-      boolean isCombinesTestBundles)
+      boolean isCombinedProjects)
       throws IOException, InterruptedException {
     TargetGraphAndTargets targetGraphAndTargets = ProjectCommandTests.createTargetGraph(
         targetGraph,
@@ -122,8 +121,7 @@ public class ProjectCommandTests {
         ImmutableList.of(),
         projectGenerators,
         isBuildWithBuck,
-        isCombinedProjects,
-        isCombinesTestBundles);
+        isCombinedProjects);
     return projectGenerators;
   }
 

@@ -17,11 +17,9 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.apple.AppleBinaryDescription;
-import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryDescription;
-import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.project_generator.ProjectGenerator;
 import com.facebook.buck.apple.project_generator.WorkspaceAndProjectGenerator;
@@ -169,12 +167,6 @@ public class ProjectCommand extends BuildCommand {
   private boolean withoutDependenciesTests = false;
 
   @Option(
-      name = "--combine-test-bundles",
-      usage = "Combine multiple ios/osx test targets into the same bundle if they have identical " +
-          "settings")
-  private boolean combineTestBundles = false;
-
-  @Option(
       name = "--ide",
       usage = "The type of IDE for which to generate a project. You may specify it in the " +
           ".buckconfig file. Please refer to https://buckbuild.com/concept/buckconfig.html#project")
@@ -260,10 +252,6 @@ public class ProjectCommand extends BuildCommand {
 
   public boolean getDryRun() {
     return dryRun;
-  }
-
-  public boolean getCombineTestBundles() {
-    return combineTestBundles;
   }
 
   public boolean shouldProcessAnnotations() {
@@ -888,8 +876,7 @@ public class ProjectCommand extends BuildCommand {
         getFocusModules(targetGraphAndTargets, params, executor),
         new HashMap<Path, ProjectGenerator>(),
         getCombinedProject(),
-        shouldBuildWithBuck,
-        getCombineTestBundles());
+        shouldBuildWithBuck);
     if (!requiredBuildTargets.isEmpty()) {
       BuildCommand buildCommand = new BuildCommand(requiredBuildTargets.stream()
           .map(Object::toString)
@@ -920,8 +907,7 @@ public class ProjectCommand extends BuildCommand {
       ImmutableList<BuildTarget> focusModules,
       Map<Path, ProjectGenerator> projectGenerators,
       boolean combinedProject,
-      boolean buildWithBuck,
-      boolean combineTestBundles)
+      boolean buildWithBuck)
       throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> targets;
     if (passedInTargetsSet.isEmpty()) {
@@ -933,10 +919,6 @@ public class ProjectCommand extends BuildCommand {
     }
 
     LOG.debug("Generating workspace for config targets %s", targets);
-    ImmutableSet<TargetNode<?>> testTargetNodes = targetGraphAndTargets.getAssociatedTests();
-    ImmutableSet<TargetNode<AppleTestDescription.Arg>> groupableTests = combineTestBundles
-        ? AppleBuildRules.filterGroupableTests(testTargetNodes)
-        : ImmutableSet.of();
     ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
     for (final BuildTarget inputTarget : targets) {
       TargetNode<?> inputNode = targetGraphAndTargets.getTargetGraph().get(inputTarget);
@@ -987,7 +969,6 @@ public class ProjectCommand extends BuildCommand {
           cxxBuckConfig,
           appleConfig,
           swiftBuckConfig);
-      generator.setGroupableTests(groupableTests);
       ListeningExecutorService executorService = params.getExecutors().get(
           ExecutorPool.PROJECT);
       Preconditions.checkNotNull(
