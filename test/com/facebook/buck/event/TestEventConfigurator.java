@@ -15,13 +15,11 @@
  */
 package com.facebook.buck.event;
 
-import com.facebook.buck.timing.Clock;
-
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-public class TestEventConfigerator {
-  private TestEventConfigerator() {}
+public class TestEventConfigurator {
+  private TestEventConfigurator() {}
 
   public static <T extends AbstractBuckEvent> ConfigBuilder<T> from(T event) {
     return new ConfigBuilder<>(event);
@@ -31,35 +29,8 @@ public class TestEventConfigerator {
     return from(event).configure();
   }
 
-  public static <T extends AbstractBuckEvent> T configureTestEvent(T event, BuckEventBus eventBus) {
-    return from(event).timesFromEventBus(eventBus).configure();
-  }
-
-  public static <T extends AbstractBuckEvent> T configureTestEvent(T event,
-      long timestamp,
-      long nanotime,
-      long threadUserNanoTime,
-      long threadid) {
-    return from(event)
-        .setCurrentTimeMillis(timestamp)
-        .setTimestampNanos(nanotime)
-        .setThreadUserNanoTime(threadUserNanoTime)
-        .setThreadId(threadid)
-        .configure();
-  }
-
-  public static <T extends AbstractBuckEvent> T configureTestEvent(T event,
-      long timestamp,
-      long nanotime,
-      long threadid) {
-    return from(event)
-        .setCurrentTimeMillis(timestamp)
-        .setTimestampNanos(nanotime)
-        .setThreadId(threadid)
-        .configure();
-  }
-
-  public static <T extends AbstractBuckEvent> T configureTestEventAtTime(T event,
+  public static <T extends AbstractBuckEvent> T configureTestEventAtTime(
+      T event,
       long time,
       TimeUnit timeUnit,
       long threadid) {
@@ -110,15 +81,6 @@ public class TestEventConfigerator {
 
     public ConfigBuilder<T> setThreadId(long threadId) {
       this.threadId = threadId;
-      return this;
-    }
-
-    public ConfigBuilder<T> timesFromEventBus(BuckEventBus eventBus) {
-      Clock clock = eventBus.getClock();
-      setThreadId(eventBus.getThreadIdSupplier().get());
-      setCurrentTimeMillis(clock.currentTimeMillis());
-      setTimestampNanos(clock.nanoTime());
-      setThreadUserNanoTime(clock.threadUserNanoTime(threadId));
       return this;
     }
 

@@ -19,7 +19,6 @@ package com.facebook.buck.apple;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -53,12 +52,6 @@ public class XcodeWorkspaceConfigBuilder
 
   public XcodeWorkspaceConfigBuilder setWorkspaceName(Optional<String> workspaceName) {
     arg.workspaceName = workspaceName;
-    return this;
-  }
-
-  public XcodeWorkspaceConfigBuilder setActionConfigNames(
-      ImmutableMap<SchemeActionType, String> actionConfigNames) {
-    arg.actionConfigNames = actionConfigNames;
     return this;
   }
 

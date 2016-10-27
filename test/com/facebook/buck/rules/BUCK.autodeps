@@ -84,6 +84,8 @@
   },
   "testutil" : {
     "deps" : [
+      "//src/com/facebook/buck/android:utils",
+      "//src/com/facebook/buck/json:json",
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/util:object_mapper",
       "//test/com/facebook/buck/android:utils",
@@ -98,12 +100,10 @@
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [
-      "//src/com/facebook/buck/android:utils",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/io:watchman",
-      "//src/com/facebook/buck/json:json",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",

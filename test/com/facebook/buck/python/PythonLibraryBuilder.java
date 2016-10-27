@@ -44,11 +44,6 @@ public class PythonLibraryBuilder extends AbstractNodeBuilder<PythonLibraryDescr
     return this;
   }
 
-  public PythonLibraryBuilder setResources(SourceList resources) {
-    arg.resources = resources;
-    return this;
-  }
-
   public PythonLibraryBuilder setPlatformResources(
       PatternMatchedCollection<SourceList> platformResources) {
     arg.platformResources = platformResources;
@@ -57,11 +52,6 @@ public class PythonLibraryBuilder extends AbstractNodeBuilder<PythonLibraryDescr
 
   public PythonLibraryBuilder setBaseModule(String baseModule) {
     arg.baseModule = Optional.of(baseModule);
-    return this;
-  }
-
-  public PythonLibraryBuilder setZipSafe(boolean zipSafe) {
-    arg.zipSafe = Optional.ofNullable(zipSafe);
     return this;
   }
 

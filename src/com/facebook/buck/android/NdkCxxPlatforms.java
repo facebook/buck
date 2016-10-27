@@ -1347,9 +1347,5 @@ public class NdkCxxPlatforms {
     public CxxRuntime getCxxRuntime() {
       return cxxRuntime;
     }
-
-    public ProjectFilesystem getFilesystem() {
-      return filesystem;
-    }
   }
 }

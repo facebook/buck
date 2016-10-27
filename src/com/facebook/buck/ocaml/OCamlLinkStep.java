@@ -40,7 +40,6 @@ public class OCamlLinkStep extends ShellStep {
   public final ImmutableList<String> flags;
   public final Optional<String> stdlib;
   public final Path output;
-  public final ImmutableList<Arg> depInput;
   public final ImmutableList<Arg> cDepInput;
   public final ImmutableList<Path> input;
   public final boolean isLibrary;
@@ -68,7 +67,6 @@ public class OCamlLinkStep extends ShellStep {
     this.flags = flags;
     this.stdlib = stdlib;
     this.output = output;
-    this.depInput = depInput;
     this.cDepInput = cDepInput;
     this.input = input;
     this.isLibrary = isLibrary;

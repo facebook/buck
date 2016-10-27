@@ -21,10 +21,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_O
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 
-import java.nio.file.Path;
 import java.util.Optional;
 
 public class RobolectricTestBuilder
@@ -42,11 +39,6 @@ public class RobolectricTestBuilder
 
   public static RobolectricTestBuilder createBuilder(BuildTarget target) {
     return new RobolectricTestBuilder(target);
-  }
-
-  public RobolectricTestBuilder addSrc(Path path) {
-    arg.srcs = amend(arg.srcs, new PathSourcePath(new FakeProjectFilesystem(), path));
-    return this;
   }
 
   public RobolectricTestBuilder addDep(BuildTarget rule) {

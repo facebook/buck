@@ -21,9 +21,7 @@ import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 
 
 public class HaskellBinaryBuilder
@@ -47,18 +45,8 @@ public class HaskellBinaryBuilder
         CxxPlatformUtils.DEFAULT_PLATFORM);
   }
 
-  public HaskellBinaryBuilder setSrcs(SourceList srcs) {
-    arg.srcs = srcs;
-    return this;
-  }
-
   public HaskellBinaryBuilder setCompilerFlags(ImmutableList<String> flags) {
     arg.compilerFlags = flags;
-    return this;
-  }
-
-  public HaskellBinaryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
     return this;
   }
 

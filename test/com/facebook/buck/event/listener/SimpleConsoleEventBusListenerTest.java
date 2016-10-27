@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.event.listener;
 
-import static com.facebook.buck.event.TestEventConfigerator.configureTestEventAtTime;
+import static com.facebook.buck.event.TestEventConfigurator.configureTestEventAtTime;
 import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreFinished;
 import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreScheduled;
 import static com.facebook.buck.event.listener.ConsoleTestUtils.postStoreStarted;

@@ -184,15 +184,6 @@ public class Publisher {
     return builder.build();
   }
 
-  /**
-   * @param coords Buildr-style artifact reference, e.g. "com.example:foo:1.0"
-   *
-   * @see DefaultArtifact#DefaultArtifact(String)
-   */
-  public DeployResult publish(String coords, List<File> toPublish) throws DeploymentException {
-    return publish(new DefaultArtifact(coords), toPublish);
-  }
-
   public DeployResult publish(
       String groupId,
       String artifactId,

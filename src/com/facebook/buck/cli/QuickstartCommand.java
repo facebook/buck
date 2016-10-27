@@ -27,12 +27,9 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.PackagedResource;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
-import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.io.BufferedReader;
@@ -45,10 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.List;
 import java.util.Optional;
-
-import javax.annotation.Nullable;
 
 /**
  * This class creates a terminal command for Buck that creates a sample Buck project in the
@@ -72,43 +66,11 @@ public class QuickstartCommand extends AbstractCommand {
   @Option(name = "--dest-dir", usage = "Destination project directory")
   private String destDir = "";
 
-  @Nullable
-  @Option(name = "--android-sdk", usage = "Android SDK directory")
-  private String androidSdkDir;
-
   @Option(name = "--type", usage = "Type of project")
   private Type type = Type.ANDROID;
 
-  @Argument
-  private List<String> arguments = Lists.newArrayList();
-
-  public List<String> getArguments() {
-    return arguments;
-  }
-
-  @VisibleForTesting
-  void setArguments(List<String> arguments) {
-    this.arguments = arguments;
-  }
-
   public String getDestDir() {
     return destDir;
-  }
-
-  public String getAndroidSdkDir(Supplier<AndroidPlatformTarget> platformTargetSupplier) {
-    if (androidSdkDir == null) {
-      try {
-        Optional<Path> possibleSdkDir = platformTargetSupplier.get().getSdkDirectory();
-
-        this.androidSdkDir = possibleSdkDir.isPresent() ?
-            possibleSdkDir.get().toAbsolutePath().toString() :
-            "";
-      } catch (HumanReadableException e) {
-        this.androidSdkDir = "";
-      }
-    }
-
-    return androidSdkDir;
   }
 
   /**

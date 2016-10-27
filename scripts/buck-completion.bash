@@ -170,7 +170,7 @@ function _buck_completion_try_project() {
 }
 
 function _buck_completion_try_quickstart() {
-  _buck_completion_try_long_arg "--android-sdk --dest-dir --help --no-cache --verbose" \
+  _buck_completion_try_long_arg "--dest-dir --help --no-cache --verbose" \
     || _buck_completion_try_dest_dir "$@"
 }
 

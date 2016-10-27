@@ -46,16 +46,6 @@ public class HeaderSymlinkTree extends SymlinkTree {
   }
 
   /**
-   * Get path to use as a system include path to get access to the files in the tree.
-   *
-   * As opposed to {@link #getIncludePath()}, this method does not require any other include paths
-   * to be used.
-   */
-  public Path getSystemIncludePath() {
-    return getRoot();
-  }
-
-  /**
    * Get path of the header map indexing this tree if one exists.
    */
   public Optional<Path> getHeaderMap() {

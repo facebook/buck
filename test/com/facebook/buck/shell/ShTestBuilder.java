@@ -37,11 +37,6 @@ public class ShTestBuilder extends AbstractNodeBuilder<ShTestDescription.Arg> {
     return this;
   }
 
-  public ShTestBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
-    return this;
-  }
-
   public ShTestBuilder setArgs(ImmutableList<String> args) {
     arg.args = args;
     return this;

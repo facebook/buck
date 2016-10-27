@@ -16,10 +16,6 @@
 
 package com.facebook.buck.step;
 
-import com.google.common.annotations.VisibleForTesting;
-
-import java.util.Optional;
-
 import javax.annotation.Nullable;
 
 public class TargetDeviceOptions {
@@ -44,11 +40,6 @@ public class TargetDeviceOptions {
     this.serialNumber = serialNumber;
   }
 
-  @VisibleForTesting
-  TargetDeviceOptions(String serial) {
-    this.serialNumber = serial;
-  }
-
   public boolean isEmulatorsOnlyModeEnabled() {
     return useEmulatorsOnlyMode;
   }
@@ -64,16 +55,5 @@ public class TargetDeviceOptions {
 
   public boolean hasSerialNumber() {
     return serialNumber != null;
-  }
-
-  public Optional<TargetDevice> getTargetDeviceOptional() {
-    if (!hasSerialNumber() && !isEmulatorsOnlyModeEnabled() && !isRealDevicesOnlyModeEnabled()) {
-      return Optional.empty();
-    }
-
-    TargetDevice device = new TargetDevice(
-        isEmulatorsOnlyModeEnabled() ? TargetDevice.Type.EMULATOR : TargetDevice.Type.REAL_DEVICE,
-        getSerialNumber());
-    return Optional.of(device);
   }
 }

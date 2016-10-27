@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java.intellij;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TestFolderTest extends IjFolderTest{
+public class TestFolderTest extends IjFolderTest {
 
   @Before
   @Override

@@ -65,16 +65,6 @@ public class TestCellBuilder {
     return this;
   }
 
-  public TestCellBuilder setAndroidDirectoryResolver(AndroidDirectoryResolver resolver) {
-    this.androidDirectoryResolver = resolver;
-    return this;
-  }
-
-  public TestCellBuilder setBuildFileParserFactory(ProjectBuildFileParserFactory factory) {
-    this.parserFactory = factory;
-    return this;
-  }
-
   public TestCellBuilder setWatchman(Watchman watchman) {
     this.watchman = watchman;
     return this;

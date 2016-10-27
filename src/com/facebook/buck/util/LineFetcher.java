@@ -36,12 +36,6 @@ public class LineFetcher implements AutoCloseable {
         BUFFER_LENGTH + dosLineEndingCheckBuffer.length);
   }
 
-  LineFetcher(BufferedReader baseReader) {
-    inputReader = new PushbackReader(
-        baseReader,
-        BUFFER_LENGTH + dosLineEndingCheckBuffer.length);
-  }
-
   @Nullable
   String readLine() throws IOException {
     int read = inputReader.read(readBuffer);

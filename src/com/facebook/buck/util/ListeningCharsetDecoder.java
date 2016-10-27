@@ -18,22 +18,16 @@ package com.facebook.buck.util;
 
 import com.zaxxer.nuprocess.codec.NuCharsetDecoder;
 
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CoderResult;
-
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CoderResult;
 
 public final class ListeningCharsetDecoder {
   private final NuCharsetDecoder decoder;
 
   public interface DecoderListener {
     void onDecode(CharBuffer buffer, boolean closed, CoderResult decoderResult);
-  }
-
-  public ListeningCharsetDecoder(DecoderListener listener, Charset charset) {
-    this(listener, charset.newDecoder());
   }
 
   public ListeningCharsetDecoder(

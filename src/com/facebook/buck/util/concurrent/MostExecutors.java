@@ -19,7 +19,6 @@ package com.facebook.buck.util.concurrent;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -47,29 +46,6 @@ public class MostExecutors {
     public Thread newThread(Runnable r) {
       Thread newThread = Executors.defaultThreadFactory().newThread(r);
       newThread.setName(String.format(threadName + "-%d", threadCount.incrementAndGet()));
-      return newThread;
-    }
-  }
-  /**
-   * A ThreadFactory which gives each thread a meaningful and distinct name and priority.
-   * ThreadFactoryBuilder is not used to avoid a dependency on Guava in the junit target.
-   */
-  public static class NamedAndPriorityThreadFactory implements ThreadFactory {
-
-    private final AtomicInteger threadCount = new AtomicInteger(0);
-    private final String threadName;
-    private final int threadPriority;
-
-    public NamedAndPriorityThreadFactory(String threadName, int threadPriority) {
-      this.threadName = threadName;
-      this.threadPriority = threadPriority;
-    }
-
-    @Override
-    public Thread newThread(Runnable r) {
-      Thread newThread = Executors.defaultThreadFactory().newThread(r);
-      newThread.setName(String.format(threadName + "-%d", threadCount.incrementAndGet()));
-      newThread.setPriority(threadPriority);
       return newThread;
     }
   }
@@ -118,16 +94,6 @@ public class MostExecutors {
   }
 
   /**
-   * Creates a single threaded scheduled executor with meaningfully named threads.
-   * @param threadName a thread name prefix used to easily identify threads when debugging.
-   * @return The single-threaded scheduled executor.
-   */
-  public static ScheduledExecutorService newSingleThreadScheduledExecutor(
-      String threadName) {
-    return Executors.newScheduledThreadPool(1, new NamedThreadFactory(threadName));
-  }
-
-  /**
    * Shutdown {@code service} and wait for all it's tasks to terminate.  In the event of
    * {@link InterruptedException}, propagate the interrupt to all tasks, wait for them to
    * finish, then re-throw the exception.
@@ -144,10 +110,6 @@ public class MostExecutors {
       service.awaitTermination(timeout, unit);
       throw e;
     }
-  }
-
-  public static void shutdown(ExecutorService service) throws InterruptedException {
-    shutdown(service, Long.MAX_VALUE, TimeUnit.DAYS);
   }
 
   /**

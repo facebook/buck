@@ -19,7 +19,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -188,20 +187,6 @@ public class TargetNodeFactory {
               "Caught exception when transforming TargetNode to use different flavors: %s",
               originalNode.getBuildTarget()),
           e);
-    }
-  }
-
-  @SuppressWarnings("serial")
-  public static class InvalidSourcePathInputException extends Exception
-      implements ExceptionWithHumanReadableMessage {
-
-    private InvalidSourcePathInputException(String message, Object...objects) {
-      super(String.format(message, objects));
-    }
-
-    @Override
-    public String getHumanReadableErrorMessage() {
-      return getMessage();
     }
   }
 }

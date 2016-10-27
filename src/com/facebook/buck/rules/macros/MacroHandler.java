@@ -57,14 +57,6 @@ public class MacroHandler {
     };
   }
 
-  public MacroHandler extend(ImmutableMap<String, MacroExpander> additionalExpanders) {
-    return new MacroHandler(
-        ImmutableMap.<String, MacroExpander>builder()
-            .putAll(expanders)
-            .putAll(addOutputToFileExpanders(additionalExpanders))
-            .build());
-  }
-
   private static ImmutableMap<String, MacroExpander> addOutputToFileExpanders(
       ImmutableMap<String, MacroExpander> source) {
     ImmutableMap.Builder<String, MacroExpander> builder = ImmutableMap.builder();

@@ -21,7 +21,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.LeafEvent;
-import com.facebook.buck.event.TestEventConfigerator;
+import com.facebook.buck.event.TestEventConfigurator;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.TestStatusMessageEvent;
@@ -222,7 +222,7 @@ public class TestThreadStateRendererTest {
       long timeMs,
       BuildTarget buildTarget) {
     return Optional.of(
-        TestEventConfigerator.configureTestEventAtTime(
+        TestEventConfigurator.configureTestEventAtTime(
             TestRuleEvent.started(buildTarget),
             timeMs,
             TimeUnit.MILLISECONDS,
@@ -235,7 +235,7 @@ public class TestThreadStateRendererTest {
       String testCaseName,
       String testName) {
     return Optional.of(
-        TestEventConfigerator.configureTestEventAtTime(
+        TestEventConfigurator.configureTestEventAtTime(
             TestSummaryEvent.started(UUID.randomUUID(), testCaseName, testName),
             timeMs,
             TimeUnit.MILLISECONDS,
@@ -248,7 +248,7 @@ public class TestThreadStateRendererTest {
       String message,
       Level level) {
     return Optional.of(
-        TestEventConfigerator.configureTestEventAtTime(
+        TestEventConfigurator.configureTestEventAtTime(
             TestStatusMessageEvent.started(
                 TestStatusMessage.of(
                     message,
@@ -264,7 +264,7 @@ public class TestThreadStateRendererTest {
       long timeMs,
       String name) {
     return Optional.of(
-        TestEventConfigerator.configureTestEventAtTime(
+        TestEventConfigurator.configureTestEventAtTime(
             StepEvent.started(name, name + " description", UUID.randomUUID()),
             timeMs,
             TimeUnit.MILLISECONDS,

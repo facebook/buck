@@ -55,10 +55,6 @@ public class SettableFakeClock implements Clock {
     this.currentTimeMillis.addAndGet(TimeUnit.NANOSECONDS.toMillis(nanos));
   }
 
-  public void advanceUserNanoTime(long threadId, long userNanoTimeDelta) {
-    threadIdToUserNanoTime.put(threadId, threadUserNanoTime(threadId) + userNanoTimeDelta);
-  }
-
   @Override
   public long currentTimeMillis() {
     return currentTimeMillis.get();

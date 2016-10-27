@@ -16,26 +16,19 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
-import java.util.Set;
 import java.util.SortedSet;
 
 /**
@@ -156,20 +149,4 @@ public class RuleUtils {
     return groupBuilder.build().asList();
   }
 
-  public static Supplier<ImmutableCollection<Path>> subpathsOfPathsSupplier(
-      final ProjectFilesystem projectFilesystem,
-      final Set<Path> dirs) {
-    return Suppliers.memoize(
-        () -> {
-          ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
-          for (Path dir : dirs) {
-            try {
-              paths.addAll(projectFilesystem.getFilesUnderPath(dir));
-            } catch (IOException e) {
-              throw new HumanReadableException(e, "Error traversing directory: %s.", dir);
-            }
-          }
-          return paths.build();
-        });
-  }
 }

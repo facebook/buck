@@ -80,9 +80,4 @@ public class PrebuiltHaskellLibraryBuilder
     return this;
   }
 
-  public PrebuiltHaskellLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
-    return this;
-  }
-
 }

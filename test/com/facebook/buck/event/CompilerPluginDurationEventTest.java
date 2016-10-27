@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event;
 
-import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
+import static com.facebook.buck.event.TestEventConfigurator.configureTestEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;

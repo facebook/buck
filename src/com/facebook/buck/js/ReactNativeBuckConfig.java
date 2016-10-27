@@ -22,7 +22,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 
-import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -55,9 +54,5 @@ public class ReactNativeBuckConfig {
           "specify 'packager_worker' in .buckconfig under the 'react-native' section.");
     }
     return packagerWorker.get();
-  }
-
-  public Optional<Path> getServer() {
-    return delegate.getPath("react-native", "server");
   }
 }

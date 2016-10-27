@@ -82,11 +82,6 @@ public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription
     return this;
   }
 
-  public PythonTestBuilder setResources(SourceList resources) {
-    arg.resources = resources;
-    return this;
-  }
-
   public PythonTestBuilder setPlatformResources(
       PatternMatchedCollection<SourceList> platformResources) {
     arg.platformResources = platformResources;
@@ -95,11 +90,6 @@ public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription
 
   public PythonTestBuilder setBaseModule(String baseModule) {
     arg.baseModule = Optional.of(baseModule);
-    return this;
-  }
-
-  public PythonTestBuilder setZipSafe(boolean zipSafe) {
-    arg.zipSafe = Optional.ofNullable(zipSafe);
     return this;
   }
 

@@ -93,10 +93,6 @@ public class QueryCommand extends AbstractCommand {
   @Argument
   private List<String> arguments = Lists.newArrayList();
 
-  public List<String> getArguments() {
-    return arguments;
-  }
-
   @VisibleForTesting
   void setArguments(List<String> arguments) {
     this.arguments = arguments;

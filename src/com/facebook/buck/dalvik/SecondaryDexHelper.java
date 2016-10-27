@@ -61,15 +61,6 @@ abstract class SecondaryDexHelper<ZIP_OUTPUT_STREAM_HELPER extends ZipOutputStre
     secondaryFiles = ImmutableList.builder();
   }
 
-  @Nullable
-  ZIP_OUTPUT_STREAM_HELPER getCurrentOutput() {
-    return currentSecondaryOut;
-  }
-
-  void finishCurrentZipFile() {
-    newSecondaryOutOnNextEntry = true;
-  }
-
   ZIP_OUTPUT_STREAM_HELPER getOutputToWriteTo(FileLike entry) throws IOException {
     // Going to write this entry to a secondary zip.
     if (currentSecondaryOut == null ||

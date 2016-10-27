@@ -25,7 +25,6 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
 
@@ -57,11 +56,6 @@ public class HaskellLibraryBuilder
 
   public HaskellLibraryBuilder setCompilerFlags(ImmutableList<String> flags) {
     arg.compilerFlags = flags;
-    return this;
-  }
-
-  public HaskellLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
     return this;
   }
 

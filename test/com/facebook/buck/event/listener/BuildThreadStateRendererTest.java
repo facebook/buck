@@ -21,7 +21,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.LeafEvent;
-import com.facebook.buck.event.TestEventConfigerator;
+import com.facebook.buck.event.TestEventConfigurator;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -175,7 +175,7 @@ public class BuildThreadStateRendererTest {
       long timeMs,
       BuildRule rule) {
     return Optional.of(
-        TestEventConfigerator.configureTestEventAtTime(
+        TestEventConfigurator.configureTestEventAtTime(
             BuildRuleEvent.started(rule),
             timeMs,
             TimeUnit.MILLISECONDS,
@@ -187,7 +187,7 @@ public class BuildThreadStateRendererTest {
       long timeMs,
       String name) {
     return Optional.of(
-        TestEventConfigerator.configureTestEventAtTime(
+        TestEventConfigurator.configureTestEventAtTime(
             StepEvent.started(name, name + " description", UUID.randomUUID()),
             timeMs,
             TimeUnit.MILLISECONDS,

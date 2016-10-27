@@ -79,11 +79,6 @@ public class UninstallCommand extends AbstractCommand {
     return arguments;
   }
 
-  @VisibleForTesting
-  void setArguments(List<String> arguments) {
-    this.arguments = arguments;
-  }
-
   public UninstallOptions uninstallOptions() {
     return uninstallOptions;
   }

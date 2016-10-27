@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event.listener;
 
-import static com.facebook.buck.event.TestEventConfigerator.configureTestEventAtTime;
+import static com.facebook.buck.event.TestEventConfigurator.configureTestEventAtTime;
 
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.BuckEventBus;

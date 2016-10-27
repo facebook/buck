@@ -42,24 +42,6 @@ public class RDotJava {
   /** Utility class: do not instantiate. */
   private RDotJava() {}
 
-  static JavacStep createJavacStepForUberRDotJavaFiles(
-      ImmutableSortedSet<Path> javaSourceFilePaths,
-      Path pathToSrcsList,
-      Path outputDirectory,
-      JavacOptions javacOptions,
-      BuildTarget buildTarget,
-      SourcePathResolver resolver,
-      ProjectFilesystem filesystem) {
-    return createJavacStepForDummyRDotJavaFiles(
-        javaSourceFilePaths,
-        pathToSrcsList,
-        outputDirectory,
-        javacOptions,
-        buildTarget,
-        resolver,
-        filesystem);
-  }
-
   static JavacStep createJavacStepForDummyRDotJavaFiles(
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,

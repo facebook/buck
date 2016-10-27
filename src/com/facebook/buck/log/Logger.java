@@ -392,11 +392,6 @@ public class Logger
         return logger.isLoggable(FINE);
     }
 
-    public boolean isInfoEnabled()
-    {
-        return logger.isLoggable(INFO);
-    }
-
     public Level getLevel() {
         return logger.getLevel();
     }

@@ -25,13 +25,6 @@ class OmnibusRootNode extends OmnibusNode implements NativeLinkTarget, NativeLin
 
   public OmnibusRootNode(
       String target,
-      Iterable<? extends NativeLinkable> deps,
-      Iterable<? extends NativeLinkable> exportedDeps) {
-    super(target, deps, exportedDeps);
-  }
-
-  public OmnibusRootNode(
-      String target,
       Iterable<? extends NativeLinkable> deps) {
     super(target, deps);
   }

@@ -80,11 +80,6 @@ public class PythonBinaryBuilder extends AbstractNodeBuilder<PythonBinaryDescrip
     return this;
   }
 
-  public PythonBinaryBuilder setZipSafe(boolean zipSafe) {
-    arg.zipSafe = Optional.ofNullable(zipSafe);
-    return this;
-  }
-
   public PythonBinaryBuilder setExtension(String extension) {
     arg.extension = Optional.of(extension);
     return this;

@@ -43,10 +43,6 @@ public class InMemoryArtifactCache implements ArtifactCache {
     return artifacts.containsKey(ruleKey);
   }
 
-  public void putArtifact(RuleKey ruleKey, Artifact artifact) {
-    artifacts.put(ruleKey, artifact);
-  }
-
   @Override
   public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
     Artifact artifact = artifacts.get(ruleKey);

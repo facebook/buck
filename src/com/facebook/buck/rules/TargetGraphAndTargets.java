@@ -25,15 +25,12 @@ import com.google.common.collect.Iterables;
 public class TargetGraphAndTargets {
   private final TargetGraph targetGraph;
   private final ImmutableSet<TargetNode<?>> projectRoots;
-  private final ImmutableSet<TargetNode<?>> associatedTests;
 
   private TargetGraphAndTargets(
       TargetGraph targetGraph,
-      Iterable<TargetNode<?>> projectRoots,
-      Iterable<TargetNode<?>> associatedTests) {
+      Iterable<TargetNode<?>> projectRoots) {
     this.targetGraph = targetGraph;
     this.projectRoots = ImmutableSet.copyOf(projectRoots);
-    this.associatedTests = ImmutableSet.copyOf(associatedTests);
   }
 
   public TargetGraph getTargetGraph() {
@@ -42,10 +39,6 @@ public class TargetGraphAndTargets {
 
   public ImmutableSet<TargetNode<?>> getProjectRoots() {
     return projectRoots;
-  }
-
-  public ImmutableSet<TargetNode<?>> getAssociatedTests() {
-    return associatedTests;
   }
 
   /**
@@ -128,7 +121,7 @@ public class TargetGraphAndTargets {
     TargetGraph targetGraph = projectGraph.getSubgraph(
         Iterables.concat(projectRoots, associatedTests, associatedProjects));
 
-    return new TargetGraphAndTargets(targetGraph, projectRoots, associatedTests);
+    return new TargetGraphAndTargets(targetGraph, projectRoots);
   }
 
   /**
