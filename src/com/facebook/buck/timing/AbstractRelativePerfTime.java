@@ -28,8 +28,4 @@ abstract class AbstractRelativePerfTime {
   public abstract long getUserCpuTimeNs();
   @Value.Parameter(order = 2)
   public abstract long getSystemCpuTimeNs();
-
-  public boolean hasCpuTime() {
-    return getUserCpuTimeNs() != UNSUPPORTED;
-  }
 }

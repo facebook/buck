@@ -68,11 +68,6 @@ public class AuditInputCommand extends AbstractCommand {
     return arguments;
   }
 
-  @VisibleForTesting
-  void setArguments(List<String> arguments) {
-    this.arguments = arguments;
-  }
-
   public List<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
     return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
   }

@@ -160,10 +160,6 @@ public final class Ansi {
     stream.println(asHighlightedFailureText(text));
   }
 
-  public void printlnInformationText(PrintStream stream, String text) {
-    stream.println(asInformationText(text));
-  }
-
   public String asHighlightedStatusText(SeverityLevel level, String text) {
     switch (level) {
       case OK:
@@ -175,22 +171,6 @@ public final class Ansi {
       default:
         String message = String.format("Unexpected SeverityLevel; cannot highlight '%s'!", level);
         throw new IllegalArgumentException(message);
-    }
-  }
-
-  public void printHighlightedStatusText(boolean isSuccess, PrintStream stream, String text) {
-    if (isSuccess) {
-      printHighlightedSuccessText(stream, text);
-    } else {
-      printHighlightedFailureText(stream, text);
-    }
-  }
-
-  public void printlnHighlightedStatusText(boolean isSuccess, PrintStream stream, String text) {
-    if (isSuccess) {
-      printlnHighlightedSuccessText(stream, text);
-    } else {
-      printlnHighlightedFailureText(stream, text);
     }
   }
 

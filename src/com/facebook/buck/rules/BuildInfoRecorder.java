@@ -187,10 +187,6 @@ public class BuildInfoRecorder {
     return this;
   }
 
-  public BuildInfoRecorder addBuildMetadata(String key, ImmutableList<String> value) {
-    return addBuildMetadata(key, toJson(value));
-  }
-
   public BuildInfoRecorder addBuildMetadata(String key, ImmutableMap<String, String> value) {
     return addBuildMetadata(key, toJson(value));
   }
@@ -388,10 +384,6 @@ public class BuildInfoRecorder {
   @VisibleForTesting
   String getMetadataFor(String key) {
     return metadataToWrite.get(key);
-  }
-
-  boolean hasBuildMetadata(String key) {
-    return buildMetadata.containsKey(key);
   }
 
   Optional<String> getBuildMetadataFor(String key) {

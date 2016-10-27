@@ -37,7 +37,6 @@ import java.net.URL;
 public class AetherUtil {
 
   public static final String CLASSIFIER_SOURCES = "sources";
-  public static final String CLASSIFIER_JAVADOC = "javadoc";
 
   private AetherUtil() {
   }

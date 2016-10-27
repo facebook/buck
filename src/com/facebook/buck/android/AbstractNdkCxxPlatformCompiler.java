@@ -16,12 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.cxx.ClangCompiler;
-import com.facebook.buck.cxx.ClangPreprocessor;
-import com.facebook.buck.cxx.DefaultPreprocessor;
-import com.facebook.buck.cxx.GccCompiler;
-import com.facebook.buck.cxx.Preprocessor;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 
 import org.immutables.value.Value;
@@ -70,26 +64,6 @@ interface AbstractNdkCxxPlatformCompiler {
 
     public String getCxx() {
       return cxx;
-    }
-
-    public com.facebook.buck.cxx.Compiler compilerFromTool(Tool tool) {
-      switch (this) {
-        case GCC:
-          return new GccCompiler(tool);
-        case CLANG:
-          return new ClangCompiler(tool);
-      }
-      throw new RuntimeException("Invalid compiler type");
-    }
-
-    public Preprocessor preprocessorFromTool(Tool tool) {
-      switch (this) {
-        case GCC:
-          return new DefaultPreprocessor(tool);
-        case CLANG:
-          return new ClangPreprocessor(tool);
-      }
-      throw new RuntimeException("Invalid compiler type");
     }
 
   }

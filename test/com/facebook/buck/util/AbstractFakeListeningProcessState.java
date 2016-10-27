@@ -63,13 +63,6 @@ abstract class AbstractFakeListeningProcessState {
         .build();
   }
 
-  public static FakeListeningProcessState ofStderr(String stderr) {
-    return FakeListeningProcessState.builder()
-        .setType(Type.STDERR)
-        .setStdout(StandardCharsets.UTF_8.encode(stderr))
-        .build();
-  }
-
   public static FakeListeningProcessState ofWaitNanos(long waitNanos) {
     return FakeListeningProcessState.builder()
         .setType(Type.WAIT)

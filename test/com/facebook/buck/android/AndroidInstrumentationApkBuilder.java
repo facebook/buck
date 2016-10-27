@@ -24,7 +24,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.MoreExecutors;
 
 
@@ -48,11 +47,6 @@ public class AndroidInstrumentationApkBuilder
 
   public AndroidInstrumentationApkBuilder setManifest(SourcePath manifest) {
     arg.manifest = manifest;
-    return this;
-  }
-
-  public AndroidInstrumentationApkBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
     return this;
   }
 

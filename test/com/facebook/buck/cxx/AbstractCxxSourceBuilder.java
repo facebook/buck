@@ -55,11 +55,6 @@ public abstract class AbstractCxxSourceBuilder<
     return getThis();
   }
 
-  public U setHeaders(SourceList headers)  {
-    arg.headers = headers;
-    return getThis();
-  }
-
   public U setCompilerFlags(ImmutableList<String> compilerFlags) {
     arg.compilerFlags = compilerFlags;
     return getThis();

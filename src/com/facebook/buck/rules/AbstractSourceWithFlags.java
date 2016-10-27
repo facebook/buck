@@ -59,13 +59,6 @@ abstract class AbstractSourceWithFlags implements Comparable<AbstractSourceWithF
         .build();
   }
 
-  public static SourceWithFlags of(SourcePath sourcePath, List<String> flags) {
-    return SourceWithFlags.builder()
-        .setSourcePath(sourcePath)
-        .addAllFlags(flags)
-        .build();
-  }
-
   public static final Function<SourceWithFlags, SourcePath> TO_SOURCE_PATH =
       SourceWithFlags::getSourcePath;
 

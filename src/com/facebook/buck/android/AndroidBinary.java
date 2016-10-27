@@ -144,10 +144,6 @@ public class AndroidBinary
     boolean isBuildWithObfuscation() {
       return this == RELEASE;
     }
-
-    final boolean isCrunchPngFiles() {
-      return this == RELEASE;
-    }
   }
 
   static enum ExopackageMode {
@@ -358,10 +354,6 @@ public class AndroidBinary
 
   public Optional<List<String>> getProguardJvmArgs() {
     return proguardJvmArgs;
-  }
-
-  public Optional<Boolean> getPackageAssetLibraries() {
-    return packageAssetLibraries;
   }
 
   public ManifestEntries getManifestEntries() {

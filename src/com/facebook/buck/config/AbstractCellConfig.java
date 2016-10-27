@@ -149,31 +149,6 @@ abstract class AbstractCellConfig {
         Maps.newLinkedHashMap();
 
     /**
-     * Merge raw config values into this config.
-     */
-    public <M extends Map<String, String>> Builder putAll(
-        RelativeCellName cellName, Map<String, M> config) {
-      for (Map.Entry<String, M> entry : config.entrySet()) {
-        requireSection(cellName, entry.getKey()).putAll(entry.getValue());
-      }
-      return this;
-    }
-
-    /**
-     * Merge the values from another {@code RawConfig}.
-     */
-    public Builder putAll(RawConfig config) {
-      return putAll(RelativeCellName.ROOT_CELL_NAME, config.getValues());
-    }
-
-    /**
-     * Merge the values from another {@code RawConfig}.
-     */
-    public Builder putAll(RelativeCellName cell, RawConfig config) {
-      return putAll(cell, config.getValues());
-    }
-
-    /**
      * Put a single value.
      */
     public Builder put(RelativeCellName cell, String section, String key, String value) {

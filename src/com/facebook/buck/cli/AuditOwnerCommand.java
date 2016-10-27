@@ -20,7 +20,6 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.util.MoreExceptions;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
 import org.kohsuke.args4j.Argument;
@@ -44,11 +43,6 @@ public class AuditOwnerCommand extends AbstractCommand {
 
   public List<String> getArguments() {
     return arguments;
-  }
-
-  @VisibleForTesting
-  void setArguments(List<String> arguments) {
-    this.arguments = arguments;
   }
 
   @Override

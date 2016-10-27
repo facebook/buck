@@ -20,7 +20,6 @@ import com.google.common.collect.Maps;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
@@ -95,12 +94,6 @@ class AnnotationMirror extends AnnotationVisitor implements Comparable<Annotatio
 
   public void appendTo(MethodVisitor method, int parameterIndex) {
     AnnotationVisitor visitor = method.visitParameterAnnotation(parameterIndex, desc, visible);
-    visitValues(visitor);
-    visitor.visitEnd();
-  }
-
-  public void appendTo(FieldVisitor field) {
-    AnnotationVisitor visitor = field.visitAnnotation(desc, visible);
     visitValues(visitor);
     visitor.visitEnd();
   }

@@ -57,7 +57,6 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.BuckTestConstant;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Preconditions;
@@ -811,7 +810,7 @@ public class ProjectTest {
         /* pathToDefaultAndroidManifest */ Optional.empty(),
         intellijConfig,
         /* pathToPostProcessScript */ Optional.empty(),
-        BuckTestConstant.PYTHON_INTERPRETER,
+        "python",
         ObjectMappers.newDefaultInstance(),
         true);
 

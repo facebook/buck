@@ -623,13 +623,6 @@ public class BuildCommand extends AbstractCommand {
     return actionGraphAndResolver;
   }
 
-  public ActionGraphAndResolver createActionGraphAndResolver(
-      CommandRunnerParams params,
-      ListeningExecutorService executor)
-      throws IOException, InterruptedException, ActionGraphCreationException {
-    return createActionGraphAndResolver(params, createTargetGraph(params, executor));
-  }
-
   protected int executeLocalBuild(
       CommandRunnerParams params,
       ActionGraphAndResolver actionGraphAndResolver,

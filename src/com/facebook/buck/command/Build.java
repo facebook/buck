@@ -146,10 +146,6 @@ public class Build implements Closeable {
     this.objectMapper = objectMapper;
   }
 
-  public ActionGraph getActionGraph() {
-    return actionGraph;
-  }
-
   public BuildRuleResolver getRuleResolver() {
     return ruleResolver;
   }

@@ -210,10 +210,6 @@ public class BuckBuildLog {
       return successType;
     }
 
-    public Optional<CacheResult> getCacheResult() {
-      return cacheResult;
-    }
-
     public Sha1HashCode getRuleKey() {
       return ruleKeyHashCode;
     }

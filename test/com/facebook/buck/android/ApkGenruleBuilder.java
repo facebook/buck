@@ -18,8 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.SourcePath;
-import com.google.common.collect.ImmutableList;
 
 import java.util.Optional;
 
@@ -38,23 +36,8 @@ public class ApkGenruleBuilder extends AbstractNodeBuilder<ApkGenruleDescription
     return this;
   }
 
-  public ApkGenruleBuilder setBash(String bash) {
-    arg.bash = Optional.of(bash);
-    return this;
-  }
-
   public ApkGenruleBuilder setCmd(String cmd) {
     arg.cmd = Optional.of(cmd);
-    return this;
-  }
-
-  public ApkGenruleBuilder setCmdExe(String cmdExe) {
-    arg.cmdExe = Optional.of(cmdExe);
-    return this;
-  }
-
-  public ApkGenruleBuilder setSrcs(ImmutableList<SourcePath> srcs) {
-    arg.srcs = srcs;
     return this;
   }
 

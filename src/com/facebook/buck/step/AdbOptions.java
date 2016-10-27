@@ -34,10 +34,6 @@ public class AdbOptions {
     this.multiInstallMode = multiInstallMode;
   }
 
-  public void setMultiInstallMode(boolean multiInstallMode) {
-    this.multiInstallMode = multiInstallMode;
-  }
-
   public int getAdbThreadCount() {
     return adbThreadCount;
   }

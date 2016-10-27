@@ -80,11 +80,6 @@ public class AuditRulesCommand extends AbstractCommand {
     return arguments;
   }
 
-  @VisibleForTesting
-  void setArguments(List<String> arguments) {
-    this.arguments = arguments;
-  }
-
   public ImmutableSet<String> getTypes() {
     return types == null ? ImmutableSet.of() : ImmutableSet.copyOf(types);
   }

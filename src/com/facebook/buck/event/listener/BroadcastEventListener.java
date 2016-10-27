@@ -74,10 +74,6 @@ public class BroadcastEventListener {
       this.eventBus = bus;
     }
 
-    public BroadcastEventListener getListener() {
-      return listener;
-    }
-
     public BuckEventBus getBuckEventBus() {
       return eventBus;
     }

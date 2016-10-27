@@ -60,11 +60,6 @@ public class AndroidLibraryBuilder extends AbstractNodeBuilder<AndroidLibraryDes
     return this;
   }
 
-  public AndroidLibraryBuilder addExportedDep(BuildTarget rule) {
-    arg.exportedDeps = amend(arg.exportedDeps, rule);
-    return this;
-  }
-
   public AndroidLibraryBuilder addProvidedDep(BuildTarget rule) {
     arg.providedDeps = amend(arg.providedDeps, rule);
     return this;

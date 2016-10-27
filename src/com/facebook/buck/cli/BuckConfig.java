@@ -326,11 +326,6 @@ public class BuckConfig {
     return config.getEnum(section, field, clazz);
   }
 
-  public <T extends Enum<T>> T getRequiredEnum(String section, String field, Class<T> clazz) {
-    Optional<T> value = getEnum(section, field, clazz);
-    return required(section, field, value);
-  }
-
   /**
    * @return a {@link SourcePath} identified by a @{link BuildTarget} or {@link Path} reference
    *     by the given section:field, if set.
@@ -350,15 +345,6 @@ public class BuckConfig {
       return Optional.of(
           new PathSourcePath(projectFilesystem, getPathFromVfs(value.get())));
     }
-  }
-
-  /**
-   * @return a {@link SourcePath} identified by a @{link BuildTarget} or {@link Path} reference
-   *     by the given section:field.
-   */
-  public SourcePath getRequiredSourcePath(String section, String field) {
-    Optional<SourcePath> path = getSourcePath(section, field);
-    return required(section, field, path);
   }
 
   /**

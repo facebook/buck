@@ -55,18 +55,8 @@ public class AndroidResourceBuilder extends AbstractNodeBuilder<AndroidResourceD
     return this;
   }
 
-  public AndroidResourceBuilder setAssets(SourcePath assets) {
-    arg.assets = Optional.of(assets);
-    return this;
-  }
-
   public AndroidResourceBuilder setManifest(SourcePath manifest) {
     arg.manifest = Optional.of(manifest);
-    return this;
-  }
-
-  public AndroidResourceBuilder setHasWhitelistedStrings(boolean hasWhitelistedStrings) {
-    arg.hasWhitelistedStrings = Optional.of(hasWhitelistedStrings);
     return this;
   }
 

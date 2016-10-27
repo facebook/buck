@@ -64,12 +64,6 @@ public abstract class AbstractAppleNativeTargetBuilder<
     return getThis();
   }
 
-  public BUILDER setPlatformPreprocessorFlags(
-      PatternMatchedCollection<ImmutableList<String>> platformPreprocessorFlags) {
-    arg.platformPreprocessorFlags = platformPreprocessorFlags;
-    return getThis();
-  }
-
   public BUILDER setLangPreprocessorFlags(
       ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags) {
     arg.langPreprocessorFlags = langPreprocessorFlags;

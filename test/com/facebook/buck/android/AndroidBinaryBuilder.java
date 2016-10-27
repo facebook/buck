@@ -100,11 +100,6 @@ public class AndroidBinaryBuilder extends AbstractNodeBuilder<AndroidBinaryDescr
     return this;
   }
 
-  public AndroidBinaryBuilder setProguardConfig(Optional<SourcePath> proguardConfig) {
-    arg.proguardConfig = proguardConfig;
-    return this;
-  }
-
   public AndroidBinaryBuilder setResourceCompressionMode(
       ResourceCompressionMode resourceCompressionMode) {
     arg.resourceCompression = Optional.of(resourceCompressionMode.toString());

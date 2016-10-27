@@ -78,11 +78,6 @@ public class CachingBuildEngineFactory {
     return this;
   }
 
-  public CachingBuildEngineFactory setInputFileSizeLimit(long inputFileSizeLimit) {
-    this.inputFileSizeLimit = inputFileSizeLimit;
-    return this;
-  }
-
   public CachingBuildEngineFactory setCachingBuildEngineDelegate(
       CachingBuildEngineDelegate cachingBuildEngineDelegate) {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
@@ -101,23 +96,12 @@ public class CachingBuildEngineFactory {
     return this;
   }
 
-  public CachingBuildEngineFactory setSourcePathResolver(BuildRuleResolver buildRuleResolver) {
-    this.buildRuleResolver = buildRuleResolver;
-    return this;
-  }
-
   public CachingBuildEngineFactory setRuleKeyFactoriesFunction(
       Function<? super ProjectFilesystem, CachingBuildEngine.RuleKeyFactories>
           ruleKeyFactoriesFunction) {
     this.ruleKeyFactoriesFunction =
         Optional.of(
             ruleKeyFactoriesFunction);
-    return this;
-  }
-
-  public CachingBuildEngineFactory setResourceAwareSchedulingInfo(
-      ResourceAwareSchedulingInfo resourceAwareSchedulingInfo) {
-    this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
     return this;
   }
 

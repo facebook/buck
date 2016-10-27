@@ -144,14 +144,6 @@ public abstract class AbstractTestStep implements Step {
     return env.isPresent() ? env.get() : null;
   }
 
-  public Path getExitCode() {
-    return exitCode;
-  }
-
-  public Path getOutput() {
-    return output;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) {

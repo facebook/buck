@@ -45,10 +45,6 @@ abstract class AbstractBuildContext {
     return false;
   }
 
-  public void logBuildInfo(String format, Object... args) {
-    getEventBus().post(ConsoleEvent.fine(format, args));
-  }
-
   public void logError(Throwable error, String msg, Object... formatArgs) {
     getEventBus().post(ThrowableConsoleEvent.create(error, msg, formatArgs));
   }
