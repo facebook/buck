@@ -17,6 +17,7 @@
 package com.facebook.buck.intellij.ideabuck.config;
 
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.Strings;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
 
@@ -24,16 +25,24 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-
 public final class BuckWSServerPortUtils {
-  public static final int CONNECTION_FAILED = -1;
+  private static final int CONNECTION_FAILED_PORT = -1;
 
-  private int mPort = CONNECTION_FAILED;
   private static final String SEARCH_FOR = "http.port=";
 
-  public int getPort(String runInPath) throws
+  public static int getPort(String runInPath) throws
       NumberFormatException, IOException, ExecutionException, HumanReadableException {
-    String exec = BuckSettingsProvider.getInstance().getState().buckExecutable;
+    BuckSettingsProvider.State state = BuckSettingsProvider.getInstance().getState();
+    if (state == null) {
+      throw new HumanReadableException("Cannot load ideabuck settings.");
+    }
+
+    String exec = state.buckExecutable;
+
+    if (Strings.isNullOrEmpty(exec)) {
+      throw new HumanReadableException("Buck executable is not defined in settings.");
+    }
+
     GeneralCommandLine commandLine = new GeneralCommandLine();
     commandLine.setExePath(exec);
     commandLine.withWorkDirectory(runInPath);
@@ -45,29 +54,28 @@ public final class BuckWSServerPortUtils {
     Process p = commandLine.createProcess();
     BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
-    String error = "";
+    int port = CONNECTION_FAILED_PORT;
     String line;
     while ((line = reader.readLine()) != null) {
-      error += line;
-      if (line.startsWith(BuckWSServerPortUtils.SEARCH_FOR)) {
-        mPort = Integer.parseInt(line.replace(BuckWSServerPortUtils.SEARCH_FOR, ""));
-        if (mPort == CONNECTION_FAILED) {
+      if (line.startsWith(SEARCH_FOR)) {
+        port = Integer.parseInt(line.substring(SEARCH_FOR.length()));
+        if (port == CONNECTION_FAILED_PORT) {
           // if the buck server is off, and it gives us -1, throw this exception
-          error =
+          String error =
               "Your buck server may be turned off, since the Buck daemon is on port " +
-                  mPort +
+                  port +
                   ".\nTry adding to your '.buckconfig.local' or '.buckconfig' file," +
                   " if you don't have it already set:\n" +
                   "[httpserver]\n" +
                   "    port = 0\n" +
                   "After that, restart IntelliJ or reopen your project.\n";
-          break;
+          throw new HumanReadableException(error);
         }
       }
     }
-    if (mPort == CONNECTION_FAILED) {
-      throw new HumanReadableException(error);
-    }
-    return mPort;
+    return port;
+  }
+
+  private BuckWSServerPortUtils() {
   }
 }

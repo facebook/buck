@@ -73,10 +73,8 @@ public class BuckClient {
     ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
       @Override
       public void run() {
-          BuckWSServerPortUtils wsPortUtils = new BuckWSServerPortUtils();
           try {
-            // Get port
-            int port = wsPortUtils.getPort(mProject.getBasePath());
+            int port = BuckWSServerPortUtils.getPort(mProject.getBasePath());
             // Connect to WebServer
             connectToWebServer("localhost", port);
           } catch (NumberFormatException e) {
