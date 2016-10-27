@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 
@@ -58,8 +57,5 @@ abstract class AbstractSourceWithFlags implements Comparable<AbstractSourceWithF
         .setSourcePath(sourcePath)
         .build();
   }
-
-  public static final Function<SourceWithFlags, SourcePath> TO_SOURCE_PATH =
-      SourceWithFlags::getSourcePath;
 
 }

@@ -331,7 +331,7 @@ public class CxxDescriptionEnhancer {
             buildTarget,
             "srcs",
             sourcesWithFlags,
-            SourceWithFlags.TO_SOURCE_PATH));
+            SourceWithFlags::getSourcePath));
   }
 
   public static ImmutableList<CxxPreprocessorInput> collectCxxPreprocessorInput(
