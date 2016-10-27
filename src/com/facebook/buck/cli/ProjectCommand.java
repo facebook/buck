@@ -207,11 +207,6 @@ public class ProjectCommand extends BuildCommand {
   private boolean deprecatedIntelliJProjectGenerationEnabled = false;
 
   @Option(
-      name = "--experimental-ij-generation",
-      usage = "Enables the experimental IntelliJ project generator.")
-  private boolean experimentalIntelliJProjectGenerationEnabled = false;
-
-  @Option(
       name = "--intellij-aggregation-mode",
       handler = AggregationModeOptionHandler.class,
       usage = "Changes how modules are aggregated. Valid options are 'none' (no aggregation), " +
@@ -406,13 +401,6 @@ public class ProjectCommand extends BuildCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    if (experimentalIntelliJProjectGenerationEnabled) {
-      throw new HumanReadableException(
-          "The --experimental-ij-generation is no longer needed. If you wish to use the old " +
-              "project generator please use --deprecated-ij-generation because without that " +
-              "switch the generator previous enabled by the \"experimental\" switch will be used.");
-    }
-
     Ide projectIde = getIdeFromBuckConfig(params.getBuckConfig()).orElse(null);
     boolean needsFullRecursiveParse = deprecatedIntelliJProjectGenerationEnabled &&
         projectIde != Ide.XCODE;
