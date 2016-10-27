@@ -81,7 +81,7 @@ public class ScalacStep extends ShellStep {
 
     String classpath = Joiner.on(File.pathSeparator).join(
         FluentIterable.from(classpathEntries)
-            .transform(filesystem.getAbsolutifier()));
+            .transform(filesystem::resolve));
     if (classpath.isEmpty()) {
       commandBuilder.add("-classpath", "''");
     } else {

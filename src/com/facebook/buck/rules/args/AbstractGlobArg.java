@@ -71,7 +71,7 @@ abstract class AbstractGlobArg extends Arg {
     }
     builder.addAll(
         FluentIterable.from(paths)
-            .transform(filesystem.getAbsolutifier())
+            .transform(filesystem::resolve)
             .transform(Object::toString));
   }
 

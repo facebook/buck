@@ -129,7 +129,6 @@ public class ProjectFilesystem {
   private final Path projectRoot;
   private final BuckPaths buckPaths;
 
-  private final Function<Path, Path> pathAbsolutifier;
   private final Function<Path, Path> pathRelativizer;
 
   private final ImmutableSet<PathOrGlobMatcher> blackListedPaths;
@@ -206,7 +205,6 @@ public class ProjectFilesystem {
     }
     this.projectRoot = MorePaths.normalize(root);
     this.delegate = delegate;
-    this.pathAbsolutifier = this::resolve;
     this.pathRelativizer = projectRoot::relativize;
     this.ignoreValidityOfPaths = false;
     this.blackListedPaths = FluentIterable.from(blackListedPaths)
@@ -352,13 +350,6 @@ public class ProjectFilesystem {
 
   public Path resolve(String path) {
     return MorePaths.normalize(getRootPath().resolve(path).toAbsolutePath());
-  }
-
-  /**
-   * @return A {@link Function} that applies {@link #resolve(Path)} to its parameter.
-   */
-  public Function<Path, Path> getAbsolutifier() {
-    return pathAbsolutifier;
   }
 
   public Function<Path, Path> getRelativizer() {

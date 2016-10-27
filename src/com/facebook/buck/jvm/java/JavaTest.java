@@ -522,7 +522,7 @@ public class JavaTest
       Path outputPath;
       Path relativeOutputPath = rule.getPathToOutput();
       if (relativeOutputPath != null) {
-        outputPath = rule.getProjectFilesystem().getAbsolutifier().apply(relativeOutputPath);
+        outputPath = rule.getProjectFilesystem().resolve(relativeOutputPath);
       } else {
         outputPath = null;
       }

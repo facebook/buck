@@ -1580,7 +1580,7 @@ public final class Main {
     try {
       int i = 0;
       for (String path : paths) {
-        String urlString = "file://" + projectFilesystem.getAbsolutifier().apply(Paths.get(path));
+        String urlString = "file://" + projectFilesystem.resolve(Paths.get(path));
         urlsArray[i] = new URL(urlString);
         i++;
       }

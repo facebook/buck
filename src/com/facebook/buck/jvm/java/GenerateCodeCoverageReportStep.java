@@ -99,7 +99,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
 
     properties.setProperty(
         "jacoco.output.dir",
-        filesystem.getAbsolutifier().apply(outputDirectory).toString());
+        filesystem.resolve(outputDirectory).toString());
     properties.setProperty("jacoco.exec.data.file", JACOCO_EXEC_COVERAGE_FILE);
     properties.setProperty("jacoco.format", format.toString().toLowerCase());
     properties.setProperty("jacoco.title", title);
@@ -107,7 +107,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
         "classes.dir", Joiner.on(":").join(
             Iterables.transform(
                 classesDirectories,
-                filesystem.getAbsolutifier())));
+                filesystem::resolve)));
     properties.setProperty("src.dir", Joiner.on(":").join(sourceDirectories));
 
     if (coverageIncludes.isPresent()) {
@@ -131,7 +131,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
     // Generate report from JaCoCo exec file using 'ReportGenerator.java'
 
     args.add("-jar", System.getProperty("buck.report_generator_jar"));
-    args.add(filesystem.getAbsolutifier().apply(propertyFile).toString());
+    args.add(filesystem.resolve(propertyFile).toString());
 
     return args.build();
   }

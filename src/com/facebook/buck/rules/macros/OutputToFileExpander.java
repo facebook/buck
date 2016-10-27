@@ -65,7 +65,7 @@ public class OutputToFileExpander implements MacroExpander {
       ProjectFilesystem filesystem = rule.get().getProjectFilesystem();
       Path tempFile = createTempFile(filesystem, target, input.get(0));
       filesystem.writeContentsToPath(expanded, tempFile);
-      return "@" + filesystem.getAbsolutifier().apply(tempFile);
+      return "@" + filesystem.resolve(tempFile);
     } catch (IOException e) {
       throw new MacroException("Unable to create file to hold expanded results", e);
     }

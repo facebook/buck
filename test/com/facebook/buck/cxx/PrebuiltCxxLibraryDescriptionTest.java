@@ -634,8 +634,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PrebuiltCxxLibraryBuilder libBuilder = new PrebuiltCxxLibraryBuilder(TARGET);
-    filesystem.touch(filesystem.getAbsolutifier().apply(
-        getStaticPicLibraryPath(libBuilder.build().getConstructorArg())));
+    filesystem.touch(
+        filesystem.resolve(getStaticPicLibraryPath(libBuilder.build().getConstructorArg())));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) libBuilder
         .build(resolver, filesystem, targetGraph);

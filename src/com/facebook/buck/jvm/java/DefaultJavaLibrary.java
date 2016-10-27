@@ -257,7 +257,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this.exportedDeps = exportedDeps;
     this.providedDeps = providedDeps;
     this.additionalClasspathEntries = additionalClasspathEntries.stream()
-        .map(getProjectFilesystem().getAbsolutifier()::apply)
+        .map(getProjectFilesystem()::resolve)
         .collect(MoreCollectors.toImmutableSet());
     this.resourcesRoot = resourcesRoot;
     this.manifestFile = manifestFile;

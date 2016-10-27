@@ -137,7 +137,7 @@ public abstract class Jsr199Javac implements Javac {
       try {
         compilationUnits = createCompilationUnits(
             fileManager,
-            filesystem.getAbsolutifier(),
+            filesystem::resolve,
             javaSourceFilePaths);
       } catch (IOException e) {
         LOG.warn(e, "Error building compilation units");

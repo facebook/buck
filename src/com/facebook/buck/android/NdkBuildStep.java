@@ -106,18 +106,16 @@ public class NdkBuildStep extends ShellStep {
     Iterable<String> flags = Iterables.transform(this.flags, macroExpander);
     builder.addAll(flags);
 
-    Function<Path, Path> absolutifier = filesystem.getAbsolutifier();
-
     // We want relative, not absolute, paths in the debug-info for binaries we build using
     // ndk_library.  Absolute paths are machine-specific, but relative ones should be the
     // same everywhere.
 
-    Path relativePathToProject = absolutifier.apply(this.root)
+    Path relativePathToProject = filesystem.resolve(root)
         .relativize(filesystem.getRootPath());
     builder.add(
-        "APP_PROJECT_PATH=" + absolutifier.apply(buildArtifactsDirectory) + File.separatorChar,
-        "APP_BUILD_SCRIPT=" + absolutifier.apply(makefile),
-        "NDK_OUT=" + absolutifier.apply(buildArtifactsDirectory) + File.separatorChar,
+        "APP_PROJECT_PATH=" + filesystem.resolve(buildArtifactsDirectory) + File.separatorChar,
+        "APP_BUILD_SCRIPT=" + filesystem.resolve(makefile),
+        "NDK_OUT=" + filesystem.resolve(buildArtifactsDirectory) + File.separatorChar,
         "NDK_LIBS_OUT=" + filesystem.resolve(binDirectory),
         "BUCK_PROJECT_DIR=" + relativePathToProject);
 

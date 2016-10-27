@@ -554,7 +554,7 @@ public class BuckConfig {
     }
 
     Path expandedPath = MorePaths.expandHomeDir(path);
-    return projectFilesystem.getAbsolutifier().apply(expandedPath);
+    return projectFilesystem.resolve(expandedPath);
   }
 
   public String getLocalhost() {

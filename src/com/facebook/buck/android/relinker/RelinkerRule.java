@@ -261,7 +261,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
   }
 
   private Path absolutify(Path p) {
-    return getProjectFilesystem().getAbsolutifier().apply(p);
+    return getProjectFilesystem().resolve(p);
   }
 
   private Path getSymbolsNeededOutPath() {

@@ -165,7 +165,7 @@ public class GwtBinary extends AbstractBuildRule {
             "-classpath", Joiner.on(File.pathSeparator).join(
                 Iterables.transform(
                     getClasspathEntries(),
-                    getProjectFilesystem().getAbsolutifier())),
+                    getProjectFilesystem()::resolve)),
             GWT_COMPILER_CLASS,
             "-war", getProjectFilesystem().resolve(getPathToOutput()).toString(),
             "-style", style.name(),

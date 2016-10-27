@@ -487,7 +487,7 @@ class DaemonicParserState {
     // that.
     Optional<Path> packageBuildFile = buildFiles.getBasePathOfAncestorTarget(path);
     packageBuildFiles.addAll(
-        OptionalCompat.asSet(packageBuildFile.map(cell.getFilesystem().getAbsolutifier()::apply)));
+        OptionalCompat.asSet(packageBuildFile.map(cell.getFilesystem()::resolve)));
 
     // If we're *not* enforcing package boundary checks, it's possible for multiple ancestor
     // packages to reference the same file

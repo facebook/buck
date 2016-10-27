@@ -844,7 +844,7 @@ public class MirrorTest {
     if (!classpath.isEmpty()) {
       args.add("-classpath");
       args.add(Joiner.on(File.pathSeparator).join(FluentIterable.from(classpath)
-                  .transform(filesystem.getAbsolutifier())));
+                  .transform(filesystem::resolve)));
     }
 
     JavaCompiler.CompilationTask compilation =

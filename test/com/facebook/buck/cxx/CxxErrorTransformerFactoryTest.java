@@ -89,7 +89,7 @@ public class CxxErrorTransformerFactoryTest {
             "absolute paths",
             new CxxErrorTransformerFactory(
                 Optional.of(filesystem.getRootPath()),
-                Optional.of(filesystem.getAbsolutifier()),
+                Optional.of(filesystem::resolve),
                 normalizer,
                 sanitizer),
             replacement.toAbsolutePath(),

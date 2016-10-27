@@ -24,7 +24,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -63,8 +62,7 @@ class DefaultClassUsageFileReader {
         continue;
       }
 
-      Function<Path, Path> absolutifier = dep.getProjectFilesystem().getAbsolutifier();
-      Path jarAbsolutePath = absolutifier.apply(dep.getPathToOutput());
+      Path jarAbsolutePath = dep.getProjectFilesystem().resolve(dep.getPathToOutput());
 
       jarAbsolutePathToAbiJarSourcePathBuilder.put(jarAbsolutePath, depAbiJar.get());
     }
@@ -91,8 +89,7 @@ class DefaultClassUsageFileReader {
       final ImmutableSet<Map.Entry<String, ImmutableList<String>>> classUsageEntries =
           loadClassUsageMap(classUsageFilePath).entrySet();
       for (Map.Entry<String, ImmutableList<String>> jarUsedClassesEntry : classUsageEntries) {
-        Path jarAbsolutePath = projectFilesystem.getAbsolutifier()
-            .apply(Paths.get(jarUsedClassesEntry.getKey()));
+        Path jarAbsolutePath = projectFilesystem.resolve(Paths.get(jarUsedClassesEntry.getKey()));
         SourcePath abiJarSourcePath = jarAbsolutePathToAbiJarSourcePath.get(jarAbsolutePath);
         if (abiJarSourcePath == null) {
           // This indicates a dependency that wasn't among the deps of the rule; i.e.,

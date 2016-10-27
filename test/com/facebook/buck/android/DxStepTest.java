@@ -28,7 +28,6 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -72,7 +71,6 @@ public class DxStepTest extends EasyMockSupport {
     // Context with --verbose 2.
     try (ExecutionContext context = createExecutionContext(2)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-      Function<Path, Path> absolutifier = filesystem.getAbsolutifier();
 
       DxStep dx = new DxStep(
           filesystem,
@@ -83,7 +81,7 @@ public class DxStepTest extends EasyMockSupport {
       String expected = String.format("%s --no-optimize --output %s %s",
           EXPECTED_DX_PREFIX,
           SAMPLE_OUTPUT_PATH,
-          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, absolutifier)));
+          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, filesystem::resolve)));
       MoreAsserts.assertShellCommands(
           "--no-optimize should be present, but --force-jumbo should not.",
           ImmutableList.of(expected),
@@ -98,7 +96,6 @@ public class DxStepTest extends EasyMockSupport {
     // Context with --verbose 2.
     try (ExecutionContext context = createExecutionContext(2)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-      Function<Path, Path> pathAbsolutifier = filesystem.getAbsolutifier();
 
       DxStep dx = new DxStep(
           filesystem,
@@ -108,7 +105,7 @@ public class DxStepTest extends EasyMockSupport {
       String expected = String.format("%s --output %s %s",
           EXPECTED_DX_PREFIX,
           SAMPLE_OUTPUT_PATH,
-          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
+          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, filesystem::resolve)));
       MoreAsserts.assertShellCommands(
           "Neither --no-optimize nor --force-jumbo should be present.",
           ImmutableList.of(expected),
@@ -123,7 +120,6 @@ public class DxStepTest extends EasyMockSupport {
     // Context with --verbose 2.
     try (ExecutionContext context = createExecutionContext(2)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-      Function<Path, Path> pathAbsolutifier = filesystem.getAbsolutifier();
 
       DxStep dx = new DxStep(
           filesystem,
@@ -135,7 +131,7 @@ public class DxStepTest extends EasyMockSupport {
           "%s --no-optimize --force-jumbo --output %s %s",
           EXPECTED_DX_PREFIX,
           SAMPLE_OUTPUT_PATH,
-          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
+          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, filesystem::resolve)));
       MoreAsserts.assertShellCommands(
           "Both --no-optimize and --force-jumbo should be present.",
           ImmutableList.of(expected),
@@ -150,7 +146,6 @@ public class DxStepTest extends EasyMockSupport {
     // Context with --verbose 3.
     try (ExecutionContext context = createExecutionContext(COMMANDS_AND_SPECIAL_OUTPUT.ordinal())) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-      Function<Path, Path> pathAbsolutifier = filesystem.getAbsolutifier();
 
       DxStep dx = new DxStep(
           filesystem,
@@ -160,7 +155,7 @@ public class DxStepTest extends EasyMockSupport {
       String expected = String.format("%s --statistics --output %s %s",
           EXPECTED_DX_PREFIX,
           SAMPLE_OUTPUT_PATH,
-          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
+          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, filesystem::resolve)));
       MoreAsserts.assertShellCommands(
           "Ensure that the --statistics flag is present.",
           ImmutableList.of(expected),
@@ -180,7 +175,6 @@ public class DxStepTest extends EasyMockSupport {
     // Context with --verbose 10.
     try (ExecutionContext context = createExecutionContext(10)) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-      Function<Path, Path> pathAbsolutifier = filesystem.getAbsolutifier();
 
       DxStep dx = new DxStep(
           filesystem,
@@ -191,7 +185,7 @@ public class DxStepTest extends EasyMockSupport {
           "%s --statistics --verbose --output %s %s",
           EXPECTED_DX_PREFIX,
           SAMPLE_OUTPUT_PATH,
-          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, pathAbsolutifier)));
+          Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, filesystem::resolve)));
       MoreAsserts.assertShellCommands(
           "Ensure that the --statistics flag is present.",
           ImmutableList.of(expected),

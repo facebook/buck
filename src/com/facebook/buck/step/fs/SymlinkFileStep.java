@@ -63,7 +63,7 @@ public class SymlinkFileStep implements Step {
   }
 
   private  Path getAbsolutePath(Path path, ProjectFilesystem filesystem) {
-    return filesystem.getAbsolutifier().apply(path);
+    return filesystem.resolve(path);
   }
 
   @Override

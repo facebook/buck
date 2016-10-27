@@ -50,7 +50,7 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
     ImmutableSetMultimap<Path, Path> classUsageMap = tracker.getClassUsageMap();
     try {
       objectMapper.writeValue(
-          filesystem.getAbsolutifier().apply(relativePath).toFile(),
+          filesystem.resolve(relativePath).toFile(),
           relativizeMap(classUsageMap, filesystem));
     } catch (IOException e) {
       throw new HumanReadableException(e, "Unable to write used classes file.");

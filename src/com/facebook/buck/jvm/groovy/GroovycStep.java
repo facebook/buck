@@ -161,7 +161,7 @@ class GroovycStep implements Step {
             }
           }
         }
-      }, filesystem.getAbsolutifier());
+      }, filesystem::resolve);
     }
   }
 

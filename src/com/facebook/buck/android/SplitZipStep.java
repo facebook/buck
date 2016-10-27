@@ -156,7 +156,7 @@ public class SplitZipStep implements Step {
   public StepExecutionResult execute(ExecutionContext context) {
     try {
       Set<Path> inputJarPaths = inputPathsToSplit.stream()
-          .map(filesystem.getAbsolutifier()::apply)
+          .map(filesystem::resolve)
           .collect(MoreCollectors.toImmutableSet());
       Supplier<ImmutableList<ClassNode>> classes =
           ClassNodeListSupplier.createMemoized(inputJarPaths);

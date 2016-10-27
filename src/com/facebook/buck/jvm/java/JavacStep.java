@@ -28,7 +28,6 @@ import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -295,7 +294,7 @@ public class JavacStep implements Step {
       public void addExtras(Collection<String> extras) {
         builder.addAll(extras);
       }
-    }, filesystem.getAbsolutifier());
+    }, filesystem::resolve);
 
     // verbose flag, if appropriate.
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
@@ -303,8 +302,7 @@ public class JavacStep implements Step {
     }
 
     // Specify the output directory.
-    Function<Path, Path> pathAbsolutifier = filesystem.getAbsolutifier();
-    builder.add("-d").add(pathAbsolutifier.apply(outputDirectory).toString());
+    builder.add("-d").add(filesystem.resolve(outputDirectory).toString());
 
     // Build up and set the classpath.
     if (!buildClasspathEntries.isEmpty()) {

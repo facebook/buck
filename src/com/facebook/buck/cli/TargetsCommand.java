@@ -853,7 +853,7 @@ public class TargetsCommand extends AbstractCommand {
     }
 
     if (absolute) {
-      return outputPathOptional.map(rule.getProjectFilesystem().getAbsolutifier()::apply);
+      return outputPathOptional.map(rule.getProjectFilesystem()::resolve);
     } else {
       return outputPathOptional;
     }
