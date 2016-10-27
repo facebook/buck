@@ -404,7 +404,9 @@ class SwiftCompile
           swiftCompiler,
           frameworkPaths,
           moduleName,
-          Optional.of(srcs.iterator().next()),
+          srcs.isEmpty() ?
+              Optional.empty() :
+              Optional.of(srcs.iterator().next()),
           enableObjcInterop,
           bridgingHeader,
           Optional.empty());
