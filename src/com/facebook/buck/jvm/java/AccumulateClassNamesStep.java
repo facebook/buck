@@ -29,6 +29,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
@@ -37,7 +38,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -125,8 +128,8 @@ public class AccumulateClassNamesStep implements Step {
    */
   public static Optional<ImmutableSortedMap<String, HashCode>> calculateClassHashes(
       ExecutionContext context, ProjectFilesystem filesystem, Path path) {
-    final ImmutableSortedMap.Builder<String, HashCode> classNamesBuilder =
-        ImmutableSortedMap.naturalOrder();
+    final Map<String, HashCode> classNames = new HashMap<>();
+
     ClasspathTraversal traversal =
         new ClasspathTraversal(Collections.singleton(path), filesystem) {
           @Override
@@ -145,7 +148,12 @@ public class AccumulateClassNamesStep implements Step {
               }
             };
             HashCode value = input.hash(Hashing.sha1());
-            classNamesBuilder.put(key, value);
+            HashCode existing = classNames.putIfAbsent(key, value);
+            if (existing != null && !existing.equals(value)) {
+              throw new IllegalArgumentException(String.format(
+                  "Multiple entries with same key but differing values: %1$s=%s and %1$s=%s",
+                  key, value, existing));
+            }
           }
         };
 
@@ -156,25 +164,29 @@ public class AccumulateClassNamesStep implements Step {
       return Optional.empty();
     }
 
-    return Optional.of(classNamesBuilder.build());
+    return Optional.of(ImmutableSortedMap.copyOf(classNames, Ordering.natural()));
   }
 
   /**
    * @param lines that were written in the same format output by {@link #execute(ExecutionContext)}.
    */
   public static ImmutableSortedMap<String, HashCode> parseClassHashes(List<String> lines) {
-    ImmutableSortedMap.Builder<String, HashCode> classNamesBuilder =
-        ImmutableSortedMap.naturalOrder();
+    final Map<String, HashCode> classNames = new HashMap<>();
 
     for (String line : lines) {
       List<String> parts = CLASS_NAME_AND_HASH_SPLITTER.splitToList(line);
       Preconditions.checkState(parts.size() == 2);
       String key = parts.get(0);
       HashCode value = HashCode.fromString(parts.get(1));
-      classNamesBuilder.put(key, value);
+      HashCode existing = classNames.putIfAbsent(key, value);
+      if (existing != null && !existing.equals(value)) {
+        throw new IllegalArgumentException(String.format(
+            "Multiple entries with same key but differing values: %1$s=%s and %1$s=%s",
+            key, value, existing));
+      }
     }
 
-    return classNamesBuilder.build();
+    return ImmutableSortedMap.copyOf(classNames, Ordering.natural());
   }
 
 }
