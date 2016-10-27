@@ -396,7 +396,7 @@ public class ProjectCommand extends BuildCommand {
         buckConfig.getValue(
             "project",
             "intellij_aggregation_mode").map(IjModuleGraph.AggregationMode::fromString);
-    return aggregationMode.orElse(IjModuleGraph.AggregationMode.NONE);
+    return aggregationMode.orElse(IjModuleGraph.AggregationMode.AUTO);
   }
 
   @Override
