@@ -68,15 +68,15 @@ public class BuckClientTest {
 
     TestBuckEventHandler handler = new TestBuckEventHandler();
     BuckSocket buckSocket = new BuckSocket(handler);
-    BuckClient.getOrInstantiate(project, handler).setBuckSocket(buckSocket);
+    BuckClientManager.getOrCreateClient(project, handler).setBuckSocket(buckSocket);
 
-    BuckClient.getOrInstantiate(project, handler).connect();
+    BuckClientManager.getOrCreateClient(project, handler).connect();
     buckSocket.onConnect(new MockSession());
 
-    BuckClient.getOrInstantiate(project, handler).disconnectWithoutRetry();
+    BuckClientManager.getOrCreateClient(project, handler).disconnectWithoutRetry();
     buckSocket.onClose(0, "FOO");
 
-    assertFalse(BuckClient.getOrInstantiate(project, handler).isConnected());
+    assertFalse(BuckClientManager.getOrCreateClient(project, handler).isConnected());
   }
 
   @Test
@@ -91,16 +91,16 @@ public class BuckClientTest {
 
     TestBuckEventHandler handler = new TestBuckEventHandler();
     BuckSocket buckSocket = new BuckSocket(handler);
-    BuckClient.getOrInstantiate(project, handler).setBuckSocket(buckSocket);
+    BuckClientManager.getOrCreateClient(project, handler).setBuckSocket(buckSocket);
 
-    BuckClient.getOrInstantiate(project, handler).connect();
+    BuckClientManager.getOrCreateClient(project, handler).connect();
     buckSocket.onConnect(new MockSession());
 
-    BuckClient.getOrInstantiate(project, handler).disconnectWithRetry();
+    BuckClientManager.getOrCreateClient(project, handler).disconnectWithRetry();
     buckSocket.onClose(0, "FOO");
     buckSocket.onConnect(new MockSession());
 
-    assertTrue(BuckClient.getOrInstantiate(project, handler).isConnected());
+    assertTrue(BuckClientManager.getOrCreateClient(project, handler).isConnected());
   }
 
   @Test
@@ -113,7 +113,7 @@ public class BuckClientTest {
     Project project = new MockProjectEx(new MockDisposable());
 
     TestBuckEventHandler handler = new TestBuckEventHandler();
-    BuckClient client = BuckClient.getOrInstantiate(project, handler);
+    BuckClient client = BuckClientManager.getOrCreateClient(project, handler);
 
     // Set the socket we control
     BuckSocket socket = new BuckSocket(handler);

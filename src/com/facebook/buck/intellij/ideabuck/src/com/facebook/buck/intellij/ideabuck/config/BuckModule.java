@@ -23,7 +23,7 @@ import com.facebook.buck.intellij.ideabuck.ui.BuckEventsConsumer;
 import com.facebook.buck.intellij.ideabuck.ui.BuckToolWindowFactory;
 import com.facebook.buck.intellij.ideabuck.ui.BuckUIManager;
 import com.facebook.buck.intellij.ideabuck.ui.utils.BuckPluginNotifications;
-import com.facebook.buck.intellij.ideabuck.ws.BuckClient;
+import com.facebook.buck.intellij.ideabuck.ws.BuckClientManager;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.BuckEventsHandler;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers.BuckEventsConsumerFactory;
 import com.intellij.execution.ui.ConsoleViewContentType;
@@ -67,7 +67,7 @@ public final class BuckModule implements ProjectComponent {
     projectClosed = new AtomicBoolean(false);
     BuckFileUtil.setBuckFileType();
     // connect to the Buck client
-    BuckClient.getOrInstantiate(mProject, mEventHandler).connect();
+    BuckClientManager.getOrCreateClient(mProject, mEventHandler).connect();
 
     if (!UISettings.getInstance().SHOW_MAIN_TOOLBAR) {
       BuckPluginNotifications.notifyActionToolbar(mProject);
@@ -82,7 +82,7 @@ public final class BuckModule implements ProjectComponent {
   @Override
   public void projectClosed() {
     projectClosed.set(true);
-    BuckClient.getOrInstantiate(mProject, mEventHandler).disconnectWithoutRetry();
+    BuckClientManager.getOrCreateClient(mProject, mEventHandler).disconnectWithoutRetry();
     AndroidDebugger.disconnect();
     if (mBuckEventsConsumer != null) {
       mBuckEventsConsumer.detach();
@@ -90,7 +90,7 @@ public final class BuckModule implements ProjectComponent {
   }
 
   public boolean isConnected() {
-    return BuckClient.getOrInstantiate(mProject, mEventHandler).isConnected();
+    return BuckClientManager.getOrCreateClient(mProject, mEventHandler).isConnected();
   }
 
   public void attachIfDetached() {
@@ -131,7 +131,7 @@ public final class BuckModule implements ProjectComponent {
           });
       if (!projectClosed.get()) {
         // Tell the client that we got disconnected, but we can retry
-        BuckClient.getOrInstantiate(mProject, mEventHandler).disconnectWithRetry();
+        BuckClientManager.getOrCreateClient(mProject, mEventHandler).disconnectWithRetry();
       }
     }
   }
