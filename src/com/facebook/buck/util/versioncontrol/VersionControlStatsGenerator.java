@@ -17,12 +17,16 @@
 package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.log.Logger;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 public class VersionControlStatsGenerator {
+
   private static final Logger LOG = Logger.get(VersionControlStatsGenerator.class);
 
   public static final ImmutableSet<String> TRACKED_BOOKMARKS = ImmutableSet.of(
@@ -66,34 +70,42 @@ public class VersionControlStatsGenerator {
       return;
     }
 
-    ImmutableSet<String> changedFiles = vcCmdLineInterface.changedFiles(".");
+    VersionControlStats.Builder versionControlStats = VersionControlStats.builder();
+    try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(
+        buckEventBus,
+        "gen_source_control_info")) {
+      try {
+        // Get a list of the revision ids of all the tracked bookmarks.
+        ImmutableMap<String, String> bookmarksRevisionIds =
+            vcCmdLineInterface.bookmarksRevisionsId(TRACKED_BOOKMARKS);
+        // Get the current revision id.
+        String currentRevisionId = vcCmdLineInterface.currentRevisionId();
+        // Get the common ancestor of master and current revision
+        String branchedFromMasterRevisionId = vcCmdLineInterface.commonAncestor(
+            currentRevisionId,
+            bookmarksRevisionIds.get("remote/master"));
+        // Get the list of tracked changes files.
+        ImmutableSet<String> changedFiles = vcCmdLineInterface.changedFiles(".");
 
-    String currentRevisionId = vcCmdLineInterface.currentRevisionId();
-    String latestMasterRevisionId = vcCmdLineInterface.revisionId("master");
+        ImmutableSet.Builder<String> baseBookmarks = ImmutableSet.builder();
+        for (Map.Entry<String, String> bookmark : bookmarksRevisionIds.entrySet()) {
+          if (bookmark.getValue().startsWith(currentRevisionId)) {
+            baseBookmarks.add(bookmark.getKey());
+          }
+        }
 
-    // Find the master revision which the current revision was branched from.
-    // (Not necessarily the same as the latest master above)
-    String branchedFromMasterRevisionId =
-        vcCmdLineInterface.commonAncestor(currentRevisionId, latestMasterRevisionId);
+        versionControlStats
+            .setPathsChangedInWorkingDirectory(changedFiles)
+            .setCurrentRevisionId(currentRevisionId)
+            .setBranchedFromMasterRevisionId(branchedFromMasterRevisionId)
+            .setBaseBookmarks(baseBookmarks.build())
+            .build();
+      } catch (VersionControlCommandFailedException e) {
+        LOG.warn("Failed to gather source control stats.");
+      }
+    }
 
-    ImmutableSet<String> baseBookmarks = vcCmdLineInterface.trackedBookmarksOffRevisionId(
-        latestMasterRevisionId,
-        currentRevisionId,
-        TRACKED_BOOKMARKS);
-
-    long branchedFromMasterTsMillis = vcCmdLineInterface.timestampSeconds(
-        branchedFromMasterRevisionId) * 1000;
-
-    VersionControlStats versionControlStats = VersionControlStats.builder()
-        .setPathsChangedInWorkingDirectory(changedFiles)
-        .setCurrentRevisionId(currentRevisionId)
-        .setBranchedFromMasterRevisionId(branchedFromMasterRevisionId)
-        .setBranchedFromMasterTsMillis(branchedFromMasterTsMillis)
-        .setBaseBookmarks(baseBookmarks)
-        .build();
-
-    LOG.info("Version control stats generated successfully. \n%s", versionControlStats);
-
-    buckEventBus.post(new VersionControlStatsEvent(versionControlStats));
+    LOG.info("Stats generated successfully. \n%s", versionControlStats);
+    buckEventBus.post(new VersionControlStatsEvent(versionControlStats.build()));
   }
 }

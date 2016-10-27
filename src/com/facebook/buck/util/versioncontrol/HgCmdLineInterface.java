@@ -32,7 +32,10 @@ import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -40,7 +43,11 @@ import java.util.regex.Pattern;
 import java.util.stream.StreamSupport;
 
 public class HgCmdLineInterface implements VersionControlCmdLineInterface {
+
   private static final Logger LOG = Logger.get(VersionControlCmdLineInterface.class);
+
+  private static final String HG_ROOT_PATH = ".hg";
+  private static final String REMOTE_NAMES_FILENAME = "remotenames";
 
   private static final Map<String, String> HG_ENVIRONMENT_VARIABLES = ImmutableMap.of(
       // Set HGPLAIN to prevent user-defined Hg aliases from interfering with the expected behavior.
@@ -55,6 +62,9 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   private static final String REVISION_ID_TEMPLATE = "{revision}";
   private static final String REVISION_IDS_TEMPLATE = "{revisions}";
 
+  private static final ImmutableList<String> HG_ROOT_COMMAND =
+      ImmutableList.of(HG_CMD_TEMPLATE, "root");
+
   private static final ImmutableList<String> CURRENT_REVISION_ID_COMMAND =
       ImmutableList.of(HG_CMD_TEMPLATE, "log", "-l", "1", "--template", "{node|short}");
 
@@ -66,9 +76,6 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
 
   private static final ImmutableList<String> UNTRACKED_FILES_COMMAND =
       ImmutableList.of(HG_CMD_TEMPLATE, "status", "-0", "--unknown");
-
-  private static final ImmutableList<String> ALL_BOOKMARKS_COMMAND =
-      ImmutableList.of(HG_CMD_TEMPLATE, "bookmarks", "--all");
 
   private static final ImmutableList<String> COMMON_ANCESTOR_COMMAND_TEMPLATE =
       ImmutableList.of(
@@ -101,9 +108,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     this.processExecutorFactory = processExecutorFactory;
     this.projectRoot = projectRoot;
     this.hgCmd = hgCmd;
-    this.environment = MoreMaps.merge(
-        environment,
-        HG_ENVIRONMENT_VARIABLES);
+    this.environment = MoreMaps.merge(environment, HG_ENVIRONMENT_VARIABLES);
   }
 
   @Override
@@ -208,42 +213,28 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   @Override
-  public ImmutableSet<String> trackedBookmarksOffRevisionId(
-      String tipRevisionId,
-      String revisionId,
-      ImmutableSet<String> bookmarks
-  ) throws InterruptedException {
-    Optional<String> commonAncestor = commonAncestorOrAbsent(tipRevisionId, revisionId);
-    if (!commonAncestor.isPresent()) {
-      return ImmutableSet.of();
-    }
+  public ImmutableMap<String, String> bookmarksRevisionsId(ImmutableSet<String> bookmarks)
+      throws InterruptedException, VersionControlCommandFailedException {
+    Path remoteNames = Paths.get(
+        executeCommand(HG_ROOT_COMMAND),
+        HG_ROOT_PATH,
+        REMOTE_NAMES_FILENAME);
 
-    ImmutableSet.Builder<String> bookmarkSetBuilder = ImmutableSet.builder();
-    for (String bookmark : bookmarks) {
-      if (revisionIdOrAbsent(bookmark).equals(commonAncestor)) {
-        bookmarkSetBuilder.add(bookmark);
-      }
+    ImmutableMap.Builder<String, String> bookmarksRevisions = ImmutableMap.builder();
+    try {
+      List<String> lines = Files.readAllLines(remoteNames);
+      lines.forEach(line -> {
+        for (String bookmark : bookmarks) {
+          if (line.endsWith(bookmark)) {
+            String[] parts = line.split(" ");
+            bookmarksRevisions.put(parts[2], parts[0]);
+          }
+        }
+      });
+    } catch (IOException e) {
+      return ImmutableMap.of();
     }
-    return bookmarkSetBuilder.build();
-  }
-
-  @Override
-  public ImmutableMap<String, String> allBookmarks()
-      throws VersionControlCommandFailedException, InterruptedException {
-    // Remove the potential asterisk that shows the active bookmark.
-    FluentIterable<String> allBookmarks =
-        FluentIterable.of(executeCommand(ALL_BOOKMARKS_COMMAND).replaceAll("\\*", "").split(" "))
-            .filter(input -> !Strings.isNullOrEmpty(input));
-
-    if (allBookmarks.size() % 2 != 0) {
-      throw new VersionControlCommandFailedException("Unable to retrieve map of bookmarks");
-    }
-
-    ImmutableMap.Builder<String, String> allBookmarksMap = ImmutableMap.builder();
-    for (int i = 0; i < allBookmarks.size(); i = i + 2) {
-      allBookmarksMap.put(allBookmarks.get(i), allBookmarks.get(i + 1));
-    }
-    return allBookmarksMap.build();
+    return bookmarksRevisions.build();
   }
 
   private String executeCommand(Iterable<String> command)
@@ -286,6 +277,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
 
     return cleanResultString(resultString.get());
   }
+
 
   private static String validateRevisionId(String revisionId)
       throws VersionControlCommandFailedException {

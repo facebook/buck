@@ -238,21 +238,6 @@ public class HgCmdLineInterfaceIntegrationTest {
   }
 
   @Test
-  public void testAllBookmarks()
-      throws VersionControlCommandFailedException, InterruptedException {
-    try {
-      assertEquals(
-          "{branch_from_master2=3:2911b3cab6b2, branch_from_master3=5:dee6702e3d5e, " +
-              "master1=0:b870f77a2738, master2=1:b1fd7e5896af, master3=2:adf7a03ed6f1}",
-          repoThreeCmdLine.allBookmarks().toString());
-    } catch (VersionControlCommandFailedException e) {
-      if (!e.getMessage().contains("option --all not recognized")) {
-        throw new VersionControlCommandFailedException(e.getCause());
-      }
-    }
-  }
-
-  @Test
   public void testUntrackedFiles()
       throws VersionControlCommandFailedException, InterruptedException {
     assertEquals(ImmutableSet.of("? local_change"), repoThreeCmdLine.untrackedFiles());
@@ -275,15 +260,16 @@ public class HgCmdLineInterfaceIntegrationTest {
   }
 
   @Test
-  public void testTrackedBookmarksOffRevisionId() throws InterruptedException {
-    ImmutableSet<String> bookmarks = ImmutableSet.of("master2");
+  public void testTrackedBookmarksOffRevisionId()
+      throws InterruptedException, VersionControlCommandFailedException {
+    ImmutableMap<String, String> bookmarks = ImmutableMap.of("master2", "b1fd7e");
     assertEquals(
         bookmarks,
-        repoThreeCmdLine.trackedBookmarksOffRevisionId("b1fd7e", "2911b3", bookmarks));
-    bookmarks = ImmutableSet.of("master3");
+        repoThreeCmdLine.bookmarksRevisionsId(bookmarks.keySet()));
+    bookmarks = ImmutableMap.of("master3", "d1");
     assertEquals(
         bookmarks,
-        repoThreeCmdLine.trackedBookmarksOffRevisionId("dee670", "adf7a0", bookmarks));
+        repoThreeCmdLine.bookmarksRevisionsId(bookmarks.keySet()));
   }
 
   @Test

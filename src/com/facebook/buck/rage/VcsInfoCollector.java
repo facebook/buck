@@ -18,24 +18,22 @@ package com.facebook.buck.rage;
 
 import static com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator.TRACKED_BOOKMARKS;
 
-import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.versioncontrol.VersionControlCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.immutables.value.Value;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
  * Responsible foe getting information out of the version control system.
  */
 public class VcsInfoCollector {
-
-  private static final Logger LOG = Logger.get(InteractiveReport.class);
-  private static final String REMOTE_MASTER = "remote/master";
 
   private final VersionControlCmdLineInterface vcCmdLineInterface;
 
@@ -54,44 +52,32 @@ public class VcsInfoCollector {
   public SourceControlInfo gatherScmInformation()
       throws InterruptedException, VersionControlCommandFailedException {
     String currentRevisionId = vcCmdLineInterface.currentRevisionId();
-    Optional<String> masterRevisionId = getMasterRevisionId();
-    Optional<String> diffBase = masterRevisionId;
+    ImmutableSet<String> changedFiles = vcCmdLineInterface.changedFiles(".");
+    ImmutableMap<String, String> bookmarksRevisionIds =
+        vcCmdLineInterface.bookmarksRevisionsId(TRACKED_BOOKMARKS);
 
-    Optional<ImmutableSet<String>> filesChangedFromMasterBranchPoint = Optional.empty();
-    ImmutableSet<String> diffBaseBookmarks = ImmutableSet.of();
-    Optional<String> producedDiff = Optional.empty();
-
-    if (masterRevisionId.isPresent()) {
-      diffBaseBookmarks = vcCmdLineInterface.trackedBookmarksOffRevisionId(
-          masterRevisionId.get(),
-          currentRevisionId,
-          TRACKED_BOOKMARKS);
+    ImmutableSet.Builder<String> baseBookmarksBuilder = ImmutableSet.builder();
+    for (Map.Entry<String, String> bookmark : bookmarksRevisionIds.entrySet()) {
+      if (bookmark.getValue().startsWith(currentRevisionId)) {
+        baseBookmarksBuilder.add(bookmark.getKey());
+      }
     }
-    if (!diffBaseBookmarks.isEmpty()) {
-      diffBase = Optional.of(vcCmdLineInterface.revisionId(diffBaseBookmarks.iterator().next()));
-      filesChangedFromMasterBranchPoint = Optional.of(
-          vcCmdLineInterface.changedFiles(diffBase.get()));
-      producedDiff = Optional.of(
-          vcCmdLineInterface.diffBetweenRevisions(currentRevisionId, diffBase.get()));
+    ImmutableSet<String> baseBookmarks = baseBookmarksBuilder.build();
+    Optional<String> baseRevisionId = Optional.empty();
+    Optional<String> diff = Optional.empty();
+    if (!baseBookmarks.isEmpty()) {
+      baseRevisionId = Optional.of(bookmarksRevisionIds.get(baseBookmarks.iterator().next()));
+      diff = Optional.of(
+          vcCmdLineInterface.diffBetweenRevisions(currentRevisionId, baseRevisionId.get()));
     }
 
     return SourceControlInfo.builder()
         .setCurrentRevisionId(currentRevisionId)
-        .setBasedOffWhichTracked(diffBaseBookmarks)
-        .setRevisionIdOffTracked(diffBase)
-        .setDiff(producedDiff)
-        .setDirtyFiles(vcCmdLineInterface.changedFiles("."))
-        .setFilesChangedFromMasterBranchPoint(filesChangedFromMasterBranchPoint)
+        .setRevisionIdOffTracked(baseRevisionId)
+        .setBasedOffWhichTracked(baseBookmarks)
+        .setDiff(diff)
+        .setDirtyFiles(changedFiles)
         .build();
-  }
-
-  private Optional<String> getMasterRevisionId() throws InterruptedException {
-    try {
-      return Optional.of(vcCmdLineInterface.revisionId(REMOTE_MASTER));
-    } catch (VersionControlCommandFailedException e) {
-      LOG.info("Couldn't locate %s bookmark. Some information won't be available.", REMOTE_MASTER);
-    }
-    return Optional.empty();
   }
 
   @Value.Immutable
@@ -103,6 +89,5 @@ public class VcsInfoCollector {
     @JsonIgnore
     Optional<String> getDiff();
     ImmutableSet<String> getDirtyFiles();
-    Optional<ImmutableSet<String>> getFilesChangedFromMasterBranchPoint();
   }
 }
