@@ -117,7 +117,7 @@ public class CompDirReplacer {
     int offset = section.getOffset().intValue();
     while (offset < maximumValidOffset) {
       buffer.position(offset);
-      String string = null;
+      String string;
       try {
         string = nulTerminatedCharsetDecoder.decodeString(buffer);
       } catch (CharacterCodingException e) {

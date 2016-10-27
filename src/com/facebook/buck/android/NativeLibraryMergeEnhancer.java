@@ -656,7 +656,8 @@ class NativeLibraryMergeEnhancer {
       if (type == Linker.LinkableDepType.STATIC_PIC) {
         ImmutableList.Builder<NativeLinkableInput> builder = ImmutableList.builder();
         for (NativeLinkable linkable : constituents.getLinkables()) {
-          builder.add(linkable.getNativeLinkableInput(cxxPlatform, type));
+          builder.add(
+              linkable.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC_PIC));
         }
         return NativeLinkableInput.concat(builder.build());
       }

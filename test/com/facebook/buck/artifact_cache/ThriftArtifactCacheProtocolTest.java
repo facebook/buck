@@ -111,8 +111,8 @@ public class ThriftArtifactCacheProtocolTest {
   public void testReceivingDataWithPayload() throws IOException, TException {
     byte[] expectedPayload = createBuffer(21);
     String expectedErrorMessage = "My Super cool error message";
-    BuckCacheResponse expectedResponse = null;
-    byte[] responseRawData = null;
+    BuckCacheResponse expectedResponse;
+    byte[] responseRawData;
     try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
       expectedResponse = serializeData(expectedErrorMessage, stream, expectedPayload);
       responseRawData = stream.toByteArray();
@@ -140,7 +140,7 @@ public class ThriftArtifactCacheProtocolTest {
   @Test(expected =  IOException.class)
   public void testReceivingCorruptedData() throws IOException, TException {
     byte[] expectedPayload = createBuffer(21);
-    byte[] responseRawData = null;
+    byte[] responseRawData;
     try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
       serializeData("irrelevant", stream, expectedPayload);
       responseRawData = stream.toByteArray();

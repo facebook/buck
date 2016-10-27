@@ -116,7 +116,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         }
 
         Path tmp = createTempFileForDownload();
-        ThriftArtifactCacheProtocol.Response.ReadPayloadInfo readResult = null;
+        ThriftArtifactCacheProtocol.Response.ReadPayloadInfo readResult;
         try (OutputStream tmpFile = projectFilesystem.newFileOutputStream(tmp)) {
           readResult = response.readPayload(tmpFile);
         }

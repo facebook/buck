@@ -119,7 +119,7 @@ public enum SizeUnit {
 
   public static Pair<Double, SizeUnit> getHumanReadableSize(double size, SizeUnit unit) {
     if (size == 0) {
-      return new Pair<>(size, unit);
+      return new Pair<>(0.0, unit);
     }
     int ordinal = unit.getOrdinal();
     double resultSize = size;

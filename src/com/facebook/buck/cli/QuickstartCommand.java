@@ -156,19 +156,6 @@ public class QuickstartCommand extends AbstractCommand {
 
     switch (type) {
       case ANDROID: {
-        String sdkLocation = getAndroidSdkDir(params.getAndroidPlatformTargetSupplier());
-        if (sdkLocation.isEmpty()) {
-          sdkLocation = promptForPath(params, "Enter your Android SDK's location: ");
-        }
-
-        File sdkLocationFile = new File(sdkLocation);
-        if (!sdkLocationFile.isDirectory()) {
-          params.getBuckEventBus().post(ConsoleEvent.severe(
-              "WARNING: That Android SDK directory does not exist."));
-        }
-
-        sdkLocation = sdkLocationFile.getAbsoluteFile().toString();
-
         params.getCell().getFilesystem().copyFolder(origin, destination);
 
         // Specify the default Android target so everyone on the project builds against the same

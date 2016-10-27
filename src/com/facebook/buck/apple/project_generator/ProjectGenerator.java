@@ -765,7 +765,7 @@ public class ProjectGenerator {
     defaultSettingsBuilder.put("HALIDE_COMPILER_PATH", compilerPath.toString());
 
     // pass the source list to the xcode script
-    String halideCompilerSrcs = "";
+    String halideCompilerSrcs;
     Iterable<Path> compilerSrcFiles =
         Iterables.transform(
             targetNode.getConstructorArg().srcs,
@@ -773,7 +773,7 @@ public class ProjectGenerator {
         );
     halideCompilerSrcs = Joiner.on(" ").join(compilerSrcFiles);
     defaultSettingsBuilder.put("HALIDE_COMPILER_SRCS", halideCompilerSrcs);
-    String halideCompilerFlags = "";
+    String halideCompilerFlags;
     halideCompilerFlags = Joiner.on(" ").join(targetNode.getConstructorArg().compilerFlags);
     defaultSettingsBuilder.put("HALIDE_COMPILER_FLAGS", halideCompilerFlags);
 

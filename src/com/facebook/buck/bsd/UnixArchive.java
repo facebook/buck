@@ -117,7 +117,7 @@ public class UnixArchive {
       long fileSizeWithoutFilename = fileAndFilenameSize - filenameLength;
 
       offset = buffer.position();
-      String filename = null;
+      String filename;
       try {
         filename = nulTerminatedCharsetDecoder.decodeString(buffer);
       } catch (CharacterCodingException e) {
@@ -164,7 +164,7 @@ public class UnixArchive {
   }
 
   private int getIntFromStringAtRange(int len, CharsetDecoder decoder)  {
-    String filenameLengthString = null;
+    String filenameLengthString;
     int offset = buffer.position();
     try {
       filenameLengthString = readStringWithLength(buffer, len, decoder);
@@ -176,7 +176,7 @@ public class UnixArchive {
   }
 
   private long getLongFromStringAtRange(int len, CharsetDecoder decoder) {
-    String filenameLengthString = null;
+    String filenameLengthString;
     int offset = buffer.position();
     try {
       filenameLengthString = readStringWithLength(buffer, len, decoder);

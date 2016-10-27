@@ -119,7 +119,7 @@ public class ReferenceCountedWriter extends Writer {
     for (;;) {
       int current = counter.get();
       if (current == 0) {
-        return current;
+        return 0;
       }
       int next = current + 1;
       if (counter.compareAndSet(current, next)) {

@@ -309,7 +309,7 @@ public class DefaultAndroidDirectoryResolver implements AndroidDirectoryResolver
   }
 
   private Optional<Path> findNdkFromRepository(Path repository) {
-    ImmutableSortedSet<Path> repositoryContents = ImmutableSortedSet.of();
+    ImmutableSortedSet<Path> repositoryContents;
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(repository)) {
       repositoryContents = ImmutableSortedSet.copyOf(stream);
     } catch (IOException e) {

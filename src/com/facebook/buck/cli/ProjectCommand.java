@@ -448,7 +448,7 @@ public class ProjectCommand extends BuildCommand {
             projectPredicates.getProjectRootsPredicate());
       } else if (projectIde == Ide.INTELLIJ && needsFullRecursiveParse) {
         ImmutableSet<BuildTarget> supplementalGraphRoots = getRootBuildTargetsForIntelliJ(
-            projectIde,
+            Ide.INTELLIJ,
             projectGraph,
             projectPredicates);
         graphRoots = Sets.union(passedInTargetsSet, supplementalGraphRoots).immutableCopy();

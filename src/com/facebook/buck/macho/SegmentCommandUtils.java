@@ -143,7 +143,7 @@ public class SegmentCommandUtils {
     Preconditions.checkArgument(SegmentCommand.VALID_CMD_VALUES.contains(fields.getCmd()));
     boolean is64Bit = fields.getCmd().equals(SegmentCommand.LC_SEGMENT_64);
 
-    String segname = null;
+    String segname;
     try {
       segname = decoder.decodeString(buffer);
     } catch (CharacterCodingException e) {

@@ -132,7 +132,7 @@ public class SymTabCommandUtils {
     Preconditions.checkArgument(!stringTableEntryIsNull(nlist));
     int offset = command.getStroff().intValue() + nlist.getN_strx().intValue();
     buffer.position(offset);
-    byte lastNonNullValue = 0;
+    byte lastNonNullValue;
     byte lastValue = 0;
     do {
       lastNonNullValue = lastValue;

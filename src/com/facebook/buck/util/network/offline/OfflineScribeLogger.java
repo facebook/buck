@@ -287,8 +287,8 @@ public class OfflineScribeLogger extends ScribeLogger {
       }
 
       // Get iterator.
-      Iterator<ScribeData> it = null;
-      File logFile = null;
+      Iterator<ScribeData> it;
+      File logFile;
       try {
         logFile = logPath.toFile();
         totalBytesToSend += logFile.length();
@@ -297,7 +297,7 @@ public class OfflineScribeLogger extends ScribeLogger {
           return;
         }
 
-        InputStream logFileStream = null;
+        InputStream logFileStream;
         try {
           logFileStream = new BufferedInputStream(new FileInputStream(logFile), BUFFER_SIZE);
         } catch (FileNotFoundException e) {

@@ -211,7 +211,7 @@ public class AppleSdkDiscovery {
         NSArray settingsToolchains = (NSArray) sdkSettings.objectForKey("Toolchains");
         if (settingsToolchains != null) {
           toolchains = Optional.of(
-              Arrays.asList(settingsToolchains.getArray()).stream()
+              Arrays.stream(settingsToolchains.getArray())
                   .map(Object::toString)
                   .collect(MoreCollectors.toImmutableList()));
           }

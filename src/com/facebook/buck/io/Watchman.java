@@ -199,7 +199,7 @@ public class Watchman implements AutoCloseable {
 
       long projectWatchTimeNanos = clock.nanoTime();
       remainingTimeNanos -= (projectWatchTimeNanos - versionQueryStartTimeNanos);
-      result = watchmanClient.get().queryWithTimeout(
+      watchmanClient.get().queryWithTimeout(
           remainingTimeNanos,
           "watch-project",
           absoluteRootPath.toString());

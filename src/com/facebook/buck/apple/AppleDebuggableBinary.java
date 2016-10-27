@@ -126,7 +126,7 @@ public class AppleDebuggableBinary
     } else if (debugFormat == AppleDebugFormat.DWARF_AND_DSYM) {
       Preconditions.checkArgument(
           appleDsym.isPresent(),
-          "debugFormat %s expects AppleDsym rule to be present", debugFormat);
+          "debugFormat %s expects AppleDsym rule to be present", AppleDebugFormat.DWARF_AND_DSYM);
       builder.add(strippedBinaryRule);
       builder.add(appleDsym.get());
     }

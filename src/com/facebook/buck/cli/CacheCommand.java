@@ -152,7 +152,7 @@ public class CacheCommand extends AbstractCommand {
     }
 
     String buckTarget = success.metadata().get().get(BuildInfo.METADATA_KEY_FOR_TARGET);
-    ImmutableList<Path> paths = null;
+    ImmutableList<Path> paths;
     try {
       paths = Unzip.extractZipFile(
           artifact.toAbsolutePath(),

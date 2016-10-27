@@ -504,7 +504,7 @@ public class AppleDescriptions {
         params.getBuildTarget(),
         MultiarchFileInfos.create(appleCxxPlatforms, params.getBuildTarget()));
 
-    AppleBundleDestinations destinations = null;
+    AppleBundleDestinations destinations;
 
     if (extension.isLeft() && extension.getLeft().equals(AppleBundleExtension.FRAMEWORK)) {
       destinations = AppleBundleDestinations.platformFrameworkDestinations(
