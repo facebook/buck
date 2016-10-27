@@ -19,6 +19,7 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
@@ -27,19 +28,17 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
 
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
+import java.util.function.Consumer;
 import java.util.logging.Handler;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
 
 /**
  * Log handler to bridge BuckEventBus events to java.util.logging records.
  */
 public class LoggingBuildListener implements BuckEventListener {
 
-  private static final Logger LOG = Logger.getLogger(LoggingBuildListener.class.getName());
+  private static final Logger LOG = Logger.get(LoggingBuildListener.class);
 
   /**
    * These are message types that have custom handling or where we want to do nothing
@@ -69,38 +68,29 @@ public class LoggingBuildListener implements BuckEventListener {
 
   @Subscribe
   public void handleConsoleEvent(ConsoleEvent logEvent) {
-    LogRecord record =
-        new LogRecord(
-            // Since SEVERE events interrupt the super console, we reserve them
-            // only for exceptional events, and so cap log messages at WARNING here.
-            // Long-term, we likely should have a separate leveling mechanism for
-            // Buck's `ConsoleEvent`.
-            logEvent.getLevel().intValue() <= Level.WARNING.intValue() ?
-                logEvent.getLevel() :
-                Level.WARNING,
-            logEvent.getMessage());
-    record.setLoggerName(getClass().getName());
-    LOG.log(record);
+    // Since SEVERE events interrupt the super console, we reserve them
+    // only for exceptional events, and so cap log messages at WARNING here.
+    // Long-term, we likely should have a separate leveling mechanism for
+    // Buck's `ConsoleEvent`.
+    Consumer<String> logFn = LOG::warn;
+    if (logEvent.getLevel().intValue() <= Level.FINER.intValue()) {
+      logFn = LOG::verbose;
+    } else if (logEvent.getLevel().intValue() <= Level.FINE.intValue()) {
+      logFn = LOG::debug;
+    } else if (logEvent.getLevel().intValue() <= Level.INFO.intValue()) {
+      logFn = LOG::info;
+    }
+    logFn.accept(logEvent.getMessage());
   }
 
   @Subscribe
   public void buildStarted(BuildEvent.Started started) {
-    LogRecord record = new LogRecord(
-        Level.INFO,
-        "Build started at {0}");
-    record.setParameters(new Object[] { formatTimestamp(started.getTimestamp()) });
-    record.setLoggerName(getClass().getName());
-    LOG.log(record);
+    LOG.info("Build started at %s", formatTimestamp(started.getTimestamp()));
   }
 
   @Subscribe
   public void buildFinished(BuildEvent.Finished finished) {
-    LogRecord record = new LogRecord(
-        Level.INFO,
-        "Build finished at {0}");
-    record.setParameters(new Object[] { formatTimestamp(finished.getTimestamp()) });
-    record.setLoggerName(getClass().getName());
-    LOG.log(record);
+    LOG.info("Build finished at %s", formatTimestamp(finished.getTimestamp()));
   }
 
   @Subscribe
@@ -108,12 +98,12 @@ public class LoggingBuildListener implements BuckEventListener {
     if (EXPLICITLY_HANDLED_EVENT_TYPES.contains(event.getClass())) {
       return;
     }
-    LOG.log(Level.FINER, "{0}", event);
+    LOG.verbose("%s", event);
   }
 
   @Override
   public void outputTrace(BuildId buildId) {
-    for (Handler h : Arrays.asList(LOG.getHandlers())) {
+    for (Handler h : LOG.getHandlers()) {
       h.flush();
     }
   }

@@ -38,6 +38,7 @@ import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 
+import java.util.logging.Handler;
 import java.util.logging.Level;
 
 import javax.annotation.Nullable;
@@ -394,5 +395,21 @@ public class Logger
     public boolean isInfoEnabled()
     {
         return logger.isLoggable(INFO);
+    }
+
+    public Level getLevel() {
+        return logger.getLevel();
+    }
+
+    public void setLevel(Level newLevel) {
+        logger.setLevel(newLevel);
+    }
+
+    public void addHandler(Handler handler) {
+        logger.addHandler(handler);
+    }
+
+    public Handler[] getHandlers() {
+        return logger.getHandlers();
     }
 }

@@ -19,6 +19,7 @@ package com.facebook.buck.rules;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.log.LogFormatter;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -39,7 +40,6 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class DiffRuleKeysScriptIntegrationTest {
 
@@ -52,7 +52,7 @@ public class DiffRuleKeysScriptIntegrationTest {
   @Before
   public void enableVerboseRuleKeys() throws Exception {
     lastPositionInLog = 0;
-    ruleKeyBuilderLogger = Logger.getLogger(RuleKeyBuilder.class.getName());
+    ruleKeyBuilderLogger = Logger.get(RuleKeyBuilder.class);
     previousRuleKeyBuilderLevel = ruleKeyBuilderLogger.getLevel();
     ruleKeyBuilderLogger.setLevel(Level.FINER);
     Path fullLogFilePath = tmp.getRoot().resolve(getLogFilePath());
