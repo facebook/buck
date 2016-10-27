@@ -9,7 +9,87 @@
     {/param}
     {param content}
 
-<h2>Request types</h2>
+<p>
+The buck client has two distinct protocols to communicate with the buck HTTP cache servers:
+</p>
+<ul>
+  <li><a href='#thrift_http'>Thrift Over HTTP Protocol</a></li>
+  <li><a href='#binary_http'>Binary HTTP Protocol</a></h2></li>
+</ul>
+
+<h2 id="thrift_http">Thrift Over HTTP Protocol <a class="inline-link" href="#thrift_http">#</a></h2>
+
+<p>
+  The goal behind this protocol is to make it easier to extend in the future.
+  Binary protocols with custom serialization/deserialization always result in
+  backwards compatibility problems. We overcome this by using thrift
+  serialization to represent our requests and responses.
+</p>
+
+<h3>The HTTP Headers</h3>
+
+<p>
+  Each request and response should set the following HTTP headers:
+</p>
+
+<table>
+  <thead><tr><th>HTTP Header</th><th>Possible Values (comma separated)</th></tr></thead>
+  <tr><td>Content-Type</td><td>application/x-hybrid-thrift-binary</td></tr>
+  <tr><td>X-Thrift-Protocol</td><td>compact, binary, json, simple_json</td></tr>
+</table>
+
+<p>
+  The <i>X-Thrift-Protocol</i> is intended to specify the thrift protocol used to serialize the Thrift Metadata Section of the body.
+</p>
+
+
+<h3>The HTTP Request/Response Format</h3>
+The body of each Request and Response is always composed of:
+<ol>
+  <li>
+    <strong>Metadata Size Bytes Section: </strong>
+    4 bytes representing an int32 in big-endian byte-order that corresponds to the number of bytes N of the <i>Thrift Metadata Section</i>.
+  </li>
+  <li>
+    <strong>Thrift Metadata Section: </strong>
+    N bytes representing the <i>Thrift Metadata Section</i>.
+  </li>
+  <li>
+    <strong>Payload Section: </strong>
+    The rest of the bytes in the body correspond to the <i>Payload Section</i>.
+  </li>
+</ol>
+
+<p>
+  All HTTP requests made using this protocol should result in a 200 HTTP Status Code.
+  Information about cache miss, invalid formats or backend problems should all come as part of the <i>BuckCacheResponse</i> thrift type described below.
+</p>
+
+<h3>Thrift Metadata Section</h3>
+<p>
+  The Thrift Metadata Section for HTTP Requests is always of thrift
+  type <i>BuckCacheRequest</i>. In the case of HTTP Responses, the thrift
+  type of this section will be BuckCacheResponse.
+</p>
+
+<p>
+  All thrift types involved in this protocol can be found in the following source file:
+  <ul>
+    <li>
+      <a href="https://github.com/facebook/buck/blob/master/src/com/facebook/buck/artifact_cache/thrift/buckcache.thrift">buck/src/com/facebook/buck/artifact_cache/thrift/buckcache.thrift</a>
+    </li>
+  </ul>
+</p>
+
+
+<h3>Payload Section</h3>
+<p>
+  This sections contains the raw bytes corresponding to the contents of the cache artifact being operated on.
+  For cache fetch Requests and cache store Responses, this payload will contain zero bytes (ie, it is not used).
+</p>
+
+
+<h2 id="binary_http">Binary HTTP Protocol <a class="inline-link" href="#binary_http">#</a></h2>
 
 <p>
   Buck makes two types of requests to the cache. Note that while there is a distinction between
