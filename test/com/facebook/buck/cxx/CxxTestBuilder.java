@@ -48,10 +48,6 @@ public class CxxTestBuilder extends
     this(target, config, createDefaultPlatform(), createDefaultPlatforms());
   }
 
-  public CxxTestBuilder(BuildTarget target) {
-    this(target, createDefaultConfig(), createDefaultPlatform(), createDefaultPlatforms());
-  }
-
   public CxxTestBuilder setEnv(ImmutableMap<String, String> env) {
     arg.env = env;
     return this;

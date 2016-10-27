@@ -57,10 +57,6 @@ class ConcurrentMapCache<K, V> {
     return values.get(key);
   }
 
-  public boolean containsKey(K key) {
-    return values.containsKey(key);
-  }
-
   public void invalidateAll(Set<K> keys) {
     for (K key : keys) {
       invalidate(key);
@@ -69,13 +65,5 @@ class ConcurrentMapCache<K, V> {
 
   public void invalidate(K key) {
     values.remove(key);
-  }
-
-  public void invalidateAll() {
-    values.clear();
-  }
-
-  public boolean isEmpty() {
-    return values.isEmpty();
   }
 }

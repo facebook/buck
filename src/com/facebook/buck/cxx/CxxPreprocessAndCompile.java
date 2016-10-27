@@ -335,10 +335,6 @@ public class CxxPreprocessAndCompile
     return output;
   }
 
-  public Path getOutput() {
-    return output;
-  }
-
   public SourcePath getInput() {
     return input;
   }

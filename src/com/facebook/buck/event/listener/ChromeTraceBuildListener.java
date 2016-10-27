@@ -168,11 +168,6 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     addProcessMetadataEvent();
   }
 
-  @VisibleForTesting
-  Path getTracePath() {
-    return tracePath;
-  }
-
   private void addProcessMetadataEvent() {
     submitTraceEvent(
         new ChromeTraceEvent(

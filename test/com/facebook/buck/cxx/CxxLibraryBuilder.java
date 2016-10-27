@@ -107,11 +107,6 @@ public class CxxLibraryBuilder extends
     return this;
   }
 
-  public CxxLibraryBuilder setTests(ImmutableSortedSet<BuildTarget> tests) {
-    arg.tests = tests;
-    return this;
-  }
-
   public CxxLibraryBuilder setSupportedPlatformsRegex(Pattern regex) {
     arg.supportedPlatformsRegex = Optional.of(regex);
     return this;

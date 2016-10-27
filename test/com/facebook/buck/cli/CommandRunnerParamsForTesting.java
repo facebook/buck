@@ -171,10 +171,5 @@ public class CommandRunnerParamsForTesting {
       return this;
     }
 
-    public Builder setBuckConfig(BuckConfig buckConfig) {
-      this.config = buckConfig;
-      return this;
-    }
-
   }
 }

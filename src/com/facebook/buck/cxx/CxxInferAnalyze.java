@@ -87,10 +87,6 @@ public class CxxInferAnalyze extends AbstractBuildRule {
     return specsDir;
   }
 
-  public Path getResultsDir() {
-    return resultsDir;
-  }
-
   public Path getAbsolutePathToResultsDir() {
     return getProjectFilesystem().resolve(resultsDir);
   }

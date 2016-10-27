@@ -18,7 +18,6 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.log.Logger;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.io.ByteStreams;
 
 import java.io.PrintStream;
@@ -97,14 +96,6 @@ public class Console {
     t.printStackTrace(stdErr);
     printBuildFailureInternal(
         "Unexpected internal error (if you are using buckd, you should restart it).");
-  }
-
-  /**
-   * Prints the message of the root cause of the {@link Throwable} as a build failure.
-   * @see #printBuildFailure(String)
-   */
-  public void printBuildFailureWithoutStacktrace(Throwable t) {
-    printBuildFailureWithoutStacktraceDontUnwrap(Throwables.getRootCause(t));
   }
 
   /**

@@ -226,10 +226,6 @@ public class CachingBuildEngineTest {
       return new CachingBuildEngineFactory(resolver)
           .setCachingBuildEngineDelegate(new LocalCachingBuildEngineDelegate(fileHashCache));
     }
-
-    List<BuckEvent> getEvents() {
-      return listener.getEvents();
-    }
   }
 
   public static class OtherTests extends CommonFixture {
