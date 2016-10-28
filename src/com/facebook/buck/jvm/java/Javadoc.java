@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
@@ -47,6 +48,7 @@ public class Javadoc extends AbstractBuildRule {
   public final static Flavor DOC_JAR = ImmutableFlavor.of("doc");
 
   private final Path output;
+  @AddToRuleKey
   private final ImmutableSet<SourcePath> sources;
   private final Path scratchDir;
 

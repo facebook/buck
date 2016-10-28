@@ -38,6 +38,7 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -120,7 +121,14 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
           .flatMap(Collection::stream)
           .collect(MoreCollectors.toImmutableSet());
 
-      return new Javadoc(params, new SourcePathResolver(resolver), sources);
+      BuildRuleParams emptyParams = params.copyWithDeps(
+          Suppliers.ofInstance(ImmutableSortedSet.of()),
+          Suppliers.ofInstance(ImmutableSortedSet.of()));
+
+      return new Javadoc(
+          emptyParams,
+          pathResolver,
+          sources);
     }
 
     if (flavors.contains(JavaLibrary.SRC_JAR)) {
