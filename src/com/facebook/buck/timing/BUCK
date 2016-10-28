@@ -1,6 +1,1 @@
-standard_java_library(
-  immutable_types = [
-    'AbsolutePerfTime',
-    'RelativePerfTime',
-  ],
-)
+standard_java_library()
