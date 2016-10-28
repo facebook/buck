@@ -14,9 +14,7 @@
  * under the License.
  */
 
-package unit;
-
-import com.facebook.buck.intellij.ideabuck.format.DependenciesOptimizer;
+package com.facebook.buck.intellij.ideabuck.format;
 
 import org.junit.Assert;
 import org.junit.Test;

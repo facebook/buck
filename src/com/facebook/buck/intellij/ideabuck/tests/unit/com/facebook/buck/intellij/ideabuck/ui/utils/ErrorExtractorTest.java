@@ -14,12 +14,10 @@
  * under the License.
  */
 
-package unit;
+package com.facebook.buck.intellij.ideabuck.ui.utils;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.intellij.ideabuck.ui.utils.CompilerErrorItem;
-import com.facebook.buck.intellij.ideabuck.ui.utils.ErrorExtractor;
 import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 
