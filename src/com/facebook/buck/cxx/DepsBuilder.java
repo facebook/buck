@@ -17,10 +17,10 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRule;
-import com.google.common.collect.ImmutableSortedSet;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.Tool;
+import com.google.common.collect.ImmutableSortedSet;
 
 /**
  * Builder suitable for generating the dependency list of a build rule.
@@ -35,11 +35,6 @@ public class DepsBuilder {
 
   public ImmutableSortedSet<BuildRule> build() {
     return builder.build();
-  }
-
-  public DepsBuilder addAll(Iterable<BuildRule> rules) {
-    builder.addAll(rules);
-    return this;
   }
 
   public DepsBuilder add(Tool tool) {

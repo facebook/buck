@@ -157,13 +157,6 @@ public class FakeProcess extends Process {
   }
 
   /**
-   * Returns true if {@link #waitFor()} was called on this object, false otherwise.
-   */
-  public boolean isWaitedFor() {
-    return isWaitedFor;
-  }
-
-  /**
    * Returns what has been written to {@link #getOutputStream()} so far.
    */
   public String getOutput() {

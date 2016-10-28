@@ -32,9 +32,7 @@
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/d:d",
       "//src/com/facebook/buck/model:model",
-      "//src/com/facebook/buck/rules/coercer:coercer",
-      "//test/com/facebook/buck/rules:testutil",
-      "//third-party/java/guava:guava"
+      "//test/com/facebook/buck/rules:testutil"
     ]
   }
 }

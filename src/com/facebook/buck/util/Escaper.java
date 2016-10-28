@@ -38,19 +38,19 @@ public final class Escaper {
    */
   public static enum Quoter {
 
-    SINGLE('\'') {
+    SINGLE {
       @Override
       public String quote(String str) {
         return '\'' + str.replace("\'", "'\\''") + '\'';
       }
     },
-    DOUBLE('"') {
+    DOUBLE {
       @Override
       public String quote(String str) {
         return '"' + str.replace("\"", "\\\"") + '"';
       }
     },
-    DOUBLE_WINDOWS_JAVAC('"') {
+    DOUBLE_WINDOWS_JAVAC {
       @Override
       public String quote(String str) {
         return '"' + str.replace("\\", "\\\\") + '"';
@@ -58,23 +58,10 @@ public final class Escaper {
     }
     ;
 
-    private final char value;
-
-    private Quoter(char value) {
-      this.value = value;
-    }
-
     /**
      * @return the string with this quoting style applied.
      */
     public abstract String quote(String str);
-
-    /**
-     * @return the raw quote character.
-     */
-    public char getValue() {
-      return value;
-    }
 
   }
 

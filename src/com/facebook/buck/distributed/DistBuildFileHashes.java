@@ -172,16 +172,6 @@ public class DistBuildFileHashes {
     }
   }
 
-  public ImmutableMap<BuildRule, RuleKey> getRuleKeys() throws IOException, InterruptedException {
-    try {
-      return ruleKeys.get();
-    } catch (ExecutionException e) {
-      Throwables.propagateIfInstanceOf(e.getCause(), IOException.class);
-      Throwables.propagateIfInstanceOf(e.getCause(), InterruptedException.class);
-      throw new RuntimeException(e.getCause());
-    }
-  }
-
   /**
    * Creates a {@link FileHashCache} that returns the hash codes cached on the remote end.
    *

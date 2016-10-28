@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
 
@@ -57,11 +56,6 @@ public class GenruleBuilder extends AbstractNodeBuilder<GenruleDescription.Arg> 
 
   public GenruleBuilder setSrcs(@Nullable ImmutableList<SourcePath> srcs) {
     arg.srcs = Optional.ofNullable(srcs).orElse(ImmutableList.of());
-    return this;
-  }
-
-  public GenruleBuilder setTests(ImmutableSortedSet<BuildTarget> tests) {
-    arg.tests = tests;
     return this;
   }
 

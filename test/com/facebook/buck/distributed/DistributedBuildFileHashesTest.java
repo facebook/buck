@@ -24,8 +24,6 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.HashingDeterministicJarWriter;
 import com.facebook.buck.io.MoreFiles;
@@ -413,7 +411,6 @@ public class DistributedBuildFileHashesTest {
 
   private abstract static class Fixture {
 
-    protected final BuckEventBus eventBus;
     protected final ProjectFilesystem projectFilesystem;
     protected final FileSystem javaFs;
 
@@ -427,7 +424,6 @@ public class DistributedBuildFileHashesTest {
     protected final DistBuildFileHashes distributedBuildFileHashes;
 
     public Fixture(ProjectFilesystem first, ProjectFilesystem second) throws Exception {
-      eventBus = BuckEventBusFactory.newInstance();
       projectFilesystem = first;
       javaFs = projectFilesystem.getRootPath().getFileSystem();
 

@@ -52,12 +52,6 @@ public class FakeListeningProcessExecutor extends ListeningProcessExecutor {
 
   public FakeListeningProcessExecutor(
       Function<ProcessExecutorParams, Collection<FakeListeningProcessState>>
-        processStatesFunction) {
-    this(processStatesFunction, new SettableFakeClock(0, 0));
-  }
-
-  public FakeListeningProcessExecutor(
-      Function<ProcessExecutorParams, Collection<FakeListeningProcessState>>
         processStatesFunction,
       SettableFakeClock clock) {
     this.processStatesFunction = processStatesFunction;

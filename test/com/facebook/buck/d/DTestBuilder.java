@@ -16,13 +16,10 @@
 
 package com.facebook.buck.d;
 
-import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.coercer.SourceList;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
 
@@ -39,24 +36,6 @@ public class DTestBuilder extends AbstractNodeBuilder<DTestDescription.Arg> {
             defaultCxxPlatform,
             Optional.empty()),
         target);
-  }
-
-  public static DTestBuilder create(BuildTarget target) {
-    DBuckConfig dBuckConfig = new DBuckConfig(FakeBuckConfig.builder().build());
-    return new DTestBuilder(
-        target,
-        dBuckConfig,
-        CxxPlatformUtils.DEFAULT_PLATFORM);
-  }
-
-  public DTestBuilder setSrcs(SourceList srcs) {
-    arg.srcs = srcs;
-    return this;
-  }
-
-  public DTestBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = deps;
-    return this;
   }
 
 }

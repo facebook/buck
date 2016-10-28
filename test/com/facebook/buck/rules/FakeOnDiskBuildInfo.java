@@ -33,11 +33,6 @@ public class FakeOnDiskBuildInfo implements OnDiskBuildInfo {
   private Map<String, ImmutableList<String>> metadataValues = Maps.newHashMap();
   private Map<Path, ImmutableList<String>> pathsToContents = Maps.newHashMap();
 
-  /** @return this */
-  public FakeOnDiskBuildInfo setRuleKey(RuleKey ruleKey) {
-    return putMetadata(BuildInfo.METADATA_KEY_FOR_RULE_KEY, ruleKey.toString());
-  }
-
   @Override
   public Optional<RuleKey> getRuleKey(String key) {
     return getValue(key).map(RuleKey::new);

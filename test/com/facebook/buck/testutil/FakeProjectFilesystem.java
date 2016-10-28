@@ -44,7 +44,6 @@ import com.google.common.jimfs.Jimfs;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -267,10 +266,6 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
 
   public FakeProjectFilesystem(Set<Path> files) {
     this(new FakeClock(0), DEFAULT_ROOT, files);
-  }
-
-  public FakeProjectFilesystem(Clock clock, File root, Set<Path> files) {
-    this(clock, root.toPath(), files);
   }
 
   public FakeProjectFilesystem(Clock clock, Path root, Set<Path> files) {

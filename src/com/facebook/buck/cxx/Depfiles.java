@@ -258,10 +258,6 @@ public class Depfiles {
       this.prereqs = prereqs;
     }
 
-    public String getTarget() {
-      return target;
-    }
-
     public ImmutableList<String> getPrereqs() {
       return prereqs;
     }

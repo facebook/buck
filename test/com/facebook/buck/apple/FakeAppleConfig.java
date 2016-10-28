@@ -32,11 +32,6 @@ public class FakeAppleConfig extends AppleConfig {
     super(FakeBuckConfig.builder().build());
   }
 
-  public FakeAppleConfig setAppleSdkPaths(ImmutableMap<AppleSdk, AppleSdkPaths> appleSdkPaths) {
-    this.appleSdkPaths = appleSdkPaths;
-    return this;
-  }
-
   @Override
   public ImmutableMap<AppleSdk, AppleSdkPaths> getAppleSdkPaths(ProcessExecutor processExecutor) {
     return Preconditions.checkNotNull(appleSdkPaths);
