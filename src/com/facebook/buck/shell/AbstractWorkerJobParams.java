@@ -19,10 +19,12 @@ package com.facebook.buck.shell;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.hash.HashCode;
 
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleTuple
@@ -33,4 +35,6 @@ interface AbstractWorkerJobParams {
   ImmutableMap<String, String> getStartupEnvironment();
   String getJobArgs();
   int getMaxWorkers();
+  Optional<String> getPersistentWorkerKey();
+  Optional<HashCode> getWorkerHash();
 }

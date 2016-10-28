@@ -27,11 +27,14 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -64,8 +67,7 @@ public class WorkerShellStep implements Step {
     WorkerProcess process = null;
     try {
       // Use the process's startup command as the key.
-      String key = Joiner.on(' ').join(getCommand(context.getPlatform()));
-      pool = getWorkerProcessPoolForKey(key, context);
+      pool = getWorkerProcessPool(context);
       process = pool.borrowWorkerProcess(); // blocks until a WorkerProcess becomes available
       WorkerJobResult result = process.submitAndWaitForJob(getExpandedJobArgs(context));
       Verbosity verbosity = context.getVerbosity();
@@ -94,11 +96,31 @@ public class WorkerShellStep implements Step {
   /**
    * Returns an existing WorkerProcessPool for the given key if one exists, else creates a new one.
    */
-  private WorkerProcessPool getWorkerProcessPoolForKey(String key, final ExecutionContext context) {
-
+  private WorkerProcessPool getWorkerProcessPool(final ExecutionContext context) {
     WorkerJobParams paramsToUse = getWorkerJobParamsToUse(context.getPlatform());
-    ConcurrentMap<String, WorkerProcessPool> processPoolMap = context.getWorkerProcessPools();
+
+    ConcurrentMap<String, WorkerProcessPool> processPoolMap;
+    final String key;
+    final HashCode workerHash;
+    if (paramsToUse.getPersistentWorkerKey().isPresent() &&
+        context.getPersistentWorkerPools().isPresent()) {
+      processPoolMap = context.getPersistentWorkerPools().get();
+      workerHash = paramsToUse.getWorkerHash().get();
+      key = paramsToUse.getPersistentWorkerKey().get();
+    } else {
+      processPoolMap = context.getWorkerProcessPools();
+      key = Joiner.on(' ').join(getCommand(context.getPlatform()));
+      workerHash = Hashing.sha1().hashString(key, Charsets.UTF_8);
+    }
+
+    // If the worker pool has a different hash, recreate the pool.
     WorkerProcessPool pool = processPoolMap.get(key);
+    if (pool != null && !pool.getPoolHash().equals(workerHash)) {
+      if (processPoolMap.remove(key, pool)) {
+        pool.close();
+      }
+      pool = processPoolMap.get(key);
+    }
 
     if (pool == null) {
       final ProcessExecutorParams processParams = ProcessExecutorParams.builder()
@@ -110,7 +132,8 @@ public class WorkerShellStep implements Step {
       final Path workerTmpDir = paramsToUse.getTempDir();
       final AtomicInteger workerNumber = new AtomicInteger(0);
 
-      WorkerProcessPool newPool = new WorkerProcessPool(paramsToUse.getMaxWorkers()) {
+      WorkerProcessPool newPool = new WorkerProcessPool(
+          paramsToUse.getMaxWorkers(), workerHash) {
         @Override
         protected WorkerProcess startWorkerProcess() throws IOException {
           Path tmpDir = workerTmpDir.resolve(Integer.toString(workerNumber.getAndIncrement()));

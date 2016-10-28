@@ -121,6 +121,7 @@ public class FetchCommand extends BuildCommand {
           params.getConsole(),
           params.getBuckEventBus(),
           Optional.empty(),
+          params.getPersistentWorkerPools(),
           params.getPlatform(),
           params.getEnvironment(),
           params.getObjectMapper(),

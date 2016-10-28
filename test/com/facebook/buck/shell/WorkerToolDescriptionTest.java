@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
@@ -70,8 +71,10 @@ public class WorkerToolDescriptionTest {
     args.exe = shBinaryRule.getBuildTarget();
     args.args = Optional.empty();
     args.maxWorkers = Optional.of(maxWorkers);
+    args.persistent = Optional.empty();
 
-    Description<WorkerToolDescription.Arg> workerToolDescription = new WorkerToolDescription();
+    Description<WorkerToolDescription.Arg> workerToolDescription = new WorkerToolDescription(
+        FakeBuckConfig.builder().build());
     return (WorkerTool) workerToolDescription.createBuildRule(
         targetGraph,
         new FakeBuildRuleParamsBuilder("//arbitrary:target").build(),

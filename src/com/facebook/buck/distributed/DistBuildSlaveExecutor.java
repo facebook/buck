@@ -120,6 +120,7 @@ public class DistBuildSlaveExecutor {
             config.getMaximumResourceAmounts().withCpu(4)),
         Optional.empty(),
         Optional.empty(),
+        Optional.empty(),
         args.getExecutors())) {
 
       // TODO(ruibm): We need to pass to the distbuild target via de distributed build

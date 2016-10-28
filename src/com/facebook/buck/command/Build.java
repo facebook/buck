@@ -39,6 +39,7 @@ import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.shell.WorkerProcessPool;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
@@ -77,6 +78,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.StreamSupport;
 
@@ -117,6 +119,7 @@ public class Build implements Closeable {
       ConcurrencyLimit concurrencyLimit,
       Optional<AdbOptions> adbOptions,
       Optional<TargetDeviceOptions> targetDeviceOptions,
+      Optional<ConcurrentMap<String, WorkerProcessPool>> persistentWorkerPools,
       Map<ExecutorPool, ListeningExecutorService> executors) {
     this.actionGraph = actionGraph;
     this.ruleResolver = ruleResolver;
@@ -136,6 +139,7 @@ public class Build implements Closeable {
         .setObjectMapper(objectMapper)
         .setConcurrencyLimit(concurrencyLimit)
         .setAdbOptions(adbOptions)
+        .setPersistentWorkerPools(persistentWorkerPools)
         .setTargetDeviceOptions(targetDeviceOptions)
         .setExecutors(executors)
         .build();

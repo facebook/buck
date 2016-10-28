@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.hash.Hashing;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -132,7 +133,7 @@ public class WorkerProcessPoolTest {
   }
 
   private static WorkerProcessPool createPool(int maxWorkers) {
-    return new WorkerProcessPool(maxWorkers) {
+    return new WorkerProcessPool(maxWorkers, Hashing.sha1().hashLong(0)) {
       @Override
       protected WorkerProcess startWorkerProcess() throws IOException {
         return new FakeWorkerProcess(ImmutableMap.of());
