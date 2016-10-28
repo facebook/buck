@@ -37,6 +37,7 @@ import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.WatchmanCursor;
 import com.facebook.buck.io.WatchmanDiagnostic;
 import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.io.WatchmanQuery;
@@ -720,6 +721,6 @@ public class WatchmanWatcherTest {
         overflow,
         timeoutMillis,
         FAKE_QUERY,
-        sinceCursor);
+        new WatchmanCursor(sinceCursor));
   }
 }

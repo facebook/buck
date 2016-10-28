@@ -24,6 +24,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.WatchmanCursor;
 import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -131,7 +132,7 @@ public class WatchmanWatcherIntegrationTest {
             eventBus,
             ImmutableSet.copyOf(ignorePaths),
             watchman,
-            UUID.randomUUID());
+            new WatchmanCursor(new StringBuilder("n:buckd").append(UUID.randomUUID()).toString()));
 
     // Clear out the initial overflow event.
     watcher.postEvents(

@@ -25,6 +25,7 @@ import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.Watchman.Capability;
 import com.facebook.buck.io.WatchmanClient;
+import com.facebook.buck.io.WatchmanCursor;
 import com.facebook.buck.io.WatchmanDiagnostic;
 import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.io.WatchmanQuery;
@@ -48,7 +49,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
@@ -80,7 +80,7 @@ public class WatchmanWatcher {
   private final EventBus fileChangeEventBus;
   private final WatchmanClient watchmanClient;
   private final WatchmanQuery query;
-  private String mSinceCursor;
+  private WatchmanCursor sinceCursor;
 
   /**
    * The maximum number of watchman changes to process in each call to postEvents before
@@ -94,27 +94,12 @@ public class WatchmanWatcher {
 
   private final long timeoutMillis;
 
-  /* Legacy interface to help switch to clockId */
   public WatchmanWatcher(
       ProjectWatch projectWatch,
       EventBus fileChangeEventBus,
       ImmutableSet<PathOrGlobMatcher> ignorePaths,
       Watchman watchman,
-      UUID queryUUID) {
-    this(
-        projectWatch,
-        fileChangeEventBus,
-        ignorePaths,
-        watchman,
-        new StringBuilder("n:buckd").append(queryUUID).toString());
-  }
-
-  public WatchmanWatcher(
-      ProjectWatch projectWatch,
-      EventBus fileChangeEventBus,
-      ImmutableSet<PathOrGlobMatcher> ignorePaths,
-      Watchman watchman,
-      String sinceCursor) {
+      WatchmanCursor sinceCursor) {
     this(
         fileChangeEventBus,
         watchman.getWatchmanClient().get(),
@@ -133,13 +118,13 @@ public class WatchmanWatcher {
                   int overflow,
                   long timeoutMillis,
                   WatchmanQuery query,
-                  String sinceCursor) {
+                  WatchmanCursor sinceCursor) {
     this.fileChangeEventBus = fileChangeEventBus;
     this.watchmanClient = watchmanClient;
     this.overflow = overflow;
     this.timeoutMillis = timeoutMillis;
     this.query = query;
-    this.mSinceCursor = sinceCursor;
+    this.sinceCursor = sinceCursor;
   }
 
   @VisibleForTesting
@@ -218,7 +203,7 @@ public class WatchmanWatcher {
 
   @VisibleForTesting
   ImmutableList<Object> getWatchmanQuery() {
-    return query.toList(mSinceCursor);
+    return query.toList(sinceCursor.get());
   }
 
   /**
@@ -293,11 +278,13 @@ public class WatchmanWatcher {
         }
         return;
       }
-      if (mSinceCursor.startsWith("c:")) {
+      if (sinceCursor.get().startsWith("c:")) {
         // Update the clockId
-        mSinceCursor = Optional
-            .ofNullable((String) response.get("clock"))
-            .orElse(Watchman.NULL_CLOCK);
+        String newCursor = Optional
+          .ofNullable((String) response.get("clock"))
+          .orElse(Watchman.NULL_CLOCK);
+        LOG.debug("Updating Watchman Cursor from %s to %s", sinceCursor.get(), newCursor);
+        sinceCursor.set(newCursor);
       }
 
       List<Map<String, Object>> files = (List<Map<String, Object>>) response.get("files");

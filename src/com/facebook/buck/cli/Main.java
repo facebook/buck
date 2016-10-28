@@ -59,6 +59,7 @@ import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.WatchmanCursor;
 import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -323,9 +324,10 @@ public final class Main {
     private final FileHashCache buckOutHashCache;
     private final EventBus fileEventBus;
     private final Optional<WebServer> webServer;
-    private final Optional<UUID> watchmanQueryUUID;
     private final ActionGraphCache actionGraphCache;
     private final BroadcastEventListener broadcastEventListener;
+
+    private WatchmanCursor cursor;
 
     public Daemon(
         Cell cell,
@@ -367,9 +369,12 @@ public final class Main {
       if (watchmanCursorType.isPresent() &&
           watchmanCursorType.get() == WatchmanWatcher.CursorType.CLOCK_ID &&
           cell.getWatchman().getClockId().isPresent()) {
-        watchmanQueryUUID = Optional.empty();
+        cursor = new WatchmanCursor(cell.getWatchman().getClockId().get());
+        LOG.debug("Using a clock-id Watchman Cursor: %s", cursor.get());
       } else {
-        watchmanQueryUUID = Optional.of(UUID.randomUUID());
+        cursor = new WatchmanCursor(
+            new StringBuilder("n:buckd").append(UUID.randomUUID()).toString());
+        LOG.debug("Using a named Watchman Cursor: %s", cursor.get());
       }
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(cell.getFilesystem());
     }
@@ -512,8 +517,8 @@ public final class Main {
       return fileEventBus;
     }
 
-    public Optional<UUID> getWatchmanQueryUUID() {
-      return watchmanQueryUUID;
+    public WatchmanCursor getWatchmanCursor() {
+      return cursor;
     }
 
     @Override
@@ -585,23 +590,12 @@ public final class Main {
       EventBus fileChangeEventBus,
       ImmutableSet<PathOrGlobMatcher> ignorePaths,
       Watchman watchman) {
-    if (daemon.getWatchmanQueryUUID().isPresent()) {
-      return new WatchmanWatcher(
-          projectWatch,
-          fileChangeEventBus,
-          ignorePaths,
-          watchman,
-          daemon.getWatchmanQueryUUID().get());
-    } else if (watchman.getClockId().isPresent()) {
-      return new WatchmanWatcher(
-          projectWatch,
-          fileChangeEventBus,
-          ignorePaths,
-          watchman,
-          watchman.getClockId().get());
-    } else {
-      throw new HumanReadableException(String.format("Could not create WatchmanWatcher"));
-    }
+    return new WatchmanWatcher(
+        projectWatch,
+        fileChangeEventBus,
+        ignorePaths,
+        watchman,
+        daemon.getWatchmanCursor());
   }
 
   private static BroadcastEventListener getBroadcastEventListener(
