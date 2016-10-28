@@ -844,7 +844,13 @@
     </forbiddenapis>
   </target>
 
-  <target name="lint" depends="pmd, checkstyle" />
+  <target name="missing-test-files-check">
+    <exec dir="${user.dir}/scripts" executable="python" failonerror="true">
+      <arg line="verify-test-files.py" />
+    </exec>
+  </target>
+
+  <target name="lint" depends="pmd, checkstyle, missing-test-files-check" />
 
   <target name="test" depends="java-test, py-test" description="runs the unit tests" />
 
