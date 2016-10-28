@@ -22,11 +22,12 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.immutables.value.Value;
+
+import java.util.stream.Stream;
 
 /**
  * Represents a Haskell package used as a dependency during compilation.
@@ -72,17 +73,8 @@ abstract class AbstractHaskellPackage implements RuleKeyAppendable {
   /**
    * @return all dependencies required to use this package at build time.
    */
-  public Iterable<BuildRule> getDeps(SourcePathResolver pathResolver) {
-    return ImmutableList.<BuildRule>builder()
-        .addAll(pathResolver.filterBuildRuleInputs(getPackageDb()))
-        .addAll(pathResolver.filterBuildRuleInputs(getLibraries()))
-        .addAll(pathResolver.filterBuildRuleInputs(getInterfaces()))
-        .build();
+  public final Stream<BuildRule> getDeps(SourcePathResolver pathResolver) {
+    return Stream.of(ImmutableList.of(getPackageDb()), getLibraries(), getInterfaces())
+        .flatMap(input -> pathResolver.filterBuildRuleInputs(input).stream());
   }
-
-  public static Function<HaskellPackage, Iterable<BuildRule>> getDepsFunction(
-      final SourcePathResolver resolver) {
-    return input -> input.getDeps(resolver);
-  }
-
 }

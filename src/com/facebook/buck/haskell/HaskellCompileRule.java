@@ -45,7 +45,6 @@ import com.facebook.buck.util.OptionalCompat;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -58,6 +57,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppendable {
 
@@ -161,11 +161,10 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
                     .addAll(resolver.filterBuildRuleInputs(includes))
                     .addAll(sources.getDeps(resolver))
                     .addAll(
-                        FluentIterable.from(exposedPackages.values())
-                            .transformAndConcat(HaskellPackage.getDepsFunction(resolver)))
-                    .addAll(
-                        FluentIterable.from(packages.values())
-                            .transformAndConcat(HaskellPackage.getDepsFunction(resolver)))
+                        Stream.of(exposedPackages, packages)
+                            .flatMap(packageMap -> packageMap.values().stream())
+                            .flatMap(pkg -> pkg.getDeps(resolver))
+                            .iterator())
                     .build()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         resolver,

@@ -36,7 +36,6 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.base.Joiner;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -48,6 +47,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class HaskellPackageRule extends AbstractBuildRule {
 
@@ -104,8 +104,9 @@ public class HaskellPackageRule extends AbstractBuildRule {
                 () -> ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(ghcPkg.getDeps(resolver))
                     .addAll(
-                        FluentIterable.from(depPackages.values())
-                            .transformAndConcat(HaskellPackage.getDepsFunction(resolver)))
+                        depPackages.values().stream()
+                            .flatMap(pkg -> pkg.getDeps(resolver))
+                            .iterator())
                     .addAll(
                         resolver.filterBuildRuleInputs(Iterables.concat(libraries, interfaces)))
                     .build()),
@@ -163,11 +164,9 @@ public class HaskellPackageRule extends AbstractBuildRule {
 
     return new WriteFileStep(
         getProjectFilesystem(),
-        Joiner.on(System.lineSeparator())
-            .join(
-                FluentIterable.from(entries.entrySet())
-                    .transform(
-                        input -> input.getKey() + ": " + input.getValue())),
+        entries.entrySet().stream()
+            .map(input -> input.getKey() + ": " + input.getValue())
+            .collect(Collectors.joining(System.lineSeparator())),
         registrationFile,
         /* executable */ false);
   }
@@ -207,11 +206,9 @@ public class HaskellPackageRule extends AbstractBuildRule {
                 registrationFile.toString()),
             ImmutableMap.of(
                 "GHC_PACKAGE_PATH",
-                Joiner.on(':').join(
-                    FluentIterable.from(depPackages.values())
-                        .transform(
-                            input -> getResolver().getAbsolutePath(input.getPackageDb())
-                                .toString())))));
+                depPackages.values().stream()
+                    .map(input -> getResolver().getAbsolutePath(input.getPackageDb()).toString())
+                .collect(Collectors.joining(":")))));
 
     return steps.build();
   }
