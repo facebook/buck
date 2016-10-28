@@ -85,14 +85,12 @@ public class Watchman implements AutoCloseable {
       ImmutableSet.of(),
       Optional.empty(),
       Optional.empty(),
-      Optional.empty(),
-      0);
+      Optional.empty());
 
   private final ProjectWatch projectWatch;
   private final ImmutableSet<Capability> capabilities;
   private final Optional<Path> socketPath;
   private final Optional<WatchmanClient> watchmanClient;
-  private final long commandTimeoutMillis;
   private final Optional<String> initialClockId;
 
   public static Watchman build(
@@ -275,8 +273,7 @@ public class Watchman implements AutoCloseable {
           capabilities,
           initialClock,
           Optional.of(socketPath),
-          watchmanClient,
-          timeoutMillis);
+          watchmanClient);
     } catch (ClassCastException | HumanReadableException | IOException e) {
       LOG.warn(e, "Unable to determine the version of watchman. Going without.");
       if (watchmanClient.isPresent()) {
@@ -430,14 +427,12 @@ public class Watchman implements AutoCloseable {
       ImmutableSet<Capability> capabilities,
       Optional<String> initialClockId,
       Optional<Path> socketPath,
-      Optional<WatchmanClient> watchmanClient,
-      long commandTimeoutMillis) {
+      Optional<WatchmanClient> watchmanClient) {
     this.projectWatch = projectWatch;
     this.capabilities = capabilities;
     this.initialClockId = initialClockId;
     this.socketPath = socketPath;
     this.watchmanClient = watchmanClient;
-    this.commandTimeoutMillis = commandTimeoutMillis;
   }
 
   public ProjectWatch getProjectWatch() {
@@ -462,10 +457,6 @@ public class Watchman implements AutoCloseable {
 
   public Optional<WatchmanClient> getWatchmanClient() {
     return watchmanClient;
-  }
-
-  public long getCommandTimeoutMillis() {
-    return commandTimeoutMillis;
   }
 
   @Override
