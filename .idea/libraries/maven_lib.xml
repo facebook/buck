@@ -17,6 +17,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/slf4j/jcl-over-slf4j-1.6.2.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/httpcomponents/httpclient-4.4.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/httpcomponents/httpcore-4.4.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/aether/aether-transport-file-1.0.2.v20150114.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
@@ -34,6 +35,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/plexus/plexus-utils-3.0.20-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/plexus/plexus-interpolation-1.21-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/slf4j/jcl-over-slf4j-1.6.2-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/aether/aether-transport-file-1.0.2.v20150114-sources.jar!/" />
     </SOURCES>
   </library>
 </component>
