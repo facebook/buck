@@ -61,6 +61,7 @@ import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.shell.WorkerProcessPool;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutorPool;
@@ -96,6 +97,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.annotation.Nullable;
 
@@ -280,6 +282,7 @@ public class BuildCommand extends AbstractCommand {
       Console console,
       BuckEventBus eventBus,
       Optional<TargetDevice> targetDevice,
+      Optional<ConcurrentMap<String, WorkerProcessPool>> persistentWorkerPools,
       Platform platform,
       ImmutableMap<String, String> environment,
       ObjectMapper objectMapper,
@@ -312,6 +315,7 @@ public class BuildCommand extends AbstractCommand {
         getConcurrencyLimit(buckConfig),
         adbOptions,
         targetDeviceOptions,
+        persistentWorkerPools,
         executors);
   }
 
@@ -677,6 +681,7 @@ public class BuildCommand extends AbstractCommand {
         params.getConsole(),
         params.getBuckEventBus(),
         Optional.empty(),
+        params.getPersistentWorkerPools(),
         rootCellBuckConfig.getPlatform(),
         rootCellBuckConfig.getEnvironment(),
         params.getObjectMapper(),

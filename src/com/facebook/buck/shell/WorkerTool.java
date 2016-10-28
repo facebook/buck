@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.rules.Tool;
+import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
 
@@ -25,4 +26,6 @@ public interface WorkerTool {
   String getArgs();
   Path getTempDir();
   int getMaxWorkers();
+  boolean isPersistent();
+  HashCode getInstanceKey();
 }

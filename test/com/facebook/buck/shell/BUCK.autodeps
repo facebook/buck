@@ -28,6 +28,7 @@
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/environment:environment",
       "//src/com/facebook/buck/util/environment:platform",
+      "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/event:testutil",
       "//test/com/facebook/buck/jvm/java:testutil",
       "//test/com/facebook/buck/model:testutil",
@@ -50,6 +51,7 @@
   "testutil" : {
     "deps" : [
       "//src/com/facebook/buck/util:io",
+      "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/util:testutil",
       "//third-party/java/jsr:jsr305"

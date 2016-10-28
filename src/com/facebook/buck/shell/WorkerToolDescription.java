@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -50,12 +51,21 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
 
   public static final BuildRuleType TYPE = BuildRuleType.of("worker_tool");
 
+  private static final String CONFIG_SECTION = "worker";
+  private static final String CONFIG_PERSISTENT_KEY = "persistent";
+
   public static final MacroHandler MACRO_HANDLER = new MacroHandler(
       ImmutableMap.<String, MacroExpander>builder()
           .put("location", new LocationMacroExpander())
           .put("classpath", new ClasspathMacroExpander())
           .put("exe", new ExecutableMacroExpander())
           .build());
+
+  private final BuckConfig buckConfig;
+
+  public WorkerToolDescription(BuckConfig buckConfig) {
+    this.buckConfig = buckConfig;
+  }
 
   @Override
   public BuildRuleType getBuildRuleType() {
@@ -125,7 +135,9 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
         (BinaryBuildRule) rule,
         expandedStartupArgs,
         expandedEnv,
-        maxWorkers);
+        maxWorkers,
+        args.persistent.orElse(
+            buckConfig.getBooleanValue(CONFIG_SECTION, CONFIG_PERSISTENT_KEY, false)));
   }
 
   @Override
@@ -158,5 +170,6 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
     public Optional<String> args;
     public BuildTarget exe;
     public Optional<Integer> maxWorkers;
+    public Optional<Boolean> persistent;
   }
 }

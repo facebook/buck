@@ -21,6 +21,7 @@
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules:types",
+      "//src/com/facebook/buck/shell:worker_process",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:io",

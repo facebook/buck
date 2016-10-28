@@ -15,6 +15,13 @@ worker_tool(
   exe = ':external_tool',
 )
 
+worker_tool(
+  name = 'worker3',
+  args = '--num-jobs 2',
+  exe = ':concurrent_tool',
+  persistent = True,
+)
+
 genrule(
   name = 'test1',
   srcs = [],
@@ -59,4 +66,18 @@ genrule(
   srcs = [],
   out = 'output.txt',
   cmd = '$(worker :concurrent_worker) $OUT',
+)
+
+genrule(
+  name = 'test6',
+  srcs = [],
+  out = 'output.txt',
+  cmd = '$(worker :worker3) $OUT',
+)
+
+genrule(
+  name = 'test7',
+  srcs = [],
+  out = 'output.txt',
+  cmd = '$(worker :worker3) $OUT',
 )

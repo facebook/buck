@@ -130,6 +130,7 @@ The following sections are recognized by Buck:
     'tools',
     'ui',
     'unknown_flavors_messages',
+    'worker',
     ]}
   <a href="#{$name}"><code>[{$name}]</code></a><br>
 {/foreach}
@@ -1550,7 +1551,7 @@ $ buck targets --resolve-alias app#src_jar
 {call buckconfig.section}
   {param name: 'intellij' /}
   {param description}
-    This section configures a project generated for IntelliJ IDEA by `buck project` command.
+    This section configures a project generated for IntelliJ IDEA by <code>buck project</code> command.
   {/param}
 {/call}
 
@@ -2702,6 +2703,26 @@ your <code>.buckjavaargs</code> file</a>:
         [unknown_flavors_messages]{\n}{sp}{sp}
             android-* = Make sure you have Android SDK & NDK installed and set up.
     </pre>
+  {/param}
+{/call}
+
+{call buckconfig.section}
+  {param name: 'worker' /}
+  {param description}
+    This section configures how Buck's workers (<code>worker_tool</code>s and similar) work.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'worker' /}
+  {param name: 'persistent' /}
+  {param example_value: 'false' /}
+  {param description}
+    Specifies whether by default workers run in persistent mode (reusing the worker process
+    across builds). The <code>persistent</code> option of <code>worker_tool</code>
+    {sp}overrides this default.
+    The default value is false. Be careful when switching this to true since the workers will
+    not shut down after buck commands and will continue consuming system resources.
   {/param}
 {/call}
 
