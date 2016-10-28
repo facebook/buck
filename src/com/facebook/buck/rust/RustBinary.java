@@ -28,8 +28,10 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+
 
 public class RustBinary extends RustCompile implements BinaryBuildRule {
 
@@ -40,7 +42,9 @@ public class RustBinary extends RustCompile implements BinaryBuildRule {
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<String> features,
       ImmutableList<String> rustcFlags,
-      Tool compiler,
+      Supplier<Tool> compiler,
+      Supplier<Tool> linker,
+      ImmutableList<String> linkerArgs,
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType linkStyle) {
     super(
@@ -59,6 +63,8 @@ public class RustBinary extends RustCompile implements BinaryBuildRule {
             params.getBuildTarget(),
             "%s/" + crate),
         compiler,
+        linker,
+        linkerArgs,
         linkStyle);
   }
 

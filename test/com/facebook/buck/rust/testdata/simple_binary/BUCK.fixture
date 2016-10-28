@@ -12,3 +12,11 @@ rust_binary(
     "main.rs",
   ],
 )
+
+genrule(
+  name = 'generated_linker',
+  srcs = [ 'linker.sh' ],
+  out = 'generated_linker.sh',
+  executable = True,
+  bash = 'cp linker.sh $OUT; chmod +x $OUT',
+)

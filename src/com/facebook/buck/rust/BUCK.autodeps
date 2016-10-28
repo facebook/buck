@@ -1,6 +1,7 @@
 {
   "rust" : {
     "deps" : [
+      "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/parser:rule_pattern",
@@ -15,6 +16,7 @@
       "//src/com/facebook/buck/cxx:platform",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step:step",
       "//third-party/java/guava:guava",

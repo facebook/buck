@@ -32,6 +32,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -60,7 +61,11 @@ import java.nio.file.Path;
  */
 abstract class RustCompile extends AbstractBuildRule {
   @AddToRuleKey
-  private final Tool compiler;
+  private final Supplier<Tool> compiler;
+  @AddToRuleKey
+  private final Supplier<Tool> linker;
+  @AddToRuleKey
+  private final ImmutableList<String> linkerArgs;
   @AddToRuleKey
   private final ImmutableSet<SourcePath> srcs;
   @AddToRuleKey
@@ -86,7 +91,9 @@ abstract class RustCompile extends AbstractBuildRule {
       ImmutableSet<String> features,
       ImmutableSortedSet<Path> nativePaths,
       Path output,
-      Tool compiler,
+      Supplier<Tool> compiler,
+      Supplier<Tool> linker,
+      ImmutableList<String> linkerArgs,
       Linker.LinkableDepType linkStyle) {
     super(params, resolver);
 
@@ -99,6 +106,8 @@ abstract class RustCompile extends AbstractBuildRule {
     this.crate = crate;
     this.output = output;
     this.compiler = compiler;
+    this.linker = linker;
+    this.linkerArgs = linkerArgs;
     this.linkStyle = linkStyle;
     this.scratchDir =
         BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "container");
@@ -131,6 +140,12 @@ abstract class RustCompile extends AbstractBuildRule {
       }
     }
 
+    Tool compiler = this.compiler.get();
+    ImmutableList.Builder<String> linkerArgs = ImmutableList.builder();
+
+    linkerArgs.addAll(linker.get().getCommandPrefix(getResolver()));
+    linkerArgs.addAll(this.linkerArgs);
+
     return ImmutableList.of(
         new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),
         new SymlinkFilesIntoDirectoryStep(
@@ -143,6 +158,7 @@ abstract class RustCompile extends AbstractBuildRule {
             getProjectFilesystem().getRootPath(),
             compiler.getEnvironment(getResolver()),
             compiler.getCommandPrefix(getResolver()),
+            linkerArgs.build(),
             flags,
             features,
             output,

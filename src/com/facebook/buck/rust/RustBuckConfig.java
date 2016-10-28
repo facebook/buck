@@ -17,16 +17,20 @@
 package com.facebook.buck.rust;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.DefaultLinkerProvider;
+import com.facebook.buck.cxx.LinkerProvider;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
-import com.facebook.buck.rules.Tool;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
+import com.facebook.buck.rules.ToolProvider;
+import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class RustBuckConfig {
+  private static final String SECTION = "rust";
   private static final Path DEFAULT_RUSTC_COMPILER = Paths.get("rustc");
 
   private final BuckConfig delegate;
@@ -35,11 +39,42 @@ public class RustBuckConfig {
     this.delegate = delegate;
   }
 
-  Supplier<Tool> getRustCompiler() {
-    Path compilerPath = delegate.getPath("rust", "compiler").orElse(DEFAULT_RUSTC_COMPILER);
+  ToolProvider getRustCompiler() {
+    return delegate
+        .getToolProvider(SECTION, "compiler")
+        .orElseGet(
+            () -> {
+              HashedFileTool tool = new HashedFileTool(
+                  new ExecutableFinder().getExecutable(
+                      DEFAULT_RUSTC_COMPILER,
+                      delegate.getEnvironment()));
+              return new ConstantToolProvider(tool);
+            });
+  }
 
-    Path compiler = new ExecutableFinder().getExecutable(compilerPath, delegate.getEnvironment());
+  LinkerProvider getLinkerProvider(
+      CxxPlatform cxxPlatform,
+      LinkerProvider.Type defaultType) {
+    LinkerProvider.Type type =
+        delegate.getEnum(SECTION, "linker_platform", LinkerProvider.Type.class)
+            .orElse(defaultType);
 
-    return Suppliers.ofInstance(new HashedFileTool(compiler));
+    return delegate.getToolProvider(SECTION, "linker")
+            .map(tp -> (LinkerProvider) new DefaultLinkerProvider(type, tp))
+            .orElseGet(cxxPlatform::getLd);
+  }
+
+  // Get args for linker. Always return rust.linker_args if provided, and also include cxx.ldflags
+  // if we're using the Cxx platform linker.
+  ImmutableList<String> getLinkerArgs(CxxPlatform cxxPlatform) {
+    ImmutableList.Builder<String> linkargs = ImmutableList.builder();
+
+    linkargs.addAll(delegate.getListWithoutComments(SECTION, "linker_args"));
+
+    if (!delegate.getPath(SECTION, "linker").isPresent()) {
+      linkargs.addAll(cxxPlatform.getLdflags());
+    }
+
+    return linkargs.build();
   }
 }

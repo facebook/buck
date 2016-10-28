@@ -74,6 +74,35 @@ public class RustCompileTest {
     linkable.getCrateRoot();
   }
 
+  private static Tool fakeTool() {
+    return new Tool() {
+      @Override
+      public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
+        return ImmutableSortedSet.of();
+      }
+
+      @Override
+      public ImmutableCollection<SourcePath> getInputs() {
+        return ImmutableSortedSet.of();
+      }
+
+      @Override
+      public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+        return ImmutableList.of();
+      }
+
+      @Override
+      public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+        return ImmutableMap.of();
+      }
+
+      @Override
+      public void appendToRuleKey(RuleKeyObjectSink sink) {
+        // Do nothing.
+      }
+    };
+  }
+
   class FakeRustCompile extends RustCompile {
     FakeRustCompile(
         String target,
@@ -90,32 +119,9 @@ public class RustCompileTest {
           /* features */ ImmutableSortedSet.of(),
           /* nativePaths */ ImmutableSortedSet.of(),
           Paths.get("somewhere"),
-          new Tool() {
-            @Override
-            public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-              return ImmutableSortedSet.of();
-            }
-
-            @Override
-            public ImmutableCollection<SourcePath> getInputs() {
-              return ImmutableSortedSet.of();
-            }
-
-            @Override
-            public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-              return ImmutableList.of();
-            }
-
-            @Override
-            public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
-              return ImmutableMap.of();
-            }
-
-            @Override
-            public void appendToRuleKey(RuleKeyObjectSink sink) {
-              // Do nothing.
-            }
-          },
+          () -> fakeTool(),
+          () -> fakeTool(),
+          ImmutableList.<String>of(),
           Linker.LinkableDepType.STATIC);
     }
 

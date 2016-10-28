@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -36,7 +37,9 @@ public class RustLibrary extends RustCompile implements RustLinkable {
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<String> features,
       ImmutableList<String> rustcFlags,
-      Tool compiler,
+      Supplier<Tool> compiler,
+      Supplier<Tool> linker,
+      ImmutableList<String> linkerArgs,
       Linker.LinkableDepType linkStyle) {
     super(
         params,
@@ -55,6 +58,8 @@ public class RustLibrary extends RustCompile implements RustLinkable {
             params.getBuildTarget(),
             "%s/lib" + crate + ".rlib"),
         compiler,
+        linker,
+        linkerArgs,
         linkStyle);
   }
 

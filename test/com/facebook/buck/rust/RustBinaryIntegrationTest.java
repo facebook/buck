@@ -82,6 +82,114 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void rustLinkerOverride() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_binary", tmp);
+    workspace.setUp();
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(Matchers.containsString(
+            "Overridden rust:linker path not found: bad-linker"));
+
+    workspace
+        .runBuckCommand("run", "--config", "rust.linker=bad-linker", "//:xyzzy")
+        .assertFailure();
+  }
+
+  @Test
+  public void rustLinkerCxxArgsOverride() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_binary", tmp);
+    workspace.setUp();
+
+    // rust.linker_args always passed through
+    assertThat(
+        workspace
+            .runBuckCommand(
+                "run",
+                "--config", "rust.linker_args=-lbad-linker-args",
+                "//:xyzzy")
+            .getStderr(),
+        Matchers.containsString("library not found for -lbad-linker-args"));
+  }
+
+  @Test
+  public void rustLinkerRustArgsOverride() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_binary", tmp);
+    workspace.setUp();
+
+    // rust.linker_args always passed through
+    assertThat(
+        workspace
+            .runBuckCommand(
+                "run",
+                "--config", "rust.linker=/usr/bin/gcc",   // need something that works
+                "--config", "rust.linker_args=-lbad-linker-args",
+                "//:xyzzy")
+            .getStderr(),
+        Matchers.containsString("library not found for -lbad-linker-args"));
+  }
+
+  @Test
+  public void cxxLinkerOverride() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_binary", tmp);
+    workspace.setUp();
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(Matchers.containsString("Overridden cxx:ld path not found: bad-linker"));
+
+    workspace
+        .runBuckCommand("run", "--config", "cxx.ld=bad-linker", "//:xyzzy")
+        .assertFailure();
+  }
+
+  @Test
+  public void cxxLinkerArgsOverride() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_binary", tmp);
+    workspace.setUp();
+
+    // default linker gets cxx.ldflags
+    assertThat(
+        workspace.runBuckCommand(
+            "run",
+            "--config", "cxx.ldflags=-lbad-linker-args",
+            "//:xyzzy")
+            .assertFailure().getStderr(),
+        Matchers.containsString("library not found for -lbad-linker-args"));
+  }
+
+  @Test
+  public void cxxLinkerArgsNoOverride() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_binary", tmp);
+    workspace.setUp();
+
+    // cxx.ldflags not used if linker overridden
+    workspace.runBuckCommand(
+        "run",
+        "--config", "rust.linker=/usr/bin/gcc",       // want to set it to something that will work
+        "--config", "cxx.ldflags=-lbad-linker-args",
+        "//:xyzzy")
+        .assertSuccess();
+  }
+
+  @Test
+  public void cxxLinkerDependency() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_binary", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand(
+        "run",
+        "--config", "cxx.ld=//:generated_linker",
+        "//:xyzzy")
+        .assertSuccess();
+  }
+
+  @Test
   public void buildAfterChangeWorks() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "simple_binary", tmp);
