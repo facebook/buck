@@ -895,7 +895,7 @@ public class AppleBinaryIntegrationTest {
         "empty_source_targets",
         tmp);
     workspace.setUp();
-    BuildTarget target = workspace.newBuildTarget("//:real-none2#iphonesimulator-x86_64");
+    BuildTarget target = workspace.newBuildTarget("//:real-none2#macosx-x86_64");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "run",
         target.getFullyQualifiedName());
