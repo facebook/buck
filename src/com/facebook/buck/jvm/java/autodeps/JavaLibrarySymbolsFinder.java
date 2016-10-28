@@ -22,18 +22,12 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.MoreCollectors;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
-import com.google.common.io.Files;
 
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
 
 final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
 
@@ -58,38 +52,18 @@ final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
 
   @Override
   public Symbols extractSymbols() {
-    Set<String> providedSymbols = new HashSet<>();
-    Set<String> requiredSymbols = new HashSet<>();
-    Set<String> exportedSymbols = new HashSet<>();
-
-    for (SourcePath src : srcs) {
+    ImmutableSortedSet<Path> absolutePaths = srcs.stream().map(src -> {
       // This should be enforced by the constructor.
       Preconditions.checkState(src instanceof PathSourcePath);
-
       PathSourcePath sourcePath = (PathSourcePath) src;
       ProjectFilesystem filesystem = sourcePath.getFilesystem();
       Path absolutePath = filesystem.resolve(sourcePath.getRelativePath());
-      String code;
-      try {
-        code = Files.toString(absolutePath.toFile(), Charsets.UTF_8);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-
-      JavaFileParser.JavaFileFeatures features = javaFileParser
-          .extractFeaturesFromJavaCode(code);
-      if (shouldRecordRequiredSymbols) {
-        requiredSymbols.addAll(features.requiredSymbols);
-        exportedSymbols.addAll(features.exportedSymbols);
-      }
-
-      providedSymbols.addAll(features.providedSymbols);
-    }
-
-    return new Symbols(
-        providedSymbols,
-        FluentIterable.from(requiredSymbols).filter(JavaLibrarySymbolsFinder::isNotABuiltInSymbol),
-        FluentIterable.from(exportedSymbols).filter(JavaLibrarySymbolsFinder::isNotABuiltInSymbol));
+      return absolutePath;
+    }).collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+    return SymbolExtractor.extractSymbols(
+        javaFileParser,
+        shouldRecordRequiredSymbols,
+        absolutePaths);
   }
 
   @Override
@@ -97,11 +71,5 @@ final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
     sink
         .setReflectively("srcs", srcs)
         .setReflectively("recordRequires", shouldRecordRequiredSymbols);
-  }
-
-  private static boolean isNotABuiltInSymbol(String symbol) {
-    // We can ignore things in java.*, but not javax.*, unfortunately since sometimes those are
-    // provided by JSRs.
-    return !symbol.startsWith("java.");
   }
 }

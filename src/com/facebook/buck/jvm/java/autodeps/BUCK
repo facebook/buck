@@ -1,4 +1,21 @@
-standard_java_library(
+SYMBOL_EXTRACTOR_SRCS = [
+  'Symbols.java',
+  'SymbolExtractor.java',
+]
+
+java_library(
+  name = 'SymbolExtractor',
+  srcs = SYMBOL_EXTRACTOR_SRCS,
+  autodeps = True,
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+java_library(
+  name = 'autodeps',
+  srcs = glob(['*.java'], excludes = SYMBOL_EXTRACTOR_SRCS),
+  autodeps = True,
   tests = [
     # JavaDepsFinder is verified via AutodepsCommandIntegrationTest.
     #
@@ -11,5 +28,8 @@ standard_java_library(
     # to be responsible for verifying JavaDepsFinder.
     '//test/com/facebook/buck/cli:cli',
     '//test/com/facebook/buck/jvm/java/autodeps:autodeps',
+  ],
+  visibility = [
+    'PUBLIC',
   ],
 )

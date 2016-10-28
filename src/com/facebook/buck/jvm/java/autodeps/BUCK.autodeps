@@ -1,4 +1,12 @@
 {
+  "SymbolExtractor" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/jvm/java:autodeps",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jackson:jackson-databind"
+    ]
+  },
   "autodeps" : {
     "deps" : [
       "//src/com/facebook/buck/android:rules",
@@ -16,6 +24,7 @@
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/java:autodeps",
+      "//src/com/facebook/buck/jvm/java/autodeps:SymbolExtractor",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:interfaces",
