@@ -210,12 +210,32 @@ public class CxxPreprocessAndCompile
             preprocessDelegate.get().getHeaderPathNormalizer() :
             HeaderPathNormalizer.empty(getResolver());
 
+    Optional<SourcePath> prefixHeader =
+        preprocessDelegate.isPresent()
+        ? preprocessDelegate.get().getPrefixHeader()
+        : Optional.<SourcePath>empty();
+
+    final boolean compileUsesPrecompiledHeader =
+        operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO &&
+        precompiledHeader.isPresent();
+
+    final boolean preprocessorUsesPrefixHeader =
+        operation.isPreprocess() &&
+        prefixHeader.isPresent() &&
+        !compileUsesPrecompiledHeader;
+
     Optional<CxxPreprocessAndCompileStep.ToolCommand> preprocessorCommand;
     if (operation.isPreprocess()) {
+      ImmutableList.Builder<String> argsBuilder = ImmutableList.<String>builder();
+      argsBuilder.addAll(
+          preprocessDelegate.get().getArguments(compilerDelegate.getCompilerFlags()));
+      if (preprocessorUsesPrefixHeader) {
+        argsBuilder.add("-include", getResolver().getAbsolutePath(prefixHeader.get()).toString());
+      }
       preprocessorCommand = Optional.of(
           new CxxPreprocessAndCompileStep.ToolCommand(
               preprocessDelegate.get().getCommandPrefix(),
-              preprocessDelegate.get().getArguments(compilerDelegate.getCompilerFlags()),
+              argsBuilder.build(),
               preprocessDelegate.get().getEnvironment(),
               preprocessDelegate.get().getFlagsForColorDiagnostics()));
     } else {
@@ -224,28 +244,31 @@ public class CxxPreprocessAndCompile
 
     Optional<CxxPreprocessAndCompileStep.ToolCommand> compilerCommand;
     if (operation.isCompile()) {
-      ImmutableList<String> arguments;
+      ImmutableList.Builder<String> argsBuilder = ImmutableList.<String>builder();
       if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO) {
-        arguments =
-            compilerDelegate.getArguments(preprocessDelegate.get().getFlagsWithSearchPaths());
-        if (precompiledHeader.isPresent()) {
-          arguments = ImmutableList.<String>builder()
-              .addAll(arguments)
+        argsBuilder.addAll(
+            compilerDelegate.getArguments(preprocessDelegate.get().getFlagsWithSearchPaths()));
+        if (compileUsesPrecompiledHeader) {
+          argsBuilder
               .add(
                   "-include-pch",
                   getResolver().getAbsolutePath(precompiledHeader.get().getSourcePath()).toString())
               // Force clang to accept pch even if mtime of its input changes, since buck tracks
               // input contents, this should be safe.
-              .add("-Wp,-fno-validate-pch")
-              .build();
+              .add("-Wp,-fno-validate-pch");
+        } else if (preprocessorUsesPrefixHeader) {
+          // Since operation is COMPILE_MUNGE_DEBUGINFO, which happens to be a combo
+          // preprocess+compile, apply this prefix header preprocessor flag here to pass it along
+          // compiler flags.  (COMPILE_MUNGE_DEBUGINFO ignores preprocessor flags.)
+          argsBuilder.add("-include", getResolver().getAbsolutePath(prefixHeader.get()).toString());
         }
       } else {
-        arguments = compilerDelegate.getArguments(CxxToolFlags.of());
+        argsBuilder.addAll(compilerDelegate.getArguments(CxxToolFlags.of()));
       }
       compilerCommand = Optional.of(
           new CxxPreprocessAndCompileStep.ToolCommand(
               compilerDelegate.getCommandPrefix(),
-              arguments,
+              argsBuilder.build(),
               compilerDelegate.getEnvironment(),
               compilerDelegate.getFlagsForColorDiagnostics()));
     } else {
