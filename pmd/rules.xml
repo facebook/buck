@@ -181,4 +181,27 @@ interface Bar {
           "/>
     </properties>
   </rule>
+  <rule name="BlacklistedJavaUtilLoggerUsage"
+        message="Use com.facebook.buck.log.Logger instead of java.util.logging.Logger"
+        class="com.liveramp.pmd_extensions.BlacklistClassUsages">
+    <description>
+      Buck uses a custom Logger which does custom formatting and maybe other things.
+      java.util.logging.Logger bypasses this.
+    </description>
+    <priority>1</priority>
+    <properties>
+      <property name="BlacklistClassUsages.BlacklistedClasses" value="java.util.logging.Logger" />
+    </properties>
+    <example>
+      <![CDATA[
+// OK
+import com.facebook.buck.log.Logger;
+private static final Logger LOG = Logger.getLogger(Main.class);
+
+// Bad
+import java.util.logging.Logger;
+private static final Logger LOG = Logger.getLogger(Main.class.getName());
+      ]]>
+    </example>
+  </rule>
 </ruleset>

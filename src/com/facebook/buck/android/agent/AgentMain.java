@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.logging.Logger; // NOPMD
 
 /**
  * Main class for an agent that runs on an Android device to aid app installation.

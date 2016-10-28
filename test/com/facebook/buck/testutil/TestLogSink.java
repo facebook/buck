@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
-import java.util.logging.Logger;
+import java.util.logging.Logger; // NOPMD
 
 /**
  * A LogSink that buffers log messages written to a particular logger.
