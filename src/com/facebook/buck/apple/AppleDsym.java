@@ -32,19 +32,13 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Optional;
 
 /**
  * Creates dSYM bundle for the given _unstripped_ binary.
@@ -144,38 +138,10 @@ public class AppleDsym
   @Override
   public ImmutableList<Step> getPostBuildSteps() {
     return ImmutableList.of(
-        new Step() {
-          @Override
-          public StepExecutionResult execute(ExecutionContext context)
-              throws IOException, InterruptedException {
-            ImmutableList<String> lldbCommandPrefix = lldb.getCommandPrefix(getResolver());
-            ProcessExecutorParams params = ProcessExecutorParams
-                .builder()
-                .addCommand(lldbCommandPrefix.toArray(new String[lldbCommandPrefix.size()]))
-                .build();
-            return StepExecutionResult.of(context.getProcessExecutor().launchAndExecute(
-                params,
-                ImmutableSet.of(),
-                Optional.of(
-                    String.format("target create %s\ntarget symbols add %s",
-                        getResolver().getAbsolutePath(unstrippedBinarySourcePath),
-                        dsymOutputPath)),
-                Optional.empty(),
-                Optional.empty()));
-          }
-
-          @Override
-          public String getShortName() {
-            return "register debug symbols";
-          }
-
-          @Override
-          public String getDescription(ExecutionContext context) {
-            return String.format(
-                "register debug symbols for binary '%s': '%s'",
-                getResolver().getRelativePath(unstrippedBinarySourcePath),
-                dsymOutputPath);
-          }
-        });
+        new RegisterDebugSymbolsStep(
+            unstrippedBinarySourcePath,
+            lldb,
+            getResolver(),
+            dsymOutputPath));
   }
 }

@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
@@ -31,20 +31,20 @@ import java.util.Optional;
 
 class RegisterDebugSymbolsStep implements Step {
 
-  private final BuildRule binaryBuildRule;
+  private final SourcePath binary;
   private final Tool lldb;
   private final SourcePathResolver resolver;
-  private final Path location;
+  private final Path dsymPath;
 
   public RegisterDebugSymbolsStep(
-      BuildRule binaryBuildRule,
+      SourcePath binary,
       Tool lldb,
       SourcePathResolver resolver,
-      Path location) {
-    this.binaryBuildRule = binaryBuildRule;
+      Path dsymPath) {
+    this.binary = binary;
     this.lldb = lldb;
     this.resolver = resolver;
-    this.location = location;
+    this.dsymPath = dsymPath;
   }
 
   @Override
@@ -60,8 +60,8 @@ class RegisterDebugSymbolsStep implements Step {
         ImmutableSet.of(),
         Optional.of(
             String.format("target create %s\ntarget symbols add %s",
-                binaryBuildRule.getPathToOutput(),
-                location)),
+                resolver.getAbsolutePath(binary),
+                dsymPath)),
         Optional.empty(),
         Optional.empty()));
   }
@@ -75,7 +75,7 @@ class RegisterDebugSymbolsStep implements Step {
   public String getDescription(ExecutionContext context) {
     return String.format(
         "register debug symbols for binary '%s': '%s'",
-        binaryBuildRule.getPathToOutput(),
-        location);
+        resolver.getRelativePath(binary),
+        dsymPath);
   }
 }
