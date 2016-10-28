@@ -98,13 +98,26 @@ java_binary(
   ],
 )
 
+TEST_SRC = ['tests/unit/**/*Test.java']
+
+java_library(
+  name = 'tests-lib',
+  srcs = glob(['tests/unit/**/*.java'], excludes = TEST_SRC),
+  target = '1.8',
+  deps = [
+    ':ideabuck-lib',
+    '//third-party/java/guava:guava',
+  ],
+)
+
 java_test(
   name = 'tests',
-  srcs = glob(['tests/unit/**/*.java']),
+  srcs = glob(TEST_SRC),
   target = '1.8',
   deps = [
     ':ideabuck-lib',
     ':resources',
+    ':tests-lib',
     '//src/com/facebook/buck/event/external:external_lib',
     '//third-party/java/easymock:easymock',
     '//third-party/java/guava:guava',
