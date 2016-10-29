@@ -327,11 +327,11 @@ class BuckTest(unittest.TestCase):
 
         build_file_processor = self.create_build_file_processor(
             includes=[build_defs.name])
-        build_file_processor.install_builtins(__builtin__.__dict__)
-        self.assertRaises(
-            ValueError,
-            build_file_processor.process,
-            build_file.root, build_file.prefix, build_file.path, set())
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            self.assertRaises(
+                ValueError,
+                build_file_processor.process,
+                build_file.root, build_file.prefix, build_file.path, set())
 
     def test_watchman_glob_failure_falls_back_to_regular_glob_and_adds_diagnostic(self):
         class FakeWatchmanError(Exception):
@@ -363,10 +363,10 @@ class BuckTest(unittest.TestCase):
         java_file = ProjectFile(self.project_root, path='Foo.java', contents=())
         self.write_files(build_file, java_file)
         build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
-        build_file_processor.install_builtins(__builtin__.__dict__)
         diagnostics = set()
-        rules = build_file_processor.process(build_file.root, build_file.prefix, build_file.path,
-                                             diagnostics)
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            rules = build_file_processor.process(
+                build_file.root, build_file.prefix, build_file.path, diagnostics)
         self.assertTrue(self.watchman_client.query_invoked)
         self.assertEqual(['Foo.java'], rules[0]['srcs'])
         self.assertEqual(
@@ -398,10 +398,10 @@ class BuckTest(unittest.TestCase):
         java_file = ProjectFile(self.project_root, path='Foo.java', contents=())
         self.write_files(build_file, java_file)
         build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
-        build_file_processor.install_builtins(__builtin__.__dict__)
         diagnostics = set()
-        rules = build_file_processor.process(build_file.root, build_file.prefix, build_file.path,
-                                             diagnostics)
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            rules = build_file_processor.process(
+                build_file.root, build_file.prefix, build_file.path, diagnostics)
         self.assertEqual(['Foo.java'], rules[0]['srcs'])
         self.assertEqual(
             set([Diagnostic(
@@ -469,8 +469,12 @@ class BuckTest(unittest.TestCase):
             ))
         self.write_files(build_file)
         build_file_processor = self.create_build_file_processor()
-        build_file_processor.install_builtins(__builtin__.__dict__)
-        build_file_processor.process(build_file.root, build_file.prefix, build_file.path, set())
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            build_file_processor.process(
+                build_file.root,
+                build_file.prefix,
+                build_file.path,
+                set())
 
     def test_enabled_sandboxing_blocks_import(self):
         self.enable_build_file_sandboxing = True
@@ -482,11 +486,11 @@ class BuckTest(unittest.TestCase):
             ))
         self.write_files(build_file)
         build_file_processor = self.create_build_file_processor()
-        build_file_processor.install_builtins(__builtin__.__dict__)
-        self.assertRaises(
-            ImportError,
-            build_file_processor.process,
-            build_file.root, build_file.prefix, build_file.path, set())
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            self.assertRaises(
+                ImportError,
+                build_file_processor.process,
+                build_file.root, build_file.prefix, build_file.path, set())
 
     def test_import_whitelist(self):
         """
@@ -524,8 +528,12 @@ class BuckTest(unittest.TestCase):
             ))
         self.write_files(build_file)
         build_file_processor = self.create_build_file_processor()
-        build_file_processor.install_builtins(__builtin__.__dict__)
-        build_file_processor.process(build_file.root, build_file.prefix, build_file.path, set())
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            build_file_processor.process(
+                build_file.root,
+                build_file.prefix,
+                build_file.path,
+                set())
 
     def test_modules_are_not_copied_unless_specified(self):
         """
@@ -737,7 +745,6 @@ class BuckTest(unittest.TestCase):
 
     def test_bser_encoding_failure(self):
         build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
-        build_file_processor.install_builtins(__builtin__.__dict__)
         fake_stdout = StringIO.StringIO()
         build_file = ProjectFile(
             self.project_root,
@@ -749,14 +756,15 @@ class BuckTest(unittest.TestCase):
                 ')'
             ))
         self.write_file(build_file)
-        process_with_diagnostics(
-            {
-                'buildFile': self.build_file_name,
-                'watchRoot': '',
-                'projectPrefix': self.project_root,
-            },
-            build_file_processor,
-            fake_stdout)
+        with build_file_processor.with_builtins(__builtin__.__dict__):
+            process_with_diagnostics(
+                {
+                    'buildFile': self.build_file_name,
+                    'watchRoot': '',
+                    'projectPrefix': self.project_root,
+                },
+                build_file_processor,
+                fake_stdout)
         result = fake_stdout.getvalue()
         decoded_result = bser.loads(result)
         self.assertEqual(

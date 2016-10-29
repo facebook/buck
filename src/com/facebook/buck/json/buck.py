@@ -8,7 +8,7 @@ import contextlib
 from collections import namedtuple
 from pathlib import _Accessor, Path, PureWindowsPath, PurePath, PosixPath
 from pywatchman import bser
-from contextlib import contextmanager
+from contextlib import contextmanager, nested
 import copy
 import StringIO
 import cProfile
@@ -858,13 +858,27 @@ class BuildFileProcessor(object):
         for function in self._functions.itervalues():
             function.build_env = build_env
 
-    def install_builtins(self, namespace):
+    def _install_builtins(self, namespace):
         """
         Installs the build functions, by their name, into the given namespace.
         """
 
         for name, function in self._functions.iteritems():
             namespace[name] = function.invoke
+
+    @contextlib.contextmanager
+    def with_builtins(self, namespace):
+        """
+        Installs the build functions for the duration of a `with` block.
+        """
+
+        original_namespace = namespace.copy()
+        self._install_builtins(namespace)
+        try:
+            yield
+        finally:
+            namespace.clear()
+            namespace.update(original_namespace)
 
     def _get_include_path(self, name):
         """Resolve the given include def name to a full path."""
@@ -1832,8 +1846,6 @@ def main():
         configs=configs,
         ignore_paths=ignore_paths)
 
-    buildFileProcessor.install_builtins(__builtin__.__dict__)
-
     # While processing, we'll write exceptions as diagnostic messages
     # to the parent then re-raise them to crash the process. While
     # doing so, we don't want Python's default unhandled exception
@@ -1843,8 +1855,11 @@ def main():
         orig_excepthook = sys.excepthook
         sys.excepthook = silent_excepthook
 
-    # Process the build files with the env var interceptors installed.
-    with buildFileProcessor.with_env_interceptors():
+    # Process the build files with the env var interceptors and builtins
+    # installed.
+    with nested(
+            buildFileProcessor.with_env_interceptors(),
+            buildFileProcessor.with_builtins(__builtin__.__dict__)):
 
         for build_file in args:
             query = {
