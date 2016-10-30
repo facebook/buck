@@ -101,15 +101,6 @@ public interface VersionControlCmdLineInterface {
 
   /**
    *
-   * @return a list of all the untracked of the current revision
-   * @throws VersionControlCommandFailedException
-   * @throws InterruptedException
-   */
-  ImmutableSet<String> untrackedFiles()
-      throws VersionControlCommandFailedException, InterruptedException;
-
-  /**
-   *
    * @param revisionId
    * @return Unix timestamp of given revisionId (in seconds)
    * @throws VersionControlCommandFailedException

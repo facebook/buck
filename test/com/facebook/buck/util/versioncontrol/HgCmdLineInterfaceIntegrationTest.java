@@ -146,7 +146,9 @@ public class HgCmdLineInterfaceIntegrationTest {
   @Test
   public void whenWorkingDirectoryChangedThenHasWorkingDirectoryChangesReturnsTrue()
       throws VersionControlCommandFailedException, InterruptedException {
-    assertThat(repoThreeCmdLine.changedFiles("."), hasSize(Matchers.greaterThan(0)));
+    assertEquals(
+        ImmutableSet.of("A tracked_change", "? local_change"),
+        repoThreeCmdLine.changedFiles("."));
   }
 
   @Test
@@ -180,16 +182,22 @@ public class HgCmdLineInterfaceIntegrationTest {
   @Test
   public void testChangedFilesFromHead()
       throws VersionControlCommandFailedException, InterruptedException {
-    ImmutableSet<String> changedFiles = repoThreeCmdLine.changedFiles(".");
-    assertThat(changedFiles, Matchers.contains("? local_change"));
+    assertEquals(
+        ImmutableSet.of("A tracked_change", "? local_change"),
+        repoThreeCmdLine.changedFiles("."));
   }
 
   @Test
   public void testChangedFilesFromCommonAncestor()
       throws VersionControlCommandFailedException, InterruptedException {
     ImmutableSet<String> changedFiles = repoThreeCmdLine.changedFiles("ancestor(., master3)");
-    assertThat(changedFiles,
-        Matchers.containsInAnyOrder("A change3", "A change3-2", "? local_change"));
+    assertThat(
+        changedFiles,
+        Matchers.containsInAnyOrder(
+            "A tracked_change",
+            "A change3",
+            "A change3-2",
+            "? local_change"));
   }
 
   @Test
@@ -235,12 +243,6 @@ public class HgCmdLineInterfaceIntegrationTest {
             "file mode 100644diff --git a/change3-2 b/change3-2new file mode 100644diff " +
             "--git a/file3 b/file3new file mode 100644",
         repoThreeCmdLine.diffBetweenRevisions("2911b3", "dee670"));
-  }
-
-  @Test
-  public void testUntrackedFiles()
-      throws VersionControlCommandFailedException, InterruptedException {
-    assertEquals(ImmutableSet.of("? local_change"), repoThreeCmdLine.untrackedFiles());
   }
 
   @Test

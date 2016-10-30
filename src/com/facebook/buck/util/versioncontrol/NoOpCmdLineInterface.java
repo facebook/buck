@@ -81,12 +81,6 @@ public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   @Override
-  public ImmutableSet<String> untrackedFiles()
-      throws VersionControlCommandFailedException, InterruptedException {
-    return ImmutableSet.of();
-  }
-
-  @Override
   public ImmutableMap<String, String> bookmarksRevisionsId(ImmutableSet<String> bookmarks)
     throws InterruptedException, VersionControlCommandFailedException {
     return ImmutableMap.of();

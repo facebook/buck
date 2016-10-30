@@ -71,11 +71,9 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   private static final ImmutableList<String> REVISION_ID_FOR_NAME_COMMAND_TEMPLATE =
       ImmutableList.of(HG_CMD_TEMPLATE, "log", "-r", NAME_TEMPLATE, "--template", "{node|short}");
 
+  // -mardu: Track modified, added, deleted, unknown
   private static final ImmutableList<String> CHANGED_FILES_COMMAND =
-      ImmutableList.of(HG_CMD_TEMPLATE, "status", "-0", "--rev", REVISION_ID_TEMPLATE);
-
-  private static final ImmutableList<String> UNTRACKED_FILES_COMMAND =
-      ImmutableList.of(HG_CMD_TEMPLATE, "status", "-0", "--unknown");
+      ImmutableList.of(HG_CMD_TEMPLATE, "status", "-mardu", "-0", "--rev", REVISION_ID_TEMPLATE);
 
   private static final ImmutableList<String> COMMON_ANCESTOR_COMMAND_TEMPLATE =
       ImmutableList.of(
@@ -200,14 +198,6 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
         REVISION_ID_TEMPLATE,
         fromRevisionId));
     return FluentIterable.of(hgChangedFilesString.split("\0"))
-        .filter(input -> !Strings.isNullOrEmpty(input))
-        .toSet();
-  }
-
-  @Override
-  public ImmutableSet<String> untrackedFiles()
-      throws VersionControlCommandFailedException, InterruptedException {
-    return FluentIterable.of(executeCommand(UNTRACKED_FILES_COMMAND).split("\0"))
         .filter(input -> !Strings.isNullOrEmpty(input))
         .toSet();
   }
