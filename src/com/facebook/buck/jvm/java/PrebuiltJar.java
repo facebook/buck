@@ -242,17 +242,6 @@ public class PrebuiltJar extends AbstractBuildRule
         resolvedBinaryJar,
         copiedBinaryJar);
 
-    if (!MorePaths.getFileExtension(copiedBinaryJar.getFileName())
-        .equals(MorePaths.getFileExtension(resolvedBinaryJar))) {
-      context.getEventBus().post(
-          ConsoleEvent.warning("Assuming %s is a JAR and renaming to %s in %s. " +
-              "Change the extension of the binary_jar to '.jar' to remove this warning.",
-              resolvedBinaryJar.getFileName(),
-              copiedBinaryJar.getFileName(),
-              getBuildTarget().getFullyQualifiedName()));
-    }
-
-
     if (getResolver().getFilesystem(binaryJar).isDirectory(resolvedBinaryJar)) {
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), copiedBinaryJar));
       steps.add(CopyStep.forDirectory(
@@ -261,6 +250,16 @@ public class PrebuiltJar extends AbstractBuildRule
           copiedBinaryJar,
           CopyStep.DirectoryMode.CONTENTS_ONLY));
     } else {
+      if (!MorePaths.getFileExtension(copiedBinaryJar.getFileName())
+          .equals(MorePaths.getFileExtension(resolvedBinaryJar))) {
+        context.getEventBus().post(
+            ConsoleEvent.warning("Assuming %s is a JAR and renaming to %s in %s. " +
+                "Change the extension of the binary_jar to '.jar' to remove this warning.",
+                resolvedBinaryJar.getFileName(),
+                copiedBinaryJar.getFileName(),
+                getBuildTarget().getFullyQualifiedName()));
+      }
+
       steps.add(new MkdirStep(getProjectFilesystem(), copiedBinaryJar.getParent()));
       steps.add(CopyStep.forFile(getProjectFilesystem(), resolvedBinaryJar, copiedBinaryJar));
     }
