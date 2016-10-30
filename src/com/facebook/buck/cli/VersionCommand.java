@@ -61,6 +61,11 @@ public class VersionCommand implements Command {
   }
 
   @Override
+  public boolean isSourceControlStatsGatheringEnabled() {
+    return false;
+  }
+
+  @Override
   public CellConfig getConfigOverrides() {
     return CellConfig.of();
   }

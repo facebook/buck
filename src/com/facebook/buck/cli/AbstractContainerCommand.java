@@ -98,4 +98,10 @@ public abstract class AbstractContainerCommand implements Command {
         ? cmd.get().getLogConfig()
         : LogConfigSetup.DEFAULT_SETUP;
   }
+
+  @Override
+  public boolean isSourceControlStatsGatheringEnabled() {
+    return false;
+  }
+
 }

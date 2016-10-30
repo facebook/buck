@@ -33,6 +33,11 @@ public interface Command {
    */
   boolean isReadOnly();
 
+  /**
+   * @return whether we should gather source control stats while executing the command.
+   */
+  boolean isSourceControlStatsGatheringEnabled();
+
   String getShortDescription();
 
   CellConfig getConfigOverrides();

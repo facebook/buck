@@ -704,6 +704,11 @@ public class BuildCommand extends AbstractCommand {
     return false;
   }
 
+  @Override
+  public boolean isSourceControlStatsGatheringEnabled() {
+    return true;
+  }
+
   Build getBuild() {
     Preconditions.checkNotNull(lastBuild);
     return lastBuild;

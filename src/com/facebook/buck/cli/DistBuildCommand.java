@@ -67,6 +67,11 @@ public class DistBuildCommand extends AbstractContainerCommand {
   }
 
   @Override
+  public boolean isSourceControlStatsGatheringEnabled() {
+    return true;
+  }
+
+  @Override
   public String getShortDescription() {
     return "attaches to a distributed build (experimental)";
   }
