@@ -58,7 +58,7 @@ public class HgCmdLineInterfaceIntegrationTest {
   private static final String MASTER_THREE_ID = "adf7a0";
 
   private static final String HG_REPOS_ZIP = "hg_repos.zip";
-  private static final String REPOS_DIR = "repos";
+  private static final String REPOS_DIR = "hg_repos";
   private static final String REPO_TWO_DIR = "hg_repo_two";
   private static final String REPO_THREE_DIR = "hg_repo_three";
   private static final String REPO_WITH_SUB_DIR = "hg_repo_with_subdir";
@@ -262,11 +262,15 @@ public class HgCmdLineInterfaceIntegrationTest {
   @Test
   public void testTrackedBookmarksOffRevisionId()
       throws InterruptedException, VersionControlCommandFailedException {
-    ImmutableMap<String, String> bookmarks = ImmutableMap.of("master2", "b1fd7e");
+    ImmutableMap<String, String> bookmarks = ImmutableMap.of(
+        "branch_from_master2",
+        "2911b3cab6b24374a3649ebb96b0e53324e9c02e");
     assertEquals(
         bookmarks,
         repoThreeCmdLine.bookmarksRevisionsId(bookmarks.keySet()));
-    bookmarks = ImmutableMap.of("master3", "d1");
+    bookmarks = ImmutableMap.of(
+        "branch_from_master3",
+        "dee6702e3d5e38a86b27b159a8a0a34205e2065d");
     assertEquals(
         bookmarks,
         repoThreeCmdLine.bookmarksRevisionsId(bookmarks.keySet()));
