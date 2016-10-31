@@ -48,6 +48,13 @@ public class JavaBuckConfig {
         .build();
   }
 
+  public JavaOptions getDefaultJavaOptionsForTests() {
+    return JavaOptions
+        .builder()
+        .setJavaPath(getPathToExecutable("java_for_tests"))
+        .build();
+  }
+
   public JavacOptions getDefaultJavacOptions() {
     Optional<String> sourceLevel = delegate.getValue("java", "source_level");
     Optional<String> targetLevel = delegate.getValue("java", "target_level");

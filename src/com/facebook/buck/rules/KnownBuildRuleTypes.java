@@ -522,6 +522,7 @@ public class KnownBuildRuleTypes {
     JavaBuckConfig javaConfig = new JavaBuckConfig(config);
     JavacOptions defaultJavacOptions = javaConfig.getDefaultJavacOptions();
     JavaOptions defaultJavaOptions = javaConfig.getDefaultJavaOptions();
+    JavaOptions defaultJavaOptionsForTests = javaConfig.getDefaultJavaOptionsForTests();
 
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(config);
 
@@ -702,7 +703,7 @@ public class KnownBuildRuleTypes {
     builder.register(
         new GroovyTestDescription(
             groovyBuckConfig,
-            defaultJavaOptions,
+            defaultJavaOptionsForTests,
             defaultJavacOptions,
             defaultTestRuleTimeoutMs)
     );
@@ -721,7 +722,7 @@ public class KnownBuildRuleTypes {
     builder.register(new JavaLibraryDescription(defaultJavacOptions));
     builder.register(
         new JavaTestDescription(
-            defaultJavaOptions,
+            defaultJavaOptionsForTests,
             defaultJavacOptions,
             defaultTestRuleTimeoutMs,
             defaultCxxPlatform));
@@ -731,7 +732,7 @@ public class KnownBuildRuleTypes {
     builder.register(
         new KotlinTestDescription(
             kotlinBuckConfig,
-            defaultJavaOptions,
+            defaultJavaOptionsForTests,
             defaultJavacOptions,
             defaultTestRuleTimeoutMs));
     builder.register(
@@ -767,7 +768,7 @@ public class KnownBuildRuleTypes {
             cxxPlatforms));
     builder.register(new RemoteFileDescription(downloader));
     builder.register(new RobolectricTestDescription(
-            defaultJavaOptions,
+            defaultJavaOptionsForTests,
             defaultJavacOptions,
             defaultTestRuleTimeoutMs,
             defaultCxxPlatform));
@@ -777,7 +778,7 @@ public class KnownBuildRuleTypes {
     builder.register(new ScalaLibraryDescription(scalaConfig));
     builder.register(new ScalaTestDescription(
         scalaConfig,
-        defaultJavaOptions,
+        defaultJavaOptionsForTests,
         defaultTestRuleTimeoutMs,
         defaultCxxPlatform));
     builder.register(new ShBinaryDescription());

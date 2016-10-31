@@ -104,6 +104,29 @@ public class JavaBuckConfigTest {
   }
 
   @Test
+  public void whenJavaForTestsIsNotSetTheAbsentIsReturned() throws IOException {
+    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
+    JavaOptions options = config.getDefaultJavaOptionsForTests();
+    assertEquals(Optional.empty(), options.getJavaPath());
+  }
+
+  @Test
+  public void whenJavaForTestsExistsAndIsExecutableThenItIsReturned() throws IOException {
+    Path java = temporaryFolder.newExecutableFile();
+    String javaCommand = java.toString();
+    JavaBuckConfig config = new JavaBuckConfig(
+        FakeBuckConfig
+            .builder()
+            .setFilesystem(defaultFilesystem)
+            .setSections(ImmutableMap.of("tools", ImmutableMap.of("java_for_tests", javaCommand)))
+            .build());
+
+    JavaOptions options = config.getDefaultJavaOptionsForTests();
+    assertEquals(Optional.of(java), options.getJavaPath());
+    assertEquals(javaCommand, options.getJavaRuntimeLauncher().getCommand());
+  }
+
+  @Test
   public void whenJavacIsNotSetThenAbsentIsReturned() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
     assertEquals(Optional.empty(), config.getJavacPath());
