@@ -100,12 +100,6 @@ abstract class AbstractPreprocessorFlags {
         sanitizer.sanitizeFlags(getOtherFlags().getRuleFlags()));
   }
 
-  /**
-   * Build flags based on all the settings in (members of) this object, with the exception
-   * of prefix header.  The reason is that later in the pipeline, prefix header include flags
-   * are only conditionally added -- if there's a corresponding precompiled header being used,
-   * then do not include those flags.
-   */
   public CxxToolFlags toToolFlags(
       SourcePathResolver resolver,
       Function<Path, Path> pathShortener,
@@ -113,6 +107,12 @@ abstract class AbstractPreprocessorFlags {
       Preprocessor preprocessor) {
     ExplicitCxxToolFlags.Builder builder = CxxToolFlags.explicitBuilder();
     ExplicitCxxToolFlags.addCxxToolFlags(builder, getOtherFlags());
+    builder.addAllRuleFlags(
+        MoreIterables.zipAndConcat(
+            Iterables.cycle("-include"),
+            FluentIterable.from(OptionalCompat.asSet(getPrefixHeader()))
+                .transform(resolver::getAbsolutePath)
+                .transform(Object::toString)));
     builder.addAllRuleFlags(
         CxxHeaders.getArgs(getIncludes(), resolver, Optional.of(pathShortener), preprocessor));
     builder.addAllRuleFlags(

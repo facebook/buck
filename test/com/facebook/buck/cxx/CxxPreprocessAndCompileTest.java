@@ -46,7 +46,6 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Strings;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -371,7 +370,7 @@ public class CxxPreprocessAndCompileTest {
   }
 
   @Test
-  public void usesCorrectCommandForPreprocessWithNonPCHPrefixHeader() {
+  public void usesCorrectCommandForPreprocess() {
 
     // Setup some dummy values for inputs to the CxxPreprocessAndCompile.
     SourcePathResolver pathResolver = new SourcePathResolver(
@@ -386,7 +385,7 @@ public class CxxPreprocessAndCompileTest {
         .build();
     Path output = Paths.get("test.ii");
     Path input = Paths.get("test.cpp");
-    Path prefixHeader = Paths.get("prefix.h");
+    Path prefixHeader = Paths.get("prefix.pch");
     Path scratchDir = Paths.get("scratch");
 
     CxxPreprocessAndCompile buildRule =
@@ -433,149 +432,6 @@ public class CxxPreprocessAndCompileTest {
     ImmutableList<String> actualPreprocessCommand =
         buildRule.makeMainStep(scratchDir, false).getCommand();
     assertEquals(expectedPreprocessCommand, actualPreprocessCommand);
-  }
-
-  @Test
-  public void usesCorrectCombinedCommandsWithoutPrecompiledHeader() {
-
-    // Setup some dummy values for inputs to the CxxPreprocessAndCompile.
-    SourcePathResolver pathResolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    CxxToolFlags preprocessorFlags = CxxToolFlags.explicitBuilder()
-        .addPlatformFlags("-Dtest=blah")
-        .addRuleFlags("-Dfoo=bar")
-        .build();
-    Path output = Paths.get("test.o");
-    Path input = Paths.get("test.cpp");
-    Path prefixHeader = Paths.get("prefix.h");
-    Path scratchDir = Paths.get("scratch");
-
-    CxxPreprocessAndCompile buildRule =
-        CxxPreprocessAndCompile.preprocessAndCompile(
-            params,
-            pathResolver,
-            new PreprocessorDelegate(
-                pathResolver,
-                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
-                DEFAULT_WORKING_DIR,
-                DEFAULT_PREPROCESSOR,
-                PreprocessorFlags.builder()
-                    .setOtherFlags(preprocessorFlags)
-                    .setPrefixHeader(new FakeSourcePath(filesystem, prefixHeader.toString()))
-                    .build(),
-                DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
-                ImmutableList.<CxxHeaders>of()),
-            new CompilerDelegate(
-                pathResolver,
-                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                DEFAULT_COMPILER,
-                DEFAULT_TOOL_FLAGS),
-            output,
-            new FakeSourcePath(input.toString()),
-            DEFAULT_INPUT_TYPE,
-            Optional.<PrecompiledHeaderReference>empty(),
-            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-            CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
-            // (PCH could only possibly work with COMBINED.)
-            CxxPreprocessMode.COMBINED);
-
-    // Verify it uses the expected command.
-    ImmutableList<String> expectedCombinedCommand = ImmutableList.<String>builder()
-        .add("compiler")
-        .add("-Dtest=blah")
-        .add("-fsanitize=address")
-        .add("-Dfoo=bar")
-        .add("-O3")
-        .add("-include", filesystem.resolve(prefixHeader).toString())
-        .add("-x", "c++")
-        .add("-c")
-        .add("-MD")
-        .add("-MF", filesystem.resolve(scratchDir).resolve("dep.tmp").toString())
-        .add(input.toString())
-        .add("-o", output.toString())
-        .build();
-    ImmutableList<String> actualCombinedCommand =
-        buildRule.makeMainStep(scratchDir, false).getCommand();
-    assertEquals(expectedCombinedCommand, actualCombinedCommand);
-  }
-
-  @Test
-  public void usesCorrectCombinedCommandsWithPrecompiledHeader() {
-
-    // Setup some dummy values for inputs to the CxxPreprocessAndCompile.
-    SourcePathResolver pathResolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    CxxToolFlags preprocessorFlags = CxxToolFlags.explicitBuilder()
-        .addPlatformFlags("-Dtest=blah")
-        .addRuleFlags("-Dfoo=bar")
-        .build();
-    Path output = Paths.get("test.o");
-    Path input = Paths.get("test.cpp");
-    Path prefixHeader = Paths.get("prefix.h");
-    Path scratchDir = Paths.get("scratch");
-
-    PrecompiledHeaderReference pchReference = PrecompiledHeaderReference.of(
-        new FakeSourcePath(prefixHeader.toString() + ".gch"),
-        Suppliers.ofInstance(ImmutableList.of("dummy-dep-line")));
-
-    CxxPreprocessAndCompile buildRule =
-        CxxPreprocessAndCompile.preprocessAndCompile(
-            params,
-            pathResolver,
-            new PreprocessorDelegate(
-                pathResolver,
-                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
-                DEFAULT_WORKING_DIR,
-                DEFAULT_PREPROCESSOR,
-                PreprocessorFlags.builder()
-                    .setOtherFlags(preprocessorFlags)
-                    .setPrefixHeader(new FakeSourcePath(filesystem, prefixHeader.toString()))
-                    .build(),
-                DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
-                ImmutableList.<CxxHeaders>of()),
-            new CompilerDelegate(
-                pathResolver,
-                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                DEFAULT_COMPILER,
-                DEFAULT_TOOL_FLAGS),
-            output,
-            new FakeSourcePath(input.toString()),
-            DEFAULT_INPUT_TYPE,
-            Optional.of(pchReference),
-            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-            CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
-            // (PCH could only possibly work with COMBINED.)
-            CxxPreprocessMode.COMBINED);
-
-    // Verify it uses the expected command.
-    ImmutableList<String> expectedCombinedCommand = ImmutableList.<String>builder()
-        .add("compiler")
-        .add("-Dtest=blah")
-        .add("-fsanitize=address")
-        .add("-Dfoo=bar")
-        .add("-O3")
-        .add("-include-pch", filesystem.resolve(prefixHeader).toString() + ".gch")
-        .add("-Wp,-fno-validate-pch")
-        .add("-x", "c++")
-        .add("-c")
-        .add("-MD")
-        .add("-MF", filesystem.resolve(scratchDir).resolve("dep.tmp").toString())
-        .add(input.toString())
-        .add("-o", output.toString())
-        .build();
-    ImmutableList<String> actualCombinedCommand =
-        buildRule.makeMainStep(scratchDir, false).getCommand();
-    assertEquals(expectedCombinedCommand, actualCombinedCommand);
   }
 
   @Test
