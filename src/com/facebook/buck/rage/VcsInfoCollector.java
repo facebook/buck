@@ -52,29 +52,27 @@ public class VcsInfoCollector {
   public SourceControlInfo gatherScmInformation()
       throws InterruptedException, VersionControlCommandFailedException {
     String currentRevisionId = vcCmdLineInterface.currentRevisionId();
-    ImmutableSet<String> changedFiles = vcCmdLineInterface.changedFiles(".");
     ImmutableMap<String, String> bookmarksRevisionIds =
         vcCmdLineInterface.bookmarksRevisionsId(TRACKED_BOOKMARKS);
+    String baseRevisionId = vcCmdLineInterface.commonAncestor(
+        currentRevisionId,
+        bookmarksRevisionIds.get("remote/master"));
+    ImmutableSet<String> changedFiles = vcCmdLineInterface.changedFiles(baseRevisionId);
 
-    ImmutableSet.Builder<String> baseBookmarksBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<String> baseBookmarks = ImmutableSet.builder();
     for (Map.Entry<String, String> bookmark : bookmarksRevisionIds.entrySet()) {
-      if (bookmark.getValue().startsWith(currentRevisionId)) {
-        baseBookmarksBuilder.add(bookmark.getKey());
+      if (bookmark.getValue().startsWith(baseRevisionId)) {
+        baseBookmarks.add(bookmark.getKey());
       }
     }
-    ImmutableSet<String> baseBookmarks = baseBookmarksBuilder.build();
-    Optional<String> baseRevisionId = Optional.empty();
-    Optional<String> diff = Optional.empty();
-    if (!baseBookmarks.isEmpty()) {
-      baseRevisionId = Optional.of(bookmarksRevisionIds.get(baseBookmarks.iterator().next()));
-      diff = Optional.of(
-          vcCmdLineInterface.diffBetweenRevisions(currentRevisionId, baseRevisionId.get()));
-    }
+
+    Optional<String> diff = Optional.of(
+        vcCmdLineInterface.diffBetweenRevisions(currentRevisionId, baseRevisionId));
 
     return SourceControlInfo.builder()
         .setCurrentRevisionId(currentRevisionId)
         .setRevisionIdOffTracked(baseRevisionId)
-        .setBasedOffWhichTracked(baseBookmarks)
+        .setBasedOffWhichTracked(baseBookmarks.build())
         .setDiff(diff)
         .setDirtyFiles(changedFiles)
         .build();
