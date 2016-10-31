@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
@@ -37,6 +38,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.OptionalInt;
 import java.util.concurrent.ExecutorService;
 
 public class MachineReadableLoggerListener implements BuckEventListener {
@@ -50,6 +52,8 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   private final ProjectFilesystem filesystem;
   private final ObjectWriter objectWriter;
   private BufferedOutputStream outputStream;
+
+  private OptionalInt exitCode = OptionalInt.empty();
 
   public MachineReadableLoggerListener (
       InvocationInfo info,
@@ -85,6 +89,11 @@ public class MachineReadableLoggerListener implements BuckEventListener {
     writeToLog("ParseFinished", event);
   }
 
+  @Subscribe
+  public void commandFinished(CommandEvent.Finished event) {
+    exitCode = OptionalInt.of(event.getExitCode());
+  }
+
   private Path getLogFilePath() {
     return filesystem.resolve(info.getLogDirectoryPath())
         .resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME);
@@ -108,6 +117,10 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   @Override
   public void outputTrace(BuildId buildId) {
     try {
+      outputStream.write(
+          String.format("ExitCode {\"exitCode\":%d}", exitCode.orElse(-1))
+              .getBytes(Charsets.UTF_8));
+
       outputStream.close();
     } catch (IOException e) {
       LOG.warn("Failed to close output stream.");

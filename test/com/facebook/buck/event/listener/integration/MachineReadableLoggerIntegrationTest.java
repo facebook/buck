@@ -60,6 +60,7 @@ public class MachineReadableLoggerIntegrationTest {
     assertTrue("log contains ParseStarted.", data.contains("ParseStarted"));
     assertTrue("log contains ParseFinished.", data.contains("ParseFinished"));
     assertTrue("log contains InvocationInfo.", data.contains("InvocationInfo"));
+    assertTrue("log contains ExitCode.", data.contains("ExitCode"));
   }
 
 }
