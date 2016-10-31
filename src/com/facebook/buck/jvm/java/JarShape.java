@@ -38,6 +38,7 @@ public enum JarShape {
       // pull in any transitive deps. Gather candidate maven deps using a BFS
       Set<HasMavenCoordinates> mavenDeps = new HashSet<>();
       Set<JavaLibrary> combinedTransitiveDeps = new HashSet<>();
+
       new AbstractBreadthFirstTraversal<JavaLibrary>((JavaLibrary) root) {
         @Override
         public Iterable<JavaLibrary> visit(JavaLibrary javaLibrary) throws RuntimeException {
@@ -47,7 +48,6 @@ public enum JarShape {
             combinedTransitiveDeps.addAll(
                 javaLibrary.getTransitiveClasspathDeps().stream()
                     .filter(input -> !(input.equals(javaLibrary)))
-                    .filter(input -> input.getMavenCoords().isPresent())
                     .collect(Collectors.toSet()));
             return ImmutableSet.of();
           }

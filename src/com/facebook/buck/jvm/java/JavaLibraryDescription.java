@@ -85,15 +85,6 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     // creating the action graph from the target graph.
 
     ImmutableSortedSet<Flavor> flavors = target.getFlavors();
-    BuildRuleParams paramsWithMavenFlavor = null;
-    if (flavors.contains(JavaLibrary.MAVEN_JAR)) {
-      paramsWithMavenFlavor = params;
-
-      // Maven rules will depend upon their vanilla versions, so the latter have to be constructed
-      // without the maven flavor to prevent output-path conflict
-      params = params.copyWithBuildTarget(
-          params.getBuildTarget().withoutFlavors(JavaLibrary.MAVEN_JAR));
-    }
 
     if (flavors.contains(Javadoc.DOC_JAR)) {
       BuildTarget unflavored = BuildTarget.of(target.getUnflavoredBuildTarget());
@@ -121,14 +112,42 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
           .flatMap(Collection::stream)
           .collect(MoreCollectors.toImmutableSet());
 
+      // In theory, the only deps we need are the ones that contribute to the sourcepaths. However,
+      // javadoc wants to have classes being documented have all their deps be available somewhere.
+      // Ideally, we'd not build everything, but then we're not able to document any classes that
+      // rely on auto-generated classes, such as those created by the Immutables library. Oh well.
+      // Might as well add them as deps. *sigh*
+      ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
+      // Sourcepath deps
+      deps.addAll(pathResolver.filterBuildRuleInputs(sources));
+      // Classpath deps
+      deps.add(baseLibrary);
+      deps.addAll(
+          summary.getClasspath().stream()
+              .filter(rule -> HasClasspathEntries.class.isAssignableFrom(rule.getClass()))
+              .flatMap(rule -> rule.getTransitiveClasspathDeps().stream())
+              .iterator());
       BuildRuleParams emptyParams = params.copyWithDeps(
-          Suppliers.ofInstance(ImmutableSortedSet.of()),
+          Suppliers.ofInstance(deps.build()),
           Suppliers.ofInstance(ImmutableSortedSet.of()));
 
       return new Javadoc(
           emptyParams,
           pathResolver,
+          args.mavenCoords,
+          args.mavenPomTemplate,
+          summary.getMavenDeps(),
           sources);
+    }
+
+    BuildRuleParams paramsWithMavenFlavor = null;
+    if (flavors.contains(JavaLibrary.MAVEN_JAR)) {
+      paramsWithMavenFlavor = params;
+
+      // Maven rules will depend upon their vanilla versions, so the latter have to be constructed
+      // without the maven flavor to prevent output-path conflict
+      params = params.copyWithBuildTarget(
+          params.getBuildTarget().withoutFlavors(ImmutableSet.of(JavaLibrary.MAVEN_JAR)));
     }
 
     if (flavors.contains(JavaLibrary.SRC_JAR)) {

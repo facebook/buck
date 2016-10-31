@@ -18,12 +18,14 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.zip.ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL;
 
+import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
@@ -41,24 +43,40 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import java.io.File;
 import java.nio.file.Path;
+import java.util.Optional;
 
-public class Javadoc extends AbstractBuildRule {
+public class Javadoc extends AbstractBuildRule implements MavenPublishable {
 
   public final static Flavor DOC_JAR = ImmutableFlavor.of("doc");
 
-  private final Path output;
   @AddToRuleKey
   private final ImmutableSet<SourcePath> sources;
+  @AddToRuleKey
+  private final Optional<String> mavenCoords;
+  @AddToRuleKey
+  private final Optional<SourcePath> mavenPomTemplate;
+  @AddToRuleKey
+  private final Iterable<HasMavenCoordinates> mavenDeps;
+
+  private final Path output;
   private final Path scratchDir;
 
   protected Javadoc(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
+      Optional<String> mavenCoords,
+      Optional<SourcePath> mavenPomTemplate,
+      Iterable<HasMavenCoordinates> mavenDeps,
       ImmutableSet<SourcePath> sources) {
     super(buildRuleParams, resolver);
 
+    this.mavenCoords = mavenCoords.map(coord -> AetherUtil.addClassifier(coord, "javadoc"));
+    this.mavenPomTemplate = mavenPomTemplate;
+    this.mavenDeps = mavenDeps;
     this.sources = sources;
+
     this.output = BuildTargets.getGenPath(
         getProjectFilesystem(),
         getBuildTarget(),
@@ -92,10 +110,8 @@ public class Javadoc extends AbstractBuildRule {
       return steps.build();
     } else {
       Path atFilePath = scratchDir.resolve("all-sources.txt");
-      Path uncompressedOutputDir = scratchDir.resolve("docs");
 
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
-      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), uncompressedOutputDir));
       // Write an @-file with all the source files in
       steps.add(new WriteFileStep(
           getProjectFilesystem(),
@@ -107,6 +123,24 @@ public class Javadoc extends AbstractBuildRule {
           atFilePath,
           /* can execute */ false));
 
+      Path atArgs = scratchDir.resolve("options");
+      // Write an @-file with the classpath
+      StringBuilder argsBuilder = new StringBuilder("-classpath ");
+      Joiner.on(File.pathSeparator).appendTo(
+          argsBuilder,
+          getDeps().stream()
+              .filter(HasClasspathEntries.class::isInstance)
+              .flatMap(rule -> ((HasClasspathEntries) rule).getTransitiveClasspaths().stream())
+              .map(Object::toString)
+              .iterator());
+      steps.add(new WriteFileStep(
+          getProjectFilesystem(),
+          argsBuilder.toString(),
+          atArgs,
+          /* can execute */ false));
+
+      Path uncompressedOutputDir = scratchDir.resolve("docs");
+      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), uncompressedOutputDir));
       steps.add(new ShellStep(getProjectFilesystem().resolve(scratchDir)) {
         @Override
         protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
@@ -115,6 +149,7 @@ public class Javadoc extends AbstractBuildRule {
               "-Xdoclint:none",
               "-notimestamp",
               "-d", uncompressedOutputDir.getFileName().toString(),
+              "@" + getProjectFilesystem().resolve(atArgs),
               "@" + getProjectFilesystem().resolve(atFilePath));
         }
 
@@ -140,5 +175,25 @@ public class Javadoc extends AbstractBuildRule {
   @Override
   public Path getPathToOutput() {
     return output;
+  }
+
+  @Override
+  public Optional<String> getMavenCoords() {
+    return mavenCoords;
+  }
+
+  @Override
+  public Iterable<HasMavenCoordinates> getMavenDeps() {
+    return mavenDeps;
+  }
+
+  @Override
+  public Iterable<BuildRule> getPackagedDependencies() {
+    return ImmutableSet.of(this);  // I think that this is right
+  }
+
+  @Override
+  public Optional<Path> getPomTemplate() {
+    return mavenPomTemplate.map(getResolver()::getAbsolutePath);
   }
 }

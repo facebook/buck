@@ -16,16 +16,12 @@
 
 package com.facebook.buck.jvm.java;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.Zip;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Splitter;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,17 +29,15 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Set;
 
 public class JavadocTest {
 
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
-  private ProjectWorkspace workspace;
 
   @Test
-  public void shouldCreateJavadocsWithoutAlsoCompilingCode() throws IOException {
+  public void shouldCreateJavadocs() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
         "javadocs",
@@ -59,25 +53,6 @@ public class JavadocTest {
     // Make sure we have an entry for a source file and an index.html
     assertTrue(allFileNames.contains("index.html"));
     assertTrue(allFileNames.contains("com/example/A.html"));
-
-    // And now make sure the library wasn't compiled
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "targets",
-        "--show-output",
-        "//:lib");
-    result.assertSuccess();
-    String outputLine =
-        Splitter.on(CharMatcher.anyOf(System.lineSeparator()))
-            .trimResults()
-            .omitEmptyStrings()
-            .splitToList(result.getStdout())
-        .get(0);
-
-    List<String> split = Splitter.on(' ').trimResults().splitToList(outputLine);
-    assertEquals("//:lib", split.get(0));
-    Path outputJar = workspace.resolve(split.get(1));
-
-    assertFalse(Files.exists(outputJar));
   }
 
   @Test
