@@ -34,6 +34,7 @@ import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;

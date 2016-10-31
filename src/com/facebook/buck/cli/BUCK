@@ -1,16 +1,3 @@
-EVENTS_SRCS = [
-  'CommandEvent.java',
-  'ProgressEvent.java',
-]
-java_library(
-  name = 'events',
-  srcs = EVENTS_SRCS,
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
-)
-
 CONFIG_SRCS = [
   'BuckConfig.java',
   'DownloadConfig.java',
@@ -28,7 +15,7 @@ java_library(
 java_immutables_library(
   name = 'cli',
   srcs = glob(['*.java'],
-              excludes = EVENTS_SRCS + CONFIG_SRCS),
+              excludes = CONFIG_SRCS),
   immutable_types = [
     'CommandRunnerParams',
     'InstallResult',
@@ -56,7 +43,6 @@ java_immutables_library(
   ],
   visibility = [
     '//src/com/facebook/buck/event:dependencies-for-external-projects-inner',
-    '//src/com/facebook/buck/event:event',
     '//test/com/facebook/buck/...',
   ],
 )

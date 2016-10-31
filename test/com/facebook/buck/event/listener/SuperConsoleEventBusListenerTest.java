@@ -33,7 +33,7 @@ import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.DirArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
-import com.facebook.buck.cli.CommandEvent;
+import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.distributed.DistBuildStatus;
 import com.facebook.buck.distributed.DistBuildStatusEvent;

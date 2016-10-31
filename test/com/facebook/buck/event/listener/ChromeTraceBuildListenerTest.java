@@ -26,7 +26,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
-import com.facebook.buck.cli.CommandEvent;
+import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;

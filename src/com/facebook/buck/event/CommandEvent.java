@@ -14,11 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.event;
 
-import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.event.EventKey;
-import com.facebook.buck.event.WorkAdvanceEvent;
 import com.google.common.collect.ImmutableList;
 
 /**

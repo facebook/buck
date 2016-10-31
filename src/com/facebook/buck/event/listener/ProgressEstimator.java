@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.cli.ProgressEvent;
+import com.facebook.buck.event.ProgressEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.log.Logger;
 import com.fasterxml.jackson.core.type.TypeReference;

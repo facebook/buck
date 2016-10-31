@@ -5,7 +5,6 @@
       "//src/com/facebook/buck/android:steps",
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
       "//src/com/facebook/buck/cli:config",
-      "//src/com/facebook/buck/cli:events",
       "//src/com/facebook/buck/counters:counters",
       "//src/com/facebook/buck/distributed:distributed",
       "//src/com/facebook/buck/event:event",

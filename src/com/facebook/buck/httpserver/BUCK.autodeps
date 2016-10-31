@@ -14,7 +14,6 @@
   },
   "httpserver" : {
     "deps" : [
-      "//src/com/facebook/buck/cli:events",
       "//src/com/facebook/buck/event/listener:CacheRateStatsKeeper",
       "//src/com/facebook/buck/httpserver:cache_handler",
       "//src/com/facebook/buck/httpserver:util",

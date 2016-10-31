@@ -34,7 +34,7 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.InMemoryArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
-import com.facebook.buck.cli.CommandEvent;
+import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;

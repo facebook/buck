@@ -22,6 +22,7 @@ import static org.easymock.EasyMock.verify;
 
 import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.ProgressEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.httpserver.WebServerBuckEventListener;
 import com.facebook.buck.model.BuildId;

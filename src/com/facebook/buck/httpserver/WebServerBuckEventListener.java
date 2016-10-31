@@ -16,7 +16,7 @@
 
 package com.facebook.buck.httpserver;
 
-import com.facebook.buck.cli.ProgressEvent;
+import com.facebook.buck.event.ProgressEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.ConsoleEvent;
