@@ -32,7 +32,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.DefaultCellPathResolver;
-import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
+import com.facebook.buck.rules.KnownBuildRuleTypesTestUtil;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -75,7 +75,7 @@ public class MissingSymbolsHandlerIntegrationTest {
         environment,
         new DefaultCellPathResolver(projectFilesystem.getRootPath(), rawConfig));
     ImmutableSet<Description<?>> allDescriptions =
-        DefaultKnownBuildRuleTypes
+        KnownBuildRuleTypesTestUtil
         .getDefaultKnownBuildRuleTypes(projectFilesystem, environment)
         .getAllDescriptions();
     BuckEventBus buckEventBus = BuckEventBusFactory.newInstance();

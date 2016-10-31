@@ -35,12 +35,12 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.DefaultCellPathResolver;
-import com.facebook.buck.rules.DefaultKnownBuildRuleTypes;
+import com.facebook.buck.rules.KnownBuildRuleTypesTestUtil;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.environment.Architecture;
@@ -83,7 +83,7 @@ public class JavaSymbolFinderIntegrationTest {
         config,
         new ExecutableFinder());
     ImmutableSet<Description<?>> allDescriptions =
-        DefaultKnownBuildRuleTypes
+        KnownBuildRuleTypesTestUtil
         .getDefaultKnownBuildRuleTypes(projectFilesystem, environment)
         .getAllDescriptions();
     SrcRootsFinder srcRootsFinder = new SrcRootsFinder(projectFilesystem);

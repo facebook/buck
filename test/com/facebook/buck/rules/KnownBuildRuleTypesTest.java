@@ -169,7 +169,7 @@ public class KnownBuildRuleTypesTest {
         .build();
 
     KnownBuildRuleTypes buildRuleTypes =
-        DefaultKnownBuildRuleTypes.getDefaultKnownBuildRuleTypes(
+        KnownBuildRuleTypesTestUtil.getDefaultKnownBuildRuleTypes(
             filesystem, environment);
     DefaultJavaLibrary libraryRule = createJavaLibrary(buildRuleTypes);
 
@@ -312,8 +312,8 @@ public class KnownBuildRuleTypesTest {
     addXcodeSelectProcess(processMap, FAKE_XCODE_DEV_PATH);
 
     processMap.putAll(
-        DefaultKnownBuildRuleTypes.getPythonProcessMap(
-            DefaultKnownBuildRuleTypes.getPaths(environment)));
+        KnownBuildRuleTypesTestUtil.getPythonProcessMap(
+            KnownBuildRuleTypesTestUtil.getPaths(environment)));
 
     return new FakeProcessExecutor(processMap);
   }
