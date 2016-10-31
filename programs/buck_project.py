@@ -104,10 +104,13 @@ class BuckProject:
             current_dir = os.getcwd()
             if '--version' in sys.argv or '-V' in sys.argv:
                 return BuckProject(current_dir)
-            while current_dir != os.sep:
+            at_root_dir = False
+            while not at_root_dir:
                 if os.path.exists(os.path.join(current_dir, ".buckconfig")):
                     return BuckProject(current_dir)
-                current_dir = os.path.dirname(current_dir)
+                parent_dir = os.path.dirname(current_dir)
+                at_root_dir = current_dir == parent_dir
+                current_dir = parent_dir
             raise NoBuckConfigFoundException()
 
     def __enter__(self):
