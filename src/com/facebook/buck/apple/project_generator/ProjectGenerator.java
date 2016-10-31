@@ -1922,7 +1922,13 @@ public class ProjectGenerator {
     PBXCopyFilesBuildPhase copyFilesBuildPhase = new PBXCopyFilesBuildPhase(destinationSpec);
     for (TargetNode<?> targetNode : targetNodes) {
       PBXFileReference fileReference = getLibraryFileReference(targetNode);
-      copyFilesBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
+      PBXBuildFile buildFile = new PBXBuildFile(fileReference);
+      if (fileReference.getExplicitFileType().equals(Optional.of("wrapper.framework"))) {
+        NSDictionary settings = new NSDictionary();
+        settings.put("ATTRIBUTES", new String[] {"CodeSignOnCopy", "RemoveHeadersOnCopy"});
+        buildFile.setSettings(Optional.of(settings));
+      }
+      copyFilesBuildPhase.getFiles().add(buildFile);
     }
     return copyFilesBuildPhase;
   }
