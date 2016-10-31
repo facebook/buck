@@ -21,7 +21,7 @@ import com.facebook.buck.artifact_cache.thrift.PayloadInfo;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
-import com.facebook.buck.util.MoreStreams;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashFunction;
@@ -138,7 +138,7 @@ public class ThriftArtifactCacheProtocol {
         for (int i = 0; i < payloads.size(); ++i) {
           try (InputStream inputStream = payloadByteSources[i].openStream()) {
             PayloadInfo info = payloads.get(i);
-            MoreStreams.copyExactly(inputStream, outStream, info.getSizeBytes());
+            copyExactly(inputStream, outStream, info.getSizeBytes());
           }
         }
       }
@@ -185,7 +185,7 @@ public class ThriftArtifactCacheProtocol {
       long payloadSizeBytes = thriftData.getPayloads().get(nextPayloadToBeRead).getSizeBytes();
       try (HashingOutputStream wrappedOutputStream =
                new HashingOutputStream(MD5_HASH_FUNCTION, outStream)) {
-        MoreStreams.copyExactly(responseStream, wrappedOutputStream, payloadSizeBytes);
+        copyExactly(responseStream, wrappedOutputStream, payloadSizeBytes);
         ++nextPayloadToBeRead;
         return new ReadPayloadInfo(payloadSizeBytes, wrappedOutputStream.hash().toString());
       }
@@ -213,6 +213,32 @@ public class ThriftArtifactCacheProtocol {
       public String getMd5Hash() {
         return md5Hash;
       }
+    }
+  }
+
+  /**
+   * Copy an exact number of bytes between two streams, failing if source has fewer bytes than
+   * requested.
+   *
+   * @param source Stream to copy from.
+   * @param destination Stream to copy to.
+   * @param bytesToRead Number of bytes to copy.
+   * @throws IOException if an I/O error occcurs, or the source stream has fewer bytes than
+   * requested.
+   */
+  @VisibleForTesting
+  static void copyExactly(InputStream source, OutputStream destination, long bytesToRead)
+      throws IOException {
+    long bytesCopied = ByteStreams.copy(
+        ByteStreams.limit(source, bytesToRead),
+        destination);
+    if (bytesCopied < bytesToRead) {
+      String msg = String.format(
+          "InputStream was missing [%d] bytes. Expected to read a total of [%d] bytes.",
+          bytesToRead - bytesCopied,
+          bytesToRead);
+      LOG.error(msg);
+      throw new IOException(msg);
     }
   }
 }

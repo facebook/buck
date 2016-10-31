@@ -32,6 +32,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 public class ThriftArtifactCacheProtocolTest {
@@ -154,6 +155,74 @@ public class ThriftArtifactCacheProtocolTest {
       response.readPayload(payloadStream);
       Assert.fail("And exception should've been thrown trying to read the payload.");
     }
+  }
+
+  @Test
+  public void testCopyingWithCorrectExactSize() throws IOException {
+    testForSizeBytes(42, 42, 42);
+  }
+
+  @Test(expected = IOException.class)
+  public void testCopyingWithShortInput() throws IOException {
+    testForSizeBytes(21, 42, 42);
+  }
+
+  @Test(expected = ArrayIndexOutOfBoundsException.class)
+  public void testCopyingWithShortOutput() throws IOException {
+    testForSizeBytes(42, 21, 42);
+  }
+
+  @Test
+  public void testCopyingWithLongOutput() throws IOException {
+    testForSizeBytes(42, 84, 42);
+  }
+
+  @Test
+  public void testCopyingWithLongInput() throws IOException {
+    testForSizeBytes(84, 42, 42);
+  }
+
+  private void testForSizeBytes(
+      int inputStreamSizeBytes,
+      int outputStreamSizeBytes,
+      int bytesToCopy) throws IOException {
+
+    byte[] inputBuffer = new byte[inputStreamSizeBytes];
+    for (int i = 0; i < inputStreamSizeBytes; ++i) {
+      inputBuffer[i] = (byte) (i % Byte.MAX_VALUE);
+    }
+
+    byte[] outputBuffer = new byte[outputStreamSizeBytes];
+
+    try (OutputStream output = wrapBuffer(outputBuffer);
+         InputStream input = new ByteArrayInputStream(inputBuffer)) {
+      ThriftArtifactCacheProtocol.copyExactly(input, output, bytesToCopy);
+
+      for (int i = 0; i < bytesToCopy; ++i) {
+        Assert.assertEquals(
+            "Data is different between the input buffer and the output buffer.",
+            inputBuffer[i],
+            outputBuffer[i]);
+      }
+
+      for (int i = inputStreamSizeBytes; i < outputStreamSizeBytes; ++i) {
+        Assert.assertEquals(
+            "Extra bytes in output buffer should be unchanged.",
+            0,
+            outputBuffer[i]);
+      }
+    }
+  }
+
+  private OutputStream wrapBuffer(final byte[] buffer) {
+    return new OutputStream() {
+      private int pos = 0;
+
+      @Override
+      public void write(int b) throws IOException {
+        buffer[pos++] = (byte) b;
+      }
+    };
   }
 
   private byte[] createBuffer(int sizeBytes) {
