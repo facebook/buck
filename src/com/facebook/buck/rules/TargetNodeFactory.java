@@ -26,6 +26,7 @@ import com.google.common.hash.HashCode;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class TargetNodeFactory {
   private final TypeCoercerFactory typeCoercerFactory;
@@ -116,7 +117,8 @@ public class TargetNodeFactory {
         ImmutableSortedSet.copyOf(Sets.difference(extraDepsBuilder.build(), declaredDeps)),
         visibilityPatterns,
         pathsBuilder.build(),
-        cellRoots);
+        cellRoots,
+        Optional.empty());
   }
 
   private static void detectBuildTargetsAndPathsForConstructorArg(

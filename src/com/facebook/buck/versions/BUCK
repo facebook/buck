@@ -1,14 +1,30 @@
-standard_java_library(
+TYPES_SRCS = [
+  'AbstractVersion.java',
+]
+java_immutables_library(
+  name = 'types',
   immutable_types = [
-    'AbstractConstraints',
-    'AbstractExactConstraint',
-    'AbstractImplication',
-    'AbstractVersion',
-    'AbstractVersionedAlias',
-    'AbstractVersionInfo',
-    'AbstractVersionUniverse',
+    'Version',
   ],
+  srcs = TYPES_SRCS,
+  autodeps = True,
+  visibility = ['PUBLIC'],
+)
+
+java_immutables_library(
+  name = 'versions',
+  immutable_types = [
+    'Constraints',
+    'ExactConstraint',
+    'Implication',
+    'VersionedAlias',
+    'VersionInfo',
+    'VersionUniverse',
+  ],
+  srcs = glob(['*.java'], excludes=TYPES_SRCS),
   tests = [
     '//test/com/facebook/buck/versions:versions',
   ],
+  autodeps = True,
+  visibility = ['PUBLIC'],
 )

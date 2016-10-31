@@ -20,6 +20,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.versions.Version;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 
@@ -48,6 +50,8 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
   private final ImmutableSet<BuildTarget> extraDeps;
   private final ImmutableSet<VisibilityPattern> visibilityPatterns;
 
+  private final Optional<ImmutableMap<BuildTarget, Version>> selectedVersions;
+
   TargetNode(
       TargetNodeFactory factory,
       HashCode rawInputsHashCode,
@@ -58,7 +62,8 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
       ImmutableSet<BuildTarget> extraDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<Path> paths,
-      CellPathResolver cellNames) {
+      CellPathResolver cellNames,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {
     this.factory = factory;
     this.rawInputsHashCode = rawInputsHashCode;
     this.description = description;
@@ -69,6 +74,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     this.extraDeps = extraDeps;
     this.inputs = paths;
     this.visibilityPatterns = visibilityPatterns;
+    this.selectedVersions = selectedVersions;
   }
 
   /**
@@ -190,11 +196,12 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     return factory.copyNodeWithFlavors(this, flavors);
   }
 
-  public TargetNode<T> withTargetConstructorArgAndDeps(
+  public TargetNode<T> withTargetConstructorArgDepsAndSelectedVerisons(
       BuildTarget target,
       T constructorArg,
       ImmutableSet<BuildTarget> declaredDeps,
-      ImmutableSet<BuildTarget> extraDeps) {
+      ImmutableSet<BuildTarget> extraDeps,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVerisons) {
     return new TargetNode<>(
         factory,
         getRawInputsHashCode(),
@@ -205,7 +212,8 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
         extraDeps,
         getVisibilityPatterns(),
         getInputs(),
-        getCellNames());
+        getCellNames(),
+        selectedVerisons);
   }
 
   public CellPathResolver getCellNames() {
@@ -215,4 +223,9 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
   public ImmutableSet<VisibilityPattern> getVisibilityPatterns() {
     return visibilityPatterns;
   }
+
+  public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions() {
+    return selectedVersions;
+  }
+
 }

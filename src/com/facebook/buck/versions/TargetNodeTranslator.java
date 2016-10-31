@@ -18,6 +18,7 @@ package com.facebook.buck.versions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -35,6 +36,9 @@ import java.util.Optional;
 public abstract class TargetNodeTranslator {
 
   public abstract Optional<BuildTarget> translateBuildTarget(BuildTarget target);
+
+  public abstract Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
+      BuildTarget target);
 
   public <A> Optional<Optional<A>> translateOptional(Optional<A> val) {
     if (!val.isPresent()) {
@@ -145,20 +149,29 @@ public abstract class TargetNodeTranslator {
     Optional<ImmutableSet<BuildTarget>> declaredDeps = translateSet(node.getDeclaredDeps());
     Optional<ImmutableSet<BuildTarget>> extraDeps = translateSet(node.getExtraDeps());
 
+    Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
+        getSelectedVersions(node.getBuildTarget());
+    Optional<ImmutableMap<BuildTarget, Version>> oldSelectedVersions = node.getSelectedVersions();
+    if (oldSelectedVersions.equals(selectedVersions)) {
+      selectedVersions = Optional.empty();
+    }
+
     // If nothing has changed, don't generate a new node.
     if (!target.isPresent() &&
         !constructorArg.isPresent() &&
         !declaredDeps.isPresent() &&
-        !extraDeps.isPresent()) {
+        !extraDeps.isPresent() &&
+        !selectedVersions.isPresent()) {
       return Optional.empty();
     }
 
     return Optional.of(
-        node.withTargetConstructorArgAndDeps(
+        node.withTargetConstructorArgDepsAndSelectedVerisons(
             target.orElse(node.getBuildTarget()),
             constructorArg.orElse(node.getConstructorArg()),
             declaredDeps.orElse(node.getDeclaredDeps()),
-            extraDeps.orElse(node.getExtraDeps())));
+            extraDeps.orElse(node.getExtraDeps()),
+            selectedVersions));
   }
 
 }

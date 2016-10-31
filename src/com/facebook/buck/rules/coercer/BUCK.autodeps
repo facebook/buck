@@ -16,6 +16,7 @@
       "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules/coercer:types",
       "//src/com/facebook/buck/util/immutables:immutables",
+      "//src/com/facebook/buck/versions:types",
       "//src/com/facebook/buck/versions:versions",
       "//third-party/java/guava:guava",
       "//third-party/java/jackson:jackson-databind"

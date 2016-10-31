@@ -1,4 +1,12 @@
 {
+  "types" : {
+    "deps" : [
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/util/immutables:immutables"
+    ]
+  },
   "versions" : {
     "deps" : [
       "//src/com/facebook/buck/graph:graph",
@@ -12,6 +20,7 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/util/immutables:immutables",
+      "//src/com/facebook/buck/versions:types",
       "//third-party/java/guava:guava",
       "//third-party/java/infer-annotations:infer-annotations"
     ]

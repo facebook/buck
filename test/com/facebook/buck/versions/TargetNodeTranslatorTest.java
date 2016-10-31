@@ -17,12 +17,14 @@ package com.facebook.buck.versions;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.TargetNode;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -49,6 +51,11 @@ public class TargetNodeTranslatorTest {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.of(d);
+          }
+          @Override
+          public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
+              BuildTarget target) {
+            return Optional.empty();
           }
         };
     Optional<TargetNode<CxxLibraryDescription.Arg>> translated = translator.translateNode(node);
@@ -85,9 +92,43 @@ public class TargetNodeTranslatorTest {
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.empty();
           }
+          @Override
+          public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
+              BuildTarget target) {
+            return Optional.empty();
+          }
         };
     Optional<TargetNode<CxxLibraryDescription.Arg>> translated = translator.translateNode(node);
     assertFalse(translated.isPresent());
+  }
+
+  @Test
+  public void selectedVersions() {
+    TargetNode<VersionPropagatorBuilder.Arg> node =
+        new VersionPropagatorBuilder("//:a")
+            .build();
+    final ImmutableMap<BuildTarget, Version> selectedVersions =
+        ImmutableMap.of(
+            BuildTargetFactory.newInstance("//:b"),
+            Version.of("1.0"));
+    TargetNodeTranslator translator =
+        new TargetNodeTranslator() {
+          @Override
+          public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
+            return Optional.empty();
+          }
+          @Override
+          public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
+              BuildTarget target) {
+            return Optional.of(selectedVersions);
+          }
+        };
+    Optional<TargetNode<VersionPropagatorBuilder.Arg>> translated =
+        translator.translateNode(node);
+    assertTrue(translated.isPresent());
+    assertThat(
+        translated.get().getSelectedVersions(),
+        Matchers.equalTo(Optional.of(selectedVersions)));
   }
 
 }

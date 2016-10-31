@@ -531,6 +531,16 @@ public class VersionedTargetGraphBuilder {
               return cache.getUnchecked(target);
             }
 
+            @Override
+            public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions(
+                BuildTarget target) {
+              ImmutableMap.Builder<BuildTarget, Version> builder = ImmutableMap.builder();
+              for (BuildTarget dep : getVersionInfo(getNode(target)).getVersionDomain().keySet()) {
+                builder.put(dep, selectedVersions.get(dep));
+              }
+              return Optional.of(builder.build());
+            }
+
           };
 
       return processVersionSubGraphNode(root, selectedVersions, targetTranslator);

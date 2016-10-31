@@ -71,12 +71,14 @@ public class VersionedTargetGraphBuilderTest {
         actual.getInputs(),
         Matchers.equalTo(expected.getInputs()));
     for (Field field : actual.getConstructorArg().getClass().getFields()) {
-      try {
-        assertThat(
-            field.get(actual.getConstructorArg()),
-            Matchers.equalTo(field.get(expected.getConstructorArg())));
-      } catch (IllegalAccessException e) {
-        throw new RuntimeException(e);
+      if (!field.getName().equals("selectedVersions")) {
+        try {
+          assertThat(
+              field.get(actual.getConstructorArg()),
+              Matchers.equalTo(field.get(expected.getConstructorArg())));
+        } catch (IllegalAccessException e) {
+          throw new RuntimeException(e);
+        }
       }
     }
   }
