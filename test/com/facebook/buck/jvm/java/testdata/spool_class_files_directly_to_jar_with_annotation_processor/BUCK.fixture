@@ -22,7 +22,7 @@ java_binary(
 
 prebuilt_jar(
   name = 'processor',
-  binary_jar = 'value-2.1.18.jar',
+  binary_jar = 'value-2.3.8.jar',
 )
 
 prebuilt_jar(

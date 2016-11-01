@@ -634,7 +634,7 @@ public class IjModuleFactoryTest {
         .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath(sourceName))))
         .build();
 
-    Path moduleBasePath = Paths.get("java/com/example/base");
+    Path moduleBasePath = Paths.get("cpp/lib");
     IjModule module = factory.createModule(
         moduleBasePath,
         ImmutableSet.of(cxxLibrary));

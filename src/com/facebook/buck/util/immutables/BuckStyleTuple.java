@@ -37,7 +37,8 @@ import java.lang.annotation.Target;
     init = "set*",
     visibility = Value.Style.ImplementationVisibility.PUBLIC,
     allParameters = true,
-    defaults = @Value.Immutable(builder = false))
+    defaults = @Value.Immutable(builder = false),
+    forceJacksonPropertyNames = false)
 @Target({ElementType.TYPE, ElementType.PACKAGE, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.SOURCE)
 public @interface BuckStyleTuple {}

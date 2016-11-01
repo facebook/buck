@@ -41,7 +41,8 @@ import java.lang.annotation.Target;
     typeAbstract = "Abstract*",
     get = {"is*", "get*"},
     init = "set*",
-    visibility = Value.Style.ImplementationVisibility.PUBLIC)
+    visibility = Value.Style.ImplementationVisibility.PUBLIC,
+    forceJacksonPropertyNames = false)
 @Target({ElementType.TYPE, ElementType.PACKAGE, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.SOURCE)
 public @interface BuckStyleImmutable {}
