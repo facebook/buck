@@ -17,14 +17,9 @@
 package com.facebook.buck.rules;
 
 import static org.easymock.EasyMock.createMock;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.event.BuckEventBusFactory.CapturingConsoleEventListener;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Supplier;
@@ -48,20 +43,5 @@ public class BuildContextTest {
     // If no AndroidPlatformTarget is passed to the builder, it should return a Supplier whose get()
     // method throws an exception.
     supplier.get();
-  }
-
-  @Test
-  public void testLogError() {
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
-    CapturingConsoleEventListener listener = new CapturingConsoleEventListener();
-    eventBus.register(listener);
-    BuildContext buildContext = BuildContext.builder()
-        .setActionGraph(createMock(ActionGraph.class))
-        .setJavaPackageFinder(createMock(JavaPackageFinder.class))
-        .setEventBus(eventBus)
-        .build();
-
-    buildContext.logError(new RuntimeException(), "Error detail: %s", "BUILD_ID");
-    assertThat(listener.getLogMessages(), contains(containsString("Error detail: BUILD_ID")));
   }
 }
