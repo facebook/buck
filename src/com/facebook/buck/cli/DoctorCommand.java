@@ -50,7 +50,7 @@ public class DoctorCommand extends AbstractCommand {
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     ProjectFilesystem filesystem = params.getCell().getFilesystem();
-    BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
+    BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem, params.getObjectMapper());
 
     DoctorReportHelper helper = new DoctorReportHelper(
         params.getCell().getFilesystem(),

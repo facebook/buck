@@ -21,9 +21,10 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -48,7 +49,9 @@ public class BuildLogHelperIntegrationTest {
 
     Cell cell = workspace.asCell();
     ProjectFilesystem filesystem = cell.getFilesystem();
-    BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
+    BuildLogHelper buildLogHelper = new BuildLogHelper(
+        filesystem,
+        ObjectMappers.newDefaultInstance());
 
     ImmutableList<BuildLogEntry> buildLogs = buildLogHelper.getBuildLogs();
 

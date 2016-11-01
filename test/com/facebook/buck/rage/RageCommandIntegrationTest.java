@@ -133,6 +133,7 @@ public class RageCommandIntegrationTest {
       AutomatedReport automatedReport = new AutomatedReport(
           reporter,
           filesystem,
+          objectMapper,
           new CapturingPrintStream(),
           TestBuildEnvironmentDescription.INSTANCE,
           VcsInfoCollector.create(new NoOpCmdLineInterface()),
@@ -180,6 +181,7 @@ public class RageCommandIntegrationTest {
     AutomatedReport automatedReport = new AutomatedReport(
         defectReporter,
         filesystem,
+        ObjectMappers.newDefaultInstance(),
         new CapturingPrintStream(),
         TestBuildEnvironmentDescription.INSTANCE,
         VcsInfoCollector.create(new NoOpCmdLineInterface()),
@@ -227,6 +229,7 @@ public class RageCommandIntegrationTest {
       AutomatedReport automatedReport = new AutomatedReport(
           reporter,
           filesystem,
+          objectMapper,
           new CapturingPrintStream(),
           TestBuildEnvironmentDescription.INSTANCE,
           VcsInfoCollector.create(new NoOpCmdLineInterface()),

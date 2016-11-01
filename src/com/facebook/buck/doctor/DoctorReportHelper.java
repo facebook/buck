@@ -42,6 +42,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.FormBody;
@@ -96,13 +97,14 @@ public class DoctorReportHelper {
         "Which buck invocation would you like to report?",
         buildLogs,
         entry -> {
-          Pair<Double, SizeUnit> humanReadableSize = SizeUnit.getHumanReadableSize(
-              entry.getSize(),
-              SizeUnit.BYTES);
+          Pair<Double, SizeUnit> humanReadableSize =
+              SizeUnit.getHumanReadableSize(entry.getSize(), SizeUnit.BYTES);
+
           return String.format(
-              "\t%s\tbuck [%s] (%.2f %s)",
+              "\t%s\tbuck [%s] %s (%.2f %s)",
               entry.getLastModifiedTime(),
-              entry.getCommandArgs().get(),
+              entry.getCommandArgs().orElse("unknown command"),
+              prettyPrintExitCode(entry.getExitCode()),
               humanReadableSize.getFirst(),
               humanReadableSize.getSecond().getAbbreviation());
         });
@@ -257,6 +259,19 @@ public class DoctorReportHelper {
         String.format("  [%s ] %s",
             console.getAnsi().isAnsiTerminal() ? status.getEmoji() : status.getText(),
             postfix));
+  }
+
+  private String prettyPrintExitCode(OptionalInt exitCode) {
+    String result = "Exit code: " +
+        (exitCode.isPresent() ? Integer.toString(exitCode.getAsInt()) : "Unknown");
+    if (exitCode.isPresent() && console.getAnsi().isAnsiTerminal()) {
+      if (exitCode.getAsInt() == 0) {
+        return console.getAnsi().asGreenText(result);
+      } else {
+        return console.getAnsi().asRedText(result);
+      }
+    }
+    return result;
   }
 
   private DoctorEndpointResponse createErrorDoctorEndpointResponse(String errorMessage) {

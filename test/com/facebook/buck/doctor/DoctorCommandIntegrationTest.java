@@ -120,7 +120,9 @@ public class DoctorCommandIntegrationTest {
     DoctorReportHelper helper = createDoctorHelper(
         (new UserInputFixture("0")).getUserInput(),
         DoctorConfig.of(FakeBuckConfig.builder().build()));
-    BuildLogHelper buildLogHelper = new BuildLogHelper(workspace.asCell().getFilesystem());
+    BuildLogHelper buildLogHelper = new BuildLogHelper(
+        workspace.asCell().getFilesystem(),
+        objectMapper);
     BuildLogEntry entry = helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
     DoctorEndpointRequest request = helper.generateEndpointRequest(entry, Optional.empty());
@@ -139,7 +141,9 @@ public class DoctorCommandIntegrationTest {
         (new UserInputFixture("0")).getUserInput(),
         createDoctorConfig(httpd));
 
-    BuildLogHelper buildLogHelper = new BuildLogHelper(workspace.asCell().getFilesystem());
+    BuildLogHelper buildLogHelper = new BuildLogHelper(
+        workspace.asCell().getFilesystem(),
+        objectMapper);
     BuildLogEntry entry = helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
     DoctorEndpointRequest request = helper.generateEndpointRequest(entry, Optional.empty());

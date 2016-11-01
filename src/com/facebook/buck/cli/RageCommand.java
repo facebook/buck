@@ -82,6 +82,8 @@ public class RageCommand extends AbstractCommand {
       report = new InteractiveReport(
           reporter,
           filesystem,
+          params.getObjectMapper(),
+          params.getConsole(),
           stdOut,
           params.getStdIn(),
           params.getBuildEnvironmentDescription(),
@@ -92,6 +94,7 @@ public class RageCommand extends AbstractCommand {
       report = new AutomatedReport(
           reporter,
           filesystem,
+          params.getObjectMapper(),
           stdOut,
           params.getBuildEnvironmentDescription(),
           gatherVcsInfo ? vcsInfoCollector : Optional.empty(),

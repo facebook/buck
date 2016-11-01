@@ -18,9 +18,11 @@ package com.facebook.buck.rage;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Ordering;
@@ -34,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 /**
  * Responsible for gathering logs and other interesting information from buck, driven by user
@@ -43,12 +46,15 @@ public class InteractiveReport extends AbstractReport {
 
   private final BuildLogHelper buildLogHelper;
   private final Optional<VcsInfoCollector> vcsInfoCollector;
+  private final Console console;
   private final UserInput input;
   private final PrintStream output;
 
   public InteractiveReport(
       DefectReporter defectReporter,
       ProjectFilesystem filesystem,
+      ObjectMapper objectMapper,
+      Console console,
       PrintStream output,
       InputStream stdin,
       BuildEnvironmentDescription buildEnvironmentDescription,
@@ -61,9 +67,10 @@ public class InteractiveReport extends AbstractReport {
         output,
         rageConfig,
         extraInfoCollector);
-    this.buildLogHelper = new BuildLogHelper(filesystem);
+    this.buildLogHelper = new BuildLogHelper(filesystem, objectMapper);
     this.vcsInfoCollector = vcsInfoCollector;
     this.output = output;
+    this.console = console;
     this.input = new UserInput(output, new BufferedReader(new InputStreamReader(stdin)));
   }
 
@@ -95,9 +102,10 @@ public class InteractiveReport extends AbstractReport {
               input1.getSize(),
               SizeUnit.BYTES);
           return String.format(
-              "\t%s\tbuck [%s] (%.2f %s)",
+              "\t%s\tbuck [%s] %s (%.2f %s)",
               input1.getLastModifiedTime(),
               input1.getCommandArgs().orElse("unknown command"),
+              prettyPrintExitCode(input1.getExitCode()),
               humanReadableSize.getFirst(),
               humanReadableSize.getSecond().getAbbreviation());
         });
@@ -118,6 +126,19 @@ public class InteractiveReport extends AbstractReport {
       output.printf("Failed to get source control information: %s, proceeding regardless.\n", e);
     }
     return Optional.empty();
+  }
+
+  private String prettyPrintExitCode(OptionalInt exitCode) {
+    String result = "Exit code: " +
+        (exitCode.isPresent() ? Integer.toString(exitCode.getAsInt()) : "Unknown");
+    if (exitCode.isPresent() && console.getAnsi().isAnsiTerminal()) {
+      if (exitCode.getAsInt() == 0) {
+        return console.getAnsi().asGreenText(result);
+      } else {
+        return console.getAnsi().asRedText(result);
+      }
+    }
+    return result;
   }
 
   @Override

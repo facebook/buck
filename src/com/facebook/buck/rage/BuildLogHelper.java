@@ -21,6 +21,9 @@ import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -32,12 +35,16 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.stream.Collectors;
 
 /**
  * Methods for finding and inspecting buck log files.
@@ -50,9 +57,13 @@ public class BuildLogHelper {
   private static final String BUCK_LOG_FILE = BuckConstant.BUCK_LOG_FILE_NAME;
 
   private final ProjectFilesystem projectFilesystem;
+  private final ObjectMapper objectMapper;
 
-  public BuildLogHelper(ProjectFilesystem projectFilesystem) {
+  public BuildLogHelper(
+      ProjectFilesystem projectFilesystem,
+      ObjectMapper objectMapper) {
     this.projectFilesystem = projectFilesystem;
+    this.objectMapper = objectMapper;
   }
 
   public ImmutableList<BuildLogEntry> getBuildLogs() throws IOException {
@@ -82,12 +93,15 @@ public class BuildLogHelper {
         logFile.getParent().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME);
     if (projectFilesystem.isFile(machineReadableLogFile)) {
       builder.setMachineReadableLogFile(machineReadableLogFile);
+      builder.setExitCode(readExitCode(machineReadableLogFile));
+
     }
 
     Optional <Path> traceFile =
         projectFilesystem.getFilesUnderPath(logFile.getParent()).stream()
             .filter(input -> input.toString().endsWith(".trace"))
             .findFirst();
+
     return builder
         .setRelativePath(logFile)
         .setSize(projectFilesystem.getFileSize(logFile))
@@ -114,6 +128,29 @@ public class BuildLogHelper {
     }
 
     return Optional.empty();
+  }
+
+  private OptionalInt readExitCode(Path machineReadableLogFile) {
+    try (BufferedReader reader = Files.newBufferedReader(
+        projectFilesystem.resolve(machineReadableLogFile))) {
+      List<String> lines = reader
+          .lines()
+          .filter(s -> s.startsWith("ExitCode"))
+          .collect(Collectors.toList());
+
+      if (lines.size() == 1) {
+        Map<String, Integer> exitCode =
+            objectMapper.readValue(
+                lines.get(0).substring("ExitCode ".length()).getBytes(Charsets.UTF_8),
+                new TypeReference<Map<String, Integer>>(){});
+        if (exitCode.containsKey("exitCode")) {
+          return OptionalInt.of(exitCode.get("exitCode"));
+        }
+      }
+    } catch (IOException e) {
+      return OptionalInt.empty();
+    }
+    return OptionalInt.empty();
   }
 
   public Collection<Path> getAllBuckLogFiles() throws IOException {
@@ -157,6 +194,7 @@ public class BuildLogHelper {
     public abstract Path getRelativePath();
     public abstract Optional<BuildId> getBuildId();
     public abstract Optional<String> getCommandArgs();
+    public abstract OptionalInt getExitCode();
     public abstract Optional<Path> getRuleKeyLoggerLogFile();
     public abstract Optional<Path> getMachineReadableLogFile();
     public abstract Optional<Path> getTraceFile();

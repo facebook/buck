@@ -114,6 +114,14 @@ public final class Ansi {
     return wrapWithColor(INFORMATION_SEQUENCE, text);
   }
 
+  public String asGreenText(String text) {
+    return wrapWithColor(GREEN, text);
+  }
+
+  public String asRedText(String text) {
+    return wrapWithColor(RED, text);
+  }
+
   public String getHighlightedWarningSequence() {
     return isAnsiTerminal ? HIGHLIGHTED_ERROR_SEQUENCE : "";
   }

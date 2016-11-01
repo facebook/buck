@@ -19,6 +19,7 @@ package com.facebook.buck.rage;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
@@ -37,6 +38,7 @@ public class AutomatedReport extends AbstractReport {
   public AutomatedReport(
       DefectReporter defectReporter,
       ProjectFilesystem filesystem,
+      ObjectMapper objectMapper,
       PrintStream output,
       BuildEnvironmentDescription buildEnvironmentDescription,
       Optional<VcsInfoCollector> vcsInfoCollector,
@@ -49,7 +51,7 @@ public class AutomatedReport extends AbstractReport {
         rageConfig,
         extraInfoCollector);
     this.vcsInfoCollector = vcsInfoCollector;
-    this.buildLogHelper = new BuildLogHelper(filesystem);
+    this.buildLogHelper = new BuildLogHelper(filesystem, objectMapper);
     this.output = output;
   }
 
