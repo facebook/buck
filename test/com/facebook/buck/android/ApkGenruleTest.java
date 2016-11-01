@@ -19,9 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
@@ -31,13 +29,13 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExopackageInfo;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -159,11 +157,7 @@ public class ApkGenruleTest {
         apkGenrule.getDeps().stream()
             .map(Object::toString)
             .collect(MoreCollectors.toImmutableSet()));
-    BuildContext buildContext = BuildContext.builder()
-        .setActionGraph(EasyMock.createMock(ActionGraph.class))
-        .setJavaPackageFinder(EasyMock.createNiceMock(JavaPackageFinder.class))
-        .setEventBus(BuckEventBusFactory.newInstance())
-        .build();
+    BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
     Iterable<Path> expectedInputsToCompareToOutputs = ImmutableList.of(
         fileSystem.getPath("src/com/facebook/signer.py"),
         fileSystem.getPath("src/com/facebook/key.properties"));

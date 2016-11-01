@@ -22,16 +22,14 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -75,7 +73,7 @@ public class ExportFileTest {
   public void createFixtures() {
     projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     target = BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:example.html");
-    context = getBuildContext();
+    context = FakeBuildContext.NOOP_CONTEXT;
   }
 
   @Test
@@ -289,27 +287,4 @@ public class ExportFileTest {
         .build(resolver, projectFilesystem);
   }
 
-  private BuildContext getBuildContext() {
-    return BuildContext.builder()
-        .setEventBus(BuckEventBusFactory.newInstance())
-        .setJavaPackageFinder(
-            new JavaPackageFinder() {
-              @Override
-              public Path findJavaPackageFolder(Path pathRelativeToProjectRoot) {
-                return null;
-              }
-
-              @Override
-              public String findJavaPackage(Path pathRelativeToProjectRoot) {
-                return null;
-              }
-
-              @Override
-              public String findJavaPackage(BuildTarget buildTarget) {
-                return null;
-              }
-            })
-        .setActionGraph(new ActionGraph(ImmutableList.of()))
-        .build();
-  }
 }

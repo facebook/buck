@@ -44,7 +44,6 @@ import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -196,12 +195,7 @@ public class CachingBuildEngineTest {
       filesystem = new FakeProjectFilesystem(tmp.getRoot());
       fileHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
       buildContext = BuildEngineBuildContext.builder()
-          .setBuildContext(BuildContext.builder()
-              .setJavaPackageFinder(new FakeJavaPackageFinder())
-              .setActionGraph(new ActionGraph(ImmutableList.of()))
-              .setEventBus(BuckEventBusFactory.newInstance())
-              .build()
-          )
+          .setBuildContext(FakeBuildContext.NOOP_CONTEXT)
           .setArtifactCache(cache)
           .setBuildId(new BuildId())
           .setClock(new DefaultClock())

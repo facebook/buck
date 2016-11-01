@@ -34,4 +34,5 @@ public class FakeBuildContext {
       .setJavaPackageFinder(new FakeJavaPackageFinder())
       .setEventBus(BuckEventBusFactory.newInstance())
       .build();
+
 }
