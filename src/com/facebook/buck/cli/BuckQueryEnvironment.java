@@ -179,7 +179,12 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   TargetNode<?> getNode(QueryTarget target)
       throws QueryException {
-    Preconditions.checkState(target instanceof QueryBuildTarget);
+    if (!(target instanceof QueryBuildTarget)) {
+      throw new IllegalArgumentException(String.format(
+          "Expected %s to be a build target but it was an instance of %s",
+          target,
+          target.getClass().getName()));
+    }
     ListeningExecutorService executor = null;
     try {
       executor = com.google.common.util.concurrent.MoreExecutors.listeningDecorator(
