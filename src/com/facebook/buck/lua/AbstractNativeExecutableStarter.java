@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.Linkers;
 import com.facebook.buck.cxx.NativeLinkTarget;
 import com.facebook.buck.cxx.NativeLinkTargetMode;
@@ -226,6 +227,8 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
 
   @Override
   public SourcePath build() throws NoSuchBuildTargetException {
+    BuildTarget linkTarget = LinkerMapMode.buildTargetByAddingDefaultLinkerMapFlavorIfNeeded(
+        getTarget());
     getRuleResolver().addToIndex(
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             getCxxBuckConfig(),
@@ -233,7 +236,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
             getBaseParams(),
             getRuleResolver(),
             getPathResolver(),
-            getTarget(),
+            linkTarget,
             Linker.LinkType.EXECUTABLE,
             Optional.empty(),
             getOutput(),
@@ -243,7 +246,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
             Optional.empty(),
             ImmutableSet.of(),
             getNativeLinkableInput()));
-    return new BuildTargetSourcePath(getTarget());
+    return new BuildTargetSourcePath(linkTarget);
   }
 
   @Override

@@ -26,7 +26,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cxx.CxxCompilationDatabase;
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxInferEnhancer;
+import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -78,7 +80,9 @@ public class MultiarchFileTest {
             "AppleLibraryDescription (static)",
             FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION,
             (NodeBuilderFactory) target -> AppleLibraryBuilder
-                .createBuilder(target.withAppendedFlavors(ImmutableFlavor.of("static")))
+            .createBuilder(target.withAppendedFlavors(
+                CxxDescriptionEnhancer.STATIC_FLAVOR,
+                LinkerMapMode.DEFAULT_MODE.getFlavor()))
                 .setSrcs(ImmutableSortedSet.of(
                     SourceWithFlags.of(new FakeSourcePath("foo.c"))))
         },
@@ -86,7 +90,9 @@ public class MultiarchFileTest {
             "AppleLibraryDescription (shared)",
             FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION,
             (NodeBuilderFactory) target -> AppleLibraryBuilder
-                .createBuilder(target.withAppendedFlavors(ImmutableFlavor.of("shared")))
+            .createBuilder(target.withAppendedFlavors(
+                CxxDescriptionEnhancer.SHARED_FLAVOR,
+                LinkerMapMode.DEFAULT_MODE.getFlavor()))
                 .setSrcs(ImmutableSortedSet.of(
                     SourceWithFlags.of(new FakeSourcePath("foo.c"))))
         },

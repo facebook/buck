@@ -26,8 +26,10 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.CodeSigning;
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.DebugPathSanitizer;
 import com.facebook.buck.cxx.MungingDebugPathSanitizer;
+import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -145,7 +147,10 @@ public class ObjectPathsAbsolutifierIntegrationTest {
         BuildTargets
             .getGenPath(
                 filesystem,
-                target.withFlavors(platformFlavor),
+                target.withFlavors(
+                    platformFlavor,
+                    CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR,
+                    LinkerMapMode.DEFAULT_MODE.getFlavor()),
                 "%s"));
     Path unsanizitedBinaryPath = workspace.getPath(
         filesystem.getBuckPaths().getScratchDir().resolve(sanitizedBinaryPath.getFileName()));

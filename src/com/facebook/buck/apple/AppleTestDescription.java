@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkables;
 import com.facebook.buck.cxx.StripStyle;
@@ -217,7 +218,8 @@ public class AppleTestDescription implements
 
     BuildTarget libraryTarget = params.getBuildTarget()
         .withAppendedFlavors(extraFlavorsBuilder.build())
-        .withAppendedFlavors(debugFormat.getFlavor());
+        .withAppendedFlavors(debugFormat.getFlavor())
+        .withAppendedFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor());
     BuildRule library = createTestLibraryRule(
         targetGraph,
         params,
@@ -243,6 +245,7 @@ public class AppleTestDescription implements
             params.getBuildTarget().withAppendedFlavors(
                 BUNDLE_FLAVOR,
                 debugFormat.getFlavor(),
+                LinkerMapMode.NO_LINKER_MAP.getFlavor(),
                 AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             // We have to add back the original deps here, since they're likely
             // stripped from the library link above (it doesn't actually depend on them).

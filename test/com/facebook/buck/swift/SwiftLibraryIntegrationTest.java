@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.apple.FakeAppleRuleDescriptions;
 import com.facebook.buck.cxx.FakeCxxLibrary;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
+import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -90,7 +91,8 @@ public class SwiftLibraryIntegrationTest {
         ImmutableSortedSet.of()
     );
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-x86_64");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-x86_64")
+        .withAppendedFlavors(LinkerMapMode.DEFAULT_MODE.getFlavor());
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
         .setDeclaredDeps(ImmutableSortedSet.of(depRule))
         .build();

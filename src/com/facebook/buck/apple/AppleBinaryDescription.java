@@ -22,6 +22,7 @@ import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
+import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.file.WriteFile;
@@ -85,7 +86,9 @@ public class AppleBinaryDescription implements
       CxxCompilationDatabase.UBER_COMPILATION_DATABASE,
       AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
       AppleDebugFormat.DWARF.getFlavor(),
-      AppleDebugFormat.NONE.getFlavor());
+      AppleDebugFormat.NONE.getFlavor(),
+      LinkerMapMode.LINKER_MAP.getFlavor(),
+      LinkerMapMode.NO_LINKER_MAP.getFlavor());
 
   private final CxxBinaryDescription delegate;
   private final SwiftLibraryDescription swiftDelegate;
@@ -188,11 +191,12 @@ public class AppleBinaryDescription implements
         params = params.appendExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
       }
     }
-
-    // remove debug format flavors so binary will have the same output regardless of debug format
+    // remove some flavors so binary will have the same output regardless their values
     BuildTarget unstrippedBinaryBuildTarget = params.getBuildTarget()
         .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
         .withoutFlavors(StripStyle.FLAVOR_DOMAIN.getFlavors());
+    unstrippedBinaryBuildTarget = LinkerMapMode
+        .buildTargetByAddingDefaultLinkerMapFlavorIfNeeded(unstrippedBinaryBuildTarget);
 
     BuildRule unstrippedBinaryRule = createBinary(
         targetGraph,
@@ -299,6 +303,12 @@ public class AppleBinaryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
+
+    if (AppleDescriptions.flavorsDoNotAllowLinkerMapMode(params.getBuildTarget().getFlavors())) {
+      params = params.copyWithBuildTarget(
+          params.getBuildTarget().withoutFlavors(LinkerMapMode.FLAVOR_DOMAIN.getFlavors()));
+    }
+
     Optional<MultiarchFileInfo> fatBinaryInfo = MultiarchFileInfos.create(
         platformFlavorsToAppleCxxPlatforms,
         params.getBuildTarget());

@@ -21,6 +21,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cxx.LinkerMapMode;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -29,7 +31,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -59,9 +60,6 @@ public class AppleBuildRulesTest {
 
   @Test
   public void testAppleTestIsXcodeTargetTestBuildRuleType() throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-
     AppleTestBuilder appleTestBuilder = new AppleTestBuilder(
         BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386"))
         .setContacts(ImmutableSortedSet.of())
@@ -69,16 +67,25 @@ public class AppleBuildRulesTest {
         .setDeps(ImmutableSortedSet.of());
 
     TargetNode<?> appleTestNode = appleTestBuilder.build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        ImmutableSet.<TargetNode<?>>of(appleTestNode));
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
     BuildRule testRule = appleTestBuilder.build(
         resolver,
         new FakeProjectFilesystem(),
-        TargetGraphFactory.newInstance(ImmutableSet.of(appleTestNode)));
+        targetGraph);
     assertTrue(AppleBuildRules.isXcodeTargetTestBuildRule(testRule));
   }
 
   @Test
   public void testAppleLibraryIsNotXcodeTargetTestBuildRuleType() throws Exception {
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder("//foo:lib").build();
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(
+        BuildTargetFactory.newInstance("//foo:lib")
+            .withAppendedFlavors(LinkerMapMode.DEFAULT_MODE.getFlavor()))
+        .build();
     AppleLibraryDescription.Arg arg =
         createDescriptionArgWithDefaults(FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION);
     BuildRule libraryRule = FakeAppleRuleDescriptions

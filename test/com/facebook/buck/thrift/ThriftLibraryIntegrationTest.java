@@ -22,6 +22,8 @@ import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.config.CellConfig;
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.listener.BroadcastEventListener;
@@ -31,7 +33,6 @@ import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.ActionGraphAndResolver;
@@ -127,7 +128,9 @@ public class ThriftLibraryIntegrationTest {
     // making the binary depend 'placeholder' BuildRules instead of real ones. This is the
     // regression test for that case.
     BuildRuleResolver ruleResolver = actionGraphAndResolver.getResolver();
-    BuildTarget binaryFlavor = target.withFlavors(ImmutableFlavor.of("binary"));
+    BuildTarget binaryFlavor = target.withFlavors(
+        CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR,
+        LinkerMapMode.DEFAULT_MODE.getFlavor());
     ImmutableSortedSet<BuildRule> deps = ruleResolver.getRule(binaryFlavor).getDeps();
     assertThat(
         FluentIterable.from(deps)

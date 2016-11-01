@@ -81,7 +81,10 @@ public class CxxBoostTestTest {
                 .build(),
             pathResolver,
             new CxxLink(
-                new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:link")).build(),
+                new FakeBuildRuleParamsBuilder(
+                    BuildTargetFactory.newInstance("//:link")
+                        .withFlavors(LinkerMapMode.DEFAULT_MODE.getFlavor()))
+                    .build(),
                 pathResolver,
                 CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
                 Paths.get("output"),

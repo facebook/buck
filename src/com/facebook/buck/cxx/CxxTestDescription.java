@@ -96,8 +96,15 @@ public class CxxTestDescription implements
       final A args) throws NoSuchBuildTargetException {
     Optional<StripStyle> flavoredStripStyle =
         StripStyle.FLAVOR_DOMAIN.getValue(inputParams.getBuildTarget());
-    final BuildRuleParams params =
-        CxxStrip.removeStripStyleFlavorInParams(inputParams, flavoredStripStyle);
+    Optional<LinkerMapMode> flavoredLinkerMapMode =
+        LinkerMapMode.FLAVOR_DOMAIN.getValue(inputParams.getBuildTarget());
+    inputParams = CxxStrip.removeStripStyleFlavorInParams(
+        inputParams,
+        flavoredStripStyle);
+    inputParams = LinkerMapMode.removeLinkerMapModeFlavorInParams(
+        inputParams,
+        flavoredLinkerMapMode);
+    final BuildRuleParams params = inputParams;
 
     Optional<CxxPlatform> platform = cxxPlatforms.getValue(params.getBuildTarget());
     CxxPlatform cxxPlatform = platform.orElse(defaultCxxPlatform);
@@ -132,13 +139,19 @@ public class CxxTestDescription implements
             cxxBuckConfig,
             cxxPlatform,
             args,
-            flavoredStripStyle);
+            flavoredStripStyle,
+            flavoredLinkerMapMode);
 
     // Construct the actual build params we'll use, notably with an added dependency on the
     // CxxLink rule above which builds the test binary.
     BuildRuleParams testParams =
         params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(pathResolver));
-    testParams = CxxStrip.restoreStripStyleFlavorInParams(testParams, flavoredStripStyle);
+    testParams = CxxStrip.restoreStripStyleFlavorInParams(
+        testParams,
+        flavoredStripStyle);
+    testParams = LinkerMapMode.restoreLinkerMapModeFlavorInParams(
+        testParams,
+        flavoredLinkerMapMode);
 
     // Supplier which expands macros in the passed in test environment.
     Supplier<ImmutableMap<String, String>> testEnv =
@@ -320,6 +333,10 @@ public class CxxTestDescription implements
     }
 
     if (StripStyle.FLAVOR_DOMAIN.containsAnyOf(flavors)) {
+      return true;
+    }
+
+    if (LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(flavors)) {
       return true;
     }
 

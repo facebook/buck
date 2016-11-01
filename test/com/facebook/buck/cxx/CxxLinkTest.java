@@ -72,7 +72,8 @@ public class CxxLinkTest {
     SourcePathResolver pathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar")
+        .withFlavors(LinkerMapMode.DEFAULT_MODE.getFlavor());
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
         ImmutableMap.of(
@@ -145,7 +146,8 @@ public class CxxLinkTest {
     SourcePathResolver pathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar")
+        .withFlavors(LinkerMapMode.DEFAULT_MODE.getFlavor());
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
         new DefaultRuleKeyBuilderFactory(

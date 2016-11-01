@@ -346,7 +346,9 @@ public class CxxLibraryDescriptionTest {
     // Generate the C++ library rules.
     BuildTarget target =
         BuildTargetFactory.newInstance(
-            String.format("//:rule#shared,%s", CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()));
+            String.format(
+                "//:rule#no-linkermap,shared,%s",
+                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()));
     CxxLibraryBuilder ruleBuilder = new CxxLibraryBuilder(target)
         .setSoname(soname)
         .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo.cpp"))));
@@ -460,6 +462,7 @@ public class CxxLibraryDescriptionTest {
         .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test.cpp"))));
     BuildTarget sharedLibraryDepTarget = BuildTarget.builder(depTarget)
         .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .addFlavors(LinkerMapMode.DEFAULT_MODE.getFlavor())
         .addFlavors(cxxPlatform.getFlavor())
         .build();
     BuildTarget headerSymlinkTreeTarget = BuildTarget.builder(depTarget)
@@ -789,7 +792,11 @@ public class CxxLibraryDescriptionTest {
             .setOut("out")
             .build(resolver);
     CxxLibraryBuilder builder =
-        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule#shared,platform"))
+        new CxxLibraryBuilder(
+            BuildTargetFactory.newInstance("//:rule")
+                .withAppendedFlavors(LinkerMapMode.DEFAULT_MODE.getFlavor(),
+                    CxxDescriptionEnhancer.SHARED_FLAVOR,
+                    CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()))
             .setLinkerFlags(ImmutableList.of("--linker-script=$(location //:dep)"))
             .setSrcs(
                 ImmutableSortedSet.of(
@@ -813,6 +820,7 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory
         .newInstance("//foo:bar")
         .withFlavors(
+            LinkerMapMode.DEFAULT_MODE.getFlavor(),
             CxxDescriptionEnhancer.SHARED_FLAVOR,
             CxxLibraryBuilder.createDefaultPlatform().getFlavor());
     BuildRuleResolver resolver =
@@ -852,6 +860,7 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory
         .newInstance("//foo:bar")
         .withFlavors(
+            LinkerMapMode.DEFAULT_MODE.getFlavor(),
             CxxDescriptionEnhancer.SHARED_FLAVOR,
             CxxLibraryBuilder.createDefaultPlatform().getFlavor());
     BuildRuleResolver resolver =
@@ -901,6 +910,7 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory
         .newInstance("//foo:bar")
         .withFlavors(
+            LinkerMapMode.DEFAULT_MODE.getFlavor(),
             CxxDescriptionEnhancer.SHARED_FLAVOR,
             CxxLibraryBuilder.createDefaultPlatform().getFlavor());
     BuildRuleResolver resolver =

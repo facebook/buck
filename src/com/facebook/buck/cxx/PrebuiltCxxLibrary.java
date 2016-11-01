@@ -180,7 +180,8 @@ public class PrebuiltCxxLibrary
         ruleResolver.requireRule(
             getBuildTarget().withFlavors(
                 cxxPlatform.getFlavor(),
-                CxxDescriptionEnhancer.SHARED_FLAVOR));
+                CxxDescriptionEnhancer.SHARED_FLAVOR,
+                LinkerMapMode.DEFAULT_MODE.getFlavor()));
 
     return new BuildTargetSourcePath(sharedLibrary.getBuildTarget());
   }

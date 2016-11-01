@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxLink;
+import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -77,46 +78,52 @@ public class MultiarchFile extends AbstractBuildRule implements ProvidesLinkedBi
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.add(new MkdirStep(getProjectFilesystem(), output.getParent()));
 
-    {
-      ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
-      commandBuilder.addAll(lipo.getCommandPrefix(getResolver()));
-      commandBuilder.add("-create", "-output", getProjectFilesystem().resolve(output).toString());
-      for (SourcePath thinBinary : thinBinaries) {
-        commandBuilder.add(getResolver().getAbsolutePath(thinBinary).toString());
-      }
-      steps.add(
-          new DefaultShellStep(
-              getProjectFilesystem().getRootPath(),
-              commandBuilder.build(),
-              lipo.getEnvironment(getResolver())));
+    lipoBinaries(steps);
+
+    if (getBuildTarget().getFlavors().contains(LinkerMapMode.LINKER_MAP.getFlavor())) {
+      copyLinkMaps(buildableContext, steps);
     }
 
-    {
-      // Copy link maps.
-      Path linkMapDir = Paths.get(output + "-LinkMap");
-      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), linkMapDir));
+    return steps.build();
+  }
 
-      for (SourcePath thinBinary : thinBinaries) {
-        Optional<BuildRule> maybeRule = getResolver().getRule(thinBinary);
-        if (maybeRule.isPresent()) {
-          BuildRule rule = maybeRule.get();
-          if (rule instanceof CxxBinary) {
-            rule = ((CxxBinary) rule).getLinkRule();
-          }
-          if (rule instanceof CxxLink) {
-            Optional<Path> maybeLinkerMapPath = ((CxxLink) rule).getLinkerMapPath();
-            if (maybeLinkerMapPath.isPresent()) {
-              Path source = maybeLinkerMapPath.get();
-              Path dest = linkMapDir.resolve(source.getFileName());
-              steps.add(CopyStep.forFile(getProjectFilesystem(), source, dest));
-              buildableContext.recordArtifact(dest);
-            }
+  private void lipoBinaries(ImmutableList.Builder<Step> steps) {
+    ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
+    commandBuilder.addAll(lipo.getCommandPrefix(getResolver()));
+    commandBuilder.add("-create", "-output", getProjectFilesystem().resolve(output).toString());
+    for (SourcePath thinBinary : thinBinaries) {
+      commandBuilder.add(getResolver().getAbsolutePath(thinBinary).toString());
+    }
+    steps.add(
+        new DefaultShellStep(
+            getProjectFilesystem().getRootPath(),
+            commandBuilder.build(),
+            lipo.getEnvironment(getResolver())));
+  }
+
+  private void copyLinkMaps(BuildableContext buildableContext, ImmutableList.Builder<Step> steps) {
+    // Copy link maps.
+    Path linkMapDir = Paths.get(output + "-LinkMap");
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), linkMapDir));
+
+    for (SourcePath thinBinary : thinBinaries) {
+      Optional<BuildRule> maybeRule = getResolver().getRule(thinBinary);
+      if (maybeRule.isPresent()) {
+        BuildRule rule = maybeRule.get();
+        if (rule instanceof CxxBinary) {
+          rule = ((CxxBinary) rule).getLinkRule();
+        }
+        if (rule instanceof CxxLink) {
+          Optional<Path> maybeLinkerMapPath = ((CxxLink) rule).getLinkerMapPath();
+          if (maybeLinkerMapPath.isPresent()) {
+            Path source = maybeLinkerMapPath.get();
+            Path dest = linkMapDir.resolve(source.getFileName());
+            steps.add(CopyStep.forFile(getProjectFilesystem(), source, dest));
+            buildableContext.recordArtifact(dest);
           }
         }
       }
     }
-
-    return steps.build();
   }
 
   @Override

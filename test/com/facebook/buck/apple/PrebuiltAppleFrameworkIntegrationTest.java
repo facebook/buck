@@ -22,6 +22,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -70,14 +72,17 @@ public class PrebuiltAppleFrameworkIntegrationTest {
     workspace.setUp();
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
-    BuildTarget target =
-        BuildTargetFactory.newInstance("//app:TestApp");
+    BuildTarget target = BuildTargetFactory.newInstance("//app:TestApp")
+        .withAppendedFlavors(LinkerMapMode.DEFAULT_MODE.getFlavor());
     ProjectWorkspace.ProcessResult result =
         workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
-
-    Path testBinaryPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
+    Path testBinaryPath = workspace.getPath(
+        BuildTargets.getGenPath(
+            filesystem,
+            target.withAppendedFlavors(CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR),
+            "%s"));
     assertTrue(Files.exists(testBinaryPath));
 
     ProcessExecutor.Result otoolResult = workspace.runCommand(

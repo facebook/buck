@@ -18,12 +18,13 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CommandTool;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -46,7 +47,10 @@ public class CxxBinaryTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
-    BuildRuleParams linkParams = new FakeBuildRuleParamsBuilder("//:link").build();
+    BuildRuleParams linkParams = new FakeBuildRuleParamsBuilder(
+        BuildTargetFactory.newInstance("//:link")
+            .withAppendedFlavors(LinkerMapMode.DEFAULT_MODE.getFlavor()))
+        .build();
     Path bin = Paths.get("path/to/exectuable");
     CxxLink cxxLink =
         ruleResolver.addToIndex(
