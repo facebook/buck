@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
 
-import com.facebook.buck.maven.AetherUtil;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
@@ -28,7 +27,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
@@ -46,6 +44,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -94,10 +93,14 @@ public class JavaLibraryDescription implements
     ImmutableSortedSet<Flavor> flavors = target.getFlavors();
 
     if (flavors.contains(Javadoc.DOC_JAR)) {
-      BuildTarget unflavored = BuildTarget.of(target.getUnflavoredBuildTarget());
-      BuildRule baseLibrary = resolver.requireRule(unflavored);
+      BuildRule baseLibrary = getUnflavoredRule(
+          targetGraph,
+          params,
+          resolver,
+          args,
+          target);
 
-      JarShape shape = params.getBuildTarget().getFlavors().contains(JavaLibrary.MAVEN_JAR) ?
+      JarShape shape = flavors.contains(JavaLibrary.MAVEN_JAR) ?
           JarShape.MAVEN : JarShape.SINGLE;
 
       JarShape.Summary summary = shape.gatherDeps(baseLibrary);
@@ -135,15 +138,31 @@ public class JavaLibraryDescription implements
           sources);
     }
 
-    if (flavors.contains(CalculateAbi.FLAVOR)) {
-      BuildTarget libraryTarget = target.withoutFlavors(CalculateAbi.FLAVOR);
-      resolver.requireRule(libraryTarget);
-      return CalculateAbi.of(
-          params.getBuildTarget(),
+    if (flavors.contains(JavaLibrary.SRC_JAR)) {
+      BuildRule baseLibrary = getUnflavoredRule(targetGraph, params, resolver, args, target);
+
+      JarShape shape = flavors.contains(JavaLibrary.MAVEN_JAR) ?
+          JarShape.MAVEN : JarShape.SINGLE;
+
+      JarShape.Summary summary = shape.gatherDeps(baseLibrary);
+      ImmutableSortedSet<SourcePath> sources = summary.getPackagedRules().stream()
+          .filter(HasSources.class::isInstance)
+          .map(rule -> ((HasSources) rule).getSources())
+          .flatMap(Collection::stream)
+          .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+
+      BuildRuleParams emptyParams = params.copyWithDeps(
+          Suppliers.ofInstance(
+              ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(sources))),
+          Suppliers.ofInstance(ImmutableSortedSet.of()));
+
+      return new JavaSourceJar(
+          emptyParams,
           pathResolver,
-          ruleFinder,
-          params,
-          new BuildTargetSourcePath(libraryTarget));
+          args.mavenCoords,
+          args.mavenPomTemplate,
+          summary.getMavenDeps(),
+          sources);
     }
 
     BuildRuleParams paramsWithMavenFlavor = null;
@@ -154,27 +173,6 @@ public class JavaLibraryDescription implements
       // without the maven flavor to prevent output-path conflict
       params = params.copyWithBuildTarget(
           params.getBuildTarget().withoutFlavors(ImmutableSet.of(JavaLibrary.MAVEN_JAR)));
-    }
-
-    if (flavors.contains(JavaLibrary.SRC_JAR)) {
-      args.mavenCoords = args.mavenCoords.map(input -> AetherUtil.addClassifier(
-          input,
-          AetherUtil.CLASSIFIER_SOURCES));
-
-      if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
-        return new JavaSourceJar(
-            params,
-            pathResolver,
-            args.srcs,
-            args.mavenCoords);
-      } else {
-        return MavenUberJar.SourceJar.create(
-            Preconditions.checkNotNull(paramsWithMavenFlavor),
-            pathResolver,
-            args.srcs,
-            args.mavenCoords,
-            args.mavenPomTemplate);
-      }
     }
 
     JavacOptions javacOptions = JavacOptionsFactory.create(
@@ -234,6 +232,27 @@ public class JavaLibraryDescription implements
           args.mavenCoords,
           args.mavenPomTemplate);
     }
+  }
+
+  private <A extends Arg> BuildRule getUnflavoredRule(
+      TargetGraph targetGraph,
+      BuildRuleParams params, BuildRuleResolver resolver, A args, BuildTarget target)
+      throws NoSuchBuildTargetException {
+    BuildTarget unflavored = BuildTarget.of(target.getUnflavoredBuildTarget());
+
+    Optional<BuildRule> optionalBaseLibrary = resolver.getRuleOptional(unflavored);
+    BuildRule baseLibrary;
+    if (!optionalBaseLibrary.isPresent()) {
+      baseLibrary = resolver.addToIndex(
+          createBuildRule(
+              targetGraph,
+              params.copyWithBuildTarget(unflavored),
+              resolver,
+              args));
+    } else {
+      baseLibrary = optionalBaseLibrary.get();
+    }
+    return baseLibrary;
   }
 
   @SuppressFieldNotInitialized

@@ -1,0 +1,32 @@
+java_library(
+  name = 'lib',
+  srcs = [
+    'Direct.java',
+    ':generated',
+  ],
+  resources = [
+    'hello.txt',
+  ],
+  deps = [
+    ':maven',
+    ':transitive',
+  ],
+)
+
+java_library(
+  name = 'maven',
+  maven_coords = 'com.example:maven:1.0',
+  srcs = [ 'MavenSource.java' ],
+)
+
+java_library(
+  name = 'transitive',
+  srcs = [ 'Transitive.java' ],
+)
+
+export_file(
+  name = 'generated',
+  src = 'Generated.txt',
+  out = 'Generated.java',
+)
+

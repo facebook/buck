@@ -92,7 +92,7 @@ public class AndroidLibraryDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     if (params.getBuildTarget().getFlavors().contains(JavaLibrary.SRC_JAR)) {
-      return new JavaSourceJar(params, pathResolver, args.srcs, args.mavenCoords);
+      return new JavaSourceJar(params, pathResolver, args.mavenCoords, args.mavenPomTemplate, ImmutableSet.of(), args.srcs);
     }
 
     JavacOptions javacOptions = JavacOptionsFactory.create(

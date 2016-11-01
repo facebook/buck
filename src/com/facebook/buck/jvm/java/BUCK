@@ -115,6 +115,7 @@ java_library(
     'DefaultJavaPackageFinder.java',
     'ResourcesRootPackageFinder.java',
     'JavaPackageFinderSerializer.java',
+    'SourceReadingPackageFinder.java',
   ],
   autodeps = True,
   visibility = ['PUBLIC'],
