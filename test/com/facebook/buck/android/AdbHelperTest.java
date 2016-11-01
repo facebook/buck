@@ -23,9 +23,12 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.InstallException;
+import com.android.ddmlib.ShellCommandUnresponsiveException;
+import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.step.AdbOptions;
@@ -42,6 +45,7 @@ import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -529,13 +533,13 @@ public class AdbHelperTest {
   public void testDeviceStartActivitySuccess() {
     TestDevice device = createDeviceForShellCommandTest(
         "Starting: Intent { cmp=com.example.ExceptionErrorActivity }\r\n");
-    assertNull(basicAdbHelper.deviceStartActivity(device, "com.foo/.Activity"));
+    assertNull(basicAdbHelper.deviceStartActivity(device, "com.foo/.Activity", false));
   }
 
   @Test
   public void testDeviceStartActivityAmDoesntExist() {
     TestDevice device = createDeviceForShellCommandTest("sh: am: not found\r\n");
-    assertNotNull(basicAdbHelper.deviceStartActivity(device, "com.foo/.Activity"));
+    assertNotNull(basicAdbHelper.deviceStartActivity(device, "com.foo/.Activity", false));
   }
 
   @Test
@@ -547,7 +551,7 @@ public class AdbHelperTest {
          errorLine);
     assertEquals(
         errorLine.trim(),
-        basicAdbHelper.deviceStartActivity(device, "com.foo/.Activiy").trim());
+        basicAdbHelper.deviceStartActivity(device, "com.foo/.Activiy", false).trim());
   }
 
   @Test
@@ -564,7 +568,7 @@ public class AdbHelperTest {
         "  at dalvik.system.NativeStart.main(Native Method)\r\n");
     assertEquals(
         errorLine.trim(),
-        basicAdbHelper.deviceStartActivity(device, "com.foo/.Activity").trim());
+        basicAdbHelper.deviceStartActivity(device, "com.foo/.Activity", false).trim());
   }
 
   /**
@@ -602,4 +606,37 @@ public class AdbHelperTest {
     assertFalse(basicAdbHelper.installApkOnDevice(device, apk, false, false));
   }
 
+  @Test
+  public void testDeviceStartActivityWaitForDebugger() throws Exception {
+    final AtomicReference<String> runDeviceCommand = new AtomicReference<>();
+    TestDevice device = new TestDevice() {
+      @Override
+      public void executeShellCommand(
+          String command,
+          IShellOutputReceiver receiver,
+          long maxTimeToOutputResponse,
+          TimeUnit maxTimeUnits) {
+        runDeviceCommand.set(command);
+      }
+    };
+    assertNull(basicAdbHelper.deviceStartActivity(device, "com.foo/.Activity", true));
+    assertTrue(runDeviceCommand.get().contains(" -D"));
+  }
+
+  @Test
+  public void testDeviceStartActivityDoNotWaitForDebugger() throws Exception {
+    final AtomicReference<String> runDeviceCommand = new AtomicReference<>();
+    TestDevice device = new TestDevice() {
+      @Override
+      public void executeShellCommand(
+          String command,
+          IShellOutputReceiver receiver,
+          long maxTimeToOutputResponse,
+          TimeUnit maxTimeUnits) {
+        runDeviceCommand.set(command);
+      }
+    };
+    assertNull(basicAdbHelper.deviceStartActivity(device, "com.foo/.Activity", false));
+    assertFalse(runDeviceCommand.get().contains(" -D"));
+  }
 }

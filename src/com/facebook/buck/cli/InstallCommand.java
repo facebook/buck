@@ -354,7 +354,7 @@ public class InstallCommand extends BuildCommand {
     // We've installed the application successfully.
     // Is either of --activity or --run present?
     if (shouldStartActivity()) {
-      int exitCode = adbHelper.startActivity(installableApk, getActivityToStart());
+      int exitCode = adbHelper.startActivity(installableApk, getActivityToStart(), waitForDebugger);
       if (exitCode != 0) {
         return exitCode;
       }
