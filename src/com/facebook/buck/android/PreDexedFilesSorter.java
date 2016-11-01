@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.dalvik.CanaryFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.classes.FileLike;
-import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -94,13 +93,12 @@ public class PreDexedFilesSorter {
   }
 
   public ImmutableMap<String, Result> sortIntoPrimaryAndSecondaryDexes(
-      BuildContext context,
       ProjectFilesystem filesystem,
       ImmutableList.Builder<Step> steps) {
     Map<APKModule, DexStoreContents> apkModuleDexesContents =
         new HashMap<>();
     DexStoreContents rootStoreContents =
-        new DexStoreContents(apkModuleGraph.getRootAPKModule(), context, filesystem, steps);
+        new DexStoreContents(apkModuleGraph.getRootAPKModule(), filesystem, steps);
     apkModuleDexesContents.put(
         apkModuleGraph.getRootAPKModule(),
         rootStoreContents);
@@ -126,7 +124,7 @@ public class PreDexedFilesSorter {
         } else {
           DexStoreContents storeContents = apkModuleDexesContents.get(module);
           if (storeContents == null) {
-            storeContents = new DexStoreContents(module, context, filesystem, steps);
+            storeContents = new DexStoreContents(module, filesystem, steps);
             apkModuleDexesContents.put(module, storeContents);
           }
           storeContents.addDex(dexWithClasses);
@@ -162,17 +160,14 @@ public class PreDexedFilesSorter {
     private List<DexWithClasses> currentDexContents;
 
     private final APKModule apkModule;
-    private final BuildContext context;
     private final ProjectFilesystem filesystem;
     private final ImmutableList.Builder<Step> steps;
     private final ImmutableMap.Builder<Path, Sha1HashCode> dexInputsHashes = ImmutableMap.builder();
 
     public DexStoreContents(
         APKModule apkModule,
-        BuildContext context,
         ProjectFilesystem filesystem,
         ImmutableList.Builder<Step> steps) {
-      this.context = context;
       this.filesystem = filesystem;
       this.steps = steps;
       this.apkModule = apkModule;
@@ -186,14 +181,13 @@ public class PreDexedFilesSorter {
     public void addPrimaryDex(DexWithClasses dexWithClasses) {
       primaryDexSize += dexWithClasses.getWeightEstimate();
       if (primaryDexSize > dexWeightLimit) {
-        context.logError(
-            "DexWithClasses %s with cost %s puts the linear alloc estimate for the primary dex " +
-                "at %s, exceeding the maximum of %s.",
+        throw new HumanReadableException(
+            "Primary dex exceeds linear alloc limit. DexWithClasses %s with cost %s puts the " +
+                "linear alloc estimate for the primary dex at %s, exceeding the maximum of %s.",
             dexWithClasses.getPathToDexFile(),
             dexWithClasses.getWeightEstimate(),
             primaryDexSize,
             dexWeightLimit);
-        throw new HumanReadableException("Primary dex exceeds linear alloc limit.");
       }
       this.primaryDexContents.add(dexWithClasses);
       dexInputsHashes.put(dexWithClasses.getPathToDexFile(), dexWithClasses.getClassesHash());

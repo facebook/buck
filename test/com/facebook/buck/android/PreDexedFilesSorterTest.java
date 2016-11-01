@@ -21,7 +21,6 @@ import static org.hamcrest.Matchers.oneOf;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -237,10 +236,7 @@ public class PreDexedFilesSorterTest {
         tempDir.newFolder("additional").toPath());
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    return sorter.sortIntoPrimaryAndSecondaryDexes(
-        FakeBuildContext.NOOP_CONTEXT,
-        filesystem,
-        steps);
+    return sorter.sortIntoPrimaryAndSecondaryDexes(filesystem, steps);
   }
 
   private DexWithClasses createFakeDexWithClasses(

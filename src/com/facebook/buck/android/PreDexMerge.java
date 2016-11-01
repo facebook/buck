@@ -132,7 +132,7 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
     steps.add(new MkdirStep(getProjectFilesystem(), primaryDexPath.getParent()));
 
     if (dexSplitMode.isShouldSplitDex()) {
-      addStepsForSplitDex(steps, context, buildableContext);
+      addStepsForSplitDex(steps, buildableContext);
     } else {
       addStepsForSingleDex(steps, buildableContext);
     }
@@ -173,7 +173,6 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
 
   private void addStepsForSplitDex(
       ImmutableList.Builder<Step> steps,
-      BuildContext context,
       BuildableContext buildableContext) {
 
     // Collect all of the DexWithClasses objects to use for merging.
@@ -238,7 +237,6 @@ public class PreDexMerge extends AbstractBuildRule implements InitializableFromD
         paths.additionalJarfilesSubdir);
     final ImmutableMap<String, PreDexedFilesSorter.Result> sortResults =
         preDexedFilesSorter.sortIntoPrimaryAndSecondaryDexes(
-            context,
             getProjectFilesystem(),
             steps);
 
