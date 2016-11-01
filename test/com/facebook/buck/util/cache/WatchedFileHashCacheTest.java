@@ -18,8 +18,10 @@ package com.facebook.buck.util.cache;
 
 import static com.facebook.buck.testutil.WatchEventsForTests.createOverflowEvent;
 import static com.facebook.buck.testutil.WatchEventsForTests.createPathEvent;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -54,8 +56,10 @@ public class WatchedFileHashCacheTest {
     Path path = new File("SomeClass.java").toPath();
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.loadingCache.put(path, value);
+    cache.sizeCache.put(path, 1234L);
     cache.onFileSystemChange(createOverflowEvent());
     assertFalse("Cache should not contain path", cache.willGet(path));
+    assertThat("Cache should not contain path", cache.sizeCache.getIfPresent(path), nullValue());
   }
 
   @Test
@@ -65,8 +69,10 @@ public class WatchedFileHashCacheTest {
     Path path = Paths.get("SomeClass.java");
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.loadingCache.put(path, value);
+    cache.sizeCache.put(path, 1234L);
     cache.onFileSystemChange(createPathEvent(path, StandardWatchEventKinds.ENTRY_CREATE));
     assertFalse("Cache should not contain path", cache.willGet(path));
+    assertThat("Cache should not contain path", cache.sizeCache.getIfPresent(path), nullValue());
   }
 
   @Test
@@ -76,8 +82,10 @@ public class WatchedFileHashCacheTest {
     Path path = Paths.get("SomeClass.java");
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.loadingCache.put(path, value);
+    cache.sizeCache.put(path, 1234L);
     cache.onFileSystemChange(createPathEvent(path, StandardWatchEventKinds.ENTRY_MODIFY));
     assertFalse("Cache should not contain path", cache.willGet(path));
+    assertThat("Cache should not contain path", cache.sizeCache.getIfPresent(path), nullValue());
   }
 
   @Test
@@ -87,8 +95,10 @@ public class WatchedFileHashCacheTest {
     Path path = Paths.get("SomeClass.java");
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.loadingCache.put(path, value);
+    cache.sizeCache.put(path, 1234L);
     cache.onFileSystemChange(createPathEvent(path, StandardWatchEventKinds.ENTRY_DELETE));
     assertFalse("Cache should not contain path", cache.willGet(path));
+    assertThat("Cache should not contain path", cache.sizeCache.getIfPresent(path), nullValue());
   }
 
   @Test
@@ -118,11 +128,13 @@ public class WatchedFileHashCacheTest {
     HashCodeAndFileType value =
         HashCodeAndFileType.ofDirectory(HashCode.fromInt(42), ImmutableSet.of());
     cache.loadingCache.put(dir, value);
+    cache.sizeCache.put(dir, 1234L);
     cache.onFileSystemChange(
         createPathEvent(
             dir.resolve("blech"),
             StandardWatchEventKinds.ENTRY_CREATE));
     assertFalse("Cache should not contain path", cache.willGet(dir));
+    assertThat("Cache should not contain path", cache.sizeCache.getIfPresent(dir), nullValue());
   }
 
 }
