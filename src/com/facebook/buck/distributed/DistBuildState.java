@@ -144,8 +144,7 @@ public class DistBuildState {
         CellProvider.createForDistributedBuild(
             cellConfigs.build(),
             cellFilesystems.build(),
-            knownBuildRuleTypesFactory,
-            rootCell.getWatchmanDiagnosticCache());
+            knownBuildRuleTypesFactory);
 
     ImmutableBiMap<Integer, Cell> cells = ImmutableBiMap.copyOf(
         Maps.transformValues(cellIndex.build(), cellProvider::getCellByPath));

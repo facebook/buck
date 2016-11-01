@@ -22,7 +22,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
@@ -158,8 +157,7 @@ public class JavaSymbolFinder {
         console,
         environment,
         buckEventBus,
-        /* ignoreBuckAutodepsFiles */ false,
-        new WatchmanDiagnosticCache())) {
+        /* ignoreBuckAutodepsFiles */ false)) {
       for (Path sourceFile : sourceFilePaths) {
         for (Path buckFile : possibleBuckFilesForSourceFile(sourceFile)) {
           List<Map<String, Object>> rules;

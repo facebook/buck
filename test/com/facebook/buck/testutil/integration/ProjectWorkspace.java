@@ -38,7 +38,6 @@ import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
-import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.model.BuildId;
@@ -625,8 +624,7 @@ public class ProjectWorkspace {
         CellConfig.of(),
         new KnownBuildRuleTypesFactory(
             new DefaultProcessExecutor(console),
-            directoryResolver),
-        new WatchmanDiagnosticCache()).getCellByPath(filesystem.getRootPath());
+            directoryResolver)).getCellByPath(filesystem.getRootPath());
   }
 
   public BuildTarget newBuildTarget(String fullyQualifiedName)

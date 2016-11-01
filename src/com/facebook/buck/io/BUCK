@@ -53,7 +53,8 @@ WATCHMAN_SRCS = [
   'AbstractWatchmanQuery.java',
   'Watchman.java',
   'WatchmanClient.java',
-  'WatchmanDiagnosticCache.java',
+  'WatchmanDiagnosticEvent.java',
+  'WatchmanDiagnosticEventListener.java',
   'WatchmanSocketClient.java',
 ]
 java_immutables_library(

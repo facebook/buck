@@ -30,6 +30,7 @@
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util:watchman",
       "//src/com/facebook/buck/util/environment:platform",
+      "//test/com/facebook/buck/event:testutil",
       "//test/com/facebook/buck/io:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:util",

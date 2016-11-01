@@ -17,7 +17,6 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.util.Console;
 import com.google.common.collect.ImmutableMap;
@@ -37,6 +36,5 @@ public interface ProjectBuildFileParserFactory {
       Console console,
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus,
-      boolean ignoreBuckAutodepsFiles,
-      WatchmanDiagnosticCache watchmanDiagnosticCache);
+      boolean ignoreBuckAutodepsFiles);
 }

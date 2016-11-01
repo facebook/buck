@@ -32,7 +32,6 @@ import com.facebook.buck.file.RemoteFileDescription;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
@@ -133,8 +132,7 @@ public class ResolverIntegrationTest {
         new TestConsole(),
         ImmutableMap.of(),
         BuckEventBusFactory.newInstance(),
-        /* ignoreBuckAutodepsFiles */ false,
-        new WatchmanDiagnosticCache());
+        /* ignoreBuckAutodepsFiles */ false);
   }
 
   @AfterClass

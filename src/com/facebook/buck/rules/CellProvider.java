@@ -22,7 +22,6 @@ import com.facebook.buck.config.Configs;
 import com.facebook.buck.config.RawConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
-import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -92,8 +91,7 @@ public final class CellProvider {
       Watchman watchman,
       BuckConfig rootConfig,
       CellConfig rootCellConfigOverrides,
-      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      WatchmanDiagnosticCache watchmanDiagnosticCache) throws IOException {
+      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory) throws IOException {
 
     DefaultCellPathResolver rootCellCellPathResolver = new DefaultCellPathResolver(
         rootFilesystem.getRootPath(),
@@ -146,8 +144,7 @@ public final class CellProvider {
                 watchman,
                 buckConfig,
                 knownBuildRuleTypesFactory,
-                cellProvider,
-                watchmanDiagnosticCache);
+                cellProvider);
           }
         },
         cellProvider -> {
@@ -158,8 +155,7 @@ public final class CellProvider {
                 watchman,
                 rootConfig,
                 knownBuildRuleTypesFactory,
-                cellProvider,
-                watchmanDiagnosticCache);
+                cellProvider);
           } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted while loading root cell", e);
           } catch (IOException e) {
@@ -171,8 +167,7 @@ public final class CellProvider {
   public static CellProvider createForDistributedBuild(
       ImmutableMap<Path, BuckConfig> cellConfigs,
       ImmutableMap<Path, ProjectFilesystem> cellFilesystems,
-      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      WatchmanDiagnosticCache watchmanDiagnosticCache) {
+      KnownBuildRuleTypesFactory knownBuildRuleTypesFactory) {
     return new CellProvider(
         cellProvider -> new CacheLoader<Path, Cell>() {
           @Override
@@ -187,9 +182,7 @@ public final class CellProvider {
                 Watchman.NULL_WATCHMAN,
                 buckConfig,
                 knownBuildRuleTypesFactory,
-                cellProvider,
-                watchmanDiagnosticCache
-            );
+                cellProvider);
           }
         },
         null);

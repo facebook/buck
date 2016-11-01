@@ -18,7 +18,7 @@ package com.facebook.buck.util;
 
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.WatchmanDiagnosticEvent;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectWatch;
@@ -27,7 +27,6 @@ import com.facebook.buck.io.Watchman.Capability;
 import com.facebook.buck.io.WatchmanClient;
 import com.facebook.buck.io.WatchmanCursor;
 import com.facebook.buck.io.WatchmanDiagnostic;
-import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.io.WatchmanQuery;
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
@@ -218,7 +217,6 @@ public class WatchmanWatcher {
   @SuppressWarnings("unchecked")
   public void postEvents(
       BuckEventBus buckEventBus,
-      WatchmanDiagnosticCache watchmanDiagnosticCache,
       FreshInstanceAction freshInstanceAction
   ) throws IOException, InterruptedException {
     try {
@@ -239,8 +237,7 @@ public class WatchmanWatcher {
       Map<String, ? extends Object> response = queryResponse.get();
       String error = (String) response.get("error");
       if (error != null) {
-        watchmanDiagnosticCache.addDiagnostic(
-            WatchmanDiagnostic.of(WatchmanDiagnostic.Level.ERROR, error));
+        // This message is not de-duplicated via WatchmanDiagnostic.
         WatchmanWatcherException e = new WatchmanWatcherException(error);
         LOG.error(
             e,
@@ -251,17 +248,9 @@ public class WatchmanWatcher {
 
       String warning = (String) response.get("warning");
       if (warning != null) {
-        switch (watchmanDiagnosticCache.addDiagnostic(
-                    WatchmanDiagnostic.of(WatchmanDiagnostic.Level.WARNING, warning))) {
-          case NEW_DIAGNOSTIC:
-            buckEventBus.post(
-                ConsoleEvent.warning("Watchman has produced a warning: %s", warning));
-            LOG.warn("Watchman has produced a warning: %s", warning);
-            break;
-          case DUPLICATE_DIAGNOSTIC:
-            LOG.verbose("Watchman has produced a duplicate warning: %s", warning);
-            break;
-        }
+        buckEventBus.post(
+            new WatchmanDiagnosticEvent(
+                WatchmanDiagnostic.of(WatchmanDiagnostic.Level.WARNING, warning)));
       }
 
       Boolean isFreshInstance = (Boolean) response.get("is_fresh_instance");

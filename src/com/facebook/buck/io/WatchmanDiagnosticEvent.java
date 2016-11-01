@@ -16,18 +16,29 @@
 
 package com.facebook.buck.io;
 
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.event.AbstractBuckEvent;
+import com.facebook.buck.event.EventKey;
 
-import org.immutables.value.Value;
+public class WatchmanDiagnosticEvent extends AbstractBuckEvent {
 
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleTuple
-interface AbstractWatchmanDiagnostic {
-  enum Level {
-      WARNING,
-      ERROR
-  };
+  private final WatchmanDiagnostic watchmanDiagnostic;
 
-  Level getLevel();
-  String getMessage();
+  public WatchmanDiagnosticEvent(WatchmanDiagnostic diagnostic) {
+    super(EventKey.unique());
+    this.watchmanDiagnostic = diagnostic;
+  }
+
+  public WatchmanDiagnostic getDiagnostic() {
+    return watchmanDiagnostic;
+  }
+
+  @Override
+  public String getEventName() {
+    return "watchman-diagnostic";
+  }
+
+  @Override
+  protected String getValueString() {
+    return watchmanDiagnostic.getMessage();
+  }
 }

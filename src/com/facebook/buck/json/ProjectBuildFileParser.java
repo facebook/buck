@@ -22,10 +22,10 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
+import com.facebook.buck.io.WatchmanDiagnosticEvent;
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.WatchmanDiagnostic;
-import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
@@ -87,7 +87,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private final BserSerializer bserSerializer;
   private final AssertScopeExclusiveAccess assertSingleThreadedParsing;
   private final boolean ignoreBuckAutodepsFiles;
-  private final WatchmanDiagnosticCache watchmanDiagnosticCache;
 
   private boolean isInitialized;
   private boolean isClosed;
@@ -103,8 +102,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus,
       ProcessExecutor processExecutor,
-      boolean ignoreBuckAutodepsFiles,
-      WatchmanDiagnosticCache watchmanDiagnosticCache) {
+      boolean ignoreBuckAutodepsFiles) {
     this.buckPythonProgram = null;
     this.options = options;
     this.marshaller = marshaller;
@@ -115,7 +113,6 @@ public class ProjectBuildFileParser implements AutoCloseable {
     this.bserSerializer = new BserSerializer();
     this.assertSingleThreadedParsing = new AssertScopeExclusiveAccess();
     this.ignoreBuckAutodepsFiles = ignoreBuckAutodepsFiles;
-    this.watchmanDiagnosticCache = watchmanDiagnosticCache;
 
     this.rawConfigJson =
         Suppliers.memoize(
@@ -393,8 +390,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       handleDiagnostics(
           buildFile,
           resultObject.getDiagnostics(),
-          buckEventBus,
-          watchmanDiagnosticCache);
+          buckEventBus);
       values = resultObject.getValues();
       LOG.verbose("Got rules: %s", values);
       LOG.debug("Parsed %d rules from process", values.size());
@@ -443,8 +439,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
   private static void handleDiagnostics(
       Path buildFile,
       List<Map<String, String>> diagnosticsList,
-      BuckEventBus buckEventBus,
-      WatchmanDiagnosticCache watchmanDiagnosticCache) throws IOException, BuildFileParseException {
+      BuckEventBus buckEventBus) throws IOException, BuildFileParseException {
     for (Map<String, String> diagnostic : diagnosticsList) {
       String level = diagnostic.get("level");
       String message = diagnostic.get("message");
@@ -458,7 +453,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
                 source));
       }
       if (source != null && source.equals("watchman")) {
-        handleWatchmanDiagnostic(buildFile, level, message, buckEventBus, watchmanDiagnosticCache);
+        handleWatchmanDiagnostic(buildFile, level, message, buckEventBus);
       } else {
         String header;
         if (source != null) {
@@ -504,8 +499,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
       Path buildFile,
       String level,
       String message,
-      BuckEventBus buckEventBus,
-      WatchmanDiagnosticCache watchmanDiagnosticCache) {
+      BuckEventBus buckEventBus) {
     WatchmanDiagnostic.Level watchmanDiagnosticLevel;
     switch (level) {
       // Watchman itself doesn't issue debug or info, but in case
@@ -533,23 +527,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
     WatchmanDiagnostic watchmanDiagnostic = WatchmanDiagnostic.of(
         watchmanDiagnosticLevel,
         message);
-    switch (watchmanDiagnosticCache.addDiagnostic(watchmanDiagnostic)) {
-      case NEW_DIAGNOSTIC:
-        switch (watchmanDiagnosticLevel) {
-          case WARNING:
-            buckEventBus.post(
-                ConsoleEvent.warning("Watchman raised a warning: %s", message));
-            break;
-          case ERROR:
-            buckEventBus.post(
-                ConsoleEvent.severe("Watchman raised an error: %s", message));
-            break;
-        }
-        break;
-      case DUPLICATE_DIAGNOSTIC:
-        // Nothing to do.
-        break;
-    }
+    buckEventBus.post(new WatchmanDiagnosticEvent(watchmanDiagnostic));
   }
 
   @Override

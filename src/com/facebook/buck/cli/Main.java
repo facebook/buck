@@ -61,7 +61,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.ProjectWatch;
 import com.facebook.buck.io.Watchman;
 import com.facebook.buck.io.WatchmanCursor;
-import com.facebook.buck.io.WatchmanDiagnosticCache;
+import com.facebook.buck.io.WatchmanDiagnosticEventListener;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.log.CommandThreadFactory;
@@ -487,8 +487,7 @@ public final class Main {
         CommandEvent commandEvent,
         BuckEventBus eventBus,
         WatchmanWatcher watchmanWatcher,
-        WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction,
-        WatchmanDiagnosticCache watchmanDiagnosticCache)
+        WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction)
         throws IOException, InterruptedException {
 
       // Synchronize on parser object so that all outstanding watch events are processed
@@ -500,7 +499,6 @@ public final class Main {
         fileEventBus.post(commandEvent);
         watchmanWatcher.postEvents(
             eventBus,
-            watchmanDiagnosticCache,
             watchmanFreshInstanceAction);
       }
     }
@@ -928,15 +926,13 @@ public final class Main {
             processExecutor,
             androidDirectoryResolver);
 
-        WatchmanDiagnosticCache watchmanDiagnosticCache = new WatchmanDiagnosticCache();
-
         Cell rootCell = CellProvider.createForLocalBuild(
             filesystem,
             watchman,
             buckConfig,
             command.getConfigOverrides(),
-            factory,
-            watchmanDiagnosticCache).getCellByPath(filesystem.getRootPath());
+            factory)
+            .getCellByPath(filesystem.getRootPath());
 
         int exitCode;
         ImmutableList<BuckEventListener> eventListeners = ImmutableList.of();
@@ -1182,8 +1178,7 @@ public final class Main {
                   startedEvent,
                   buildEventBus,
                   watchmanWatcher,
-                  watchmanFreshInstanceAction,
-                  watchmanDiagnosticCache);
+                  watchmanFreshInstanceAction);
               actionGraphCache = daemon.getActionGraphCache();
             } catch (WatchmanWatcherException | IOException e) {
               buildEventBus.post(
@@ -1551,8 +1546,7 @@ public final class Main {
       CommandEvent commandEvent,
       BuckEventBus eventBus,
       WatchmanWatcher watchmanWatcher,
-      WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction,
-      WatchmanDiagnosticCache watchmanDiagnosticCache)
+      WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction)
       throws IOException, InterruptedException {
     // Wire up daemon to new client and get cached Parser.
     Daemon daemonForParser = getDaemon(cell, objectMapper);
@@ -1561,8 +1555,7 @@ public final class Main {
         commandEvent,
         eventBus,
         watchmanWatcher,
-        watchmanFreshInstanceAction,
-        watchmanDiagnosticCache);
+        watchmanFreshInstanceAction);
     return daemon.getParser();
   }
 
@@ -1727,12 +1720,11 @@ public final class Main {
 
     eventListenersBuilder.add(new LoadBalancerEventsListener(counterRegistry));
     eventListenersBuilder.add(new CacheRateStatsListener(buckEventBus));
+    eventListenersBuilder.add(new WatchmanDiagnosticEventListener(buckEventBus));
 
     ImmutableList<BuckEventListener> eventListeners = eventListenersBuilder.build();
+    eventListeners.forEach(buckEventBus::register);
 
-    for (BuckEventListener eventListener : eventListeners) {
-      buckEventBus.register(eventListener);
-    }
 
     return eventListeners;
   }

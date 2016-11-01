@@ -14,20 +14,25 @@
  * under the License.
  */
 
-package com.facebook.buck.io;
+package com.facebook.buck.testutil;
 
-import com.facebook.buck.util.immutables.BuckStyleTuple;
+import org.hamcrest.CustomMatcher;
 
-import org.immutables.value.Value;
+import java.util.function.Predicate;
 
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleTuple
-interface AbstractWatchmanDiagnostic {
-  enum Level {
-      WARNING,
-      ERROR
-  };
+public final class PredicateMatcher<T> extends CustomMatcher<T> {
 
-  Level getLevel();
-  String getMessage();
+  private final Predicate<T> predicate;
+
+  public PredicateMatcher(String description, Predicate<T> predicate) {
+    super(description);
+    this.predicate = predicate;
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public boolean matches(Object o) {
+    return predicate.test((T) o);
+  }
+
 }

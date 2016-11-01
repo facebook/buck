@@ -30,7 +30,6 @@ import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
-import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
@@ -108,8 +107,7 @@ public class ThriftLibraryIntegrationTest {
         CellConfig.of(),
         new KnownBuildRuleTypesFactory(
             new DefaultProcessExecutor(new TestConsole()),
-            new FakeAndroidDirectoryResolver()),
-        new WatchmanDiagnosticCache()).getCellByPath(filesystem.getRootPath());
+            new FakeAndroidDirectoryResolver())).getCellByPath(filesystem.getRootPath());
     BuildTarget target = BuildTargetFactory.newInstance(filesystem, "//thrift:exe");
     TargetGraph targetGraph = parser.buildTargetGraph(
         eventBus,

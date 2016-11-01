@@ -21,7 +21,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.Watchman;
-import com.facebook.buck.io.WatchmanDiagnosticCache;
 import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.json.ProjectBuildFileParser;
 import com.facebook.buck.json.ProjectBuildFileParserFactory;
@@ -55,7 +54,6 @@ public class Cell {
   private final BuckConfig config;
   private final KnownBuildRuleTypes knownBuildRuleTypes;
   private final CellProvider cellProvider;
-  private final WatchmanDiagnosticCache watchmanDiagnosticCache;
 
   private final Supplier<Integer> hashCodeSupplier = Suppliers.memoize(
       new Supplier<Integer>() {
@@ -74,8 +72,7 @@ public class Cell {
       final Watchman watchman,
       final BuckConfig config,
       final KnownBuildRuleTypesFactory knownBuildRuleTypesFactory,
-      final CellProvider cellProvider,
-      WatchmanDiagnosticCache watchmanDiagnosticCache) throws IOException, InterruptedException {
+      final CellProvider cellProvider) throws IOException, InterruptedException {
 
     this.knownRoots = knownRoots;
     this.filesystem = filesystem;
@@ -84,7 +81,6 @@ public class Cell {
 
     this.knownBuildRuleTypes = knownBuildRuleTypesFactory.create(config, filesystem);
     this.cellProvider = cellProvider;
-    this.watchmanDiagnosticCache = watchmanDiagnosticCache;
   }
 
   public ProjectFilesystem getFilesystem() {
@@ -187,10 +183,6 @@ public class Cell {
     return watchman;
   }
 
-  public WatchmanDiagnosticCache getWatchmanDiagnosticCache() {
-    return watchmanDiagnosticCache;
-  }
-
   /**
    * Callers are responsible for managing the life-cycle of the created {@link
    * ProjectBuildFileParser}.
@@ -206,8 +198,7 @@ public class Cell {
         console,
         config.getEnvironment(),
         eventBus,
-        ignoreBuckAutodepsFiles,
-        watchmanDiagnosticCache);
+        ignoreBuckAutodepsFiles);
   }
 
   private ProjectBuildFileParserFactory createBuildFileParserFactory() {
