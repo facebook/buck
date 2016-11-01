@@ -226,7 +226,6 @@ public class Build implements Closeable {
             .setJavaPackageFinder(javaPackageFinder)
             .setEventBus(executionContext.getBuckEventBus())
             .setAndroidPlatformTargetSupplier(executionContext.getAndroidPlatformTargetSupplier())
-            .setShouldReportAbsolutePaths(executionContext.shouldReportAbsolutePaths())
             .build())
         .setClock(clock)
         .setArtifactCache(artifactCache)

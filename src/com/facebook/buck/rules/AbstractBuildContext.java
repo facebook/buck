@@ -40,11 +40,6 @@ abstract class AbstractBuildContext {
     return AndroidPlatformTarget.EXPLODING_ANDROID_PLATFORM_TARGET_SUPPLIER;
   }
 
-  @Value.Default
-  public boolean shouldReportAbsolutePaths() {
-    return false;
-  }
-
   public void logError(Throwable error, String msg, Object... formatArgs) {
     getEventBus().post(ThrowableConsoleEvent.create(error, msg, formatArgs));
   }
