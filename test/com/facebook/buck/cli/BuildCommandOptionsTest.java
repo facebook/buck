@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.rules.RelativeCellName;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -37,7 +38,8 @@ public class BuildCommandOptionsTest {
         ImmutableMap.of(
             "java",
             ImmutableMap.of("src_roots", "src, test"))).build();
-    DefaultJavaPackageFinder javaPackageFinder = buckConfig.createDefaultJavaPackageFinder();
+    DefaultJavaPackageFinder javaPackageFinder =
+        buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
     assertEquals(ImmutableSortedSet.of(), javaPackageFinder.getPathsFromRoot());
     assertEquals(ImmutableSet.of("src", "test"), javaPackageFinder.getPathElements());
   }
@@ -45,7 +47,8 @@ public class BuildCommandOptionsTest {
   @Test
   public void testCreateJavaPackageFinderFromEmptyBuckConfig() {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
-    DefaultJavaPackageFinder javaPackageFinder = buckConfig.createDefaultJavaPackageFinder();
+    DefaultJavaPackageFinder javaPackageFinder =
+      buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
     assertEquals(ImmutableSortedSet.<String>of(), javaPackageFinder.getPathsFromRoot());
     assertEquals(ImmutableSet.of(), javaPackageFinder.getPathsFromRoot());
   }

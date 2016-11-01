@@ -21,6 +21,7 @@ import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
@@ -100,7 +101,7 @@ public class DistBuildSlaveExecutor {
         getExplodingAndroidSupplier(),
         buildEngine,
         args.getArtifactCache(),
-        config.createDefaultJavaPackageFinder(),
+        config.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
         args.getConsole(),
         /* defaultTestTimeoutMillis */ 1000,
         /* isCodeCoverageEnabled */ false,

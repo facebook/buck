@@ -57,7 +57,6 @@
       "//test/com/facebook/buck/cxx:testutil",
       "//test/com/facebook/buck/event:testutil",
       "//test/com/facebook/buck/io:testutil",
-      "//test/com/facebook/buck/jvm/java:fakepackagefinder",
       "//test/com/facebook/buck/jvm/java:testutil",
       "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/rules:testutil",

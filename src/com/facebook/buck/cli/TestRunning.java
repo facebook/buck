@@ -442,14 +442,14 @@ public class TestRunning {
     // Generate the code coverage report.
     if (options.isCodeCoverageEnabled() && !rulesUnderTest.isEmpty()) {
       try {
-        Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional =
-            Optional.ofNullable(params.getBuckConfig().createDefaultJavaPackageFinder());
+        DefaultJavaPackageFinder defaultJavaPackageFinder =
+            params.getBuckConfig().getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
         stepRunner.runStepForBuildTarget(
             executionContext,
             getReportCommand(
                 rulesUnderTest,
-                defaultJavaPackageFinderOptional,
-                new JavaBuckConfig(params.getBuckConfig())
+                Optional.of(defaultJavaPackageFinder),
+                params.getBuckConfig().getView(JavaBuckConfig.class)
                     .getDefaultJavaOptions()
                     .getJavaRuntimeLauncher(),
                 params.getCell().getFilesystem(),

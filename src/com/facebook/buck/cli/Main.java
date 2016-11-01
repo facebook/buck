@@ -1251,7 +1251,9 @@ public final class Main {
                   .setParser(parser)
                   .setPlatform(platform)
                   .setEnvironment(clientEnvironment)
-                  .setJavaPackageFinder(rootCell.getBuckConfig().createDefaultJavaPackageFinder())
+                  .setJavaPackageFinder(
+                      rootCell.getBuckConfig().getView(JavaBuckConfig.class)
+                          .createDefaultJavaPackageFinder())
                   .setObjectMapper(objectMapper)
                   .setClock(clock)
                   .setProcessManager(processManager)
@@ -1710,7 +1712,7 @@ public final class Main {
       }
     }
 
-    JavaBuckConfig javaBuckConfig = new JavaBuckConfig(config);
+    JavaBuckConfig javaBuckConfig = config.getView(JavaBuckConfig.class);
     if (!javaBuckConfig.getSkipCheckingMissingDeps()) {
       JavacOptions javacOptions = javaBuckConfig.getDefaultJavacOptions();
       eventListenersBuilder.add(MissingSymbolsHandler.createListener(

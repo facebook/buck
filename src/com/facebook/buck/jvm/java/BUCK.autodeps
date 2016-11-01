@@ -3,6 +3,7 @@
     "deps" : [
       "//src/com/facebook/buck/android:rules",
       "//src/com/facebook/buck/io:MorePaths.java",
+      "//src/com/facebook/buck/jvm/java:config",
       "//src/com/facebook/buck/jvm/java:packagefinder",
       "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/log:api",
@@ -29,6 +30,8 @@
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/config:config",
+      "//src/com/facebook/buck/jvm/java:packagefinder",
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/rules:build_rule",
       "//third-party/java/guava:guava"

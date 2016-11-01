@@ -112,7 +112,8 @@ public class JavaSymbolFinder {
     // First find all the source roots in the current project.
     Collection<Path> srcRoots;
     try {
-      srcRoots = srcRootsFinder.getAllSrcRootPaths(config.getSrcRoots());
+      srcRoots =
+          srcRootsFinder.getAllSrcRootPaths(config.getView(JavaBuckConfig.class).getSrcRoots());
     } catch (IOException e) {
       buckEventBus.post(ThrowableConsoleEvent.create(e, "Error while searching for source roots."));
       return ImmutableSetMultimap.of();

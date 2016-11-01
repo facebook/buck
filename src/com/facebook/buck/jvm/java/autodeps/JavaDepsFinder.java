@@ -142,7 +142,7 @@ public class JavaDepsFinder {
       javaPackageMapping = ImmutableSortedMap.of();
     }
 
-    JavaBuckConfig javaBuckConfig = new JavaBuckConfig(buckConfig);
+    JavaBuckConfig javaBuckConfig = buckConfig.getView(JavaBuckConfig.class);
     JavacOptions javacOptions = javaBuckConfig.getDefaultJavacOptions();
     JavaFileParser javaFileParser = JavaFileParser.createJavaFileParser(javacOptions);
 

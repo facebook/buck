@@ -35,6 +35,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.HasBuildTarget;
@@ -301,7 +302,7 @@ public class BuildCommand extends AbstractCommand {
         androidPlatformTargetSupplier,
         buildEngine,
         artifactCache,
-        buckConfig.createDefaultJavaPackageFinder(),
+        buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
         console,
         buckConfig.getDefaultTestTimeoutMillis(),
         isCodeCoverageEnabled(),

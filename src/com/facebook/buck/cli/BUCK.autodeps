@@ -134,7 +134,6 @@
     "exported_deps" : [
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/io:io",
-      "//src/com/facebook/buck/jvm/java:packagefinder",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:interfaces",

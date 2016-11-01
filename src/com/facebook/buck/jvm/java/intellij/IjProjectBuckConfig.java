@@ -69,7 +69,7 @@ public class IjProjectBuckConfig {
                 "disable_r_java_idea_generator",
                 false)
         )
-        .setJavaBuckConfig(new JavaBuckConfig(buckConfig))
+        .setJavaBuckConfig(buckConfig.getView(JavaBuckConfig.class))
         .setBuckConfig(buckConfig)
         .setJavaLibrarySdkNamesBySourceLevel(javaLibrarySdkNames)
         .setProjectJdkName(

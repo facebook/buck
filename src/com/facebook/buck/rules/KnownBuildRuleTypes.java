@@ -519,7 +519,7 @@ public class KnownBuildRuleTypes {
 
     Builder builder = builder();
 
-    JavaBuckConfig javaConfig = new JavaBuckConfig(config);
+    JavaBuckConfig javaConfig = config.getView(JavaBuckConfig.class);
     JavacOptions defaultJavacOptions = javaConfig.getDefaultJavacOptions();
     JavaOptions defaultJavaOptions = javaConfig.getDefaultJavaOptions();
     JavaOptions defaultJavaOptionsForTests = javaConfig.getDefaultJavaOptionsForTests();

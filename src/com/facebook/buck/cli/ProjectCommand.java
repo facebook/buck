@@ -263,7 +263,7 @@ public class ProjectCommand extends BuildCommand {
   }
 
   public JavaPackageFinder getJavaPackageFinder(BuckConfig buckConfig) {
-    return buckConfig.createDefaultJavaPackageFinder();
+    return buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
   }
 
   public Optional<String> getPathToDefaultAndroidManifest(BuckConfig buckConfig) {
@@ -615,8 +615,7 @@ public class ProjectCommand extends BuildCommand {
     BuildRuleResolver ruleResolver = result.getResolver();
     SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleResolver);
 
-    JavacOptions javacOptions = new JavaBuckConfig(buckConfig)
-        .getDefaultJavacOptions();
+    JavacOptions javacOptions = buckConfig.getView(JavaBuckConfig.class).getDefaultJavacOptions();
 
     IjProject project = new IjProject(
         targetGraphAndTargets,

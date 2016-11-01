@@ -5,7 +5,6 @@
       "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:io",
-      "//src/com/facebook/buck/jvm/core:packagefinder",
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",
