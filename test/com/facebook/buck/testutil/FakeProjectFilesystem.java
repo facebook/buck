@@ -69,6 +69,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -398,7 +399,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
    * Does not support symlinks.
    */
   @Override
-  public ImmutableCollection<Path> getDirectoryContents(final Path pathRelativeToProjectRoot)
+  public final ImmutableCollection<Path> getDirectoryContents(final Path pathRelativeToProjectRoot)
       throws IOException {
     Preconditions.checkState(isDirectory(pathRelativeToProjectRoot));
     return FluentIterable
@@ -411,7 +412,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
               }
               return MorePaths.getParentOrEmpty(input).equals(pathRelativeToProjectRoot);
             })
-        .toList();
+        .toSortedList(Comparator.naturalOrder());
   }
 
   @Override
@@ -431,7 +432,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   }
 
   @Override
-  public ImmutableSortedSet<Path> getSortedMatchingDirectoryContents(
+  public ImmutableSortedSet<Path> getMtimeSortedMatchingDirectoryContents(
       final Path pathRelativeToProjectRoot,
       String globPattern)
       throws IOException {
@@ -728,7 +729,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
    * {@code fileVisitor}.
    */
   @Override
-  public void walkRelativeFileTree(
+  public final void walkRelativeFileTree(
       Path path,
       EnumSet<FileVisitOption> visitOptions,
       FileVisitor<Path> fileVisitor) throws IOException {

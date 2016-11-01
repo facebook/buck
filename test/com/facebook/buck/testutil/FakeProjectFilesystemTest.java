@@ -348,7 +348,7 @@ public class FakeProjectFilesystemTest {
 
     assertEquals(
         ImmutableSet.of(c, b, a),
-        filesystem.getSortedMatchingDirectoryContents(
+        filesystem.getMtimeSortedMatchingDirectoryContents(
             Paths.get("foo"),
             "*.txt"));
   }
@@ -367,7 +367,7 @@ public class FakeProjectFilesystemTest {
   }
 
   @Test
-  public void testDirectoryContentsBasedOnInsertionOrder() throws IOException {
+  public void testDirectoryContentsAreInSortedOrder() throws IOException {
     SettableFakeClock clock = new SettableFakeClock(1000, 0);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem(clock);
     filesystem.touch(Paths.get("foo/foo"));
@@ -377,7 +377,7 @@ public class FakeProjectFilesystemTest {
     assertThat(
         filesystem.getDirectoryContents(Paths.get("foo")),
         // Yes, contains() is an order-dependent matcher, despite its name.
-        contains(Paths.get("foo/foo"), Paths.get("foo/bar"), Paths.get("foo/baz")));
+        contains(Paths.get("foo/bar"), Paths.get("foo/baz"), Paths.get("foo/foo")));
 
     FakeProjectFilesystem filesystem2 = new FakeProjectFilesystem(clock);
     filesystem2.touch(Paths.get("foo/baz"));
@@ -386,7 +386,7 @@ public class FakeProjectFilesystemTest {
 
     assertThat(
         filesystem2.getDirectoryContents(Paths.get("foo")),
-        contains(Paths.get("foo/baz"), Paths.get("foo/bar"), Paths.get("foo/foo")));
+        contains(Paths.get("foo/bar"), Paths.get("foo/baz"), Paths.get("foo/foo")));
   }
 
   @Test
@@ -414,31 +414,29 @@ public class FakeProjectFilesystemTest {
   }
 
   @Test
-  public void filesystemWalkUsesInsertionOrder() throws IOException {
+  public void filesystemWalkIsInSortedOrder() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     filesystem.mkdirs(Paths.get("foo"));
     filesystem.touch(Paths.get("foo/bbbb"));
     filesystem.touch(Paths.get("foo/aaaa"));
+    filesystem.mkdirs(Paths.get("bar"));
+    filesystem.touch(Paths.get("bar/aaaa"));
+    filesystem.touch(Paths.get("bar/cccc"));
+    filesystem.touch(Paths.get("bar/bbbb"));
+
     AccumulatingFileVisitor visitor = new AccumulatingFileVisitor();
     filesystem.walkRelativeFileTree(
-        Paths.get("foo"),
+        Paths.get(""),
         visitor);
     assertThat(
         visitor.getSeen(),
-        contains(Paths.get("foo/bbbb"), Paths.get("foo/aaaa")));
-
-    // Change the order the files were added and verify this changes the iteration order.
-    filesystem = new FakeProjectFilesystem();
-    filesystem.mkdirs(Paths.get("foo"));
-    filesystem.touch(Paths.get("foo/aaaa"));
-    filesystem.touch(Paths.get("foo/bbbb"));
-    visitor = new AccumulatingFileVisitor();
-    filesystem.walkRelativeFileTree(
-        Paths.get("foo"),
-        visitor);
-    assertThat(
-        visitor.getSeen(),
-        contains(Paths.get("foo/aaaa"), Paths.get("foo/bbbb")));
+        contains(
+            Paths.get("bar/aaaa"),
+            Paths.get("bar/bbbb"),
+            Paths.get("bar/cccc"),
+            Paths.get("foo/aaaa"),
+            Paths.get("foo/bbbb")
+            ));
   }
 
   private static class AccumulatingFileVisitor implements FileVisitor<Path> {
@@ -473,7 +471,10 @@ public class FakeProjectFilesystemTest {
 
     @Override
     public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-      throw exc;
+      if (exc != null) {
+        throw exc;
+      }
+      return FileVisitResult.CONTINUE;
     }
 
   }

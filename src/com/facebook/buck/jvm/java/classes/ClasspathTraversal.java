@@ -152,7 +152,6 @@ public abstract class ClasspathTraversal {
       filesystem.walkFileTree(
           directory,
           ImmutableSet.of(FileVisitOption.FOLLOW_LINKS),
-          Integer.MAX_VALUE,
           new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)

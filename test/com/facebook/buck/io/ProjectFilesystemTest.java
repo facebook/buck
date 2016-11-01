@@ -592,7 +592,7 @@ public class ProjectFilesystemTest {
 
     assertEquals(
         ImmutableSet.of(c, b, a),
-        filesystem.getSortedMatchingDirectoryContents(
+        filesystem.getMtimeSortedMatchingDirectoryContents(
             Paths.get("foo"),
             "*.txt"));
   }

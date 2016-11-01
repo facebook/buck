@@ -40,6 +40,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.UnmodifiableIterator;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 
@@ -61,6 +62,7 @@ import java.nio.channels.Channels;
 import java.nio.file.CopyOption;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
+import java.nio.file.FileSystemLoopException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -77,7 +79,9 @@ import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -503,37 +507,34 @@ public class ProjectFilesystem {
       EnumSet<FileVisitOption> visitOptions,
       final FileVisitor<Path> fileVisitor) throws IOException {
 
-    FileVisitor<Path> actualVisitor = wrapWithIgnoringFileVisitor(
-        new FileVisitor<Path>() {
+    FileVisitor<Path> relativizingVisitor = new FileVisitor<Path>() {
           @Override
           public FileVisitResult preVisitDirectory(
               Path dir, BasicFileAttributes attrs) throws IOException {
-            return fileVisitor.preVisitDirectory(projectRoot.relativize(dir), attrs);
+            return fileVisitor.preVisitDirectory(relativize(dir), attrs);
           }
 
           @Override
           public FileVisitResult visitFile(
               Path file, BasicFileAttributes attrs) throws IOException {
-            return fileVisitor.visitFile(projectRoot.relativize(file), attrs);
+            return fileVisitor.visitFile(relativize(file), attrs);
           }
 
           @Override
           public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-            return fileVisitor.visitFileFailed(projectRoot.relativize(file), exc);
+            return fileVisitor.visitFileFailed(relativize(file), exc);
           }
 
           @Override
           public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-            return fileVisitor.postVisitDirectory(projectRoot.relativize(dir), exc);
+            return fileVisitor.postVisitDirectory(relativize(dir), exc);
           }
-        });
-
+        };
     Path rootPath = getPathForRelativePath(pathRelativeToProjectRoot);
-    Files.walkFileTree(
+    walkFileTree(
         rootPath,
         visitOptions,
-        Integer.MAX_VALUE,
-        actualVisitor);
+        relativizingVisitor);
   }
 
   /**
@@ -541,15 +542,17 @@ public class ProjectFilesystem {
    */
   public void walkFileTree(Path root, FileVisitor<Path> fileVisitor) throws IOException {
     root = getPathForRelativePath(root);
-    Files.walkFileTree(root, wrapWithIgnoringFileVisitor(fileVisitor));
+    walkFileTree(
+        root,
+        EnumSet.noneOf(FileVisitOption.class),
+        fileVisitor);
   }
 
   public void walkFileTree(
       Path root,
       Set<FileVisitOption> options,
-      int maxDepth,
       FileVisitor<Path> fileVisitor) throws IOException {
-    Files.walkFileTree(root, options, maxDepth, wrapWithIgnoringFileVisitor(fileVisitor));
+    new FileTreeWalker(root, options, fileVisitor).walk();
   }
 
   public ImmutableSet<Path> getFilesUnderPath(Path pathRelativeToProjectRoot) throws IOException {
@@ -573,16 +576,15 @@ public class ProjectFilesystem {
     walkRelativeFileTree(
         pathRelativeToProjectRoot,
         visitOptions,
-        wrapWithIgnoringFileVisitor(
-            new SimpleFileVisitor<Path>() {
-              @Override
-              public FileVisitResult visitFile(Path path, BasicFileAttributes attributes) {
-                if (predicate.apply(path)) {
-                  paths.add(path);
-                }
-                return FileVisitResult.CONTINUE;
-              }
-            }));
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path path, BasicFileAttributes attributes) {
+            if (predicate.apply(path)) {
+              paths.add(path);
+            }
+            return FileVisitResult.CONTINUE;
+          }
+        });
     return paths.build();
   }
 
@@ -619,7 +621,7 @@ public class ProjectFilesystem {
       return FluentIterable.from(stream)
           .filter(input -> !isIgnored(relativize(input)))
           .transform(absolutePath -> MorePaths.relativize(projectRoot, absolutePath))
-          .toList();
+          .toSortedList(Comparator.naturalOrder());
     }
   }
 
@@ -644,7 +646,7 @@ public class ProjectFilesystem {
    * ordered in descending last modified time order. This will not obey the results of
    * {@link #isIgnored(Path)}.
    */
-  public ImmutableSortedSet<Path> getSortedMatchingDirectoryContents(
+  public ImmutableSortedSet<Path> getMtimeSortedMatchingDirectoryContents(
       Path pathRelativeToProjectRoot,
       String globPattern)
       throws IOException {
@@ -1170,45 +1172,153 @@ public class ProjectFilesystem {
   }
 
   /**
-   * Wraps an existing {@link FileVisitor} so that paths that {@link #isIgnored(Path)} indicates
-   * should be ignored are ignored.
+   * FileTreeWalker is used to walk files similar to Files.walkFileTree.
+   *
+   * It has two major differences from walkFileTree.
+   * 1. It ignores files and directories ignored by this ProjectFilesystem.
+   * 2. The walk is in a deterministic order.
+   *
+   * And it has two minor differences.
+   * 1. It doesn't accept a depth limit.
+   * 2. It doesn't handle the presence of a security manager the same way.
    */
-  private FileVisitor<Path> wrapWithIgnoringFileVisitor(final FileVisitor<Path> delegate) {
-    return new FileVisitor<Path>() {
-      @Override
-      public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-          throws IOException {
-        if (isIgnored(relativize(dir))) {
-          return FileVisitResult.SKIP_SUBTREE;
+  private class FileTreeWalker {
+    private final FileVisitor<Path> visitor;
+    private final Path root;
+    private final boolean followLinks;
+    private ArrayDeque<DirWalkState> state;
+
+    FileTreeWalker(
+        Path root,
+        Set<FileVisitOption> options,
+        FileVisitor<Path> pathFileVisitor) {
+      this.followLinks = options.contains(FileVisitOption.FOLLOW_LINKS);
+      this.visitor = pathFileVisitor;
+      this.root = root;
+      this.state = new ArrayDeque<>();
+    }
+
+    private ImmutableList<Path> getContents(Path root) throws IOException {
+      try (DirectoryStream<Path> stream =
+               Files.newDirectoryStream(root, input -> !isIgnored(relativize(input)))) {
+        return FluentIterable.from(stream).toSortedList(Comparator.naturalOrder());
+      }
+    }
+
+    private class DirWalkState {
+      final @Nullable Path dir;
+      final @Nullable BasicFileAttributes attrs;
+      UnmodifiableIterator<Path> iter;
+      @Nullable IOException ioe;
+
+      DirWalkState(
+          Path directory,
+          BasicFileAttributes attributes) {
+        this.dir = directory;
+        this.attrs = attributes;
+        try {
+          this.iter = getContents(directory).iterator();
+          this.ioe = null;
+        } catch (IOException e) {
+          this.iter = ImmutableList.<Path>of().iterator();
+          this.ioe = e;
         }
-        return delegate.preVisitDirectory(dir, attrs);
       }
 
-      @Override
-      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        if (isIgnored(relativize(file))) {
-          return FileVisitResult.CONTINUE;
+      DirWalkState(Path root) {
+        this.dir = null;
+        this.attrs = null;
+        this.iter = ImmutableList.<Path>of(root).iterator();
+        this.ioe = null;
+      }
+    }
+
+    private void walk() throws IOException {
+      state.add(new DirWalkState(root));
+
+      while (true) {
+        FileVisitResult result;
+        if (state.getLast().iter.hasNext()) {
+          result = visitPath(state.getLast().iter.next());
+        } else {
+          DirWalkState dirState = state.removeLast();
+          if (dirState.dir == null) {
+            return;
+          }
+          result = visitor.postVisitDirectory(dirState.dir, dirState.ioe);
         }
-        return delegate.visitFile(file, attrs);
-      }
-
-      @Override
-      public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-        return delegate.visitFileFailed(file, exc);
-      }
-
-      @Override
-      public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-        return delegate.postVisitDirectory(dir, exc);
-      }
-
-      private Path relativize(Path path) {
-        if (path.startsWith(getRootPath())) {
-          return ProjectFilesystem.this.relativize(path);
+        Objects.requireNonNull(result, "FileVisitor returned a null FileVisitResult.");
+        if (result == FileVisitResult.SKIP_SIBLINGS) {
+          state.getLast().iter = ImmutableList.<Path>of().iterator();
+        } else if (result == FileVisitResult.TERMINATE) {
+          return;
         }
-        return path;
       }
-    };
+    }
+
+    private FileVisitResult visitPath(Path p) throws IOException {
+      BasicFileAttributes attrs;
+      try {
+        attrs = getAttributes(p);
+        ensureNoLoops(p, attrs);
+      } catch (IOException ioe) {
+        return visitor.visitFileFailed(p, ioe);
+      }
+
+      if (attrs.isDirectory()) {
+        FileVisitResult result = visitor.preVisitDirectory(p, attrs);
+        if (result == FileVisitResult.CONTINUE) {
+          state.add(new DirWalkState(p, attrs));
+        }
+        return result;
+      } else {
+        return visitor.visitFile(p, attrs);
+      }
+    }
+
+    private void ensureNoLoops(Path p, BasicFileAttributes attrs) throws FileSystemLoopException {
+      if (!followLinks) {
+        return;
+      }
+      if (!attrs.isDirectory()) {
+        return;
+      }
+      if (willLoop(p, attrs)) {
+        throw new FileSystemLoopException(p.toString());
+      }
+    }
+
+    private boolean willLoop(Path p, BasicFileAttributes attrs) {
+      try {
+        Object thisKey = attrs.fileKey();
+        for (DirWalkState s : state) {
+          if (s.dir == null) {
+            continue;
+          }
+          Object thatKey = s.attrs.fileKey();
+          if (thisKey != null && thatKey != null) {
+            if (thisKey.equals(thatKey)) {
+              return true;
+            }
+          } else if (Files.isSameFile(p, s.dir)) {
+            return true;
+          }
+        }
+      } catch (IOException e) {
+        return true;
+      }
+      return false;
+    }
+
+    private BasicFileAttributes getAttributes(Path root) throws IOException {
+      if (!followLinks) {
+        return Files.readAttributes(root, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+      }
+      try {
+        return Files.readAttributes(root, BasicFileAttributes.class);
+      } catch (IOException e) {
+        return Files.readAttributes(root, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+      }
+    }
   }
-
 }

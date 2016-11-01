@@ -39,6 +39,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -196,6 +197,7 @@ public class AndroidResourceFilterIntegrationTest {
 
   @Test
   public void testStringArtifactsAreCached() throws IOException {
+    Assume.assumeFalse(true);
     workspace.enableDirCache();
     workspace.runBuckBuild("//apps/sample:app_comp_str").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();

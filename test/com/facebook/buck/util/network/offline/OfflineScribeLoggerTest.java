@@ -154,7 +154,7 @@ public class OfflineScribeLoggerTest {
         .toArray(Path.class);
 
     ImmutableSortedSet<Path> logs =
-        filesystem.getSortedMatchingDirectoryContents(logDir, LOGFILE_PATTERN);
+        filesystem.getMtimeSortedMatchingDirectoryContents(logDir, LOGFILE_PATTERN);
     assertThat(logs, Matchers.allOf(
         hasItem(expectedLogPaths[1]),
         hasItem(expectedLogPaths[2]),
@@ -277,7 +277,7 @@ public class OfflineScribeLoggerTest {
 
     // Check that oldest log was not removed (due to exceeding the byte limit when reading&sending).
     ImmutableSortedSet<Path> logs =
-        filesystem.getSortedMatchingDirectoryContents(logDir, LOGFILE_PATTERN);
+        filesystem.getMtimeSortedMatchingDirectoryContents(logDir, LOGFILE_PATTERN);
     Path notRemovedLog = filesystem.resolve(
         logDir.resolve(LOGFILE_PREFIX + ids[0] + LOGFILE_SUFFIX));
     assertThat(logs, Matchers.allOf(

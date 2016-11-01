@@ -244,7 +244,7 @@ public class OfflineScribeLogger extends ScribeLogger {
 
   private synchronized void deleteOldLogsIfNeeded(long maxSizeForOldLogs) throws IOException {
     ImmutableSortedSet<Path> logs =
-        filesystem.getSortedMatchingDirectoryContents(logDir, LOGFILE_PATTERN);
+        filesystem.getMtimeSortedMatchingDirectoryContents(logDir, LOGFILE_PATTERN);
 
     long totalSize = 0;
     boolean deleteLogs = false;
@@ -271,7 +271,7 @@ public class OfflineScribeLogger extends ScribeLogger {
         // No logs to submit to Scribe.
         return;
       }
-      logsPaths = filesystem.getSortedMatchingDirectoryContents(
+      logsPaths = filesystem.getMtimeSortedMatchingDirectoryContents(
           logDir,
           LOGFILE_PATTERN);
     } catch (Exception e) {
