@@ -48,6 +48,10 @@ abstract class AbstractIjProjectConfig {
 
   public abstract Optional<String> getProjectJdkType();
 
+  public abstract Optional<String> getAndroidModuleSdkName();
+
+  public abstract Optional<String> getAndroidModuleSdkType();
+
   public abstract Optional<String> getProjectLanguageLevel();
 
   public abstract List<String> getExcludedResourcePaths();

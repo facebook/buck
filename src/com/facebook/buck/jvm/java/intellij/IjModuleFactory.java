@@ -289,6 +289,7 @@ public class IjModuleFactory {
   }
 
   private static final String SDK_TYPE_JAVA = "JavaSDK";
+  private static final String SDK_TYPE_ANDROID = "Android SDK";
 
   private final Map<BuildRuleType, IjModuleRule<?>> moduleRuleIndex = new HashMap<>();
   private final IjModuleFactoryResolver moduleFactoryResolver;
@@ -357,13 +358,19 @@ public class IjModuleFactory {
     Optional<String> sourceLevel = getSourceLevel(targetNodes);
     // The only JDK type that is supported right now. If we ever add support for Android libraries
     // to have different language levels we need to add logic to detect correct JDK type.
-    String sdkType = SDK_TYPE_JAVA;
-
+    String sdkType;
     Optional<String> sdkName;
-    if (sourceLevel.isPresent()) {
-      sdkName = getSdkName(sourceLevel.get(), sdkType);
+
+    if (context.getAndroidFacet().isPresent()) {
+      sdkType = projectConfig.getAndroidModuleSdkType().orElse(SDK_TYPE_ANDROID);
+      sdkName = projectConfig.getAndroidModuleSdkName();
     } else {
-      sdkName = Optional.empty();
+      sdkType = projectConfig.getProjectJdkType().orElse(SDK_TYPE_JAVA);
+      if (sourceLevel.isPresent()) {
+        sdkName = getSdkName(sourceLevel.get(), sdkType);
+      } else {
+        sdkName = Optional.empty();
+      }
     }
 
     return IjModule.builder()

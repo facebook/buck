@@ -1,0 +1,11 @@
+[color]
+  ui = false
+[alias]
+  root=//:root_repo
+[project]
+  ignore = buck-out
+  ide = intellij
+  disable_r_java_idea_generator = true
+[intellij]
+  android_module_sdk_name = "Google Inc.:Google APIs:24"
+  android_module_sdk_type = "AndroidSDK"
