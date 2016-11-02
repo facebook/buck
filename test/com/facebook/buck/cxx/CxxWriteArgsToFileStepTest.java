@@ -50,7 +50,8 @@ public class CxxWriteArgsToFileStepTest {
         fileListPath,
         Optional.empty(),
         ImmutableList.of(new StringArg("-dummy"), new StringArg("\"")),
-        ImmutableList.of("-dummy", "\""));
+        ImmutableList.of("-dummy", "\""),
+        projectFilesystem.getRootPath());
   }
 
   @Test
@@ -64,21 +65,24 @@ public class CxxWriteArgsToFileStepTest {
         fileListPath,
         Optional.of(input -> "foo".equals(input) ? "bar" : input),
         ImmutableList.of(new StringArg("-dummy"), new StringArg("foo")),
-        ImmutableList.of("-dummy", "bar"));
+        ImmutableList.of("-dummy", "bar"),
+        projectFilesystem.getRootPath());
   }
 
   private void runTestForArgFilePathAndOutputPath(
       Path argFilePath,
       Optional<Function<String, String>> escaper,
       ImmutableList<Arg> inputArgs,
-      ImmutableList<String> expectedArgFileContents) throws IOException, InterruptedException {
+      ImmutableList<String> expectedArgFileContents,
+      Path currentCellPath) throws IOException, InterruptedException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     // Create our CxxWriteArgsToFileStep to test.
     CxxWriteArgsToFileStep step = new CxxWriteArgsToFileStep(
         argFilePath,
         inputArgs,
-        escaper);
+        escaper,
+        currentCellPath);
 
     step.execute(context);
 

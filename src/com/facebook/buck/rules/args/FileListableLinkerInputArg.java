@@ -22,6 +22,8 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
+import java.nio.file.Path;
+
 /**
  * Arg that represents object file that should be linked into resulting binary using
  * normal mechanism, e.g. passed to the linker without any additional surrounding flags.
@@ -63,6 +65,12 @@ public class FileListableLinkerInputArg extends Arg {
   @Override
   public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
     value.appendToCommandLine(builder);
+  }
+
+  public void appendToCommandLineRel(
+      ImmutableCollection.Builder<String> builder,
+      Path currentCellPath) {
+    value.appendToCommandLineRel(builder, currentCellPath);
   }
 
   @Override

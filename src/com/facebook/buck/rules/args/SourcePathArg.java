@@ -17,12 +17,14 @@
 package com.facebook.buck.rules.args;
 
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
+import java.nio.file.Path;
 import java.util.Objects;
 
 /**
@@ -41,6 +43,16 @@ public class SourcePathArg extends Arg {
   @Override
   public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
     builder.add(pathResolver.getAbsolutePath(path).toString());
+  }
+
+  public void appendToCommandLineRel(ImmutableCollection.Builder<String> builder, Path cellPath) {
+    if (path instanceof BuildTargetSourcePath &&
+        cellPath.equals(((BuildTargetSourcePath) path).getTarget().getCellPath())) {
+      builder.add(pathResolver.getRelativePath(path).toString());
+    } else {
+      appendToCommandLine(builder);
+    }
+
   }
 
   @Override

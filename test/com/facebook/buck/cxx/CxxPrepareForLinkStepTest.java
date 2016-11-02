@@ -68,7 +68,8 @@ public class CxxPrepareForLinkStepTest {
             new StringArg(dummyPath.toString())),
         dummyPath,
         dummyArgs,
-        CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver));
+        CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
+        dummyPath);
 
     ImmutableList<Step> containingSteps = ImmutableList.copyOf(
         cxxPrepareForLinkStepSupportFileList.iterator());
@@ -85,7 +86,8 @@ public class CxxPrepareForLinkStepTest {
         ImmutableList.of(),
         dummyPath,
         dummyArgs,
-        CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver));
+        CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
+        dummyPath);
 
     containingSteps = ImmutableList.copyOf(
         cxxPrepareForLinkStepNoSupportFileList.iterator());
@@ -102,7 +104,8 @@ public class CxxPrepareForLinkStepTest {
         "/tmp/cxxLinkStepPassesLinkerOptionsViaFileList.txt");
     Path output = projectFilesystem.getRootPath().resolve("output");
 
-    runTestForArgFilePathAndOutputPath(argFilePath, fileListPath, output);
+    runTestForArgFilePathAndOutputPath(argFilePath, fileListPath, output,
+        projectFilesystem.getRootPath());
   }
 
   @Test
@@ -119,7 +122,8 @@ public class CxxPrepareForLinkStepTest {
     Files.deleteIfExists(argFilePath.getParent());
     Files.deleteIfExists(fileListPath.getParent());
 
-    runTestForArgFilePathAndOutputPath(argFilePath, fileListPath, output);
+    runTestForArgFilePathAndOutputPath(argFilePath, fileListPath, output,
+        projectFilesystem.getRootPath());
 
     // cleanup after test
     Files.deleteIfExists(argFilePath);
@@ -131,7 +135,7 @@ public class CxxPrepareForLinkStepTest {
   private void runTestForArgFilePathAndOutputPath(
       Path argFilePath,
       Path fileListPath,
-      Path output) throws IOException, InterruptedException {
+      Path output, Path currentCellPath) throws IOException, InterruptedException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     BuildRuleResolver buildRuleResolver = new BuildRuleResolver(
@@ -162,7 +166,8 @@ public class CxxPrepareForLinkStepTest {
             new StringArg(fileListPath.toString())),
         output,
         args,
-        CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver));
+        CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
+        currentCellPath);
 
     step.execute(context);
 
