@@ -78,9 +78,6 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
         contents == Contents.NORMAL || archiver.supportsThinArchives(),
         "%s: archive tool for this platform does not support thin archives",
         getBuildTarget());
-    Preconditions.checkArgument(
-        !LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(params.getBuildTarget().getFlavors()),
-        "Static archive rule %s should not have any Linker Map Mode flavors", this);
     this.archiver = archiver;
     this.archiverFlags = archiverFlags;
     this.ranlib = ranlib;

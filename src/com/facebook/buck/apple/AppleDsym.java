@@ -16,7 +16,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxStrip;
-import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -107,10 +106,6 @@ public class AppleDsym
         !StripStyle.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
         "Rule %s must not contain strip style flavors: %s works only with unstripped binaries!",
         buildTarget, AppleDsym.class.toString());
-    Preconditions.checkArgument(
-        !LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
-        "Rule %s must not contain linker map mode flavors.",
-        buildTarget);
   }
 
   @Override

@@ -1280,15 +1280,10 @@ public class CxxBinaryIntegrationTest {
     workspace.enableDirCache(); // enable the cache
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:simple")
-        .withAppendedFlavors(LinkerMapMode.LINKER_MAP.getFlavor());
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:simple");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path outputPath = workspace.getPath(
-        BuildTargets.getGenPath(
-            filesystem,
-            target.withAppendedFlavors(CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR),
-            "%s"));
+    Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
 
     /*
      * Check that building after clean will use the cache
@@ -1316,9 +1311,7 @@ public class CxxBinaryIntegrationTest {
         workspace.getDestPath(),
         target,
         cxxPlatform);
-    BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(
-        target,
-        Optional.<LinkerMapMode>empty());
+    BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "simple.cpp";
     String sourceFull = "foo/" + sourceName;
     BuildTarget preprocessTarget =
@@ -1478,9 +1471,7 @@ public class CxxBinaryIntegrationTest {
         workspace.getDestPath(),
         target,
         cxxPlatform);
-    BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(
-        target,
-        Optional.<LinkerMapMode>empty());
+    BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "simple_with_header.cpp";
     String headerName = "simple_with_header.h";
     String headerFull = "foo/" + headerName;
@@ -1566,9 +1557,7 @@ public class CxxBinaryIntegrationTest {
         workspace.getDestPath(),
         target,
         cxxPlatform);
-    BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(
-        target,
-        Optional.<LinkerMapMode>empty());
+    BuildTarget binaryTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
     String sourceName = "foo.cpp";
     BuildTarget preprocessTarget =
         cxxSourceRuleFactory.createPreprocessBuildTarget(sourceName, CxxSource.Type.CXX);
@@ -1720,8 +1709,7 @@ public class CxxBinaryIntegrationTest {
     result.assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
-
-    buildLog.assertTargetBuiltLocally("//:bin#binary,linkermap");
+    buildLog.assertTargetBuiltLocally("//:bin#binary");
     buildLog.assertTargetBuiltLocally("//:bin#compile-" + sanitize("bin.c.o") + ",default");
     buildLog.assertTargetBuiltLocally("//:lib1#default,static");
 
@@ -1733,7 +1721,7 @@ public class CxxBinaryIntegrationTest {
     result.assertSuccess();
 
     buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally("//:bin#binary,linkermap");
+    buildLog.assertTargetBuiltLocally("//:bin#binary");
     buildLog.assertTargetHadMatchingDepfileRuleKey(
         "//:bin#compile-" + sanitize("bin.c.o") + ",default");
     buildLog.assertTargetBuiltLocally("//:lib1#default,static");
@@ -1749,7 +1737,7 @@ public class CxxBinaryIntegrationTest {
     result.assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally("//:bin#binary,linkermap");
+    buildLog.assertTargetBuiltLocally("//:bin#binary");
     buildLog.assertTargetBuiltLocally("//:bin#compile-" + sanitize("bin.c.o") + ",default");
     buildLog.assertTargetBuiltLocally("//:lib1#default,static");
 
@@ -1761,7 +1749,7 @@ public class CxxBinaryIntegrationTest {
     result.assertSuccess();
 
     buildLog = workspace.getBuildLog();
-    buildLog.assertTargetHadMatchingInputRuleKey("//:bin#binary,linkermap");
+    buildLog.assertTargetHadMatchingInputRuleKey("//:bin#binary");
     buildLog.assertTargetHadMatchingDepfileRuleKey(
         "//:bin#compile-" + sanitize("bin.c.o") + ",default");
     buildLog.assertTargetHadMatchingInputRuleKey("//:lib1#default,static");
@@ -2109,9 +2097,8 @@ public class CxxBinaryIntegrationTest {
       throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
 
-    BuildTarget unstrippedTarget = BuildTargetFactory.newInstance("//:test")
-        .withAppendedFlavors(LinkerMapMode.DEFAULT_MODE.getFlavor());
-    BuildTarget strippedTarget = unstrippedTarget.withAppendedFlavors(
+    BuildTarget unstrippedTarget = BuildTargetFactory.newInstance("//:test");
+    BuildTarget strippedTarget = unstrippedTarget.withFlavors(
         StripStyle.DEBUGGING_SYMBOLS.getFlavor());
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -2125,13 +2112,12 @@ public class CxxBinaryIntegrationTest {
 
     Path strippedPath = workspace.getPath(BuildTargets.getGenPath(
         filesystem,
-        strippedTarget.withAppendedFlavors(CxxStrip.RULE_FLAVOR),
+        BuildTarget.builder(strippedTarget)
+            .addFlavors(CxxStrip.RULE_FLAVOR)
+            .build(),
         "%s"));
     Path unstrippedPath =
-        workspace.getPath(BuildTargets.getGenPath(
-            filesystem,
-            unstrippedTarget.withAppendedFlavors(CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR),
-            "%s"));
+        workspace.getPath(BuildTargets.getGenPath(filesystem, unstrippedTarget, "%s"));
 
     String strippedOut = workspace.runCommand("dsymutil", "-s", strippedPath.toString())
         .getStdout().orElse("");
@@ -2151,9 +2137,7 @@ public class CxxBinaryIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
 
     BuildTarget strippedTarget = BuildTargetFactory.newInstance("//:test")
-        .withFlavors(
-            StripStyle.DEBUGGING_SYMBOLS.getFlavor(),
-            LinkerMapMode.DEFAULT_MODE.getFlavor());
+        .withFlavors(StripStyle.DEBUGGING_SYMBOLS.getFlavor());
     BuildTarget unstrippedTarget = strippedTarget.withoutFlavors(
         StripStyle.FLAVOR_DOMAIN.getFlavors());
 
@@ -2175,7 +2159,9 @@ public class CxxBinaryIntegrationTest {
 
     Path strippedPath = workspace.getPath(BuildTargets.getGenPath(
         filesystem,
-        strippedTarget.withAppendedFlavors(CxxStrip.RULE_FLAVOR),
+        BuildTarget.builder(strippedTarget)
+            .addFlavors(CxxStrip.RULE_FLAVOR)
+            .build(),
         "%s"));
     Path unstrippedPath =
         workspace.getPath(BuildTargets.getGenPath(filesystem, unstrippedTarget, "%s"));
@@ -2210,69 +2196,6 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void testBuildingWithAndWithoutLinkerMap()
-      throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
-
-    BuildTarget target = BuildTargetFactory.newInstance("//:test");
-    BuildTarget withLinkerMapTarget = target
-        .withAppendedFlavors(LinkerMapMode.LINKER_MAP.getFlavor());
-    BuildTarget withoutLinkerMapTarget = target
-        .withAppendedFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor());
-
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "header_namespace", tmp);
-    workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
-
-    workspace.runBuckCommand(
-        "build",
-        "--config",
-        "cxx.cxxflags=-g",
-        withLinkerMapTarget.getFullyQualifiedName()).assertSuccess();
-
-    BuildTarget binaryWithLinkerMap = withLinkerMapTarget
-        .withAppendedFlavors(CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR);
-
-    Path binaryWithLinkerMapPath = workspace.getPath(
-        BuildTargets.getGenPath(
-            filesystem,
-            binaryWithLinkerMap,
-            "%s"));
-    Path linkerMapPath = workspace.getPath(
-        BuildTargets.getGenPath(
-            filesystem,
-            binaryWithLinkerMap,
-            "%s-LinkMap.txt"));
-    assertThat(Files.exists(binaryWithLinkerMapPath), Matchers.equalTo(true));
-    assertThat(Files.exists(linkerMapPath), Matchers.equalTo(true));
-
-    workspace.runBuckCommand("clean").assertSuccess();
-
-    workspace.runBuckCommand(
-        "build",
-        "--config",
-        "cxx.cxxflags=-g",
-        withoutLinkerMapTarget.getFullyQualifiedName()).assertSuccess();
-
-    BuildTarget binaryWithoutLinkerMap = withoutLinkerMapTarget
-        .withAppendedFlavors(CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR);
-
-    Path binaryWithoutLinkerMapPath = workspace.getPath(
-        BuildTargets.getGenPath(
-            filesystem,
-            binaryWithoutLinkerMap,
-            "%s"));
-    linkerMapPath = workspace.getPath(
-        BuildTargets.getGenPath(
-            filesystem,
-            binaryWithoutLinkerMap,
-            "%s-LinkMap.txt"));
-    assertThat(Files.exists(binaryWithoutLinkerMapPath), Matchers.equalTo(true));
-    assertThat(Files.exists(linkerMapPath), Matchers.equalTo(false));
-  }
-
-  @Test
   public void testDisablingLinkCaching() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
@@ -2282,9 +2205,7 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("clean");
     workspace.runBuckBuild("-c", "cxx.cache_links=false", "//foo:simple").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally(
-        CxxDescriptionEnhancer.createCxxLinkTarget(
-            BuildTargetFactory.newInstance("//foo:simple"),
-            Optional.<LinkerMapMode>empty())
+        CxxDescriptionEnhancer.createCxxLinkTarget(BuildTargetFactory.newInstance("//foo:simple"))
             .toString());
   }
 
@@ -2314,9 +2235,7 @@ public class CxxBinaryIntegrationTest {
         .assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally(
         CxxDescriptionEnhancer
-            .createCxxLinkTarget(
-                BuildTargetFactory.newInstance("//foo:binary_with_dep"),
-                Optional.<LinkerMapMode>empty())
+            .createCxxLinkTarget(BuildTargetFactory.newInstance("//foo:binary_with_dep"))
             .toString());
     ImmutableSortedSet<Path> subsequentObjects =
         findFiles(

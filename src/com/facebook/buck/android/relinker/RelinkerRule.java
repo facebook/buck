@@ -19,11 +19,8 @@ import com.facebook.buck.android.NdkCxxPlatforms;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -160,9 +157,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
 
       relinkerSteps.addAll(
           new CxxLink(
-              buildRuleParams
-                  .withFlavor(ImmutableFlavor.of("cxx-link"))
-                  .withFlavor(getLinkerMapFlavor()),
+              buildRuleParams.withFlavor(ImmutableFlavor.of("cxx-link")),
               getResolver(),
               linker,
               getLibFilePath(),
@@ -202,12 +197,6 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
             return StepExecutionResult.SUCCESS;
           }
         });
-  }
-
-  private Flavor getLinkerMapFlavor() {
-    BuildTarget buildTarget = buildRuleParams.getBuildTarget();
-    buildTarget = LinkerMapMode.buildTargetByAddingDefaultLinkerMapFlavorIfNeeded(buildTarget);
-    return LinkerMapMode.FLAVOR_DOMAIN.getRequiredValue(buildTarget).getFlavor();
   }
 
   @Nullable

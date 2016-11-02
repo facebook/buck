@@ -21,7 +21,6 @@ import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
@@ -77,8 +76,6 @@ abstract class DDescriptionUtils {
       String flavorPrefix,
       String fileName,
       CxxPlatform cxxPlatform) {
-    existingTarget = LinkerMapMode
-        .buildTargetByAddingDefaultLinkerMapFlavorIfNeeded(existingTarget);
     return BuildTarget.builder(existingTarget)
         .addFlavors(
             cxxPlatform.getFlavor(),

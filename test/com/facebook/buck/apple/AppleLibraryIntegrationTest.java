@@ -25,9 +25,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.CxxStrip;
-import com.facebook.buck.cxx.LinkerMapMode;
-import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -89,8 +86,8 @@ public class AppleLibraryIntegrationTest {
 
     BuildTarget implicitTarget = target.withAppendedFlavors(
         ImmutableFlavor.of("shared"),
-        ImmutableFlavor.of("iphonesimulator-x86_64"),
-        LinkerMapMode.DEFAULT_MODE.getFlavor());
+        ImmutableFlavor.of("iphonesimulator-x86_64")
+    );
     assertTrue(
         Files.exists(workspace.getPath(BuildTargets.getGenPath(filesystem, implicitTarget, "%s"))));
   }
@@ -111,8 +108,8 @@ public class AppleLibraryIntegrationTest {
 
     BuildTarget implicitTarget = target.withAppendedFlavors(
         ImmutableFlavor.of("shared"),
-        ImmutableFlavor.of("iphoneos-arm64"),
-        LinkerMapMode.DEFAULT_MODE.getFlavor());
+        ImmutableFlavor.of("iphoneos-arm64")
+    );
     Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, implicitTarget, "%s"));
     assertTrue(Files.exists(outputPath));
   }
@@ -328,11 +325,7 @@ public class AppleLibraryIntegrationTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target = BuildTargetFactory.newInstance(
-        "//Libraries/TestLibrary:TestLibrary#macosx-x86_64,macosx-i386")
-        .withAppendedFlavors(
-            AppleDescriptions.FRAMEWORK_FLAVOR,
-            AppleDebugFormat.NONE.getFlavor(),
-            LinkerMapMode.DEFAULT_MODE.getFlavor());
+        "//Libraries/TestLibrary:TestLibrary#framework,macosx-x86_64,macosx-i386,no-debug");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         target.getFullyQualifiedName());
@@ -342,8 +335,9 @@ public class AppleLibraryIntegrationTest {
         BuildTargets
             .getGenPath(
                 filesystem,
-                target
-                    .withAppendedFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR),
+                BuildTarget.builder(target)
+                    .addFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR)
+                    .build(),
                 "%s")
             .resolve("TestLibrary.framework"));
     Path libraryPath = frameworkPath.resolve("TestLibrary");
@@ -395,23 +389,18 @@ public class AppleLibraryIntegrationTest {
     workspace.setUp();
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
-    BuildTarget target =
-        BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary")
-        .withAppendedFlavors(
-            ImmutableFlavor.of("macosx-x86_64"),
-            CxxDescriptionEnhancer.SHARED_FLAVOR);
-
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
-        target.getFullyQualifiedName(),
+        "//Libraries/TestLibrary:TestLibrary#shared,macosx-x86_64",
         "--config",
         "cxx.cflags=-g");
     result.assertSuccess();
 
-    BuildTarget implicitTarget = target.withAppendedFlavors(
-        LinkerMapMode.DEFAULT_MODE.getFlavor());
-    Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, implicitTarget, "%s"));
-    assertThat(Files.exists(outputPath), is(true));
+    Path output = tmp.getRoot()
+        .resolve(filesystem.getBuckPaths().getGenDir())
+        .resolve("Libraries/TestLibrary/TestLibrary#macosx-x86_64,shared")
+        .resolve("libLibraries_TestLibrary_TestLibrary.dylib");
+    assertThat(Files.exists(output), is(true));
   }
 
   @Test
@@ -424,25 +413,18 @@ public class AppleLibraryIntegrationTest {
     workspace.setUp();
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
-    BuildTarget target = BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary")
-        .withAppendedFlavors(
-            CxxDescriptionEnhancer.SHARED_FLAVOR,
-            AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
-            ImmutableFlavor.of("macosx-x86_64"));
-
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
-        target.getFullyQualifiedName(),
+        "//Libraries/TestLibrary:TestLibrary#shared,macosx-x86_64,dwarf-and-dsym",
         "--config",
         "cxx.cflags=-g");
     result.assertSuccess();
 
-    BuildTarget implicitTarget = target.withAppendedFlavors(
-        LinkerMapMode.DEFAULT_MODE.getFlavor(),
-        CxxStrip.RULE_FLAVOR,
-        StripStyle.NON_GLOBAL_SYMBOLS.getFlavor());
-    Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, implicitTarget, "%s"));
-    assertThat(Files.exists(outputPath), is(true));
+    Path output = tmp.getRoot()
+        .resolve(filesystem.getBuckPaths().getGenDir())
+        .resolve("Libraries/TestLibrary/TestLibrary#macosx-x86_64,shared")
+        .resolve("libLibraries_TestLibrary_TestLibrary.dylib");
+    assertThat(Files.exists(output), is(true));
 
     Path dsymPath = tmp.getRoot()
         .resolve(filesystem.getBuckPaths().getGenDir())
@@ -573,9 +555,8 @@ public class AppleLibraryIntegrationTest {
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance(
-        "//Libraries/TestLibrary:TestLibrary#default")
-        .withAppendedFlavors(
-            CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
+        "//Libraries/TestLibrary:TestLibrary#" +
+            "default," + CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         buildTarget.getFullyQualifiedName());
@@ -583,11 +564,7 @@ public class AppleLibraryIntegrationTest {
 
     Path inputPath = workspace.getPath(buildTarget.getBasePath()).toRealPath();
     Path outputPath =
-        workspace.getPath(
-            BuildTargets.getGenPath(
-                filesystem,
-                buildTarget, "%s"))
-            .toRealPath();
+        workspace.getPath(BuildTargets.getGenPath(filesystem, buildTarget, "%s")).toRealPath();
 
     assertIsSymbolicLink(
         outputPath.resolve("TestLibrary/PublicHeader.h"),
@@ -643,10 +620,7 @@ public class AppleLibraryIntegrationTest {
         "empty_source_targets",
         tmp);
     workspace.setUp();
-    BuildTarget target = workspace.newBuildTarget("//:real-none#iphonesimulator-x86_64")
-        .withAppendedFlavors(
-            CxxDescriptionEnhancer.SHARED_FLAVOR,
-            LinkerMapMode.DEFAULT_MODE.getFlavor());
+    BuildTarget target = workspace.newBuildTarget("//:real-none#iphonesimulator-x86_64,shared");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         target.getFullyQualifiedName());
@@ -670,10 +644,7 @@ public class AppleLibraryIntegrationTest {
         "empty_source_targets",
         tmp);
     workspace.setUp();
-    BuildTarget target = workspace.newBuildTarget("//:none-swift#iphonesimulator-x86_64")
-        .withAppendedFlavors(
-            LinkerMapMode.DEFAULT_MODE.getFlavor(),
-            CxxDescriptionEnhancer.SHARED_FLAVOR);
+    BuildTarget target = workspace.newBuildTarget("//:none-swift#iphonesimulator-x86_64,shared");
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
         target.getFullyQualifiedName());

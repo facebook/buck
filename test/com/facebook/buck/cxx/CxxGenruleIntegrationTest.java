@@ -170,10 +170,7 @@ public class CxxGenruleIntegrationTest {
             BuildTargets
                 .getGenPath(
                     workspace.asCell().getFilesystem(),
-                    BuildTargetFactory.newInstance("//:binary#default")
-                        .withAppendedFlavors(
-                            CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR,
-                            LinkerMapMode.DEFAULT_MODE.getFlavor()),
+                    BuildTargetFactory.newInstance("//:binary#default"),
                     "%s")
                 .toString()));
   }

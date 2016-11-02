@@ -45,8 +45,7 @@ public class CxxLinkIntegrationTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_unused_header");
     String unusedHeaderName = "unused_header.h";
-    BuildTarget linkTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target,
-        Optional.<LinkerMapMode>empty());
+    BuildTarget linkTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target);
 
     // Run the build and verify that the C++ source was compiled.
     workspace.runBuckBuild(target.toString());

@@ -614,11 +614,6 @@ public class Omnibus {
       Iterable<? extends NativeLinkable> nativeLinkableRoots)
       throws NoSuchBuildTargetException {
 
-    if (!LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(params.getBuildTarget().getFlavors())) {
-      params = params.copyWithBuildTarget(
-          LinkerMapMode.buildTargetByAddingDefaultLinkerMapFlavorIfNeeded(params.getBuildTarget()));
-    }
-
     OmnibusLibraries.Builder libs = OmnibusLibraries.builder();
 
     OmnibusSpec spec = buildSpec(cxxPlatform, nativeLinkTargetRoots, nativeLinkableRoots);

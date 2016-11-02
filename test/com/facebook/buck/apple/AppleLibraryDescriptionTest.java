@@ -20,9 +20,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
-import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLink;
-import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -53,11 +51,7 @@ public class AppleLibraryDescriptionTest {
             .setOut("out")
             .build(resolver);
     AppleLibraryBuilder builder =
-        new AppleLibraryBuilder(
-            BuildTargetFactory.newInstance("//:rule#default")
-                .withAppendedFlavors(
-                    LinkerMapMode.DEFAULT_MODE.getFlavor(),
-                    CxxDescriptionEnhancer.SHARED_FLAVOR))
+        new AppleLibraryBuilder(BuildTargetFactory.newInstance("//:rule#shared,default"))
             .setLinkerFlags(ImmutableList.of("--linker-script=$(location //:dep)"))
             .setSrcs(
                 ImmutableSortedSet.of(

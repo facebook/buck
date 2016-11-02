@@ -83,10 +83,6 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
         StripStyle.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
         "CxxStrip rule %s should contain one of the strip style flavors (%s)",
         this, StripStyle.FLAVOR_DOMAIN.getFlavors());
-    Preconditions.checkArgument(
-        LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
-        "CxxStrip rule %s should contain linker map flavor (%s) as CxxLink output depends on it.",
-        this, LinkerMapMode.FLAVOR_DOMAIN.getFlavors());
   }
 
   public static BuildRuleParams removeStripStyleFlavorInParams(

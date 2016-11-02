@@ -503,14 +503,8 @@ public class CxxDescriptionEnhancer {
   }
 
   @VisibleForTesting
-  protected static BuildTarget createCxxLinkTarget(
-      BuildTarget target,
-      Optional<LinkerMapMode> flavoredLinkerMapMode) {
-    if (flavoredLinkerMapMode.isPresent()) {
-      target = target.withAppendedFlavors(flavoredLinkerMapMode.get().getFlavor());
-    }
-    target = LinkerMapMode.buildTargetByAddingDefaultLinkerMapFlavorIfNeeded(target);
-    return target.withAppendedFlavors(CXX_LINK_BINARY_FLAVOR);
+  protected static BuildTarget createCxxLinkTarget(BuildTarget target) {
+    return BuildTarget.builder(target).addFlavors(CXX_LINK_BINARY_FLAVOR).build();
   }
 
   /**
@@ -547,8 +541,7 @@ public class CxxDescriptionEnhancer {
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CxxBinaryDescription.Arg args,
-      Optional<StripStyle> stripStyle,
-      Optional<LinkerMapMode> flavoredLinkerMapMode) throws NoSuchBuildTargetException {
+      Optional<StripStyle> stripStyle) throws NoSuchBuildTargetException {
 
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     ImmutableMap<String, CxxSource> srcs = parseCxxSources(
@@ -569,7 +562,6 @@ public class CxxDescriptionEnhancer {
         srcs,
         headers,
         stripStyle,
-        flavoredLinkerMapMode,
         args.linkStyle.orElse(Linker.LinkableDepType.STATIC),
         args.preprocessorFlags,
         args.platformPreprocessorFlags,
@@ -593,7 +585,6 @@ public class CxxDescriptionEnhancer {
       ImmutableMap<String, CxxSource> srcs,
       ImmutableMap<Path, SourcePath> headers,
       Optional<StripStyle> stripStyle,
-      Optional<LinkerMapMode> flavoredLinkerMapMode,
       Linker.LinkableDepType linkStyle,
       ImmutableList<String> preprocessorFlags,
       PatternMatchedCollection<ImmutableList<String>> platformPreprocessorFlags,
@@ -609,9 +600,7 @@ public class CxxDescriptionEnhancer {
       Optional<Linker.CxxRuntimeType> cxxRuntimeType)
       throws NoSuchBuildTargetException {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
-    Path linkOutput = getLinkOutputPath(
-        createCxxLinkTarget(params.getBuildTarget(), flavoredLinkerMapMode),
-        params.getProjectFilesystem());
+    Path linkOutput = getLinkOutputPath(params.getBuildTarget(), params.getProjectFilesystem());
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
@@ -720,9 +709,7 @@ public class CxxDescriptionEnhancer {
             .collect(MoreCollectors.toImmutableList());
     argsBuilder.addAll(FileListableLinkerInputArg.from(objectArgs));
 
-    BuildTarget linkRuleTarget = createCxxLinkTarget(
-        params.getBuildTarget(),
-        flavoredLinkerMapMode);
+    BuildTarget linkRuleTarget = createCxxLinkTarget(params.getBuildTarget());
 
     CxxLink cxxLink = createCxxLinkRule(
         params,
@@ -742,7 +729,7 @@ public class CxxDescriptionEnhancer {
     Optional<CxxStrip> cxxStrip = Optional.empty();
     if (stripStyle.isPresent()) {
       CxxStrip stripRule = createCxxStripRule(
-          params.withFlavor(flavoredLinkerMapMode.orElse(LinkerMapMode.DEFAULT_MODE).getFlavor()),
+          params,
           resolver,
           cxxPlatform.getStrip(),
           stripStyle.get(),

@@ -244,9 +244,7 @@ public class CxxTestDescriptionTest {
     CxxTest test = (CxxTest) builder.build(resolver);
     CxxLink binary =
         (CxxLink) resolver.getRule(
-            CxxDescriptionEnhancer.createCxxLinkTarget(
-                test.getBuildTarget(),
-                Optional.<LinkerMapMode>empty()));
+            CxxDescriptionEnhancer.createCxxLinkTarget(test.getBuildTarget()));
     assertThat(
         Arg.stringify(binary.getArgs()),
         Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
@@ -284,9 +282,7 @@ public class CxxTestDescriptionTest {
     CxxTest test = (CxxTest) builder.build(resolver);
     CxxLink binary =
         (CxxLink) resolver.getRule(
-            CxxDescriptionEnhancer.createCxxLinkTarget(
-                test.getBuildTarget(),
-                Optional.<LinkerMapMode>empty()));
+            CxxDescriptionEnhancer.createCxxLinkTarget(test.getBuildTarget()));
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
         Arg.stringify(binary.getArgs()),
@@ -321,9 +317,7 @@ public class CxxTestDescriptionTest {
     CxxTest test = (CxxTest) builder.build(resolver);
     CxxLink binary =
         (CxxLink) resolver.getRule(
-            CxxDescriptionEnhancer.createCxxLinkTarget(
-                test.getBuildTarget(),
-                Optional.<LinkerMapMode>empty()));
+            CxxDescriptionEnhancer.createCxxLinkTarget(test.getBuildTarget()));
     assertThat(
         Arg.stringify(binary.getArgs()),
         Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
@@ -355,9 +349,7 @@ public class CxxTestDescriptionTest {
     CxxTest test = (CxxTest) builder.build(resolver);
     CxxLink binary =
         (CxxLink) resolver.getRule(
-            CxxDescriptionEnhancer.createCxxLinkTarget(
-                test.getBuildTarget(),
-                Optional.<LinkerMapMode>empty()));
+            CxxDescriptionEnhancer.createCxxLinkTarget(test.getBuildTarget()));
     assertThat(
         Arg.stringify(binary.getArgs()),
         Matchers.not(

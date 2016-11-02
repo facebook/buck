@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
@@ -227,17 +226,15 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
               targetsWithoutPlatformFlavors));
     }
 
-    // Propagate some flavors in defined
+    // Propagate debug symbol flavor if defined.
     depsExcludingBinary = BuildTargets.propagateFlavorsInDomainIfNotPresent(
         StripStyle.FLAVOR_DOMAIN,
         buildTarget,
         depsExcludingBinary);
+
+    // Propagate debug symbol flavor if defined.
     depsExcludingBinary = BuildTargets.propagateFlavorsInDomainIfNotPresent(
         AppleDebugFormat.FLAVOR_DOMAIN,
-        buildTarget,
-        depsExcludingBinary);
-    depsExcludingBinary = BuildTargets.propagateFlavorsInDomainIfNotPresent(
-        LinkerMapMode.FLAVOR_DOMAIN,
         buildTarget,
         depsExcludingBinary);
 

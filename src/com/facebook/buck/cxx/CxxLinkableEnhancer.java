@@ -80,7 +80,7 @@ public class CxxLinkableEnhancer {
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
 
     // Add flags to generate linker map if supported.
-    if (linker instanceof HasLinkerMap && LinkerMapMode.isLinkerMapEnabledForBuildTarget(target)) {
+    if (linker instanceof HasLinkerMap) {
       argsBuilder.addAll(((HasLinkerMap) linker).linkerMap(output));
     }
 

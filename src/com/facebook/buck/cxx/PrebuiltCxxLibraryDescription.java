@@ -385,7 +385,6 @@ public class PrebuiltCxxLibraryDescription implements
     BuildTarget sharedTarget = BuildTarget
         .builder(params.getBuildTarget())
         .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
-        .addFlavors(LinkerMapMode.DEFAULT_MODE.getFlavor())
         .build();
 
     // If not, setup a single link rule to link it from the static lib.

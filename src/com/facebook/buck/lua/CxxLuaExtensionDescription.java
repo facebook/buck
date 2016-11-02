@@ -31,7 +31,6 @@ import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.HeaderSymlinkTree;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.NativeLinkTargetMode;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
@@ -194,15 +193,6 @@ public class CxxLuaExtensionDescription implements
       BuildRuleResolver ruleResolver,
       CxxPlatform cxxPlatform,
       A args) throws NoSuchBuildTargetException {
-
-    Optional<LinkerMapMode> flavoredLinkerMapMode = LinkerMapMode.FLAVOR_DOMAIN.getValue(
-        params.getBuildTarget());
-    if (!flavoredLinkerMapMode.isPresent()) {
-      return ruleResolver.requireRule(
-          LinkerMapMode.buildTargetByAddingDefaultLinkerMapFlavorIfNeeded(
-              params.getBuildTarget()));
-    }
-
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     String extensionName = getExtensionName(params.getBuildTarget(), cxxPlatform);
     Path extensionPath =
@@ -230,13 +220,7 @@ public class CxxLuaExtensionDescription implements
         Optional.empty(),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
-            .setArgs(
-                getExtensionArgs(
-                    params.withoutFlavor(flavoredLinkerMapMode.get().getFlavor()),
-                    ruleResolver,
-                    pathResolver,
-                    cxxPlatform,
-                    args))
+            .setArgs(getExtensionArgs(params, ruleResolver, pathResolver, cxxPlatform, args))
             .build());
   }
 

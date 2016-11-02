@@ -19,7 +19,6 @@ package com.facebook.buck.d;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -51,7 +50,7 @@ public class DBinaryDescription implements
 
   private static final BuildRuleType TYPE = BuildRuleType.of("d_binary");
 
-  public static final Flavor BINARY_FLAVOR = ImmutableFlavor.of("binary");
+  private static final Flavor BINARY_FLAVOR = ImmutableFlavor.of("binary");
 
   private final DBuckConfig dBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
@@ -98,10 +97,7 @@ public class DBinaryDescription implements
     // rule to the index.
     CxxLink nativeLinkable =
         DDescriptionUtils.createNativeLinkable(
-            params.copyWithBuildTarget(
-                LinkerMapMode.buildTargetByAddingDefaultLinkerMapFlavorIfNeeded(
-                    params.getBuildTarget())
-                    .withAppendedFlavors(BINARY_FLAVOR)),
+            params.copyWithBuildTarget(params.getBuildTarget().withAppendedFlavors(BINARY_FLAVOR)),
             buildRuleResolver,
             cxxPlatform,
             dBuckConfig,

@@ -104,14 +104,11 @@ public class CxxBinaryDescription implements
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
 
-    // We explicitly remove some flavors below from params to make sure rule
+    // We explicitly remove strip flavor from params to make sure rule
     // has the same output regardless if we will strip or not.
     Optional<StripStyle> flavoredStripStyle =
         StripStyle.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
-    Optional<LinkerMapMode> flavoredLinkerMapMode =
-        LinkerMapMode.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
     params = CxxStrip.removeStripStyleFlavorInParams(params, flavoredStripStyle);
-    params = LinkerMapMode.removeLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
 
     // Extract the platform from the flavor, falling back to the default platform if none are
     // found.
@@ -152,8 +149,7 @@ public class CxxBinaryDescription implements
               cxxBuckConfig,
               cxxPlatform,
               args,
-              flavoredStripStyle,
-              flavoredLinkerMapMode);
+              flavoredStripStyle);
       return CxxCompilationDatabase.createCompilationDatabase(
           params,
           pathResolver,
@@ -229,8 +225,7 @@ public class CxxBinaryDescription implements
             cxxBuckConfig,
             cxxPlatform,
             args,
-            flavoredStripStyle,
-            flavoredLinkerMapMode);
+            flavoredStripStyle);
 
     // Return a CxxBinary rule as our representative in the action graph, rather than the CxxLink
     // rule above for a couple reasons:
@@ -244,7 +239,6 @@ public class CxxBinaryDescription implements
     //     preventing it from affecting link parallelism.
 
     params = CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle);
-    params = LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
     CxxBinary cxxBinary = new CxxBinary(
         params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(pathResolver)),
         resolver,
@@ -329,9 +323,7 @@ public class CxxBinaryDescription implements
             CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get(),
             StripStyle.ALL_SYMBOLS.getFlavor(),
             StripStyle.DEBUGGING_SYMBOLS.getFlavor(),
-            StripStyle.NON_GLOBAL_SYMBOLS.getFlavor(),
-            LinkerMapMode.LINKER_MAP.getFlavor(),
-            LinkerMapMode.NO_LINKER_MAP.getFlavor()));
+            StripStyle.NON_GLOBAL_SYMBOLS.getFlavor()));
 
     return flavors.isEmpty();
   }

@@ -76,11 +76,6 @@ public class CxxLink
         !params.getBuildTarget().getFlavors().contains(CxxStrip.RULE_FLAVOR) ||
             !StripStyle.FLAVOR_DOMAIN.containsAnyOf(params.getBuildTarget().getFlavors()),
         "CxxLink should not be created with CxxStrip flavors");
-    Preconditions.checkArgument(
-        LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(params.getBuildTarget().getFlavors()),
-        "CxxLink %s should be created with one of the LinkerMapMode flavors (%s)",
-        this,
-        LinkerMapMode.FLAVOR_DOMAIN);
   }
 
   @Override
@@ -89,8 +84,7 @@ public class CxxLink
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
     Optional<Path> linkerMapPath = getLinkerMapPath();
-    if (linkerMapPath.isPresent() &&
-        LinkerMapMode.isLinkerMapEnabledForBuildTarget(getBuildTarget())) {
+    if (linkerMapPath.isPresent()) {
       buildableContext.recordArtifact(linkerMapPath.get());
     }
     Path scratchDir =

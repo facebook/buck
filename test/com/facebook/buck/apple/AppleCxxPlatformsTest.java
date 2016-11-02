@@ -41,7 +41,6 @@ import com.facebook.buck.cxx.CxxPreprocessMode;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.ExecutableFinder;
@@ -818,8 +817,7 @@ public class AppleCxxPlatformsTest {
                     .put("input.o", Strings.repeat("a", 40))
                     .build()),
             pathResolver);
-    BuildTarget target = BuildTargetFactory.newInstance("//:target")
-        .withAppendedFlavors(LinkerMapMode.DEFAULT_MODE.getFlavor());
+    BuildTarget target = BuildTargetFactory.newInstance("//:target");
     ImmutableMap.Builder<Flavor, RuleKey> ruleKeys =
         ImmutableMap.builder();
     for (Map.Entry<Flavor, AppleCxxPlatform> entry : cxxPlatforms.entrySet()) {

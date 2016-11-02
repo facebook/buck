@@ -31,7 +31,6 @@ import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.HeaderSymlinkTree;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.Linkers;
 import com.facebook.buck.cxx.NativeLinkTarget;
 import com.facebook.buck.cxx.NativeLinkTargetMode;
@@ -253,13 +252,6 @@ public class CxxPythonExtensionDescription implements
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       A args) throws NoSuchBuildTargetException {
-
-    if (!LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(params.getBuildTarget().getFlavors())) {
-      return ruleResolver.requireRule(
-          LinkerMapMode.buildTargetByAddingDefaultLinkerMapFlavorIfNeeded(
-              params.getBuildTarget()));
-    }
-
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     String extensionName = getExtensionName(params.getBuildTarget());
     Path extensionPath =
@@ -288,15 +280,7 @@ public class CxxPythonExtensionDescription implements
         Optional.empty(),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
-        .setArgs(
-            getExtensionArgs(
-                params.copyWithBuildTarget(
-                    params.getBuildTarget().withoutFlavors(
-                        LinkerMapMode.FLAVOR_DOMAIN.getFlavors())),
-                ruleResolver,
-                pathResolver,
-                cxxPlatform,
-                args))
+          .setArgs(getExtensionArgs(params, ruleResolver, pathResolver, cxxPlatform, args))
           .setFrameworks(args.frameworks)
           .setLibraries(args.libraries)
           .build());

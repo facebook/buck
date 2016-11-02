@@ -22,7 +22,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -238,8 +237,7 @@ public class BuiltinApplePackageIntegrationTest {
     workspace.setUp();
 
     BuildTarget packageTarget = BuildTargetFactory.newInstance(
-        "//:DemoAppPackage#iphonesimulator-i386,iphonesimulator-x86_64")
-        .withAppendedFlavors(LinkerMapMode.DEFAULT_MODE.getFlavor());
+        "//:DemoAppPackage#iphonesimulator-i386,iphonesimulator-x86_64");
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
 
     Unzip.extractZipFile(

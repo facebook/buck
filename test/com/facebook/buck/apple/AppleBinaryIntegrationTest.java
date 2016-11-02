@@ -27,7 +27,6 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxStrip;
-import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -69,22 +68,16 @@ public class AppleBinaryIntegrationTest {
   }
 
   @Test
-  public void testAppleBinaryBuildsBinaryWithLinkerMap() throws Exception {
+  public void testAppleBinaryBuildsBinary() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "apple_binary_builds_something", tmp);
     workspace.setUp();
 
-    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
-        .withAppendedFlavors(
-            LinkerMapMode.LINKER_MAP.getFlavor());
+    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path outputPath = workspace.getPath(
-        BuildTargets.getGenPath(
-            filesystem,
-            target.withAppendedFlavors(CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR),
-            "%s"));
+    Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
     assertThat(Files.exists(Paths.get(outputPath.toString() + "-LinkMap.txt")), is(true));
     assertThat(
@@ -99,14 +92,11 @@ public class AppleBinaryIntegrationTest {
         this, "apple_binary_with_config_default_platform", tmp);
     workspace.setUp();
 
-    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
-        .withAppendedFlavors(
-            LinkerMapMode.LINKER_MAP.getFlavor(),
-            ImmutableFlavor.of("iphoneos-arm64"));
+    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
     BuildTarget implicitTarget = target.withAppendedFlavors(
-        CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR);
+        ImmutableFlavor.of("iphoneos-arm64"));
     Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, implicitTarget, "%s"));
     assertThat(Files.exists(outputPath), is(true));
     assertThat(Files.exists(Paths.get(outputPath.toString() + "-LinkMap.txt")), is(true));
@@ -125,14 +115,11 @@ public class AppleBinaryIntegrationTest {
         this, "apple_binary_with_platform", tmp);
     workspace.setUp();
 
-    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
-        .withAppendedFlavors(
-            ImmutableFlavor.of("iphoneos-arm64"),
-            LinkerMapMode.LINKER_MAP.getFlavor());
+    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
     BuildTarget implicitTarget = target.withAppendedFlavors(
-        CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR);
+        ImmutableFlavor.of("iphoneos-arm64"));
     Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, implicitTarget, "%s"));
     assertThat(Files.exists(outputPath), is(true));
     assertThat(Files.exists(Paths.get(outputPath.toString() + "-LinkMap.txt")), is(true));
@@ -151,16 +138,11 @@ public class AppleBinaryIntegrationTest {
         this, "apple_binary_builds_something", tmp);
     workspace.setUp();
 
-    BuildTarget target = BuildTargetFactory
-        .newInstance("//Apps/TestApp:TestAppWithNonstandardMain")
-        .withAppendedFlavors(LinkerMapMode.DEFAULT_MODE.getFlavor());
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//Apps/TestApp:TestAppWithNonstandardMain");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path outputPath = workspace.getPath(
-        BuildTargets.getGenPath(
-            filesystem,
-            target.withAppendedFlavors(CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR),
-            "%s"));
+    Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
     assertThat(
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
@@ -233,17 +215,10 @@ public class AppleBinaryIntegrationTest {
         this, "apple_binary_with_system_frameworks_builds_something", tmp);
     workspace.setUp();
 
-    BuildTarget target = BuildTargetFactory.newInstance(
-        "//Apps/TestApp:TestApp#macosx-x86_64");
+    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp#macosx-x86_64");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path outputPath = workspace.getPath(
-        BuildTargets.getGenPath(
-            filesystem,
-            target.withAppendedFlavors(
-                CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR,
-                LinkerMapMode.DEFAULT_MODE.getFlavor()),
-            "%s"));
+    Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
     assertThat(
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
@@ -258,17 +233,10 @@ public class AppleBinaryIntegrationTest {
         this, "apple_binary_with_library_dependency_builds_something", tmp);
     workspace.setUp();
 
-    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
-        .withAppendedFlavors(
-            ImmutableFlavor.of("macosx-x86_64"),
-            LinkerMapMode.DEFAULT_MODE.getFlavor());
+    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp#macosx-x86_64");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path outputPath = workspace.getPath(
-        BuildTargets.getGenPath(
-            filesystem,
-            target.withAppendedFlavors(CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR),
-            "%s"));
+    Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
     assertThat(
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
@@ -318,16 +286,10 @@ public class AppleBinaryIntegrationTest {
         this, "apple_binary_with_library_dependency_with_system_frameworks_builds_something", tmp);
     workspace.setUp();
 
-    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
-        .withAppendedFlavors(
-            ImmutableFlavor.of("macosx-x86_64"),
-            LinkerMapMode.DEFAULT_MODE.getFlavor());
+    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp#macosx-x86_64");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path outputPath = workspace.getPath(BuildTargets.getGenPath(
-        filesystem,
-        target.withAppendedFlavors(CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR),
-        "%s"));
+    Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
     assertThat(
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
@@ -387,13 +349,7 @@ public class AppleBinaryIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path outputPath = workspace.getPath(
-        BuildTargets.getGenPath(
-            filesystem,
-            target.withAppendedFlavors(
-                CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR,
-                LinkerMapMode.DEFAULT_MODE.getFlavor()),
-            "%s"));
+    Path outputPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
     assertThat(
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
@@ -438,10 +394,7 @@ public class AppleBinaryIntegrationTest {
     workspace.setUp();
 
     BuildTarget target =
-        BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
-            .withAppendedFlavors(
-                ImmutableFlavor.of("iphonesimulator-x86_64"),
-                LinkerMapMode.DEFAULT_MODE.getFlavor());
+        BuildTargetFactory.newInstance("//Apps/TestApp:TestApp#iphonesimulator-x86_64");
     ProjectWorkspace.ProcessResult first = workspace.runBuckCommand(
         workspace.getPath("first"),
         "build",
@@ -463,10 +416,7 @@ public class AppleBinaryIntegrationTest {
     MoreAsserts.assertContentsEqual(
         workspace.getPath(Paths.get("first").resolve(outputPath)),
         workspace.getPath(Paths.get("second").resolve(outputPath)));
-    outputPath = BuildTargets.getGenPath(
-        filesystem,
-        target.withAppendedFlavors(CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR),
-        "%s");
+    outputPath = BuildTargets.getGenPath(filesystem, target, "%s");
     MoreAsserts.assertContentsEqual(
         workspace.getPath(Paths.get("first").resolve(outputPath)),
         workspace.getPath(Paths.get("second").resolve(outputPath)));
@@ -505,11 +455,7 @@ public class AppleBinaryIntegrationTest {
         workspace.getPath(Paths.get("second").resolve(outputPath)));
     outputPath = BuildTargets.getGenPath(
         filesystem,
-        target
-            .withAppendedFlavors(
-                CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR,
-                LinkerMapMode.LINKER_MAP.getFlavor())
-            .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors()),
+        target.withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors()),
         "%s");
     MoreAsserts.assertContentsEqual(
         workspace.getPath(Paths.get("first").resolve(outputPath)),
@@ -520,10 +466,7 @@ public class AppleBinaryIntegrationTest {
           filesystem,
           target
               .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
-              .withAppendedFlavors(
-                  StripStyle.NON_GLOBAL_SYMBOLS.getFlavor(),
-                  CxxStrip.RULE_FLAVOR,
-                  LinkerMapMode.LINKER_MAP.getFlavor()),
+              .withAppendedFlavors(StripStyle.NON_GLOBAL_SYMBOLS.getFlavor(), CxxStrip.RULE_FLAVOR),
           "%s");
       MoreAsserts.assertContentsEqual(
           workspace.getPath(Paths.get("first").resolve(strippedPath)),
@@ -553,7 +496,7 @@ public class AppleBinaryIntegrationTest {
         this, "simple_application_bundle_dwarf_and_dsym", tmp);
     workspace.setUp();
     BuildTarget target = BuildTargetFactory.newInstance(
-        "//:DemoAppBinary#iphonesimulator-i386,iphonesimulator-x86_64,no-linkermap");
+        "//:DemoAppBinary#iphonesimulator-i386,iphonesimulator-x86_64");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
     Path output = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
@@ -577,15 +520,12 @@ public class AppleBinaryIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance(
-        "//:DemoAppBinary#iphonesimulator-i386,iphonesimulator-x86_64,no-linkermap");
+        "//:DemoAppBinary#iphonesimulator-i386,iphonesimulator-x86_64");
     BuildTarget targetToBuild = target
         .withAppendedFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor());
     BuildTarget dsymTarget = target.withAppendedFlavors(AppleDsym.RULE_FLAVOR);
     workspace.runBuckCommand("build", targetToBuild.getFullyQualifiedName()).assertSuccess();
-    Path output = workspace.getPath(
-        AppleDsym.getDsymOutputPath(dsymTarget.withoutFlavors(
-            LinkerMapMode.FLAVOR_DOMAIN.getFlavors()),
-            filesystem));
+    Path output = workspace.getPath(AppleDsym.getDsymOutputPath(dsymTarget, filesystem));
     AppleDsymTestUtil
         .checkDsymFileHasDebugSymbolsForMainForConcreteArchitectures(
             workspace,
@@ -922,14 +862,11 @@ public class AppleBinaryIntegrationTest {
       throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     BuildTarget singleArchI386Target =
-        BuildTargetFactory.newInstance("//:DemoApp#iphonesimulator-i386")
-            .withAppendedFlavors(LinkerMapMode.LINKER_MAP.getFlavor());
+        BuildTargetFactory.newInstance("//:DemoApp#iphonesimulator-i386");
     BuildTarget singleArchX8664Target =
-        BuildTargetFactory.newInstance("//:DemoApp#iphonesimulator-x86_64")
-            .withAppendedFlavors(LinkerMapMode.LINKER_MAP.getFlavor());
+        BuildTargetFactory.newInstance("//:DemoApp#iphonesimulator-x86_64");
     BuildTarget target =
-        BuildTargetFactory.newInstance("//:DemoApp#iphonesimulator-i386,iphonesimulator-x86_64")
-            .withAppendedFlavors(LinkerMapMode.LINKER_MAP.getFlavor());
+        BuildTargetFactory.newInstance("//:DemoApp#iphonesimulator-i386,iphonesimulator-x86_64");
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "multiarch_binary_linkmap", tmp);
@@ -939,24 +876,14 @@ public class AppleBinaryIntegrationTest {
         "Has link map for i386 arch.",
         Files.exists(
             workspace.getPath(
-                BuildTargets.getGenPath(filesystem, target, "%s-LinkMap")
-                    .resolve(
-                        singleArchI386Target
-                            .withAppendedFlavors(
-                                CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR,
-                                LinkerMapMode.LINKER_MAP.getFlavor())
-                            .getShortNameAndFlavorPostfix() + "-LinkMap.txt"))));
+                BuildTargets.getGenPath(filesystem, target, "%s-LinkMap").resolve(
+                    singleArchI386Target.getShortNameAndFlavorPostfix() + "-LinkMap.txt"))));
     assertTrue(
         "Has link map for x86_64 arch.",
         Files.exists(
             workspace.getPath(
-                BuildTargets.getGenPath(filesystem, target, "%s-LinkMap")
-                    .resolve(
-                        singleArchX8664Target
-                            .withAppendedFlavors(
-                                CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR,
-                                LinkerMapMode.LINKER_MAP.getFlavor())
-                            .getShortNameAndFlavorPostfix() + "-LinkMap.txt"))));
+                BuildTargets.getGenPath(filesystem, target, "%s-LinkMap").resolve(
+                    singleArchX8664Target.getShortNameAndFlavorPostfix() + "-LinkMap.txt"))));
   }
 
   @Test

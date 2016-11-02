@@ -25,7 +25,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -118,7 +117,6 @@ public class AppleTestIntegrationTest {
             ImmutableFlavor.of("iphonesimulator-x86_64"),
             ImmutableFlavor.of("apple-test-bundle"),
             AppleDebugFormat.DWARF.getFlavor(),
-            LinkerMapMode.NO_LINKER_MAP.getFlavor(),
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path outputPath = projectRoot.resolve(
         BuildTargets.getGenPath(
@@ -153,7 +151,6 @@ public class AppleTestIntegrationTest {
             ImmutableFlavor.of("iphonesimulator-x86_64"),
             ImmutableFlavor.of("apple-test-bundle"),
             AppleDebugFormat.DWARF.getFlavor(),
-            LinkerMapMode.NO_LINKER_MAP.getFlavor(),
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path outputPath = projectRoot.resolve(
         BuildTargets.getGenPath(
@@ -185,7 +182,6 @@ public class AppleTestIntegrationTest {
             BuildTarget.builder(target)
                 .addFlavors(AppleDebugFormat.DWARF.getFlavor())
                 .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
-                .addFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor())
                 .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                 .build(),
             "%s"));
@@ -209,7 +205,6 @@ public class AppleTestIntegrationTest {
             BuildTarget.builder(target)
                 .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
                 .addFlavors(AppleDebugFormat.DWARF.getFlavor())
-                .addFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor())
                 .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                 .build(),
             "%s"));
@@ -233,17 +228,15 @@ public class AppleTestIntegrationTest {
             BuildTarget.builder(buildTarget)
                 .addFlavors(AppleDebugFormat.DWARF.getFlavor())
                 .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
-                .addFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor())
                 .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                 .build(),
             "%s"));
 
     Path projectRoot = Paths.get(tmp.getRoot().toFile().getCanonicalPath());
     BuildTarget appleTestBundleFlavoredBuildTarget = buildTarget
-        .withAppendedFlavors(
+        .withFlavors(
             ImmutableFlavor.of("apple-test-bundle"),
             AppleDebugFormat.DWARF.getFlavor(),
-            LinkerMapMode.NO_LINKER_MAP.getFlavor(),
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path outputPath = projectRoot.resolve(
         BuildTargets.getGenPath(
@@ -299,7 +292,6 @@ public class AppleTestIntegrationTest {
             BuildTarget.builder(target)
                 .addFlavors(AppleDebugFormat.DWARF.getFlavor())
                 .addFlavors(AppleTestDescription.BUNDLE_FLAVOR)
-                .addFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor())
                 .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                 .build(),
             "%s"));
@@ -454,7 +446,7 @@ public class AppleTestIntegrationTest {
 
     Path appTestDsym = tmp.getRoot()
         .resolve(filesystem.getBuckPaths().getGenDir())
-        .resolve("AppTest#apple-test-bundle,dwarf-and-dsym,no-include-frameworks,no-linkermap")
+        .resolve("AppTest#apple-test-bundle,dwarf-and-dsym,no-include-frameworks")
         .resolve("AppTest.xctest.dSYM");
     AppleDsymTestUtil.checkDsymFileHasDebugSymbol(
         "-[AppTest testMagicValue]",
@@ -597,6 +589,7 @@ public class AppleTestIntegrationTest {
                     filesystem,
                     workspace.newBuildTarget("#AppBinary#binary,iphonesimulator-x86_64"),
                     "AppBinary#apple-dsym,iphonesimulator-x86_64.dSYM"))
+
             .toString());
 
     assertThat(hasSymbol.getExitCode(), equalTo(0));

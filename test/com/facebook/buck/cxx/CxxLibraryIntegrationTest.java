@@ -111,10 +111,7 @@ public class CxxLibraryIntegrationTest {
             workspace.getPath(
                 BuildTargets.getGenPath(
                     new ProjectFilesystem(workspace.getDestPath()),
-                    BuildTargetFactory.newInstance("//subdir:library#default")
-                        .withAppendedFlavors(
-                            CxxDescriptionEnhancer.SHARED_FLAVOR,
-                            LinkerMapMode.DEFAULT_MODE.getFlavor()),
+                    BuildTargetFactory.newInstance("//subdir:library#default,shared"),
                     "%s/libsubdir_library.so"))));
     result.assertSuccess();
   }
@@ -137,14 +134,14 @@ public class CxxLibraryIntegrationTest {
     workspace.runBuckBuild("//:foo-prefer-shared#default").assertSuccess();
     buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//:always_static#default,static-pic");
-    buildLog.assertTargetBuiltLocally("//:always_shared#default,linkermap,shared");
-    buildLog.assertTargetBuiltLocally("//:agnostic#default,linkermap,shared");
+    buildLog.assertTargetBuiltLocally("//:always_shared#default,shared");
+    buildLog.assertTargetBuiltLocally("//:agnostic#default,shared");
     buildLog.assertTargetBuiltLocally("//:foo-prefer-shared#default");
 
     workspace.runBuckBuild("//:foo-prefer-static#default").assertSuccess();
     buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//:always_static#default,static");
-    buildLog.assertTargetHadMatchingRuleKey("//:always_shared#default,linkermap,shared");
+    buildLog.assertTargetHadMatchingRuleKey("//:always_shared#default,shared");
     buildLog.assertTargetBuiltLocally("//:agnostic#default,static");
     buildLog.assertTargetBuiltLocally("//:foo-prefer-static#default");
   }

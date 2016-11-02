@@ -18,7 +18,6 @@ package com.facebook.buck.d;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -54,10 +53,7 @@ public class DLibraryIntegrationTest {
             .resolve(
                 BuildTargets.getGenPath(
                     new FakeProjectFilesystem(),
-                    BuildTargetFactory.newInstance("//:greet")
-                        .withAppendedFlavors(
-                            DBinaryDescription.BINARY_FLAVOR,
-                            LinkerMapMode.DEFAULT_MODE.getFlavor()),
+                    BuildTargetFactory.newInstance("//:greet#binary"),
                     "%s/greet"))
             .toString());
     assertEquals(0, result.getExitCode());

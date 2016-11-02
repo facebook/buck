@@ -27,15 +27,11 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.ApplePlatform;
-import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 
@@ -130,23 +126,16 @@ public class SwiftIOSBundleIntegrationTest {
     workspace.setUp();
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
-    BuildTarget parentDynamicTarget = BuildTargetFactory.newInstance("//:ios-parent-dynamic")
-        .withAppendedFlavors(ImmutableFlavor.of("iphonesimulator-x86_64"));
-
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
-        parentDynamicTarget.getFullyQualifiedName(),
+        ":ios-parent#iphonesimulator-x86_64",
         "--config",
         "cxx.cflags=-g");
     result.assertSuccess();
 
-    Path binaryOutput = workspace.resolve(
-        BuildTargets.getGenPath(
-            filesystem,
-            parentDynamicTarget.withAppendedFlavors(
-                LinkerMapMode.DEFAULT_MODE.getFlavor(),
-                CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR),
-            "%s"));
+    Path binaryOutput = tmp.getRoot()
+        .resolve(filesystem.getBuckPaths().getGenDir())
+        .resolve("ios-parent#iphonesimulator-x86_64");
     assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
 
     assertThat(
@@ -176,23 +165,16 @@ public class SwiftIOSBundleIntegrationTest {
     workspace.setUp();
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 
-    BuildTarget parentDynamicTarget = BuildTargetFactory.newInstance("//:ios-parent-dynamic")
-        .withAppendedFlavors(ImmutableFlavor.of("iphonesimulator-x86_64"));
-
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",
-        parentDynamicTarget.getFullyQualifiedName(),
+        ":ios-parent-dynamic#iphonesimulator-x86_64",
         "--config",
         "cxx.cflags=-g");
     result.assertSuccess();
 
-    Path binaryOutput = workspace.resolve(
-        BuildTargets.getGenPath(
-            filesystem,
-            parentDynamicTarget.withAppendedFlavors(
-                LinkerMapMode.DEFAULT_MODE.getFlavor(),
-                CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR),
-            "%s"));
+    Path binaryOutput = tmp.getRoot()
+        .resolve(filesystem.getBuckPaths().getGenDir())
+        .resolve("ios-parent-dynamic#iphonesimulator-x86_64");
     assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
 
     assertThat(
@@ -211,18 +193,11 @@ public class SwiftIOSBundleIntegrationTest {
         .resolve("ios_parent_dynamic.swiftmodule");
     assertThat(Files.exists(parentOutput), CoreMatchers.is(true));
 
-    BuildTarget iosdep1Target = BuildTargetFactory.newInstance("//:iosdep1")
-        .withAppendedFlavors(
-            ImmutableFlavor.of("iphonesimulator-x86_64"),
-            LinkerMapMode.DEFAULT_MODE.getFlavor());
-    Path iosdep1TargetOutput = workspace.resolve(
-        BuildTargets.getGenPath(
-            filesystem,
-            iosdep1Target,
-            "%s"));
-    assertThat(
-        Files.exists(iosdep1TargetOutput.resolve("libiosdep1.dylib")),
-        CoreMatchers.is(true));
+    Path dep1Output = tmp.getRoot()
+        .resolve(filesystem.getBuckPaths().getGenDir())
+        .resolve("iosdep1#iphonesimulator-x86_64")
+        .resolve("libiosdep1.dylib");
+    assertThat(Files.exists(dep1Output), CoreMatchers.is(true));
   }
 
   @Test
@@ -242,10 +217,10 @@ public class SwiftIOSBundleIntegrationTest {
         "cxx.cflags=-g");
     result.assertSuccess();
 
+
     Path binaryOutput = tmp.getRoot()
         .resolve(filesystem.getBuckPaths().getGenDir())
-        .resolve("dep1-soname#iphonesimulator-x86_64," +
-            LinkerMapMode.DEFAULT_MODE.getFlavor().getName())
+        .resolve("dep1-soname#iphonesimulator-x86_64")
         .resolve("custom-soname");
     assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
 
@@ -287,10 +262,7 @@ public class SwiftIOSBundleIntegrationTest {
 
     Path binaryOutput = tmp.getRoot()
         .resolve(filesystem.getBuckPaths().getGenDir())
-        .resolve("ios-parent-dynamic#" +
-            CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR.getName() +
-            ",iphonesimulator-x86_64," +
-            LinkerMapMode.DEFAULT_MODE.getFlavor().getName());
+        .resolve("ios-parent-dynamic#iphonesimulator-x86_64");
     assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
 
     Path dep1Output = tmp.getRoot()

@@ -93,19 +93,6 @@ public class CxxPreprocessAndCompile
     this.precompiledHeader = precompiledHeader;
     this.compilerSanitizer = compilerSanitizer;
     this.assemblerSanitizer = assemblerSanitizer;
-    performChecks(params);
-  }
-
-  private void performChecks(BuildRuleParams params) {
-    Preconditions.checkArgument(
-        !params.getBuildTarget().getFlavors().contains(CxxStrip.RULE_FLAVOR) ||
-            !StripStyle.FLAVOR_DOMAIN.containsAnyOf(params.getBuildTarget().getFlavors()),
-        "CxxPreprocessAndCompile should not be created with CxxStrip flavors");
-    Preconditions.checkArgument(
-        !LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(params.getBuildTarget().getFlavors()),
-        "CxxPreprocessAndCompile %s should not be created with LinkerMapMode flavor (%s)",
-        this,
-        LinkerMapMode.FLAVOR_DOMAIN);
   }
 
   /**

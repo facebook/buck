@@ -22,7 +22,6 @@ import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.NativeLinkTarget;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
@@ -618,7 +617,6 @@ class NativeLibraryMergeEnhancer {
     private BuildTarget getBuildTargetForPlatform(CxxPlatform cxxPlatform) {
       return BuildTarget.builder().from(getBuildTarget())
           .addFlavors(cxxPlatform.getFlavor())
-          .addFlavors(LinkerMapMode.DEFAULT_MODE.getFlavor())
           .build();
     }
 
