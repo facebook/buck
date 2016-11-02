@@ -1,0 +1,14 @@
+{
+  "message_ipc" : {
+    "deps" : [
+      "//src/com/facebook/buck/message_ipc:message_ipc",
+      "//src/com/facebook/buck/shell:worker_process",
+      "//test/com/facebook/buck/shell:testutil",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/jackson:jackson-databind",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}
