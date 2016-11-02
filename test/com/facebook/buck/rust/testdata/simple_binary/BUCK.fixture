@@ -6,6 +6,14 @@ rust_binary(
 )
 
 rust_binary(
+  name = "xyzzy_flags",
+  rustc_flags = [ '--this-is-a-bad-option' ],
+  srcs = [
+    "main.rs",
+  ],
+)
+
+rust_binary(
   name = "xyzzy_aliased",
   crate = "xyzzy",
   srcs = [

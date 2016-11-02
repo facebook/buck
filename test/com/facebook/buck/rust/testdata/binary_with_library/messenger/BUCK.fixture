@@ -7,3 +7,14 @@ rust_library(
     'PUBLIC',
   ],
 )
+
+rust_library(
+  name = 'messenger_flags',
+  rustc_flags = [ '--this-is-a-bad-option' ],
+  srcs = [
+    'lib.rs',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
