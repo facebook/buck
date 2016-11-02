@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cxx.CxxToolProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -55,10 +56,10 @@ public class AppleConfig {
 
   private final BuckConfig delegate;
 
-  private final ConcurrentMap<Path, Supplier<Optional<String>>> xcodeVersionCache;
+  private final ConcurrentMap<Path, Supplier<Optional<String>>> versionCache;
 
   public AppleConfig(BuckConfig delegate) {
-    this.xcodeVersionCache = new MapMaker().weakKeys().makeMap();
+    this.versionCache = new MapMaker().makeMap();
     this.delegate = delegate;
   }
 
@@ -180,8 +181,34 @@ public class AppleConfig {
    */
   public Supplier<Optional<String>> getXcodeBuildVersionSupplier(
       final Path developerPath,
-      final ProcessExecutor processExecutor) {
-    Supplier<Optional<String>> supplier = xcodeVersionCache.get(developerPath);
+      final Optional<ProcessExecutor> processExecutor) {
+    return getToolVersionSupplier(
+        developerPath.resolve("usr/bin/xcodebuild"),
+        "-version",
+        processExecutor,
+        XCODE_BUILD_NUMBER_PATTERN);
+  }
+
+  public Supplier<Optional<String>> getClangVersionSupplier(
+      final Path clangPath,
+      final Optional<ProcessExecutor> processExecutor) {
+    return getToolVersionSupplier(
+        clangPath,
+        "--version",
+        processExecutor,
+        CxxToolProvider.CLANG_VERSION_PATTERN);
+  }
+
+  private Supplier<Optional<String>> getToolVersionSupplier(
+      final Path toolPath,
+      final String versionFlag,
+      final Optional<ProcessExecutor> processExecutor,
+      final Pattern versionPattern) {
+    if (!processExecutor.isPresent()) {
+      return Suppliers.ofInstance(Optional.empty());
+    }
+
+    Supplier<Optional<String>> supplier = versionCache.get(toolPath);
     if (supplier != null) {
       return supplier;
     }
@@ -194,7 +221,7 @@ public class AppleConfig {
                 ProcessExecutorParams.builder()
                     .setCommand(
                         ImmutableList.of(
-                            developerPath.resolve("usr/bin/xcodebuild").toString(), "-version"))
+                            toolPath.toString(), versionFlag))
                     .build();
             // Specify that stdout is expected, or else output may be wrapped in Ansi escape chars.
             Set<ProcessExecutor.Option> options =
@@ -202,33 +229,33 @@ public class AppleConfig {
             ProcessExecutor.Result result;
 
             try {
-              result = processExecutor.launchAndExecute(
+              result = processExecutor.get().launchAndExecute(
                   processExecutorParams,
                   options,
                   /* stdin */ Optional.empty(),
                   /* timeOutMs */ Optional.empty(),
                   /* timeOutHandler */ Optional.empty());
             } catch (InterruptedException | IOException e) {
-              LOG.warn("Could not execute xcodebuild to find Xcode build number.");
+              LOG.warn("Could not execute " + toolPath.toString() + " to find version.");
               return Optional.empty();
             }
 
             if (result.getExitCode() != 0) {
               throw new RuntimeException(
-                  result.getMessageForUnexpectedResult("xcodebuild -version"));
+                  result.getMessageForUnexpectedResult(toolPath.toString() + " " + versionFlag));
             }
 
-            Matcher matcher = XCODE_BUILD_NUMBER_PATTERN.matcher(result.getStdout().get());
+            Matcher matcher = versionPattern.matcher(result.getStdout().get());
             if (matcher.find()) {
-              String xcodeBuildNumber = matcher.group(1);
-              return Optional.of(xcodeBuildNumber);
+              String versionString = matcher.group(1);
+              return Optional.of(versionString);
             } else {
-              LOG.warn("Xcode build number not found.");
+              LOG.warn(toolPath.toString() + " version not found.");
               return Optional.empty();
             }
           }
         });
-    xcodeVersionCache.put(developerPath, supplier);
+    versionCache.put(toolPath, supplier);
     return supplier;
   }
 

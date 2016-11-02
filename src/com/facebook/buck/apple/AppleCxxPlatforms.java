@@ -178,7 +178,7 @@ public class AppleCxxPlatforms {
       // different than the build number in the Info.plist, sigh.
       if (processExecutor.isPresent()) {
         xcodeBuildVersion = appleConfig
-            .getXcodeBuildVersionSupplier(developerPath.get(), processExecutor.get())
+            .getXcodeBuildVersionSupplier(developerPath.get(), processExecutor)
             .get();
         platformBuilder.setXcodeBuildVersion(xcodeBuildVersion);
         LOG.debug("Xcode build version is: " + xcodeBuildVersion.orElse("<absent>"));
@@ -206,15 +206,23 @@ public class AppleCxxPlatforms {
 
     ImmutableList<Path> toolSearchPaths = toolSearchPathsBuilder.build();
 
+    Path clangBinaryPath = getToolPath("clang", toolSearchPaths, executableFinder);
     Tool clangPath = VersionedTool.of(
-        getToolPath("clang", toolSearchPaths, executableFinder),
+        clangBinaryPath,
         "apple-clang",
-        version);
+        appleConfig
+            .getClangVersionSupplier(clangBinaryPath, processExecutor)
+            .get()
+            .orElse(version));
 
+    Path clangXxBinaryPath = getToolPath("clang++", toolSearchPaths, executableFinder);
     Tool clangXxPath = VersionedTool.of(
-        getToolPath("clang++", toolSearchPaths, executableFinder),
+        clangXxBinaryPath,
         "apple-clang++",
-        version);
+        appleConfig
+            .getClangVersionSupplier(clangXxBinaryPath, processExecutor)
+            .get()
+            .orElse(version));
 
     Tool ar = VersionedTool.of(
         getToolPath("ar", toolSearchPaths, executableFinder),
