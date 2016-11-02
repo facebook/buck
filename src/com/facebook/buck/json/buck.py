@@ -7,7 +7,7 @@ import __future__
 import contextlib
 from collections import namedtuple
 from pathlib import _Accessor, Path, PureWindowsPath, PurePath, PosixPath
-from pywatchman import bser
+from pywatchman import bser, WatchmanError
 from contextlib import contextmanager, nested
 import copy
 import StringIO
@@ -22,6 +22,7 @@ import optparse
 import os
 import os.path
 import pstats
+import pywatchman
 import re
 import subprocess
 import sys
@@ -84,7 +85,7 @@ class BuildFileContext(object):
 
     def __init__(self, project_root, base_path, dirname, autodeps, allow_empty_globs, ignore_paths,
                  watchman_client, watchman_watch_root, watchman_project_prefix,
-                 sync_cookie_state, watchman_error, watchman_glob_stat_results,
+                 sync_cookie_state, watchman_glob_stat_results,
                  watchman_use_glob_generator, use_mercurial_glob):
         self.globals = {}
         self.includes = set()
@@ -100,7 +101,6 @@ class BuildFileContext(object):
         self.watchman_watch_root = watchman_watch_root
         self.watchman_project_prefix = watchman_project_prefix
         self.sync_cookie_state = sync_cookie_state
-        self.watchman_error = watchman_error
         self.watchman_glob_stat_results = watchman_glob_stat_results
         self.watchman_use_glob_generator = watchman_use_glob_generator
         self.use_mercurial_glob = use_mercurial_glob
@@ -289,7 +289,8 @@ def glob(includes, excludes=None, include_dotfiles=False, build_env=None, search
                 build_env.diagnostics,
                 build_env.watchman_glob_stat_results,
                 build_env.watchman_use_glob_generator)
-        except build_env.watchman_error as e:
+        except WatchmanError as e:
+
             build_env.diagnostics.append(
                 Diagnostic(
                     message=str(e),
@@ -732,7 +733,7 @@ GENDEPS_SIGNATURE = re.compile(r'^#@# GENERATED FILE: DO NOT MODIFY ([a-f0-9]{40
 class BuildFileProcessor(object):
     def __init__(self, project_root, cell_roots, build_file_name,
                  allow_empty_globs, ignore_buck_autodeps_files, no_autodeps_signatures,
-                 watchman_client, watchman_error, watchman_glob_stat_results,
+                 watchman_client, watchman_glob_stat_results,
                  watchman_use_glob_generator, use_mercurial_glob, enable_build_file_sandboxing,
                  project_import_whitelist=None, implicit_includes=None,
                  extra_funcs=None, configs=None, env_vars=None,
@@ -762,7 +763,6 @@ class BuildFileProcessor(object):
         self._no_autodeps_signatures = no_autodeps_signatures
         self._enable_build_file_sandboxing = enable_build_file_sandboxing
         self._watchman_client = watchman_client
-        self._watchman_error = watchman_error
         self._watchman_glob_stat_results = watchman_glob_stat_results
         self._watchman_use_glob_generator = watchman_use_glob_generator
         self._use_mercurial_glob = use_mercurial_glob
@@ -1408,7 +1408,6 @@ class BuildFileProcessor(object):
             watch_root,
             project_prefix,
             self._sync_cookie_state,
-            self._watchman_error,
             self._watchman_glob_stat_results,
             self._watchman_use_glob_generator,
             self._use_mercurial_glob)
@@ -1785,10 +1784,8 @@ def main():
                       for (k, v) in options.cell_roots.iteritems())
 
     watchman_client = None
-    watchman_error = None
     use_mercurial_glob = False
     if options.use_watchman_glob:
-        import pywatchman
         client_args = {}
         if options.watchman_query_timeout_ms is not None:
             # pywatchman expects a timeout as a nonnegative floating-point
@@ -1800,7 +1797,6 @@ def main():
             client_args['sockpath'] = options.watchman_socket_path
             client_args['transport'] = 'local'
         watchman_client = pywatchman.client(**client_args)
-        watchman_error = pywatchman.WatchmanError
     elif options.use_mercurial_glob:
         # mercurial libraries
         try:
@@ -1836,7 +1832,6 @@ def main():
         options.ignore_buck_autodeps_files,
         options.no_autodeps_signatures,
         watchman_client,
-        watchman_error,
         options.watchman_glob_stat_results,
         options.watchman_use_glob_generator,
         use_mercurial_glob,

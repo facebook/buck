@@ -6,7 +6,7 @@ import shutil
 import tempfile
 import StringIO
 
-from pywatchman import bser
+from pywatchman import bser, WatchmanError
 
 from .buck import BuildFileProcessor, Diagnostic, add_rule, process_with_diagnostics
 
@@ -81,7 +81,6 @@ class BuckTest(unittest.TestCase):
         self.allow_empty_globs = False
         self.build_file_name = 'BUCK'
         self.watchman_client = None
-        self.watchman_error = None
         self.enable_build_file_sandboxing = False
         self.project_import_whitelist = None
 
@@ -105,7 +104,6 @@ class BuckTest(unittest.TestCase):
             False,              # ignore_buck_autodeps_files
             False,              # no_autodeps_signatures
             self.watchman_client,
-            self.watchman_error,
             False,              # watchman_glob_stat_results
             False,              # watchman_use_glob_generator
             False,              # use_mercurial_glob
@@ -334,22 +332,18 @@ class BuckTest(unittest.TestCase):
                 build_file.root, build_file.prefix, build_file.path, [])
 
     def test_watchman_glob_failure_falls_back_to_regular_glob_and_adds_diagnostic(self):
-        class FakeWatchmanError(Exception):
-            pass
-
         class FakeWatchmanClient:
             def __init__(self):
                 self.query_invoked = False
 
             def query(self, *args):
                 self.query_invoked = True
-                raise FakeWatchmanError("Nobody watches the watchmen")
+                raise WatchmanError("Nobody watches the watchmen")
 
             def close(self):
                 pass
 
         self.watchman_client = FakeWatchmanClient()
-        self.watchman_error = FakeWatchmanError
 
         build_file = ProjectFile(
             self.project_root,
