@@ -104,7 +104,7 @@ class BuildFileContext(object):
         self.watchman_glob_stat_results = watchman_glob_stat_results
         self.watchman_use_glob_generator = watchman_use_glob_generator
         self.use_mercurial_glob = use_mercurial_glob
-        self.diagnostics = set()
+        self.diagnostics = []
         self.rules = {}
 
 
@@ -120,7 +120,7 @@ class IncludeContext(object):
         self.includes = set()
         self.used_configs = {}
         self.used_env_vars = {}
-        self.diagnostics = set()
+        self.diagnostics = []
 
 
 class LazyBuildEnvPartial(object):
@@ -290,7 +290,7 @@ def glob(includes, excludes=None, include_dotfiles=False, build_env=None, search
                 build_env.watchman_glob_stat_results,
                 build_env.watchman_use_glob_generator)
         except build_env.watchman_error as e:
-            build_env.diagnostics.add(
+            build_env.diagnostics.append(
                 Diagnostic(
                     message=str(e),
                     level='error',
@@ -600,14 +600,14 @@ def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watc
     res = watchman_client.query(*query)
     error_message = res.get('error')
     if error_message is not None:
-        diagnostics.add(
+        diagnostics.append(
             Diagnostic(
                 message=error_message,
                 level='error',
                 source='watchman'))
     warning_message = res.get('warning')
     if warning_message is not None:
-        diagnostics.add(
+        diagnostics.append(
             Diagnostic(
                 message=warning_message,
                 level='warning',
@@ -627,7 +627,7 @@ def stat_results(base_path, result, diagnostics):
         if os.path.exists(resolved_path):
             statted_result.append(path)
         else:
-            diagnostics.add(
+            diagnostics.append(
                 Diagnostic(
                     message='Watchman query returned non-existent file: {0}'.format(
                         resolved_path),
@@ -1010,7 +1010,7 @@ class BuildFileProcessor(object):
         build_env.includes.update(inner_env.includes)
 
         # Pull in any diagnostics issued by the include.
-        build_env.diagnostics.update(inner_env.diagnostics)
+        build_env.diagnostics.extend(inner_env.diagnostics)
 
         # Pull in any config settings used by the include.
         build_env.used_configs.update(inner_env.used_configs)
@@ -1055,7 +1055,7 @@ class BuildFileProcessor(object):
         Add a warning to the current build_env's diagnostics.
         """
         if self._build_env_stack:
-            self._build_env_stack[-1].diagnostics.add(
+            self._build_env_stack[-1].diagnostics.append(
                 Diagnostic(
                     message=message,
                     level='warning',
@@ -1329,7 +1329,7 @@ class BuildFileProcessor(object):
             self._merge_globals(mod, default_globals)
             build_env.includes.add(include_path)
             build_env.includes.update(inner_env.includes)
-            build_env.diagnostics.update(inner_env.diagnostics)
+            build_env.diagnostics.extend(inner_env.diagnostics)
 
         # Build a new module for the given file, using the default globals
         # created above.
@@ -1420,7 +1420,7 @@ class BuildFileProcessor(object):
             build_env.includes.add(autodeps_file)
 
         if invalid_signature_error_message:
-            build_env.diagnostics.add(
+            build_env.diagnostics.append(
                 Diagnostic(
                     message=invalid_signature_error_message,
                     level='fatal',
@@ -1514,7 +1514,7 @@ class BuildFileProcessor(object):
         # Add in used environment variables as a special meta rule.
         values.append({"__env": build_env.used_env_vars})
 
-        diagnostics.update(build_env.diagnostics)
+        diagnostics.extend(build_env.diagnostics)
 
         return values
 
@@ -1585,7 +1585,7 @@ def process_with_diagnostics(build_file_query, build_file_processor, to_parent,
     if project_prefix is not None:
         project_prefix = cygwin_adjusted_path(project_prefix).rstrip().encode('ascii')
 
-    diagnostics = set()
+    diagnostics = []
     values = []
     if should_profile:
         profile = cProfile.Profile()
@@ -1601,7 +1601,7 @@ def process_with_diagnostics(build_file_query, build_file_processor, to_parent,
     except Exception as e:
         # Control-C and sys.exit() don't emit diagnostics.
         if not (e is KeyboardInterrupt or e is SystemExit):
-            diagnostics.add(
+            diagnostics.append(
                 Diagnostic(
                     message=format_traceback_and_exception(),
                     level='fatal',
