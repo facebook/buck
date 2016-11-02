@@ -66,25 +66,40 @@ public class JavaBuckConfigTest {
   @Test
   public void whenJavaIsNotSetThenJavaFromPathIsReturned() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
-    JavaOptions options = config.getDefaultJavaOptions();
-    assertEquals(Optional.empty(), options.getJavaPath());
-    assertEquals("java", options.getJavaRuntimeLauncher().getCommand());
+    JavaOptions javaOptions = config.getDefaultJavaOptions();
+    assertEquals(Optional.empty(), javaOptions.getJavaPath());
+    assertEquals("java", javaOptions.getJavaRuntimeLauncher().getCommand());
+
+    JavaOptions javaForTestsOptions = config.getDefaultJavaOptionsForTests();
+    assertEquals(Optional.empty(), javaForTestsOptions.getJavaPath());
   }
 
   @Test
   public void whenJavaExistsAndIsExecutableThenItIsReturned() throws IOException {
     Path java = temporaryFolder.newExecutableFile();
+    Path javaForTests = temporaryFolder.newExecutableFile();
     String javaCommand = java.toString();
-    JavaBuckConfig config = FakeBuckConfig
-        .builder()
-        .setFilesystem(defaultFilesystem)
-        .setSections(ImmutableMap.of("tools", ImmutableMap.of("java", javaCommand)))
-        .build()
-        .getView(JavaBuckConfig.class);
+    String javaForTestsCommand = javaForTests.toString();
+    JavaBuckConfig config =
+        FakeBuckConfig
+            .builder()
+            .setFilesystem(defaultFilesystem)
+            .setSections(
+                ImmutableMap.of(
+                    "tools",
+                    ImmutableMap.of(
+                        "java", javaCommand,
+                        "java_for_tests", javaForTestsCommand)))
+            .build()
+            .getView(JavaBuckConfig.class);
 
-    JavaOptions options = config.getDefaultJavaOptions();
-    assertEquals(Optional.of(java), options.getJavaPath());
-    assertEquals(javaCommand, options.getJavaRuntimeLauncher().getCommand());
+    JavaOptions javaOptions = config.getDefaultJavaOptions();
+    assertEquals(Optional.of(java), javaOptions.getJavaPath());
+    assertEquals(javaCommand, javaOptions.getJavaRuntimeLauncher().getCommand());
+
+    JavaOptions javaForTestsOptions = config.getDefaultJavaOptionsForTests();
+    assertEquals(Optional.of(javaForTests), javaForTestsOptions.getJavaPath());
+    assertEquals(javaForTestsCommand, javaForTestsOptions.getJavaRuntimeLauncher().getCommand());
   }
 
   @Test
@@ -104,21 +119,14 @@ public class JavaBuckConfigTest {
   }
 
   @Test
-  public void whenJavaForTestsIsNotSetTheAbsentIsReturned() throws IOException {
-    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
-    JavaOptions options = config.getDefaultJavaOptionsForTests();
-    assertEquals(Optional.empty(), options.getJavaPath());
-  }
-
-  @Test
-  public void whenJavaForTestsExistsAndIsExecutableThenItIsReturned() throws IOException {
+  public void whenJavaForTestsIsNotSetThenJavaIsReturned() throws IOException {
     Path java = temporaryFolder.newExecutableFile();
     String javaCommand = java.toString();
     JavaBuckConfig config =
         FakeBuckConfig
             .builder()
             .setFilesystem(defaultFilesystem)
-            .setSections(ImmutableMap.of("tools", ImmutableMap.of("java_for_tests", javaCommand)))
+            .setSections(ImmutableMap.of("tools", ImmutableMap.of("java", javaCommand)))
             .build()
             .getView(JavaBuckConfig.class);
 

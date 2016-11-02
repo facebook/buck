@@ -61,10 +61,14 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   }
 
   public JavaOptions getDefaultJavaOptionsForTests() {
-    return JavaOptions
-        .builder()
-        .setJavaPath(getPathToExecutable("java_for_tests"))
-        .build();
+    Optional<Path> javaTestPath = getPathToExecutable("java_for_tests");
+    if (javaTestPath.isPresent()) {
+      return JavaOptions
+          .builder()
+          .setJavaPath(javaTestPath)
+          .build();
+    }
+    return getDefaultJavaOptions();
   }
 
   public JavacOptions getDefaultJavacOptions() {
