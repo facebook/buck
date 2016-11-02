@@ -15,6 +15,9 @@
  */
 package com.facebook.buck.config;
 
+import static com.facebook.buck.util.MoreCollectors.toImmutableMap;
+import static java.util.stream.Collectors.collectingAndThen;
+
 import com.facebook.buck.rules.RelativeCellName;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.base.Functions;
@@ -42,25 +45,23 @@ import java.util.Optional;
  * This class only implements the simple construction/storage/retrieval of these values. Other
  * classes like {@link Config} implements accessors that interpret the values as other types.
  */
-@Value.Immutable
+@Value.Immutable(singleton = true, builder = false, copy = false)
 @BuckStyleTuple
 abstract class AbstractCellConfig {
   public static final RelativeCellName ALL_CELLS_OVERRIDE =
       RelativeCellName.of(ImmutableSet.of(RelativeCellName.ALL_CELLS_SPECIAL_NAME));
 
-  public abstract ImmutableMap<RelativeCellName, ImmutableMap<String, ImmutableMap<String, String>>>
-    getValues();
+  public abstract ImmutableMap<RelativeCellName, RawConfig> getValues();
 
   /**
-   * Retrieve the Cell-view of the raw config
+   * Retrieve the Cell-view of the raw config.
    *
    * @return The contents of the raw config with the cell-view filter
    */
   public RawConfig getForCell(RelativeCellName cellName) {
-    ImmutableMap<String, ImmutableMap<String, String>> config = Optional.ofNullable(getValues().get(
-        cellName)).orElse(ImmutableMap.of());
-    ImmutableMap<String, ImmutableMap<String, String>> starConfig =
-        Optional.ofNullable(getValues().get(ALL_CELLS_OVERRIDE)).orElse(ImmutableMap.of());
+    RawConfig config = Optional.ofNullable(getValues().get(cellName)).orElse(RawConfig.of());
+    RawConfig starConfig =
+        Optional.ofNullable(getValues().get(ALL_CELLS_OVERRIDE)).orElse(RawConfig.of());
     return RawConfig.builder()
       .putAll(starConfig)
       .putAll(config)
@@ -127,14 +128,6 @@ abstract class AbstractCellConfig {
     return ImmutableMap.copyOf(overridesByPath);
   }
 
-  /**
-   * Returns an empty config.
-   */
-  public static CellConfig of() {
-    return CellConfig.of(
-        ImmutableMap.of());
-  }
-
   public static Builder builder() {
     return new Builder();
   }
@@ -145,60 +138,33 @@ abstract class AbstractCellConfig {
    * Unless otherwise stated, duplicate keys overwrites earlier ones.
    */
   public static class Builder {
-    private Map<RelativeCellName, Map<String, Map<String, String>>> values =
-        Maps.newLinkedHashMap();
+    private Map<RelativeCellName, RawConfig.Builder> values = Maps.newLinkedHashMap();
 
     /**
      * Put a single value.
      */
     public Builder put(RelativeCellName cell, String section, String key, String value) {
-      requireSection(cell, section).put(key, value);
+      requireCell(cell).put(section, key, value);
       return this;
     }
 
     public CellConfig build() {
-      ImmutableMap.Builder<RelativeCellName, ImmutableMap<String, ImmutableMap<String, String>>>
-        builder = ImmutableMap.builder();
-      for (RelativeCellName cell : values.keySet()) {
-        ImmutableMap.Builder<String, ImmutableMap<String, String>> rawBuilder =
-            ImmutableMap.builder();
-        Map<String, Map<String, String>> config = values.get(cell);
-        if (config == null) {
-          continue;
-        }
-        for (Map.Entry<String, Map<String, String>> entry : config.entrySet()) {
-          rawBuilder.put(entry.getKey(), ImmutableMap.copyOf(entry.getValue()));
-        }
-        builder.put(cell, rawBuilder.build());
-      }
-      return CellConfig.of(builder.build());
+      return values.entrySet().stream().collect(collectingAndThen(
+          toImmutableMap(Map.Entry::getKey, entry -> entry.getValue().build()),
+          CellConfig::of));
     }
 
     /**
      * Get a section or create it if it doesn't exist.
      */
-    private Map<String, Map<String, String>> requireCell(RelativeCellName cellName) {
-      Map<String, Map<String, String>> cell = values.get(cellName);
+    private RawConfig.Builder requireCell(RelativeCellName cellName) {
+      RawConfig.Builder cell = values.get(cellName);
       if (cell == null) {
-        cell = Maps.newLinkedHashMap();
+        cell = RawConfig.builder();
         values.put(cellName, cell);
       }
       return cell;
     }
-
-    /**
-     * Get a section or create it if it doesn't exist.
-     */
-    private Map<String, String> requireSection(RelativeCellName cellName, String sectionName) {
-      Map<String, Map<String, String>> cell = requireCell(cellName);
-      Map<String, String> section = cell.get(sectionName);
-      if (section == null) {
-        section = Maps.newLinkedHashMap();
-        cell.put(sectionName, section);
-      }
-      return section;
-    }
-
   }
 
   public static class MalformedOverridesException extends Exception {

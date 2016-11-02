@@ -4,6 +4,7 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/model:macros",
       "//src/com/facebook/buck/util:exceptions",
+      "//src/com/facebook/buck/util:util",
       "//third-party/java/immutables:processor",
       "//third-party/java/ini4j:ini4j"
     ],
