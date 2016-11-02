@@ -76,13 +76,18 @@ public class RustBinaryDescription implements
     LinkerProvider linker =
         rustBuckConfig.getLinkerProvider(cxxPlatform, cxxPlatform.getLd().getType());
 
+    ImmutableList.Builder<String> rustcArgs = ImmutableList.builder();
+
+    rustcArgs.addAll(rustBuckConfig.getRustCompilerFlags());
+    rustcArgs.addAll(args.rustcFlags);
+
     return new RustBinary(
         params,
         new SourcePathResolver(resolver),
         args.crate.orElse(params.getBuildTarget().getShortName()),
         ImmutableSortedSet.copyOf(args.srcs),
         ImmutableSortedSet.copyOf(args.features),
-        ImmutableList.copyOf(args.rustcFlags),
+        rustcArgs.build(),
         () -> rustBuckConfig.getRustCompiler().resolve(resolver),
         () -> linker.resolve(resolver),
         rustBuckConfig.getLinkerArgs(cxxPlatform),

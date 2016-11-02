@@ -52,6 +52,10 @@ public class RustBuckConfig {
             });
   }
 
+  ImmutableList<String> getRustCompilerFlags() {
+    return delegate.getListWithoutComments(SECTION, "rustc_flags");
+  }
+
   LinkerProvider getLinkerProvider(
       CxxPlatform cxxPlatform,
       LinkerProvider.Type defaultType) {

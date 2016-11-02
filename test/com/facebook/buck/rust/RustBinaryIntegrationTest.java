@@ -82,13 +82,48 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void rustBinaryCompilerArgs() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_binary", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace
+            .runBuckCommand(
+                "run",
+                "--config",
+                "rust.rustc_flags=--this-is-a-bad-option",
+                "//:xyzzy")
+            .getStderr(),
+        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
+  }
+
+  @Test
+  public void rustLibraryCompilerArgs() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace
+            .runBuckCommand(
+                "run",
+                "--config",
+                "rust.rustc_flags=--this-is-a-bad-option",
+                "//messenger:messenger")
+            .getStderr(),
+        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
+  }
+
+  @Test
   public void rustLinkerOverride() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "simple_binary", tmp);
     workspace.setUp();
 
     thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(Matchers.containsString(
+    thrown.expectMessage(
+        Matchers.containsString(
             "Overridden rust:linker path not found: bad-linker"));
 
     workspace
