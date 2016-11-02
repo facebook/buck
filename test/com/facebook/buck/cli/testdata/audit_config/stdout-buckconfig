@@ -1,7 +1,7 @@
 [ignored_section]
     dotted.value = value with dot in name
-    short_value = short test value
     long_value = multiline value with \n and \r\n chars in it
+    short_value = short test value
 
 [second_section]
     some_property = some_value

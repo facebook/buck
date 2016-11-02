@@ -585,6 +585,11 @@ public class BuckConfig {
     return config.get(sectionName).containsKey(propertyName);
   }
 
+  public Optional<ImmutableMap<String, String>> getSection(String sectionName) {
+    ImmutableMap<String, String> values = config.get(sectionName);
+    return values.isEmpty() ? Optional.empty() : Optional.of(values);
+  }
+
   public Optional<String> getValue(String sectionName, String propertyName) {
     return config.getValue(sectionName, propertyName);
   }

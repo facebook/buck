@@ -17,12 +17,13 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 
 import org.immutables.value.Value;
@@ -31,9 +32,11 @@ import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class AuditConfigCommand extends AbstractCommand {
 
@@ -87,21 +90,40 @@ public class AuditConfigCommand extends AbstractCommand {
 
     final BuckConfig buckConfig = params.getBuckConfig();
 
-    final ImmutableList<ConfigValue> configs = getArguments().stream()
-        .map(input -> {
+    final ImmutableSortedSet<ConfigValue> configs = getArguments().stream()
+        .flatMap(input -> {
           String[] parts = input.split("\\.", 2);
-          if (parts.length != 2) {
-            params.getConsole().getStdErr().println(
-                String.format("%s is not a valid section/property string", input));
-            return ConfigValue.of(input, "", input, Optional.empty());
+
+          DirtyPrintStreamDecorator stdErr = params.getConsole().getStdErr();
+          if (parts.length == 1) {
+            Optional<ImmutableMap<String, String>> section = buckConfig.getSection(parts[0]);
+            if (!section.isPresent()) {
+              stdErr.println(String.format("%s is not a valid section string", input));
+              return Stream.of(ConfigValue.of(input, "", input, Optional.empty()));
+            }
+            return section.get().entrySet().stream().map(
+              entry -> ConfigValue.of(
+                parts[0] + "." + entry.getKey(),
+                parts[0],
+                entry.getKey(),
+                Optional.of(entry.getValue()))
+            );
+          } else if (parts.length != 2) {
+            stdErr.println(String.format("%s is not a valid section/property string", input));
+            return Stream.of(ConfigValue.of(input, "", input, Optional.empty()));
           }
-          return ConfigValue.of(
-              input,
-              parts[0],
-              parts[1],
-              buckConfig.getValue(parts[0], parts[1]));
+          return Stream.of(
+              ConfigValue.of(
+                input,
+                parts[0],
+                parts[1],
+                buckConfig.getValue(parts[0], parts[1])));
         })
-        .collect(MoreCollectors.toImmutableList());
+        .collect(MoreCollectors.toImmutableSortedSet(
+            Comparator
+              .comparing(ConfigValue::getSection)
+              .thenComparing(ConfigValue::getKey)
+        ));
 
     if (shouldGenerateJsonOutput()) {
       printJsonOutput(params, configs);
@@ -115,7 +137,7 @@ public class AuditConfigCommand extends AbstractCommand {
 
   private void printTabbedOutput(
       final CommandRunnerParams params,
-      ImmutableList<ConfigValue> configs) {
+      ImmutableSortedSet<ConfigValue> configs) {
     for (ConfigValue config : configs) {
       params.getConsole().getStdOut().println(
           String.format(
@@ -127,7 +149,7 @@ public class AuditConfigCommand extends AbstractCommand {
 
   private void printJsonOutput(
       final CommandRunnerParams params,
-      ImmutableList<ConfigValue> configs) throws IOException {
+      ImmutableSortedSet<ConfigValue> configs) throws IOException {
     ImmutableMap.Builder<String, Optional<String>> jsBuilder;
     jsBuilder = ImmutableMap.builder();
 
@@ -140,7 +162,7 @@ public class AuditConfigCommand extends AbstractCommand {
 
   private void printBuckconfigOutput(
       final CommandRunnerParams params,
-      ImmutableList<ConfigValue> configs) {
+      ImmutableSortedSet<ConfigValue> configs) {
     ImmutableListMultimap<String, ConfigValue> iniData =
         FluentIterable.from(configs)
             .filter(

@@ -46,7 +46,6 @@ public class AuditConfigCommandIntegrationTest {
         "config",
         "--tab",
         "missing_section.badvalue",
-        "ignored_section",
         "ignored_section.dotted.value",
         "ignored_section.short_value",
         "ignored_section.long_value"
@@ -68,10 +67,28 @@ public class AuditConfigCommandIntegrationTest {
         "config",
         "--json",
         "missing_section.badvalue",
-        "ignored_section",
         "ignored_section.dotted.value",
         "ignored_section.short_value",
         "ignored_section.long_value"
+    );
+    result.assertSuccess();
+    assertEquals(workspace.getFileContents("stdout-config.json").trim(), result.getStdout());
+  }
+
+  @Test
+  public void testConfigJsonUIWithWholeSection() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "audit_config",
+        tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "audit",
+        "config",
+        "--json",
+        "missing_section.badvalue",
+        "ignored_section"
     );
     result.assertSuccess();
     assertEquals(workspace.getFileContents("stdout-config.json").trim(), result.getStdout());
