@@ -11,6 +11,59 @@
 	<string>46</string>
 	<key>objects</key>
 	<dict>
+		<key>1DD70E297D7A05EC00000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>name</key>
+			<string>TestApp#iphonesimulator-x86_64-Debug.xcconfig</string>
+			<key>path</key>
+			<string>../buck-out/gen/Apps/TestApp#iphonesimulator-x86_64-Debug.xcconfig</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+			<key>explicitFileType</key>
+			<string>text.xcconfig</string>
+		</dict>
+		<key>1DD70E295FC97DB800000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>name</key>
+			<string>TestApp#iphonesimulator-x86_64-Release.xcconfig</string>
+			<key>path</key>
+			<string>../buck-out/gen/Apps/TestApp#iphonesimulator-x86_64-Release.xcconfig</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+			<key>explicitFileType</key>
+			<string>text.xcconfig</string>
+		</dict>
+		<key>B401C9792F7F325000000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXGroup</string>
+			<key>name</key>
+			<string>Buck (Do Not Modify)</string>
+			<key>sourceTree</key>
+			<string><![CDATA[<group>]]></string>
+			<key>children</key>
+			<array>
+				<string>1DD70E297D7A05EC00000000</string>
+				<string>1DD70E295FC97DB800000000</string>
+			</array>
+		</dict>
+		<key>B401C979B781F65D00000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXGroup</string>
+			<key>name</key>
+			<string>Configurations</string>
+			<key>sourceTree</key>
+			<string><![CDATA[<group>]]></string>
+			<key>children</key>
+			<array>
+				<string>B401C9792F7F325000000000</string>
+			</array>
+		</dict>
 		<key>1DD70E291C9EF7C200000000</key>
 		<dict>
 			<key>isa</key>
@@ -50,6 +103,19 @@
 			<key>explicitFileType</key>
 			<string>text.script.python</string>
 		</dict>
+		<key>1DD70E2906C06BEE00000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>name</key>
+			<string>Info.plist</string>
+			<key>path</key>
+			<string>Info.plist</string>
+			<key>sourceTree</key>
+			<string><![CDATA[<group>]]></string>
+			<key>explicitFileType</key>
+			<string>text.plist</string>
+		</dict>
 		<key>B401C979EAB5339800000000</key>
 		<dict>
 			<key>isa</key>
@@ -60,6 +126,7 @@
 			<string><![CDATA[<group>]]></string>
 			<key>children</key>
 			<array>
+				<string>1DD70E2906C06BEE00000000</string>
 			</array>
 		</dict>
 		<key>B401C9790E6F340F00000000</key>
@@ -86,9 +153,34 @@
 			<string><![CDATA[<group>]]></string>
 			<key>children</key>
 			<array>
+				<string>B401C979B781F65D00000000</string>
 				<string>B401C979C806358400000000</string>
 				<string>B401C9790E6F340F00000000</string>
 			</array>
+		</dict>
+		<key>4952437303EDA63300000000</key>
+		<dict>
+			<key>isa</key>
+			<string>XCBuildConfiguration</string>
+			<key>name</key>
+			<string>Debug</string>
+			<key>buildSettings</key>
+			<dict>
+			</dict>
+			<key>baseConfigurationReference</key>
+			<string>1DD70E297D7A05EC00000000</string>
+		</dict>
+		<key>49524373A439BFE700000000</key>
+		<dict>
+			<key>isa</key>
+			<string>XCBuildConfiguration</string>
+			<key>name</key>
+			<string>Release</string>
+			<key>buildSettings</key>
+			<dict>
+			</dict>
+			<key>baseConfigurationReference</key>
+			<string>1DD70E295FC97DB800000000</string>
 		</dict>
 		<key>218C37090000000000000000</key>
 		<dict>
@@ -96,6 +188,8 @@
 			<string>XCConfigurationList</string>
 			<key>buildConfigurations</key>
 			<array>
+				<string>4952437303EDA63300000000</string>
+				<string>49524373A439BFE700000000</string>
 			</array>
 			<key>defaultConfigurationIsVisible</key>
 			<false/>
@@ -121,12 +215,34 @@
 			<key>buildConfigurationList</key>
 			<string>218C37090000000000000000</string>
 		</dict>
+		<key>4952437303EDA63300000001</key>
+		<dict>
+			<key>isa</key>
+			<string>XCBuildConfiguration</string>
+			<key>name</key>
+			<string>Debug</string>
+			<key>buildSettings</key>
+			<dict>
+			</dict>
+		</dict>
+		<key>49524373A439BFE700000001</key>
+		<dict>
+			<key>isa</key>
+			<string>XCBuildConfiguration</string>
+			<key>name</key>
+			<string>Release</string>
+			<key>buildSettings</key>
+			<dict>
+			</dict>
+		</dict>
 		<key>218C37090000000000000001</key>
 		<dict>
 			<key>isa</key>
 			<string>XCConfigurationList</string>
 			<key>buildConfigurations</key>
 			<array>
+				<string>4952437303EDA63300000001</string>
+				<string>49524373A439BFE700000001</string>
 			</array>
 			<key>defaultConfigurationIsVisible</key>
 			<false/>

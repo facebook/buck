@@ -903,7 +903,7 @@ public class ProjectCommand extends BuildCommand {
       ImmutableSet<BuildTarget> passedInTargetsSet,
       ImmutableSet<ProjectGenerator.Option> options,
       ImmutableList<String> buildWithBuckFlags,
-      ImmutableList<BuildTarget> focusModules,
+      ImmutableSet<UnflavoredBuildTarget> focusModules,
       Map<Path, ProjectGenerator> projectGenerators,
       boolean combinedProject,
       boolean buildWithBuck)
@@ -986,13 +986,13 @@ public class ProjectCommand extends BuildCommand {
     return requiredBuildTargetsBuilder.build();
   }
 
-  private ImmutableList<BuildTarget> getFocusModules(
+  private ImmutableSet<UnflavoredBuildTarget> getFocusModules(
       final TargetGraphAndTargets targetGraphAndTargets,
       CommandRunnerParams params,
       ListeningExecutorService executor)
       throws IOException, InterruptedException {
     if (modulesToFocusOn == null) {
-      return ImmutableList.of();
+      return ImmutableSet.of();
     }
 
     Iterable<String> patterns = Splitter.onPattern("\\s+").split(modulesToFocusOn);
@@ -1018,7 +1018,7 @@ public class ProjectCommand extends BuildCommand {
     } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return ImmutableList.of();
+      return ImmutableSet.of();
     }
     LOG.debug("Selected targets: %s", passedInTargetsSet.toString());
 
@@ -1028,10 +1028,11 @@ public class ProjectCommand extends BuildCommand {
         .map(node -> node.getBuildTarget().getUnflavoredBuildTarget())
         .collect(MoreCollectors.toImmutableSet());
 
-    // Match the targets resolved using the patterns wit the valid of valid targets.
-    ImmutableList<BuildTarget> result = passedInTargetsSet.stream()
+    // Match the targets resolved using the patterns with the valid of valid targets.
+    ImmutableSet<UnflavoredBuildTarget> result = passedInTargetsSet.stream()
       .filter(target -> validUnflavoredTargets.contains(target.getUnflavoredBuildTarget()))
-      .collect(MoreCollectors.toImmutableList());
+      .map(target -> target.getUnflavoredBuildTarget())
+      .collect(MoreCollectors.toImmutableSet());
 
     LOG.debug("Focused targets: %s", result.toString());
     return result;

@@ -29,6 +29,7 @@ import java.nio.file.Path;
 @BuckStyleTuple
 abstract class AbstractGenerationResult {
   public abstract Path getProjectPath();
+  public abstract boolean isProjectGenerated();
   public abstract ImmutableSet<BuildTarget> getRequiredBuildTargets();
   public abstract ImmutableMultimap<BuildTarget, PBXTarget> getBuildTargetToGeneratedTargetMap();
 }

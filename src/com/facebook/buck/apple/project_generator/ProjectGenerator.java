@@ -280,7 +280,7 @@ public class ProjectGenerator {
   private final CxxBuckConfig cxxBuckConfig;
   private final AppleConfig appleConfig;
   private final SwiftBuckConfig swiftBuckConfig;
-  private final ImmutableList<BuildTarget> focusModules;
+  private final ImmutableSet<UnflavoredBuildTarget> focusModules;
 
   public ProjectGenerator(
       TargetGraph targetGraph,
@@ -292,7 +292,7 @@ public class ProjectGenerator {
       Set<Option> options,
       Optional<BuildTarget> targetToBuildWithBuck,
       ImmutableList<String> buildWithBuckFlags,
-      ImmutableList<BuildTarget> focusModules,
+      ImmutableSet<UnflavoredBuildTarget> focusModules,
       ExecutableFinder executableFinder,
       ImmutableMap<String, String> environment,
       FlavorDomain<CxxPlatform> cxxPlatforms,
@@ -352,12 +352,6 @@ public class ProjectGenerator {
     this.appleConfig = appleConfig;
     this.swiftBuckConfig = swiftBuckConfig;
     this.focusModules = focusModules;
-
-    for (BuildTarget focusedTarget : focusModules) {
-      Preconditions.checkArgument(
-          targetGraph.getOptional(focusedTarget).isPresent(),
-          "Cannot find build target %s in target graph", focusedTarget);
-    }
   }
 
   @VisibleForTesting
@@ -415,9 +409,16 @@ public class ProjectGenerator {
     return requiredBuildTargetsBuilder.build();
   }
 
+  // Returns true if we ran the project generation and we decided to eventually generate
+  // the project.
+  public boolean isProjectGenerated() {
+    return projectGenerated;
+  }
+
   public void createXcodeProjects() throws IOException {
     LOG.debug("Creating projects for targets %s", initialTargets);
 
+    boolean hasAtLeastOneTarget = false;
     try (
         SimplePerfEvent.Scope scope = SimplePerfEvent.scope(
             buckEventBus,
@@ -431,9 +432,19 @@ public class ProjectGenerator {
           if (target.isPresent()) {
             targetNodeToGeneratedProjectTargetBuilder.put(targetNode, target.get());
           }
+          if (shouldIncludeBuildTargetIntoFocusedProject(
+              focusModules, targetNode.getBuildTarget())) {
+            // If the target is not included, we still need to do other operations to generate
+            // the required header maps.
+            hasAtLeastOneTarget = true;
+          }
         } else {
           LOG.verbose("Excluding rule %s (not built by current project)", targetNode);
         }
+      }
+
+      if (!hasAtLeastOneTarget && focusModules.size() != 0) {
+        return;
       }
 
       if (targetToBuildWithBuck.isPresent()) {
@@ -1058,7 +1069,8 @@ public class ProjectGenerator {
             buildTargetName,
             Paths.get(String.format(productOutputFormat, buildTargetName)));
 
-    boolean isFocusedOnTarget = shouldIncludeBuildTargetIntoFocusedProject(buildTarget);
+    boolean isFocusedOnTarget = shouldIncludeBuildTargetIntoFocusedProject(
+        focusModules, buildTarget);
     if (isFocusedOnTarget) {
       mutator
           .setLangPreprocessorFlags(langPreprocessorFlags)
@@ -1410,23 +1422,22 @@ public class ProjectGenerator {
     return target;
   }
 
-  private boolean shouldIncludeBuildTargetIntoFocusedProject(BuildTarget buildTarget) {
+  /**
+   * Returns true if a target matches a set of unflavored targets or the main target.
+   *
+   * @param focusModules Set of unflavored targets.
+   * @param buildTarget Target to test against the set of unflavored targets.
+   *
+   * @return {@code true} if the target is member of {@code focusModules}.
+   */
+  public static boolean shouldIncludeBuildTargetIntoFocusedProject(
+      ImmutableSet<UnflavoredBuildTarget> focusModules,
+      BuildTarget buildTarget) {
     if (focusModules.isEmpty()) {
       return true;
     }
 
-    UnflavoredBuildTarget unflavoredTarget = buildTarget.getUnflavoredBuildTarget();
-    if (targetToBuildWithBuck.isPresent() &&
-        unflavoredTarget.equals(targetToBuildWithBuck.get().getUnflavoredBuildTarget())) {
-      return true;
-    }
-
-    for (BuildTarget target : focusModules) {
-      if (unflavoredTarget.equals(target.getUnflavoredBuildTarget())) {
-        return true;
-      }
-    }
-    return false;
+    return focusModules.contains(buildTarget.getUnflavoredBuildTarget());
   }
 
   public static String getProductName(TargetNode<?> buildTargetNode, BuildTarget buildTarget) {

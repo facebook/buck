@@ -28,7 +28,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.apple.AppleBinaryBuilder;
@@ -251,7 +250,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.of(),
-        ImmutableList.of(),
+        ImmutableSet.of(),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),
@@ -327,7 +326,7 @@ public class WorkspaceAndProjectGeneratorTest {
         true /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.of(),
-        ImmutableList.of(),
+        ImmutableSet.of(),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),
@@ -387,7 +386,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.of(),
-        ImmutableList.of(),
+        ImmutableSet.of(),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),
@@ -453,7 +452,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.of(),
-        ImmutableList.of(),
+        ImmutableSet.of(),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),
@@ -528,7 +527,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.of(),
-        ImmutableList.of(),
+        ImmutableSet.of(),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),
@@ -585,7 +584,7 @@ public class WorkspaceAndProjectGeneratorTest {
         true /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.of(),
-        ImmutableList.of(),
+        ImmutableSet.of(),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),
@@ -624,7 +623,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         true /* buildWithBuck */,
         ImmutableList.of(),
-        ImmutableList.of(),
+        ImmutableSet.of(),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),
@@ -693,7 +692,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         true /* buildWithBuck */,
         ImmutableList.of(),
-        ImmutableList.of(BuildTargetFactory.newInstance(fooLib)),
+        ImmutableSet.of(BuildTargetFactory.newInstance(fooLib).getUnflavoredBuildTarget()),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),
@@ -723,52 +722,6 @@ public class WorkspaceAndProjectGeneratorTest {
         assertThat(target.getBuildPhases().size(), Matchers.equalTo(0));
       }
     }
-  }
-
-  @Test
-  public void buildWithBuckFocusedFailsIfTargetDoesNotExist()
-      throws IOException, InterruptedException {
-    final String fooLib = "//NOT:EXISTING_TARGET";
-    Optional<Path> buck = new ExecutableFinder().getOptionalExecutable(
-        Paths.get("buck"),
-        ImmutableMap.of());
-    assumeThat(buck.isPresent(), is(true));
-    WorkspaceAndProjectGenerator generator = new WorkspaceAndProjectGenerator(
-        rootCell,
-        targetGraph,
-        workspaceNode.getConstructorArg(),
-        workspaceNode.getBuildTarget(),
-        ImmutableSet.of(ProjectGenerator.Option.INCLUDE_TESTS,
-            ProjectGenerator.Option.INCLUDE_DEPENDENCIES_TESTS),
-        false /* combinedProject */,
-        true /* buildWithBuck */,
-        ImmutableList.of(),
-        ImmutableList.of(BuildTargetFactory.newInstance(fooLib)),
-        false /* parallelizeBuild */,
-        new AlwaysFoundExecutableFinder(),
-        ImmutableMap.of(),
-        PLATFORMS,
-        DEFAULT_PLATFORM,
-        "BUCK",
-        getSourcePathResolverForNodeFunction(targetGraph),
-        getFakeBuckEventBus(),
-        halideBuckConfig,
-        cxxBuckConfig,
-        appleConfig,
-        swiftBuckConfig);
-    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-
-    try {
-      generator.generateWorkspaceAndDependentProjects(
-          projectGenerators,
-          MoreExecutors.newDirectExecutorService());
-    } catch (IllegalArgumentException e) {
-      assertThat(
-          e.getMessage(),
-          Matchers.equalTo("Cannot find build target " + fooLib + " in target graph"));
-      return;
-    }
-    fail("Project generation should fail because there is no " + fooLib + " target in the graph!");
   }
 
   private void setUpWorkspaceWithSchemeAndProjects() {
@@ -898,7 +851,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.of(),
-        ImmutableList.of(),
+        ImmutableSet.of(),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),
@@ -1057,7 +1010,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.of(),
-        ImmutableList.of(),
+        ImmutableSet.of(),
         false /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),
@@ -1154,7 +1107,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.of(),
-        ImmutableList.of(),
+        ImmutableSet.of(),
         true /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),
@@ -1217,7 +1170,7 @@ public class WorkspaceAndProjectGeneratorTest {
         false /* combinedProject */,
         false /* buildWithBuck */,
         ImmutableList.of(),
-        ImmutableList.of(),
+        ImmutableSet.of(),
         true /* parallelizeBuild */,
         new AlwaysFoundExecutableFinder(),
         ImmutableMap.of(),
