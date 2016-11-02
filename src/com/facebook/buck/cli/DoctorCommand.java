@@ -61,10 +61,16 @@ public class DoctorCommand extends AbstractCommand {
         params.getObjectMapper(),
         params.getBuckConfig().getView(DoctorConfig.class));
 
-    BuildLogEntry entry = helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
-    Optional<DefectSubmitResult> rageResult = generateRageReport(params, entry);
+    Optional<BuildLogEntry> entry =
+        helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
+    if (!entry.isPresent()) {
+      params.getConsole().getStdOut().println("No interesting commands found in buck-out/log.");
+      return 0;
+    }
 
-    DoctorEndpointRequest request = helper.generateEndpointRequest(entry, rageResult);
+    Optional<DefectSubmitResult> rageResult = generateRageReport(params, entry.get());
+
+    DoctorEndpointRequest request = helper.generateEndpointRequest(entry.get(), rageResult);
     DoctorEndpointResponse response = helper.uploadRequest(request);
 
     helper.presentResponse(response);

@@ -123,9 +123,10 @@ public class DoctorCommandIntegrationTest {
     BuildLogHelper buildLogHelper = new BuildLogHelper(
         workspace.asCell().getFilesystem(),
         objectMapper);
-    BuildLogEntry entry = helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
+    Optional<BuildLogEntry> entry =
+        helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
-    DoctorEndpointRequest request = helper.generateEndpointRequest(entry, Optional.empty());
+    DoctorEndpointRequest request = helper.generateEndpointRequest(entry.get(), Optional.empty());
     DoctorEndpointResponse response = helper.uploadRequest(request);
     assertEquals(
         "Please define URL",
@@ -144,9 +145,10 @@ public class DoctorCommandIntegrationTest {
     BuildLogHelper buildLogHelper = new BuildLogHelper(
         workspace.asCell().getFilesystem(),
         objectMapper);
-    BuildLogEntry entry = helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
+    Optional<BuildLogEntry> entry =
+        helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
-    DoctorEndpointRequest request = helper.generateEndpointRequest(entry, Optional.empty());
+    DoctorEndpointRequest request = helper.generateEndpointRequest(entry.get(), Optional.empty());
     DoctorEndpointResponse response = helper.uploadRequest(request);
     helper.presentResponse(response);
 

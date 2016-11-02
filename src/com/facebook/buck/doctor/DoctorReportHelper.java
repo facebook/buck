@@ -80,7 +80,11 @@ public class DoctorReportHelper {
     this.doctorConfig = doctorConfig;
   }
 
-  public BuildLogEntry promptForBuild(List<BuildLogEntry> buildLogs) throws IOException {
+  public Optional<BuildLogEntry> promptForBuild(List<BuildLogEntry> buildLogs) throws IOException {
+    if (buildLogs.isEmpty()) {
+      return Optional.empty();
+    }
+
     // Remove commands with unknown args or invocations of buck rage.
     buildLogs.removeIf(
         entry -> !(entry.getCommandArgs().isPresent() &&
@@ -88,12 +92,16 @@ public class DoctorReportHelper {
             !entry.getCommandArgs().get().contains("doctor"))
     );
 
+    if (buildLogs.isEmpty()) {
+      return Optional.empty();
+    }
+
     // Sort the remaining logs based on time, reverse order.
     Collections.sort(
         buildLogs,
         Ordering.natural().onResultOf(BuildLogEntry::getLastModifiedTime).reverse());
 
-    return input.selectOne(
+    return Optional.of(input.selectOne(
         "Which buck invocation would you like to report?",
         buildLogs,
         entry -> {
@@ -107,7 +115,7 @@ public class DoctorReportHelper {
               prettyPrintExitCode(entry.getExitCode()),
               humanReadableSize.getFirst(),
               humanReadableSize.getSecond().getAbbreviation());
-        });
+        }));
   }
 
   public DoctorEndpointRequest generateEndpointRequest(
