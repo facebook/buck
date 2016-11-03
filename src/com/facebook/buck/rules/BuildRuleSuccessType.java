@@ -32,6 +32,8 @@ public enum BuildRuleSuccessType {
   BUILT_LOCALLY(
       "BUILT",
       Property.SHOULD_UPLOAD_RESULTING_ARTIFACT,
+      Property.SHOULD_UPLOAD_RESULTING_ARTIFACT_INPUT_BASED,
+      Property.SHOULD_UPLOAD_RESULTING_ARTIFACT_MANIFEST_BASED,
       Property.SHOULD_CLEAR_AND_WRITE_METADATA_ON_DISK,
       Property.OUTPUTS_HAVE_CHANGED
   ),
@@ -118,6 +120,14 @@ public enum BuildRuleSuccessType {
     return properties.contains(Property.SHOULD_UPLOAD_RESULTING_ARTIFACT);
   }
 
+  public boolean shouldUploadResultingArtifactInputBased() {
+    return properties.contains(Property.SHOULD_UPLOAD_RESULTING_ARTIFACT_INPUT_BASED);
+  }
+
+  public boolean shouldUploadResultingArtifactManifestBased() {
+    return properties.contains(Property.SHOULD_UPLOAD_RESULTING_ARTIFACT_MANIFEST_BASED);
+  }
+
   /**
    * @return whether a rule completing with this success type may have changed it's outputs.
    */
@@ -131,6 +141,8 @@ public enum BuildRuleSuccessType {
 
   private enum Property {
     SHOULD_UPLOAD_RESULTING_ARTIFACT,
+    SHOULD_UPLOAD_RESULTING_ARTIFACT_INPUT_BASED,
+    SHOULD_UPLOAD_RESULTING_ARTIFACT_MANIFEST_BASED,
     SHOULD_CLEAR_AND_WRITE_METADATA_ON_DISK,
     SHOULD_UPDATE_METADATA_ON_DISK,
     OUTPUTS_HAVE_CHANGED,

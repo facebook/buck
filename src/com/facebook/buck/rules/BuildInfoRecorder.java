@@ -386,8 +386,4 @@ public class BuildInfoRecorder {
     return metadataToWrite.get(key);
   }
 
-  Optional<String> getBuildMetadataFor(String key) {
-    return Optional.ofNullable(buildMetadata.get(key));
-  }
-
 }
