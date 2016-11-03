@@ -87,6 +87,7 @@ import com.facebook.buck.go.GoBinaryDescription;
 import com.facebook.buck.go.GoBuckConfig;
 import com.facebook.buck.go.GoLibraryDescription;
 import com.facebook.buck.go.GoTestDescription;
+import com.facebook.buck.graphql.GraphQlLibraryDescription;
 import com.facebook.buck.groups.TargetGroupDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
 import com.facebook.buck.halide.HalideBuckConfig;
@@ -695,6 +696,7 @@ public class KnownBuildRuleTypes {
         new GoTestDescription(
             goBuckConfig,
             defaultTestRuleTimeoutMs));
+    builder.register(new GraphQlLibraryDescription());
     GroovyBuckConfig groovyBuckConfig = new GroovyBuckConfig(config);
     builder.register(
         new GroovyLibraryDescription(

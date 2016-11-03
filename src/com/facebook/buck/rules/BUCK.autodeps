@@ -183,6 +183,7 @@
       "//src/com/facebook/buck/file:downloader",
       "//src/com/facebook/buck/file:file",
       "//src/com/facebook/buck/go:go",
+      "//src/com/facebook/buck/graphql:graphql",
       "//src/com/facebook/buck/groups:groups",
       "//src/com/facebook/buck/gwt:gwt",
       "//src/com/facebook/buck/halide:halide",

@@ -1,0 +1,7 @@
+graphql_library(
+  name = 'AppGraphQl',
+  deps = [
+    '//LibraryOne:LibraryOneGraphQl',
+    '//LibraryTwo:LibraryTwoGraphQl',
+  ],
+)

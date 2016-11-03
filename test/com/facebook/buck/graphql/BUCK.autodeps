@@ -1,0 +1,12 @@
+{
+  "graphql" : {
+    "deps" : [
+      "//src/com/facebook/buck/util:object_mapper",
+      "//test/com/facebook/buck/testutil/integration:util",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/jackson:jackson-databind",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}
