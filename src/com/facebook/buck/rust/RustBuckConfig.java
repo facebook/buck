@@ -53,7 +53,7 @@ public class RustBuckConfig {
   }
 
   ImmutableList<String> getRustCompilerFlags() {
-    return delegate.getListWithoutComments(SECTION, "rustc_flags");
+    return delegate.getListWithoutComments(SECTION, "rustc_flags", ' ');
   }
 
   LinkerProvider getLinkerProvider(
