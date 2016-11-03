@@ -165,6 +165,11 @@ public class DarwinLinker implements Linker, HasLinkerMap {
   }
 
   @Override
+  public boolean hasFilePathSizeLimitations() {
+    return false;
+  }
+
+  @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink
         .setReflectively("tool", tool)

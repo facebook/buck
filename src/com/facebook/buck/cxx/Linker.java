@@ -118,6 +118,8 @@ public interface Linker extends Tool {
 
   Iterable<String> outputArgs(String path);
 
+  boolean hasFilePathSizeLimitations();
+
   /**
    * The various ways to link an output file.
    */

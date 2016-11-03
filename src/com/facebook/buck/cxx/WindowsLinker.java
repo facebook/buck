@@ -133,6 +133,15 @@ public class WindowsLinker implements Linker {
     return ImmutableList.of("/OUT:" + path);
   }
 
+  /**
+   * https://msdn.microsoft.com/en-us/library/ts7eyw4s.aspx -
+   * LNK1104 error if Path for filename expands to more than 260 characters.
+   */
+  @Override
+  public boolean hasFilePathSizeLimitations() {
+    return true;
+  }
+
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink

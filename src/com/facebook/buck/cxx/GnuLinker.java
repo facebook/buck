@@ -180,6 +180,11 @@ public class GnuLinker implements Linker {
   }
 
   @Override
+  public boolean hasFilePathSizeLimitations() {
+    return false;
+  }
+
+  @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
     sink
         .setReflectively("tool", tool)

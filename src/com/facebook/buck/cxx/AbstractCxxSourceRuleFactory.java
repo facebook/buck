@@ -290,6 +290,12 @@ abstract class AbstractCxxSourceRuleFactory {
    * @return the object file name for the given source name.
    */
   private String getCompileOutputName(String name) {
+    Linker ld = getCxxPlatform().getLd().resolve(getResolver());
+    String outName = ld.hasFilePathSizeLimitations() ? "out" : getOutputName(name);
+    return outName + "." + getCxxPlatform().getObjectFileExtension();
+  }
+
+  private String getCompileFlavorSuffix(String name) {
     return getOutputName(name) + "." + getCxxPlatform().getObjectFileExtension();
   }
 
@@ -308,7 +314,7 @@ abstract class AbstractCxxSourceRuleFactory {
    */
   @VisibleForTesting
   public BuildTarget createCompileBuildTarget(String name) {
-    String outputName = CxxFlavorSanitizer.sanitize(getCompileOutputName(name));
+    String outputName = CxxFlavorSanitizer.sanitize(getCompileFlavorSuffix(name));
     return BuildTarget
         .builder(getParams().getBuildTarget())
         .addFlavors(getCxxPlatform().getFlavor())
@@ -322,7 +328,7 @@ abstract class AbstractCxxSourceRuleFactory {
   }
 
   public BuildTarget createInferCaptureBuildTarget(String name) {
-    String outputName = CxxFlavorSanitizer.sanitize(getCompileOutputName(name));
+    String outputName = CxxFlavorSanitizer.sanitize(getCompileFlavorSuffix(name));
     return BuildTarget
         .builder(getParams().getBuildTarget())
         .addAllFlavors(getParams().getBuildTarget().getFlavors())
