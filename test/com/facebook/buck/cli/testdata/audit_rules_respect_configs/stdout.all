@@ -2,19 +2,15 @@
 
 genrule(
   name = "example",
-  autodeps = False,
+  autodeps = None,
   bash = "bar",
   cmd = None,
   cmdExe = None,
   executable = None,
-  licenses = [
-  ],
+  licenses = None,
   out = "baz.txt",
-  srcs = [
-  ],
-  tests = [
-  ],
-  visibility = [
-  ],
+  srcs = None,
+  tests = None,
+  visibility = None,
 )
 

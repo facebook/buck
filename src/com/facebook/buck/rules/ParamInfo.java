@@ -185,10 +185,6 @@ public class ParamInfo implements Comparable<ParamInfo> {
         result = defaultValue;
       } else if (isOptional) {
         result = Optional.empty();
-      } else if (Number.class.isAssignableFrom(typeCoercer.getOutputClass())) {
-        result = 0;
-      } else if (Boolean.class.isAssignableFrom(typeCoercer.getOutputClass())) {
-        result = false;
       } else {
         throw new ParamInfoException(name, "field cannot be null");
       }

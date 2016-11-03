@@ -30,8 +30,6 @@ import org.stringtemplate.v4.STGroupFile;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.Collection;
-import java.util.Map;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
@@ -80,14 +78,13 @@ public class BuckPyFunction {
         continue;
       }
       if (param.isOptional()) {
-        optional.add(
-            new StParamInfo(param.getName(), param.getPythonName(), getPythonDefault(param)));
+        optional.add(new StParamInfo(param));
       } else {
-        mandatory.add(new StParamInfo(param.getName(), param.getPythonName(), null));
+        mandatory.add(new StParamInfo(param));
       }
     }
-    optional.add(new StParamInfo("autodeps", "autodeps", "False"));
-    optional.add(new StParamInfo("visibility", "visibility", "[]"));
+    optional.add(new StParamInfo("autodeps", "autodeps", /* optional */ true));
+    optional.add(new StParamInfo("visibility", "visibility", /* optional */ true));
 
     STGroup group = buckPyFunctionTemplate.get();
     ST st;
@@ -110,21 +107,6 @@ public class BuckPyFunction {
       throw new IllegalStateException("ST writer should not throw with StringWriter", e);
     }
     return stringWriter.toString();
-  }
-
-  private String getPythonDefault(ParamInfo param) {
-    Class<?> resultClass = param.getResultClass();
-    if (Map.class.isAssignableFrom(resultClass)) {
-      return "{}";
-    } else if (Collection.class.isAssignableFrom(resultClass)) {
-      return "[]";
-    } else if (param.isOptional()) {
-      return "None";
-    } else if (Boolean.class.equals(resultClass)) {
-      return "False";
-    } else {
-      return "None";
-    }
   }
 
   private boolean isSkippable(ParamInfo param) {
@@ -159,12 +141,18 @@ public class BuckPyFunction {
   private static class StParamInfo {
     public final String name;
     public final String pythonName;
-    @Nullable public final String pythonDefault;
+    public final boolean optional;
 
-    public StParamInfo(String name, String pythonName, @Nullable String pythonDefault) {
+    public StParamInfo(ParamInfo info) {
+      this.name = info.getName();
+      this.pythonName = info.getPythonName();
+      this.optional = info.isOptional();
+    }
+
+    public StParamInfo(String name, String pythonName, boolean optional) {
       this.name = name;
       this.pythonName = pythonName;
-      this.pythonDefault = pythonDefault;
+      this.optional = optional;
     }
   }
 }

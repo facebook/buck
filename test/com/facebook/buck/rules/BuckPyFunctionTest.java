@@ -25,6 +25,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -68,7 +69,7 @@ public class BuckPyFunctionTest {
         BuildRuleType.of("bad"),
         new NoVis());
 
-    assertTrue(definition.contains("visibility=[]"));
+    assertTrue(definition.contains("visibility=None"));
   }
 
   public static class Named {
@@ -83,7 +84,7 @@ public class BuckPyFunctionTest {
 
     assertEquals(Joiner.on("\n").join(
         "@provide_for_build",
-        "def named(name, autodeps=False, visibility=[], build_env=None):",
+        "def named(name, autodeps=None, visibility=None, build_env=None):",
         "    add_rule({",
         "        'buck.type': 'named',",
         "        'name': name,",
@@ -109,7 +110,7 @@ public class BuckPyFunctionTest {
 
     assertEquals(Joiner.on("\n").join(
             "@provide_for_build",
-            "def noname(foobar, autodeps=False, visibility=[], build_env=None):",
+            "def noname(foobar, autodeps=None, visibility=None, build_env=None):",
             "    add_rule({",
             "        'buck.type': 'noname',",
             "        'name': 'lollerskates',",
@@ -134,8 +135,10 @@ public class BuckPyFunctionTest {
   public static class LotsOfOptions {
     public Optional<String> thing;
     public Optional<List<BuildTarget>> targets;
+    public List<String> strings = ImmutableList.of("123");
     public Optional<Integer> version;
     public Optional<Boolean> doStuff;
+    public boolean doSomething = true;
   }
 
   @Test
@@ -145,7 +148,8 @@ public class BuckPyFunctionTest {
 
     assertTrue(
         definition,
-        definition.contains("do_stuff=None, targets=None, thing=None, version=None"));
+        definition.contains("do_something=None, do_stuff=None, strings=None, targets=None, " +
+            "thing=None, version=None"));
   }
 
   public static class Either {
@@ -165,7 +169,7 @@ public class BuckPyFunctionTest {
     assertEquals(Joiner.on("\n").join(
         "@provide_for_build",
         "def either(name, dog, fake, " +
-            "cat=None, egg=None, autodeps=False, visibility=[], build_env=None):",
+            "cat=None, egg=None, autodeps=None, visibility=None, build_env=None):",
         "    add_rule({",
         "        'buck.type': 'either',",
         "        'name': name,",
@@ -206,7 +210,7 @@ public class BuckPyFunctionTest {
     assertEquals(Joiner.on("\n").join(
         "@provide_for_build",
         "def case(name, all_this_was_fields, some_field, " +
-            "autodeps=False, visibility=[], build_env=None):",
+            "autodeps=None, visibility=None, build_env=None):",
         "    add_rule({",
         "        'buck.type': 'case',",
         "        'name': name,",

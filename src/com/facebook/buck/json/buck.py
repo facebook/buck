@@ -194,14 +194,18 @@ def add_rule(rule, build_env):
             # it to BUCK.autodeps, then it will appear in both places.
             auto_deps = build_env.autodeps[rule_name].get('deps', None)
             if auto_deps:
-                explicit_deps = rule.get('deps', [])
+                explicit_deps = rule.get('deps')
+                if explicit_deps is None:
+                    explicit_deps = []
                 deps = set(explicit_deps)
                 deps.update(auto_deps)
                 rule['deps'] = list(deps)
 
             auto_exported_deps = build_env.autodeps[rule_name].get('exported_deps', None)
             if auto_exported_deps:
-                explicit_exported_deps = rule.get('exportedDeps', [])
+                explicit_exported_deps = rule.get('exportedDeps')
+                if explicit_exported_deps is None:
+                    explicit_exported_deps = []
                 exported_deps = set(explicit_exported_deps)
                 exported_deps.update(auto_exported_deps)
                 rule['exportedDeps'] = list(exported_deps)
