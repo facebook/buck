@@ -51,11 +51,13 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.zip.Unzip;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
@@ -537,6 +539,49 @@ public class CachingBuildEngine implements BuildEngine {
     }
   }
 
+  private boolean verifyRecordedPathHashes(
+      BuildTarget target,
+      ProjectFilesystem filesystem,
+      ImmutableMap<String, String> recordedPathHashes)
+      throws IOException {
+
+    // Create a new `DefaultFileHashCache` to prevent caching from interfering with verification.
+    FileHashCache fileHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
+
+    // Verify each path from the recorded path hashes entry matches the actual on-disk version.
+    for (Map.Entry<String, String> ent : recordedPathHashes.entrySet()) {
+      Path path = filesystem.getRootPath().getFileSystem().getPath(ent.getKey());
+      HashCode cachedHashCode = HashCode.fromString(ent.getValue());
+      HashCode realHashCode = fileHashCache.get(filesystem.resolve(path));
+      if (!realHashCode.equals(cachedHashCode)) {
+        LOG.debug(
+            "%s: recorded hash for \"%s\" doesn't match actual hash: %s (cached) != %s (real).",
+            target,
+            path,
+            cachedHashCode,
+            realHashCode);
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private boolean verifyRecordedPathHashes(
+      BuildTarget target,
+      ProjectFilesystem filesystem,
+      String recordedPathHashesBlob)
+      throws IOException {
+
+    // Extract the recorded path hashes map.
+    ImmutableMap<String, String> recordedPathHashes =
+        objectMapper.readValue(
+            recordedPathHashesBlob,
+            new TypeReference<ImmutableMap<String, String>>() {});
+
+    return verifyRecordedPathHashes(target, filesystem, recordedPathHashes);
+  }
+
   private ListenableFuture<BuildResult> processBuildRule(
       BuildRule rule,
       BuildEngineBuildContext buildContext,
@@ -705,7 +750,17 @@ public class CachingBuildEngine implements BuildEngine {
           if (success != BuildRuleSuccessType.BUILT_LOCALLY && success.outputsHaveChanged()) {
             Optional<ImmutableMap<String, String>> hashes =
                 onDiskBuildInfo.getMap(BuildInfo.METADATA_KEY_FOR_RECORDED_PATH_HASHES);
-            if (hashes.isPresent()) {
+
+            // We only seed after first verifying the recorded path hashes.  This prevents the
+            // optimization, but is useful to keep in place for a while to verify this optimization
+            // is causing issues.
+            if (hashes.isPresent() &&
+                verifyRecordedPathHashes(
+                    rule.getBuildTarget(),
+                    rule.getProjectFilesystem(),
+                    hashes.get())) {
+
+              // Seed the cache with the hashes.
               for (Map.Entry<String, String> ent : hashes.get().entrySet()) {
                 Path path =
                     rule.getProjectFilesystem().getRootPath().getFileSystem()
@@ -809,10 +864,25 @@ public class CachingBuildEngine implements BuildEngine {
                 // If we have any rule keys to push to the cache with, do the upload now.
                 if (!ruleKeys.isEmpty()) {
                   try {
+
+                    // Verify that the recorded path hashes are accurate.
+                    Optional<String> recordedPathHashes =
+                        buildInfoRecorder.getBuildMetadataFor(
+                            BuildInfo.METADATA_KEY_FOR_RECORDED_PATH_HASHES);
+                    if (recordedPathHashes.isPresent() &&
+                        !verifyRecordedPathHashes(
+                            rule.getBuildTarget(),
+                            rule.getProjectFilesystem(),
+                            recordedPathHashes.get())) {
+                      return;
+                    }
+
+                    // Push to cache.
                     buildInfoRecorder.performUploadToArtifactCache(
                         ImmutableSet.copyOf(ruleKeys),
                         buildContext.getArtifactCache(),
                         buildContext.getEventBus());
+
                   } catch (Throwable t) {
                     buildContext.getEventBus().post(
                         ThrowableConsoleEvent.create(
