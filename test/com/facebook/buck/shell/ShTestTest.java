@@ -70,6 +70,7 @@ public class ShTestTest extends EasyMockSupport {
         /* env */ ImmutableMap.of(),
         /* resources */ ImmutableSortedSet.of(),
         Optional.empty(),
+        /* runTestSeparately */ false,
         /* labels */ ImmutableSet.of(),
         /* contacts */ ImmutableSet.of());
     filesystem.touch(shTest.getPathToTestOutputResult());
@@ -104,6 +105,7 @@ public class ShTestTest extends EasyMockSupport {
         /* env */ ImmutableMap.of(),
         /* resources */ ImmutableSortedSet.of(),
         Optional.empty(),
+        /* runTestSeparately */ false,
         /* labels */ ImmutableSet.of(),
         /* contacts */ ImmutableSet.of());
 

@@ -73,6 +73,7 @@ public class ShTest
   private final ImmutableSortedSet<SourcePath> resources;
   private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
+  private final boolean runTestSeparately;
   private final ImmutableSet<Label> labels;
 
   protected ShTest(
@@ -83,6 +84,7 @@ public class ShTest
       ImmutableMap<String, Arg> env,
       ImmutableSortedSet<SourcePath> resources,
       Optional<Long> testRuleTimeoutMs,
+      boolean runTestSeparately,
       Set<Label> labels,
       ImmutableSet<String> contacts) {
     super(params, resolver);
@@ -91,6 +93,7 @@ public class ShTest
     this.env = env;
     this.resources = resources;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.runTestSeparately = runTestSeparately;
     this.labels = ImmutableSet.copyOf(labels);
     this.contacts = contacts;
   }
@@ -190,7 +193,7 @@ public class ShTest
 
   @Override
   public boolean runTestSeparately() {
-    return false;
+    return runTestSeparately;
   }
 
   // A shell test has no real build dependencies.  Instead interpret the dependencies as runtime

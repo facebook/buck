@@ -116,6 +116,7 @@ public class ShTestDescription implements
             .transform(SourcePaths.toSourcePath(params.getProjectFilesystem()))
             .toSortedSet(Ordering.natural()),
         args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        args.runTestSeparately.orElse(false),
         args.labels,
         args.contacts);
   }
@@ -149,6 +150,7 @@ public class ShTestDescription implements
     public ImmutableSet<String> contacts = ImmutableSet.of();
     public ImmutableSortedSet<Label> labels = ImmutableSortedSet.of();
     public Optional<Long> testRuleTimeoutMs;
+    public Optional<Boolean> runTestSeparately;
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public ImmutableSortedSet<Path> resources = ImmutableSortedSet.of();
     public ImmutableMap<String, String> env = ImmutableMap.of();
