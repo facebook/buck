@@ -2490,6 +2490,15 @@ your <code>.buckjavaargs</code> file</a>:
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'rust' /}
+  {param name: 'rustc_flags' /}
+  {param example_value: '-g' /}
+  {param description}
+    Default command-line flags passed to the rust compiler.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'test' /}
   {param description}
