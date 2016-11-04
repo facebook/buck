@@ -515,10 +515,9 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
 
   @Override
   public void mkdirs(Path path) throws IOException {
-    for (int i = 0; i < path.getNameCount(); i++) {
-      Path subpath = path.subpath(0, i + 1);
-      directories.add(subpath);
-      fileLastModifiedTimes.put(subpath, FileTime.fromMillis(clock.currentTimeMillis()));
+    for (Path parent = path; parent != null; parent = parent.getParent()) {
+      directories.add(parent);
+      fileLastModifiedTimes.put(parent, FileTime.fromMillis(clock.currentTimeMillis()));
     }
   }
 

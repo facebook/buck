@@ -20,6 +20,7 @@ import static org.junit.Assume.assumeNoException;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
@@ -33,8 +34,19 @@ abstract class GoAssumptions {
     Throwable exception = null;
     try {
       ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
+
+      FakeBuckConfig.Builder baseConfig = FakeBuckConfig.builder();
+      String goRoot = System.getenv("GOROOT");
+      if (goRoot != null) {
+        baseConfig.setSections("[go]", "  root = " + goRoot);
+        // This should really act like some kind of readonly bind-mount onto the real filesystem.
+        // But this is currently enough to check whether Go seems to be installed, so we'll live...
+        FakeProjectFilesystem fs = new FakeProjectFilesystem();
+        fs.mkdirs(fs.getRootPath().getFileSystem().getPath(goRoot));
+        baseConfig.setFilesystem(fs);
+      }
       new GoBuckConfig(
-          FakeBuckConfig.builder().build(),
+          baseConfig.build(),
           executor,
           FlavorDomain.from("Cxx", ImmutableSet.of())).getCompiler();
     } catch (HumanReadableException e) {

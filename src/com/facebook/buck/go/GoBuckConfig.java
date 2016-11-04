@@ -201,8 +201,10 @@ public class GoBuckConfig {
         "root").map(input -> ImmutableMap.of("GOROOT", input.toString()));
     try {
       ProcessExecutor.Result goToolResult = processExecutor.launchAndExecute(
-          ProcessExecutorParams.builder().addCommand(
-              goTool.toString(), "env", env).setEnvironment(goRootEnv).build(),
+          ProcessExecutorParams.builder()
+              .addCommand(goTool.toString(), "env", env)
+              .setEnvironment(goRootEnv)
+              .build(),
           EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
                     /* stdin */ Optional.empty(),
                     /* timeOutMs */ Optional.empty(),
@@ -218,7 +220,7 @@ public class GoBuckConfig {
       throw new HumanReadableException(
           e,
           "Could not run \"%s env %s\": %s",
-          env, goTool);
+          goTool, env, e.getMessage());
     }
   }
 }

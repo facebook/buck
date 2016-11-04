@@ -2,6 +2,9 @@ java_test(
   name = 'integration',
   srcs = glob(['*IntegrationTest.java']),
   autodeps = True,
+  env = {
+    "GOROOT": read_config("go", "root", "/usr/local/go"),
+  }
 )
 
 java_test(
