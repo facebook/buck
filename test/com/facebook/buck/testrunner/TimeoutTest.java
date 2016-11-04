@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
+import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.Computer;
 import org.junit.runner.JUnitCore;
@@ -36,6 +37,7 @@ import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
 
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TimeoutTest {
 
@@ -47,6 +49,15 @@ public class TimeoutTest {
    */
   @Test
   public void testsShouldRunOnTheThreadTheyAreCreatedOn() throws InitializationError {
+    ThreadGuardedTest.isBeingUsedForTimeoutTest.set(true);
+    try {
+      doTestUsingThreadGuardedTestClass();
+    } finally {
+      ThreadGuardedTest.isBeingUsedForTimeoutTest.set(false);
+    }
+  }
+
+  private void doTestUsingThreadGuardedTestClass() throws InitializationError {
     Class<?> testClass = ThreadGuardedTest.class;
 
     RunnerBuilder builder = new RunnerBuilder() {
@@ -87,20 +98,25 @@ public class TimeoutTest {
   }
 
   public static class ThreadGuardedTest {
+    public static AtomicBoolean isBeingUsedForTimeoutTest = new AtomicBoolean(false);
+
     private long creatorThreadId = Thread.currentThread().getId();
 
     @Test
     public void verifyTestRunsOnCreatorThread() {
+      Assume.assumeTrue(isBeingUsedForTimeoutTest.get());
       assertEquals(creatorThreadId, Thread.currentThread().getId());
     }
 
     @Test
     public void testsMayTimeOut() throws InterruptedException {
+      Assume.assumeTrue(isBeingUsedForTimeoutTest.get());
       Thread.sleep(1000);
     }
 
     @Test
     public void failingTestsAreReported() {
+      Assume.assumeTrue(isBeingUsedForTimeoutTest.get());
       fail("This is expected");
     }
   }
