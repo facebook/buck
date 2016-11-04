@@ -769,7 +769,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       case ASSUMPTION_VIOLATION:
         testSkips.incrementAndGet();
         break;
+      case DISABLED:
+        break;
       case DRY_RUN:
+        break;
+      case EXCLUDED:
         break;
     }
   }

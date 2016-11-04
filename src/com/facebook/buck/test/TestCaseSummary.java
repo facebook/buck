@@ -68,6 +68,14 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
           isDryRun = true;
           break;
 
+        case DISABLED:
+          ++skippedCount;
+          break;
+
+        case EXCLUDED:
+          ++skippedCount;
+          break;
+
         case ASSUMPTION_VIOLATION:
           hasAssumptionViolations = true;
           ++skippedCount;
