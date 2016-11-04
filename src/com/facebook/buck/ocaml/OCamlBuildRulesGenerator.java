@@ -62,6 +62,8 @@ public class OCamlBuildRulesGenerator {
   private final Compiler cxxCompiler;
   private final boolean bytecodeOnly;
 
+  private BuildRule cleanRule;
+
   public OCamlBuildRulesGenerator(
       BuildRuleParams params,
       SourcePathResolver pathResolver,
@@ -81,6 +83,7 @@ public class OCamlBuildRulesGenerator {
     this.cCompiler = cCompiler;
     this.cxxCompiler = cxxCompiler;
     this.bytecodeOnly = bytecodeOnly;
+    this.cleanRule = generateCleanBuildRule(params, pathResolver, ocamlContext);
   }
 
   /**
@@ -88,6 +91,9 @@ public class OCamlBuildRulesGenerator {
    */
   OCamlGeneratedBuildRules generate() {
 
+    // TODO(): The order of rules added to "rules" matters - the OCamlRuleBuilder
+    // object currently assumes that the native or bytecode compilation rule will
+    // be the first one in the list. We should eliminate this restriction.
     ImmutableList.Builder<BuildRule> rules = ImmutableList.builder();
     ImmutableList.Builder<BuildRule> nativeCompileDeps = ImmutableList.builder();
     ImmutableList.Builder<BuildRule> bytecodeCompileDeps = ImmutableList.builder();
@@ -199,6 +205,32 @@ public class OCamlBuildRulesGenerator {
           new BuildTargetSourcePath(compileRule.getBuildTarget()));
     }
     return objects.build();
+  }
+
+  private BuildRule generateCleanBuildRule(
+      BuildRuleParams params,
+      SourcePathResolver pathResolver,
+      OCamlBuildContext ocamlContext) {
+    BuildTarget cleanTarget =
+      BuildTarget.builder(params.getBuildTarget())
+        .addFlavors(
+            ImmutableFlavor.of(
+                String.format(
+                    "clean-%s",
+                    params.getBuildTarget().getShortName())))
+        .build();
+
+    BuildRuleParams cleanParams = params.copyWithChanges(
+      cleanTarget,
+      Suppliers.ofInstance(
+        ImmutableSortedSet.<BuildRule>naturalOrder()
+          .addAll(params.getDeclaredDeps().get())
+          .build()),
+      params.getExtraDeps());
+
+    BuildRule cleanRule = new OCamlClean(cleanParams, pathResolver, ocamlContext);
+    resolver.addToIndex(cleanRule);
+    return cleanRule;
   }
 
   public static BuildTarget addDebugFlavor(BuildTarget target) {
@@ -468,6 +500,7 @@ public class OCamlBuildRulesGenerator {
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()
                 .addAll(params.getDeclaredDeps().get())
+                .add(this.cleanRule)
                 .addAll(deps)
                 .addAll(ocamlContext.getNativeCompileDeps())
                 .addAll(cCompiler.getDeps(pathResolver))
@@ -569,6 +602,7 @@ public class OCamlBuildRulesGenerator {
         buildTarget,
         Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()
+                .add(this.cleanRule)
                 .addAll(params.getDeclaredDeps().get())
                 .addAll(deps)
                 .addAll(ocamlContext.getBytecodeCompileDeps())
