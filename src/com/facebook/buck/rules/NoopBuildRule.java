@@ -24,9 +24,21 @@ import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 /**
- * A {@link com.facebook.buck.rules.BuildRule} which performs no actions.  This is useful for
- * certain situations where we want presence in the action graph that doesn't actually do anything
- * (e.g. {@link com.facebook.buck.rules.TestRule}.
+ * A {@link com.facebook.buck.rules.BuildRule} which has no output.
+ * This is used in the following ways:
+ * <ol>
+ *   <li>When a target has multiple potential outputs (e.g. a CxxLibrary may be static or shared).
+ *       Flavored versions of the target will actually do work (and be depended on) in the action
+ *       graph. However, the target graph to action graph conversion assumes that every node in the
+ *       target graph will have a corresponding node in the action graph, so we create a
+ *       NoopBuildRule to keep to that constraint, even though the actual work is done by the
+ *       flavored versions.</li>
+ *   <li>When a target has no output artifacts, but its exit code may be interesting.
+ *       e.g. {@link com.facebook.buck.rules.TestRule}s may not have any build steps to perform,
+ *       but have runTests Steps to run to determine their exit code.</li>
+ *   <li>When a target just forwards an existing file, e.g. for prebuilt library rules, or if all
+ *       the work is actually done on a depending rule (e.g. Lua).</li>
+ * </ol>
  */
 public class NoopBuildRule extends AbstractBuildRule {
 
