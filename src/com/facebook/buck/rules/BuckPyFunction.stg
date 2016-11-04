@@ -10,7 +10,7 @@ def <name>(<{<if(!defaultName)>name, <endif>}><params:param();separator=", ">, b
 
 >>
 
-param(param) ::= "<param.pythonName><if(param.optional)>=None<endif>"
+param(param) ::= "<param.pythonName><if(param.pythonDefault)>=<param.pythonDefault><endif>"
 
 assign(param) ::= "<param.name:quote()>: <param.pythonName>"
 

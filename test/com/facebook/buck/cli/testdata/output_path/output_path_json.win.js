@@ -1,6 +1,6 @@
 [
 {
-  "autodeps":null,
+  "autodeps":false,
   "bash":null,
   "buck.base_path":"",
   "buck.direct_dependencies":[],
@@ -10,11 +10,11 @@
   "cmdExe":null,
   "executable":null,
   "fully_qualified_name":"//:test",
-  "licenses":null,
+  "licenses":[],
   "name":"test",
   "out":"test-output",
-  "srcs":null,
-  "tests":null,
-  "visibility":null
+  "srcs":[],
+  "tests":[],
+  "visibility":[]
 }
 ]

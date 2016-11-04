@@ -69,6 +69,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -216,7 +217,7 @@ public class ResolverIntegrationTest {
     assertEquals(ImmutableList.of("PUBLIC"), rule.get("visibility"));
 
     // And it doesn't depend on anything
-    assertNull(rule.get("deps"));
+    assertEquals(ImmutableList.of(), rule.get("deps"));
   }
 
   @Test
@@ -248,7 +249,7 @@ public class ResolverIntegrationTest {
         ImmutableList.of(
             String.format("//%s:with-deps", MorePaths.pathWithUnixSeparators(exampleDir))),
         visibility);
-    assertNull(noDeps.get("deps"));
+    assertEquals(ImmutableList.of(), noDeps.get("deps"));
 
     assertEquals(ImmutableList.of("PUBLIC"), withDeps.get("visibility"));
     @SuppressWarnings("unchecked")
@@ -282,7 +283,7 @@ public class ResolverIntegrationTest {
 
     // Although the "deps-in-same-project" could be in the visibility param, it doesn't need to be
     // because it's declared in the same build file.
-    assertNull(noDeps.get("visibility"));
+    assertEquals(0, ((Collection<?>) noDeps.get("visibility")).size());
   }
 
   @Test

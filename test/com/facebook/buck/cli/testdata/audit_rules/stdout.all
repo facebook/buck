@@ -2,19 +2,21 @@
 
 genrule(
   name = "example",
-  autodeps = None,
+  autodeps = False,
   bash = "cat $SRCS > $OUT",
   cmd = None,
   cmdExe = None,
   executable = None,
-  licenses = None,
+  licenses = [
+  ],
   out = "baz.txt",
   srcs = [
     "foo.txt",
     "bar.txt",
     "//fake:rule",
   ],
-  tests = None,
+  tests = [
+  ],
   visibility = [
     "PUBLIC",
   ],
@@ -22,11 +24,14 @@ genrule(
 
 keystore(
   name = "debug_keystore",
-  autodeps = None,
-  licenses = None,
+  autodeps = False,
+  licenses = [
+  ],
   properties = "debug.keystore.properties",
   store = "debug.keystore",
-  deps = None,
-  visibility = None,
+  deps = [
+  ],
+  visibility = [
+  ],
 )
 

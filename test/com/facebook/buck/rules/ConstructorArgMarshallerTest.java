@@ -540,6 +540,8 @@ public class ConstructorArgMarshallerTest {
     assertEquals(Optional.empty(), dto.defaultString);
     assertEquals(Optional.empty(), dto.noSourcePath);
     assertEquals(Optional.empty(), dto.defaultSourcePath);
+    assertEquals(0, dto.primitiveNum);
+    assertEquals(Integer.valueOf(0), dto.wrapperObjectNum);
   }
 
   @Test
@@ -548,7 +550,6 @@ public class ConstructorArgMarshallerTest {
     // This is not an ImmutableMap so we can test null values.
     Map<String, Object> args = Maps.newHashMap();
     args.put("something", null);
-    args.put("things", null);
     args.put("another", null);
     DtoWithDefaultValues dto = new DtoWithDefaultValues();
     marshaller.populate(
@@ -561,7 +562,6 @@ public class ConstructorArgMarshallerTest {
         args);
 
     assertThat(dto.something, is("foo"));
-    assertThat(dto.things, is(ImmutableList.of("bar")));
     assertThat(dto.another, is(365));
     assertThat(dto.beGood, is(true));
   }
@@ -572,7 +572,6 @@ public class ConstructorArgMarshallerTest {
     // This is not an ImmutableMap so we can test null values.
     Map<String, Object> args = Maps.newHashMap();
     args.put("something", "bar");
-    args.put("things", ImmutableList.of("qux", "quz"));
     args.put("another", 1234L);
     args.put("beGood", false);
     DtoWithDefaultValues dto = new DtoWithDefaultValues();
@@ -586,7 +585,6 @@ public class ConstructorArgMarshallerTest {
         args);
 
     assertThat(dto.something, is("bar"));
-    assertThat(dto.things, is(ImmutableList.of("qux", "quz")));
     assertThat(dto.another, is(1234));
     assertThat(dto.beGood, is(false));
   }
@@ -742,11 +740,15 @@ public class ConstructorArgMarshallerTest {
 
     public Optional<SourcePath> noSourcePath;
     public Optional<SourcePath> defaultSourcePath;
+
+    public int primitiveNum;
+    public Integer wrapperObjectNum;
+    public boolean primitiveBoolean;
+    public Boolean wrapperObjectBoolean;
   }
 
   public static class DtoWithDefaultValues {
     public String something = "foo";
-    public List<String> things = ImmutableList.of("bar");
     public int another = 365;
     public Boolean beGood = true;
   }
