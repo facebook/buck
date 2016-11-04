@@ -443,7 +443,7 @@ class DiagnosticsFileObject(object):
         self.diagnostics = diagnostics
 
     def write(self, value):
-        self.diagnostics.add(Diagnostic(
+        self.diagnostics.append(Diagnostic(
             message=value, level='warning', source='mercurial'))
 
     def flush(self):
