@@ -29,9 +29,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <Python.h>
+#include <bytesobject.h>
 #ifdef _MSC_VER
 #define inline __inline
+#if _MSC_VER >= 1800
 #include <stdint.h>
+#else
+// The compiler associated with Python 2.7 on Windows doesn't ship
+// with stdint.h, so define the small subset that we use here.
+typedef __int8 int8_t;
+typedef __int16 int16_t;
+typedef __int32 int32_t;
+typedef __int64 int64_t;
+typedef unsigned __int8 uint8_t;
+typedef unsigned __int16 uint16_t;
+typedef unsigned __int32 uint32_t;
+typedef unsigned __int64 uint64_t;
+#define UINT32_MAX 4294967295U
+#endif
 #endif
 
 /* Return the smallest size int that can store the value */
@@ -41,7 +56,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define BSER_ARRAY     0x00
 #define BSER_OBJECT    0x01
-#define BSER_STRING    0x02
+#define BSER_BYTESTRING 0x02
 #define BSER_INT8      0x03
 #define BSER_INT16     0x04
 #define BSER_INT32     0x05
@@ -104,18 +119,35 @@ static void bserobj_dealloc(PyObject *o) {
 static PyObject *bserobj_getattrro(PyObject *o, PyObject *name) {
   bserObject *obj = (bserObject*)o;
   Py_ssize_t i, n;
+  PyObject *name_bytes = NULL;
+  PyObject *ret = NULL;
   const char *namestr;
 
   if (PyIndex_Check(name)) {
     i = PyNumber_AsSsize_t(name, PyExc_IndexError);
     if (i == -1 && PyErr_Occurred()) {
-      return NULL;
+      goto bail;
     }
-    return PySequence_GetItem(obj->values, i);
+    ret = PySequence_GetItem(obj->values, i);
+    goto bail;
   }
 
+  // We can be passed in Unicode objects here -- we don't support anything other
+  // than UTF-8 for keys.
+  if (PyUnicode_Check(name)) {
+    name_bytes = PyUnicode_AsUTF8String(name);
+    if (name_bytes == NULL) {
+      goto bail;
+    }
+    namestr = PyBytes_AsString(name_bytes);
+  } else {
+    namestr = PyBytes_AsString(name);
+  }
+
+  if (namestr == NULL) {
+    goto bail;
+  }
   // hack^Wfeature to allow mercurial to use "st_size" to reference "size"
-  namestr = PyString_AsString(name);
   if (!strncmp(namestr, "st_", 3)) {
     namestr += 3;
   }
@@ -125,14 +157,18 @@ static PyObject *bserobj_getattrro(PyObject *o, PyObject *name) {
     const char *item_name = NULL;
     PyObject *key = PyTuple_GET_ITEM(obj->keys, i);
 
-    item_name = PyString_AsString(key);
+    item_name = PyBytes_AsString(key);
     if (!strcmp(item_name, namestr)) {
-      return PySequence_GetItem(obj->values, i);
+      ret = PySequence_GetItem(obj->values, i);
+      goto bail;
     }
   }
+
   PyErr_Format(PyExc_AttributeError,
               "bserobject has no attribute '%.400s'", namestr);
-  return NULL;
+ bail:
+  Py_XDECREF(name_bytes);
+  return ret;
 }
 
 static PyMappingMethods bserobj_map = {
@@ -182,16 +218,24 @@ PyTypeObject bserObjectType = {
   0,                         /* tp_new */
 };
 
+typedef struct loads_ctx {
+  int mutable;
+  const char *value_encoding;
+  const char *value_errors;
+  uint32_t bser_version;
+  uint32_t bser_capabilities;
+} unser_ctx_t;
 
 static PyObject *bser_loads_recursive(const char **ptr, const char *end,
-    int mutable);
+    const unser_ctx_t *ctx);
 
 static const char bser_true = BSER_TRUE;
 static const char bser_false = BSER_FALSE;
 static const char bser_null = BSER_NULL;
-static const char bser_string_hdr = BSER_STRING;
+static const char bser_bytestring_hdr = BSER_BYTESTRING;
 static const char bser_array_hdr = BSER_ARRAY;
 static const char bser_object_hdr = BSER_OBJECT;
+
 
 static inline uint32_t next_power_2(uint32_t n)
 {
@@ -207,6 +251,8 @@ static inline uint32_t next_power_2(uint32_t n)
 struct bser_buffer {
   char *buf;
   int wpos, allocd;
+  uint32_t bser_version;
+  uint32_t capabilities;
 };
 typedef struct bser_buffer bser_t;
 
@@ -228,12 +274,13 @@ static int bser_append(bser_t *bser, const char *data, uint32_t len)
   return 1;
 }
 
-static int bser_init(bser_t *bser)
+static int bser_init(bser_t *bser, uint32_t version, uint32_t capabilities)
 {
   bser->allocd = 8192;
   bser->wpos = 0;
   bser->buf = malloc(bser->allocd);
-
+  bser->bser_version = version;
+  bser->capabilities = capabilities;
   if (!bser->buf) {
     return 0;
   }
@@ -242,7 +289,15 @@ static int bser_init(bser_t *bser)
   // our overall length.  To make things simpler, we'll use an
   // int32 for the header
 #define EMPTY_HEADER "\x00\x01\x05\x00\x00\x00\x00"
-  bser_append(bser, EMPTY_HEADER, sizeof(EMPTY_HEADER)-1);
+
+  // Version 2 also carries an integer indicating the capabilities. The
+  // capabilities integer comes before the PDU size.
+#define EMPTY_HEADER_V2 "\x00\x02\x05\x00\x00\x00\x00\x05\x00\x00\x00\x00"
+  if (version == 2) {
+    bser_append(bser, EMPTY_HEADER_V2, sizeof(EMPTY_HEADER_V2)-1);
+  } else {
+    bser_append(bser, EMPTY_HEADER, sizeof(EMPTY_HEADER)-1);
+  }
 
   return 1;
 }
@@ -297,7 +352,7 @@ static int bser_long(bser_t *bser, int64_t val)
   return bser_append(bser, iptr, size);
 }
 
-static int bser_string(bser_t *bser, PyObject *sval)
+static int bser_bytestring(bser_t *bser, PyObject *sval)
 {
   char *buf = NULL;
   Py_ssize_t len;
@@ -309,13 +364,13 @@ static int bser_string(bser_t *bser, PyObject *sval)
     sval = utf;
   }
 
-  res = PyString_AsStringAndSize(sval, &buf, &len);
+  res = PyBytes_AsStringAndSize(sval, &buf, &len);
   if (res == -1) {
     res = 0;
     goto out;
   }
 
-  if (!bser_append(bser, &bser_string_hdr, sizeof(bser_string_hdr))) {
+  if (!bser_append(bser, &bser_bytestring_hdr, sizeof(bser_bytestring_hdr))) {
     res = 0;
     goto out;
   }
@@ -354,16 +409,19 @@ static int bser_recursive(bser_t *bser, PyObject *val)
     return bser_append(bser, &bser_null, sizeof(bser_null));
   }
 
+  // Python 3 has one integer type.
+#if PY_MAJOR_VERSION < 3
   if (PyInt_Check(val)) {
     return bser_long(bser, PyInt_AS_LONG(val));
   }
+#endif // PY_MAJOR_VERSION < 3
 
   if (PyLong_Check(val)) {
     return bser_long(bser, PyLong_AsLongLong(val));
   }
 
-  if (PyString_Check(val) || PyUnicode_Check(val)) {
-    return bser_string(bser, val);
+  if (PyBytes_Check(val) || PyUnicode_Check(val)) {
+    return bser_bytestring(bser, val);
   }
 
 
@@ -436,7 +494,7 @@ static int bser_recursive(bser_t *bser, PyObject *val)
     }
 
     while (PyDict_Next(val, &pos, &key, &ele)) {
-      if (!bser_string(bser, key)) {
+      if (!bser_bytestring(bser, key)) {
         return 0;
       }
       if (!bser_recursive(bser, ele)) {
@@ -451,17 +509,20 @@ static int bser_recursive(bser_t *bser, PyObject *val)
   return 0;
 }
 
-static PyObject *bser_dumps(PyObject *self, PyObject *args)
+static PyObject *bser_dumps(PyObject *self, PyObject *args, PyObject *kw)
 {
   PyObject *val = NULL, *res;
   bser_t bser;
-  uint32_t len;
+  uint32_t len, bser_version = 1, bser_capabilities = 0;
 
-  if (!PyArg_ParseTuple(args, "O", &val)) {
+  static char *kw_list[] = {"val", "version", "capabilities", NULL};
+
+  if (!PyArg_ParseTupleAndKeywords(args, kw, "O|ii:dumps", kw_list, &val,
+                                   &bser_version, &bser_capabilities)) {
     return NULL;
   }
 
-  if (!bser_init(&bser)) {
+  if (!bser_init(&bser, bser_version, bser_capabilities)) {
     return PyErr_NoMemory();
   }
 
@@ -475,10 +536,17 @@ static PyObject *bser_dumps(PyObject *self, PyObject *args)
   }
 
   // Now fill in the overall length
-  len = bser.wpos - (sizeof(EMPTY_HEADER) - 1);
-  memcpy(bser.buf + 3, &len, sizeof(len));
+  if (bser_version == 1) {
+    len = bser.wpos - (sizeof(EMPTY_HEADER) - 1);
+    memcpy(bser.buf + 3, &len, sizeof(len));
+  } else {
+    len = bser.wpos - (sizeof(EMPTY_HEADER_V2) - 1);
+    // The BSER capabilities block comes before the PDU length
+    memcpy(bser.buf + 3, &bser_capabilities, sizeof(bser_capabilities));
+    memcpy(bser.buf + 8, &len, sizeof(len));
+  }
 
-  res = PyString_FromStringAndSize(bser.buf, bser.wpos);
+  res = PyBytes_FromStringAndSize(bser.buf, bser.wpos);
   bser_dtor(&bser);
 
   return res;
@@ -538,7 +606,7 @@ int bunser_int(const char **ptr, const char *end, int64_t *val)
   }
 }
 
-static int bunser_string(const char **ptr, const char *end,
+static int bunser_bytestring(const char **ptr, const char *end,
     const char **start, int64_t *len)
 {
   const char *buf = *ptr;
@@ -559,10 +627,12 @@ static int bunser_string(const char **ptr, const char *end,
   return 1;
 }
 
-static PyObject *bunser_array(const char **ptr, const char *end, int mutable)
+static PyObject *bunser_array(const char **ptr, const char *end,
+                              const unser_ctx_t *ctx)
 {
   const char *buf = *ptr;
   int64_t nitems, i;
+  int mutable = ctx->mutable;
   PyObject *res;
 
   // skip array header
@@ -584,7 +654,7 @@ static PyObject *bunser_array(const char **ptr, const char *end, int mutable)
   }
 
   for (i = 0; i < nitems; i++) {
-    PyObject *ele = bser_loads_recursive(ptr, end, mutable);
+    PyObject *ele = bser_loads_recursive(ptr, end, ctx);
 
     if (!ele) {
       Py_DECREF(res);
@@ -603,10 +673,11 @@ static PyObject *bunser_array(const char **ptr, const char *end, int mutable)
 }
 
 static PyObject *bunser_object(const char **ptr, const char *end,
-    int mutable)
+    const unser_ctx_t *ctx)
 {
   const char *buf = *ptr;
   int64_t nitems, i;
+  int mutable = ctx->mutable;
   PyObject *res;
   bserObject *obj;
 
@@ -632,7 +703,7 @@ static PyObject *bunser_object(const char **ptr, const char *end,
     PyObject *key;
     PyObject *ele;
 
-    if (!bunser_string(ptr, end, &keystr, &keylen)) {
+    if (!bunser_bytestring(ptr, end, &keystr, &keylen)) {
       Py_DECREF(res);
       return NULL;
     }
@@ -643,13 +714,24 @@ static PyObject *bunser_object(const char **ptr, const char *end,
       return NULL;
     }
 
-    key = PyString_FromStringAndSize(keystr, (Py_ssize_t)keylen);
+    if (mutable) {
+      // This will interpret the key as UTF-8.
+      key = PyUnicode_FromStringAndSize(keystr, (Py_ssize_t)keylen);
+    } else {
+      // For immutable objects we'll manage key lookups, so we can avoid going
+      // through the Unicode APIs. This avoids a potentially expensive and
+      // definitely unnecessary conversion to UTF-16 and back for Python 2.
+      // TODO: On Python 3 the Unicode APIs are smarter: we might be able to use
+      // Unicode keys there without an appreciable performance loss.
+      key = PyBytes_FromStringAndSize(keystr, (Py_ssize_t)keylen);
+    }
+
     if (!key) {
       Py_DECREF(res);
       return NULL;
     }
 
-    ele = bser_loads_recursive(ptr, end, mutable);
+    ele = bser_loads_recursive(ptr, end, ctx);
 
     if (!ele) {
       Py_DECREF(key);
@@ -672,13 +754,24 @@ static PyObject *bunser_object(const char **ptr, const char *end,
 }
 
 static PyObject *bunser_template(const char **ptr, const char *end,
-    int mutable)
+    const unser_ctx_t *ctx)
 {
   const char *buf = *ptr;
   int64_t nitems, i;
+  int mutable = ctx->mutable;
   PyObject *arrval;
   PyObject *keys;
   Py_ssize_t numkeys, keyidx;
+  unser_ctx_t keys_ctx = {0};
+  if (mutable) {
+    keys_ctx.mutable = 1;
+    // Decode keys as UTF-8 in this case.
+    keys_ctx.value_encoding = "utf-8";
+    keys_ctx.value_errors = "strict";
+  } else {
+    // Treat keys as bytestrings in this case -- we'll do Unicode conversions at
+    // lookup time.
+  }
 
   if (buf[1] != BSER_ARRAY) {
     PyErr_Format(PyExc_ValueError, "Expect ARRAY to follow TEMPLATE");
@@ -689,8 +782,9 @@ static PyObject *bunser_template(const char **ptr, const char *end,
   buf++;
   *ptr = buf;
 
-  // Load template keys
-  keys = bunser_array(ptr, end, mutable);
+  // Load template keys.
+  // For keys we don't want to do any decoding right now.
+  keys = bunser_array(ptr, end, &keys_ctx);
   if (!keys) {
     return NULL;
   }
@@ -746,7 +840,7 @@ fail:
         ele = Py_None;
         Py_INCREF(ele);
       } else {
-        ele = bser_loads_recursive(ptr, end, mutable);
+        ele = bser_loads_recursive(ptr, end, ctx);
       }
 
       if (!ele) {
@@ -773,7 +867,7 @@ fail:
 }
 
 static PyObject *bser_loads_recursive(const char **ptr, const char *end,
-    int mutable)
+    const unser_ctx_t *ctx)
 {
   const char *buf = *ptr;
 
@@ -787,10 +881,15 @@ static PyObject *bser_loads_recursive(const char **ptr, const char *end,
         if (!bunser_int(ptr, end, &ival)) {
           return NULL;
         }
+        // Python 3 has one integer type.
+#if PY_MAJOR_VERSION >= 3
+        return PyLong_FromLongLong(ival);
+#else
         if (ival < LONG_MIN || ival > LONG_MAX) {
           return PyLong_FromLongLong(ival);
         }
         return PyInt_FromSsize_t(Py_SAFE_DOWNCAST(ival, int64_t, Py_ssize_t));
+#endif // PY_MAJOR_VERSION >= 3
       }
 
     case BSER_REAL:
@@ -816,12 +915,12 @@ static PyObject *bser_loads_recursive(const char **ptr, const char *end,
       Py_INCREF(Py_None);
       return Py_None;
 
-    case BSER_STRING:
+    case BSER_BYTESTRING:
       {
         const char *start;
         int64_t len;
 
-        if (!bunser_string(ptr, end, &start, &len)) {
+        if (!bunser_bytestring(ptr, end, &start, &len)) {
           return NULL;
         }
 
@@ -830,17 +929,22 @@ static PyObject *bser_loads_recursive(const char **ptr, const char *end,
           return NULL;
         }
 
-        return PyString_FromStringAndSize(start, (long)len);
+        if (ctx->value_encoding != NULL) {
+          return PyUnicode_Decode(start, (long)len, ctx->value_encoding,
+                                  ctx->value_errors);
+        } else {
+          return PyBytes_FromStringAndSize(start, (long)len);
+        }
       }
 
     case BSER_ARRAY:
-      return bunser_array(ptr, end, mutable);
+      return bunser_array(ptr, end, ctx);
 
     case BSER_OBJECT:
-      return bunser_object(ptr, end, mutable);
+      return bunser_object(ptr, end, ctx);
 
     case BSER_TEMPLATE:
-      return bunser_template(ptr, end, mutable);
+      return bunser_template(ptr, end, ctx);
 
     default:
       PyErr_Format(PyExc_ValueError, "unhandled bser opcode 0x%02x", buf[0]);
@@ -849,100 +953,219 @@ static PyObject *bser_loads_recursive(const char **ptr, const char *end,
   return NULL;
 }
 
-// Expected use case is to read a packet from the socket and
-// then call bser.pdu_len on the packet.  It returns the total
-// length of the entire response that the peer is sending,
-// including the bytes already received.  This allows the client
-// to compute the data size it needs to read before it can
-// decode the data
-static PyObject *bser_pdu_len(PyObject *self, PyObject *args)
-{
+static int _pdu_info_helper(const char *data, const char *end,
+    uint32_t *bser_version_out, uint32_t *bser_capabilities_out,
+    int64_t *expected_len_out, off_t *position_out) {
+  uint32_t bser_version;
+  int64_t bser_capabilities = 0; // int64 because bunser_int requires it
+  int64_t expected_len, total_len;
+
+  const char *start;
+  start = data;
+  // Validate the header and length
+  if (memcmp(data, EMPTY_HEADER, 2) == 0) {
+    bser_version = 1;
+  } else if (memcmp(data, EMPTY_HEADER_V2, 2) == 0) {
+    bser_version = 2;
+  } else {
+    PyErr_SetString(PyExc_ValueError, "invalid bser header");
+    return 0;
+  }
+
+  data += 2;
+
+  if (bser_version == 2) {
+    // Expect an integer telling us what capabilities are supported by the
+    // remote server (currently unused).
+    if (!bunser_int(&data, end, &bser_capabilities)) {
+      return 0;
+    }
+  }
+
+  // Expect an integer telling us how big the rest of the data
+  // should be
+  if (!bunser_int(&data, end, &expected_len)) {
+    return 0;
+  }
+
+  total_len = expected_len + (data - start);
+
+  *bser_version_out = bser_version;
+  *bser_capabilities_out = (uint32_t) bser_capabilities;
+  *expected_len_out = expected_len;
+  *position_out = (off_t)(data - start);
+  return 1;
+}
+
+// This function parses the PDU header and provides info about the packet
+// Returns false if unsuccessful
+static int pdu_info_helper(PyObject *self, PyObject *args,
+    uint32_t *bser_version_out, uint32_t *bser_capabilities_out,
+    int64_t *total_len_out) {
   const char *start = NULL;
   const char *data = NULL;
   int datalen = 0;
   const char *end;
-  int64_t expected_len, total_len;
+  int64_t expected_len;
+  off_t position;
 
   if (!PyArg_ParseTuple(args, "s#", &start, &datalen)) {
-    return NULL;
+    return 0;
   }
   data = start;
   end = data + datalen;
 
-  // Validate the header and length
-  if (memcmp(data, EMPTY_HEADER, 2) != 0) {
-    PyErr_SetString(PyExc_ValueError, "invalid bser header");
-    return NULL;
+  if (!_pdu_info_helper(data, end, bser_version_out, bser_capabilities_out,
+                        &expected_len, &position)) {
+    return 0;
   }
-
-  data += 2;
-
-  // Expect an integer telling us how big the rest of the data
-  // should be
-  if (!bunser_int(&data, end, &expected_len)) {
-    return NULL;
-  }
-
-  total_len = expected_len + (data - start);
-  if (total_len > LONG_MAX) {
-    return PyLong_FromLongLong(total_len);
-  }
-  return PyInt_FromLong((long)total_len);
+  *total_len_out = (int64_t)(expected_len + position);
+  return 1;
 }
 
-static PyObject *bser_loads(PyObject *self, PyObject *args)
+// Expected use case is to read a packet from the socket and then call
+// bser.pdu_info on the packet.  It returns the BSER version, BSER capabilities,
+// and the total length of the entire response that the peer is sending,
+// including the bytes already received. This allows the client  to compute the
+// data size it needs to read before it can decode the data.
+static PyObject *bser_pdu_info(PyObject *self, PyObject *args)
+{
+  uint32_t version, capabilities;
+  int64_t total_len;
+  if (!pdu_info_helper(self, args, &version, &capabilities, &total_len)) {
+    return NULL;
+  }
+  return Py_BuildValue("kkL", version, capabilities, total_len);
+}
+
+static PyObject *bser_pdu_len(PyObject *self, PyObject *args)
+{
+  uint32_t version, capabilities;
+  int64_t total_len;
+  if (!pdu_info_helper(self, args, &version, &capabilities, &total_len)) {
+    return NULL;
+  }
+  return Py_BuildValue("L", total_len);
+}
+
+static PyObject *bser_loads(PyObject *self, PyObject *args, PyObject *kw)
 {
   const char *data = NULL;
   int datalen = 0;
+  const char *start;
   const char *end;
   int64_t expected_len;
-  int mutable = 1;
+  off_t position;
   PyObject *mutable_obj = NULL;
+  const char *value_encoding = NULL;
+  const char *value_errors = NULL;
+  unser_ctx_t ctx = {1, 0};
 
-  if (!PyArg_ParseTuple(args, "s#|O:loads", &data, &datalen, &mutable_obj)) {
+  static char *kw_list[] = {"buf", "mutable", "value_encoding", "value_errors",
+                            NULL};
+
+  if (!PyArg_ParseTupleAndKeywords(args, kw, "s#|Ozz:loads", kw_list, &start,
+                                   &datalen, &mutable_obj, &value_encoding,
+                                   &value_errors)) {
     return NULL;
   }
-  if (mutable_obj) {
-    mutable = PyObject_IsTrue(mutable_obj) > 0 ? 1 : 0;
-  }
 
+  if (mutable_obj) {
+    ctx.mutable = PyObject_IsTrue(mutable_obj) > 0 ? 1 : 0;
+  }
+  ctx.value_encoding = value_encoding;
+  if (value_encoding == NULL) {
+    ctx.value_errors = NULL;
+  } else if (value_errors == NULL) {
+    ctx.value_errors = "strict";
+  } else {
+    ctx.value_errors = value_errors;
+  }
+  data = start;
   end = data + datalen;
 
-  // Validate the header and length
-  if (memcmp(data, EMPTY_HEADER, 2) != 0) {
-    PyErr_SetString(PyExc_ValueError, "invalid bser header");
+  if (!_pdu_info_helper(data, end, &ctx.bser_version, &ctx.bser_capabilities,
+                        &expected_len, &position)) {
     return NULL;
   }
 
-  data += 2;
-
-  // Expect an integer telling us how big the rest of the data
-  // should be
-  if (!bunser_int(&data, end, &expected_len)) {
-    return NULL;
-  }
-
+  data = start + position;
   // Verify
   if (expected_len + data != end) {
     PyErr_SetString(PyExc_ValueError, "bser data len != header len");
     return NULL;
   }
 
-  return bser_loads_recursive(&data, end, mutable);
+  return bser_loads_recursive(&data, end, &ctx);
+}
+
+static PyObject *bser_load(PyObject *self, PyObject *args, PyObject *kw)
+{
+  PyObject *load, *string;
+  PyObject *fp = NULL;
+  PyObject *mutable_obj = NULL;
+  const char *value_encoding = NULL;
+  const char *value_errors = NULL;
+
+  static char *kw_list[] = {"fp", "mutable", "value_encoding", "value_errors",
+                            NULL};
+
+  if (!PyArg_ParseTupleAndKeywords(args, kw, "OOzz:load", kw_list, &fp,
+                                   &mutable_obj, &value_encoding,
+                                   &value_errors)) {
+    return NULL;
+  }
+
+  load = PyImport_ImportModule("pywatchman.load");
+  if (load == NULL) {
+    return NULL;
+  }
+  string = PyObject_CallMethod(load, "load", "OOzz", fp, mutable_obj,
+                               value_encoding, value_errors);
+  Py_DECREF(load);
+  return string;
 }
 
 static PyMethodDef bser_methods[] = {
-  {"loads",  bser_loads, METH_VARARGS, "Deserialize string."},
-  {"pdu_len", bser_pdu_len, METH_VARARGS, "Extract PDU length."},
-  {"dumps",  bser_dumps, METH_VARARGS, "Serialize string."},
+  {"loads", (PyCFunction)bser_loads, METH_VARARGS | METH_KEYWORDS,
+   "Deserialize string."},
+  {"load", (PyCFunction)bser_load, METH_VARARGS | METH_KEYWORDS,
+   "Deserialize a file object"},
+  {"pdu_info", (PyCFunction)bser_pdu_info, METH_VARARGS,
+   "Extract PDU information."},
+  {"pdu_len", (PyCFunction)bser_pdu_len, METH_VARARGS,
+   "Extract total PDU length."},
+  {"dumps",  (PyCFunction)bser_dumps, METH_VARARGS | METH_KEYWORDS,
+   "Serialize string."},
   {NULL, NULL, 0, NULL}
 };
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef bser_module = {
+  PyModuleDef_HEAD_INIT,
+  "bser",
+  "Efficient encoding and decoding of BSER.",
+  -1,
+  bser_methods
+};
+
+PyMODINIT_FUNC PyInit_bser(void)
+{
+  PyObject *mod;
+
+  mod = PyModule_Create(&bser_module);
+  PyType_Ready(&bserObjectType);
+
+  return mod;
+}
+#else
 
 PyMODINIT_FUNC initbser(void)
 {
   (void)Py_InitModule("bser", bser_methods);
   PyType_Ready(&bserObjectType);
 }
+#endif // PY_MAJOR_VERSION >= 3
 
 /* vim:ts=2:sw=2:et:
  */
