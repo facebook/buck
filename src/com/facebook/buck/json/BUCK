@@ -23,6 +23,9 @@ java_immutables_library(
   srcs = glob(['*.java'], excludes = RULES_SRCS + STEPS_SRCS),
   immutable_types = [
     'ProjectBuildFileParserOptions',
+    'BuildFileParseExceptionData',
+    'BuildFileParseExceptionStackTraceEntry',
+    'BuildFileSyntaxError',
   ],
   tests = [
     '//test/com/facebook/buck/json:json',

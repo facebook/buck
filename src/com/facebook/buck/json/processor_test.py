@@ -331,7 +331,7 @@ class BuckTest(unittest.TestCase):
                 build_file_processor.process,
                 build_file.root, build_file.prefix, build_file.path, [])
 
-    def test_watchman_glob_failure_falls_back_to_regular_glob_and_adds_diagnostic(self):
+    def test_watchman_glob_failure_raises_diagnostic_with_stack(self):
         class FakeWatchmanClient:
             def __init__(self):
                 self.query_invoked = False
@@ -358,17 +358,32 @@ class BuckTest(unittest.TestCase):
         self.write_files(build_file, java_file)
         build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
         diagnostics = []
+        rules = []
+        fake_stdout = StringIO.StringIO()
         with build_file_processor.with_builtins(__builtin__.__dict__):
-            rules = build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, diagnostics)
+            self.assertRaises(
+                WatchmanError,
+                process_with_diagnostics,
+                {
+                    'buildFile': self.build_file_name,
+                    'watchRoot': '',
+                    'projectPrefix': self.project_root,
+                },
+                build_file_processor,
+                fake_stdout)
         self.assertTrue(self.watchman_client.query_invoked)
-        self.assertEqual(['Foo.java'], rules[0]['srcs'])
-        self.assertEqual(
-            [Diagnostic(
-                message='Nobody watches the watchmen',
-                level='error',
-                source='watchman')],
-            diagnostics)
+        result = fake_stdout.getvalue()
+        decoded_result = bser.loads(result)
+        self.assertEqual([], decoded_result['values'])
+        self.assertEqual(1, len(decoded_result['diagnostics']))
+        diagnostic = decoded_result['diagnostics'][0]
+        self.assertEqual('fatal', diagnostic['level'])
+        self.assertEqual('parse', diagnostic['source'])
+        self.assertEqual('Nobody watches the watchmen', diagnostic['message'])
+        exception = diagnostic['exception']
+        self.assertEqual('WatchmanError', exception['type'])
+        self.assertEqual('Nobody watches the watchmen', exception['value'])
+        self.assertTrue(len(exception['traceback']) > 0)
 
     def test_watchman_glob_warning_adds_diagnostic(self):
         class FakeWatchmanClient:
@@ -401,7 +416,8 @@ class BuckTest(unittest.TestCase):
             [Diagnostic(
                 message='This is a warning',
                 level='warning',
-                source='watchman')],
+                source='watchman',
+                exception=None)],
             diagnostics)
 
     def test_multiple_watchman_glob_warning_adds_diagnostics_in_order(self):
@@ -440,11 +456,13 @@ class BuckTest(unittest.TestCase):
                 [Diagnostic(
                     message='Warning 1',
                     level='warning',
-                    source='watchman'),
+                    source='watchman',
+                    exception=None),
                  Diagnostic(
                      message='Warning 2',
                      level='warning',
-                     source='watchman')],
+                     source='watchman',
+                     exception=None)],
                 diagnostics)
 
     def test_read_config(self):
@@ -765,7 +783,8 @@ class BuckTest(unittest.TestCase):
             [Diagnostic(
                 message=expected_message,
                 level='warning',
-                source='sandboxing')],
+                source='sandboxing',
+                exception=None)],
             diagnostics)
 
     def test_can_resolve_cell_paths(self):

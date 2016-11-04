@@ -39,7 +39,7 @@ public class BuildFileParseException extends Exception
 
   private static String formatMessageWithCause(String message, IOException cause) {
     if (cause != null && cause.getMessage() != null) {
-      return message + ": " + cause.getMessage();
+      return message + ":\n" + cause.getMessage();
     } else {
       return message;
     }

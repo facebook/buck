@@ -520,7 +520,7 @@ public class DaemonIntegrationTest {
     assertThat(
         "Failure should be due to syntax error.",
         result.getStderr(),
-        containsString("SyntaxError: invalid syntax"));
+        containsString("Syntax error"));
     result.assertFailure();
   }
 

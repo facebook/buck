@@ -146,7 +146,7 @@ class LazyBuildEnvPartial(object):
         return self.func(*args, **updated_kwargs)
 
 
-Diagnostic = namedtuple('Diagnostic', ['message', 'level', 'source'])
+Diagnostic = namedtuple('Diagnostic', ['message', 'level', 'source', 'exception'])
 
 
 def provide_for_build(func):
@@ -276,31 +276,18 @@ def glob(includes, excludes=None, include_dotfiles=False, build_env=None, search
             includes, excludes, build_env.ignore_paths, include_dotfiles, search_base,
             build_env.project_root, mercurial_repo_info)
     elif build_env.watchman_client:
-        try:
-            results = glob_watchman(
-                includes,
-                excludes,
-                include_dotfiles,
-                build_env.base_path,
-                build_env.watchman_watch_root,
-                build_env.watchman_project_prefix,
-                build_env.sync_cookie_state,
-                build_env.watchman_client,
-                build_env.diagnostics,
-                build_env.watchman_glob_stat_results,
-                build_env.watchman_use_glob_generator)
-        except WatchmanError as e:
-
-            build_env.diagnostics.append(
-                Diagnostic(
-                    message=str(e),
-                    level='error',
-                    source='watchman'))
-            try:
-                build_env.watchman_client.close()
-            except:
-                pass
-            build_env.watchman_client = None
+        results = glob_watchman(
+            includes,
+            excludes,
+            include_dotfiles,
+            build_env.base_path,
+            build_env.watchman_watch_root,
+            build_env.watchman_project_prefix,
+            build_env.sync_cookie_state,
+            build_env.watchman_client,
+            build_env.diagnostics,
+            build_env.watchman_glob_stat_results,
+            build_env.watchman_use_glob_generator)
 
     if results is None:
         results = glob_internal(
@@ -444,7 +431,7 @@ class DiagnosticsFileObject(object):
 
     def write(self, value):
         self.diagnostics.append(Diagnostic(
-            message=value, level='warning', source='mercurial'))
+            message=value, level='warning', source='mercurial', exception=None))
 
     def flush(self):
         pass
@@ -578,8 +565,8 @@ def format_watchman_query_params(includes, excludes, include_dotfiles, relative_
 
 @memoized()
 def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watch_root,
-                  watchman_project_prefix, sync_cookie_state, watchman_client, diagnostics,
-                  watchman_glob_stat_results, watchman_use_glob_generator):
+                  watchman_project_prefix, sync_cookie_state, watchman_client,
+                  diagnostics, watchman_glob_stat_results, watchman_use_glob_generator):
     assert includes, "The includes argument must be a non-empty list of strings."
 
     if watchman_project_prefix:
@@ -605,14 +592,16 @@ def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watc
             Diagnostic(
                 message=error_message,
                 level='error',
-                source='watchman'))
+                source='watchman',
+                exception=None))
     warning_message = res.get('warning')
     if warning_message is not None:
         diagnostics.append(
             Diagnostic(
                 message=warning_message,
                 level='warning',
-                source='watchman'))
+                source='watchman',
+                exception=None))
     result = res.get('files', [])
     if watchman_glob_stat_results:
         result = stat_results(base_path, result, diagnostics)
@@ -633,7 +622,8 @@ def stat_results(base_path, result, diagnostics):
                     message='Watchman query returned non-existent file: {0}'.format(
                         resolved_path),
                     level='warning',
-                    source='watchman'))
+                    source='watchman',
+                    exception=None))
     return statted_result
 
 
@@ -1059,7 +1049,8 @@ class BuildFileProcessor(object):
                 Diagnostic(
                     message=message,
                     level='warning',
-                    source=source))
+                    source=source,
+                    exception=None))
 
     def _block_unsafe_function(self, module, name):
         # Returns a function that ignores any arguments and raises AttributeError.
@@ -1423,7 +1414,8 @@ class BuildFileProcessor(object):
                 Diagnostic(
                     message=invalid_signature_error_message,
                     level='fatal',
-                    source='autodeps'))
+                    source='autodeps',
+                    exception=None))
 
         return self._process(
             build_env,
@@ -1529,16 +1521,47 @@ def cygwin_adjusted_path(path):
         return path
 
 
+def format_traceback(tb):
+    formatted = []
+    for entry in traceback.extract_tb(tb):
+        (filename, line_number, function_name, text) = entry
+        formatted.append({
+            'filename': filename,
+            'line_number': line_number,
+            'function_name': function_name,
+            'text': text,
+        })
+    return formatted
+
+
+def format_exception_info(exception_info):
+    (exc_type, exc_value, exc_traceback) = exception_info
+    formatted = {
+        'type': exc_type.__name__,
+        'value': str(exc_value),
+        'traceback': format_traceback(exc_traceback),
+    }
+    if exc_type is SyntaxError:
+        formatted['filename'] = exc_value.filename
+        formatted['lineno'] = exc_value.lineno
+        formatted['offset'] = exc_value.offset
+        formatted['text'] = exc_value.text
+    return formatted
+
+
 def encode_result(values, diagnostics, profile):
     result = {'values': values}
     if diagnostics:
         encoded_diagnostics = []
         for d in diagnostics:
-            encoded_diagnostics.append({
+            encoded = {
                 'message': d.message,
                 'level': d.level,
                 'source': d.source,
-            })
+            }
+            if d.exception:
+                encoded['exception'] = format_exception_info(d.exception)
+            encoded_diagnostics.append(encoded)
         result['diagnostics'] = encoded_diagnostics
     if profile is not None:
         result['profile'] = profile
@@ -1550,27 +1573,12 @@ def encode_result(values, diagnostics, profile):
         if 'diagnostics' not in result:
             result['diagnostics'] = []
         result['diagnostics'].append({
-            'message': format_traceback_and_exception(),
+            'message': str(e),
             'level': 'fatal',
             'source': 'parse',
+            'exception': format_exception_info(sys.exc_info()),
         })
         return bser.dumps(result)
-
-
-def filter_tb(entries):
-    for i in range(len(entries)):
-        # Filter out the beginning of the stack trace (any entries including the buck.py file)
-        if entries[i][0] != sys.argv[0]:
-            return entries[i:]
-    return []
-
-
-def format_traceback_and_exception():
-    exc_type, exc_value, exc_traceback = sys.exc_info()
-    filtered_traceback = filter_tb(traceback.extract_tb(exc_traceback))
-    formatted_traceback = ''.join(traceback.format_list(filtered_traceback))
-    formatted_exception = ''.join(traceback.format_exception_only(exc_type, exc_value))
-    return formatted_traceback + formatted_exception
 
 
 def process_with_diagnostics(build_file_query, build_file_processor, to_parent,
@@ -1600,11 +1608,16 @@ def process_with_diagnostics(build_file_query, build_file_processor, to_parent,
     except Exception as e:
         # Control-C and sys.exit() don't emit diagnostics.
         if not (e is KeyboardInterrupt or e is SystemExit):
+            if e is WatchmanError:
+                source = 'watchman'
+            else:
+                source = 'parse'
             diagnostics.append(
                 Diagnostic(
-                    message=format_traceback_and_exception(),
+                    message=str(e),
                     level='fatal',
-                    source='parse'))
+                    source=source,
+                    exception=sys.exc_info()))
         raise e
     finally:
         if profile is not None:
@@ -1803,11 +1816,12 @@ def main():
             global ui, hg
             from mercurial import ui, hg
             use_mercurial_glob = True
-        except ImportError:
+        except ImportError as e:
             d = Diagnostic(
                 message=format_traceback_and_exception(),
                 level='warning',
-                source='mercurial'
+                source='mercurial',
+                exception=None
             )
             to_parent.write(encode_result([], [d], None))
             to_parent.flush()
