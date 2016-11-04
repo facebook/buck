@@ -130,14 +130,13 @@ public class Watchman implements AutoCloseable {
       Optional<? extends Map<String, ?>> result;
 
       long timeoutMillis = commandTimeoutMillis.orElse(DEFAULT_COMMAND_TIMEOUT_MILLIS);
-      long timeoutNanos = TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
-      long startTimeNanos = clock.nanoTime();
+      long endTimeNanos = clock.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
       result = execute(
           executor,
           console,
           clock,
           timeoutMillis,
-          timeoutNanos,
+          TimeUnit.MILLISECONDS.toNanos(timeoutMillis),
           watchmanPath,
           "get-sockname");
 
@@ -160,10 +159,8 @@ public class Watchman implements AutoCloseable {
       LOG.debug("Connected to Watchman");
 
       long versionQueryStartTimeNanos = clock.nanoTime();
-      timeoutNanos -= versionQueryStartTimeNanos - startTimeNanos;
-
       result = watchmanClient.get().queryWithTimeout(
-          timeoutNanos,
+          endTimeNanos - versionQueryStartTimeNanos,
           "version",
           ImmutableMap.of(
               "required",
@@ -191,13 +188,11 @@ public class Watchman implements AutoCloseable {
       ImmutableSet<Capability> capabilities = capabilitiesBuilder.build();
       LOG.debug("Got Watchman capabilities: %s", capabilities);
 
-      long projectWatchTimeNanos = clock.nanoTime();
-      timeoutNanos -= (projectWatchTimeNanos - versionQueryStartTimeNanos);
       Optional<ProjectWatch> projectWatch = queryWatchProject(
           watchmanClient.get(),
           rootPath,
           clock,
-          timeoutNanos);
+          endTimeNanos - clock.nanoTime());
       if (!projectWatch.isPresent()) {
         watchmanClient.get().close();
         return NULL_WATCHMAN;
@@ -205,12 +200,11 @@ public class Watchman implements AutoCloseable {
 
       Optional<String> clockId = Optional.empty();
       if (capabilities.contains(Capability.CLOCK_SYNC_TIMEOUT)) {
-        timeoutNanos -= (clock.nanoTime() - projectWatchTimeNanos);
         clockId = queryClock(
             watchmanClient.get(),
             projectWatch.get().getWatchRoot(),
             clock,
-            timeoutNanos);
+            endTimeNanos - clock.nanoTime());
       }
 
       return new Watchman(
@@ -299,10 +293,8 @@ public class Watchman implements AutoCloseable {
     // before the crawl is finished which causes the next
     // interaction to block. Calling watch-project a second time
     // properly attributes where we are spending time.
-    long secondProjectWatchTimeNanos = clock.nanoTime();
-    timeoutNanos -= (secondProjectWatchTimeNanos - projectWatchTimeNanos);
     Optional<? extends Map<String, ?>> result = watchmanClient.queryWithTimeout(
-        timeoutNanos,
+        timeoutNanos - (clock.nanoTime() - projectWatchTimeNanos),
         "watch-project",
         absoluteRootPath.toString());
     LOG.info(
