@@ -1,6 +1,6 @@
 [
 {
-  "autodeps": false,
+  "autodeps": null,
   "bash" : null,
   "buck.base_path" : "",
   "buck.direct_dependencies" : [ "//:A", "//:test-library" ],
@@ -9,11 +9,11 @@
   "cmdExe" : null,
   "executable" : null,
   "fully_qualified_name": "//:B",
-  "licenses" : [ ],
+  "licenses" : null,
   "name" : "B",
   "out" : "B.txt",
   "srcs" : [":A"],
-  "tests" : [ ],
-  "visibility" : [ ]
+  "tests" : null,
+  "visibility" : null
 }
 ]

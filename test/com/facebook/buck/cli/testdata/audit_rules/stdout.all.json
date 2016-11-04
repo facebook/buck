@@ -1,28 +1,28 @@
 {
   "debug_keystore" : {
-    "autodeps" : false,
+    "autodeps" : null,
     "buck.base_path" : "example",
     "buck.type" : "keystore",
-    "deps" : [ ],
-    "licenses" : [ ],
+    "deps" : null,
+    "licenses" : null,
     "name" : "debug_keystore",
     "properties" : "debug.keystore.properties",
     "store" : "debug.keystore",
-    "visibility" : [ ]
+    "visibility" : null
   },
   "example" : {
-    "autodeps" : false,
+    "autodeps" : null,
     "bash" : "cat $SRCS > $OUT",
     "buck.base_path" : "example",
     "buck.type" : "genrule",
     "cmd" : null,
     "cmdExe" : null,
     "executable" : null,
-    "licenses" : [ ],
+    "licenses" : null,
     "name" : "example",
     "out" : "baz.txt",
     "srcs" : [ "foo.txt", "bar.txt", "//fake:rule" ],
-    "tests" : [ ],
+    "tests" : null,
     "visibility" : [ "PUBLIC" ]
   }
 }
