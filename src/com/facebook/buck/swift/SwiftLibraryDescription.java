@@ -231,6 +231,7 @@ public class SwiftLibraryDescription implements
       for (HeaderVisibility headerVisibility : HeaderVisibility.values()) {
         // unflavoredBuildTarget because #headers can collide with any other flavor
         // from the same domain.
+
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             params.copyWithBuildTarget(BuildTarget.builder(unflavoredBuildTarget).build()),
             resolver,

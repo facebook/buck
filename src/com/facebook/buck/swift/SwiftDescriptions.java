@@ -20,6 +20,8 @@ import static com.facebook.buck.cxx.NativeLinkable.Linkage.STATIC;
 import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPANION_FLAVOR;
 import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_EXTENSION;
 
+import com.facebook.buck.apple.AppleDescriptions;
+import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
@@ -29,9 +31,12 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 class SwiftDescriptions {
@@ -59,11 +64,26 @@ class SwiftDescriptions {
       final A args,
       BuildTarget buildTarget) {
     output.srcs = filterSwiftSources(sourcePathResolver, args.srcs);
-    output.headersSearchPath = FluentIterable.from(args.exportedHeaders.getPaths())
-        .uniqueIndex(path -> {
-          Preconditions.checkArgument(path instanceof PathSourcePath);
-          return ((PathSourcePath) path).getRelativePath();
-        });
+    if (args instanceof AppleNativeTargetDescriptionArg) {
+      AppleNativeTargetDescriptionArg appleArgs = (AppleNativeTargetDescriptionArg) args;
+      ImmutableMap<String, SourcePath> headers = AppleDescriptions.convertAppleHeadersToPublicCxxHeaders(
+          sourcePathResolver::deprecatedGetPath,
+          AppleDescriptions.getHeaderPathPrefix(appleArgs, buildTarget),
+          args);
+      ImmutableMap.Builder<Path, SourcePath> builder = ImmutableMap.builder();
+      for (String key : headers.keySet()) {
+        builder.put(Paths.get(key), headers.get(key));
+      }
+      output.headersSearchPath = builder.build();
+    } else {
+      output.headersSearchPath = FluentIterable.from(args.exportedHeaders.getPaths())
+          .uniqueIndex(path -> {
+            Preconditions.checkArgument(path instanceof PathSourcePath);
+            return ((PathSourcePath) path).getRelativePath();
+          });
+    }
+
+
     output.compilerFlags = args.compilerFlags;
     output.frameworks = args.frameworks;
     output.libraries = args.libraries;

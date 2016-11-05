@@ -1,0 +1,28 @@
+apple_library(
+  name='ObjcDependency1',
+  visibility=['PUBLIC'],
+  header_path_prefix = 'ObjcDependency1',
+  exported_headers = glob(['ObjcDep1.h', 'Classes/*.h']),
+  srcs = glob(['Classes/*.m']),
+  tests = [':Tests'],
+  deps = [],
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+  ],
+)
+
+apple_test(
+  name = 'Tests',
+  info_plist = 'Tests/Info.plist',
+  info_plist_substitutions = {
+    'PRODUCT_BUNDLE_IDENTIFIER': 'com.test.test',
+  },
+  headers = glob(['Classes/*.h']),
+  srcs = glob([ 'Tests/*.m']),
+  deps = [ ':ObjcDependency1' ],
+  frameworks = [
+      '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+      '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework'
+  ],
+)
