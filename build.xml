@@ -683,7 +683,9 @@
       <!-- The py folder is actually a python package, so use module import style here. -->
       <env key="PYTHONPATH" path="${buck.pythonpath}" />
       <arg value="-m" />
+      <arg value="unittest" />
       <arg value="buck_parser.buck_test" />
+      <arg value="buck_parser.processor_test" />
     </exec>
   </target>
 

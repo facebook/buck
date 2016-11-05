@@ -1,14 +1,12 @@
 from .buck import (
     BuildFileContext,
     LazyBuildEnvPartial,
-    _load_manifest_trie,
     flatten_dicts,
-    format_watchman_query_params,
-    glob_internal,
-    glob_mercurial_manifest,
-    path_component_contains_dot,
     subdir_glob,
 )
+from .glob_mercurial import _load_manifest_trie, glob_mercurial_manifest
+from .glob_watchman import format_watchman_query_params
+from .glob_internal import path_component_contains_dot, glob_internal
 from pathlib import Path, PurePosixPath, PureWindowsPath
 import itertools
 import os
@@ -637,7 +635,7 @@ class TestBuck(unittest.TestCase):
 
 class TestMemoized(unittest.TestCase):
     def _makeone(self, func, *args, **kwargs):
-        from buck import memoized
+        from .util import memoized
         return memoized(*args, **kwargs)(func)
 
     def test_cache_none(self):

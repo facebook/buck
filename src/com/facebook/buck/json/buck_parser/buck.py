@@ -8,18 +8,19 @@ import __builtin__
 import __future__
 
 import contextlib
-from collections import namedtuple
 from pathlib import _Accessor, Path, PureWindowsPath, PurePath, PosixPath
 from pywatchman import bser, WatchmanError
 from contextlib import contextmanager, nested
-from .util import cygwin_adjusted_path, memoized
+from .glob_internal import glob_internal
+from .glob_mercurial import glob_mercurial_manifest, load_mercurial_repo_info
+from .glob_watchman import glob_watchman
+from .util import Diagnostic, cygwin_adjusted_path, is_special
 import StringIO
 import cProfile
 import functools
 import hashlib
 import imp
 import inspect
-import itertools
 import json
 import optparse
 import os
@@ -146,9 +147,6 @@ class LazyBuildEnvPartial(object):
         updated_kwargs = kwargs.copy()
         updated_kwargs.update({'build_env': self.build_env})
         return self.func(*args, **updated_kwargs)
-
-
-Diagnostic = namedtuple('Diagnostic', ['message', 'level', 'source', 'exception'])
 
 
 def provide_for_build(func):
@@ -343,305 +341,6 @@ def subdir_glob(glob_specs, excludes=None, prefix=None, build_env=None, search_b
                                allow_safe_import=allow_safe_import))
 
     return merge_maps(*results)
-
-
-def load_mercurial_repo_info(build_env, search_base, allow_safe_import):
-    if not build_env.use_mercurial_glob:
-        return
-    for parent in itertools.chain((search_base,), search_base.parents):
-        if parent.joinpath('.hg').is_dir():
-            break
-    else:
-        # No parent found
-        return
-    return _load_mercurial_repo_info_for_root(build_env, parent, allow_safe_import)
-
-
-@memoized(deepcopy=False, keyfunc=lambda build_env, hgroot, *a: str(hgroot))
-def _load_mercurial_repo_info_for_root(build_env, hgroot, allow_safe_import):
-    os.environ['HGPLAIN'] = ''  # any output should be plain
-    with allow_safe_import():
-        # Mercurial imports extensions when creating the UI and accessing a new repository.
-        ui_ = ui.ui()
-        ui_.fout = DiagnosticsFileObject(build_env.diagnostics)
-        ui_.ferr = DiagnosticsFileObject(build_env.diagnostics)
-        ui_.quiet = True
-        repo = hg.repository(ui_, str(hgroot))
-    manifest = repo['.'].manifest()
-    status = repo.status(unknown=True)
-    return (repo.root, manifest, status)
-
-
-@memoized(
-    deepcopy=False,
-    keyfunc=lambda repo_info, project_root: (repo_info[0], project_root))
-def _load_manifest_trie(repo_info, project_root):
-    return ManifestTrie.from_repo(repo_info, project_root)
-
-
-def glob_mercurial_manifest(
-        includes, excludes, project_root_relative_excludes, include_dotfiles,
-        search_base, project_root, repo_info):
-    # pull file information from the mercurial manifest; this doesn't require
-    # any filesystem access beyond access to the mercurial repository itself.
-
-    trie = _load_manifest_trie(repo_info, project_root)
-    try:
-        for p in search_base.relative_to(project_root).parts:
-            trie = trie.traverse(p)
-    except KeyError:
-        # no such path in the manifest, short-circuit
-        return []
-    return glob_internal(
-        includes, excludes, project_root_relative_excludes, include_dotfiles,
-        ManifestPath(search_base, manifest_trie=trie), project_root)
-
-
-class DiagnosticsFileObject(object):
-    def __init__(self, diagnostics):
-        self.diagnostics = diagnostics
-
-    def write(self, value):
-        self.diagnostics.append(Diagnostic(
-            message=value, level='warning', source='mercurial', exception=None))
-
-    def flush(self):
-        pass
-
-
-class ManifestTrie(object):
-    """Basic trie implementation from a hg repository manifest and working copy status
-
-    Lazily parses path strings of children as the trie is traversed.
-
-    """
-    @classmethod
-    def from_repo(cls, repo_info, project_root):
-        entries = {}
-        hgroot, manifest, status = repo_info
-        base_path = os.path.relpath(project_root, hgroot)
-        if base_path:
-            base_path += '/'
-        removed = set(status.removed).union(status.deleted)
-        entries = (
-            path[len(base_path):]
-            for path in itertools.chain(manifest, status.added, status.unknown)
-            if path.startswith(base_path) and path not in removed)
-        return cls(entries)
-
-    def __init__(self, entries):
-        parsed = {}
-        for path in filter(None, entries):
-            parent, _, remainder = path.partition('/')
-            parsed.setdefault(parent, []).append(remainder)
-        self._entries = parsed or None  # None is a leaf node
-
-    def listdir(self):
-        return list(self._entries)
-
-    def is_dir(self):
-        return self._entries is not None
-
-    def traverse(self, name):
-        entry = self._entries[name]
-        if not isinstance(entry, type(self)):
-            self._entries[name] = entry = type(self)(entry)
-        return entry
-
-
-class ManifestAccessor(_Accessor):
-    def listdir(self, path):
-        return path._manifest_trie.listdir()
-
-
-class ManifestPath(PosixPath):
-    """Minimal Path implementation sourced from a manifest"""
-    __slots__ = ('_manifest_trie',)
-
-    def __new__(cls, *args, **kwargs):
-        self = cls._from_parts(args, init=False)
-        self._init()
-        self._manifest_trie = kwargs.pop('manifest_trie', None)
-        return self
-
-    def _init(self):
-        self._accessor = ManifestAccessor()
-
-    def _make_child_relpath(self, part):
-        child = super(ManifestPath, self)._make_child_relpath(part)
-        try:
-            child._manifest_trie = self._manifest_trie.traverse(part)
-        except KeyError:
-            child._manifest_trie = None
-        return child
-
-    def is_dir(self):
-        return self._manifest_trie.is_dir()
-
-    def is_file(self):
-        return not self.is_dir()
-
-    def exists(self):
-        return self._manifest_trie is not None
-
-    def relative_to(self, *other):
-        # produce a PosixPath object again
-        result = super(PosixPath, self).relative_to(*other)
-        return PosixPath._from_parsed_parts(result._drv, result._root, result._parts)
-
-
-COLLAPSE_SLASHES = re.compile(r'/+')
-
-
-def format_watchman_query_params(includes, excludes, include_dotfiles, relative_root,
-                                 watchman_use_glob_generator):
-    match_exprs = ["allof", ["anyof", ["type", "f"], ["type", "l"]]]
-    match_flags = {}
-
-    if include_dotfiles:
-        match_flags["includedotfiles"] = True
-    if excludes:
-        match_exprs.append(
-            ["not",
-             ["anyof"] +
-             [["match", COLLAPSE_SLASHES.sub('/', x), "wholename", match_flags]
-              for x in excludes]])
-
-    query = {
-        "relative_root": relative_root,
-        "fields": ["name"],
-    }
-
-    if watchman_use_glob_generator:
-        query["glob"] = includes
-        # We don't have to check for existence; the glob generator only matches
-        # files which exist.
-    else:
-        # We do have to check for existence; the path generator
-        # includes files which don't exist.
-        match_exprs.append("exists")
-
-        # Explicitly pass an empty path so Watchman queries only the tree of files
-        # starting at base_path.
-        query["path"] = ['']
-        match_exprs.append(
-            ["anyof"] +
-            # Collapse multiple consecutive slashes in pattern until fix in
-            # https://github.com/facebook/watchman/pull/310/ is available
-            [["match", COLLAPSE_SLASHES.sub('/', i), "wholename", match_flags] for i in includes])
-
-    query["expression"] = match_exprs
-
-    return query
-
-
-@memoized()
-def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watch_root,
-                  watchman_project_prefix, sync_cookie_state, watchman_client,
-                  diagnostics, watchman_glob_stat_results, watchman_use_glob_generator):
-    assert includes, "The includes argument must be a non-empty list of strings."
-
-    if watchman_project_prefix:
-        relative_root = os.path.join(watchman_project_prefix, base_path)
-    else:
-        relative_root = base_path
-    query_params = format_watchman_query_params(
-        includes, excludes, include_dotfiles, relative_root, watchman_use_glob_generator)
-
-    # Sync cookies cause a massive overhead when issuing thousands of
-    # glob queries.  Only enable them (by not setting sync_timeout to 0)
-    # for the very first request issued by this process.
-    if sync_cookie_state.use_sync_cookies:
-        sync_cookie_state.use_sync_cookies = False
-    else:
-        query_params["sync_timeout"] = 0
-
-    query = ["query", watchman_watch_root, query_params]
-    res = watchman_client.query(*query)
-    error_message = res.get('error')
-    if error_message is not None:
-        diagnostics.append(
-            Diagnostic(
-                message=error_message,
-                level='error',
-                source='watchman',
-                exception=None))
-    warning_message = res.get('warning')
-    if warning_message is not None:
-        diagnostics.append(
-            Diagnostic(
-                message=warning_message,
-                level='warning',
-                source='watchman',
-                exception=None))
-    result = res.get('files', [])
-    if watchman_glob_stat_results:
-        result = stat_results(base_path, result, diagnostics)
-    return sorted(result)
-
-
-def stat_results(base_path, result, diagnostics):
-    statted_result = []
-    for path in result:
-        # We really shouldn't have to stat() every result from Watchman, but
-        # occasionally it returns non-existent files.
-        resolved_path = os.path.join(base_path, path)
-        if os.path.exists(resolved_path):
-            statted_result.append(path)
-        else:
-            diagnostics.append(
-                Diagnostic(
-                    message='Watchman query returned non-existent file: {0}'.format(
-                        resolved_path),
-                    level='warning',
-                    source='watchman',
-                    exception=None))
-    return statted_result
-
-
-def path_component_contains_dot(relative_path):
-    for p in relative_path.parts:
-        if p.startswith('.'):
-            return True
-    return False
-
-
-def glob_internal(includes, excludes, project_root_relative_excludes, include_dotfiles, search_base, project_root):
-
-    def includes_iterator():
-        for pattern in includes:
-            for path in search_base.glob(pattern):
-                # TODO(bhamiltoncx): Handle hidden files on Windows.
-                if path.is_file() and \
-                   (include_dotfiles or not path_component_contains_dot(
-                       path.relative_to(search_base))):
-                    yield path
-
-    non_special_excludes = set()
-    match_excludes = set()
-    for pattern in excludes:
-        if is_special(pattern):
-            match_excludes.add(pattern)
-        else:
-            non_special_excludes.add(pattern)
-
-    def exclusion(path):
-        relative_to_search_base = path.relative_to(search_base)
-        if relative_to_search_base.as_posix() in non_special_excludes:
-            return True
-        for pattern in match_excludes:
-            result = relative_to_search_base.match(pattern, match_entire=True)
-            if result:
-                return True
-        relative_to_project_root = path.relative_to(project_root)
-        for pattern in project_root_relative_excludes:
-            result = relative_to_project_root.match(pattern, match_entire=True)
-            if result:
-                return True
-        return False
-
-    return sorted(set([
-        str(p.relative_to(search_base)) for p in includes_iterator() if not exclusion(p)]))
 
 
 @provide_for_build
@@ -1864,10 +1563,6 @@ def make_glob(pat):
     if is_special(pat):
         return pat
     return pat + '/**'
-
-
-def is_special(pat):
-    return "*" in pat or "?" in pat or "[" in pat
 
 
 # import autogenerated rule instances for effect.

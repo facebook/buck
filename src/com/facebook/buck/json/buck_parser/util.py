@@ -6,6 +6,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import with_statement
 
+from collections import namedtuple
 import copy
 import functools
 import subprocess
@@ -55,3 +56,11 @@ def memoized(deepcopy=True, keyfunc=None):
         return wrapped
 
     return decorator
+
+
+Diagnostic = namedtuple('Diagnostic', ['message', 'level', 'source', 'exception'])
+
+
+def is_special(pat):
+    """Whether the given pattern string contains match constructs."""
+    return "*" in pat or "?" in pat or "[" in pat
