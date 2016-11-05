@@ -98,12 +98,10 @@ information will be under parameter <code>data</code>.
 <pre class="prettyprint lang-js">{literal}
 {
     errorMessage: "...",
-    parsingStatus: "...",
-    remoteCacheStatus: "...",
-    environmentStatus: "...",
     suggestions: [
-                    "Issue 123 reported. Check link.",
-                    "Parsing too slow. Check BUCK file.",
+                   "state": "ERROR",
+                   "area": "Environment",
+                   "suggestion": "Parsing too slow. Check BUCK file.",
                  ]
 }
 {/literal}</pre>

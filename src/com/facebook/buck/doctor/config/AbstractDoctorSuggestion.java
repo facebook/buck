@@ -18,7 +18,6 @@ package com.facebook.buck.doctor.config;
 
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.google.common.collect.ImmutableList;
 
 import org.immutables.value.Value;
 
@@ -26,15 +25,41 @@ import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleImmutable
-@JsonDeserialize(as = DoctorEndpointResponse.class)
-abstract class AbstractDoctorEndpointResponse {
+@JsonDeserialize(as = DoctorSuggestion.class)
+abstract class AbstractDoctorSuggestion {
 
   @Value.Parameter
-  abstract Optional<String> getErrorMessage();
+  abstract StepStatus getStatus();
 
   @Value.Parameter
-  abstract ImmutableList<DoctorSuggestion> getSuggestions();
+  abstract Optional<String> getArea();
 
+  @Value.Parameter
+  abstract String getSuggestion();
+
+  public enum StepStatus {
+    OK("\u2705", "OK"),
+    WARNING("\u2757", "Warning"),
+    ERROR("\u274C", "Error"),
+    UNKNOWN("\u2753", "Unknown");
+
+    private final String emoji;
+    private final String text;
+
+    StepStatus(String emoji, String text) {
+      this.emoji = emoji;
+      this.text = text;
+    }
+
+    public String getEmoji() {
+      return this.emoji;
+    }
+
+    public String getText() {
+      return this.text;
+    }
+
+  }
 
 }
 

@@ -2,9 +2,10 @@ java_immutables_library(
   name = 'config',
   srcs = glob(['*.java'],),
   immutable_types = [
+    'DoctorConfig',
+    'DoctorSuggestion',
     'DoctorEndpointRequest',
     'DoctorEndpointResponse',
-    'DoctorConfig',
   ],
   autodeps = True,
   tests = [

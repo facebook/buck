@@ -16,7 +16,6 @@
 
 package com.facebook.buck.doctor;
 
-import static com.facebook.buck.doctor.config.DoctorEndpointResponse.StepStatus;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -72,15 +71,10 @@ public class DoctorReportHelperTest {
     String errorMessage = "This is an error message.";
     DoctorEndpointResponse response = DoctorEndpointResponse.of(
         Optional.of(errorMessage),
-        StepStatus.ERROR,
-        StepStatus.ERROR,
-        StepStatus.ERROR,
-        ImmutableList.of("Suggestion no1", "Suggestion no2"));
+        ImmutableList.of());
 
     helper.presentResponse(response);
-    assertEquals(
-        console.getTextWrittenToStdOut(),
-        "\n:: Doctor results\n" + errorMessage + "\n");
+    assertEquals(errorMessage + "\n", console.getTextWrittenToStdOut());
   }
 
   @Test
@@ -101,19 +95,12 @@ public class DoctorReportHelperTest {
 
     DoctorEndpointResponse response = DoctorEndpointResponse.of(
         Optional.empty(),
-        StepStatus.ERROR,
-        StepStatus.ERROR,
-        StepStatus.ERROR,
         ImmutableList.of());
 
     helper.presentResponse(response);
     assertEquals(
-        console.getTextWrittenToStdOut(),
-        "\n:: Doctor results\n" +
-            "  [Error ] Environment\n" +
-            "  [Error ] Parsing\n" +
-            "  [Error ] Remote cache\n" +
-            ":: No available suggestions right now.\n\n");
+        "\n:: No available suggestions right now.\n\n",
+        console.getTextWrittenToStdOut());
   }
 
 }
