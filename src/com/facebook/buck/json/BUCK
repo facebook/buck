@@ -31,7 +31,7 @@ java_immutables_library(
     '//test/com/facebook/buck/json:json',
   ],
   resources = [
-    'buck.py',
+    '//src/com/facebook/buck/json:python_bundle',
   ],
   autodeps = True,
   visibility = [
@@ -39,11 +39,17 @@ java_immutables_library(
   ],
 )
 
+PYTHON_PROD_SRCS = glob(['buck_parser/**/*.py'], excludes=['buck_parser/**/*_test.py'])
+
+zip_file(
+  name = 'python_bundle',
+  srcs = PYTHON_PROD_SRCS,
+)
+
 python_library(
-  name = 'buck',
-  srcs = [
-    'buck.py',
-  ],
+  name = 'buck_parser',
+  srcs = PYTHON_PROD_SRCS,
+  base_module = '',
   deps = [
     '//third-party/py/pathlib:pathlib',
     '//third-party/py/pywatchman:pywatchman',
@@ -53,12 +59,10 @@ python_library(
 
 python_test(
   name = 'buck_test',
-  srcs = [
-    'processor_test.py',
-    'buck_test.py',
-  ],
+  srcs = glob(['buck_parser/**/*_test.py']),
+  base_module = '',
   deps = [
-    ':buck',
+    ':buck_parser',
     '//third-party/py/pathlib:pathlib',
     '//third-party/py/pywatchman:pywatchman',
   ],

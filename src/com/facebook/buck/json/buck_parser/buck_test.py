@@ -1,4 +1,4 @@
-from buck import (
+from .buck import (
     BuildFileContext,
     LazyBuildEnvPartial,
     _load_manifest_trie,

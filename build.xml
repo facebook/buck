@@ -398,15 +398,19 @@
           tofile="${classes.dir}/com/facebook/buck/android/ddmlib.jar"/>
     <copy file="${third-party.dir}/java/kxml2/kxml2-2.3.0.jar"
           tofile="${classes.dir}/com/facebook/buck/android/kxml2.jar"/>
+
+    <zip basedir="src/com/facebook/buck/json"
+         destfile="${classes.dir}/com/facebook/buck/json/python_bundle.zip"
+         includes="buck_parser/**/*.py"
+         excludes="BUCK,buck_parser/**/*_test.py"
+         defaultexcludes="no"/>
+
   </target>
 
   <target name="compile"
           depends="compile-testrunner, compile-aosp, compile-manual-gen-src, bootstrapper, package-resources, tracing-api, dx"
           description="compile Java source code">
     <mkdir dir="${classes.dir}" />
-
-    <!-- Copy in scripts we need at run time when using an unpacked buck -->
-    <copy file="src/com/facebook/buck/json/buck.py" todir="${classes.dir}/com/facebook/buck/json"/>
 
     <ecj>
       <javac-params>
@@ -675,9 +679,11 @@
   <target name="py-test" description="runs the Python tests" depends="buck-py-test, class-loader-py-test, log-rotation-py-test, pathlib-py-test, zip-munger-py-test, buck-tool-py-test, scandir-py-test" />
 
   <target name="buck-py-test" description="tests the BUCK parser">
-    <exec executable="python" failonerror="true">
+    <exec executable="python" failonerror="true" dir="${basedir}/src/com/facebook/buck/json">
+      <!-- The py folder is actually a python package, so use module import style here. -->
       <env key="PYTHONPATH" path="${buck.pythonpath}" />
-      <arg value="src/com/facebook/buck/json/buck_test.py" />
+      <arg value="-m" />
+      <arg value="buck_parser.buck_test" />
     </exec>
   </target>
 

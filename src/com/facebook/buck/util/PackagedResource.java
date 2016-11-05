@@ -52,17 +52,14 @@ public class PackagedResource implements Supplier<Path> {
       Class<?> relativeTo,
       String pathRelativeToClass) {
     this.filesystem = filesystem;
-
     this.relativeTo = relativeTo;
+
     // We could magically detect the class we're relative to by examining the stacktrace but that
     // would be incredibly fragile. So we won't.
-
     this.name = pathRelativeToClass;
-
     this.filename = Paths.get(pathRelativeToClass).getFileName();
 
-    this.supplier = Suppliers.memoize(
-        this::unpack);
+    this.supplier = Suppliers.memoize(this::unpack);
   }
 
   @Override
