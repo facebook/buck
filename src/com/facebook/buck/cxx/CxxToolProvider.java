@@ -51,7 +51,7 @@ import javax.annotation.Nonnull;
 public abstract class CxxToolProvider<T> {
 
   private static final Logger LOG = Logger.get(CxxToolProvider.class);
-  public static final Pattern CLANG_VERSION_PATTERN =
+  private static final Pattern CLANG_VERSION_PATTERN =
       Pattern.compile(
           "\\s*(" + // Ignore leading whitespace.
           "clang version [.0-9]*(\\s*\\(.*\\))?" + // Format used by opensource Clang.
