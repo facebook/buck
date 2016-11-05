@@ -67,3 +67,13 @@ python_test(
     '//third-party/py/pywatchman:pywatchman',
   ],
 )
+
+# Main binary for testing.
+python_binary(
+  name = 'standalone',
+  base_module = '',
+  main_module = 'buck_parser',
+  deps = [
+    ':buck_parser',
+  ]
+)
