@@ -120,20 +120,21 @@ public class CxxPythonExtensionDescription implements
   }
 
   @VisibleForTesting
-  protected static String getExtensionName(BuildTarget target) {
+  protected static String getExtensionName(String moduleName) {
     // .so is used on OS X too (as opposed to dylib).
-    return String.format("%s.so", target.getShortName());
+    return String.format("%s.so", moduleName);
   }
 
   @VisibleForTesting
   protected Path getExtensionPath(
       ProjectFilesystem filesystem,
       BuildTarget target,
+      String moduleName,
       Flavor pythonPlatform,
       Flavor platform) {
     return BuildTargets
         .getGenPath(filesystem, getExtensionTarget(target, pythonPlatform, platform), "%s")
-        .resolve(getExtensionName(target));
+        .resolve(getExtensionName(moduleName));
   }
 
   private ImmutableList<com.facebook.buck.rules.args.Arg> getExtensionArgs(
@@ -253,11 +254,13 @@ public class CxxPythonExtensionDescription implements
       CxxPlatform cxxPlatform,
       A args) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
-    String extensionName = getExtensionName(params.getBuildTarget());
+    String moduleName = args.moduleName.orElse(params.getBuildTarget().getShortName());
+    String extensionName = getExtensionName(moduleName);
     Path extensionPath =
         getExtensionPath(
             params.getProjectFilesystem(),
             params.getBuildTarget(),
+            moduleName,
             pythonPlatform.getFlavor(),
             cxxPlatform.getFlavor());
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
@@ -327,7 +330,8 @@ public class CxxPythonExtensionDescription implements
     // get the real build rules via querying the action graph.
     final SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
-    final Path module = baseModule.resolve(getExtensionName(params.getBuildTarget()));
+    String moduleName = args.moduleName.orElse(params.getBuildTarget().getShortName());
+    final Path module = baseModule.resolve(getExtensionName(moduleName));
     return new CxxPythonExtension(params, pathResolver) {
 
       @Override
@@ -448,6 +452,7 @@ public class CxxPythonExtensionDescription implements
     public PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps =
         PatternMatchedCollection.of();
     public Optional<String> baseModule;
+    public Optional<String> moduleName;
   }
 
 }

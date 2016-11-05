@@ -48,6 +48,11 @@ public class CxxPythonExtensionBuilder extends
     return this;
   }
 
+  public CxxPythonExtensionBuilder setModuleName(String moduleName) {
+    arg.moduleName = Optional.of(moduleName);
+    return this;
+  }
+
   @Override
   protected CxxPythonExtensionBuilder getThis() {
     return this;

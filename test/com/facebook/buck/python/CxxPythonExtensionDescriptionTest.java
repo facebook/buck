@@ -123,7 +123,8 @@ public class CxxPythonExtensionDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM);
     assertEquals(
         ImmutableSet.of(
-            target.getBasePath().resolve(CxxPythonExtensionDescription.getExtensionName(target))),
+            target.getBasePath()
+                .resolve(CxxPythonExtensionDescription.getExtensionName(target.getShortName()))),
         normalComps.getModules().keySet());
 
     // Verify that explicitly setting works.
@@ -152,7 +153,8 @@ public class CxxPythonExtensionDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM);
     assertEquals(
         ImmutableSet.of(
-            Paths.get(name).resolve(CxxPythonExtensionDescription.getExtensionName(target2))),
+            Paths.get(name)
+                .resolve(CxxPythonExtensionDescription.getExtensionName(target2.getShortName()))),
         baseModuleComps.getModules().keySet());
   }
 
@@ -268,7 +270,8 @@ public class CxxPythonExtensionDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()));
     PythonPackageComponents expectedComponents = PythonPackageComponents.of(
         ImmutableMap.of(
-            target.getBasePath().resolve(CxxPythonExtensionDescription.getExtensionName(target)),
+            target.getBasePath()
+                .resolve(CxxPythonExtensionDescription.getExtensionName(target.getShortName())),
             new BuildTargetSourcePath(rule.getBuildTarget())),
         ImmutableMap.of(),
         ImmutableMap.of(),
@@ -570,6 +573,25 @@ public class CxxPythonExtensionDescriptionTest {
     assertThat(
         cxxPythonExtension.getRuntimeDeps(),
         Matchers.hasItem(cxxBinary));
+  }
+
+  @Test
+  public void moduleName() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    new CxxLibraryBuilder(PYTHON2_DEP_TARGET).build(resolver);
+    new CxxLibraryBuilder(PYTHON3_DEP_TARGET).build(resolver);
+    CxxPythonExtension cxxPythonExtension =
+        (CxxPythonExtension) new CxxPythonExtensionBuilder(
+            BuildTargetFactory.newInstance("//:ext"),
+            FlavorDomain.of("Python Platform", PY2, PY3),
+            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            CxxTestBuilder.createDefaultPlatforms())
+            .setModuleName("blah")
+            .build(resolver);
+    assertThat(
+        cxxPythonExtension.getModule().toString(),
+        Matchers.endsWith(CxxPythonExtensionDescription.getExtensionName("blah")));
   }
 
 }
