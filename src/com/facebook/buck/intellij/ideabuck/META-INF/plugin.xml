@@ -25,6 +25,7 @@
       <li>
         <b>2.7.3</b>
           Removed restriction on IDEA version.
+          Added test run configuration.
       </li>
       <li>
         <b>2.7.2</b>
@@ -144,6 +145,8 @@
         serviceImplementation="com.facebook.buck.intellij.ideabuck.build.BuckBuildManager"/>
     <projectService
         serviceImplementation="com.facebook.buck.intellij.ideabuck.ui.BuckUIManager"/>
+    <configurationType
+            implementation="com.facebook.buck.intellij.ideabuck.configurations.TestConfigurationType"/>
   </extensions>
 
   <actions>

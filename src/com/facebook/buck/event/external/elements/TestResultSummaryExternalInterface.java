@@ -16,6 +16,8 @@
 
 package com.facebook.buck.event.external.elements;
 
+import com.facebook.buck.test.result.type.ResultType;
+
 /**
  * Describes the results of a single test.
  * This type is intended to be used by external applications (like the Intellij Buck plugin)
@@ -31,6 +33,7 @@ public interface TestResultSummaryExternalInterface {
    */
   String getTestCaseName();
   /**
+   * Note: if deserialized from json always returns false.
    * @return the success or failure of a test.
    */
   boolean isSuccess();
@@ -54,4 +57,9 @@ public interface TestResultSummaryExternalInterface {
    * @return the stderr of the test failure.
    */
   String getStdErr();
+
+  /**
+   * @return the kind of test result
+   */
+  ResultType getType();
 }
