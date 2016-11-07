@@ -63,7 +63,8 @@ class SwiftPrepareForCompile extends AbstractBuildRule {
     return new CxxWriteArgsToFileStep(
         fileListPath,
         sourceListArgs,
-        Optional.empty());
+        Optional.empty(),
+        getBuildTarget().getCellPath());
   }
 
   @Override

@@ -83,9 +83,6 @@ class SwiftCompile
           .stream()
           .anyMatch(flavor -> flavor.getName().startsWith(COMPILE_FLAVOR_PREFIX));
 
-  // Prepend "-I" before the input with no space (this is required by swift).
-  private static final Function<String, String> PREPEND_INCLUDE_FLAG = INCLUDE_FLAG::concat;
-
   @AddToRuleKey
   private final Tool swiftCompiler;
 
