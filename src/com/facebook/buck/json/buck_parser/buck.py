@@ -1475,9 +1475,8 @@ def main():
             client_args['transport'] = 'local'
         watchman_client = pywatchman.client(**client_args)
     elif options.use_mercurial_glob:
-        # mercurial libraries
+        # warn early if the mercurial libraries can't be loaded
         try:
-            global ui, hg
             from mercurial import ui, hg
             use_mercurial_glob = True
         except ImportError as e:

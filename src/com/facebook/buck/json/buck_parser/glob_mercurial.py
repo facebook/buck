@@ -114,6 +114,7 @@ def load_mercurial_repo_info(build_env, search_base, allow_safe_import):
 def _load_mercurial_repo_info_for_root(build_env, hgroot, allow_safe_import):
     os.environ['HGPLAIN'] = ''  # any output should be plain
     with allow_safe_import():
+        from mercurial import ui, hg
         # Mercurial imports extensions when creating the UI and accessing a new repository.
         ui_ = ui.ui()
         ui_.fout = DiagnosticsFileObject(build_env.diagnostics)
