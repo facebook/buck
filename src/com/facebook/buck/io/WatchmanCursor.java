@@ -30,4 +30,9 @@ public class WatchmanCursor {
   public String get() {
     return mWatchmanCursor;
   }
+
+  @Override
+  public String toString() {
+    return mWatchmanCursor;
+  }
 }

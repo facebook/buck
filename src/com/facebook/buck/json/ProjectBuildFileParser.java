@@ -371,12 +371,21 @@ public class ProjectBuildFileParser implements AutoCloseable {
     ImmutableList<Map<String, Object>> values = ImmutableList.of();
     String profile = "";
     try (AssertScopeExclusiveAccess.Scope scope = assertSingleThreadedParsing.scope()) {
-      ProjectWatch projectWatch = options.getWatchman().getProjectWatch();
+      Path cellPath = options.getProjectRoot().toAbsolutePath();
+      String watchRoot = cellPath.toString();
+      String projectPrefix = "";
+      if (options.getWatchman().getProjectWatches().containsKey(cellPath)) {
+        ProjectWatch projectWatch = options.getWatchman().getProjectWatches().get(cellPath);
+        watchRoot = projectWatch.getWatchRoot();
+        if (projectWatch.getProjectPrefix().isPresent()) {
+          projectPrefix = projectWatch.getProjectPrefix().get();
+        }
+      }
       bserSerializer.serializeToStream(
           ImmutableMap.of(
               "buildFile", buildFile.toString(),
-              "watchRoot", projectWatch.getWatchRoot(),
-              "projectPrefix", projectWatch.getProjectPrefix().orElse("")),
+              "watchRoot", watchRoot,
+              "projectPrefix", projectPrefix),
           buckPyStdinWriter);
       buckPyStdinWriter.flush();
 

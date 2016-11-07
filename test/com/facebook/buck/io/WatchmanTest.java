@@ -45,6 +45,7 @@ import java.util.concurrent.TimeUnit;
 public class WatchmanTest {
 
   private String root = Paths.get("/some/root").toAbsolutePath().toString();
+  private ImmutableSet<Path> rootPaths = ImmutableSet.of(Paths.get(root));
   private String exe = Paths.get("/opt/bin/watchman").toAbsolutePath().toString();
   private FakeExecutableFinder finder = new FakeExecutableFinder(Paths.get(exe));
   private ImmutableMap<String, String> env = ImmutableMap.of();
@@ -100,7 +101,7 @@ public class WatchmanTest {
     Watchman watchman = Watchman.build(
         executor,
         NULL_WATCHMAN_CONNECTOR,
-        Paths.get(root),
+        rootPaths,
         env,
         finder,
         new TestConsole(),
@@ -139,7 +140,7 @@ public class WatchmanTest {
                     "3.7.9"),
                 ImmutableList.of("watch", root),
                 ImmutableMap.of("version", "3.7.9", "watch", root))),
-        Paths.get(root),
+        rootPaths,
         env,
         finder,
         new TestConsole(),
@@ -186,7 +187,7 @@ public class WatchmanTest {
                     "error",
                     "client required capabilty `cmd-watch-project` is not supported by this " +
                     "server"))),
-        Paths.get(root),
+        rootPaths,
         env,
         finder,
         new TestConsole(),
@@ -232,7 +233,7 @@ public class WatchmanTest {
                         "glob_generator", false)),
                 ImmutableList.of("watch-project", root),
                 ImmutableMap.of("version", "3.8.0", "watch", root))),
-        Paths.get(root),
+        rootPaths,
         env,
         finder,
         new TestConsole(),
@@ -278,7 +279,7 @@ public class WatchmanTest {
                         .build()),
                 ImmutableList.of("watch-project", root),
                 ImmutableMap.of("version", "3.8.0", "watch", root))),
-        Paths.get(root),
+        rootPaths,
         env,
         finder,
         new TestConsole(),
@@ -325,7 +326,7 @@ public class WatchmanTest {
                         .build()),
                 ImmutableList.of("watch-project", root),
                 ImmutableMap.of("version", "3.8.0", "watch", root))),
-        Paths.get(root),
+        rootPaths,
         env,
         finder,
         new TestConsole(),
@@ -341,8 +342,8 @@ public class WatchmanTest {
         watchman.getCapabilities());
 
     assertEquals(
-        Optional.empty(),
-        watchman.getClockId());
+        ImmutableMap.of(),
+        watchman.getClockIds());
   }
 
   @Test
@@ -387,7 +388,7 @@ public class WatchmanTest {
                     root,
                     ImmutableMap.of("sync_timeout", 100)),
                 ImmutableMap.of("version", "4.7.0", "clock", "c:0:0:1"))),
-        Paths.get(root),
+        rootPaths,
         env,
         finder,
         new TestConsole(),
@@ -405,8 +406,8 @@ public class WatchmanTest {
         watchman.getCapabilities());
 
     assertEquals(
-        Optional.of("c:0:0:1"),
-        watchman.getClockId());
+        ImmutableMap.of(Paths.get(root), "c:0:0:1"),
+        watchman.getClockIds());
   }
 
   @Test
@@ -451,7 +452,7 @@ public class WatchmanTest {
                     root,
                     ImmutableMap.of("sync_timeout", 100)),
                 ImmutableMap.<String, Object>of())),
-        Paths.get(root),
+        rootPaths,
         env,
         finder,
         new TestConsole(),
@@ -459,7 +460,7 @@ public class WatchmanTest {
         Optional.empty());
 
     assertEquals(
-        Optional.empty(),
-        watchman.getClockId());
+        ImmutableMap.of(),
+        watchman.getClockIds());
   }
 }

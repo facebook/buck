@@ -68,6 +68,7 @@ import java.util.Set;
 
 public class WatchmanWatcherTest {
 
+  private static final Path FAKE_ROOT = Paths.get("/fake/root").toAbsolutePath();
   private static final WatchmanQuery FAKE_QUERY =
       WatchmanQuery.of("/fake/root", ImmutableMap.of());
   private static final List<Object> FAKE_UUID_QUERY = FAKE_QUERY.toList("n:buckduuid");
@@ -662,7 +663,7 @@ public class WatchmanWatcherTest {
         10000 /* timeout */,
         "c:0:0" /* sinceParam */);
     assertThat(
-      watcher.getWatchmanQuery(),
+      watcher.getWatchmanQuery(FAKE_ROOT),
       hasItem(hasEntry("since", "c:0:0")));
 
     watcher.postEvents(
@@ -670,7 +671,7 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.FreshInstanceAction.NONE);
 
     assertThat(
-      watcher.getWatchmanQuery(),
+      watcher.getWatchmanQuery(FAKE_ROOT),
       hasItem(hasEntry("since", "c:0:1")));
   }
 
@@ -708,7 +709,7 @@ public class WatchmanWatcherTest {
         watchmanClient,
         overflow,
         timeoutMillis,
-        FAKE_QUERY,
-        new WatchmanCursor(sinceCursor));
+        ImmutableMap.of(FAKE_ROOT, FAKE_QUERY),
+        ImmutableMap.of(FAKE_ROOT, new WatchmanCursor(sinceCursor)));
   }
 }

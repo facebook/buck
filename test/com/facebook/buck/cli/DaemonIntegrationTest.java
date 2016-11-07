@@ -48,6 +48,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.After;
 import org.junit.Before;
@@ -95,7 +96,7 @@ public class DaemonIntegrationTest {
     tmp.newFolder(".git");
     tmp.newFile(".arcconfig");
     Watchman watchman = Watchman.build(
-        tmp.getRoot(),
+        ImmutableSet.of(tmp.getRoot()),
         getWatchmanEnv(),
         new TestConsole(),
         new FakeClock(0),

@@ -114,7 +114,8 @@ public class BuildFileSpecTest {
 
   @Test
   public void findWithWatchmanSucceeds() throws IOException, InterruptedException {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path watchRoot = Paths.get(".").toAbsolutePath().normalize();
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem(watchRoot.resolve("project-name"));
     Path buildFile = Paths.get("a", "BUCK");
 
     BuildFileSpec recursiveSpec = BuildFileSpec.fromRecursivePath(
@@ -126,7 +127,7 @@ public class BuildFileSpecTest {
         ImmutableMap.of(
             ImmutableList.of(
                 "query",
-                "/path/to/src",
+                watchRoot.toString(),
                 ImmutableMap.of(
                     "relative_root", "project-name",
                     "sync_timeout", 0,
@@ -144,12 +145,14 @@ public class BuildFileSpecTest {
         .setFilesystem(filesystem)
         .setWatchman(
             new Watchman(
-                ProjectWatch.of("/path/to/src", Optional.of("project-name")),
+                ImmutableMap.of(
+                    filesystem.getRootPath(),
+                    ProjectWatch.of(watchRoot.toString(), Optional.of("project-name"))),
                 ImmutableSet.of(
                     Watchman.Capability.SUPPORTS_PROJECT_WATCH,
                     Watchman.Capability.DIRNAME,
                     Watchman.Capability.WILDMATCH_GLOB),
-                Optional.empty(),
+                ImmutableMap.of(),
                 Optional.of(Paths.get(".watchman-sock")),
                 Optional.of(fakeWatchmanClient)))
         .build();
@@ -161,7 +164,8 @@ public class BuildFileSpecTest {
 
   @Test
   public void findWithWatchmanThrowsOnFailure() throws IOException, InterruptedException {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path watchRoot = Paths.get(".").toAbsolutePath().normalize();
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem(watchRoot.resolve("project-name"));
     Path buildFile = Paths.get("a", "BUCK");
 
     BuildFileSpec recursiveSpec = BuildFileSpec.fromRecursivePath(
@@ -172,7 +176,7 @@ public class BuildFileSpecTest {
         ImmutableMap.of(
             ImmutableList.of(
                 "query",
-                "/path/to/src",
+                watchRoot.toString(),
                 ImmutableMap.of(
                     "relative_root", "project-name",
                     "sync_timeout", 0,
@@ -191,12 +195,14 @@ public class BuildFileSpecTest {
         .setFilesystem(filesystem)
         .setWatchman(
             new Watchman(
-                ProjectWatch.of("/path/to/src", Optional.of("project-name")),
+                ImmutableMap.of(
+                    filesystem.getRootPath(),
+                    ProjectWatch.of(watchRoot.toString(), Optional.of("project-name"))),
                 ImmutableSet.of(
                     Watchman.Capability.SUPPORTS_PROJECT_WATCH,
                     Watchman.Capability.DIRNAME,
                     Watchman.Capability.WILDMATCH_GLOB),
-                Optional.empty(),
+                ImmutableMap.of(),
                 Optional.of(Paths.get(".watchman-sock")),
                 Optional.of(fakeWatchmanClient)))
         .build();
@@ -211,7 +217,8 @@ public class BuildFileSpecTest {
   @Test
   public void findWithWatchmanFallsBackToFilesystemOnTimeout()
       throws IOException, InterruptedException {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path watchRoot = Paths.get(".").toAbsolutePath().normalize();
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem(watchRoot.resolve("project-name"));
     Path buildFile = Paths.get("a", "BUCK");
     filesystem.mkdirs(buildFile.getParent());
     filesystem.touch(buildFile);
@@ -229,7 +236,7 @@ public class BuildFileSpecTest {
         ImmutableMap.of(
             ImmutableList.of(
                 "query",
-                "/path/to/src",
+                watchRoot.toString(),
                 ImmutableMap.of(
                     "relative_root", "project-name",
                     "sync_timeout", 0,
@@ -247,12 +254,14 @@ public class BuildFileSpecTest {
         .setFilesystem(filesystem)
         .setWatchman(
             new Watchman(
-                ProjectWatch.of("/path/to/src", Optional.of("project-name")),
+                ImmutableMap.of(
+                    filesystem.getRootPath(),
+                    ProjectWatch.of(watchRoot.toString(), Optional.of("project-name"))),
                 ImmutableSet.of(
                     Watchman.Capability.SUPPORTS_PROJECT_WATCH,
                     Watchman.Capability.DIRNAME,
                     Watchman.Capability.WILDMATCH_GLOB),
-                Optional.empty(),
+                ImmutableMap.of(),
                 Optional.of(Paths.get(".watchman-sock")),
                 Optional.of(timingOutWatchmanClient)))
         .build();

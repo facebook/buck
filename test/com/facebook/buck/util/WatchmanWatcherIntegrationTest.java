@@ -69,7 +69,7 @@ public class WatchmanWatcherIntegrationTest {
 
     watchman =
         Watchman.build(
-            tmp.getRoot(),
+            ImmutableSet.of(tmp.getRoot()),
             ImmutableMap.copyOf(System.getenv()),
             new Console(Verbosity.ALL, System.out, System.err, Ansi.withoutTty()),
             new DefaultClock(),
@@ -125,11 +125,18 @@ public class WatchmanWatcherIntegrationTest {
 
     WatchmanWatcher watcher =
         new WatchmanWatcher(
-            ProjectWatch.of(tmp.getRoot().toString(), Optional.empty()),
+            ImmutableMap.of(
+                tmp.getRoot(),
+                ProjectWatch.of(tmp.getRoot().toString(), Optional.empty())),
             eventBus,
             ImmutableSet.copyOf(ignorePaths),
             watchman,
-            new WatchmanCursor(new StringBuilder("n:buckd").append(UUID.randomUUID()).toString()));
+            ImmutableMap.of(
+                tmp.getRoot(),
+                new WatchmanCursor(
+                    new StringBuilder("n:buckd")
+                        .append(UUID.randomUUID())
+                        .toString())));
 
     // Clear out the initial overflow event.
     watcher.postEvents(

@@ -103,10 +103,10 @@ abstract class AbstractBuildFileSpec {
     boolean tryWatchman =
         buildFileSearchMethod == ParserConfig.BuildFileSearchMethod.WATCHMAN &&
         watchman.getWatchmanClient().isPresent() &&
-        !watchman.getProjectWatch().getWatchRoot().isEmpty();
+        watchman.getProjectWatches().containsKey(filesystem.getRootPath());
     boolean walkComplete = false;
-    ProjectWatch projectWatch = watchman.getProjectWatch();
     if (tryWatchman) {
+      ProjectWatch projectWatch = watchman.getProjectWatches().get(filesystem.getRootPath());
       LOG.debug(
           "Searching for %s files (watch root %s, project prefix %s, base path %s) with Watchman",
           buildFileName,
@@ -126,7 +126,7 @@ abstract class AbstractBuildFileSpec {
           "Not using Watchman (search method %s, client present %s, root present %s)",
           buildFileSearchMethod,
           watchman.getWatchmanClient().isPresent(),
-          !projectWatch.getWatchRoot().isEmpty());
+          watchman.getProjectWatches().containsKey(filesystem.getRootPath()));
     }
 
     if (!walkComplete) {

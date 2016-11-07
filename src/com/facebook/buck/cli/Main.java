@@ -332,7 +332,7 @@ public final class Main {
     private final ActionGraphCache actionGraphCache;
     private final BroadcastEventListener broadcastEventListener;
 
-    private WatchmanCursor cursor;
+    private ImmutableMap<Path, WatchmanCursor> cursor;
 
     public Daemon(
         Cell cell,
@@ -371,16 +371,24 @@ public final class Main {
           "project",
           "watchman_cursor",
           WatchmanWatcher.CursorType.class);
+      ImmutableMap.Builder<Path, WatchmanCursor> cursorBuilder = ImmutableMap.builder();
       if (watchmanCursorType.isPresent() &&
           watchmanCursorType.get() == WatchmanWatcher.CursorType.CLOCK_ID &&
-          cell.getWatchman().getClockId().isPresent()) {
-        cursor = new WatchmanCursor(cell.getWatchman().getClockId().get());
-        LOG.debug("Using a clock-id Watchman Cursor: %s", cursor.get());
+          !cell.getWatchman().getClockIds().isEmpty()) {
+        for (Map.Entry<Path, String> entry : cell.getWatchman().getClockIds().entrySet()) {
+          cursorBuilder.put(entry.getKey(), new WatchmanCursor(entry.getValue()));
+        }
       } else {
-        cursor = new WatchmanCursor(
-            new StringBuilder("n:buckd").append(UUID.randomUUID()).toString());
-        LOG.debug("Using a named Watchman Cursor: %s", cursor.get());
+        LOG.debug("Falling back to named cursors: %s", cell.getWatchman().getProjectWatches());
+        for (Path cellPath : cell.getWatchman().getProjectWatches().keySet()) {
+          cursorBuilder.put(
+              cellPath,
+              new WatchmanCursor(
+                  new StringBuilder("n:buckd").append(UUID.randomUUID()).toString()));
+        }
       }
+      cursor = cursorBuilder.build();
+      LOG.debug("Using Watchman Cursor: %s", cursor);
       persistentWorkerPools = new ConcurrentHashMap<>();
       JavaUtilsLoggingBuildListener.ensureLogFileIsWritten(cell.getFilesystem());
     }
@@ -525,7 +533,7 @@ public final class Main {
       return fileEventBus;
     }
 
-    public WatchmanCursor getWatchmanCursor() {
+    public ImmutableMap<Path, WatchmanCursor> getWatchmanCursor() {
       return cursor;
     }
 
@@ -605,7 +613,7 @@ public final class Main {
 
   private WatchmanWatcher createWatchmanWatcher(
       Daemon daemon,
-      ProjectWatch projectWatch,
+      ImmutableMap<Path, ProjectWatch> projectWatch,
       EventBus fileChangeEventBus,
       ImmutableSet<PathOrGlobMatcher> ignorePaths,
       Watchman watchman) {
@@ -908,7 +916,7 @@ public final class Main {
                buildWatchman(
                    context,
                    parserConfig,
-                   projectRoot,
+                   ImmutableSet.of(canonicalRootPath),
                    clientEnvironment,
                    console,
                    clock)) {
@@ -1165,7 +1173,7 @@ public final class Main {
               Daemon daemon = getDaemon(rootCell, objectMapper);
               WatchmanWatcher watchmanWatcher = createWatchmanWatcher(
                   daemon,
-                  watchman.getProjectWatch(),
+                  watchman.getProjectWatches(),
                   daemon.getFileEventBus(),
                   ImmutableSet.<PathOrGlobMatcher>builder()
                       .addAll(filesystem.getIgnorePaths())
@@ -1361,24 +1369,24 @@ public final class Main {
   private static final Watchman buildWatchman(
       Optional<NGContext> context,
       ParserConfig parserConfig,
-      Path projectRoot,
+      ImmutableSet<Path> projectWatchList,
       ImmutableMap<String, String> clientEnvironment,
       Console console,
       Clock clock) throws InterruptedException {
     Watchman watchman;
     if (context.isPresent() || parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN) {
       watchman = Watchman.build(
-          projectRoot,
+          projectWatchList,
           clientEnvironment,
           console,
           clock,
           parserConfig.getWatchmanQueryTimeoutMs());
 
       LOG.debug(
-          "Watchman capabilities: %s Project watch: %s Glob handler config: %s " +
+          "Watchman capabilities: %s Project watches: %s Glob handler config: %s " +
           "Query timeout ms config: %s",
           watchman.getCapabilities(),
-          watchman.getProjectWatch(),
+          watchman.getProjectWatches(),
           parserConfig.getGlobHandler(),
           parserConfig.getWatchmanQueryTimeoutMs());
 

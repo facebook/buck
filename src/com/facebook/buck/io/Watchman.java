@@ -80,20 +80,20 @@ public class Watchman implements AutoCloseable {
 
   private static final Path WATCHMAN = Paths.get("watchman");
   public static final Watchman NULL_WATCHMAN = new Watchman(
-      ProjectWatch.of("", Optional.<String>empty()),
+      ImmutableMap.of(),
       ImmutableSet.of(),
-      Optional.empty(),
+      ImmutableMap.of(),
       Optional.empty(),
       Optional.empty());
 
-  private final ProjectWatch projectWatch;
+  private final ImmutableMap<Path, ProjectWatch> projectWatches;
   private final ImmutableSet<Capability> capabilities;
   private final Optional<Path> socketPath;
   private final Optional<WatchmanClient> watchmanClient;
-  private final Optional<String> clockId;
+  private final ImmutableMap<Path, String> clockIds;
 
   public static Watchman build(
-      Path rootPath,
+      ImmutableSet<Path> projectWatchList,
       ImmutableMap<String, String> env,
       Console console,
       Clock clock,
@@ -104,7 +104,7 @@ public class Watchman implements AutoCloseable {
         localSocketWatchmanConnector(
             console,
             clock),
-        rootPath,
+        projectWatchList,
         env,
         new ExecutableFinder(),
         console,
@@ -117,13 +117,13 @@ public class Watchman implements AutoCloseable {
   static Watchman build(
       ListeningProcessExecutor executor,
       Function<Path, Optional<WatchmanClient>> watchmanConnector,
-      Path rootPath,
+      ImmutableSet<Path> projectWatchList,
       ImmutableMap<String, String> env,
       ExecutableFinder exeFinder,
       Console console,
       Clock clock,
       Optional<Long> commandTimeoutMillis) throws InterruptedException {
-    LOG.info("Creating for: " + rootPath);
+    LOG.info("Creating for: " + projectWatchList);
     Optional<WatchmanClient> watchmanClient = Optional.empty();
     try {
       Path watchmanPath = exeFinder.getExecutable(WATCHMAN, env).toAbsolutePath();
@@ -188,29 +188,36 @@ public class Watchman implements AutoCloseable {
       ImmutableSet<Capability> capabilities = capabilitiesBuilder.build();
       LOG.debug("Got Watchman capabilities: %s", capabilities);
 
-      Optional<ProjectWatch> projectWatch = queryWatchProject(
-          watchmanClient.get(),
-          rootPath,
-          clock,
-          endTimeNanos - clock.nanoTime());
-      if (!projectWatch.isPresent()) {
-        watchmanClient.get().close();
-        return NULL_WATCHMAN;
-      }
-
-      Optional<String> clockId = Optional.empty();
-      if (capabilities.contains(Capability.CLOCK_SYNC_TIMEOUT)) {
-        clockId = queryClock(
+      ImmutableMap.Builder<Path, ProjectWatch> projectWatchesBuilder = ImmutableMap.builder();
+      ImmutableMap.Builder<Path, String> clockIdsBuilder = ImmutableMap.builder();
+      for (Path rootPath : projectWatchList) {
+        Optional<ProjectWatch> projectWatch = queryWatchProject(
             watchmanClient.get(),
-            projectWatch.get().getWatchRoot(),
+            rootPath,
             clock,
             endTimeNanos - clock.nanoTime());
+        if (!projectWatch.isPresent()) {
+          watchmanClient.get().close();
+          return NULL_WATCHMAN;
+        }
+        projectWatchesBuilder.put(rootPath, projectWatch.get());
+
+        if (capabilities.contains(Capability.CLOCK_SYNC_TIMEOUT)) {
+          Optional<String> clockId = queryClock(
+              watchmanClient.get(),
+              projectWatch.get().getWatchRoot(),
+              clock,
+              endTimeNanos - clock.nanoTime());
+          if (clockId.isPresent()) {
+            clockIdsBuilder.put(rootPath, clockId.get());
+          }
+        }
       }
 
       return new Watchman(
-          projectWatch.get(),
+          projectWatchesBuilder.build(),
           capabilities,
-          clockId,
+          clockIdsBuilder.build(),
           Optional.of(socketPath),
           watchmanClient);
     } catch (ClassCastException | HumanReadableException | IOException e) {
@@ -468,28 +475,28 @@ public class Watchman implements AutoCloseable {
   // the WatchmanClient separately.
   @VisibleForTesting
   public Watchman(
-      ProjectWatch projectWatch,
+      ImmutableMap<Path, ProjectWatch> projectWatches,
       ImmutableSet<Capability> capabilities,
-      Optional<String> clockId,
+      ImmutableMap<Path, String> clockIds,
       Optional<Path> socketPath,
       Optional<WatchmanClient> watchmanClient) {
-    this.projectWatch = projectWatch;
+    this.projectWatches = projectWatches;
     this.capabilities = capabilities;
-    this.clockId = clockId;
+    this.clockIds = clockIds;
     this.socketPath = socketPath;
     this.watchmanClient = watchmanClient;
   }
 
-  public ProjectWatch getProjectWatch() {
-    return projectWatch;
+  public ImmutableMap<Path, ProjectWatch> getProjectWatches() {
+    return projectWatches;
   }
 
   public ImmutableSet<Capability> getCapabilities() {
     return capabilities;
   }
 
-  public Optional<String> getClockId() {
-    return clockId;
+  public ImmutableMap<Path, String> getClockIds() {
+    return clockIds;
   }
 
   public boolean hasWildmatchGlob() {
