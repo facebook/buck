@@ -20,8 +20,6 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -31,7 +29,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 
 public final class DefaultStepRunner implements StepRunner {
 
@@ -89,39 +86,6 @@ public final class DefaultStepRunner implements StepRunner {
     };
 
     return listeningExecutorService.submit(callable);
-  }
-
-  /**
-   * Run multiple steps in parallel and block waiting for all of them to finish.  An
-   * exception is thrown (immediately) if any step fails.
-   *
-   * @param steps List of steps to execute.
-   */
-  @Override
-  public void runStepsInParallelAndWait(
-      ExecutionContext context,
-      final List<Step> steps,
-      final Optional<BuildTarget> target,
-      ListeningExecutorService listeningExecutorService,
-      final StepRunningCallback callback)
-      throws StepFailedException, InterruptedException {
-    List<Callable<Void>> callables = Lists.transform(steps,
-        step -> () -> {
-          runStepForBuildTarget(context, step, target);
-          return null;
-        });
-
-    try {
-      callback.stepsWillRun(target);
-      MoreFutures.getAll(listeningExecutorService, callables);
-      callback.stepsDidRun(target);
-    } catch (ExecutionException e) {
-      Throwable cause = e.getCause();
-      Throwables.propagateIfInstanceOf(cause, StepFailedException.class);
-
-      // Programmer error.  Boo-urns.
-      throw new RuntimeException(cause);
-    }
   }
 
   @Override

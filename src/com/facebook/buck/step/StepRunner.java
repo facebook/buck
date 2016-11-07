@@ -62,14 +62,6 @@ public interface StepRunner {
       ListeningExecutorService service,
       StepRunningCallback callback);
 
-  public void runStepsInParallelAndWait(
-      ExecutionContext context,
-      List<Step> steps,
-      Optional<BuildTarget> target,
-      ListeningExecutorService service,
-      StepRunningCallback callback)
-      throws StepFailedException, InterruptedException;
-
   /**
    * Execute callback in a new thread, once dependencies have completed.
    */

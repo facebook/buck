@@ -27,6 +27,7 @@ import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.fs.XzStep;
+import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipCompressionLevel;
@@ -35,6 +36,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -55,6 +57,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
 
@@ -199,12 +203,22 @@ public class SmartDexingStep implements Step {
     // Invoke dx commands in parallel for maximum thread utilization.  In testing, dx revealed
     // itself to be CPU (and not I/O) bound making it a good candidate for parallelization.
     List<Step> dxSteps = generateDxCommands(filesystem, outputToInputs);
-    stepRunner.runStepsInParallelAndWait(
-        context,
-        dxSteps,
-        Optional.empty(),
-        executorService,
-        DefaultStepRunner.NOOP_CALLBACK);
+
+    List<Callable<Void>> callables = Lists.transform(dxSteps,
+        step -> () -> {
+          stepRunner.runStepForBuildTarget(context, step, Optional.empty());
+          return null;
+        });
+
+    try {
+      MoreFutures.getAll(executorService, callables);
+    } catch (ExecutionException e) {
+      Throwable cause = e.getCause();
+      Throwables.propagateIfInstanceOf(cause, StepFailedException.class);
+
+      // Programmer error.  Boo-urns.
+      throw new RuntimeException(cause);
+    }
   }
 
   /**

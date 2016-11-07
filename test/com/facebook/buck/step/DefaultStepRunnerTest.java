@@ -26,14 +26,11 @@ import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Optional;
-import java.util.concurrent.Executors;
 
 public class DefaultStepRunnerTest {
 
@@ -89,30 +86,6 @@ public class DefaultStepRunnerTest {
     assertFalse(events.get(1).isRelatedTo(events.get(3)));
   }
 
-  @Test(expected = StepFailedException.class, timeout = 5000)
-  public void testParallelStepFailure()
-      throws StepFailedException, InterruptedException, IOException {
-    ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(new SleepingStep(0, 0));
-    steps.add(new SleepingStep(10, 1));
-    // Add a step that will also fail, but taking longer than the test timeout to complete.
-    // This tests the fail-fast behaviour of runStepsInParallelAndWait (that is, since the 10ms
-    // step will fail so quickly, the result of the 5000ms step will not be observed).
-    steps.add(new SleepingStep(5000, 1));
-
-    ListeningExecutorService service =
-        MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(3));
-    DefaultStepRunner runner = new DefaultStepRunner();
-    runner.runStepsInParallelAndWait(
-        TestExecutionContext.newInstance(),
-        steps.build(),
-        Optional.empty(),
-        service,
-        StepRunner.NOOP_CALLBACK);
-
-    // Success if the test timeout is not reached.
-  }
-
   @Test
   public void testExplodingStep() throws InterruptedException, IOException {
     ExecutionContext context = TestExecutionContext.newInstance();
@@ -140,35 +113,6 @@ public class DefaultStepRunnerTest {
     @Override
     public String getDescription(ExecutionContext context) {
       return "MOAR EXPLOSIONS!!!!";
-    }
-  }
-
-  private static class SleepingStep implements Step {
-    private final long sleepMillis;
-    private final int exitCode;
-
-    public SleepingStep(long sleepMillis, int exitCode) {
-      this.sleepMillis = sleepMillis;
-      this.exitCode = exitCode;
-    }
-
-    @Override
-    public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
-      Thread.sleep(sleepMillis);
-      return StepExecutionResult.of(exitCode);
-    }
-
-    @Override
-    public String getShortName() {
-      return "sleep";
-    }
-
-    @Override
-    public String getDescription(ExecutionContext context) {
-      return String.format("%s %d, then %s",
-          getShortName(),
-          sleepMillis,
-          exitCode == 0 ? "success" : "fail");
     }
   }
 }
