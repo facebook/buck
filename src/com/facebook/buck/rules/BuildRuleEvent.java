@@ -260,29 +260,6 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     public String getEventName() {
       return "BuildRuleResumed";
     }
-
-  }
-
-  public static class Scope implements AutoCloseable {
-
-    private final BuckEventBus eventBus;
-    private final BuildRule rule;
-    private final RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory;
-
-    protected Scope(
-        BuckEventBus eventBus,
-        BuildRule rule,
-        RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
-      this.eventBus = eventBus;
-      this.rule = rule;
-      this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
-    }
-
-    @Override
-    public final void close() {
-      eventBus.post(BuildRuleEvent.suspended(rule, ruleKeyBuilderFactory));
-    }
-
   }
 
   public static Scope startSuspendScope(
@@ -290,7 +267,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       BuildRule rule,
       RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
     eventBus.post(BuildRuleEvent.started(rule));
-    return new Scope(eventBus, rule, ruleKeyBuilderFactory);
+    return new Scope(eventBus, () -> BuildRuleEvent.suspended(rule, ruleKeyBuilderFactory));
   }
 
   public static Scope resumeSuspendScope(
@@ -298,7 +275,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       BuildRule rule,
       RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
     eventBus.post(BuildRuleEvent.resumed(rule, ruleKeyBuilderFactory));
-    return new Scope(eventBus, rule, ruleKeyBuilderFactory);
+    return new Scope(eventBus, () -> BuildRuleEvent.suspended(rule, ruleKeyBuilderFactory));
   }
+
 
 }
