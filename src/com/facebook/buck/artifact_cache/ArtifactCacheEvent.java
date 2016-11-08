@@ -38,7 +38,8 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
   }
 
   public enum InvocationType {
-    SYNCHRONOUS, ASYNCHRONOUS
+    SYNCHRONOUS,
+    ASYNCHRONOUS,
   }
 
   public enum CacheMode {

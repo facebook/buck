@@ -16,18 +16,12 @@
 
 package com.facebook.buck.artifact_cache;
 
-import static org.junit.Assert.assertTrue;
-
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.util.ObjectMappers;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Functions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -35,48 +29,48 @@ import java.util.Optional;
 
 public class HttpArtifactCacheEventTest {
 
-  private static final ObjectMapper JSON_CONVERTER = ObjectMappers.newDefaultInstance();
-
-  private static final ImmutableList<RuleKey> TEST_RULE_KEYS = ImmutableList.of(
+  private static final ImmutableSet<RuleKey> TEST_RULE_KEYS = ImmutableSet.of(
       new RuleKey("1234567890"),
       new RuleKey("123456"),
       new RuleKey("1234")
   );
-  private static final String TEST_RULE_KEYS_JSON = "[\"1234567890\",\"123456\",\"1234\"]";
+
+  private static final RuleKey TEST_RULE_KEY = new RuleKey("4321");
 
   @Test
-  public void jsonRepresentationContainsAllRuleKeysWithTransform() throws IOException {
-    Iterable<RuleKey> ruleKeysInATransform = Iterables.transform(
-        TEST_RULE_KEYS,
-        Functions.identity());
-
-    HttpArtifactCacheEvent.Finished finishedEvent = createBuilder()
-        .setRuleKeys(ruleKeysInATransform)
-        .build();
+  public void storeDataContainsRuleKeys() throws IOException {
+    HttpArtifactCacheEvent.Finished finishedEvent = createStoreBuilder(TEST_RULE_KEYS).build();
     configureEvent(finishedEvent);
-    String json = JSON_CONVERTER.writeValueAsString(finishedEvent);
-    assertTrue(json.contains(TEST_RULE_KEYS_JSON));
+    Assert.assertEquals(TEST_RULE_KEYS, finishedEvent.getStoreData().getRuleKeys());
   }
 
   @Test
-  public void jsonRepresentationContainsAllRuleKeys() throws IOException {
-    HttpArtifactCacheEvent.Finished finishedEvent = createBuilder()
-        .setRuleKeys(TEST_RULE_KEYS)
-        .build();
+  public void fetchDataContainsRuleKey() throws IOException {
+    HttpArtifactCacheEvent.Finished finishedEvent = createFetchBuilder(TEST_RULE_KEY).build();
     configureEvent(finishedEvent);
-    String json = JSON_CONVERTER.writeValueAsString(finishedEvent);
-    assertTrue(json.contains(TEST_RULE_KEYS_JSON));
+    Assert.assertEquals(TEST_RULE_KEY, finishedEvent.getFetchData().getRequestedRuleKey());
   }
 
-  private static HttpArtifactCacheEvent.Finished.Builder createBuilder() {
+  private static HttpArtifactCacheEvent.Finished.Builder createStoreBuilder(
+      ImmutableSet<RuleKey> ruleKeys) {
 
     HttpArtifactCacheEvent.Scheduled scheduledEvent =
         HttpArtifactCacheEvent.newStoreScheduledEvent(
-            Optional.of("target"), ImmutableSet.of());
+            Optional.of("target"), ruleKeys);
     HttpArtifactCacheEvent.Started startedEvent = HttpArtifactCacheEvent.newStoreStartedEvent(
         scheduledEvent);
     configureEvent(startedEvent);
     return HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
+  }
+
+  private static HttpArtifactCacheEvent.Finished.Builder createFetchBuilder(RuleKey ruleKey) {
+    HttpArtifactCacheEvent.Started startedEvent = HttpArtifactCacheEvent.newFetchStartedEvent(
+        ruleKey);
+    configureEvent(startedEvent);
+    HttpArtifactCacheEvent.Finished.Builder builder =
+        HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
+    builder.getFetchBuilder().setFetchResult(CacheResult.hit("super source"));
+    return builder;
   }
 
   private static void configureEvent(AbstractBuckEvent event) {

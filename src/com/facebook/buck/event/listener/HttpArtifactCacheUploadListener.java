@@ -85,8 +85,8 @@ public class HttpArtifactCacheUploadListener implements BuckEventListener {
 
     --outstandingUploads;
     ++artifactCount;
-    if (event.getArtifactSizeBytes().isPresent()) {
-      totalUploadedBytes += event.getArtifactSizeBytes().get();
+    if (event.getStoreData().getArtifactSizeBytes().isPresent()) {
+      totalUploadedBytes += event.getStoreData().getArtifactSizeBytes().get();
     }
     lastUploadFinishMillis = event.getTimestamp();
     if (outstandingUploads == 0) {

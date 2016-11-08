@@ -31,8 +31,6 @@ import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.concurrent.MostExecutors;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -42,7 +40,6 @@ import org.junit.rules.TemporaryFolder;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 public class RuleKeyLoggerListenerTest {
@@ -109,16 +106,16 @@ public class RuleKeyLoggerListenerTest {
   }
 
   private HttpArtifactCacheEvent.Finished createArtifactCacheEvent(CacheResultType type) {
-    Set<RuleKey> ruleKeys = Sets.newHashSet();
-    ruleKeys.add(new RuleKey("abababab42"));
-    HttpArtifactCacheEvent.Started startedEvent =
-        HttpArtifactCacheEvent.newFetchStartedEvent(ImmutableSet.copyOf(ruleKeys));
-    return HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
-        .setFetchResult(CacheResult.builder()
-            .setType(type)
-            .setCacheSource("random source")
-            .build())
-        .build();
+    RuleKey ruleKey = new RuleKey("abababab42");
+    HttpArtifactCacheEvent.Started startedEvent = HttpArtifactCacheEvent.newFetchStartedEvent(
+        ruleKey);
+    HttpArtifactCacheEvent.Finished.Builder builder =
+        HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
+    builder.getFetchBuilder().setFetchResult(CacheResult.builder()
+        .setType(type)
+        .setCacheSource("random source")
+        .build());
+    return builder.build();
   }
 
   private RuleKeyLoggerListener newInstance(int minLinesForAutoFlush) {

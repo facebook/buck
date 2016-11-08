@@ -102,8 +102,7 @@ public class HttpArtifactCacheTest {
 
   private static HttpArtifactCacheEvent.Finished.Builder createFinishedEventBuilder() {
     HttpArtifactCacheEvent.Started started = HttpArtifactCacheEvent.newFetchStartedEvent(
-        ImmutableSet.of()
-    );
+        new RuleKey("1234"));
     started.configure(-1, -1, -1, -1, new BuildId());
     return HttpArtifactCacheEvent.newFinishedEventBuilder(started);
   }

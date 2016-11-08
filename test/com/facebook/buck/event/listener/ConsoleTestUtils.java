@@ -71,15 +71,15 @@ public class ConsoleTestUtils {
       long timeInMs,
       boolean success,
       HttpArtifactCacheEvent.Started storeStartedOne) {
-    HttpArtifactCacheEvent.Finished storeFinished =
-        HttpArtifactCacheEvent.newFinishedEventBuilder(storeStartedOne)
-            .setWasUploadSuccessful(success)
-            .setArtifactSizeBytes(artifactSizeInBytes)
-            .build();
+    HttpArtifactCacheEvent.Finished.Builder storeFinished =
+        HttpArtifactCacheEvent.newFinishedEventBuilder(storeStartedOne);
+    storeFinished.getStoreBuilder()
+            .setWasStoreSuccessful(success)
+            .setArtifactSizeBytes(artifactSizeInBytes);
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            storeFinished,
+            storeFinished.build(),
             timeInMs,
             TimeUnit.MILLISECONDS,
             threadId));

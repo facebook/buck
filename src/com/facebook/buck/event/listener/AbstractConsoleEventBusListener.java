@@ -667,9 +667,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Subscribe
   public void onHttpArtifactCacheFinishedEvent(HttpArtifactCacheEvent.Finished event) {
     if (event.getOperation() == ArtifactCacheEvent.Operation.STORE) {
-      if (event.wasUploadSuccessful()) {
+      if (event.getStoreData().wasStoreSuccessful().orElse(false)) {
         httpArtifactUploadedCount.incrementAndGet();
-        Optional<Long> artifactSizeBytes = event.getArtifactSizeBytes();
+        Optional<Long> artifactSizeBytes = event.getStoreData().getArtifactSizeBytes();
         if (artifactSizeBytes.isPresent()) {
           httpArtifactTotalBytesUploaded.addAndGet(artifactSizeBytes.get());
         }

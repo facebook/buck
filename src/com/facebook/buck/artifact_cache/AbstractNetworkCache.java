@@ -24,8 +24,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.slb.HttpService;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -74,7 +72,8 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
       LazyPath output,
       final HttpArtifactCacheEvent.Finished.Builder eventBuilder) throws IOException;
 
-  protected abstract void storeImpl(ArtifactInfo info,
+  protected abstract void storeImpl(
+      ArtifactInfo info,
       final Path file,
       final HttpArtifactCacheEvent.Finished.Builder eventBuilder)
       throws IOException;
@@ -82,27 +81,27 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
   @Override
   public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
     HttpArtifactCacheEvent.Started startedEvent = HttpArtifactCacheEvent.newFetchStartedEvent(
-        ImmutableSet.of(ruleKey));
+        ruleKey);
     buckEventBus.post(startedEvent);
     HttpArtifactCacheEvent.Finished.Builder eventBuilder =
-        HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
-        .setRuleKeys(Lists.newArrayList(ruleKey));
+        HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
+    eventBuilder.getFetchBuilder()
+        .setRequestedRuleKey(ruleKey);
 
     try {
       CacheResult result = fetchImpl(ruleKey, output, eventBuilder);
-      buckEventBus.post(
-          eventBuilder
-              .setFetchResult(result)
-              .build());
+      eventBuilder.getFetchBuilder().setFetchResult(result);
+      buckEventBus.post(eventBuilder.build());
       return result;
     } catch (IOException e) {
       String msg = String.format("%s: %s", e.getClass().getName(), e.getMessage());
       reportFailure(e, "fetch(%s): %s", ruleKey, msg);
       CacheResult cacheResult = CacheResult.error(name, msg);
-      buckEventBus.post(eventBuilder
+      eventBuilder
+          .getFetchBuilder()
           .setFetchResult(cacheResult)
-          .setErrorMessage(msg)
-          .build());
+          .setErrorMessage(msg);
+      buckEventBus.post(eventBuilder.build());
       return cacheResult;
     }
   }
@@ -135,15 +134,21 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
               HttpArtifactCacheEvent.newStoreStartedEvent(scheduled);
           buckEventBus.post(startedEvent);
           HttpArtifactCacheEvent.Finished.Builder finishedEventBuilder =
-              HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
-                  .setRuleKeys(info.getRuleKeys());
+              HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
+          finishedEventBuilder
+              .getStoreBuilder()
+              .setRuleKeys(info.getRuleKeys());
 
           try {
-            if (!isArtefactTooBigToBeStored(tmp, maxStoreSize, projectFilesystem)) {
+
+            long artifactSizeBytes = projectFilesystem.getFileSize(tmp);
+            finishedEventBuilder.getStoreBuilder().setArtifactSizeBytes(artifactSizeBytes);
+            if (!isArtefactTooBigToBeStored(artifactSizeBytes, maxStoreSize)) {
               storeImpl(info, tmp, finishedEventBuilder);
             } else {
-              LOG.info("Artifact too big so not storing it in the distributed cache. " +
-                  "file=[%s] buildTarget=[%s]",
+              LOG.info(
+                  "Artifact too big so not storing it in the distributed cache. " +
+                      "file=[%s] buildTarget=[%s]",
                   tmp,
                   info.getBuildTarget());
             }
@@ -156,12 +161,11 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
                 info.getRuleKeys(),
                 e.getClass().getName(),
                 e.getMessage());
-
-            buckEventBus.post(
-                finishedEventBuilder
-                    .setWasUploadSuccessful(false)
-                    .setErrorMessage(e.toString())
-                    .build());
+            finishedEventBuilder
+                .getStoreBuilder()
+                .setWasStoreSuccessful(false)
+                .setErrorMessage(e.toString());
+            buckEventBus.post(finishedEventBuilder.build());
           }
           try {
             projectFilesystem.deleteFileAtPathIfExists(tmp);
@@ -211,22 +215,24 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
     if (seenErrors.add(format)) {
       buckEventBus.post(ConsoleEvent.warning(
           errorTextTemplate
-              .replaceAll("\\{cache_name}",
+              .replaceAll(
+                  "\\{cache_name}",
                   Matcher.quoteReplacement(name))
-              .replaceAll("\\\\t",
+              .replaceAll(
+                  "\\\\t",
                   Matcher.quoteReplacement("\t"))
-              .replaceAll("\\\\n",
+              .replaceAll(
+                  "\\\\n",
                   Matcher.quoteReplacement("\n"))
-              .replaceAll("\\{error_message}",
+              .replaceAll(
+                  "\\{error_message}",
                   Matcher.quoteReplacement(String.format(format, args)))));
     }
   }
 
   private static boolean isArtefactTooBigToBeStored(
-      Path file,
-      Optional<Long> maxStoreSize,
-      ProjectFilesystem projectFilesystem) throws IOException {
-    return maxStoreSize.isPresent() &&
-        projectFilesystem.getFileSize(file) > maxStoreSize.get();
+      long artifactSizeBytes,
+      Optional<Long> maxStoreSize) {
+    return maxStoreSize.isPresent() && artifactSizeBytes > maxStoreSize.get();
   }
 }

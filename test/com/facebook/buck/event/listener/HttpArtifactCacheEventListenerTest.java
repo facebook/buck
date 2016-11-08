@@ -23,11 +23,10 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Finished;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.util.network.BatchingLogger;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.Futures;
 
 import org.easymock.Capture;
 import org.easymock.EasyMock;
@@ -39,43 +38,49 @@ import java.util.Optional;
 public class HttpArtifactCacheEventListenerTest {
 
   private static final BuildId BUILD_ID = new BuildId("My Super ID");
-  private static final ObjectMapper CONVERTER = ObjectMappers.newDefaultInstance();
 
-  private BatchingLogger logger;
+  private BatchingLogger storeLogger;
+  private BatchingLogger fetchLogger;
   private HttpArtifactCacheListener listener;
 
   @Before
   public void setUp() {
-    logger = EasyMock.createMock(BatchingLogger.class);
-    listener = new HttpArtifactCacheListener(logger, CONVERTER);
+    storeLogger = EasyMock.createMock(BatchingLogger.class);
+    fetchLogger = EasyMock.createMock(BatchingLogger.class);
+    listener = new HttpArtifactCacheListener(storeLogger, fetchLogger);
   }
 
   @Test
   public void creatingRowWithoutColumns() throws InterruptedException {
     Capture<String> logLineCapture = Capture.newInstance();
     EasyMock.expect(
-        logger.log(
+        fetchLogger.log(
             EasyMock.capture(logLineCapture)))
         .andReturn(Optional.empty())
         .once();
-    EasyMock.expect(logger.close())
-        .andReturn(null)
+    EasyMock.expect(fetchLogger.close())
+        .andReturn(Futures.immediateFuture(null))
         .once();
-    EasyMock.replay(logger);
+    EasyMock.replay(fetchLogger);
+    EasyMock.expect(storeLogger.close())
+        .andReturn(Futures.immediateFuture(null))
+        .once();
+    EasyMock.replay(storeLogger);
 
     String errorMsg = "My super cool error message!!!";
 
     HttpArtifactCacheEvent.Started startedEvent = HttpArtifactCacheEvent.newFetchStartedEvent(
-        ImmutableSet.of());
+        new RuleKey("1234"));
     startedEvent.configure(-1, -1, -1, -1, null);
-    Finished event = HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
+    Finished.Builder builder = HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
+    builder.getFetchBuilder()
         .setFetchResult(CacheResult.hit("http"))
-        .setErrorMessage(errorMsg)
-        .build();
+        .setErrorMessage(errorMsg);
+    Finished event = builder.build();
     event.configure(-1, -1, -1, -1, BUILD_ID);
     listener.onHttpArtifactCacheEvent(event);
     listener.outputTrace(BUILD_ID);
-    EasyMock.verify(logger);
+    EasyMock.verify(fetchLogger);
     String actualLogLine = logLineCapture.getValue();
     assertFalse(Strings.isNullOrEmpty(actualLogLine));
     assertTrue(actualLogLine.contains(errorMsg));

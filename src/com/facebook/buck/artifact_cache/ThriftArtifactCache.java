@@ -103,7 +103,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       }
 
       try (ThriftArtifactCacheProtocol.Response response =
-          ThriftArtifactCacheProtocol.parseResponse(PROTOCOL, httpResponse.getBody())) {
+               ThriftArtifactCacheProtocol.parseResponse(PROTOCOL, httpResponse.getBody())) {
 
         BuckCacheResponse cacheResponse = response.getThriftData();
         if (!cacheResponse.isWasSuccessful()) {
@@ -183,7 +183,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       }
 
       try (ThriftArtifactCacheProtocol.Response response =
-          ThriftArtifactCacheProtocol.parseResponse(PROTOCOL, httpResponse.getBody())) {
+               ThriftArtifactCacheProtocol.parseResponse(PROTOCOL, httpResponse.getBody())) {
         if (!response.getThriftData().isWasSuccessful()) {
           reportFailure(
               "Failed to store artifact with thriftErrorMessage=[%s] " +
@@ -193,16 +193,19 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
               artifactSizeBytes);
         }
 
-        eventBuilder.setArtifactContentHash(storeRequest.getMetadata().artifactPayloadMd5);
-        eventBuilder.setArtifactSizeBytes(artifactSizeBytes);
-        eventBuilder.setWasUploadSuccessful(response.getThriftData().isWasSuccessful());
+        eventBuilder
+            .getStoreBuilder()
+            .setArtifactContentHash(storeRequest.getMetadata().artifactPayloadMd5)
+            .setArtifactSizeBytes(artifactSizeBytes);
+        eventBuilder.getStoreBuilder().setWasStoreSuccessful(
+            response.getThriftData().isWasSuccessful());
       }
     }
   }
 
   private Path createTempFileForDownload() throws IOException {
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getScratchDir());
-    return  projectFilesystem.createTempFile(
+    return projectFilesystem.createTempFile(
         projectFilesystem.getBuckPaths().getScratchDir(),
         "buckcache_artifact",
         ".tmp");

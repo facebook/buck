@@ -27,6 +27,7 @@ import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.event.CommandEvent;
+import com.facebook.buck.artifact_cache.HttpArtifactCacheEventFetchData;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -210,12 +211,13 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(buildEventStarted);
 
     HttpArtifactCacheEvent.Started artifactCacheEventStarted =
-        HttpArtifactCacheEvent.newFetchStartedEvent(
-            ImmutableSet.of(ruleKey));
+        HttpArtifactCacheEvent.newFetchStartedEvent(ruleKey);
     eventBus.post(artifactCacheEventStarted);
     eventBus.post(
         HttpArtifactCacheEvent.newFinishedEventBuilder(artifactCacheEventStarted)
-            .setFetchResult(CacheResult.hit("http"))
+            .setFetchDataBuilder(
+                HttpArtifactCacheEventFetchData.builder()
+                    .setFetchResult(CacheResult.hit("http")))
             .build());
 
     ArtifactCompressionEvent.Started artifactCompressionStartedEvent =
