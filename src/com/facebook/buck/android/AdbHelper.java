@@ -747,7 +747,8 @@ public class AdbHelper {
   @SuppressForbidden
   public int startActivity(
       InstallableApk installableApk,
-      @Nullable String activity) throws IOException, InterruptedException {
+      @Nullable String activity,
+      boolean waitForDebugger) throws IOException, InterruptedException {
 
     // Might need the package name and activities from the AndroidManifest.
     Path pathToManifest = installableApk.getProjectFilesystem().resolve(
@@ -788,7 +789,7 @@ public class AdbHelper {
         new AdbHelper.AdbCallable() {
           @Override
           public boolean call(IDevice device) throws Exception {
-            String err = deviceStartActivity(device, activityToRun);
+            String err = deviceStartActivity(device, activityToRun, waitForDebugger);
             if (err != null) {
               console.printBuildFailure(err);
               return false;
@@ -812,7 +813,7 @@ public class AdbHelper {
   @VisibleForTesting
   @Nullable
   @SuppressForbidden
-  String deviceStartActivity(IDevice device, String activityToRun) {
+  String deviceStartActivity(IDevice device, String activityToRun, boolean waitForDebugger) {
     try {
       AdbHelper.ErrorParsingReceiver receiver = new AdbHelper.ErrorParsingReceiver() {
         @Override
@@ -823,6 +824,7 @@ public class AdbHelper {
               line.contains("am: not found")) ? line : null;
         }
       };
+      final String waitForDebuggerFlag = waitForDebugger ? "-D" : "";
       device.executeShellCommand(
           //  0x10200000 is FLAG_ACTIVITY_RESET_TASK_IF_NEEDED | FLAG_ACTIVITY_NEW_TASK; the
           // constant values are public ABI.  This way of invoking "am start" makes buck install -r
@@ -830,8 +832,9 @@ public class AdbHelper {
           // launcher starts.
           String.format(
               "am start -f 0x10200000 -a android.intent.action.MAIN " +
-              "-c android.intent.category.LAUNCHER -n %s",
-              activityToRun),
+              "-c android.intent.category.LAUNCHER -n %s %s",
+              activityToRun,
+              waitForDebuggerFlag),
           receiver,
           AdbHelper.INSTALL_TIMEOUT,
           TimeUnit.MILLISECONDS);
