@@ -181,6 +181,9 @@ public class OCamlBuildRulesGenerator {
                   .addAll(pathResolver.filterBuildRuleInputs(cSrc))
                   // Add any deps from the C/C++ preprocessor input.
                   .addAll(cxxPreprocessorInput.getDeps(resolver, pathResolver))
+                  // Add the clean rule, to ensure that any shared output folders shared with
+                  // OCaml build artifacts are properly cleaned.
+                  .add(this.cleanRule)
                   // Add deps from the C compiler, since we're calling it.
                   .addAll(cCompiler.getDeps(pathResolver))
                   .addAll(params.getDeclaredDeps().get())
