@@ -466,7 +466,7 @@ public class BuckConfig {
   }
 
   public boolean isProcessTrackerEnabled() {
-    return getBooleanValue(LOG_SECTION, "process_tracker_enabled", false);
+    return getBooleanValue(LOG_SECTION, "process_tracker_enabled", true);
   }
 
   public boolean isRuleKeyLoggerEnabled() {

@@ -1080,7 +1080,7 @@ public final class Main {
                 buildEventBus,
                 invocationInfo);
             ProcessTracker processTracker =
-                buckConfig.isProcessTrackerEnabled() ?
+                buckConfig.isProcessTrackerEnabled() && platform != Platform.WINDOWS ?
                     new ProcessTracker(buildEventBus, invocationInfo, isDaemon) : null;
         ) {
 
