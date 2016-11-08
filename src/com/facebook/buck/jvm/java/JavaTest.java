@@ -122,6 +122,7 @@ public class JavaTest
   @AddToRuleKey
   private final TestType testType;
 
+  @AddToRuleKey
   private final Optional<Long> testRuleTimeoutMs;
 
   @AddToRuleKey
