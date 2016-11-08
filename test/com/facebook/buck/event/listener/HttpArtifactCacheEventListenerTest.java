@@ -41,13 +41,13 @@ public class HttpArtifactCacheEventListenerTest {
 
   private BatchingLogger storeLogger;
   private BatchingLogger fetchLogger;
-  private HttpArtifactCacheListener listener;
+  private HttpArtifactCacheEventListener listener;
 
   @Before
   public void setUp() {
     storeLogger = EasyMock.createMock(BatchingLogger.class);
     fetchLogger = EasyMock.createMock(BatchingLogger.class);
-    listener = new HttpArtifactCacheListener(storeLogger, fetchLogger);
+    listener = new HttpArtifactCacheEventListener(storeLogger, fetchLogger);
   }
 
   @Test

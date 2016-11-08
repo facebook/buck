@@ -38,8 +38,8 @@ import java.util.concurrent.TimeoutException;
 /**
  * Listens to HttpArtifactCacheEvents and logs stats data in Hive row format.
  */
-public class HttpArtifactCacheListener implements BuckEventListener {
-  private static final Logger LOG = Logger.get(HttpArtifactCacheListener.class);
+public class HttpArtifactCacheEventListener implements BuckEventListener {
+  private static final Logger LOG = Logger.get(HttpArtifactCacheEventListener.class);
 
   private static final long TEAR_DOWN_SECONDS = TimeUnit.SECONDS.toSeconds(15);
   private static final String NOT_SET_STRING = "NOT_SET";
@@ -48,7 +48,7 @@ public class HttpArtifactCacheListener implements BuckEventListener {
   private final BatchingLogger storeRequestLogger;
   private final BatchingLogger fetchRequestLogger;
 
-  public HttpArtifactCacheListener(
+  public HttpArtifactCacheEventListener(
       BatchingLogger storeRequestLogger,
       BatchingLogger fetchRequestLogger) {
     this.storeRequestLogger = storeRequestLogger;
