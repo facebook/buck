@@ -145,11 +145,7 @@ public class DoctorReportHelper {
           Charsets.UTF_8));
     }
 
-    if (rageResult.isPresent()) {
-      rageUrl = Optional.of(rageResult.get().getReportSubmitLocation());
-    } else {
-      rageUrl = Optional.empty();
-    }
+    rageUrl = rageResult.map(result -> result.getReportSubmitMessage().get());
 
     return DoctorEndpointRequest.of(
         entry.getBuildId(),
