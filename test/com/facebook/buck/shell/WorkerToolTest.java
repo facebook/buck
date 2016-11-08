@@ -49,7 +49,7 @@ public class WorkerToolTest {
     BuildRule workerRule = WorkerToolBuilder
         .newWorkerToolBuilder(BuildTargetFactory.newInstance("//:worker_rule"))
         .setExe(shBinaryRule.getBuildTarget())
-        .setArgs("arg1 arg2")
+        .setArgs("arg1", "arg2")
         .build(resolver);
 
     assertThat(
@@ -132,7 +132,7 @@ public class WorkerToolTest {
     WorkerToolBuilder workerToolBuilder = WorkerToolBuilder
         .newWorkerToolBuilder(BuildTargetFactory.newInstance("//:worker_rule"))
         .setExe(shBinaryRule.getBuildTarget())
-        .setArgs("--input $(location //:file)");
+        .setArgs("--input", "$(location //:file)");
     WorkerTool workerTool = (WorkerTool) workerToolBuilder.build(resolver);
 
     assertThat(

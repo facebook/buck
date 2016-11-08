@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -29,6 +30,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
@@ -69,7 +71,7 @@ public class WorkerToolDescriptionTest {
     WorkerToolDescription.Arg args = new WorkerToolDescription.Arg();
     args.env = ImmutableMap.of();
     args.exe = shBinaryRule.getBuildTarget();
-    args.args = Optional.empty();
+    args.args = Either.ofRight(ImmutableList.of());
     args.maxWorkers = Optional.of(maxWorkers);
     args.persistent = Optional.empty();
 

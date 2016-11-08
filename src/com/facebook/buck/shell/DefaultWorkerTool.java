@@ -32,7 +32,10 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.MoreCollectors;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
@@ -46,7 +49,7 @@ public class DefaultWorkerTool extends NoopBuildRule implements
     HasRuntimeDeps, WorkerTool, InitializableFromDisk<DefaultWorkerTool.Data> {
 
   @AddToRuleKey
-  private final String args;
+  private final ImmutableList<Arg> args;
   @AddToRuleKey
   private final ImmutableMap<String, String> env;
 
@@ -59,7 +62,7 @@ public class DefaultWorkerTool extends NoopBuildRule implements
       BuildRuleParams ruleParams,
       SourcePathResolver resolver,
       BinaryBuildRule exe,
-      String args,
+      ImmutableList<Arg> args,
       ImmutableMap<String, String> env,
       int maxWorkers,
       boolean isPersistent) {
@@ -88,7 +91,11 @@ public class DefaultWorkerTool extends NoopBuildRule implements
 
   @Override
   public String getArgs() {
-    return this.args;
+    ImmutableList.Builder<String> command = ImmutableList.builder();
+    for (Arg arg : args) {
+      arg.appendToCommandLine(command);
+    }
+    return Joiner.on(' ').join(command.build());
   }
 
   @Override
