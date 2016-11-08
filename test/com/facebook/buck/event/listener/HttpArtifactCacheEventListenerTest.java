@@ -58,11 +58,11 @@ public class HttpArtifactCacheEventListenerTest {
             EasyMock.capture(logLineCapture)))
         .andReturn(Optional.empty())
         .once();
-    EasyMock.expect(fetchLogger.close())
+    EasyMock.expect(fetchLogger.forceFlush())
         .andReturn(Futures.immediateFuture(null))
         .once();
     EasyMock.replay(fetchLogger);
-    EasyMock.expect(storeLogger.close())
+    EasyMock.expect(storeLogger.forceFlush())
         .andReturn(Futures.immediateFuture(null))
         .once();
     EasyMock.replay(storeLogger);

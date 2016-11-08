@@ -88,7 +88,7 @@ public abstract class AbstractBatchingLogger implements BatchingLogger {
   }
 
   @Override
-  public final ListenableFuture<Void> close() {
+  public final ListenableFuture<Void> forceFlush() {
     return sendBatch();
   }
 

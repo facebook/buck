@@ -58,8 +58,8 @@ public class HttpArtifactCacheListener implements BuckEventListener {
   @Override
   public void outputTrace(final BuildId buildId) {
     List<ListenableFuture<Void>> futures = Lists.newArrayList();
-    futures.add(fetchRequestLogger.close());
-    futures.add(storeRequestLogger.close());
+    futures.add(fetchRequestLogger.forceFlush());
+    futures.add(storeRequestLogger.forceFlush());
     try {
       Futures.allAsList(futures).get(TEAR_DOWN_SECONDS, TimeUnit.SECONDS);
     } catch (InterruptedException e) {

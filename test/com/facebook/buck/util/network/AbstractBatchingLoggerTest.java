@@ -70,7 +70,7 @@ public class AbstractBatchingLoggerTest {
     testBatchingLogger.log(shortData);
     testBatchingLogger.log(shortData);
     assertThat(testBatchingLogger.getUploadedBatches(), Matchers.hasSize(1));
-    testBatchingLogger.close();
+    testBatchingLogger.forceFlush();
     assertThat(testBatchingLogger.getUploadedBatches(), Matchers.hasSize(2));
 
     assertThat(

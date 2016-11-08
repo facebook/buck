@@ -36,5 +36,5 @@ public interface BatchingLogger {
    *
    * @return future representing the forced upload.
    */
-  ListenableFuture<Void> close();
+  ListenableFuture<Void> forceFlush();
 }
