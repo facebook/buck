@@ -18,6 +18,8 @@ package com.facebook.buck.util.network;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-public abstract class ScribeLogger implements AutoCloseable {
+import java.io.Closeable;
+
+public abstract class ScribeLogger implements Closeable {
   public abstract ListenableFuture<Void> log(String category, Iterable<String> lines);
 }

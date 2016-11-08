@@ -224,7 +224,7 @@ public class OfflineScribeLoggerTest {
       }
 
       @Override
-      public void close() throws Exception {
+      public void close() throws IOException {
       }
     };
 
@@ -344,7 +344,7 @@ public class OfflineScribeLoggerTest {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() throws IOException {
       offlineScribeLogger.close();
     }
 

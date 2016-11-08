@@ -187,7 +187,7 @@ public class OfflineScribeLogger extends ScribeLogger {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() throws IOException {
     // Request stopping sending as soon as possible.
     startedClosing = true;
 

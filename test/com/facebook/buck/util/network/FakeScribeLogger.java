@@ -22,6 +22,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.io.IOException;
 import java.util.Collection;
 
 import javax.annotation.concurrent.GuardedBy;
@@ -53,6 +54,6 @@ public final class FakeScribeLogger extends ScribeLogger {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() throws IOException {
   }
 }

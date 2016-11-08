@@ -38,6 +38,6 @@ public final class FakeFailingScribeLogger extends ScribeLogger {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() throws IOException {
   }
 }

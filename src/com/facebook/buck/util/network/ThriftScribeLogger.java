@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.util.concurrent.Callable;
 
 
+
 public class ThriftScribeLogger extends ScribeLogger {
 
   private final ThriftService<FrontendRequest, FrontendResponse> thriftService;
@@ -77,7 +78,7 @@ public class ThriftScribeLogger extends ScribeLogger {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() throws IOException {
     executorService.shutdown();
     thriftService.close();
   }
