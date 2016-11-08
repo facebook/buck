@@ -86,6 +86,8 @@ public class AppleBundle
 
   private static final Logger LOG = Logger.get(AppleBundle.class);
   private static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
+  private static final String FRAMEWORK_EXTENSION =
+      AppleBundleExtension.FRAMEWORK.toFileExtension();
 
   @AddToRuleKey
   private final String extension;
@@ -380,7 +382,9 @@ public class AppleBundle
       }
     }
 
-    addStepsToCopyExtensionBundlesDependencies(stepsBuilder);
+    ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder = ImmutableList.builder();
+
+    addStepsToCopyExtensionBundlesDependencies(stepsBuilder, codeSignOnCopyPathsBuilder);
 
     for (SourcePath variantSourcePath : resources.getResourceVariantFiles()) {
       // TODO(shs96c): Ensure this works cross-cell, as relative path begins with "buck-out"
@@ -406,12 +410,14 @@ public class AppleBundle
       Path frameworksDestinationPath = bundleRoot.resolve(this.destinations.getFrameworksPath());
       stepsBuilder.add(new MkdirStep(getProjectFilesystem(), frameworksDestinationPath));
       for (SourcePath framework : frameworks) {
+        Path srcPath = getResolver().getAbsolutePath(framework);
         stepsBuilder.add(
             CopyStep.forDirectory(
                 getProjectFilesystem(),
-                getResolver().getAbsolutePath(framework),
+                srcPath,
                 frameworksDestinationPath,
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
+        codeSignOnCopyPathsBuilder.add(frameworksDestinationPath.resolve(srcPath.getFileName()));
       }
     }
 
@@ -492,6 +498,17 @@ public class AppleBundle
         stepsBuilder,
         false /* is for packaging? */
       );
+
+      for (Path codeSignOnCopyPath : codeSignOnCopyPathsBuilder.build()) {
+        stepsBuilder.add(
+            new CodeSignStep(
+                getProjectFilesystem().getRootPath(),
+                getResolver(),
+                codeSignOnCopyPath,
+                Optional.empty(),
+                codeSignIdentitySupplier,
+                codesignAllocatePath));
+      }
 
       stepsBuilder.add(
           new CodeSignStep(
@@ -598,16 +615,21 @@ public class AppleBundle
   }
 
   public void addStepsToCopyExtensionBundlesDependencies(
-      ImmutableList.Builder<Step> stepsBuilder) {
+      ImmutableList.Builder<Step> stepsBuilder,
+      ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder) {
     for (Map.Entry<SourcePath, String> entry : extensionBundlePaths.entrySet()) {
+      Path srcPath = getResolver().getAbsolutePath(entry.getKey());
       Path destPath = bundleRoot.resolve(entry.getValue());
       stepsBuilder.add(new MkdirStep(getProjectFilesystem(), destPath));
       stepsBuilder.add(
         CopyStep.forDirectory(
             getProjectFilesystem(),
-            getResolver().getAbsolutePath(entry.getKey()),
+            srcPath,
             destPath,
             CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
+      if (srcPath.toString().endsWith("." + FRAMEWORK_EXTENSION)) {
+        codeSignOnCopyPathsBuilder.add(destPath.resolve(srcPath.getFileName()));
+      }
     }
   }
 
@@ -870,8 +892,10 @@ public class AppleBundle
     return ApplePlatform.adHocCodeSignIsSufficient(platformName);
   }
 
+  // .framework bundles will be code-signed when they're copied into the containing bundle.
   private boolean needCodeSign() {
-    return binary.isPresent() && ApplePlatform.needsCodeSign(platformName);
+    return binary.isPresent() && ApplePlatform.needsCodeSign(platformName) &&
+        !extension.equals(FRAMEWORK_EXTENSION);
   }
 
   @Override

@@ -22,3 +22,23 @@ apple_binary(
     '$SDKROOT/usr/lib/libobjc.dylib',
   ],
 )
+
+apple_library(
+  name = 'DemoFrameworkLib',
+  srcs = ['framework.c'],
+)
+
+apple_bundle(
+   name = 'DemoFramework',
+   binary = ':DemoFrameworkLib#shared,strip-non-global',
+   extension = 'framework',
+   info_plist = 'FrameworkInfo.plist',
+)
+
+apple_bundle(
+  name = 'DemoAppWithFramework',
+  binary = ':DemoAppBinary',
+  extension = 'app',
+  info_plist = 'Info.plist',
+  deps = [':DemoFramework'],
+)

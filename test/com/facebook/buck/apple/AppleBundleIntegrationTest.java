@@ -162,6 +162,54 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void simpleApplicationBundleWithEmbeddedFrameworks() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "simple_application_bundle_with_codesigning",
+        tmp);
+    workspace.setUp();
+
+    BuildTarget appTarget = workspace.newBuildTarget(
+        "//:DemoAppWithFramework#iphoneos-arm64,no-debug,include-frameworks");
+    workspace.runBuckCommand("build", appTarget.getFullyQualifiedName()).assertSuccess();
+
+    workspace.verify(
+        Paths.get("DemoAppWithFramework_output.expected"),
+        BuildTargets.getGenPath(
+            filesystem,
+            appTarget,
+            "%s"));
+
+    Path appPath = workspace.getPath(
+        BuildTargets
+            .getGenPath(
+                filesystem,
+                appTarget,
+                "%s")
+            .resolve(appTarget.getShortName() + ".app"));
+    assertTrue(Files.exists(appPath.resolve(appTarget.getShortName())));
+    assertTrue(checkCodeSigning(appPath));
+
+    BuildTarget frameworkTarget =
+        workspace.newBuildTarget("//:DemoFramework#iphoneos-arm64,no-debug,no-include-frameworks");
+    Path frameworkPath = workspace.getPath(
+        BuildTargets
+            .getGenPath(
+                filesystem,
+                frameworkTarget,
+                "%s")
+            .resolve(frameworkTarget.getShortName() + ".framework"));
+    assertFalse(checkCodeSigning(frameworkPath));
+
+    Path embeddedFrameworkPath = appPath.resolve(Paths.get("Frameworks/DemoFramework.framework"));
+    assertTrue(Files.exists(embeddedFrameworkPath.resolve(frameworkTarget.getShortName())));
+    assertTrue(checkCodeSigning(embeddedFrameworkPath));
+  }
+
+  @Test
   public void simpleApplicationBundleWithCodeSigningAndEntitlements()
       throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
