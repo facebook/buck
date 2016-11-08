@@ -16,10 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckTracingEventBusBridge;
-import com.facebook.buck.event.MissingSymbolEvent;
-import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.jvm.java.tracing.TranslatingJavacPhaseTracer;
 import com.facebook.buck.log.Logger;
@@ -180,11 +176,10 @@ public abstract class Jsr199Javac implements Javac {
               .transform(ARGFILES_ESCAPER),
           pathToSrcsList);
     } catch (IOException e) {
-      context.getBuckEventBus().post(
-          ThrowableConsoleEvent.create(
-              e,
-              "Cannot write list of .java files to compile to %s file! Terminating compilation.",
-              pathToSrcsList));
+      context.getEventSink().reportThrowable(
+          e,
+          "Cannot write list of .java files to compile to %s file! Terminating compilation.",
+          pathToSrcsList);
       return 1;
     }
 
@@ -201,7 +196,7 @@ public abstract class Jsr199Javac implements Javac {
 
     boolean isSuccess = false;
     BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
-        new BuckTracingEventBusBridge(context.getBuckEventBus(), invokingRule));
+        new Jsr199TracingBridge(context.getEventSink(), invokingRule));
     try {
       try (
           // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
@@ -209,7 +204,7 @@ public abstract class Jsr199Javac implements Javac {
           TranslatingJavacPhaseTracer tracer = TranslatingJavacPhaseTracer.setupTracing(
               invokingRule,
               context.getClassLoaderCache(),
-              context.getBuckEventBus(),
+              context.getEventSink(),
               compilationTask);
 
           // Ensure annotation processors are loaded from their own classloader. If we don't do
@@ -217,7 +212,7 @@ public abstract class Jsr199Javac implements Javac {
           // which means that libraries that have dependencies on different versions of Buck's deps
           // may choke with novel errors that don't occur on the command line.
           ProcessorBundle bundle = prepareProcessors(
-              context.getBuckEventBus(),
+              context.getEventSink(),
               compiler.getClass().getClassLoader(),
               context.getClassLoaderCache(),
               safeAnnotationProcessors,
@@ -283,7 +278,7 @@ public abstract class Jsr199Javac implements Javac {
   }
 
   private ProcessorBundle prepareProcessors(
-      BuckEventBus buckEventBus,
+      JavacEventSink eventSink,
       ClassLoader compilerClassLoader,
       ClassLoaderCache classLoaderCache,
       Set<String> safeAnnotationProcessors,
@@ -349,7 +344,7 @@ public abstract class Jsr199Javac implements Javac {
                 .asSubclass(Processor.class);
         processorBundle.processors.add(
             new TracingProcessorWrapper(
-                buckEventBus,
+                eventSink,
                 target,
                 aClass.newInstance()));
       } catch (ReflectiveOperationException e) {
@@ -453,11 +448,7 @@ public abstract class Jsr199Javac implements Javac {
       // This error wasn't related to a missing symbol, as far as we can tell.
       return;
     }
-    MissingSymbolEvent event = MissingSymbolEvent.create(
-        invokingRule,
-        symbol.get(),
-        MissingSymbolEvent.SymbolType.Java);
-    context.getBuckEventBus().post(event);
+    context.getEventSink().reportMissingJavaSymbol(invokingRule, symbol.get());
   }
 
   @VisibleForTesting

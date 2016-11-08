@@ -16,14 +16,11 @@
 
 package com.facebook.buck.jvm.java.tracing;
 
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.jvm.java.JavacEventSink;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.infer.annotation.Assertions;
 import com.google.common.collect.ImmutableMap;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -34,14 +31,11 @@ public class JavacPhaseEventLogger {
   private static final ImmutableMap<String, String> EMPTY_MAP = ImmutableMap.of();
 
   private final BuildTarget buildTarget;
-  private final BuckEventBus buckEventBus;
+  private final JavacEventSink eventSink;
 
-  private final Map<JavacPhaseEvent.Phase, JavacPhaseEvent.Started> currentPhaseEvents =
-      new HashMap<JavacPhaseEvent.Phase, JavacPhaseEvent.Started>();
-
-  public JavacPhaseEventLogger(BuildTarget buildTarget, BuckEventBus buckEventBus) {
+  public JavacPhaseEventLogger(BuildTarget buildTarget, JavacEventSink eventSink) {
     this.buildTarget = buildTarget;
-    this.buckEventBus = buckEventBus;
+    this.eventSink = eventSink;
   }
 
   public void beginParse(String filename) {
@@ -109,22 +103,11 @@ public class JavacPhaseEventLogger {
   }
 
   private void postStartedEvent(JavacPhaseEvent.Phase phase, ImmutableMap<String, String> args) {
-    JavacPhaseEvent.Started startedEvent = JavacPhaseEvent.started(buildTarget, phase, args);
-
-    Assertions.assertCondition(currentPhaseEvents.get(phase) == null);
-    currentPhaseEvents.put(phase, startedEvent);
-
-    buckEventBus.post(startedEvent);
+    eventSink.reportJavacPhaseStarted(buildTarget, phase.toString(), args);
   }
 
   private void postFinishedEvent(JavacPhaseEvent.Phase phase, ImmutableMap<String, String> args) {
-    JavacPhaseEvent.Finished finishedEvent = JavacPhaseEvent.finished(
-        Assertions.assertNotNull(currentPhaseEvents.get(phase)),
-        args);
-
-    currentPhaseEvents.remove(phase);
-
-    buckEventBus.post(finishedEvent);
+    eventSink.reportJavacPhaseFinished(buildTarget, phase.toString(), args);
   }
 
   private ImmutableMap<String, String> getRoundNumberArgs(int roundNumber) {

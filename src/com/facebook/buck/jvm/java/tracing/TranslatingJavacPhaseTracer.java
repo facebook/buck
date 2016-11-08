@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.tracing;
 
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.jvm.java.JavacEventSink;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.ClassLoaderCache;
@@ -113,7 +113,7 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
   public static TranslatingJavacPhaseTracer setupTracing(
       BuildTarget invokingTarget,
       ClassLoaderCache classLoaderCache,
-      BuckEventBus buckEventBus,
+      JavacEventSink eventSink,
       JavaCompiler.CompilationTask task) {
     if (JAVAC_TRACING_JAR_URL == null) {
       return null;
@@ -140,7 +140,7 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
           JavaCompiler.CompilationTask.class,
           JavacPhaseTracer.class);
       final TranslatingJavacPhaseTracer tracer = new TranslatingJavacPhaseTracer(
-          new JavacPhaseEventLogger(invokingTarget, buckEventBus));
+          new JavacPhaseEventLogger(invokingTarget, eventSink));
       setupTracingMethod.invoke(
           null,
           task,

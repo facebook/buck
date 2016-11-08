@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -35,7 +34,7 @@ import java.util.Optional;
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractJavacExecutionContext {
-  public abstract BuckEventBus getBuckEventBus();
+  public abstract JavacEventSink getEventSink();
   public abstract PrintStream getStdErr();
   public abstract ClassLoaderCache getClassLoaderCache();
   public abstract ObjectMapper getObjectMapper();

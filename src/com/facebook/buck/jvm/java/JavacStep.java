@@ -152,7 +152,7 @@ public class JavacStep implements Step {
           Optional.of(verbosity))) {
 
       JavacExecutionContext javacExecutionContext = JavacExecutionContext.of(
-          firstOrderContext.getBuckEventBus(),
+          new JavacEventSinkToBuckEventBusBridge(firstOrderContext.getBuckEventBus()),
           stderr,
           firstOrderContext.getClassLoaderCache(),
           firstOrderContext.getObjectMapper(),

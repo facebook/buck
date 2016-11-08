@@ -31,6 +31,15 @@ java_library(
   autodeps = True,
 )
 
+java_library(
+  name = 'javac-sink',
+  srcs = [
+    'JavacEventSink.java',
+  ],
+  autodeps = True,
+  visibility = ['PUBLIC'],
+)
+
 java_immutables_library(
   name = 'support',
   srcs = [
@@ -58,6 +67,8 @@ java_immutables_library(
     'JavaLibrary.java',
     'Javac.java',
     'JavacErrorParser.java',
+    'JavacEventSinkToBuckEventBusBridge.java',
+    'Jsr199TracingBridge.java',
     'JavaInMemoryFileManager.java',
     'JavaInMemoryFileObject.java',
     'JavaNoOpFileObject.java',

@@ -44,6 +44,13 @@
     ],
     "exported_deps" : [ ]
   },
+  "javac-sink" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/model:model",
+      "//third-party/java/guava:guava"
+    ]
+  },
   "packagefinder" : {
     "deps" : [
       "//src/com/facebook/buck/io:MorePaths.java",
@@ -143,6 +150,7 @@
       "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/zip:unzip",
       "//third-party/java/immutables:processor",
+      "//third-party/java/infer-annotations:infer-annotations",
       "//third-party/java/jackson:jackson-core"
     ],
     "exported_deps" : [
@@ -150,9 +158,9 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/core:classhash",
       "//src/com/facebook/buck/jvm/core:packagefinder",
+      "//src/com/facebook/buck/jvm/java:javac-sink",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
-      "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/immutables:immutables",

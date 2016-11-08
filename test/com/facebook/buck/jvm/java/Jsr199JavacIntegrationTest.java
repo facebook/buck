@@ -118,7 +118,7 @@ public class Jsr199JavacIntegrationTest {
     Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     JavacExecutionContext javacExecutionContext = JavacExecutionContext.of(
-        executionContext.getBuckEventBus(),
+        new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
         executionContext.getStdErr(),
         executionContext.getClassLoaderCache(),
         executionContext.getObjectMapper(),
@@ -165,7 +165,7 @@ public class Jsr199JavacIntegrationTest {
         /* withSyntaxError */ false);
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     JavacExecutionContext javacExecutionContext = JavacExecutionContext.of(
-        executionContext.getBuckEventBus(),
+        new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
         executionContext.getStdErr(),
         executionContext.getClassLoaderCache(),
         executionContext.getObjectMapper(),
@@ -265,7 +265,7 @@ public class Jsr199JavacIntegrationTest {
         Optional.of(fakeJavacJar));
 
     JavacExecutionContext javacExecutionContext = JavacExecutionContext.of(
-        executionContext.getBuckEventBus(),
+        new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
         executionContext.getStdErr(),
         executionContext.getClassLoaderCache(),
         executionContext.getObjectMapper(),

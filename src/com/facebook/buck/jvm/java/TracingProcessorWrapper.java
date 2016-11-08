@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.model.BuildTarget;
 
 import java.util.Set;
@@ -33,7 +32,7 @@ import javax.lang.model.element.TypeElement;
 
 /** Wraps an annotation processor, tracing all method calls to BuckEventBus. */
 class TracingProcessorWrapper implements Processor {
-  private final BuckEventBus eventBus;
+  private final JavacEventSink eventSink;
   private final Processor innerProcessor;
   private final BuildTarget buildTarget;
   private final String annotationProcessorName;
@@ -42,10 +41,10 @@ class TracingProcessorWrapper implements Processor {
   private boolean isLastRound = false;
 
   public TracingProcessorWrapper(
-      BuckEventBus eventBus,
+      JavacEventSink eventSink,
       BuildTarget buildTarget,
       Processor processor) {
-    this.eventBus = eventBus;
+    this.eventSink = eventSink;
     this.buildTarget = buildTarget;
     innerProcessor = processor;
     annotationProcessorName = innerProcessor.getClass().getName();
@@ -126,11 +125,21 @@ class TracingProcessorWrapper implements Processor {
         operation,
         roundNumber,
         isLastRound);
-    eventBus.post(started);
+    eventSink.reportAnnotationProcessingEventStarted(
+        buildTarget,
+        annotationProcessorName,
+        operation.toString(),
+        roundNumber,
+        isLastRound);
     return started;
   }
 
   private void end(AnnotationProcessingEvent.Started started) {
-    eventBus.post(AnnotationProcessingEvent.finished(started));
+    eventSink.reportAnnotationProcessingEventFinished(
+        started.getBuildTarget(),
+        started.getAnnotationProcessorName(),
+        started.getOperation().toString(),
+        started.getRound(),
+        started.isLastRound());
   }
 }

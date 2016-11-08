@@ -133,6 +133,16 @@ public abstract class AnnotationProcessingEvent
           started.isLastRound());
     }
 
+    public Finished(
+        EventKey eventKey,
+        BuildTarget buildTarget,
+        String annotationProcessorName,
+        Operation operation,
+        int round,
+        boolean isLastRound) {
+      super(eventKey, buildTarget, annotationProcessorName, operation, round, isLastRound);
+    }
+
     @Override
     public String getEventName() {
       return String.format(

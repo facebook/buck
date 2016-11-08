@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
@@ -202,10 +201,10 @@ public class ExternalJavac implements Javac {
           pathToSrcsList);
       command.add("@" + pathToSrcsList);
     } catch (IOException e) {
-      context.getBuckEventBus().post(ThrowableConsoleEvent.create(
+      context.getEventSink().reportThrowable(
           e,
           "Cannot write list of .java files to compile to %s file! Terminating compilation.",
-          pathToSrcsList));
+          pathToSrcsList);
       return 1;
     }
 
