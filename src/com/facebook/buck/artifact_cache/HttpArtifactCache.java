@@ -98,6 +98,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
         }
 
         eventBuilder
+            .setTarget(ArtifactCacheEvent.getTarget(fetchedData.getMetadata()))
             .getFetchBuilder()
             .setResponseSizeBytes(fetchedData.getResponseSizeBytes())
             .setArtifactContentHash(fetchedData.getArtifactOnlyHashCode().toString());
@@ -168,7 +169,6 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
             StoreWriteResult writeResult = storeRequest.write(bufferedSink.outputStream());
             eventBuilder
                 .getStoreBuilder()
-                .setArtifactSizeBytes(writeResult.getArtifactSizeBytes())
                 .setArtifactContentHash(writeResult.getArtifactContentHashCode().toString());
           }
         });

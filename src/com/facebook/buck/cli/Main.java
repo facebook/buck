@@ -311,7 +311,7 @@ public final class Main {
       throw new HumanReadableException(
           String.format(
               ("Failed to resolve project root [%s]." +
-              "Check if it exists and has the right permissions."),
+                  "Check if it exists and has the right permissions."),
               path.toAbsolutePath()),
           e);
     }
@@ -342,10 +342,10 @@ public final class Main {
         Optional<WebServer> webServerToReuse) {
       this.cell = cell;
       this.hashCache = new WatchedFileHashCache(cell.getFilesystem());
-        this.buckOutHashCache =
-            DefaultFileHashCache.createBuckOutFileHashCache(
-                createProjectFilesystem(cell.getFilesystem().getRootPath()),
-                cell.getFilesystem().getBuckPaths().getBuckOut());
+      this.buckOutHashCache =
+          DefaultFileHashCache.createBuckOutFileHashCache(
+              createProjectFilesystem(cell.getFilesystem().getRootPath()),
+              cell.getFilesystem().getBuckPaths().getBuckOut());
       this.fileEventBus = new EventBus("file-change-events");
 
       this.broadcastEventListener = new BroadcastEventListener();

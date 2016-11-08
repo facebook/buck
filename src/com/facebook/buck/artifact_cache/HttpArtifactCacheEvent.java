@@ -153,12 +153,15 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
     @JsonProperty("request_duration_millis")
     private long requestDurationMillis;
 
-    public Finished(Started event, HttpArtifactCacheEventFetchData data) {
+    public Finished(
+        Started event,
+        Optional<String> target,
+        HttpArtifactCacheEventFetchData data) {
       super(
           event.getEventKey(),
           CACHE_MODE,
           event.getOperation(),
-          event.getTarget(),
+          Preconditions.checkNotNull(target),
           event.getRuleKeys(),
           event.getInvocationType(),
           data.getFetchResult());
@@ -217,11 +220,13 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
       private final Started startedEvent;
       private HttpArtifactCacheEventFetchData.Builder fetchDataBuilder;
       private HttpArtifactCacheEventStoreData.Builder storeDataBuilder;
+      private Optional<String> target;
 
       private Builder(Started event) {
         this.startedEvent = event;
         this.storeDataBuilder = HttpArtifactCacheEventStoreData.builder();
         this.fetchDataBuilder = HttpArtifactCacheEventFetchData.builder();
+        this.target = Optional.empty();
       }
 
       public HttpArtifactCacheEvent.Finished build() {
@@ -230,7 +235,10 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
               startedEvent.getRuleKeys(),
               null));
           fetchDataBuilder.setRequestedRuleKey(requestsRuleKey);
-          return new HttpArtifactCacheEvent.Finished(startedEvent, fetchDataBuilder.build());
+          return new HttpArtifactCacheEvent.Finished(
+              startedEvent,
+              target,
+              fetchDataBuilder.build());
         } else {
           storeDataBuilder.setRuleKeys(startedEvent.getRuleKeys());
           return new HttpArtifactCacheEvent.Finished(startedEvent, storeDataBuilder.build());
@@ -254,6 +262,11 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
         this.storeDataBuilder = storeDataBuilder;
         return this;
       }
+
+      public Builder setTarget(Optional<String> target) {
+        this.target = target;
+        return this;
+      }
     }
   }
 
@@ -271,6 +284,8 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
     Optional<Long> getArtifactSizeBytes();
 
     Optional<String> getErrorMessage();
+
+    ImmutableSet<RuleKey> getAssociatedRuleKeys();
   }
 
   @Value.Immutable

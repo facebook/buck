@@ -142,7 +142,9 @@ public abstract class AbstractNetworkCache implements ArtifactCache {
           try {
 
             long artifactSizeBytes = projectFilesystem.getFileSize(tmp);
-            finishedEventBuilder.getStoreBuilder().setArtifactSizeBytes(artifactSizeBytes);
+            finishedEventBuilder.getStoreBuilder()
+                .setArtifactSizeBytes(artifactSizeBytes)
+                .setRuleKeys(info.getRuleKeys());
             if (!isArtefactTooBigToBeStored(artifactSizeBytes, maxStoreSize)) {
               storeImpl(info, tmp, finishedEventBuilder);
             } else {

@@ -31,6 +31,7 @@ import com.facebook.buck.slb.ThriftProtocol;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteSource;
 
@@ -39,6 +40,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
+import java.util.Optional;
 
 import okhttp3.MediaType;
 import okhttp3.Request;
@@ -104,6 +107,9 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
 
       try (ThriftArtifactCacheProtocol.Response response =
                ThriftArtifactCacheProtocol.parseResponse(PROTOCOL, httpResponse.getBody())) {
+        eventBuilder
+            .getFetchBuilder()
+            .setResponseSizeBytes(httpResponse.contentLength());
 
         BuckCacheResponse cacheResponse = response.getThriftData();
         if (!cacheResponse.isWasSuccessful()) {
@@ -122,6 +128,12 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         }
 
         ArtifactMetadata metadata = fetchResponse.getMetadata();
+        eventBuilder
+            .setTarget(Optional.ofNullable(metadata.getBuildTarget()))
+            .getFetchBuilder()
+            .setAssociatedRuleKeys(toImmutableSet(metadata.getRuleKeys()))
+            .setArtifactSizeBytes(readResult.getBytesRead())
+            .setArtifactContentHash(metadata.getArtifactPayloadMd5());
         if (!metadata.isSetArtifactPayloadMd5()) {
           String msg = "Fetched artifact is missing the MD5 hash.";
           LOG.warn(msg);
@@ -143,6 +155,13 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
             readResult.getBytesRead());
       }
     }
+  }
+
+  private static ImmutableSet<RuleKey> toImmutableSet(
+      List<com.facebook.buck.artifact_cache.thrift.RuleKey> ruleKeys) {
+    return ImmutableSet.copyOf(Iterables.transform(
+        ruleKeys,
+        input -> new RuleKey(input.getHashString())));
   }
 
   @Override
@@ -171,6 +190,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     final ThriftArtifactCacheProtocol.Request request =
         ThriftArtifactCacheProtocol.createRequest(PROTOCOL, cacheRequest, artifact);
     Request.Builder builder = toOkHttpRequest(request);
+    eventBuilder.getStoreBuilder().setRequestSizeBytes(request.getRequestLengthBytes());
     try (HttpResponse httpResponse = storeClient.makeRequest(hybridThriftEndpoint, builder)) {
       if (httpResponse.code() != 200) {
         throw new IOException(String.format(
@@ -195,8 +215,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
 
         eventBuilder
             .getStoreBuilder()
-            .setArtifactContentHash(storeRequest.getMetadata().artifactPayloadMd5)
-            .setArtifactSizeBytes(artifactSizeBytes);
+            .setArtifactContentHash(storeRequest.getMetadata().artifactPayloadMd5);
         eventBuilder.getStoreBuilder().setWasStoreSuccessful(
             response.getThriftData().isWasSuccessful());
       }
