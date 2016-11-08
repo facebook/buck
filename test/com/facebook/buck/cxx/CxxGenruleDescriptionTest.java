@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
@@ -27,6 +28,7 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -87,6 +89,33 @@ public class CxxGenruleDescriptionTest {
           Joiner.on(' ').join(Arg.stringify(ImmutableList.of(genrule.getCmd().get()))),
           Matchers.not(Matchers.containsString("-b")));
     }
+  }
+
+  @Test
+  public void cppflagsNoArgs() throws Exception {
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.DEFAULT_PLATFORM
+            .withCppflags("-cppflag")
+            .withCxxppflags("-cxxppflag");
+    CxxGenruleBuilder builder =
+        new CxxGenruleBuilder(
+            BuildTargetFactory.newInstance("//:rule#" + cxxPlatform.getFlavor()),
+            new FlavorDomain<>(
+                "C/C++ Platform",
+                ImmutableMap.of(cxxPlatform.getFlavor(), cxxPlatform)))
+            .setOut("out")
+            .setCmd("$(cppflags) $(cxxppflags)");
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            builder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            targetGraph,
+            new DefaultTargetNodeToBuildRuleTransformer());
+    Genrule genrule = (Genrule) builder.build(resolver);
+    assertThat(
+        Joiner.on(' ').join(Arg.stringify(ImmutableList.of(genrule.getCmd().get()))),
+        Matchers.containsString("-cppflag -cxxppflag"));
   }
 
 }

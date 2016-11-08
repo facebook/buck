@@ -355,10 +355,8 @@ public class CxxGenruleDescription
         ImmutableList<String> input)
         throws MacroException {
 
-      if (this.filter == Filter.PARAM && input.size() < 2) {
-        throw new MacroException("expected at leats 2 argument");
-      } else if (this.filter == Filter.NONE && input.size() < 1) {
-        throw new MacroException("expected at leats 1 argument");
+      if (this.filter == Filter.PARAM && input.size() < 1) {
+        throw new MacroException("expected at least 1 argument");
       }
 
       Iterator<String> itr = input.iterator();
@@ -369,13 +367,13 @@ public class CxxGenruleDescription
               Optional.empty();
 
       ImmutableList.Builder<BuildTarget> targets = ImmutableList.builder();
-      do {
+      while (itr.hasNext()) {
         targets.add(
             BuildTargetParser.INSTANCE.parse(
                 itr.next(),
                 BuildTargetPatternParser.forBaseName(target.getBaseName()),
                 cellNames));
-      } while (itr.hasNext());
+      }
 
       return new FilterAndTargets(filter, targets.build());
     }
