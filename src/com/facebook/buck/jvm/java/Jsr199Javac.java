@@ -19,13 +19,12 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckTracingEventBusBridge;
 import com.facebook.buck.event.MissingSymbolEvent;
+import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.event.api.BuckTracing;
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.tracing.TranslatingJavacPhaseTracer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
@@ -111,33 +110,27 @@ public abstract class Jsr199Javac implements Javac {
     throw new UnsupportedOperationException("In memory javac may not be used externally");
   }
 
-  protected abstract JavaCompiler createCompiler(
-      ExecutionContext context,
-      SourcePathResolver resolver);
+  protected abstract JavaCompiler createCompiler(JavacExecutionContext context);
 
   @Override
   public int buildWithClasspath(
-      ExecutionContext context,
-      ProjectFilesystem filesystem,
-      SourcePathResolver resolver,
+      JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableSet<String> safeAnnotationProcessors,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
-      Optional<Path> workingDirectory,
-      ClassUsageFileWriter usedClassesFileWriter,
-      Optional<StandardJavaFileManagerFactory> fileManagerFactory) {
-    JavaCompiler compiler = createCompiler(context, resolver);
+      Optional<Path> workingDirectory) {
+    JavaCompiler compiler = createCompiler(context);
 
     StandardJavaFileManager fileManager =
-        fileManagerFactory.orElse(DEFAULT_FILE_MANAGER_FACTORY).create(compiler);
+        context.getFileManagerFactory().orElse(DEFAULT_FILE_MANAGER_FACTORY).create(compiler);
     try {
       Iterable<? extends JavaFileObject> compilationUnits;
       try {
         compilationUnits = createCompilationUnits(
             fileManager,
-            filesystem::resolve,
+            context.getProjectFilesystem()::resolve,
             javaSourceFilePaths);
       } catch (IOException e) {
         LOG.warn(e, "Error building compilation units");
@@ -147,14 +140,12 @@ public abstract class Jsr199Javac implements Javac {
       try {
         return buildWithClasspath(
             context,
-            filesystem,
             invokingRule,
             options,
             safeAnnotationProcessors,
             javaSourceFilePaths,
             pathToSrcsList,
             compiler,
-            usedClassesFileWriter,
             fileManager,
             compilationUnits);
       } finally {
@@ -170,41 +161,39 @@ public abstract class Jsr199Javac implements Javac {
   }
 
   private int buildWithClasspath(
-      ExecutionContext context,
-      ProjectFilesystem filesystem,
+      JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableSet<String> safeAnnotationProcessors,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       JavaCompiler compiler,
-      ClassUsageFileWriter usedClassesFileWriter,
       StandardJavaFileManager fileManager,
       Iterable<? extends JavaFileObject> compilationUnits) {
     // write javaSourceFilePaths to classes file
     // for buck user to have a list of all .java files to be compiled
     // since we do not print them out to console in case of error
     try {
-      filesystem.writeLinesToPath(
+      context.getProjectFilesystem().writeLinesToPath(
           FluentIterable.from(javaSourceFilePaths)
               .transform(Object::toString)
               .transform(ARGFILES_ESCAPER),
           pathToSrcsList);
     } catch (IOException e) {
-      context.logError(
-          e,
-          "Cannot write list of .java files to compile to %s file! Terminating compilation.",
-          pathToSrcsList);
+      context.getBuckEventBus().post(
+          ThrowableConsoleEvent.create(
+              e,
+              "Cannot write list of .java files to compile to %s file! Terminating compilation.",
+              pathToSrcsList));
       return 1;
     }
-
 
     DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
     List<String> classNamesForAnnotationProcessing = ImmutableList.of();
     Writer compilerOutputWriter = new PrintWriter(context.getStdErr());
     JavaCompiler.CompilationTask compilationTask = compiler.getTask(
         compilerOutputWriter,
-        usedClassesFileWriter.wrapFileManager(fileManager),
+        context.getUsedClassesFileWriter().wrapFileManager(fileManager),
         diagnostics,
         options,
         classNamesForAnnotationProcessing,
@@ -252,7 +241,9 @@ public abstract class Jsr199Javac implements Javac {
     }
 
     if (isSuccess) {
-      usedClassesFileWriter.writeFile(filesystem, context.getObjectMapper());
+      context.getUsedClassesFileWriter().writeFile(
+          context.getProjectFilesystem(),
+          context.getObjectMapper());
       return 0;
     } else {
       if (context.getVerbosity().shouldPrintStandardInformation()) {
@@ -262,7 +253,7 @@ public abstract class Jsr199Javac implements Javac {
           Diagnostic.Kind kind = diagnostic.getKind();
           if (kind == Diagnostic.Kind.ERROR) {
             ++numErrors;
-            handleMissingSymbolError(invokingRule, diagnostic, context, filesystem);
+            handleMissingSymbolError(invokingRule, diagnostic, context);
           } else if (kind == Diagnostic.Kind.WARNING ||
               kind == Diagnostic.Kind.MANDATORY_WARNING) {
             ++numWarnings;
@@ -452,10 +443,9 @@ public abstract class Jsr199Javac implements Javac {
   private void handleMissingSymbolError(
       BuildTarget invokingRule,
       Diagnostic<? extends JavaFileObject> diagnostic,
-      ExecutionContext context,
-      ProjectFilesystem filesystem) {
+      JavacExecutionContext context) {
     JavacErrorParser javacErrorParser = new JavacErrorParser(
-        filesystem,
+        context.getProjectFilesystem(),
         context.getJavaPackageFinder());
     Optional<String> symbol = javacErrorParser.getMissingSymbolFromCompilerError(
         DiagnosticPrettyPrinter.format(diagnostic));

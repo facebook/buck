@@ -35,6 +35,7 @@ java_immutables_library(
   name = 'support',
   srcs = [
     'AbstractJavaOptions.java',
+    'AbstractJavacExecutionContext.java',
     'AbstractJavacOptions.java',
     'AbstractJavacVersion.java',
     'AnnotationProcessingEvent.java',
@@ -70,6 +71,7 @@ java_immutables_library(
   ],
   immutable_types = [
     'JavaOptions',
+    'JavacExecutionContext',
     'JavacOptions',
     'JavacVersion',
   ],

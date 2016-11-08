@@ -117,17 +117,27 @@ public class Jsr199JavacIntegrationTest {
   public void testClassesFile() throws IOException, InterruptedException {
     Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
     ExecutionContext executionContext = TestExecutionContext.newInstance();
-    int exitCode = javac.buildWithClasspath(
-        executionContext,
+    JavacExecutionContext javacExecutionContext = JavacExecutionContext.of(
+        executionContext.getBuckEventBus(),
+        executionContext.getStdErr(),
+        executionContext.getClassLoaderCache(),
+        executionContext.getObjectMapper(),
+        executionContext.getVerbosity(),
+        executionContext.getJavaPackageFinder(),
         createProjectFilesystem(),
         PATH_RESOLVER,
+        NoOpClassUsageFileWriter.instance(),
+        Optional.empty(),
+        executionContext.getEnvironment(),
+        executionContext.getProcessExecutor());
+
+    int exitCode = javac.buildWithClasspath(
+        javacExecutionContext,
         BuildTargetFactory.newInstance("//some:example"),
         ImmutableList.of(),
         ImmutableSet.of(),
         SOURCE_PATHS,
         pathToSrcsList,
-        Optional.empty(),
-        NoOpClassUsageFileWriter.instance(),
         Optional.empty());
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
@@ -154,17 +164,27 @@ public class Jsr199JavacIntegrationTest {
     Jsr199Javac javac = createJavac(
         /* withSyntaxError */ false);
     ExecutionContext executionContext = TestExecutionContext.newInstance();
-    int exitCode = javac.buildWithClasspath(
-        executionContext,
+    JavacExecutionContext javacExecutionContext = JavacExecutionContext.of(
+        executionContext.getBuckEventBus(),
+        executionContext.getStdErr(),
+        executionContext.getClassLoaderCache(),
+        executionContext.getObjectMapper(),
+        executionContext.getVerbosity(),
+        executionContext.getJavaPackageFinder(),
         createProjectFilesystem(),
         PATH_RESOLVER,
+        NoOpClassUsageFileWriter.instance(),
+        Optional.empty(),
+        executionContext.getEnvironment(),
+        executionContext.getProcessExecutor());
+
+    int exitCode = javac.buildWithClasspath(
+        javacExecutionContext,
         BuildTargetFactory.newInstance("//some:example"),
         ImmutableList.of(),
         ImmutableSet.of(),
         SOURCE_PATHS,
         pathToSrcsList,
-        Optional.empty(),
-        NoOpClassUsageFileWriter.instance(),
         Optional.empty());
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
@@ -244,20 +264,30 @@ public class Jsr199JavacIntegrationTest {
         /* withSyntaxError */ false,
         Optional.of(fakeJavacJar));
 
+    JavacExecutionContext javacExecutionContext = JavacExecutionContext.of(
+        executionContext.getBuckEventBus(),
+        executionContext.getStdErr(),
+        executionContext.getClassLoaderCache(),
+        executionContext.getObjectMapper(),
+        executionContext.getVerbosity(),
+        executionContext.getJavaPackageFinder(),
+        createProjectFilesystem(),
+        PATH_RESOLVER,
+        NoOpClassUsageFileWriter.instance(),
+        Optional.empty(),
+        executionContext.getEnvironment(),
+        executionContext.getProcessExecutor());
+
     boolean caught = false;
 
     try {
       javac.buildWithClasspath(
-          executionContext,
-          createProjectFilesystem(),
-          PATH_RESOLVER,
+          javacExecutionContext,
           BuildTargetFactory.newInstance("//some:example"),
           ImmutableList.of(),
           ImmutableSet.of(),
           SOURCE_PATHS,
           pathToSrcsList,
-          Optional.empty(),
-          NoOpClassUsageFileWriter.instance(),
           Optional.empty());
       fail("Did not expect compilation to succeed");
     } catch (UnsupportedOperationException ex) {

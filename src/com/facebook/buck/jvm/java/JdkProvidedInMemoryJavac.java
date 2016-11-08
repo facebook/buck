@@ -20,7 +20,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedSet;
@@ -51,9 +50,7 @@ public class JdkProvidedInMemoryJavac extends Jsr199Javac {
   }
 
   @Override
-  protected JavaCompiler createCompiler(
-      ExecutionContext context,
-      SourcePathResolver resolver) {
+  protected JavaCompiler createCompiler(JavacExecutionContext context) {
     JavaCompiler compiler;
     synchronized (ToolProvider.class) {
       // ToolProvider has no synchronization internally, so if we don't synchronize from the

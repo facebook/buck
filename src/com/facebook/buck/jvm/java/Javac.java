@@ -16,12 +16,9 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -43,17 +40,13 @@ public interface Javac extends RuleKeyAppendable, Tool {
   JavacVersion getVersion();
 
   int buildWithClasspath(
-      ExecutionContext context,
-      ProjectFilesystem filesystem,
-      SourcePathResolver resolver,
+      JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
       ImmutableSet<String> safeAnnotationProcessors,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
-      Optional<Path> workingDirectory,
-      ClassUsageFileWriter usedClassesFileWriter,
-      Optional<StandardJavaFileManagerFactory> fileManagerFactory) throws InterruptedException;
+      Optional<Path> workingDirectory) throws InterruptedException;
 
   String getDescription(
       ImmutableList<String> options,

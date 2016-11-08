@@ -144,27 +144,37 @@ public class JavacStep implements Step {
     Verbosity verbosity =
         context.getVerbosity().isSilent() ? Verbosity.STANDARD_INFORMATION : context.getVerbosity();
     try (
-        CapturingPrintStream stdout = new CapturingPrintStream();
-        CapturingPrintStream stderr = new CapturingPrintStream();
-        ExecutionContext firstOrderContext = context.createSubContext(
-            stdout,
-            stderr,
-            Optional.of(verbosity))) {
+      CapturingPrintStream stdout = new CapturingPrintStream();
+      CapturingPrintStream stderr = new CapturingPrintStream();
+      ExecutionContext firstOrderContext = context.createSubContext(
+          stdout,
+          stderr,
+          Optional.of(verbosity))) {
+
+      JavacExecutionContext javacExecutionContext = JavacExecutionContext.of(
+          firstOrderContext.getBuckEventBus(),
+          stderr,
+          firstOrderContext.getClassLoaderCache(),
+          firstOrderContext.getObjectMapper(),
+          verbosity,
+          firstOrderContext.getJavaPackageFinder(),
+          filesystem,
+          resolver,
+          usedClassesFileWriter,
+          fileManagerFactory,
+          context.getEnvironment(),
+          context.getProcessExecutor());
 
       Javac javac = getJavac();
 
       int declaredDepsResult = javac.buildWithClasspath(
-          firstOrderContext,
-          filesystem,
-          resolver,
+          javacExecutionContext,
           invokingRule,
           getOptions(context, declaredClasspathEntries),
           javacOptions.getSafeAnnotationProcessors(),
           javaSourceFilePaths,
           pathToSrcsList,
-          workingDirectory,
-          usedClassesFileWriter,
-          fileManagerFactory);
+          workingDirectory);
 
       String firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
       String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
