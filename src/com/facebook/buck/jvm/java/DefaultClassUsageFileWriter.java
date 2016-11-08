@@ -33,11 +33,10 @@ import javax.tools.StandardJavaFileManager;
 public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
 
   private final Path relativePath;
-  private final ClassUsageTracker tracker;
+  private final ClassUsageTracker tracker = new ClassUsageTracker();
 
-  public DefaultClassUsageFileWriter(final Path relativePath, ClassUsageTracker tracker) {
+  public DefaultClassUsageFileWriter(Path relativePath) {
     this.relativePath = relativePath;
-    this.tracker = tracker;
   }
 
   @Override

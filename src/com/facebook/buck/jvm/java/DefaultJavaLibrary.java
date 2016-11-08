@@ -487,9 +487,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         final Path usedClassesFilePath =
             getUsedClassesFilePath(getBuildTarget(), getProjectFilesystem());
         depFileOutputPath = getProjectFilesystem().getPathForRelativePath(usedClassesFilePath);
-        usedClassesFileWriter = new DefaultClassUsageFileWriter(
-            usedClassesFilePath,
-            new ClassUsageTracker());
+        usedClassesFileWriter = new DefaultClassUsageFileWriter(usedClassesFilePath);
 
         buildableContext.recordArtifact(usedClassesFilePath);
       } else {

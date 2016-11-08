@@ -64,9 +64,7 @@ public class DefaultClassUsageFileWriterTest {
     }
 
 
-    DefaultClassUsageFileWriter writerOne = new DefaultClassUsageFileWriter(
-        outputOne,
-        new ClassUsageTracker());
+    DefaultClassUsageFileWriter writerOne = new DefaultClassUsageFileWriter(outputOne);
     {
       StandardJavaFileManager wrappedFileManager = writerOne.wrapFileManager(fakeFileManager);
       for (JavaFileObject javaFileObject : wrappedFileManager.list(null, null, null, false)) {
@@ -76,9 +74,7 @@ public class DefaultClassUsageFileWriterTest {
     writerOne.writeFile(filesystem, ObjectMappers.newDefaultInstance());
 
 
-    DefaultClassUsageFileWriter writerTwo = new DefaultClassUsageFileWriter(
-        outputTwo,
-        new ClassUsageTracker());
+    DefaultClassUsageFileWriter writerTwo = new DefaultClassUsageFileWriter(outputTwo);
     {
       StandardJavaFileManager wrappedFileManager = writerTwo.wrapFileManager(fakeFileManager);
       Iterable<JavaFileObject> fileObjects = wrappedFileManager.list(null, null, null, false);
