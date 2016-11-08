@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.cli.ConfigPathGetter;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
@@ -48,20 +49,26 @@ public class RecordingFileHashLoader implements FileHashLoader {
   private final ProjectFilesystem projectFilesystem;
   @GuardedBy("this")
   private final BuildJobStateFileHashes remoteFileHashes;
+  private ConfigPathGetter buckConfig;
   @GuardedBy("this")
   private final Set<Path> seenPaths;
   @GuardedBy("this")
   private final Set<ArchiveMemberPath> seenArchives;
+  private boolean materializeCurrentFileDuringPreloading = false;
 
   public RecordingFileHashLoader(
       FileHashLoader delegate,
       ProjectFilesystem projectFilesystem,
-      BuildJobStateFileHashes remoteFileHashes) {
+      BuildJobStateFileHashes remoteFileHashes,
+      ConfigPathGetter buckConfig) {
     this.delegate = delegate;
     this.projectFilesystem = projectFilesystem;
     this.remoteFileHashes = remoteFileHashes;
+    this.buckConfig = buckConfig;
     this.seenPaths = new HashSet<>();
     this.seenArchives = new HashSet<>();
+
+    extractBuckConfigFileHashes();
   }
 
   @Override
@@ -213,6 +220,9 @@ public class RecordingFileHashLoader implements FileHashLoader {
     } else if (isDirectory && !pathIsAbsolute && realPathInsideProject) {
       fileHashEntry.setChildren(children);
     }
+
+    fileHashEntry.setMaterializeDuringPreloading(materializeCurrentFileDuringPreloading);
+
     // TODO(alisdair04): handling for symlink to internal directory (including infinite loop).
     remoteFileHashes.addToEntries(fileHashEntry);
   }
@@ -232,5 +242,39 @@ public class RecordingFileHashLoader implements FileHashLoader {
       }
     }
     return hashCode;
+  }
+
+  private void addIfPresent(Set<Path> paths, Optional<Path> path) {
+    if (path.isPresent() &&
+        projectFilesystem.getPathRelativeToProjectRoot(path.get()).isPresent()) {
+      paths.add(path.get());
+    }
+  }
+
+  private synchronized void extractBuckConfigFileHashes() {
+    // We only want to materialize files during pre-loading for .buckconfig entries
+    materializeCurrentFileDuringPreloading = true;
+
+    Set<Path> paths = new HashSet<>();
+
+    // KnownBuildRuleTypes always loads these paths, if they are defined in a .buckconfig,
+    // regardless of what type of build is taking place.
+    // Unless peforming a Java build, they are not added to the build graph, and as such
+    // Stampede needs to be told about them directly.
+    // TODO(alisdair04,ruibm): capture all .buckconfig dependencies automatically.
+    addIfPresent(paths, buckConfig.getPath("tools", "java"));
+    addIfPresent(paths, buckConfig.getPath("tools", "java_for_tests"));
+    addIfPresent(paths, buckConfig.getPath("tools", "javac"));
+    addIfPresent(paths, buckConfig.getPath("tools", "javac_jar"));
+
+    for (Path path : paths) {
+      try {
+        get(path);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    materializeCurrentFileDuringPreloading = false;
   }
 }

@@ -52,8 +52,8 @@ public class Cell {
   private final ProjectFilesystem filesystem;
   private final Watchman watchman;
   private final BuckConfig config;
-  private final KnownBuildRuleTypes knownBuildRuleTypes;
   private final CellProvider cellProvider;
+  private final Supplier<KnownBuildRuleTypes> knownBuildRuleTypesSupplier;
 
   private final Supplier<Integer> hashCodeSupplier = Suppliers.memoize(
       new Supplier<Integer>() {
@@ -79,7 +79,24 @@ public class Cell {
     this.watchman = watchman;
     this.config = config;
 
-    this.knownBuildRuleTypes = knownBuildRuleTypesFactory.create(config, filesystem);
+    // Stampede needs the Cell before it can materialize all the files required by
+    // knownBuildRuleTypesFactory (specifically java/javac), and as such we need to load this
+    // lazily when getKnownBuildRuleTypes() is called.
+    knownBuildRuleTypesSupplier = Suppliers.memoize(() -> {
+      try {
+        return knownBuildRuleTypesFactory.create(config, filesystem);
+      } catch (IOException e) {
+        throw new RuntimeException(String.format(
+            "Creation of KnownBuildRuleTypes failed for Cell rooted at [%s].",
+            filesystem.getRootPath()), e);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new RuntimeException(String.format(
+            "Creation of KnownBuildRuleTypes failed for Cell rooted at [%s].",
+            filesystem.getRootPath()), e);
+      }
+    });
+
     this.cellProvider = cellProvider;
   }
 
@@ -92,7 +109,7 @@ public class Cell {
   }
 
   public KnownBuildRuleTypes getKnownBuildRuleTypes() {
-    return knownBuildRuleTypes;
+    return knownBuildRuleTypesSupplier.get();
   }
 
   public BuckConfig getBuckConfig() {

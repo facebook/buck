@@ -78,7 +78,7 @@ import javax.annotation.Nullable;
 /**
  * Structured representation of data read from a {@code .buckconfig} file.
  */
-public class BuckConfig {
+public class BuckConfig implements ConfigPathGetter {
 
   public static final String BUCK_CONFIG_OVERRIDE_FILE_NAME = ".buckconfig.local";
 
@@ -696,6 +696,7 @@ public class BuckConfig {
   /**
    * @return the path for the given section and property.
    */
+  @Override
   public Optional<Path> getPath(String sectionName, String name) {
     return getPath(sectionName, name, true);
   }

@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cli.NoOpConfigPathGetter;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
@@ -77,7 +78,8 @@ public class RecordingFileHashLoaderTest {
     RecordingFileHashLoader recordingLoader = new RecordingFileHashLoader(
         delegateLoader,
         projectFilesystem,
-        fileHashes);
+        fileHashes,
+        new NoOpConfigPathGetter());
 
     recordingLoader.get(symlink);
 
@@ -118,7 +120,8 @@ public class RecordingFileHashLoaderTest {
     RecordingFileHashLoader recordingLoader = new RecordingFileHashLoader(
         delegateLoader,
         projectFilesystem,
-        fileHashes);
+        fileHashes,
+        new NoOpConfigPathGetter());
 
     recordingLoader.get(symlink);
 
@@ -169,7 +172,8 @@ public class RecordingFileHashLoaderTest {
     RecordingFileHashLoader recordingLoader = new RecordingFileHashLoader(
         delegateHashLoaderMock,
         projectFilesystem,
-        fileHashes);
+        fileHashes,
+        new NoOpConfigPathGetter());
 
     recordingLoader.get(pathDirA.toRealPath());
 

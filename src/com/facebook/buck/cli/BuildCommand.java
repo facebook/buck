@@ -413,6 +413,7 @@ public class BuildCommand extends AbstractCommand {
       ActionGraphAndResolver actionGraphAndResolver,
       final WeightedListeningExecutorService executorService)
       throws InterruptedException, IOException {
+
     DistBuildCellIndexer cellIndexer =
         new DistBuildCellIndexer(params.getCell());
     DistBuildFileHashes distributedBuildFileHashes = new DistBuildFileHashes(
@@ -421,7 +422,8 @@ public class BuildCommand extends AbstractCommand {
         params.getFileHashCache(),
         cellIndexer,
         executorService,
-        params.getBuckConfig().getKeySeed());
+        params.getBuckConfig().getKeySeed(),
+        params.getBuckConfig());
 
     return DistBuildState.dump(
         cellIndexer,

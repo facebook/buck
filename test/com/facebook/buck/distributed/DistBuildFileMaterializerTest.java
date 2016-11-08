@@ -69,7 +69,8 @@ public class DistBuildFileMaterializerTest {
     void execute(DistBuildFileMaterializer materializer, Path path) throws IOException;
   }
 
-  private void testMaterializeDirectoryHelper(MaterializeFunction materializeFunction)
+  private void testMaterializeDirectoryHelper(
+      boolean materializeDuringPreloading, MaterializeFunction materializeFunction)
       throws IOException {
     // Scenario:
     // file hash entries for:
@@ -105,6 +106,7 @@ public class DistBuildFileMaterializerTest {
         unixPath(relativePathDirAb),
         unixPath(relativePathFileAe)
     ));
+    dirAFileHashEntry.setMaterializeDuringPreloading(materializeDuringPreloading);
     fileHashes.addToEntries(dirAFileHashEntry);
 
     BuildJobStateFileHashEntry dirAbFileHashEntry = new BuildJobStateFileHashEntry();
@@ -115,12 +117,14 @@ public class DistBuildFileMaterializerTest {
         unixPath(relativePathFileAbc),
         unixPath(relativePathDirAbd)
     ));
+    dirAbFileHashEntry.setMaterializeDuringPreloading(materializeDuringPreloading);
     fileHashes.addToEntries(dirAbFileHashEntry);
 
     BuildJobStateFileHashEntry fileAbcFileHashEntry = new BuildJobStateFileHashEntry();
     fileAbcFileHashEntry.setPath(unixPath(relativePathFileAbc));
     fileAbcFileHashEntry.setHashCode(EXAMPLE_HASHCODE.toString());
     fileAbcFileHashEntry.setIsDirectory(false);
+    fileAbcFileHashEntry.setMaterializeDuringPreloading(materializeDuringPreloading);
     fileHashes.addToEntries(fileAbcFileHashEntry);
 
     BuildJobStateFileHashEntry dirAbdFileHashEntry = new BuildJobStateFileHashEntry();
@@ -128,12 +132,14 @@ public class DistBuildFileMaterializerTest {
     dirAbdFileHashEntry.setHashCode(EXAMPLE_HASHCODE.toString());
     dirAbdFileHashEntry.setIsDirectory(true);
     dirAbdFileHashEntry.setChildren(ImmutableList.of());
+    dirAbdFileHashEntry.setMaterializeDuringPreloading(materializeDuringPreloading);
     fileHashes.addToEntries(dirAbdFileHashEntry);
 
     BuildJobStateFileHashEntry fileAeFileHashEntry = new BuildJobStateFileHashEntry();
     fileAeFileHashEntry.setPath(unixPath(relativePathFileAe));
     fileAeFileHashEntry.setHashCode(EXAMPLE_HASHCODE.toString());
     fileAeFileHashEntry.setIsDirectory(false);
+    fileAeFileHashEntry.setMaterializeDuringPreloading(materializeDuringPreloading);
     fileHashes.addToEntries(fileAeFileHashEntry);
 
     FileContentsProvider mockFileProvider = EasyMock.createMock(FileContentsProvider.class);
@@ -171,7 +177,24 @@ public class DistBuildFileMaterializerTest {
   public void testMaterializeDirectory() throws IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
 
-    testMaterializeDirectoryHelper((m, p) -> m.get(p));
+    testMaterializeDirectoryHelper(false, (m, p) -> m.get(p));
+
+    String fileAbcContents = new String(Files.readAllBytes(projectFilesystem.resolve("a/b/c")));
+    assertThat(
+        fileAbcContents,
+        Matchers.equalTo(FILE_CONTENTS));
+
+    String fileAeContents = new String(Files.readAllBytes(projectFilesystem.resolve("a/e")));
+    assertThat(
+        fileAeContents,
+        Matchers.equalTo(FILE_CONTENTS_TWO));
+  }
+
+  @Test
+  public void testMaterializeDuringPreloadingDirectory() throws IOException {
+    ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
+
+    testMaterializeDirectoryHelper(true, (m, p) -> m.preloadAllFiles());
 
     String fileAbcContents = new String(Files.readAllBytes(projectFilesystem.resolve("a/b/c")));
     assertThat(
@@ -186,14 +209,14 @@ public class DistBuildFileMaterializerTest {
 
   @Test
   public void testPreloadDirectory() throws IOException {
-    testMaterializeDirectoryHelper((m, p) -> m.preloadAllFiles());
+    testMaterializeDirectoryHelper(false, (m, p) -> m.preloadAllFiles());
   }
 
   @Test
   public void testPreloadThenMaterializeDirectory() throws IOException {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
 
-    testMaterializeDirectoryHelper((m, p) -> {
+    testMaterializeDirectoryHelper(false, (m, p) -> {
       m.preloadAllFiles();
       m.get(p);
     });
@@ -209,7 +232,9 @@ public class DistBuildFileMaterializerTest {
         Matchers.equalTo(FILE_CONTENTS_TWO));
   }
 
-  private Path testEntryForRealFile(MaterializeFunction materializeFunction) throws IOException {
+  private Path testEntryForRealFile(
+      boolean materializeDuringPreloading, MaterializeFunction materializeFunction)
+      throws IOException {
     assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
 
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(projectDir.getRoot().toPath());
@@ -220,6 +245,7 @@ public class DistBuildFileMaterializerTest {
     realFileHashEntry.setPath(unixPath(relativeRealFile));
     realFileHashEntry.setHashCode(EXAMPLE_HASHCODE.toString());
     realFileHashEntry.setContents(FILE_CONTENTS.getBytes(StandardCharsets.UTF_8));
+    realFileHashEntry.setMaterializeDuringPreloading(materializeDuringPreloading);
     BuildJobStateFileHashes fileHashes = new BuildJobStateFileHashes();
     fileHashes.addToEntries(realFileHashEntry);
 
@@ -245,7 +271,23 @@ public class DistBuildFileMaterializerTest {
     //  path: /project/linktoexternaldir/externalfile
     //  contents: "filecontents"
     // => materialize creates file with correct contents
-    Path realFile = testEntryForRealFile((m, p) -> m.get(p));
+    Path realFile = testEntryForRealFile(false, (m, p) -> m.get(p));
+
+    assertTrue(realFile.toFile().exists());
+    String actualFileContents = new String(Files.readAllBytes(realFile));
+    assertThat(
+        actualFileContents,
+        Matchers.equalTo(FILE_CONTENTS));
+  }
+
+  @Test
+  public void testMaterializeRealFileDuringPreloadingSetsContents() throws IOException {
+    // Scenario:
+    //  path: /project/linktoexternaldir/externalfile
+    //  contents: "filecontents"
+    // => preloading for entry with materializeDuringPreloading set to true
+    // creates file with correct contents
+    Path realFile = testEntryForRealFile(true, (m, p) -> m.preloadAllFiles());
 
     assertTrue(realFile.toFile().exists());
     String actualFileContents = new String(Files.readAllBytes(realFile));
@@ -260,7 +302,7 @@ public class DistBuildFileMaterializerTest {
     //  path: /project/linktoexternaldir/externalfile
     //  contents: "filecontents"
     // => preload touches file, but doesn't set contents
-    Path realFile = testEntryForRealFile((m, p) -> m.preloadAllFiles());
+    Path realFile = testEntryForRealFile(false, (m, p) -> m.preloadAllFiles());
 
     assertTrue(realFile.toFile().exists());
     assertThat(realFile.toFile().length(),

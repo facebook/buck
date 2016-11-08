@@ -71,6 +71,9 @@ class DistBuildFileMaterializer implements FileHashLoader {
       BuildJobStateFileHashEntry fileHashEntry = remoteFileHashesByPath.get(path);
       if (fileHashEntry == null || fileHashEntry.isPathIsAbsolute()) {
         continue;
+      } else if (fileHashEntry.isSetMaterializeDuringPreloading() &&
+          fileHashEntry.isMaterializeDuringPreloading()) {
+        get(path);
       } else if (fileHashEntry.isSetRootSymLink()) {
         materializeSymlink(fileHashEntry, symlinkedPaths);
         symlinkedPaths.add(path);

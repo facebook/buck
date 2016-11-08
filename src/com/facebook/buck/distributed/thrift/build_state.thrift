@@ -51,6 +51,11 @@ struct BuildJobStateFileHashEntry {
 
   9: optional list<PathWithUnixSeparators> children;
   10: optional bool isExecutable;
+
+  // By default, during the pre-loading stage all files that have BuildJobStateFileHashEntry
+  // entries are touched. If this flag is set to true, rather than being touched the full file
+  // will be materialized for the entry during the pre-loading stage.
+  11: optional bool materializeDuringPreloading;
 }
 
 struct BuildJobStateFileHashes {

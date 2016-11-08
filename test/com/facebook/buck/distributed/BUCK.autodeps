@@ -2,6 +2,7 @@
   "distributed" : {
     "deps" : [
       "//src-gen:thrift",
+      "//src/com/facebook/buck/cli:cli",
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/distributed:distributed",

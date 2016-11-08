@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.cli.NoOpConfigPathGetter;
 import com.facebook.buck.config.Config;
 import com.facebook.buck.config.ConfigBuilder;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -277,7 +278,8 @@ public class DistributedBuildStateTest {
         DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem),
         Functions.constant(0),
         MoreExecutors.newDirectExecutorService(),
-        /* keySeed */ 0);
+        /* keySeed */ 0,
+        new NoOpConfigPathGetter());
   }
 
   private static DistBuildTargetGraphCodec createDefaultCodec(
