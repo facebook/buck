@@ -109,11 +109,6 @@ public abstract class AbstractGenruleStep extends ShellStep {
       // and modify the command directly rather than using environment variables.
       String environmentVariableName = environmentVariable.getKey();
       if (command.contains(environmentVariableName)) {
-        // I hate this $DEPS variable so much...
-        if ("DEPS".equals(environmentVariableName) &&
-            allEnvironmentVariables.containsKey("GEN_DIR")) {
-          usedEnvironmentVariablesBuilder.put("GEN_DIR", allEnvironmentVariables.get("GEN_DIR"));
-        }
         usedEnvironmentVariablesBuilder.put(environmentVariable);
       }
     }

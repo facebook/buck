@@ -25,7 +25,6 @@ import com.facebook.buck.model.HasOutputName;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
@@ -48,12 +47,10 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Build rule for generating a file via a shell command. For example, to generate the katana
@@ -190,17 +187,10 @@ public class Genrule extends AbstractBuildRule
                 .transform(Object::toString)));
     environmentVariablesBuilder.put("OUT", getAbsoluteOutputFilePath());
 
-    final Set<String> depFiles = Sets.newHashSet();
-    final Set<BuildRule> processedBuildRules = Sets.newHashSet();
-    for (BuildRule dep : getDeps()) {
-      transformNames(processedBuildRules, depFiles, dep);
-    }
-
     environmentVariablesBuilder.put(
         "GEN_DIR",
         getProjectFilesystem().resolve(getProjectFilesystem().getBuckPaths().getGenDir())
             .toString());
-    environmentVariablesBuilder.put("DEPS", Joiner.on(' ').skipNulls().join(depFiles));
     environmentVariablesBuilder.put("SRCDIR", absolutePathToSrcDirectory.toString());
     environmentVariablesBuilder.put("TMP", absolutePathToTmpDirectory.toString());
 
@@ -229,39 +219,6 @@ public class Genrule extends AbstractBuildRule
 
     // TODO(t5302074): This shouldn't be necessary. Speculatively disabling.
     environmentVariablesBuilder.put("NO_BUCKD", "1");
-  }
-
-  private void transformNames(Set<BuildRule> processedBuildRules,
-                              Set<String> appendTo,
-                              BuildRule rule) {
-    if (processedBuildRules.contains(rule)) {
-      return;
-    }
-    processedBuildRules.add(rule);
-
-    Path output = rule.getPathToOutput();
-    if (output != null) {
-      // TODO(t6405518): This is a giant hack and we should do away with $DEPS altogether.
-      // There can be a lot of paths here and the filesystem location can be arbitrarily long.
-      // We can easily hit the shell command character limit. What this does is find
-      // BuckConstant.GEN_DIR (which should be the same for every path) and replaces
-      // it with a shell variable. This way the character count is much lower when run
-      // from the shell but anyone reading the environment variable will get the
-      // full paths due to variable interpolation
-      if (output.startsWith(getProjectFilesystem().getBuckPaths().getGenDir())) {
-        Path relativePath =
-            output.subpath(
-                getProjectFilesystem().getBuckPaths().getGenDir().getNameCount(),
-                output.getNameCount());
-        appendTo.add("$GEN_DIR" + relativePath.getFileSystem().getSeparator() + relativePath);
-      } else {
-        appendTo.add(getProjectFilesystem().resolve(output).toString());
-      }
-    }
-
-    for (BuildRule dep : rule.getDeps()) {
-      transformNames(processedBuildRules, appendTo, dep);
-    }
   }
 
   private static Optional<String> flattenToSpaceSeparatedString(Optional<Arg> arg) {

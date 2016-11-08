@@ -23,7 +23,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.jvm.java.JavaLibrary;
@@ -35,9 +34,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildInfo;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeOnDiskBuildInfo;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -391,49 +388,6 @@ public class GenruleTest {
         .build(ruleResolver);
 
     assertThat(genrule.getDeps(), Matchers.hasItems(shBinaryRule, workerToolRule));
-  }
-
-  @Test
-  public void testDepsEnvironmentVariableIsComplete() throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    BuildTarget depTarget = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar");
-    BuildRule dep = new FakeBuildRule(depTarget, new SourcePathResolver(resolver)) {
-      @Override
-      public Path getPathToOutput() {
-        return filesystem.getBuckPaths().getGenDir().resolve("foo/bar.jar");
-      }
-    };
-    resolver.addToIndex(dep);
-
-    BuildRule genrule = GenruleBuilder
-        .newGenruleBuilder(
-            BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:baz"))
-        .setBash("cat $DEPS > $OUT")
-        .setCmdExe("echo %DEPS% > %OUT%")
-        .setOut("deps.txt")
-        .setSrcs(
-            ImmutableList.of(new BuildTargetSourcePath(dep.getBuildTarget())))
-        .build(resolver, filesystem);
-
-    AbstractGenruleStep genruleStep = ((Genrule) genrule).createGenruleStep();
-    Platform platform = Platform.detect() == Platform.WINDOWS ?
-        Platform.WINDOWS : Platform.LINUX;
-    ExecutionContext context = newEmptyExecutionContext(platform);
-    ImmutableMap<String, String> environmentVariables =
-        genruleStep.getEnvironmentVariables(context);
-    assertEquals(
-        "Make sure that the use of $DEPS pulls in $GEN_DIR, as well.",
-        ImmutableMap.of(
-            "DEPS", MorePaths.pathWithPlatformSeparators("$GEN_DIR/foo/bar.jar"),
-            "GEN_DIR", filesystem.resolve("buck-out/gen").toString(),
-            "OUT", filesystem.resolve("buck-out/gen/foo/baz/deps.txt").toString()),
-        environmentVariables);
-
-    // Ensure that $GEN_DIR is declared before $DEPS.
-    List<String> keysInOrder = ImmutableList.copyOf(environmentVariables.keySet());
-    assertEquals("GEN_DIR", keysInOrder.get(1));
-    assertEquals("DEPS", keysInOrder.get(2));
   }
 
   private ExecutionContext newEmptyExecutionContext(Platform platform) {
