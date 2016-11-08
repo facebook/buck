@@ -392,18 +392,18 @@ public class CachingBuildEngine implements BuildEngine {
         Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> depFileRuleKeyAndInputs =
             calculateDepFileRuleKey(
                 rule,
-                onDiskBuildInfo.getValues(BuildInfo.METADATA_KEY_FOR_DEP_FILE),
+                onDiskBuildInfo.getValues(BuildInfo.MetadataKey.DEP_FILE),
                 /* allowMissingInputs */ true);
         if (depFileRuleKeyAndInputs.isPresent()) {
 
           RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getFirst();
           buildInfoRecorder.addBuildMetadata(
-              BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY,
+              BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
               depFileRuleKey.toString());
 
           // Check the input-based rule key says we're already built.
           Optional<RuleKey> lastDepFileRuleKey =
-              onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY);
+              onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
           if (lastDepFileRuleKey.isPresent() &&
               depFileRuleKey.equals(lastDepFileRuleKey.get())) {
             return Futures.immediateFuture(Optional.of(
@@ -474,7 +474,7 @@ public class CachingBuildEngine implements BuildEngine {
 
       // 1. Check if it's already built.
       Optional<RuleKey> cachedRuleKey =
-          onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY);
+          onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY);
       final RuleKey defaultRuleKey = ruleKeyFactory.defaultRuleKeyBuilderFactory.build(rule);
       if (defaultRuleKey.equals(cachedRuleKey.orElse(null))) {
         return Futures.transform(
@@ -598,7 +598,7 @@ public class CachingBuildEngine implements BuildEngine {
     final BuildInfoRecorder buildInfoRecorder =
         buildContext.createBuildInfoRecorder(rule.getBuildTarget(), rule.getProjectFilesystem())
             .addBuildMetadata(
-                BuildInfo.METADATA_KEY_FOR_RULE_KEY,
+                BuildInfo.MetadataKey.RULE_KEY,
                 keyFactories.defaultRuleKeyBuilderFactory.build(rule).toString());
     final BuildableContext buildableContext = new DefaultBuildableContext(buildInfoRecorder);
     final AtomicReference<Long> outputSize = Atomics.newReference();
@@ -639,7 +639,7 @@ public class CachingBuildEngine implements BuildEngine {
           if (success != BuildRuleSuccessType.BUILT_LOCALLY) {
             for (String str :
                  onDiskBuildInfo.getValuesOrThrow(
-                     BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS)) {
+                     BuildInfo.MetadataKey.RECORDED_PATHS)) {
               buildInfoRecorder.recordArtifact(Paths.get(str));
             }
           }
@@ -683,7 +683,7 @@ public class CachingBuildEngine implements BuildEngine {
                 .map(MoreFunctions.toJsonFunction(objectMapper))
                 .collect(MoreCollectors.toImmutableList());
             buildInfoRecorder.addMetadata(
-                BuildInfo.METADATA_KEY_FOR_DEP_FILE,
+                BuildInfo.MetadataKey.DEP_FILE,
                 inputStrings);
 
             // Re-calculate and store the depfile rule key for next time.
@@ -695,7 +695,7 @@ public class CachingBuildEngine implements BuildEngine {
             if (depFileRuleKeyAndInputs.isPresent()) {
               RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getFirst();
               buildInfoRecorder.addBuildMetadata(
-                  BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY,
+                  BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
                   depFileRuleKey.toString());
 
               // Push an updated manifest to the cache.
@@ -705,7 +705,7 @@ public class CachingBuildEngine implements BuildEngine {
                         .depFileRuleKeyBuilderFactory.buildManifestKey(rule);
                 if (manifestKey.isPresent()) {
                   buildInfoRecorder.addBuildMetadata(
-                      BuildInfo.METADATA_KEY_FOR_MANIFEST_KEY,
+                      BuildInfo.MetadataKey.MANIFEST_KEY,
                       manifestKey.get().getFirst().toString());
                   updateAndStoreManifest(
                       rule,
@@ -739,7 +739,7 @@ public class CachingBuildEngine implements BuildEngine {
                   fileHashCache.get(rule.getProjectFilesystem().resolve(path)).toString());
             }
             buildInfoRecorder.addBuildMetadata(
-                BuildInfo.METADATA_KEY_FOR_RECORDED_PATH_HASHES,
+                BuildInfo.MetadataKey.RECORDED_PATH_HASHES,
                 outputHashes.build());
           }
 
@@ -749,7 +749,7 @@ public class CachingBuildEngine implements BuildEngine {
           // the output hashes weren't recorded in the cache we do nothing.
           if (success != BuildRuleSuccessType.BUILT_LOCALLY && success.outputsHaveChanged()) {
             Optional<ImmutableMap<String, String>> hashes =
-                onDiskBuildInfo.getMap(BuildInfo.METADATA_KEY_FOR_RECORDED_PATH_HASHES);
+                onDiskBuildInfo.getMap(BuildInfo.MetadataKey.RECORDED_PATH_HASHES);
 
             // We only seed after first verifying the recorded path hashes.  This prevents the
             // optimization, but is useful to keep in place for a while to verify this optimization
@@ -774,10 +774,10 @@ public class CachingBuildEngine implements BuildEngine {
           // Make sure that all of the local files have the same values they would as if the
           // rule had been built locally.
           buildInfoRecorder.addBuildMetadata(
-              BuildInfo.METADATA_KEY_FOR_TARGET,
+              BuildInfo.MetadataKey.TARGET,
               rule.getBuildTarget().toString());
           buildInfoRecorder.addMetadata(
-              BuildInfo.METADATA_KEY_FOR_RECORDED_PATHS,
+              BuildInfo.MetadataKey.RECORDED_PATHS,
               buildInfoRecorder.getRecordedPaths().stream()
                   .map(Object::toString)
                   .collect(MoreCollectors.toImmutableList()));
@@ -849,7 +849,7 @@ public class CachingBuildEngine implements BuildEngine {
                     success.shouldUploadResultingArtifactInputBased()) {
                   ruleKeys.addAll(
                       OptionalCompat.asSet(onDiskBuildInfo.getRuleKey(
-                          BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY)));
+                          BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY)));
                 }
 
                 // If the manifest-based rule key has changed, we need to push the artifact to cache
@@ -858,7 +858,7 @@ public class CachingBuildEngine implements BuildEngine {
                     success.shouldUploadResultingArtifactManifestBased()) {
                   ruleKeys.addAll(
                       OptionalCompat.asSet(onDiskBuildInfo.getRuleKey(
-                          BuildInfo.METADATA_KEY_FOR_DEP_FILE_RULE_KEY)));
+                          BuildInfo.MetadataKey.DEP_FILE_RULE_KEY)));
                 }
 
                 // If we have any rule keys to push to the cache with, do the upload now.
@@ -868,7 +868,7 @@ public class CachingBuildEngine implements BuildEngine {
                     // Verify that the recorded path hashes are accurate.
                     Optional<String> recordedPathHashes =
                         buildInfoRecorder.getBuildMetadataFor(
-                            BuildInfo.METADATA_KEY_FOR_RECORDED_PATH_HASHES);
+                            BuildInfo.MetadataKey.RECORDED_PATH_HASHES);
                     if (recordedPathHashes.isPresent() &&
                         !verifyRecordedPathHashes(
                             rule.getBuildTarget(),
@@ -986,7 +986,7 @@ public class CachingBuildEngine implements BuildEngine {
                             .setRuleKey(keyFactories.defaultRuleKeyBuilderFactory.build(rule))
                             .setInputRuleKey(
                                 onDiskBuildInfo.getRuleKey(
-                                    BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY))
+                                    BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY))
                             .build(),
                         input.getStatus(),
                         input.getCacheResult(),
@@ -1597,7 +1597,7 @@ public class CachingBuildEngine implements BuildEngine {
             .depFileRuleKeyBuilderFactory.buildManifestKey(rule);
     if (!manifestKey.isPresent()) {
       buildInfoRecorder.addBuildMetadata(
-          BuildInfo.METADATA_KEY_FOR_MANIFEST_KEY,
+          BuildInfo.MetadataKey.MANIFEST_KEY,
           manifestKey.get().getFirst().toString());
       return Optional.empty();
     }
@@ -1688,12 +1688,12 @@ public class CachingBuildEngine implements BuildEngine {
     }
 
     buildInfoRecorder.addBuildMetadata(
-        BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY,
+        BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY,
         inputRuleKey.get().toString());
 
     // Check the input-based rule key says we're already built.
     Optional<RuleKey> lastInputRuleKey = onDiskBuildInfo.getRuleKey(
-        BuildInfo.METADATA_KEY_FOR_INPUT_BASED_RULE_KEY);
+        BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY);
     if (inputRuleKey.get().equals(lastInputRuleKey.orElse(null))) {
       return Optional.of(
               BuildResult.success(
@@ -1754,11 +1754,11 @@ public class CachingBuildEngine implements BuildEngine {
     if (rule instanceof AbiRule) {
       RuleKey abiRuleKey = ruleKeyFactory.abiRuleKeyBuilderFactory.build(rule);
       buildInfoRecorder.addBuildMetadata(
-          BuildInfo.METADATA_KEY_FOR_ABI_RULE_KEY,
+          BuildInfo.MetadataKey.ABI_RULE_KEY,
           abiRuleKey.toString());
 
       Optional<RuleKey> lastAbiRuleKey =
-          onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_ABI_RULE_KEY);
+          onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.ABI_RULE_KEY);
       if (abiRuleKey.equals(lastAbiRuleKey.orElse(null))) {
         return Optional.of(BuildResult.success(
             rule,

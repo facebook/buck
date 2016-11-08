@@ -294,7 +294,7 @@ public class GenruleTest {
     workerTool.getBuildOutputInitializer().setBuildOutput(
         workerTool.initializeFromDisk(
             new FakeOnDiskBuildInfo().putMetadata(
-                BuildInfo.METADATA_KEY_FOR_RULE_KEY,
+                BuildInfo.MetadataKey.RULE_KEY,
                 Hashing.sha1().hashLong(0).toString())));
 
     return GenruleBuilder

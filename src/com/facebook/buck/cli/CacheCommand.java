@@ -151,7 +151,7 @@ public class CacheCommand extends AbstractCommand {
       return false;
     }
 
-    String buckTarget = success.metadata().get().get(BuildInfo.METADATA_KEY_FOR_TARGET);
+    String buckTarget = success.metadata().get().get(BuildInfo.MetadataKey.TARGET);
     ImmutableList<Path> paths;
     try {
       paths = Unzip.extractZipFile(

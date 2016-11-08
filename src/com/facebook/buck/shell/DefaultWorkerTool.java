@@ -120,7 +120,7 @@ public class DefaultWorkerTool extends NoopBuildRule implements
   @Override
   public Data initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
     Optional<RuleKey> ruleKey =
-        onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY);
+        onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY);
     if (!ruleKey.isPresent()) {
       throw new IllegalStateException(String.format(
           "Should not be initializing %s from disk if the rule key is not written.",

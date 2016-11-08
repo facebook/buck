@@ -29,56 +29,61 @@ import java.nio.file.Path;
 @VisibleForTesting
 public class BuildInfo {
 
-  /**
-   * Key for {@link OnDiskBuildInfo} which lists the recorded items.
-   */
-  static final String METADATA_KEY_FOR_RECORDED_PATHS = "RECORDED_PATHS";
+  public static class MetadataKey {
+    /** Utility class: do not instantiate. */
+    private MetadataKey() {}
 
-  /**
-   * Key for {@link OnDiskBuildInfo} with a map of outputs to hashes.
-   */
-  static final String METADATA_KEY_FOR_RECORDED_PATH_HASHES = "RECORDED_PATH_HASHES";
+    /**
+     * Key for {@link OnDiskBuildInfo} which lists the recorded items.
+     */
+    static final String RECORDED_PATHS = "RECORDED_PATHS";
 
-  /**
-   * Key for {@link OnDiskBuildInfo} to identify additional info describing a build.
-   */
-  static final String METADATA_KEY_FOR_ADDITIONAL_INFO = "ADDITIONAL_INFO";
+    /**
+     * Key for {@link OnDiskBuildInfo} with a map of outputs to hashes.
+     */
+    static final String RECORDED_PATH_HASHES = "RECORDED_PATH_HASHES";
 
-  /**
-   * Key for {@link OnDiskBuildInfo} to identify the RuleKey for a build rule.
-   */
-  public static final String METADATA_KEY_FOR_RULE_KEY = "RULE_KEY";
+    /**
+     * Key for {@link OnDiskBuildInfo} to identify additional info describing a build.
+     */
+    static final String ADDITIONAL_INFO = "ADDITIONAL_INFO";
 
-  /**
-   * Key for {@link OnDiskBuildInfo} to identify the input RuleKey for a build rule.
-   */
-  static final String METADATA_KEY_FOR_INPUT_BASED_RULE_KEY = "INPUT_BASED_RULE_KEY";
+    /**
+     * Key for {@link OnDiskBuildInfo} to identify the RuleKey for a build rule.
+     */
+    public static final String RULE_KEY = "RULE_KEY";
 
-  /**
-   * Key for {@link OnDiskBuildInfo} to identify the ABI RuleKey for a build rule.
-   */
-  static final String METADATA_KEY_FOR_ABI_RULE_KEY = "ABI_RULE_KEY";
+    /**
+     * Key for {@link OnDiskBuildInfo} to identify the input RuleKey for a build rule.
+     */
+    static final String INPUT_BASED_RULE_KEY = "INPUT_BASED_RULE_KEY";
 
-  /**
-   * Key for {@link OnDiskBuildInfo} to identify the dependency-file {@link RuleKey} for a build
-   * rule.
-   */
-  static final String METADATA_KEY_FOR_DEP_FILE_RULE_KEY = "DEP_FILE_RULE_KEY";
+    /**
+     * Key for {@link OnDiskBuildInfo} to identify the ABI RuleKey for a build rule.
+     */
+    static final String ABI_RULE_KEY = "ABI_RULE_KEY";
 
-  /**
-   * Key for {@link OnDiskBuildInfo} to identify the dependency-file for a build rule.
-   */
-  static final String METADATA_KEY_FOR_DEP_FILE = "DEP_FILE";
+    /**
+     * Key for {@link OnDiskBuildInfo} to identify the dependency-file {@link RuleKey} for a build
+     * rule.
+     */
+    static final String DEP_FILE_RULE_KEY = "DEP_FILE_RULE_KEY";
 
-  /**
-   * Key for {@link OnDiskBuildInfo} to store the build target of the owning build rule.
-   */
-  public static final String METADATA_KEY_FOR_TARGET = "TARGET";
+    /**
+     * Key for {@link OnDiskBuildInfo} to identify the dependency-file for a build rule.
+     */
+    static final String DEP_FILE = "DEP_FILE";
 
-  /**
-   * Key for {@link OnDiskBuildInfo} to store the cache key of the manifest.
-   */
-  static final String METADATA_KEY_FOR_MANIFEST_KEY = "MANIFEST_KEY";
+    /**
+     * Key for {@link OnDiskBuildInfo} to store the build target of the owning build rule.
+     */
+    public static final String TARGET = "TARGET";
+
+    /**
+     * Key for {@link OnDiskBuildInfo} to store the cache key of the manifest.
+     */
+    static final String MANIFEST_KEY = "MANIFEST_KEY";
+  }
 
   /**
    * Key for {@link OnDiskBuildInfo} to store the manifest for build rules supporting manifest-based

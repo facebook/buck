@@ -121,7 +121,7 @@ public class BuildInfoRecorderTest {
     buildInfoRecorder = createBuildInfoRecorder(filesystem);
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ true);
     onDiskBuildInfo = new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem, new ObjectMapper());
-    assertTrue(onDiskBuildInfo.getValue(BuildInfo.METADATA_KEY_FOR_ADDITIONAL_INFO).isPresent());
+    assertTrue(onDiskBuildInfo.getValue(BuildInfo.MetadataKey.ADDITIONAL_INFO).isPresent());
   }
 
   @Test

@@ -180,7 +180,7 @@ public class DefaultOnDiskBuildInfoTest {
     String key = "fa";
     projectFilesystem.writeContentsToPath(
         key,
-        Paths.get("buck-out/bin/foo/bar/.baz/metadata/" + BuildInfo.METADATA_KEY_FOR_RULE_KEY));
+        Paths.get("buck-out/bin/foo/bar/.baz/metadata/" + BuildInfo.MetadataKey.RULE_KEY));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -189,7 +189,7 @@ public class DefaultOnDiskBuildInfoTest {
             projectFilesystem,
             ObjectMappers.newDefaultInstance());
     assertThat(
-        onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY),
+        onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY),
         Matchers.equalTo(Optional.of(new RuleKey(key))));
   }
 
@@ -198,7 +198,7 @@ public class DefaultOnDiskBuildInfoTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     projectFilesystem.writeContentsToPath(
         "",
-        Paths.get("buck-out/bin/foo/bar/.baz/metadata/" + BuildInfo.METADATA_KEY_FOR_RULE_KEY));
+        Paths.get("buck-out/bin/foo/bar/.baz/metadata/" + BuildInfo.MetadataKey.RULE_KEY));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -207,7 +207,7 @@ public class DefaultOnDiskBuildInfoTest {
             projectFilesystem,
             ObjectMappers.newDefaultInstance());
     assertThat(
-        onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY),
+        onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY),
         Matchers.equalTo(Optional.empty()));
   }
 
@@ -216,7 +216,7 @@ public class DefaultOnDiskBuildInfoTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     projectFilesystem.writeContentsToPath(
         "Not A Valid Rule Key",
-        Paths.get("buck-out/bin/foo/bar/.baz/metadata/" + BuildInfo.METADATA_KEY_FOR_RULE_KEY));
+        Paths.get("buck-out/bin/foo/bar/.baz/metadata/" + BuildInfo.MetadataKey.RULE_KEY));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
     DefaultOnDiskBuildInfo onDiskBuildInfo =
@@ -225,7 +225,7 @@ public class DefaultOnDiskBuildInfoTest {
             projectFilesystem,
             ObjectMappers.newDefaultInstance());
     assertThat(
-        onDiskBuildInfo.getRuleKey(BuildInfo.METADATA_KEY_FOR_RULE_KEY),
+        onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY),
         Matchers.equalTo(Optional.empty()));
   }
 
