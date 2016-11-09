@@ -192,6 +192,7 @@ java_immutables_library(
     'BuildInfoRecorder.java',
     'BuildOutputInitializer.java',
     'BuildResult.java',
+    'BuildRuleCacheEvent.java',
     'BuildRuleEvent.java',
     'CachingBuildEngine.java',
     'DefaultBuildableContext.java',

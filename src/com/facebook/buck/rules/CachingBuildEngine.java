@@ -374,64 +374,72 @@ public class CachingBuildEngine implements BuildEngine {
         return Futures.immediateFuture(Optional.of(BuildResult.canceled(rule, firstFailure)));
       }
 
-      // Input-based rule keys.
-      Optional<BuildResult> inputResult = performInputBasedCacheFetch(
-          rule,
-          context,
-          onDiskBuildInfo,
-          buildInfoRecorder,
-          ruleKeyFactory);
+      try (BuildRuleEvent.Scope scope = BuildRuleCacheEvent.startCacheCheckScope(
+          context.getEventBus(), rule, BuildRuleCacheEvent.CacheStepType.INPUT_BASED)) {
+        // Input-based rule keys.
+        Optional<BuildResult> inputResult = performInputBasedCacheFetch(
+            rule,
+            context,
+            onDiskBuildInfo,
+            buildInfoRecorder,
+            ruleKeyFactory);
 
-      if (inputResult.isPresent()) {
-        return Futures.immediateFuture(inputResult);
-      }
-
-      // Dep-file rule keys.
-      if (useDependencyFileRuleKey(rule)) {
-        // Try to get the current dep-file rule key.
-        Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> depFileRuleKeyAndInputs =
-            calculateDepFileRuleKey(
-                rule,
-                onDiskBuildInfo.getValues(BuildInfo.MetadataKey.DEP_FILE),
-                /* allowMissingInputs */ true);
-        if (depFileRuleKeyAndInputs.isPresent()) {
-
-          RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getFirst();
-          buildInfoRecorder.addBuildMetadata(
-              BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
-              depFileRuleKey.toString());
-
-          // Check the input-based rule key says we're already built.
-          Optional<RuleKey> lastDepFileRuleKey =
-              onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
-          if (lastDepFileRuleKey.isPresent() &&
-              depFileRuleKey.equals(lastDepFileRuleKey.get())) {
-            return Futures.immediateFuture(Optional.of(
-                BuildResult.success(
-                    rule,
-                    BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY,
-                    CacheResult.localKeyUnchangedHit())));
-          }
+        if (inputResult.isPresent()) {
+          return Futures.immediateFuture(inputResult);
         }
       }
 
-      // Manifest caching
-      Optional<BuildResult> manifestResult =
-          performManifestBasedCacheFetch(rule, context, buildInfoRecorder);
+      try (BuildRuleEvent.Scope scope = BuildRuleCacheEvent.startCacheCheckScope(
+          context.getEventBus(), rule, BuildRuleCacheEvent.CacheStepType.DEPFILE_BASED)) {
+        // Dep-file rule keys.
+        if (useDependencyFileRuleKey(rule)) {
+          // Try to get the current dep-file rule key.
+          Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> depFileRuleKeyAndInputs =
+              calculateDepFileRuleKey(
+                  rule,
+                  onDiskBuildInfo.getValues(BuildInfo.MetadataKey.DEP_FILE),
+                /* allowMissingInputs */ true);
+          if (depFileRuleKeyAndInputs.isPresent()) {
+            RuleKey depFileRuleKey = depFileRuleKeyAndInputs.get().getFirst();
+            buildInfoRecorder.addBuildMetadata(
+                BuildInfo.MetadataKey.DEP_FILE_RULE_KEY,
+                depFileRuleKey.toString());
 
-      if (manifestResult.isPresent()) {
-        return Futures.immediateFuture(manifestResult);
+            // Check the input-based rule key says we're already built.
+            Optional<RuleKey> lastDepFileRuleKey =
+                onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
+            if (lastDepFileRuleKey.isPresent() &&
+                depFileRuleKey.equals(lastDepFileRuleKey.get())) {
+              return Futures.immediateFuture(Optional.of(
+                  BuildResult.success(
+                      rule,
+                      BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY,
+                      CacheResult.localKeyUnchangedHit())));
+            }
+          }
+        }
+
+        // Manifest caching
+        Optional<BuildResult> manifestResult =
+            performManifestBasedCacheFetch(rule, context, buildInfoRecorder);
+
+        if (manifestResult.isPresent()) {
+          return Futures.immediateFuture(manifestResult);
+        }
       }
 
-      // Perform an ABI-based fetch.
-      Optional<BuildResult> abiResult = performAbiBasedCacheFetch(
-          rule,
-          ruleKeyFactory,
-          buildInfoRecorder,
-          onDiskBuildInfo);
+      try (BuildRuleEvent.Scope scope = BuildRuleCacheEvent.startCacheCheckScope(
+          context.getEventBus(), rule, BuildRuleCacheEvent.CacheStepType.ABI_BASED)) {
+        // Perform an ABI-based fetch.
+        Optional<BuildResult> abiResult = performAbiBasedCacheFetch(
+            rule,
+            ruleKeyFactory,
+            buildInfoRecorder,
+            onDiskBuildInfo);
 
-      if (abiResult.isPresent()) {
-        return Futures.immediateFuture(abiResult);
+        if (abiResult.isPresent()) {
+          return Futures.immediateFuture(abiResult);
+        }
       }
 
       // Cache lookups failed, so if we're just trying to populate, we've failed.
