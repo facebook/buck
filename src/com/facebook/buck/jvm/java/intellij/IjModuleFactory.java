@@ -401,21 +401,10 @@ public class IjModuleFactory {
     }
 
     if (result.isPresent()) {
-      result = Optional.of(normalizeSourceLevel(result.get()));
+      result = Optional.of(JavaLanguageLevelHelper.normalizeSourceLevel(result.get()));
     }
 
     return result;
-  }
-
-  /**
-   * Ensures that source level has format "majorVersion.minorVersion".
-   */
-  private static String normalizeSourceLevel(String jdkVersion) {
-    if (jdkVersion.length() == 1) {
-      return "1." + jdkVersion;
-    } else {
-      return jdkVersion;
-    }
   }
 
   /**

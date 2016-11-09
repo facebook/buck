@@ -1621,15 +1621,6 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'intellij' /}
-  {param name: 'language_level' /}
-  {param example_value: 'JDK_1_7' /}
-  {param description}
-    Default Java language level for the IntelliJ project.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'intellij' /}
   {param name: 'remove_unused_libraries' /}
   {param example_value: 'true' /}
   {param description}
@@ -1671,7 +1662,8 @@ $ buck targets --resolve-alias app#src_jar
   {param name: 'source_level' /}
   {param example_value: '7' /}
   {param description}
-    The default version of Java for source files.
+    The default version of Java for source files. Also defines the project language level in
+    IntelliJ.
   {/param}
 {/call}
 

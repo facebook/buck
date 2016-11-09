@@ -37,8 +37,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 
-import javax.annotation.Nullable;
-
 /**
  * Writes the serialized representations of IntelliJ project components to disk.
  */
@@ -129,28 +127,23 @@ public class IjProjectWriter {
         module.getSdkType().orElse(null));
     moduleContents.add(
         "languageLevel",
-        convertLanguageLevelToIjFormat(module.getLanguageLevel().orElse(null)));
+        JavaLanguageLevelHelper.convertLanguageLevelToIjFormat(
+            module.getLanguageLevel().orElse(null)));
 
     writeToFile(moduleContents, path);
     return path;
   }
 
-  private @Nullable String convertLanguageLevelToIjFormat(@Nullable String languageLevel) {
-    if (languageLevel == null) {
-      return null;
-    }
-
-    return "JDK_" + languageLevel.replace('.', '_');
-  }
-
   private void writeProjectSettings(
       IJProjectCleaner cleaner,
       IjProjectConfig projectConfig) throws IOException {
-    Optional<String> languageLevel = projectConfig.getProjectLanguageLevel();
+    String sourceLevel = projectConfig.getJavaBuckConfig().getDefaultJavacOptions()
+        .getSourceLevel();
+    sourceLevel = JavaLanguageLevelHelper.convertLanguageLevelToIjFormat(sourceLevel);
     Optional<String> sdkName = projectConfig.getProjectJdkName();
     Optional<String> sdkType = projectConfig.getProjectJdkType();
 
-    if (!languageLevel.isPresent() || !sdkName.isPresent() || !sdkType.isPresent()) {
+    if (!sdkName.isPresent() || !sdkType.isPresent()) {
       return;
     }
 
@@ -160,8 +153,8 @@ public class IjProjectWriter {
 
     ST contents = getST(StringTemplateFile.MISC_TEMPLATE);
 
-    contents.add("languageLevel", languageLevel.get());
-    contents.add("jdk15", getJdk15FromLanguageLevel(languageLevel.get()));
+    contents.add("languageLevel", sourceLevel);
+    contents.add("jdk15", getJdk15FromLanguageLevel(sourceLevel));
     contents.add("jdkName", sdkName.get());
     contents.add("jdkType", sdkType.get());
 
