@@ -121,7 +121,7 @@ public class BuildThreadStateRenderer implements ThreadStateRenderer {
         threadInformation.getStartEvent(),
         threadInformation.getRunningStep(),
         stepCategory,
-        Optional.of("checking local cache"),
+        Optional.of("checking_cache"),
         threadInformation.getElapsedTimeMs(),
         lineBuilder);
   }

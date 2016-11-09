@@ -33,7 +33,6 @@ import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.DirArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
-import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.distributed.DistBuildStatus;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
@@ -43,6 +42,7 @@ import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.InstallEvent;
@@ -54,6 +54,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
+import com.facebook.buck.rules.BuildRuleCacheEvent;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleKeys;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -245,18 +246,47 @@ public class SuperConsoleEventBusListenerTest {
         parsingLine,
         DOWNLOAD_STRING,
         "[+] BUILDING...0.3s",
-        " |=> //banana:stand...  0.1s (checking local cache)"));
+        " |=> //banana:stand...  0.1s (checking_cache)"));
+
+    BuildRuleCacheEvent.CacheStepStarted cacheStepStarted = BuildRuleCacheEvent.started(
+        fakeRule,
+        BuildRuleCacheEvent.CacheStepType.INPUT_BASED);
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            cacheStepStarted,
+            701L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    validateConsole(listener, 701L, ImmutableList.of(
+        parsingLine,
+        DOWNLOAD_STRING,
+        "[+] BUILDING...0.3s",
+        " |=> //banana:stand...  0.1s (running checking_cache_input_based[0.0s])"));
+
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            BuildRuleCacheEvent.finished(cacheStepStarted),
+            702L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+
+    validateConsole(listener, 702L, ImmutableList.of(
+        parsingLine,
+        DOWNLOAD_STRING,
+        "[+] BUILDING...0.3s",
+        " |=> //banana:stand...  0.1s (checking_cache)"));
 
     ArtifactCompressionEvent.Started compressStarted = ArtifactCompressionEvent.started(
         ArtifactCompressionEvent.Operation.COMPRESS, ImmutableSet.of());
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             compressStarted,
-            701L,
+            703L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    validateConsole(listener, 702L, ImmutableList.of(
+    validateConsole(listener, 703L, ImmutableList.of(
         parsingLine,
         DOWNLOAD_STRING,
         "[+] BUILDING...0.3s",
@@ -265,15 +295,15 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             ArtifactCompressionEvent.finished(compressStarted),
-            703L,
+            704L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    validateConsole(listener, 704L, ImmutableList.of(
+    validateConsole(listener, 705L, ImmutableList.of(
         parsingLine,
         DOWNLOAD_STRING,
         "[+] BUILDING...0.3s",
-        " |=> //banana:stand...  0.1s (checking local cache)"));
+        " |=> //banana:stand...  0.1s (checking_cache)"));
 
     DirArtifactCacheEvent.DirArtifactCacheEventFactory dirArtifactCacheEventFactory =
         new DirArtifactCacheEvent.DirArtifactCacheEventFactory();
@@ -307,7 +337,7 @@ public class SuperConsoleEventBusListenerTest {
         parsingLine,
         DOWNLOAD_STRING,
         "[+] BUILDING...0.4s",
-        " |=> //banana:stand...  0.2s (checking local cache)"));
+        " |=> //banana:stand...  0.2s (checking_cache)"));
 
     String stepShortName = "doing_something";
     String stepDescription = "working hard";
@@ -367,7 +397,7 @@ public class SuperConsoleEventBusListenerTest {
         DOWNLOAD_STRING,
         "[+] BUILDING...0.7s",
         " |=> IDLE",
-        " |=> //chicken:dance...  0.1s (checking local cache)"));
+        " |=> //chicken:dance...  0.1s (checking_cache)"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -610,7 +640,7 @@ public class SuperConsoleEventBusListenerTest {
         DOWNLOAD_STRING,
         "[+] BUILDING...0.4s" + " [0%] (0/10 JOBS, 0 UPDATED, " +
             "0 [0.0%] CACHE MISS)",
-        " |=> //banana:stand...  0.2s (checking local cache)"));
+        " |=> //banana:stand...  0.2s (checking_cache)"));
 
     String stepShortName = "doing_something";
     String stepDescription = "working hard";
@@ -671,7 +701,7 @@ public class SuperConsoleEventBusListenerTest {
         DOWNLOAD_STRING,
         "[+] BUILDING...0.7s [10%] (1/10 JOBS, 1 UPDATED, 1 [10.0%] CACHE MISS)",
         " |=> IDLE",
-        " |=> //chicken:dance...  0.1s (checking local cache)"));
+        " |=> //chicken:dance...  0.1s (checking_cache)"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1051,7 +1081,7 @@ public class SuperConsoleEventBusListenerTest {
         listener,
         800L,
         ImmutableList.of(parsingLine, DOWNLOAD_STRING, "[+] BUILDING...0.4s",
-            " |=> //:test...  0.2s (checking local cache)"));
+            " |=> //:test...  0.2s (checking_cache)"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1343,7 +1373,7 @@ public class SuperConsoleEventBusListenerTest {
         parsingLine,
         DOWNLOAD_STRING,
         "[+] BUILDING...0.4s",
-        " |=> //:test...  0.2s (checking local cache)"));
+        " |=> //:test...  0.2s (checking_cache)"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1648,7 +1678,7 @@ public class SuperConsoleEventBusListenerTest {
         parsingLine,
         DOWNLOAD_STRING,
         "[+] BUILDING...0.4s",
-        " |=> //:test...  0.2s (checking local cache)"));
+        " |=> //:test...  0.2s (checking_cache)"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1967,7 +1997,7 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             DOWNLOAD_STRING,
             "[+] BUILDING...0.3s",
-            " |=> //banana:stand...  0.1s (checking local cache)"));
+            " |=> //banana:stand...  0.1s (checking_cache)"));
 
     // Post events that run another step.
     StepEvent.Started step2EventStarted =
