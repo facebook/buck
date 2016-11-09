@@ -8,7 +8,7 @@ java_library(
 
 java_test(
   name = 'SimpleSuiteTest',
-  srcs = glob(['SimpleSuiteTest.java']),
+  srcs = ['SimpleSuiteTest.java'],
   deps = [
     ':junit',
     ':SubTests',
@@ -17,7 +17,7 @@ java_test(
 
 java_test(
   name = 'FailingSuiteTest',
-  srcs = glob(['FailingSuiteTest.java']),
+  srcs = ['FailingSuiteTest.java'],
   deps = [
     ':junit',
     ':SubTests',
@@ -26,7 +26,7 @@ java_test(
 
 java_test(
   name = 'ParametrizedTest',
-  srcs = glob(['ParametrizedTest.java']),
+  srcs = ['ParametrizedTest.java'],
   deps = [
     ':junit',
   ],

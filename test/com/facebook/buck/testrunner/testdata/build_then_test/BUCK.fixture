@@ -1,6 +1,6 @@
 java_test(
   name = 'example',
-  srcs = glob(['MyTest.java']),
+  srcs = ['MyTest.java'],
   deps = [
     ':junit',
   ],
@@ -16,7 +16,7 @@ java_test(
 
 java_test(
   name = 'abstractclass',
-  srcs = glob(['AbstractClassWithTests.java']),
+  srcs = ['AbstractClassWithTests.java'],
   deps = [
     ':junit',
   ],
