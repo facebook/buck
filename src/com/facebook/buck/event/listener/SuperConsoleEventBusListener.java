@@ -356,7 +356,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         // All steps past this point require a build.
         return lines.build();
       }
-      String suffix = Joiner.on(" ")
+      String suffix = Joiner.on("\n    ")
           .join(FluentIterable.of(new String[] {jobSummary, buildTrace})
               .filter(Objects::nonNull));
       Optional<String> suffixOptional =
