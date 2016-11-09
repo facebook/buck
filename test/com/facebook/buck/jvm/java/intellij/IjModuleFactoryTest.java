@@ -494,7 +494,7 @@ public class IjModuleFactoryTest {
         ImmutableSet.of(java8Node));
 
     assertThat(moduleWithDefault.getSdkName(), equalTo(Optional.empty()));
-    assertThat(moduleWithJava8.getSdkName(), equalTo(Optional.of("1.8")));
+    assertThat(moduleWithJava8.getSdkName(), equalTo(Optional.empty()));
     assertThat(moduleWithJava8.getLanguageLevel(), equalTo(Optional.of("1.8")));
   }
 
@@ -525,7 +525,7 @@ public class IjModuleFactoryTest {
         ImmutableSet.of(java8Node));
 
     assertThat(moduleWithDefault.getSdkName(), equalTo(Optional.empty()));
-    assertThat(moduleWithJava8.getSdkName(), equalTo(Optional.of("TestSDK")));
+    assertThat(moduleWithJava8.getSdkName(), equalTo(Optional.empty()));
     assertThat(moduleWithJava8.getLanguageLevel(), equalTo(Optional.of("1.8")));
   }
 

@@ -599,13 +599,13 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void testVersion2BuckProjectCustomSdks() throws IOException {
-    runBuckProjectAndVerify("experimental_project_with_custom_sdks");
+  public void testBuckProjectWithCustomAndroidSdks() throws IOException {
+    runBuckProjectAndVerify("project_with_custom_android_sdks");
   }
 
   @Test
-  public void testBuckProjectWithCustomAndroidSdks() throws IOException {
-    runBuckProjectAndVerify("project_with_custom_android_sdks");
+  public void testBuckProjectWithCustomJavaSdks() throws IOException {
+    runBuckProjectAndVerify("project_with_custom_java_sdks");
   }
 
   @Test

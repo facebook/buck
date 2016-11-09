@@ -1,7 +1,0 @@
-java_library(
-  name = 'dep4',
-  srcs = glob(['src/**/*.java']),
-  visibility = [
-    'PUBLIC',
-  ],
-)
