@@ -151,8 +151,8 @@ public class JUnitStep extends ShellStep {
             return;
           }
 
-          context.getStdErr().print(
-              "Test has timed out!  Here is a trace of what it is currently doing:%n");
+          context.getStdErr().println(
+              "Test has timed out!  Here is a trace of what it is currently doing:");
           try {
             context.getProcessExecutor().launchAndExecute(
                 /* command */ ProcessExecutorParams.builder()
