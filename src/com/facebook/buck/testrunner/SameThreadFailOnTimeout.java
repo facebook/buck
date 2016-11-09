@@ -18,6 +18,7 @@ package com.facebook.buck.testrunner;
 
 import org.junit.runners.model.Statement;
 
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -57,7 +58,18 @@ class SameThreadFailOnTimeout extends Statement {
         throw result;
       }
     } catch (TimeoutException e) {
+      System.err.printf("Dumping threads for timed-out test %s:%n", testName);
+      for (Map.Entry<Thread, StackTraceElement[]> t : Thread.getAllStackTraces().entrySet()) {
+        Thread thread = t.getKey();
+        System.err.printf("\"%s\" #%d%n", thread.getName(), thread.getId(), thread.getId());
+        System.err.printf("\tjava.lang.Thread.State: %s%n", thread.getState());
+        for (StackTraceElement element : t.getValue()) {
+          System.err.printf("\t\t at %s%n", element);
+        }
+      }
+
       submitted.cancel(true);
+
       // The default timeout doesn't indicate which test was running.
       String message = String.format(
           "test %s timed out after %d milliseconds",

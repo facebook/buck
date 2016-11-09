@@ -14,6 +14,15 @@ java_test(
   ],
 )
 
+java_test(
+  name = 'SleepTest',
+  srcs = ['SleepTest.java'],
+  deps = [
+    ':junit',
+  ],
+  test_case_timeout_ms = 50,
+)
+
 prebuilt_jar(
   name = 'junit',
   binary_jar = 'junit-4.11.jar',

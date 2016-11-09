@@ -43,6 +43,7 @@ public class JUnitStep extends ShellStep {
   private final JavaRuntimeLauncher javaRuntimeLauncher;
   private final ImmutableMap<String, String> nativeLibsEnvironment;
   private final Optional<Long> testRuleTimeoutMs;
+  private final Optional<Long> testCaseTimeoutMs;
   private final ImmutableMap<String, String> env;
   private final JUnitJvmArgs junitJvmArgs;
 
@@ -53,6 +54,7 @@ public class JUnitStep extends ShellStep {
       ProjectFilesystem filesystem,
       Map<String, String> nativeLibsEnvironment,
       Optional<Long> testRuleTimeoutMs,
+      Optional<Long> testCaseTimeoutMs,
       ImmutableMap<String, String> env,
       JavaRuntimeLauncher javaRuntimeLauncher,
       JUnitJvmArgs junitJvmArgs) {
@@ -61,6 +63,7 @@ public class JUnitStep extends ShellStep {
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.nativeLibsEnvironment = ImmutableMap.copyOf(nativeLibsEnvironment);
     this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.testCaseTimeoutMs = testCaseTimeoutMs;
     this.env = env;
     this.junitJvmArgs = junitJvmArgs;
   }
@@ -79,7 +82,7 @@ public class JUnitStep extends ShellStep {
         args,
         filesystem,
         context.getVerbosity(),
-        context.getDefaultTestTimeoutMillis());
+        testCaseTimeoutMs.orElse(context.getDefaultTestTimeoutMillis()));
 
     if (junitJvmArgs.isDebugEnabled()) {
       warnUser(context,

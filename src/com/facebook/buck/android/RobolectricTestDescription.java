@@ -197,6 +197,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                 cxxLibraryEnhancement.nativeLibsEnvironment,
                 dummyRDotJava,
                 args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+                args.testCaseTimeoutMs,
                 args.env,
                 args.getRunTestSeparately(),
                 args.getForkMode(),

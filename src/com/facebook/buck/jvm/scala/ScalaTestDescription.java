@@ -169,6 +169,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                 args.vmArgs,
                 cxxLibraryEnhancement.nativeLibsEnvironment,
                 args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+                args.testCaseTimeoutMs,
                 args.env,
                 args.runTestSeparately.orElse(false),
                 args.forkMode.orElse(ForkMode.NONE),
@@ -209,6 +210,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
     public Optional<Boolean> useCxxLibraries;
     public ImmutableSet<BuildTarget> cxxLibraryWhitelist = ImmutableSet.of();
     public Optional<Long> testRuleTimeoutMs;
+    public Optional<Long> testCaseTimeoutMs;
     public ImmutableMap<String, String> env = ImmutableMap.of();
   }
 }

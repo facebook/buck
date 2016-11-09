@@ -83,7 +83,8 @@ public class JUnitStepTest {
     JUnitStep junit = new JUnitStep(
         filesystem,
         /* nativeLibsEnvironment */ ImmutableMap.of(),
-        /* testRuleTimeoutMs*/ Optional.empty(),
+        /* testRuleTimeoutMs */ Optional.empty(),
+        /* testCaseTimeoutMs */ Optional.empty(),
         ImmutableMap.of(),
         new ExternalJavaRuntimeLauncher("/foo/bar/custom/java"),
         args);
@@ -143,7 +144,8 @@ public class JUnitStepTest {
     JUnitStep junit = new JUnitStep(
         filesystem,
         /* nativeLibsEnvironment */ ImmutableMap.of(),
-        /* testRuleTimeoutMs*/ Optional.empty(),
+        /* testRuleTimeoutMs */ Optional.empty(),
+        /* testCaseTimeoutMs */ Optional.empty(),
         ImmutableMap.of("FOO", "BAR"),
         new ExternalJavaRuntimeLauncher("/foo/bar/custom/java"),
         args);
@@ -192,7 +194,8 @@ public class JUnitStepTest {
     JUnitStep junit = new JUnitStep(
         filesystem,
         ImmutableMap.of(),
-        /* testRuleTimeoutMs*/ Optional.empty(),
+        /* testRuleTimeoutMs */ Optional.empty(),
+        /* testCaseTimeoutMs */ Optional.empty(),
         ImmutableMap.of(),
         new ExternalJavaRuntimeLauncher("/foo/bar/custom/java"),
         args);

@@ -171,6 +171,7 @@ public class JavaTestDescription implements
               args.vmArgs,
               cxxLibraryEnhancement.nativeLibsEnvironment,
               args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+              args.testCaseTimeoutMs,
               args.env,
               args.getRunTestSeparately(),
               args.getForkMode(),
@@ -234,6 +235,7 @@ public class JavaTestDescription implements
     public Optional<Boolean> useCxxLibraries;
     public ImmutableSet<BuildTarget> cxxLibraryWhitelist = ImmutableSet.of();
     public Optional<Long> testRuleTimeoutMs;
+    public Optional<Long> testCaseTimeoutMs;
     public ImmutableMap<String, String> env = ImmutableMap.of();
 
     public boolean getRunTestSeparately() {

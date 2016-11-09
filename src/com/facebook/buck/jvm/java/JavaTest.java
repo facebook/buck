@@ -126,6 +126,9 @@ public class JavaTest
   private final Optional<Long> testRuleTimeoutMs;
 
   @AddToRuleKey
+  private final Optional<Long> testCaseTimeoutMs;
+
+  @AddToRuleKey
   private final ImmutableMap<String, String> env;
 
   private final Path pathToTestLogs;
@@ -155,6 +158,7 @@ public class JavaTest
       List<String> vmArgs,
       Map<String, String> nativeLibsEnvironment,
       Optional<Long> testRuleTimeoutMs,
+      Optional<Long> testCaseTimeoutMs,
       ImmutableMap<String, String> env,
       boolean runTestSeparately,
       ForkMode forkMode,
@@ -170,6 +174,7 @@ public class JavaTest
     this.contacts = ImmutableSet.copyOf(contacts);
     this.testType = testType;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.testCaseTimeoutMs = testCaseTimeoutMs;
     this.env = env;
     this.runTestSeparately = runTestSeparately;
     this.forkMode = forkMode;
@@ -240,6 +245,7 @@ public class JavaTest
         getProjectFilesystem(),
         nativeLibsEnvironment,
         testRuleTimeoutMs,
+        testCaseTimeoutMs,
         env,
         javaRuntimeLauncher,
         args);
