@@ -40,6 +40,9 @@ public class BuckBuildAction extends BuckBaseAction {
   @Override
   public void executeOnPooledThread(final AnActionEvent e) {
     Project project = e.getProject();
+    if (project == null) {
+      return;
+    }
     BuckBuildManager buildManager = BuckBuildManager.getInstance(project);
 
     String target = buildManager.getCurrentSavedTarget(project);

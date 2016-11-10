@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.module.mrbean.MrBeanModule;
+import com.google.common.annotations.VisibleForTesting;
 
 import java.io.IOException;
 
@@ -38,12 +39,18 @@ public class BuckEventsHandler implements BuckEventsHandlerInterface {
     mOnConnectHandler = onConnectHandler;
     mOnDisconnectHandler = onDisconnectHandler;
 
-    mObjectMapper = new ObjectMapper();
-    mObjectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    mObjectMapper.registerModule(new MrBeanModule());
-    mObjectMapper.registerModule(new GuavaModule());
+    mObjectMapper = createObjectMapper();
 
     mQueue = new BuckEventsQueue(mObjectMapper, consumerFactory);
+  }
+
+  @VisibleForTesting
+  public static ObjectMapper createObjectMapper() {
+    final ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    objectMapper.registerModule(new MrBeanModule());
+    objectMapper.registerModule(new GuavaModule());
+    return objectMapper;
   }
 
   @Override
