@@ -2175,14 +2175,17 @@ your <code>.buckjavaargs</code> file</a>:
 
 {call buckconfig.entry}
   {param section: 'project' /}
-  {param name: 'post_process' /}
-  {param example_value: '//scripts/post_process_buck_project.py' /}
+  {param name: 'pre_process' /}
+  {param example_value: 'scripts/pre_process_buck_project.py' /}
   {param description}
-    A script that should be executed after the project files are generated.  Because{sp}
-    {call buck.cmd_project /} is currently based on heuristics, the IntelliJ project that it
-    generates may not be exactly what you want if you are using a non-tradional project structure.
-    In these cases, this script can cleanup the generated project files to better work with your
-    project layout.
+    A script that should be executed before the project files are generated. This should only be
+    used to do some project-specific actions that are reasonably fast. The general advice is keep
+    it free from any logic that modifies generated iml files.
+    <p/>
+    The environment of this script contains the following variables:
+    <ul>
+      <code>BUCK_PROJECT_TARGETS</code> - whitespace-separated list of input targets.
+    </ul>
   {/param}
 {/call}
 

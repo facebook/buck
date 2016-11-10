@@ -614,6 +614,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testVersion2BuckProjectWithScripts() throws IOException {
+    runBuckProjectAndVerify("experimental_project_with_scripts", "//modules/dep1:dep1");
+  }
+
+  @Test
   public void testVersion2BuckProjectWithUnusedLibraries() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "experimental_project_with_unused_libraries", temporaryFolder);

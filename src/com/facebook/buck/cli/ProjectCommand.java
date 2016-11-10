@@ -67,10 +67,13 @@ import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.ProcessManager;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -270,7 +273,11 @@ public class ProjectCommand extends BuildCommand {
     return buckConfig.getValue("project", "default_android_manifest");
   }
 
-  public Optional<String> getPathToPostProcessScript(BuckConfig buckConfig) {
+  private Optional<String> getPathToPreProcessScript(BuckConfig buckConfig) {
+    return buckConfig.getValue("project", "pre_process");
+  }
+
+  private Optional<String> getPathToPostProcessScript(BuckConfig buckConfig) {
     return buckConfig.getValue("project", "post_process");
   }
 
@@ -395,7 +402,14 @@ public class ProjectCommand extends BuildCommand {
 
     try (CommandThreadManager pool = new CommandThreadManager(
         "Project",
-        getConcurrencyLimit(params.getBuckConfig()))) {
+        getConcurrencyLimit(params.getBuckConfig()));
+        ExecutionContext executionContext = createExecutionContext(params)) {
+
+      int rc = runPreprocessScriptIfNeeded(params, executionContext);
+      if (rc != 0) {
+        return rc;
+      }
+
       ImmutableSet<BuildTarget> passedInTargetsSet;
       TargetGraph projectGraph;
 
@@ -506,6 +520,7 @@ public class ProjectCommand extends BuildCommand {
             // unreachable
             throw new IllegalStateException("'ide' should always be of type 'INTELLIJ' or 'XCODE'");
         }
+
       } finally {
         params.getBuckEventBus().post(ProjectGenerationEvent.finished());
       }
@@ -703,6 +718,44 @@ public class ProjectCommand extends BuildCommand {
             "work correctly with IntelliJ. Please fix the errors and run this command again.\n");
   }
 
+  private int runPreprocessScriptIfNeeded(
+      CommandRunnerParams params,
+      ExecutionContext executionContext)
+      throws IOException, InterruptedException {
+    Optional<String> pathToPreProcessScript = getPathToPreProcessScript(params.getBuckConfig());
+    if (!pathToPreProcessScript.isPresent()) {
+      return 0;
+    }
+    return runScript(params, executionContext, pathToPreProcessScript.get());
+  }
+
+  private int runScript(
+      CommandRunnerParams params,
+      ExecutionContext executionContext,
+      String pathToScript) throws IOException, InterruptedException {
+    if (!Paths.get(pathToScript).isAbsolute()) {
+      pathToScript = params
+          .getCell()
+          .getFilesystem()
+          .getPathForRelativePath(pathToScript)
+          .toAbsolutePath()
+          .toString();
+    }
+
+    Map<String, String> environment = new HashMap<>();
+    environment.put("BUCK_PROJECT_TARGETS", Joiner.on(" ").join(getArguments()));
+
+    ProcessExecutorParams processParams = ProcessExecutorParams.builder()
+        .setCommand(ImmutableList.of(pathToScript))
+        .setRedirectOutput(ProcessBuilder.Redirect.INHERIT)
+        .setRedirectError(ProcessBuilder.Redirect.INHERIT)
+        .setEnvironment(environment)
+        .build();
+    ProcessExecutor.Result postProcessResult =
+        executionContext.getProcessExecutor().launchAndExecute(processParams);
+
+    return postProcessResult.getExitCode();
+  }
 
   /**
    * Run intellij specific project generation actions.
