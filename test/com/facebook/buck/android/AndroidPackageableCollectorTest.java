@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -40,6 +41,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -279,6 +281,58 @@ public class AndroidPackageableCollectorTest {
             .getAndroidPackageableCollection()
             .getResourceDetails()
             .getResourcesWithNonEmptyResDir());
+  }
+
+  @Test
+  public void testGetAndroidResourceDepsWithDuplicateResourcePaths() throws Exception {
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    FakeSourcePath resPath = new FakeSourcePath("res");
+    AndroidResource res1 = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
+            .setResolver(pathResolver)
+            .setBuildTarget(BuildTargetFactory.newInstance("//:res1"))
+            .setRes(resPath)
+            .setRDotJavaPackage("com.facebook")
+            .build());
+
+    AndroidResource res2 = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
+            .setResolver(pathResolver)
+            .setBuildTarget(BuildTargetFactory.newInstance("//:res2"))
+            .setRes(resPath)
+            .setRDotJavaPackage("com.facebook")
+            .build());
+
+    FakeSourcePath resBPath = new FakeSourcePath("res_b");
+    BuildRule b = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
+            .setResolver(pathResolver)
+            .setBuildTarget(BuildTargetFactory.newInstance("//:b"))
+            .setRes(resBPath)
+            .setRDotJavaPackage("com.facebook")
+            .build());
+
+    FakeSourcePath resAPath = new FakeSourcePath("res_a");
+    AndroidResource a = ruleResolver.addToIndex(
+        AndroidResourceRuleBuilder.newBuilder()
+            .setResolver(pathResolver)
+            .setBuildTarget(BuildTargetFactory.newInstance("//:a"))
+            .setRes(resAPath)
+            .setRDotJavaPackage("com.facebook")
+            .setDeps(ImmutableSortedSet.of(res1, res2, b))
+            .build());
+
+    AndroidPackageableCollector collector = new AndroidPackageableCollector(a.getBuildTarget());
+    collector.addPackageables(ImmutableList.of(a));
+
+    AndroidPackageableCollection androidPackageableCollection = collector.build();
+    AndroidPackageableCollection.ResourceDetails resourceDetails =
+        androidPackageableCollection.getResourceDetails();
+    assertThat(
+        resourceDetails.getResourceDirectories(),
+        Matchers.contains(resAPath, resPath, resBPath));
   }
 
   /**

@@ -40,6 +40,7 @@ import com.google.common.hash.HashCode;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class AndroidPackageableCollector {
 
@@ -273,7 +274,12 @@ public class AndroidPackageableCollector {
     // Reverse the resource directories/targets collections because we perform a post-order
     // traversal of the action graph, and we need to return these collections topologically
     // sorted.
-    resourceDetailsBuilder.setResourceDirectories(resourceDirectories.build().reverse());
+    resourceDetailsBuilder.setResourceDirectories(
+            resourceDirectories.build()
+                .reverse()
+                .stream()
+                .distinct()
+                .collect(Collectors.toList()));
     resourceDetailsBuilder.setResourcesWithNonEmptyResDir(
         resourcesWithNonEmptyResDir.build().reverse());
 
