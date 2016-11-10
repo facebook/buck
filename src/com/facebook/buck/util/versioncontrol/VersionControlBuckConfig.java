@@ -46,7 +46,7 @@ public class VersionControlBuckConfig {
   public static final String HG_CMD_SETTING_KEY = "hg_cmd";
 
   public static final String HG_CMD_DEFAULT = "hg";
-  public static final boolean GENERATE_STATISTICS_DEFAULT = true;
+  public static final boolean GENERATE_STATISTICS_DEFAULT = false;
 
   private final BuckConfig delegate;
 
