@@ -37,10 +37,13 @@ def is_git(dirpath):
     if(which('git') and sys.platform != 'cygwin'):
         if(os.path.exists(dot_git) and os.path.isdir(dot_git)):
             return True
-        output = check_output(
-            ['git', 'rev-parse', '--is-inside-work-tree'],
-            cwd=dirpath)
-        return output.strip() == 'true'
+        try:
+            output = check_output(
+                ['git', 'rev-parse', '--is-inside-work-tree'],
+                cwd=dirpath)
+            return output.strip() == 'true'
+        except:
+            pass
     return False
 
 
