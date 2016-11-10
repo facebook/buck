@@ -194,7 +194,7 @@ public class PrebuiltAppleFramework
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+  public Iterable<NativeLinkable> getNativeLinkableDepsForPlatform(CxxPlatform cxxPlatform) {
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }

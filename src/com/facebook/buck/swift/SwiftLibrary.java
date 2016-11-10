@@ -124,7 +124,8 @@ class SwiftLibrary
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
+      CxxPlatform cxxPlatform) {
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }

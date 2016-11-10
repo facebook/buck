@@ -632,14 +632,15 @@ class NativeLibraryMergeEnhancer {
     }
 
     @Override
-    public Iterable<? extends NativeLinkable> getNativeLinkableDeps(final CxxPlatform cxxPlatform) {
-      return getMappedDeps(l -> l.getNativeLinkableDeps(cxxPlatform));
+    public Iterable<? extends NativeLinkable> getNativeLinkableDepsForPlatform(
+        final CxxPlatform cxxPlatform) {
+      return getMappedDeps(l -> l.getNativeLinkableDepsForPlatform(cxxPlatform));
     }
 
     @Override
     public Iterable<? extends NativeLinkable>
-    getNativeLinkableExportedDeps(final CxxPlatform cxxPlatform) {
-      return getMappedDeps(l -> l.getNativeLinkableExportedDeps(cxxPlatform));
+    getNativeLinkableExportedDepsForPlatform(final CxxPlatform cxxPlatform) {
+      return getMappedDeps(l -> l.getNativeLinkableExportedDepsForPlatform(cxxPlatform));
     }
 
     private Iterable<? extends NativeLinkable> getMappedDeps(
@@ -784,8 +785,8 @@ class NativeLibraryMergeEnhancer {
             // Android Binaries will use share deps by default.
             Linker.LinkableDepType.SHARED,
             Iterables.concat(
-                getNativeLinkableDeps(cxxPlatform),
-                getNativeLinkableExportedDeps(cxxPlatform)),
+                getNativeLinkableDepsForPlatform(cxxPlatform),
+                getNativeLinkableExportedDepsForPlatform(cxxPlatform)),
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),

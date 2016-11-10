@@ -124,8 +124,8 @@ abstract class AbstractOmnibusRoots {
             return ImmutableSet.of();
           }
           return Iterables.concat(
-              linkable.getNativeLinkableDeps(cxxPlatform),
-              linkable.getNativeLinkableExportedDeps(cxxPlatform));
+              linkable.getNativeLinkableDepsForPlatform(cxxPlatform),
+              linkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform));
         }
       }.start();
 
@@ -142,8 +142,8 @@ abstract class AbstractOmnibusRoots {
             updatedExcludedRoots.put(linkable.getBuildTarget(), linkable);
           }
           return Iterables.concat(
-              linkable.getNativeLinkableDeps(cxxPlatform),
-              linkable.getNativeLinkableExportedDeps(cxxPlatform));
+              linkable.getNativeLinkableDepsForPlatform(cxxPlatform),
+              linkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform));
         }
       }.start();
 

@@ -86,8 +86,8 @@ public class Omnibus {
       NativeLinkable nativeLinkable,
       CxxPlatform cxxPlatform) {
     return Iterables.concat(
-        nativeLinkable.getNativeLinkableDeps(cxxPlatform),
-        nativeLinkable.getNativeLinkableExportedDeps(cxxPlatform));
+        nativeLinkable.getNativeLinkableDepsForPlatform(cxxPlatform),
+        nativeLinkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform));
   }
 
   // Returned the dependencies for the given node, which can either be a `NativeLinkable` or a

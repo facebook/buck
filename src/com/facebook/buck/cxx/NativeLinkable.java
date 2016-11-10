@@ -32,7 +32,8 @@ public interface NativeLinkable extends HasBuildTarget {
    * on a specific platform.
    */
   @SuppressWarnings("unused")
-  default Iterable<? extends NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+  default Iterable<? extends NativeLinkable> getNativeLinkableDepsForPlatform(
+      CxxPlatform cxxPlatform) {
     return getNativeLinkableDeps();
   }
 
@@ -41,7 +42,7 @@ public interface NativeLinkable extends HasBuildTarget {
    * on a specific platform.
    */
   @SuppressWarnings("unused")
-  default Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+  default Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
       CxxPlatform cxxPlatform) {
     return getNativeLinkableExportedDeps();
   }

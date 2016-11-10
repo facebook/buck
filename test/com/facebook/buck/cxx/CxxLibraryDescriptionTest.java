@@ -1147,11 +1147,12 @@ public class CxxLibraryDescriptionTest {
             .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
             .build(resolver);
     assertThat(
-        rule.getNativeLinkableDeps(CxxLibraryBuilder.createDefaultPlatform()),
+        rule.getNativeLinkableDepsForPlatform(CxxLibraryBuilder.createDefaultPlatform()),
         Matchers.contains(dep));
     assertThat(
         ImmutableList.copyOf(
-            rule.getNativeLinkableExportedDeps(CxxLibraryBuilder.createDefaultPlatform())),
+            rule.getNativeLinkableExportedDepsForPlatform(
+                CxxLibraryBuilder.createDefaultPlatform())),
         Matchers.<NativeLinkable>empty());
   }
 
@@ -1167,10 +1168,11 @@ public class CxxLibraryDescriptionTest {
             .setExportedDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
             .build(resolver);
     assertThat(
-        ImmutableList.copyOf(rule.getNativeLinkableDeps(CxxLibraryBuilder.createDefaultPlatform())),
+        ImmutableList.copyOf(rule.getNativeLinkableDepsForPlatform(
+            CxxLibraryBuilder.createDefaultPlatform())),
         empty());
     assertThat(
-        rule.getNativeLinkableExportedDeps(CxxLibraryBuilder.createDefaultPlatform()),
+        rule.getNativeLinkableExportedDepsForPlatform(CxxLibraryBuilder.createDefaultPlatform()),
         Matchers.contains(dep));
   }
 

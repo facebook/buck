@@ -176,7 +176,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
             .setExportedDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
             .build(resolver);
     assertThat(
-        lib.getNativeLinkableExportedDeps(CxxPlatformUtils.DEFAULT_PLATFORM),
+        lib.getNativeLinkableExportedDepsForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM),
         Matchers.contains(dep));
   }
 

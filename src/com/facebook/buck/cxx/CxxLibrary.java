@@ -186,7 +186,7 @@ public class CxxLibrary
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+  public Iterable<NativeLinkable> getNativeLinkableDepsForPlatform(CxxPlatform cxxPlatform) {
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
@@ -200,7 +200,8 @@ public class CxxLibrary
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
+      CxxPlatform cxxPlatform) {
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
@@ -349,8 +350,8 @@ public class CxxLibrary
   @Override
   public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(CxxPlatform cxxPlatform) {
     return Iterables.concat(
-        getNativeLinkableDeps(cxxPlatform),
-        getNativeLinkableExportedDeps(cxxPlatform));
+        getNativeLinkableDepsForPlatform(cxxPlatform),
+        getNativeLinkableExportedDepsForPlatform(cxxPlatform));
   }
 
   @Override

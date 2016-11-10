@@ -565,7 +565,7 @@ public class ThriftCxxEnhancerTest {
             deps);
 
     assertThat(
-        ImmutableList.copyOf(rule.getNativeLinkableExportedDeps(CXX_PLATFORM)),
+        ImmutableList.copyOf(rule.getNativeLinkableExportedDepsForPlatform(CXX_PLATFORM)),
         Matchers.<NativeLinkable>hasItem(dep));
   }
 

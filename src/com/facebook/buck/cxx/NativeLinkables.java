@@ -111,7 +111,7 @@ public class NativeLinkables {
 
             // We always traverse a rule's exported native linkables.
             Iterable<? extends NativeLinkable> nativeLinkableDeps =
-                nativeLinkable.getNativeLinkableExportedDeps(cxxPlatform);
+                nativeLinkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform);
 
             boolean shouldTraverse = true;
             switch (nativeLinkable.getPreferredLinkage(cxxPlatform)) {
@@ -131,7 +131,7 @@ public class NativeLinkables {
               nativeLinkableDeps =
                   Iterables.concat(
                       nativeLinkableDeps,
-                      nativeLinkable.getNativeLinkableDeps(cxxPlatform));
+                      nativeLinkable.getNativeLinkableDepsForPlatform(cxxPlatform));
             }
 
             // Process all the traversable deps.
@@ -241,8 +241,8 @@ public class NativeLinkables {
             ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
             for (NativeLinkable dep :
                  Iterables.concat(
-                     nativeLinkable.getNativeLinkableDeps(cxxPlatform),
-                     nativeLinkable.getNativeLinkableExportedDeps(cxxPlatform))) {
+                     nativeLinkable.getNativeLinkableDepsForPlatform(cxxPlatform),
+                     nativeLinkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform))) {
               BuildTarget depTarget = dep.getBuildTarget();
               graph.addEdge(target, depTarget);
               deps.add(depTarget);
