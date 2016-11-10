@@ -22,11 +22,13 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeTestRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -111,6 +113,13 @@ public class CxxTestTest {
             return command;
           }
 
+          @Override
+          public Tool getExecutableCommand() {
+            CommandTool.Builder builder = new CommandTool.Builder();
+            command.forEach(builder::addArg);
+            return builder.build();
+          }
+
         };
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
@@ -175,6 +184,11 @@ public class CxxTestTest {
             assertEquals(expectedOutput, output);
             assertEquals(expectedResults, results);
             return ImmutableList.of();
+          }
+
+          @Override
+          public Tool getExecutableCommand() {
+            return new CommandTool.Builder().build();
           }
 
         };

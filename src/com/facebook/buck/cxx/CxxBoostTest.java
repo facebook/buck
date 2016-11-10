@@ -121,6 +121,11 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         .build();
   }
 
+  @Override
+  public Tool getExecutableCommand() {
+    return executable;
+  }
+
   private void visitTestSuite(
       ImmutableList.Builder<TestResultSummary> builder,
       Map<String, String> messages,

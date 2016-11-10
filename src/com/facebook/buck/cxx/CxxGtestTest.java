@@ -117,6 +117,11 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         .build();
   }
 
+  @Override
+  public Tool getExecutableCommand() {
+    return executable;
+  }
+
   private TestResultSummary getProgramFailureSummary(
       String message,
       String output) {
