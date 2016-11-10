@@ -62,7 +62,6 @@ public class BuckEventsQueue implements BuckEventsQueueInterface {
                   mObjectMapper);
             }
           } catch (IOException e) {
-            // TODO(cosmin1123) Handle exception
             e.printStackTrace();
           }
         }
