@@ -22,5 +22,6 @@ java_library(
     '//test/com/facebook/buck/python:python',
     '//test/com/facebook/buck/testrunner:testrunner',
     '//test/com/facebook/buck/test:test',
+    '//src/com/facebook/buck/event/external:external_lib',
   ],
 )

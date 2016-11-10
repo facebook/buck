@@ -6,6 +6,8 @@ java_library(
     ':idea',
     ':openapi',
     ':util',
+    ':serviceMessages',
+    ':jdom',
   ],
   visibility = [
     'PUBLIC',
@@ -35,6 +37,16 @@ prebuilt_jar(
 prebuilt_jar(
   name='idea',
   binary_jar='idea.jar',
+)
+
+prebuilt_jar(
+  name='serviceMessages',
+  binary_jar='serviceMessages.jar',
+)
+
+prebuilt_jar(
+  name='jdom',
+  binary_jar='jdom.jar',
 )
 
 project_config(

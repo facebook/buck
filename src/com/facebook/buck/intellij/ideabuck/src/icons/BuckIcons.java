@@ -41,4 +41,5 @@ public final class BuckIcons {
   public static final Icon ACTION_RUN = load("/icons/actions/Run.png");
   public static final Icon ACTION_TEST = load("/icons/actions/Test.png");
   public static final Icon ACTION_UNINSTALL = load("/icons/actions/Uninstall.png");
+  public static final Icon CONFIGURATION_TEST = load("/icons/runConfigurations/test.png");
 }

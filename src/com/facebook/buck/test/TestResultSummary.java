@@ -113,6 +113,7 @@ public class TestResultSummary implements TestResultSummaryExternalInterface {
     return type != ResultType.FAILURE;
   }
 
+  @Override
   public ResultType getType() {
     return type;
   }

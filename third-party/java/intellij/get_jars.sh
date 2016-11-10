@@ -15,6 +15,8 @@ LIBS_TO_COPY=(
   extensions.jar
   openapi.jar
   util.jar
+  jdom.jar
+  serviceMessages.jar
 )
 LIBS_TO_STUB=(
   idea.jar

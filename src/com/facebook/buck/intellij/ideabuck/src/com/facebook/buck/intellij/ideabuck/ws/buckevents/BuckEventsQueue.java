@@ -20,16 +20,18 @@ import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers.BuckEventsConsumerFactory;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.handlers.BuckEventHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class BuckEventsQueue implements BuckEventsQueueInterface {
 
   private static final Logger LOG = Logger.getInstance(BuckEventsQueue.class);
 
   private final BuckEventsConsumerFactory mFactory;
+  private final ExecutorService mSingleThreadExecutor;
   private ObjectMapper mObjectMapper;
   private BuckEventsAdapter mBuckEventsAdapter;
 
@@ -37,6 +39,7 @@ public class BuckEventsQueue implements BuckEventsQueueInterface {
     mFactory = factory;
     mObjectMapper = objectMapper;
     mBuckEventsAdapter = new BuckEventsAdapter();
+    mSingleThreadExecutor = Executors.newSingleThreadExecutor();
   }
 
   @Override
@@ -45,28 +48,23 @@ public class BuckEventsQueue implements BuckEventsQueueInterface {
   }
 
   private void handleEvent(final String rawMessage, final BuckEventExternalInterface event) {
-    ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
-      @Override
-      public void run() {
-        synchronized (BuckEventsQueue.this.mFactory) {
-          try {
-            String eventName = event.getEventName();
-            BuckEventHandler buckEventHandler = mBuckEventsAdapter.get(eventName);
-            if (buckEventHandler == null) {
+    mSingleThreadExecutor.submit(() -> {
+        try {
+          String eventName = event.getEventName();
+          BuckEventHandler buckEventHandler = mBuckEventsAdapter.get(eventName);
+          if (buckEventHandler == null) {
               LOG.warn("Unhandled event '" + eventName + "': " + rawMessage);
-            } else {
-              buckEventHandler.handleEvent(
-                  rawMessage,
-                  event,
-                  mFactory,
-                  mObjectMapper);
-            }
-          } catch (IOException e) {
-            // TODO(cosmin1123) Handle exception
-            e.printStackTrace();
+          } else {
+            buckEventHandler.handleEvent(
+                rawMessage,
+                event,
+                mFactory,
+                mObjectMapper);
           }
+        } catch (IOException e) {
+          // TODO(cosmin1123) Handle exception
+          e.printStackTrace();
         }
-      }
     });
   }
 }
