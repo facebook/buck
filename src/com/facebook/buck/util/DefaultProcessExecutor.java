@@ -53,11 +53,37 @@ public class DefaultProcessExecutor implements ProcessExecutor {
    * of the process.
    */
   public DefaultProcessExecutor(Console console) {
-    this.stdOutStream = console.getStdOut();
-    this.stdErrStream = console.getStdErr();
-    this.ansi = console.getAnsi();
-    this.processHelper = ProcessHelper.getInstance();
-    this.processRegistry = ProcessRegistry.getInstance();
+    this(
+        console.getStdOut(),
+        console.getStdErr(),
+        console.getAnsi(),
+        ProcessHelper.getInstance(),
+        ProcessRegistry.getInstance());
+  }
+
+  protected DefaultProcessExecutor(
+      PrintStream stdOutStream,
+      PrintStream stdErrStream,
+      Ansi ansi,
+      ProcessHelper processHelper,
+      ProcessRegistry processRegistry) {
+    this.stdOutStream = stdOutStream;
+    this.stdErrStream = stdErrStream;
+    this.ansi = ansi;
+    this.processHelper = processHelper;
+    this.processRegistry = processRegistry;
+  }
+
+  @Override
+  public ProcessExecutor cloneWithOutputStreams(
+      PrintStream newStdOutStream,
+      PrintStream newStdErrStream) {
+    return new DefaultProcessExecutor(
+        newStdOutStream,
+        newStdErrStream,
+        ansi,
+        processHelper,
+        processRegistry);
   }
 
   @Override

@@ -219,7 +219,7 @@ abstract class AbstractExecutionContext implements Closeable {
     return ExecutionContext.builder()
         .from(this)
         .setConsole(console)
-        .setProcessExecutor(new DefaultProcessExecutor(console))
+        .setProcessExecutor(getProcessExecutor().cloneWithOutputStreams(newStdout, newStderr))
         .setClassLoaderCache(getClassLoaderCache().addRef())
         .setWorkerProcessPools(new ConcurrentHashMap<String, WorkerProcessPool>())
         .build();

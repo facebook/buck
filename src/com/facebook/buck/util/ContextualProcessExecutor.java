@@ -19,6 +19,7 @@ package com.facebook.buck.util;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Set;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -104,5 +105,14 @@ public class ContextualProcessExecutor implements ProcessExecutor {
   @Override
   public void destroyLaunchedProcess(LaunchedProcess launchedProcess) {
     delegate.destroyLaunchedProcess(launchedProcess);
+  }
+
+  @Override
+  public ProcessExecutor cloneWithOutputStreams(
+      PrintStream newStdOutStream,
+      PrintStream newStdErrStream) {
+    return new ContextualProcessExecutor(
+        delegate.cloneWithOutputStreams(newStdOutStream, newStdErrStream),
+        context);
   }
 }

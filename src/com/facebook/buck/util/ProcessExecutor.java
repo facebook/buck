@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -220,4 +221,12 @@ public interface ProcessExecutor {
           MoreStrings.truncatePretty(getStderr().orElse("")));
     }
   }
+
+  /**
+   * Makes a clone of this process executor with the stdout and
+   * stderr streams overridden.
+   */
+  ProcessExecutor cloneWithOutputStreams(
+      PrintStream stdOutStream,
+      PrintStream stdErrStream);
 }

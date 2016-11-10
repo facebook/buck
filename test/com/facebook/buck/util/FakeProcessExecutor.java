@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -80,7 +81,20 @@ public class FakeProcessExecutor extends DefaultProcessExecutor {
   public FakeProcessExecutor(
       Function<? super ProcessExecutorParams, FakeProcess> processFunction,
       Console console) {
-    super(console);
+    this(processFunction, console.getStdOut(), console.getStdErr(), console.getAnsi());
+  }
+
+  public FakeProcessExecutor(
+      Function<? super ProcessExecutorParams, FakeProcess> processFunction,
+      PrintStream stdOutStream,
+      PrintStream stdErrStream,
+      Ansi ansi) {
+      super(
+          stdOutStream,
+          stdErrStream,
+          ansi,
+          ProcessHelper.getInstance(),
+          ProcessRegistry.getInstance());
     this.processFunction = processFunction;
     this.launchedProcesses = new HashSet<>();
   }
@@ -108,5 +122,16 @@ public class FakeProcessExecutor extends DefaultProcessExecutor {
 
   public boolean isProcessLaunched(ProcessExecutorParams params) {
     return launchedProcesses.contains(params);
+  }
+
+  @Override
+  public ProcessExecutor cloneWithOutputStreams(
+      PrintStream newStdOutStream,
+      PrintStream newStdErrStream) {
+    return new FakeProcessExecutor(
+        processFunction,
+        newStdOutStream,
+        newStdErrStream,
+        Ansi.withoutTty());
   }
 }
