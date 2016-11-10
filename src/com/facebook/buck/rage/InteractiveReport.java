@@ -80,11 +80,13 @@ public class InteractiveReport extends AbstractReport {
 
     // Commands with unknown args and buck rage should be excluded.
     List<BuildLogEntry> interestingBuildLogs = new ArrayList<>();
-    for (BuildLogEntry entry : buildLogs) {
-      if (entry.getCommandArgs().isPresent() && !entry.getCommandArgs().get().contains("rage")) {
+    buildLogs.forEach(entry -> {
+      if (entry.getCommandArgs().isPresent() &&
+          !entry.getCommandArgs().get().matches("rage|doctor")) {
         interestingBuildLogs.add(entry);
       }
-    }
+    });
+
     if (interestingBuildLogs.isEmpty()) {
       return ImmutableSet.of();
     }
