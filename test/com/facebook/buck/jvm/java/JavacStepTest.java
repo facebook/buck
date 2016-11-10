@@ -16,11 +16,36 @@
 
 package com.facebook.buck.jvm.java;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.empty;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+
+import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.FakeProcessExecutor;
+import com.facebook.buck.util.FakeProcess;
+
+import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+
+import java.nio.file.Paths;
+
+import java.util.Optional;
 
 import org.junit.Test;
 
@@ -44,4 +69,94 @@ public class JavacStepTest {
         missingImports);
   }
 
+  @Test
+  public void successfulCompileDoesNotSendStdoutAndStderrToConsole() throws Exception {
+    FakeJavac fakeJavac = new FakeJavac();
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
+    ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    JavacOptions javacOptions = JavacOptions.builder()
+        .setSourceLevel("8.0")
+        .setTargetLevel("8.0")
+        .build();
+
+    JavacStep step = new JavacStep(
+        Paths.get("output"),
+        NoOpClassUsageFileWriter.instance(),
+        Optional.empty(),
+        Optional.empty(),
+        ImmutableSortedSet.of(),
+        Paths.get("pathToSrcsList"),
+        ImmutableSortedSet.of(),
+        fakeJavac,
+        javacOptions,
+        BuildTargetFactory.newInstance("//foo:bar"),
+        Optional.empty(),
+        sourcePathResolver,
+        fakeFilesystem);
+
+    FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
+
+    ExecutionContext executionContext = TestExecutionContext.newBuilder()
+        .setProcessExecutor(
+            new FakeProcessExecutor(
+                Functions.constant(fakeJavacProcess),
+                new TestConsole()))
+        .build();
+    BuckEventBusFactory.CapturingConsoleEventListener listener =
+        new BuckEventBusFactory.CapturingConsoleEventListener();
+    executionContext.getBuckEventBus().register(listener);
+    StepExecutionResult result = step.execute(executionContext);
+
+    // Note that we don't include stderr in the step result on success.
+    assertThat(result, equalTo(StepExecutionResult.SUCCESS));
+    assertThat(listener.getLogMessages(), empty());
+  }
+
+  @Test
+  public void failedCompileSendsStdoutAndStderrToConsole() throws Exception {
+    FakeJavac fakeJavac = new FakeJavac();
+    BuildRuleResolver buildRuleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
+    ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    JavacOptions javacOptions = JavacOptions.builder()
+        .setSourceLevel("8.0")
+        .setTargetLevel("8.0")
+        .build();
+
+    JavacStep step = new JavacStep(
+        Paths.get("output"),
+        NoOpClassUsageFileWriter.instance(),
+        Optional.empty(),
+        Optional.empty(),
+        ImmutableSortedSet.of(),
+        Paths.get("pathToSrcsList"),
+        ImmutableSortedSet.of(),
+        fakeJavac,
+        javacOptions,
+        BuildTargetFactory.newInstance("//foo:bar"),
+        Optional.empty(),
+        sourcePathResolver,
+        fakeFilesystem);
+
+    FakeProcess fakeJavacProcess = new FakeProcess(1, "javac stdout\n", "javac stderr\n");
+
+    ExecutionContext executionContext = TestExecutionContext.newBuilder()
+        .setProcessExecutor(
+            new FakeProcessExecutor(
+                Functions.constant(fakeJavacProcess),
+                new TestConsole()))
+        .build();
+    BuckEventBusFactory.CapturingConsoleEventListener listener =
+        new BuckEventBusFactory.CapturingConsoleEventListener();
+    executionContext.getBuckEventBus().register(listener);
+    StepExecutionResult result = step.execute(executionContext);
+
+    assertThat(result, equalTo(StepExecutionResult.of(1, Optional.of("javac stderr\n"))));
+    assertThat(
+        listener.getLogMessages(),
+        equalTo(ImmutableList.of("javac stdout\n", "javac stderr\n")));
+  }
 }

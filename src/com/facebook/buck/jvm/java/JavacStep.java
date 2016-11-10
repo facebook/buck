@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.event.CompilerErrorEvent;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.model.BuildTarget;
@@ -136,10 +137,12 @@ public class JavacStep implements Step {
   @Override
   public final StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    return StepExecutionResult.of(tryBuildWithFirstOrderDeps(context, filesystem));
+    return tryBuildWithFirstOrderDeps(context, filesystem);
   }
 
-  private int tryBuildWithFirstOrderDeps(ExecutionContext context, ProjectFilesystem filesystem)
+  private StepExecutionResult tryBuildWithFirstOrderDeps(
+      ExecutionContext context,
+      ProjectFilesystem filesystem)
       throws InterruptedException, IOException {
     Verbosity verbosity =
         context.getVerbosity().isSilent() ? Verbosity.STANDARD_INFORMATION : context.getVerbosity();
@@ -163,7 +166,7 @@ public class JavacStep implements Step {
           usedClassesFileWriter,
           fileManagerFactory,
           context.getEnvironment(),
-          context.getProcessExecutor());
+          firstOrderContext.getProcessExecutor());
 
       Javac javac = getJavac();
 
@@ -179,7 +182,11 @@ public class JavacStep implements Step {
       String firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
       String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
 
+      Optional<String> returnedStderr;
+
       if (declaredDepsResult != 0) {
+        returnedStderr = Optional.of(firstOrderStderr);
+
         ImmutableList.Builder<String> errorMessage = ImmutableList.builder();
         errorMessage.add(firstOrderStderr);
 
@@ -215,13 +222,17 @@ public class JavacStep implements Step {
           context.postEvent(evt);
         }
 
-        if (!context.getVerbosity().isSilent()) {
-          context.getStdOut().print(firstOrderStdout);
-          context.getStdErr().println(Joiner.on("\n").join(errorMessage.build()));
+        if (!firstOrderStdout.isEmpty()) {
+          context.postEvent(ConsoleEvent.info("%s", firstOrderStdout));
         }
+        if (!firstOrderStderr.isEmpty()) {
+          context.postEvent(ConsoleEvent.severe("%s", Joiner.on("\n").join(errorMessage.build())));
+        }
+      } else {
+        returnedStderr = Optional.empty();
       }
 
-      return declaredDepsResult;
+      return StepExecutionResult.of(declaredDepsResult, returnedStderr);
     }
   }
 
