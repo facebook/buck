@@ -188,16 +188,21 @@ public class PrebuiltAppleFramework
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
-    if (!isPlatformSupported(cxxPlatform)) {
-      return ImmutableList.of();
-    }
+  public Iterable<NativeLinkable> getNativeLinkableDeps() {
     return FluentIterable.from(getDeclaredDeps())
         .filter(NativeLinkable.class);
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+  public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+    if (!isPlatformSupported(cxxPlatform)) {
+      return ImmutableList.of();
+    }
+    return getNativeLinkableDeps();
+  }
+
+  @Override
+  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
     return ImmutableList.of();
   }
 

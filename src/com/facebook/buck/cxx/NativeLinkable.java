@@ -27,9 +27,36 @@ import com.google.common.collect.ImmutableMap;
  */
 public interface NativeLinkable extends HasBuildTarget {
 
-  Iterable<? extends NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform);
+  /**
+   * @return All native linkable dependencies that are required by this linkable
+   * on a specific platform.
+   */
+  @SuppressWarnings("unused")
+  default Iterable<? extends NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+    return getNativeLinkableDeps();
+  }
 
-  Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform);
+  /**
+   * @return All native linkable exported dependencies that are required by this linkable
+   * on a specific platform.
+   */
+  @SuppressWarnings("unused")
+  default Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+      CxxPlatform cxxPlatform) {
+    return getNativeLinkableExportedDeps();
+  }
+
+  /**
+   * @return All native linkable dependencies that might be required by this linkable
+   * on any platform.
+   */
+  Iterable<? extends NativeLinkable> getNativeLinkableDeps();
+
+  /**
+   * @return All native linkable exported dependencies that might be required by this linkable
+   * on any platform.
+   */
+  Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps();
 
   /**
    * Return input that *dependents* should put on their link line

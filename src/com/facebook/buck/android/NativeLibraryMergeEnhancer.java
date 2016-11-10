@@ -282,8 +282,8 @@ class NativeLibraryMergeEnhancer {
       for (NativeLinkable constituentLinkable : constituents.getLinkables()) {
         // For each dep of each constituent of each merged lib...
         for (NativeLinkable dep : Iterables.concat(
-            constituentLinkable.getNativeLinkableDeps(null),
-            constituentLinkable.getNativeLinkableExportedDeps(null))) {
+            constituentLinkable.getNativeLinkableDeps(),
+            constituentLinkable.getNativeLinkableExportedDeps())) {
           // If that dep is in a different merged lib, add a dependency.
           MergedNativeLibraryConstituents mergedDep =
               Preconditions.checkNotNull(linkableMembership.get(dep));
@@ -351,11 +351,11 @@ class NativeLibraryMergeEnhancer {
 
       List<MergedLibNativeLinkable> orderedDeps = getStructuralDeps(
           constituents,
-          l -> l.getNativeLinkableDeps(null),
+          l -> l.getNativeLinkableDeps(),
           mergeResults);
       List<MergedLibNativeLinkable> orderedExportedDeps = getStructuralDeps(
           constituents,
-          l -> l.getNativeLinkableExportedDeps(null),
+          l -> l.getNativeLinkableExportedDeps(),
           mergeResults);
 
       MergedLibNativeLinkable mergedLinkable = new MergedLibNativeLinkable(
@@ -618,6 +618,17 @@ class NativeLibraryMergeEnhancer {
       return BuildTarget.builder().from(getBuildTarget())
           .addFlavors(cxxPlatform.getFlavor())
           .build();
+    }
+
+    @Override
+    public Iterable<? extends NativeLinkable> getNativeLinkableDeps() {
+      return getMappedDeps(l -> l.getNativeLinkableDeps());
+    }
+
+    @Override
+    public Iterable<? extends NativeLinkable>
+    getNativeLinkableExportedDeps() {
+      return getMappedDeps(l -> l.getNativeLinkableExportedDeps());
     }
 
     @Override

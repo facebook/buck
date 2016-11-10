@@ -133,16 +133,21 @@ public class HalideLibrary
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
-    if (!isPlatformSupported(cxxPlatform)) {
-      return ImmutableList.of();
-    }
+  public Iterable<NativeLinkable> getNativeLinkableDeps() {
     return FluentIterable.from(getDeclaredDeps())
         .filter(NativeLinkable.class);
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+  public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+    if (!isPlatformSupported(cxxPlatform)) {
+      return ImmutableList.of();
+    }
+    return getNativeLinkableDeps();
+  }
+
+  @Override
+  public Iterable<NativeLinkable> getNativeLinkableExportedDeps() {
     return ImmutableList.of();
   }
 

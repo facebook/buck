@@ -106,13 +106,12 @@ public class PrebuiltHaskellLibraryDescription
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+      public Iterable<? extends NativeLinkable> getNativeLinkableDeps() {
         return ImmutableList.of();
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
-          CxxPlatform cxxPlatform) {
+      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
         return FluentIterable.from(getDeclaredDeps())
             .filter(NativeLinkable.class);
       }

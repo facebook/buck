@@ -49,12 +49,12 @@ public class DLibrary extends NoopBuildRule implements NativeLinkable {
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+  public Iterable<NativeLinkable> getNativeLinkableDeps() {
     return ImmutableList.of();
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+  public Iterable<NativeLinkable> getNativeLinkableExportedDeps() {
     return FluentIterable.from(getDeclaredDeps())
         .filter(NativeLinkable.class);
   }

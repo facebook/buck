@@ -137,13 +137,13 @@ public final class FakeCxxLibrary
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+  public Iterable<NativeLinkable> getNativeLinkableDeps() {
     return FluentIterable.from(getDeclaredDeps())
         .filter(NativeLinkable.class);
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+  public Iterable<NativeLinkable> getNativeLinkableExportedDeps() {
     return FluentIterable.from(getDeclaredDeps())
         .filter(NativeLinkable.class);
   }

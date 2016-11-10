@@ -71,12 +71,12 @@ public class NativeLinkablesTest {
     }
 
     @Override
-    public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+    public Iterable<NativeLinkable> getNativeLinkableDeps() {
       return deps;
     }
 
     @Override
-    public Iterable<NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+    public Iterable<NativeLinkable> getNativeLinkableExportedDeps() {
       return exportedDeps;
     }
 

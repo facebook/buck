@@ -85,12 +85,12 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibrary {
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+  public Iterable<? extends NativeLinkable> getNativeLinkableDeps() {
     return ImmutableList.of();
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
     return ImmutableList.of();
   }
 

@@ -54,12 +54,12 @@ final class SwiftRuntimeNativeLinkable implements NativeLinkable {
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+  public Iterable<? extends NativeLinkable> getNativeLinkableDeps() {
     return ImmutableSet.of();
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
     return ImmutableSet.of();
   }
 

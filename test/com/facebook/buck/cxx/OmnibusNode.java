@@ -64,13 +64,12 @@ class OmnibusNode implements NativeLinkable {
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
+  public Iterable<? extends NativeLinkable> getNativeLinkableDeps() {
     return deps;
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
-      CxxPlatform cxxPlatform) {
+  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
     return exportedDeps;
   }
 

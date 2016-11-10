@@ -295,12 +295,22 @@ public class PrebuiltCxxLibrary
   }
 
   @Override
+  public Iterable<NativeLinkable> getNativeLinkableDeps() {
+    return FluentIterable.from(getDeclaredDeps())
+        .filter(NativeLinkable.class);
+  }
+
+  @Override
   public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-    return FluentIterable.from(getDeclaredDeps())
-        .filter(NativeLinkable.class);
+    return getNativeLinkableDeps();
+  }
+
+  @Override
+  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps() {
+    return exportedDeps;
   }
 
   @Override
@@ -308,7 +318,7 @@ public class PrebuiltCxxLibrary
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-    return exportedDeps;
+    return getNativeLinkableExportedDeps();
   }
 
   public NativeLinkableInput getNativeLinkableInputUncached(
