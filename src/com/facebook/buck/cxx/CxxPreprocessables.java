@@ -198,7 +198,7 @@ public class CxxPreprocessables {
         "Attempt to add %s of type %s and class %s to %s",
         rule.getFullyQualifiedName(),
         rule.getType(),
-        rule.getClass(),
+        rule.getClass().getName(),
         target);
     HeaderSymlinkTree symlinkTree = (HeaderSymlinkTree) rule;
     builder.addIncludes(CxxSymlinkTreeHeaders.from(symlinkTree, includeType));
