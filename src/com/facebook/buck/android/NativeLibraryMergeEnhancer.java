@@ -46,7 +46,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -73,6 +72,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
@@ -351,11 +351,11 @@ class NativeLibraryMergeEnhancer {
 
       List<MergedLibNativeLinkable> orderedDeps = getStructuralDeps(
           constituents,
-          l -> l.getNativeLinkableDeps(),
+          NativeLinkable::getNativeLinkableDeps,
           mergeResults);
       List<MergedLibNativeLinkable> orderedExportedDeps = getStructuralDeps(
           constituents,
-          l -> l.getNativeLinkableExportedDeps(),
+          NativeLinkable::getNativeLinkableExportedDeps,
           mergeResults);
 
       MergedLibNativeLinkable mergedLinkable = new MergedLibNativeLinkable(
@@ -622,13 +622,13 @@ class NativeLibraryMergeEnhancer {
 
     @Override
     public Iterable<? extends NativeLinkable> getNativeLinkableDeps() {
-      return getMappedDeps(l -> l.getNativeLinkableDeps());
+      return getMappedDeps(NativeLinkable::getNativeLinkableDeps);
     }
 
     @Override
     public Iterable<? extends NativeLinkable>
     getNativeLinkableExportedDeps() {
-      return getMappedDeps(l -> l.getNativeLinkableExportedDeps());
+      return getMappedDeps(NativeLinkable::getNativeLinkableExportedDeps);
     }
 
     @Override
@@ -723,13 +723,8 @@ class NativeLibraryMergeEnhancer {
               linkable.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC_PIC);
           builder.add(
               staticPic.withArgs(
-                  FluentIterable.from(staticPic.getArgs()).transformAndConcat(
-                      new Function<Arg, Iterable<Arg>>() {
-                        @Override
-                        public Iterable<Arg> apply(Arg arg) {
-                          return linker.linkWhole(arg);
-                        }
-                      })));
+                  FluentIterable.from(staticPic.getArgs())
+                      .transformAndConcat(linker::linkWhole)));
         }
       }
       return NativeLinkableInput.concat(builder.build());
@@ -795,7 +790,7 @@ class NativeLibraryMergeEnhancer {
       }
       return ImmutableMap.of(
           soname,
-          (SourcePath) new BuildTargetSourcePath(target)
+          new BuildTargetSourcePath(target)
       );
     }
   }
