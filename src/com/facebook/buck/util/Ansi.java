@@ -152,16 +152,8 @@ public final class Ansi {
     }
   }
 
-  public void printHighlightedFailureText(PrintStream stream, String text) {
-    stream.print(asHighlightedFailureText(text));
-  }
-
   public void printHighlightedSuccessText(PrintStream stream, String text) {
     stream.print(asHighlightedSuccessText(text));
-  }
-
-  public void printlnHighlightedSuccessText(PrintStream stream, String text) {
-    stream.println(asHighlightedSuccessText(text));
   }
 
   public void printlnHighlightedFailureText(PrintStream stream, String text) {
