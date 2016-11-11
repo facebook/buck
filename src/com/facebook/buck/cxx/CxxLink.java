@@ -125,7 +125,8 @@ public class CxxLink
         new FileScrubberStep(
             getProjectFilesystem(),
             output,
-            linker.getScrubbers(cellRoots.build())));
+            linker.getScrubbers(cellRoots.build())),
+        new RmStep(getProjectFilesystem(), argFilePath, false));
   }
 
   @Override
