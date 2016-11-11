@@ -26,6 +26,9 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.dd.plist.NSDictionary;
+import com.dd.plist.NSString;
+import com.dd.plist.PropertyListParser;
 import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -44,6 +47,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -178,6 +182,49 @@ public class AppleBundleIntegrationTest {
     assertTrue(Files.exists(appPath.resolve(target.getShortName())));
 
     assertTrue(checkCodeSigning(appPath));
+  }
+
+  @Test
+  public void simpleApplicationBundleWithDryRunCodeSigning() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
+
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "simple_application_bundle_with_codesigning",
+        tmp);
+    workspace.setUp();
+    workspace.writeContentsToPath(
+        "[apple]\n  dry_run_code_signing = true\n",
+        ".buckconfig.local");
+
+    BuildTarget target =
+        workspace.newBuildTarget("//:DemoApp#iphoneos-arm64,no-debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path appPath = workspace.getPath(
+        BuildTargets
+            .getGenPath(
+                filesystem,
+                BuildTarget.builder(target)
+                    .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
+                    .build(),
+                "%s")
+            .resolve(target.getShortName() + ".app"));
+    Path codeSignResultsPath = appPath.resolve("BUCK_code_sign_entitlements.plist");
+    assertTrue(Files.exists(codeSignResultsPath));
+
+    Path dryRunResultsPath = appPath.resolve("BUCK_pp_dry_run.plist");
+    assertTrue(Files.exists(dryRunResultsPath));
+
+    String resultContents = filesystem.readFileIfItExists(dryRunResultsPath).get();
+    NSDictionary resultPlist = (NSDictionary)
+        PropertyListParser.parse(resultContents.getBytes(Charsets.UTF_8));
+
+    assertEquals(new NSString("com.example.DemoApp"), resultPlist.get("bundle-id"));
+    assertEquals(new NSString("12345ABCDE"), resultPlist.get("team-identifier"));
+    assertEquals(new NSString("00000000-0000-0000-0000-000000000000"),
+        resultPlist.get("provisioning-profile-uuid"));
   }
 
   @Test

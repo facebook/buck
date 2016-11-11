@@ -122,6 +122,7 @@ public class AppleLibraryDescription implements
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
   private final AppleDebugFormat defaultDebugFormat;
+  private final boolean dryRunCodeSigning;
 
   public AppleLibraryDescription(
       CxxLibraryDescription delegate,
@@ -130,7 +131,8 @@ public class AppleLibraryDescription implements
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
-      AppleDebugFormat defaultDebugFormat) {
+      AppleDebugFormat defaultDebugFormat,
+      boolean dryRunCodeSigning) {
     this.delegate = delegate;
     this.swiftDelegate = swiftDelegate;
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
@@ -138,6 +140,7 @@ public class AppleLibraryDescription implements
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
     this.defaultDebugFormat = defaultDebugFormat;
+    this.dryRunCodeSigning = dryRunCodeSigning;
   }
 
   @Override
@@ -213,7 +216,8 @@ public class AppleLibraryDescription implements
         args.infoPlistSubstitutions,
         args.deps,
         args.tests,
-        debugFormat);
+        debugFormat,
+        dryRunCodeSigning);
   }
 
   /**

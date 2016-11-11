@@ -70,6 +70,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
   private final AppleDebugFormat defaultDebugFormat;
+  private final boolean dryRunCodeSigning;
 
   public AppleBundleDescription(
       AppleBinaryDescription appleBinaryDescription,
@@ -79,7 +80,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
-      AppleDebugFormat defaultDebugFormat) {
+      AppleDebugFormat defaultDebugFormat,
+      boolean dryRunCodeSigning) {
     this.appleBinaryDescription = appleBinaryDescription;
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
@@ -88,6 +90,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
     this.defaultDebugFormat = defaultDebugFormat;
+    this.dryRunCodeSigning = dryRunCodeSigning;
   }
 
   @Override
@@ -147,7 +150,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         args.infoPlistSubstitutions,
         args.deps,
         args.tests,
-        flavoredDebugFormat);
+        flavoredDebugFormat,
+        dryRunCodeSigning);
   }
 
   /**

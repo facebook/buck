@@ -25,6 +25,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
+import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
@@ -36,6 +37,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -59,6 +61,7 @@ public class ProvisioningProfileCopyStepTest {
   private Path tempOutputDir;
   private Path outputFile;
   private Path xcentFile;
+  private Path dryRunResultFile;
   private Path entitlementsFile;
   private ProjectFilesystem projectFilesystem;
   private ExecutionContext executionContext;
@@ -89,6 +92,7 @@ public class ProvisioningProfileCopyStepTest {
     tempOutputDir = tmp.getRoot();
     outputFile = tempOutputDir.resolve("embedded.mobileprovision");
     xcentFile = Paths.get("test.xcent");
+    dryRunResultFile = Paths.get("test_dry_run_results.plist");
     executionContext = TestExecutionContext.newInstance();
     codeSignIdentityStore =
         CodeSignIdentityStore.fromIdentities(ImmutableList.of());
@@ -111,7 +115,8 @@ public class ProvisioningProfileCopyStepTest {
             testdataDir),
         outputFile,
         xcentFile,
-        codeSignIdentityStore
+        codeSignIdentityStore,
+        Optional.empty()
     );
 
     step.execute(executionContext);
@@ -133,7 +138,8 @@ public class ProvisioningProfileCopyStepTest {
             testdataDir),
         outputFile,
         xcentFile,
-        codeSignIdentityStore
+        codeSignIdentityStore,
+        Optional.empty()
     );
 
     step.execute(executionContext);
@@ -159,11 +165,48 @@ public class ProvisioningProfileCopyStepTest {
             emptyDir),
         outputFile,
         xcentFile,
-        codeSignIdentityStore
+        codeSignIdentityStore,
+        Optional.empty()
     );
 
     step.execute(executionContext);
   }
+
+  @Test
+  public void testDoesNotFailInDryRunMode() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    Path emptyDir =
+        TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles_empty");
+
+    ProvisioningProfileCopyStep step = new ProvisioningProfileCopyStep(
+        projectFilesystem,
+        testdataDir.resolve("Info.plist"),
+        Optional.empty(),
+        Optional.empty(),
+        ProvisioningProfileStore.fromSearchPath(
+            new DefaultProcessExecutor(new TestConsole()),
+            emptyDir),
+        outputFile,
+        xcentFile,
+        codeSignIdentityStore,
+        Optional.of(dryRunResultFile)
+    );
+
+    Future<Optional<ProvisioningProfileMetadata>> profileFuture =
+        step.getSelectedProvisioningProfileFuture();
+    step.execute(executionContext);
+    assertTrue(profileFuture.isDone());
+    assertNotNull(profileFuture.get());
+    assertFalse(profileFuture.get().isPresent());
+
+    Optional<String> resultContents = projectFilesystem.readFileIfItExists(dryRunResultFile);
+    assertTrue(resultContents.isPresent());
+    NSDictionary resultPlist = (NSDictionary)
+        PropertyListParser.parse(resultContents.get().getBytes(Charsets.UTF_8));
+
+    assertEquals(new NSString("com.example.TestApp"), resultPlist.get("bundle-id"));
+  }
+
 
   @Test
   public void shouldSetProvisioningProfileFutureWhenStepIsRun() throws Exception {
@@ -178,10 +221,12 @@ public class ProvisioningProfileCopyStepTest {
             testdataDir),
         outputFile,
         xcentFile,
-        codeSignIdentityStore
+        codeSignIdentityStore,
+        Optional.empty()
     );
 
-    Future<ProvisioningProfileMetadata> profileFuture = step.getSelectedProvisioningProfileFuture();
+    Future<Optional<ProvisioningProfileMetadata>> profileFuture =
+        step.getSelectedProvisioningProfileFuture();
     step.execute(executionContext);
     assertTrue(profileFuture.isDone());
     assertNotNull(profileFuture.get());
@@ -200,11 +245,13 @@ public class ProvisioningProfileCopyStepTest {
             testdataDir),
         outputFile,
         xcentFile,
-        codeSignIdentityStore
+        codeSignIdentityStore,
+        Optional.empty()
     );
     step.execute(executionContext);
 
-    ProvisioningProfileMetadata selectedProfile = step.getSelectedProvisioningProfileFuture().get();
+    ProvisioningProfileMetadata selectedProfile =
+        step.getSelectedProvisioningProfileFuture().get().get();
     ImmutableMap<String, NSObject> profileEntitlements = selectedProfile.getEntitlements();
     assertTrue(profileEntitlements.containsKey(
         "com.apple.developer.icloud-container-development-container-identifiers"));
@@ -232,11 +279,13 @@ public class ProvisioningProfileCopyStepTest {
             testdataDir),
         outputFile,
         xcentFile,
-        codeSignIdentityStore
+        codeSignIdentityStore,
+        Optional.empty()
     );
     step.execute(executionContext);
 
-    ProvisioningProfileMetadata selectedProfile = step.getSelectedProvisioningProfileFuture().get();
+    ProvisioningProfileMetadata selectedProfile =
+        step.getSelectedProvisioningProfileFuture().get().get();
     ImmutableMap<String, NSObject> profileEntitlements = selectedProfile.getEntitlements();
     assertTrue(profileEntitlements.containsKey(
         "com.apple.developer.icloud-container-development-container-identifiers"));

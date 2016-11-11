@@ -264,6 +264,10 @@ public class AppleConfig {
     return delegate.getBooleanValue("apple", "xcode_disable_parallelize_build", false);
   }
 
+  public boolean useDryRunCodeSigning() {
+    return delegate.getBooleanValue("apple", "dry_run_code_signing", false);
+  }
+
   public Optional<Path> getAppleDeviceHelperPath() {
     return getOptionalPath("apple", "device_helper_path");
   }

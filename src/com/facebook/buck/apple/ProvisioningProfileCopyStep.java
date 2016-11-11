@@ -21,6 +21,7 @@ import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.io.ProjectFilesystem.CopySourceMode;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -48,6 +49,13 @@ class ProvisioningProfileCopyStep implements Step {
   private static final String KEYCHAIN_ACCESS_GROUPS = "keychain-access-groups";
   private static final String APPLICATION_IDENTIFIER = "application-identifier";
 
+  private static final String BUNDLE_ID = "bundle-id";
+  private static final String PROFILE_UUID = "provisioning-profile-uuid";
+  private static final String PROFILE_FILENAME = "provisioning-profile-file";
+  private static final String TEAM_IDENTIFIER = "team-identifier";
+  private static final String ENTITLEMENTS = "entitlements";
+
+
   private final ProjectFilesystem filesystem;
   private final Optional<Path> entitlementsPlist;
   private final Optional<String> provisioningProfileUUID;
@@ -56,8 +64,11 @@ class ProvisioningProfileCopyStep implements Step {
   private final ProvisioningProfileStore provisioningProfileStore;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final Path infoPlist;
-  private final SettableFuture<ProvisioningProfileMetadata> selectedProvisioningProfileFuture =
-      SettableFuture.create();
+  private final SettableFuture<Optional<ProvisioningProfileMetadata>>
+      selectedProvisioningProfileFuture = SettableFuture.create();
+  private Optional<Path> dryRunResultsPath;
+
+  private static final Logger LOG = Logger.get(ProvisioningProfileCopyStep.class);
 
   /**
    * @param infoPlist  Bundle relative path of the bundle's {@code Info.plist} file.
@@ -70,6 +81,16 @@ class ProvisioningProfileCopyStep implements Step {
    *                                        normally the bundle root.
    * @param signingEntitlementsTempPath     Where to copy the code signing entitlements file,
    *                                        normally a scratch directory.
+   *
+   * @param dryRunResultsPath               If set, will output a plist into this path with the
+   *                                        results of this step.
+   *
+   *                                        If a suitable profile was found, this will contain
+   *                                        metadata on the provisioning profile selected.
+   *
+   *                                        If no suitable profile was found, this will contain
+   *                                        the bundle ID and entitlements needed in a profile
+   *                                        (in lieu of throwing an exception.)
    */
   public ProvisioningProfileCopyStep(
       ProjectFilesystem filesystem,
@@ -79,7 +100,8 @@ class ProvisioningProfileCopyStep implements Step {
       ProvisioningProfileStore provisioningProfileStore,
       Path provisioningProfileDestination,
       Path signingEntitlementsTempPath,
-      CodeSignIdentityStore codeSignIdentityStore) {
+      CodeSignIdentityStore codeSignIdentityStore,
+      Optional<Path> dryRunResultsPath) {
     this.filesystem = filesystem;
     this.provisioningProfileDestination = provisioningProfileDestination;
     this.infoPlist = infoPlist;
@@ -88,6 +110,7 @@ class ProvisioningProfileCopyStep implements Step {
     this.provisioningProfileStore = provisioningProfileStore;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.signingEntitlementsTempPath = signingEntitlementsTempPath;
+    this.dryRunResultsPath = dryRunResultsPath;
   }
 
   @Override
@@ -137,12 +160,42 @@ class ProvisioningProfileCopyStep implements Step {
                 entitlements,
                 identities);
 
-    if (!bestProfile.isPresent()) {
-      throw new HumanReadableException("No valid non-expired provisioning profiles match for " +
-        prefix + "." + bundleID);
+
+    if (dryRunResultsPath.isPresent()) {
+      try {
+        NSDictionary dryRunResult = new NSDictionary();
+        dryRunResult.put(BUNDLE_ID, bundleID);
+        dryRunResult.put(ENTITLEMENTS, entitlements.orElse(ImmutableMap.of()));
+        if (bestProfile.isPresent()) {
+          dryRunResult.put(PROFILE_UUID, bestProfile.get().getUUID());
+          dryRunResult.put(PROFILE_FILENAME,
+              bestProfile.get().getProfilePath().getFileName().toString());
+          dryRunResult.put(TEAM_IDENTIFIER,
+              bestProfile.get().getEntitlements().get("com.apple.developer.team-identifier"));
+        }
+
+        filesystem.writeContentsToPath(dryRunResult.toXMLPropertyList(), dryRunResultsPath.get());
+      } catch (IOException e) {
+        context.logError(e,
+            "Failed when trying to write dry run results: %s",
+            getDescription(context));
+        return StepExecutionResult.ERROR;
+      }
     }
 
-    selectedProvisioningProfileFuture.set(bestProfile.get());
+    selectedProvisioningProfileFuture.set(bestProfile);
+
+    if (!bestProfile.isPresent()) {
+      String message = "No valid non-expired provisioning profiles match for " +
+          prefix + "." + bundleID;
+      if (dryRunResultsPath.isPresent()) {
+        LOG.warn(message);
+        return StepExecutionResult.SUCCESS;
+      } else {
+        throw new HumanReadableException(message);
+      }
+    }
+
     Path provisioningProfileSource = bestProfile.get().getProfilePath();
 
     // Copy the actual .mobileprovision.
@@ -195,7 +248,8 @@ class ProvisioningProfileCopyStep implements Step {
   /**
    * Returns a future that's populated once the rule is executed.
    */
-  public ListenableFuture<ProvisioningProfileMetadata> getSelectedProvisioningProfileFuture() {
+  public ListenableFuture<Optional<ProvisioningProfileMetadata>>
+    getSelectedProvisioningProfileFuture() {
     return selectedProvisioningProfileFuture;
   }
 }

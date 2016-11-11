@@ -558,7 +558,8 @@ public class KnownBuildRuleTypes {
             platformFlavorsToSwiftPlatforms);
     builder.register(swiftLibraryDescription);
 
-    CodeSignIdentityStore codeSignIdentityStore =
+    CodeSignIdentityStore codeSignIdentityStore = appleConfig.useDryRunCodeSigning() ?
+        CodeSignIdentityStore.fromIdentities(ImmutableList.of()) :
         CodeSignIdentityStore.fromSystem(processExecutor);
     ProvisioningProfileStore provisioningProfileStore =
         ProvisioningProfileStore.fromSearchPath(
@@ -573,7 +574,8 @@ public class KnownBuildRuleTypes {
             defaultCxxPlatform,
             codeSignIdentityStore,
             provisioningProfileStore,
-            appleConfig.getDefaultDebugInfoFormatForLibraries());
+            appleConfig.getDefaultDebugInfoFormatForLibraries(),
+            appleConfig.useDryRunCodeSigning());
     builder.register(appleLibraryDescription);
     PrebuiltAppleFrameworkDescription appleFrameworkDescription =
         new PrebuiltAppleFrameworkDescription();
@@ -586,7 +588,8 @@ public class KnownBuildRuleTypes {
             platformFlavorsToAppleCxxPlatforms,
             codeSignIdentityStore,
             provisioningProfileStore,
-            appleConfig.getDefaultDebugInfoFormatForBinaries());
+            appleConfig.getDefaultDebugInfoFormatForBinaries(),
+            appleConfig.useDryRunCodeSigning());
     builder.register(appleBinaryDescription);
 
     HaskellBuckConfig haskellBuckConfig = new HaskellBuckConfig(config, executableFinder);
@@ -650,7 +653,8 @@ public class KnownBuildRuleTypes {
             defaultCxxPlatform,
             codeSignIdentityStore,
             provisioningProfileStore,
-            appleConfig.getDefaultDebugInfoFormatForBinaries());
+            appleConfig.getDefaultDebugInfoFormatForBinaries(),
+            appleConfig.useDryRunCodeSigning());
     builder.register(appleBundleDescription);
     builder.register(new AppleResourceDescription());
     builder.register(
@@ -664,7 +668,8 @@ public class KnownBuildRuleTypes {
             provisioningProfileStore,
             appleConfig.getAppleDeveloperDirectorySupplierForTests(processExecutor),
             appleConfig.getDefaultDebugInfoFormatForTests(),
-            defaultTestRuleTimeoutMs));
+            defaultTestRuleTimeoutMs,
+            appleConfig.useDryRunCodeSigning()));
     builder.register(new CoreDataModelDescription());
     builder.register(new CsharpLibraryDescription());
     builder.register(cxxBinaryDescription);

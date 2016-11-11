@@ -95,6 +95,7 @@ public class AppleBinaryDescription
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
   private final AppleDebugFormat defaultDebugFormat;
+  private final boolean dryRunCodeSigning;
 
   public AppleBinaryDescription(
       CxxBinaryDescription delegate,
@@ -102,13 +103,15 @@ public class AppleBinaryDescription
       FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
-      AppleDebugFormat defaultDebugFormat) {
+      AppleDebugFormat defaultDebugFormat,
+      boolean dryRunCodeSigning) {
     this.delegate = delegate;
     this.swiftDelegate = swiftDelegate;
     this.platformFlavorsToAppleCxxPlatforms = platformFlavorsToAppleCxxPlatforms;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
     this.defaultDebugFormat = defaultDebugFormat;
+    this.dryRunCodeSigning = dryRunCodeSigning;
   }
 
   @Override
@@ -287,7 +290,8 @@ public class AppleBinaryDescription
         args.infoPlistSubstitutions,
         args.deps,
         args.tests,
-        flavoredDebugFormat);
+        flavoredDebugFormat,
+        dryRunCodeSigning);
   }
 
   private <A extends AppleBinaryDescription.Arg> BuildRule createBinary(

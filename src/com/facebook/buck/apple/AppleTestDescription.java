@@ -106,6 +106,7 @@ public class AppleTestDescription implements
   private final Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier;
   private final AppleDebugFormat defaultDebugFormat;
   private final Optional<Long> defaultTestRuleTimeoutMs;
+  private final boolean dryRunCodeSigning;
 
   public AppleTestDescription(
       AppleConfig appleConfig,
@@ -117,7 +118,8 @@ public class AppleTestDescription implements
       ProvisioningProfileStore provisioningProfileStore,
       Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier,
       AppleDebugFormat defaultDebugFormat,
-      Optional<Long> defaultTestRuleTimeoutMs) {
+      Optional<Long> defaultTestRuleTimeoutMs,
+      boolean dryRunCodeSigning) {
     this.appleConfig = appleConfig;
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
@@ -128,6 +130,7 @@ public class AppleTestDescription implements
     this.xcodeDeveloperDirectorySupplier = xcodeDeveloperDirectorySupplier;
     this.defaultDebugFormat = defaultDebugFormat;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
+    this.dryRunCodeSigning = dryRunCodeSigning;
   }
 
   @Override
@@ -262,7 +265,8 @@ public class AppleTestDescription implements
         args.infoPlistSubstitutions,
         args.deps,
         args.tests,
-        debugFormat);
+        debugFormat,
+        dryRunCodeSigning);
 
     Optional<SourcePath> xctool = getXctool(params, resolver, sourcePathResolver);
 

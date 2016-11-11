@@ -86,6 +86,9 @@ public class AppleBundle
   private static final String CODE_SIGN_ENTITLEMENTS = "CODE_SIGN_ENTITLEMENTS";
   private static final String FRAMEWORK_EXTENSION =
       AppleBundleExtension.FRAMEWORK.toFileExtension();
+  private static final String PP_DRY_RUN_RESULT_FILE = "BUCK_pp_dry_run.plist";
+  private static final String CODE_SIGN_DRY_RUN_ENTITLEMENTS_FILE =
+      "BUCK_code_sign_entitlements.plist";
 
   @AddToRuleKey
   private final String extension;
@@ -141,6 +144,9 @@ public class AppleBundle
   @AddToRuleKey
   private final Optional<Tool> swiftStdlibTool;
 
+  @AddToRuleKey
+  private final boolean dryRunCodeSigning;
+
   // Need to use String here as RuleKeyBuilder requires that paths exist to compute hashes.
   @AddToRuleKey
   private final ImmutableMap<SourcePath, String> extensionBundlePaths;
@@ -177,7 +183,8 @@ public class AppleBundle
       Optional<CoreDataModel> coreDataModel,
       Set<BuildTarget> tests,
       CodeSignIdentityStore codeSignIdentityStore,
-      ProvisioningProfileStore provisioningProfileStore) {
+      ProvisioningProfileStore provisioningProfileStore,
+      boolean dryRunCodeSigning) {
     super(params, resolver);
     this.extension = extension.isLeft() ?
         extension.getLeft().toFileExtension() :
@@ -208,6 +215,7 @@ public class AppleBundle
     this.platformBuildVersion = appleCxxPlatform.getBuildVersion();
     this.xcodeBuildVersion = appleCxxPlatform.getXcodeBuildVersion();
     this.xcodeVersion = appleCxxPlatform.getXcodeVersion();
+    this.dryRunCodeSigning = dryRunCodeSigning;
 
     bundleBinaryPath = bundleRoot.resolve(binaryPath);
     hasBinary = binary.isPresent() && binary.get().getPathToOutput() != null;
@@ -456,6 +464,8 @@ public class AppleBundle
         signingEntitlementsTempPath = Optional.of(
             BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.xcent"));
 
+        final Path dryRunResultPath = bundleRoot.resolve(PP_DRY_RUN_RESULT_FILE);
+
         final ProvisioningProfileCopyStep provisioningProfileCopyStep =
             new ProvisioningProfileCopyStep(
                 getProjectFilesystem(),
@@ -464,17 +474,27 @@ public class AppleBundle
                 entitlementsPlist,
                 provisioningProfileStore,
                 resourcesDestinationPath.resolve("embedded.mobileprovision"),
-                signingEntitlementsTempPath.get(),
-                codeSignIdentityStore);
+                dryRunCodeSigning ?
+                    bundleRoot.resolve(CODE_SIGN_DRY_RUN_ENTITLEMENTS_FILE) :
+                    signingEntitlementsTempPath.get(),
+                codeSignIdentityStore,
+                dryRunCodeSigning ?
+                    Optional.of(dryRunResultPath) :
+                    Optional.empty());
         stepsBuilder.add(provisioningProfileCopyStep);
 
         codeSignIdentitySupplier = () -> {
           // Using getUnchecked here because the previous step should already throw if exception
           // occurred, and this supplier would never be evaluated.
-          ProvisioningProfileMetadata selectedProfile = Futures.getUnchecked(
+          Optional<ProvisioningProfileMetadata> selectedProfile = Futures.getUnchecked(
               provisioningProfileCopyStep.getSelectedProvisioningProfileFuture());
+
+          if (!selectedProfile.isPresent()) {
+            return CodeSignIdentity.AD_HOC;
+          }
+
           ImmutableSet<HashCode> fingerprints =
-              selectedProfile.getDeveloperCertificateFingerprints();
+              selectedProfile.get().getDeveloperCertificateFingerprints();
           if (fingerprints.isEmpty()) {
             // No constraints, pick an arbitrary identity.
             // If no identities are available, use an ad-hoc identity.
@@ -488,18 +508,24 @@ public class AppleBundle
               return identity;
             }
           }
+
+          if (dryRunCodeSigning) {
+            return CodeSignIdentity.AD_HOC;
+          }
           throw new HumanReadableException(
               "No code sign identity available for provisioning profile: %s\n" +
                   "Profile requires an identity with one of the following SHA1 fingerprints " +
                   "available in your keychain: \n  %s",
-              selectedProfile.getProfilePath(),
+              selectedProfile.get().getProfilePath(),
               Joiner.on("\n  ").join(fingerprints));
         };
       }
 
       addSwiftStdlibStepIfNeeded(
         bundleRoot.resolve(Paths.get("Frameworks")),
-        Optional.of(codeSignIdentitySupplier),
+        dryRunCodeSigning ?
+            Optional.<Supplier<CodeSignIdentity>>empty() :
+            Optional.of(codeSignIdentitySupplier),
         stepsBuilder,
         false /* is for packaging? */
       );
@@ -520,7 +546,7 @@ public class AppleBundle
               getProjectFilesystem().getRootPath(),
               getResolver(),
               bundleRoot,
-              signingEntitlementsTempPath,
+              dryRunCodeSigning ? Optional.empty() : signingEntitlementsTempPath,
               codeSignIdentitySupplier,
               codesignAllocatePath));
     } else {
@@ -619,7 +645,7 @@ public class AppleBundle
     buildableContext.recordArtifact(dsymDestinationPath);
   }
 
-  public void addStepsToCopyExtensionBundlesDependencies(
+  private void addStepsToCopyExtensionBundlesDependencies(
       ImmutableList.Builder<Step> stepsBuilder,
       ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder) {
     for (Map.Entry<SourcePath, String> entry : extensionBundlePaths.entrySet()) {
