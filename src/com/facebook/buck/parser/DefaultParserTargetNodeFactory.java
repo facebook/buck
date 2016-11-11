@@ -28,7 +28,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuckPyFunction;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshalException;
@@ -148,9 +147,6 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
     }
 
     Cell targetCell = cell.getCell(target);
-    BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
-        targetCell.getFilesystem(),
-        target);
     Object constructorArg = description.createUnpopulatedConstructorArg();
     try {
       ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
@@ -161,7 +157,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
         marshaller.populate(
             targetCell.getCellPathResolver(),
             targetCell.getFilesystem(),
-            factoryParams,
+            target,
             constructorArg,
             declaredDeps,
             visibilityPatterns,
@@ -176,7 +172,8 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
             hasher.hash(),
             description,
             constructorArg,
-            factoryParams,
+            targetCell.getFilesystem(),
+            target,
             declaredDeps.build(),
             visibilityPatterns.build(),
             targetCell.getCellPathResolver());

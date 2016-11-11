@@ -26,7 +26,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.ConstructorArgMarshalException;
@@ -233,16 +232,13 @@ public class JvmLibraryArgInterpreterTest {
   }
 
   private void populateWithDefaultValues(Object arg) {
-    BuildRuleFactoryParams factoryParams = new BuildRuleFactoryParams(
-        new FakeProjectFilesystem(),
-        BuildTargetFactory.newInstance("//example:target"));
-
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     try {
       new ConstructorArgMarshaller(
           new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance())).populate(
-          createCellRoots(factoryParams.getProjectFilesystem()),
-          factoryParams.getProjectFilesystem(),
-          factoryParams,
+          createCellRoots(filesystem),
+          filesystem,
+          BuildTargetFactory.newInstance("//example:target"),
           arg,
           ImmutableSet.builder(),
           ImmutableSet.builder(),

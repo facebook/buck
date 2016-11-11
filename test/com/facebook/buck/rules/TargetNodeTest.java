@@ -165,30 +165,29 @@ public class TargetNodeTest {
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableMap<String, Object> rawNode) throws NoSuchBuildTargetException {
-    BuildRuleFactoryParams buildRuleFactoryParams = new BuildRuleFactoryParams(
-        new FakeProjectFilesystem(),
-        buildTarget);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     Description<Arg> description = new TestDescription();
 
     return new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
         .create(
-            Hashing.sha1().hashString(buildRuleFactoryParams.target.getFullyQualifiedName(), UTF_8),
+            Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
             description,
             createPopulatedConstructorArg(
                 description,
-                buildRuleFactoryParams,
+                buildTarget,
                 rawNode),
-            buildRuleFactoryParams,
+            filesystem,
+            buildTarget,
             declaredDeps,
             ImmutableSet.of(),
-            createCellRoots(buildRuleFactoryParams.getProjectFilesystem()));
+            createCellRoots(filesystem));
   }
 
 
   private static Arg createPopulatedConstructorArg(
       Description<Arg> description,
-      BuildRuleFactoryParams buildRuleFactoryParams,
+      BuildTarget buildTarget,
       Map<String, Object> instance) throws NoSuchBuildTargetException {
     ConstructorArgMarshaller marshaller =
         new ConstructorArgMarshaller(new DefaultTypeCoercerFactory(
@@ -199,7 +198,7 @@ public class TargetNodeTest {
       marshaller.populate(
           createCellRoots(projectFilesystem),
           projectFilesystem,
-          buildRuleFactoryParams,
+          buildTarget,
           constructorArg,
           ImmutableSet.builder(),
           ImmutableSet.builder(),

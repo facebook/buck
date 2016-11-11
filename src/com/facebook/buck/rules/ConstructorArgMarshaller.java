@@ -81,14 +81,14 @@ public class ConstructorArgMarshaller {
   public void populate(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      BuildRuleFactoryParams params,
+      BuildTarget buildTarget,
       Object dto,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableSet.Builder<VisibilityPattern> visibilityPatterns,
       Map<String, ?> instance) throws ConstructorArgMarshalException {
     for (ParamInfo info : getAllParamInfo(dto)) {
       try {
-        info.setFromParams(cellRoots, filesystem, params, dto, instance);
+        info.setFromParams(cellRoots, filesystem, buildTarget, dto, instance);
       } catch (ParamInfoException e) {
         throw new ConstructorArgMarshalException(e.getMessage(), e);
       }
@@ -96,7 +96,7 @@ public class ConstructorArgMarshaller {
         populateDeclaredDeps(info, declaredDeps, dto);
       }
     }
-    populateVisibilityPatterns(cellRoots, visibilityPatterns, instance, params.target);
+    populateVisibilityPatterns(cellRoots, visibilityPatterns, instance, buildTarget);
   }
 
   /**
@@ -108,12 +108,12 @@ public class ConstructorArgMarshaller {
   void populateDefaults(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      BuildRuleFactoryParams params,
+      BuildTarget buildTarget,
       Object dto) throws ConstructorArgMarshalException {
     for (ParamInfo info : getAllParamInfo(dto)) {
       if (info.isOptional()) {
         try {
-          info.set(cellRoots, filesystem, params.target.getBasePath(), dto, null);
+          info.set(cellRoots, filesystem, buildTarget.getBasePath(), dto, null);
         } catch (ParamInfoException e) {
           throw new ConstructorArgMarshalException(e.getMessage(), e);
         }

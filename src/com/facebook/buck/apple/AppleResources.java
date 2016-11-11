@@ -72,7 +72,7 @@ public class AppleResources {
             targetNode,
             Optional.of(types));
 
-    ProjectFilesystem filesystem = targetNode.getRuleFactoryParams().getProjectFilesystem();
+    ProjectFilesystem filesystem = targetNode.getFilesystem();
 
     for (TargetNode<?> resourceNode : resourceNodes) {
       Object constructorArg = resourceNode.getConstructorArg();

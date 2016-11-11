@@ -236,10 +236,7 @@ public class PerBuildState implements AutoCloseable {
       Path buildFile,
       TargetNode<?> node) throws IOException {
     Map<Path, Path> newSymlinksEncountered =
-        inputFilesUnderSymlink(
-            node.getInputs(),
-            node.getRuleFactoryParams().getProjectFilesystem(),
-            symlinkExistenceCache);
+        inputFilesUnderSymlink(node.getInputs(), node.getFilesystem(), symlinkExistenceCache);
     if (!newSymlinksEncountered.isEmpty()) {
       ParserConfig.AllowSymlinks allowSymlinks = Preconditions.checkNotNull(
           cellSymlinkAllowability.get(node.getBuildTarget().getCellPath()));

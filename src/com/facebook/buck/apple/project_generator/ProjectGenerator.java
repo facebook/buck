@@ -744,8 +744,7 @@ public class ProjectGenerator {
       TargetNode<HalideLibraryDescription.Arg> targetNode) throws IOException {
     final BuildTarget buildTarget = targetNode.getBuildTarget();
     String productName = getProductNameForBuildTarget(buildTarget);
-    Path outputPath =
-        getHalideOutputPath(targetNode.getRuleFactoryParams().getProjectFilesystem(), buildTarget);
+    Path outputPath = getHalideOutputPath(targetNode.getFilesystem(), buildTarget);
 
     Path scriptPath = halideBuckConfig.getXcodeCompileScriptPath();
     Optional<String> script = projectFilesystem.readFileIfItExists(scriptPath);
@@ -1283,8 +1282,7 @@ public class ProjectGenerator {
         ImmutableSet.of() :
         ImmutableSet.of(
             pathRelativizer.outputDirToRootRelative(
-                buildTargetNode.getRuleFactoryParams().getProjectFilesystem()
-                    .getBuckPaths().getBuckOut()));
+                buildTargetNode.getFilesystem().getBuckPaths().getBuckOut()));
 
     appendConfigsBuilder
         .put(

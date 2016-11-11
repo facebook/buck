@@ -30,9 +30,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
       BuildRuleResolver ruleResolver,
       TargetNode<T> targetNode)
       throws NoSuchBuildTargetException {
-    BuildRuleFactoryParams ruleFactoryParams = targetNode.getRuleFactoryParams();
     Description<T> description = targetNode.getDescription();
-
     T arg = targetNode.getConstructorArg();
 
     // The params used for the Buildable only contain the declared parameters. However, the deps of
@@ -42,7 +40,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
         targetNode.getBuildTarget(),
         Suppliers.ofInstance(ruleResolver.requireAllRules(targetNode.getDeclaredDeps())),
         Suppliers.ofInstance(ruleResolver.requireAllRules(targetNode.getExtraDeps())),
-        ruleFactoryParams.getProjectFilesystem(),
+        targetNode.getFilesystem(),
         targetNode.getCellNames());
 
     return description.createBuildRule(targetGraph, params, ruleResolver, arg);

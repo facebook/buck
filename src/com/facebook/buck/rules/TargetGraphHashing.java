@@ -143,7 +143,7 @@ public class TargetGraphHashing {
       LOG.verbose("Got rules hash %s", targetRuleHashCode);
       hasher.putBytes(targetRuleHashCode.asBytes());
 
-      ProjectFilesystem cellFilesystem = node.getRuleFactoryParams().getProjectFilesystem();
+      ProjectFilesystem cellFilesystem = node.getFilesystem();
 
       try {
         // Hash the contents of all input files and directories.

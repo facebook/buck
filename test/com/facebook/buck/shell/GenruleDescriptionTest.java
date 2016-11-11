@@ -28,7 +28,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
@@ -63,20 +62,18 @@ public class GenruleDescriptionTest {
         "out", "AndroidManifest.xml",
         "cmd", "$(exe //bin:executable) $(location :arg)");
     ProjectFilesystem projectFilesystem = new AllExistingProjectFilesystem();
-    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
-        projectFilesystem,
-        BuildTargetFactory.newInstance("//foo:bar"));
     ConstructorArgMarshaller marshaller =
         new ConstructorArgMarshaller(new DefaultTypeCoercerFactory(
             ObjectMappers.newDefaultInstance()));
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> visibilityPatterns = ImmutableSet.builder();
     GenruleDescription.Arg constructorArg = genruleDescription.createUnpopulatedConstructorArg();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     try {
       marshaller.populate(
           createCellRoots(projectFilesystem),
           projectFilesystem,
-          params,
+          buildTarget,
           constructorArg,
           declaredDeps,
           visibilityPatterns,
@@ -87,10 +84,11 @@ public class GenruleDescriptionTest {
     TargetNode<GenruleDescription.Arg> targetNode =
         new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
             .create(
-                Hashing.sha1().hashString(params.target.getFullyQualifiedName(), UTF_8),
+                Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
                 genruleDescription,
                 constructorArg,
-                params,
+                projectFilesystem,
+                buildTarget,
                 declaredDeps.build(),
                 visibilityPatterns.build(),
                 createCellRoots(projectFilesystem));

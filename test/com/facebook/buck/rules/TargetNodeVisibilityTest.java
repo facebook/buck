@@ -232,15 +232,13 @@ public class TargetNodeVisibilityTest {
     }
     Description<FakeDescription.FakeArg> description = new FakeDescription();
     FakeDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
-    BuildRuleFactoryParams params = new BuildRuleFactoryParams(
-        new FakeProjectFilesystem(),
-        buildTarget);
     return new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
         .create(
-            Hashing.sha1().hashString(params.target.getFullyQualifiedName(), UTF_8),
+            Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
             description,
             arg,
-            params,
+            filesystem,
+            buildTarget,
             ImmutableSet.of(),
             builder.build(),
             createCellRoots(filesystem));

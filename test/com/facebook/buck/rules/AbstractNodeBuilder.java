@@ -46,7 +46,7 @@ public abstract class AbstractNodeBuilder<A> {
       new VisibilityPatternParser();
 
   protected final Description<A> description;
-  protected final BuildRuleFactoryParams factoryParams;
+  protected final ProjectFilesystem filesystem;
   protected final BuildTarget target;
   protected final A arg;
   private final CellPathResolver cellRoots;
@@ -72,11 +72,11 @@ public abstract class AbstractNodeBuilder<A> {
       ProjectFilesystem projectFilesystem,
       HashCode hashCode) {
     this.description = description;
-    this.factoryParams = new BuildRuleFactoryParams(projectFilesystem, target);
+    this.filesystem = projectFilesystem;
     this.target = target;
     this.rawHashCode = hashCode;
 
-    this.cellRoots = new FakeCellPathResolver(factoryParams.getProjectFilesystem());
+    this.cellRoots = new FakeCellPathResolver(projectFilesystem);
 
     this.arg = description.createUnpopulatedConstructorArg();
     populateWithDefaultValues(this.arg);
@@ -112,7 +112,7 @@ public abstract class AbstractNodeBuilder<A> {
   public TargetNode<A> build() {
     try {
       HashCode hash = rawHashCode == null ?
-          Hashing.sha1().hashString(factoryParams.target.getFullyQualifiedName(), UTF_8) :
+          Hashing.sha1().hashString(target.getFullyQualifiedName(), UTF_8) :
           rawHashCode;
 
       return new TargetNodeFactory(TYPE_COERCER_FACTORY).create(
@@ -120,7 +120,8 @@ public abstract class AbstractNodeBuilder<A> {
           hash,
           description,
           arg,
-          factoryParams,
+          filesystem,
+          target,
           getDepsFromArg(),
           ImmutableSet.of(
               VISIBILITY_PATTERN_PARSER.parse(null, VisibilityPatternParser.VISIBILITY_PUBLIC)
@@ -187,12 +188,12 @@ public abstract class AbstractNodeBuilder<A> {
    */
   private void populateWithDefaultValues(A arg) {
     try {
-      new ConstructorArgMarshaller(
-          TYPE_COERCER_FACTORY).populateDefaults(
-          cellRoots,
-          factoryParams.getProjectFilesystem(),
-          factoryParams,
-          arg);
+      new ConstructorArgMarshaller(TYPE_COERCER_FACTORY)
+          .populateDefaults(
+              cellRoots,
+              filesystem,
+              target,
+              arg);
     } catch (ConstructorArgMarshalException error) {
       throw Throwables.propagate(error);
     }

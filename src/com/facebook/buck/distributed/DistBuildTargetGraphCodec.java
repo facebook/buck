@@ -70,8 +70,7 @@ public class DistBuildTargetGraphCodec {
 
     for (TargetNode<?> targetNode : targetNodes) {
       Map<String, Object> rawTargetNode = nodeToRawNode.apply(targetNode);
-      ProjectFilesystem projectFilesystem =
-          targetNode.getRuleFactoryParams().getProjectFilesystem();
+      ProjectFilesystem projectFilesystem = targetNode.getFilesystem();
 
       BuildJobStateTargetNode remoteNode = new BuildJobStateTargetNode();
       remoteNode.setCellIndex(cellIndexer.apply(projectFilesystem.getRootPath()));

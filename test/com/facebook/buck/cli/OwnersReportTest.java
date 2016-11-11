@@ -27,7 +27,6 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleFactoryParams;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
@@ -91,19 +90,19 @@ public class OwnersReportTest {
     Description<FakeDescription.FakeArg> description = new FakeDescription();
     FakeDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
     arg.inputs = inputs;
-    BuildRuleFactoryParams params =
-        new BuildRuleFactoryParams(new FakeProjectFilesystem(), buildTarget);
     try {
+      FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
       return
           new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
               .create(
-                  Hashing.sha1().hashString(params.target.getFullyQualifiedName(), UTF_8),
+                  Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),
                   description,
                   arg,
-                  params,
+                  filesystem,
+                  buildTarget,
                   ImmutableSet.of(),
                   ImmutableSet.of(),
-                  createCellRoots(params.getProjectFilesystem()));
+                  createCellRoots(filesystem));
     } catch (NoSuchBuildTargetException e) {
       throw new RuntimeException(e);
     }

@@ -69,7 +69,6 @@ java_immutables_library(
     'BuckPyFunction.java',
     'BuildRule.java',
     'BuildRuleDependencyVisitors.java',
-    'BuildRuleFactoryParams.java',
     'BuildRuleParams.java',
     'BuildRuleResolver.java',
     'BuildRuleStatus.java',

@@ -677,7 +677,7 @@ class NewNativeTargetProjectMutator {
 
     template.add("bundle_name", args.bundleName);
 
-    ProjectFilesystem filesystem = targetNode.getRuleFactoryParams().getProjectFilesystem();
+    ProjectFilesystem filesystem = targetNode.getFilesystem();
     BuildTarget buildTarget = targetNode.getBuildTarget();
     Path jsOutput =
         ReactNativeBundle.getPathToJSBundleDir(buildTarget, filesystem).resolve(args.bundleName);

@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -48,7 +49,8 @@ public class TargetNodeFactory {
       HashCode rawInputsHashCode,
       Description<T> description,
       Object constructorArg,
-      BuildRuleFactoryParams params,
+      ProjectFilesystem filesystem,
+      BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       CellPathResolver cellRoots)
@@ -57,7 +59,8 @@ public class TargetNodeFactory {
         rawInputsHashCode,
         description,
         (T) constructorArg,
-        params,
+        filesystem,
+        buildTarget,
         declaredDeps,
         visibilityPatterns,
         cellRoots);
@@ -68,7 +71,8 @@ public class TargetNodeFactory {
       HashCode rawInputsHashCode,
       Description<T> description,
       T constructorArg,
-      BuildRuleFactoryParams params,
+      ProjectFilesystem filesystem,
+      BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       CellPathResolver cellRoots)
@@ -95,7 +99,7 @@ public class TargetNodeFactory {
       extraDepsBuilder
           .addAll(
               ((ImplicitDepsInferringDescription<T>) description)
-                  .findDepsForTargetFromConstructorArgs(params.target, cellRoots, constructorArg));
+                  .findDepsForTargetFromConstructorArgs(buildTarget, cellRoots, constructorArg));
     }
 
     if (description instanceof ImplicitInputsInferringDescription) {
@@ -103,7 +107,7 @@ public class TargetNodeFactory {
           .addAll(
               ((ImplicitInputsInferringDescription<T>) description)
                   .inferInputsFromConstructorArgs(
-                      params.target.getUnflavoredBuildTarget(),
+                      buildTarget.getUnflavoredBuildTarget(),
                       constructorArg));
     }
 
@@ -112,7 +116,8 @@ public class TargetNodeFactory {
         rawInputsHashCode,
         description,
         constructorArg,
-        params,
+        filesystem,
+        buildTarget,
         declaredDeps,
         ImmutableSortedSet.copyOf(Sets.difference(extraDepsBuilder.build(), declaredDeps)),
         visibilityPatterns,
@@ -158,7 +163,8 @@ public class TargetNodeFactory {
           originalNode.getRawInputsHashCode(),
           description,
           (T) originalNode.getConstructorArg(),
-          originalNode.getRuleFactoryParams(),
+          originalNode.getFilesystem(),
+          originalNode.getBuildTarget(),
           originalNode.getDeclaredDeps(),
           originalNode.getVisibilityPatterns(),
           originalNode.getCellNames());
@@ -179,7 +185,8 @@ public class TargetNodeFactory {
           originalNode.getRawInputsHashCode(),
           originalNode.getDescription(),
           originalNode.getConstructorArg(),
-          originalNode.getRuleFactoryParams().withFlavors(flavors),
+          originalNode.getFilesystem(),
+          originalNode.getBuildTarget().withFlavors(flavors),
           originalNode.getDeclaredDeps(),
           originalNode.getVisibilityPatterns(),
           originalNode.getCellNames());

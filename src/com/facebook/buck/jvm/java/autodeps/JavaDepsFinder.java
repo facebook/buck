@@ -398,7 +398,7 @@ public class JavaDepsFinder {
         symbolsFinder,
         generatedSymbols,
         objectMapper,
-        node.getRuleFactoryParams().getProjectFilesystem());
+        node.getFilesystem());
     ListenableFuture<BuildResult> future =
         buildEngine.build(buildContext, executionContext, buildRule);
     BuildResult result = Futures.getUnchecked(future);

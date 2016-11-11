@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
@@ -39,7 +40,8 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
   private final TargetNodeFactory factory;
 
   private final HashCode rawInputsHashCode;
-  private final BuildRuleFactoryParams ruleFactoryParams;
+  private final ProjectFilesystem filesystem;
+  private final BuildTarget buildTarget;
   private final CellPathResolver cellNames;
 
   private final Description<T> description;
@@ -57,7 +59,8 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
       HashCode rawInputsHashCode,
       Description<T> description,
       T constructorArg,
-      BuildRuleFactoryParams params,
+      ProjectFilesystem filesystem,
+      BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<BuildTarget> extraDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
@@ -68,7 +71,8 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     this.rawInputsHashCode = rawInputsHashCode;
     this.description = description;
     this.constructorArg = constructorArg;
-    this.ruleFactoryParams = params;
+    this.filesystem = filesystem;
+    this.buildTarget = buildTarget;
     this.cellNames = cellNames;
     this.declaredDeps = declaredDeps;
     this.extraDeps = extraDeps;
@@ -96,9 +100,13 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     return constructorArg;
   }
 
+  public ProjectFilesystem getFilesystem() {
+    return filesystem;
+  }
+
   @Override
   public BuildTarget getBuildTarget() {
-    return ruleFactoryParams.target;
+    return buildTarget;
   }
 
   public ImmutableSet<Path> getInputs() {
@@ -118,10 +126,6 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     builder.addAll(getDeclaredDeps());
     builder.addAll(getExtraDeps());
     return builder.build();
-  }
-
-  public BuildRuleFactoryParams getRuleFactoryParams() {
-    return ruleFactoryParams;
   }
 
   /**
@@ -207,7 +211,8 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
         getRawInputsHashCode(),
         getDescription(),
         constructorArg,
-        getRuleFactoryParams().withTarget(target),
+        filesystem,
+        target,
         declaredDeps,
         extraDeps,
         getVisibilityPatterns(),
