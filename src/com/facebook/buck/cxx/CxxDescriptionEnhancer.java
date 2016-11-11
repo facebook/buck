@@ -138,9 +138,10 @@ public class CxxDescriptionEnhancer {
       CxxPlatform cxxPlatform,
       ImmutableMap<Path, SourcePath> headers,
       HeaderVisibility headerVisibility) {
+    BuildRuleParams untypedParams = CxxLibraryDescription.getUntypedParams(params);
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-            params.getBuildTarget(),
+            untypedParams.getBuildTarget(),
             cxxPlatform.getFlavor(),
             headerVisibility);
 
@@ -152,7 +153,7 @@ public class CxxDescriptionEnhancer {
     }
 
     HeaderSymlinkTree symlinkTree = createHeaderSymlinkTree(
-        params,
+        untypedParams,
         ruleResolver,
         pathResolver,
         cxxPlatform,

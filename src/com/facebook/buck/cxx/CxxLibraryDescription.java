@@ -536,7 +536,7 @@ public class CxxLibraryDescription implements
     BuildTarget buildTarget = params.getBuildTarget();
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
-    Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
+    Optional<Map.Entry<Flavor, Type>> type = getLibType(buildTarget);
     Optional<CxxPlatform> platform = cxxPlatforms.getValue(buildTarget);
 
     if (params.getBuildTarget().getFlavors()
@@ -605,33 +605,23 @@ public class CxxLibraryDescription implements
       // If we *are* building a specific type of this lib, call into the type specific
       // rule builder methods.
 
-      Set<Flavor> flavors = Sets.newHashSet(params.getBuildTarget().getFlavors());
-      flavors.remove(type.get().getKey());
-      BuildTarget target = BuildTarget
-          .builder(params.getBuildTarget().getUnflavoredBuildTarget())
-          .addAllFlavors(flavors)
-          .build();
-      BuildRuleParams typeParams =
-          params.copyWithChanges(
-              target,
-              params.getDeclaredDeps(),
-              params.getExtraDeps());
+      BuildRuleParams untypedParams = getUntypedParams(params);
       switch (type.get().getValue()) {
         case HEADERS:
           return createHeaderSymlinkTreeBuildRule(
-              typeParams,
+              untypedParams,
               resolver,
               platform.get(),
               args);
         case EXPORTED_HEADERS:
           return createExportedHeaderSymlinkTreeBuildRule(
-              typeParams,
+              untypedParams,
               resolver,
               platform.get(),
               args);
         case SHARED:
           return createSharedLibraryBuildRule(
-              typeParams,
+              untypedParams,
               resolver,
               cxxBuckConfig,
               platform.get(),
@@ -642,7 +632,7 @@ public class CxxLibraryDescription implements
               blacklist);
         case MACH_O_BUNDLE:
           return createSharedLibraryBuildRule(
-              typeParams,
+              untypedParams,
               resolver,
               cxxBuckConfig,
               platform.get(),
@@ -653,7 +643,7 @@ public class CxxLibraryDescription implements
               blacklist);
         case STATIC:
           return createStaticLibraryBuildRule(
-              typeParams,
+              untypedParams,
               resolver,
               cxxBuckConfig,
               platform.get(),
@@ -661,7 +651,7 @@ public class CxxLibraryDescription implements
               CxxSourceRuleFactory.PicType.PDC);
         case STATIC_PIC:
           return createStaticLibraryBuildRule(
-              typeParams,
+              untypedParams,
               resolver,
               cxxBuckConfig,
               platform.get(),
@@ -751,6 +741,27 @@ public class CxxLibraryDescription implements
         args.soname,
         args.tests,
         args.canBeAsset.orElse(false));
+  }
+
+  private static Optional<Map.Entry<Flavor, Type>> getLibType(BuildTarget buildTarget) {
+    return LIBRARY_TYPE.getFlavorAndValue(buildTarget);
+  }
+
+  static BuildRuleParams getUntypedParams(BuildRuleParams params) {
+    Optional<Map.Entry<Flavor, Type>> type = getLibType(params.getBuildTarget());
+    if (!type.isPresent()) {
+      return params;
+    }
+    Set<Flavor> flavors = Sets.newHashSet(params.getBuildTarget().getFlavors());
+    flavors.remove(type.get().getKey());
+    BuildTarget target = BuildTarget
+        .builder(params.getBuildTarget().getUnflavoredBuildTarget())
+        .addAllFlavors(flavors)
+        .build();
+    return params.copyWithChanges(
+        target,
+        params.getDeclaredDeps(),
+        params.getExtraDeps());
   }
 
   @Override
