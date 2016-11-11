@@ -700,7 +700,9 @@ public class AppleTestIntegrationTest {
     result.assertSuccess();
 
     BuildTarget libraryTarget =
-        target.withAppendedFlavors(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR);
+        target.withAppendedFlavors(
+            AppleTestDescription.LIBRARY_FLAVOR,
+            CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR);
     Path output = workspace.getDestPath().resolve(
         BuildTargets.getGenPath(
             filesystem,

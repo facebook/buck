@@ -81,10 +81,12 @@ public class AppleTestDescription implements
   /**
    * Flavors for the additional generated build rules.
    */
+  static final Flavor LIBRARY_FLAVOR = ImmutableFlavor.of("apple-test-library");
   static final Flavor BUNDLE_FLAVOR = ImmutableFlavor.of("apple-test-bundle");
   private static final Flavor UNZIP_XCTOOL_FLAVOR = ImmutableFlavor.of("unzip-xctool");
 
-  private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(BUNDLE_FLAVOR);
+  private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
+      LIBRARY_FLAVOR, BUNDLE_FLAVOR);
 
   /**
    * Auxiliary build modes which makes this description emit just the results of the underlying
@@ -168,7 +170,9 @@ public class AppleTestDescription implements
     boolean addDefaultPlatform = libraryFlavors.isEmpty();
     ImmutableSet.Builder<Flavor> extraFlavorsBuilder = ImmutableSet.builder();
     if (createBundle) {
-      extraFlavorsBuilder.add(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR);
+      extraFlavorsBuilder.add(
+          LIBRARY_FLAVOR,
+          CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR);
     }
     extraFlavorsBuilder.add(debugFormat.getFlavor());
     if (addDefaultPlatform) {
