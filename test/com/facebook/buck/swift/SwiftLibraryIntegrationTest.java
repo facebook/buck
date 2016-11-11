@@ -104,7 +104,6 @@ public class SwiftLibraryIntegrationTest {
     args.libraries = ImmutableSortedSet.of();
     args.enableObjcInterop = Optional.empty();
     args.supportedPlatformsRegex = Optional.empty();
-    args.headersSearchPath = ImmutableMap.of();
 
     SwiftCompile buildRule = (SwiftCompile) FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION
         .createBuildRule(TargetGraph.EMPTY, params, resolver, args);
