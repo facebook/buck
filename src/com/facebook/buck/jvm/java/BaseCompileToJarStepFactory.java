@@ -43,6 +43,8 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
 
   public static final Function<BuildContext, Iterable<Path>> EMPTY_EXTRA_CLASSPATH =
       input -> ImmutableList.of();
+  public static final StandardJavaFileManagerFactory DEFAULT_FILE_MANAGER_FACTORY =
+      compiler -> compiler.getStandardFileManager(null, null, null);
 
   @Override
   public void createCompileToJarStep(

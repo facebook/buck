@@ -56,7 +56,7 @@ public class JavacStep implements Step {
 
   private final ClassUsageFileWriter usedClassesFileWriter;
 
-  private final Optional<StandardJavaFileManagerFactory> fileManagerFactory;
+  private final StandardJavaFileManagerFactory fileManagerFactory;
 
   private final Optional<Path> workingDirectory;
 
@@ -110,7 +110,7 @@ public class JavacStep implements Step {
   public JavacStep(
       Path outputDirectory,
       ClassUsageFileWriter usedClassesFileWriter,
-      Optional<StandardJavaFileManagerFactory> fileManagerFactory,
+      StandardJavaFileManagerFactory fileManagerFactory,
       Optional<Path> workingDirectory,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,

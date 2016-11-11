@@ -177,7 +177,7 @@ public class JavacDirectToJarStep implements Step {
     return new JavacStep(
         outputDirectory,
         usedClassesFileWriter,
-        Optional.of(createFileManagerFactory(jarOutputStream)),
+        createFileManagerFactory(jarOutputStream),
         workingDirectory,
         sourceFilePaths,
         pathToSrcsList,

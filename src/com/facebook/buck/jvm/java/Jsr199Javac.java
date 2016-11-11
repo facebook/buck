@@ -70,8 +70,6 @@ public abstract class Jsr199Javac implements Javac {
 
   private static final Logger LOG = Logger.get(Jsr199Javac.class);
   private static final JavacVersion VERSION = JavacVersion.of("in memory");
-  private static final StandardJavaFileManagerFactory DEFAULT_FILE_MANAGER_FACTORY =
-      compiler -> compiler.getStandardFileManager(null, null, null);
 
   @Override
   public JavacVersion getVersion() {
@@ -119,8 +117,7 @@ public abstract class Jsr199Javac implements Javac {
       Optional<Path> workingDirectory) {
     JavaCompiler compiler = createCompiler(context);
 
-    StandardJavaFileManager fileManager =
-        context.getFileManagerFactory().orElse(DEFAULT_FILE_MANAGER_FACTORY).create(compiler);
+    StandardJavaFileManager fileManager = context.getFileManagerFactory().create(compiler);
     try {
       Iterable<? extends JavaFileObject> compilationUnits;
       try {

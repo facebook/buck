@@ -123,7 +123,7 @@ public class Jsr199JavacIntegrationTest {
         executionContext.getJavaPackageFinder(),
         createProjectFilesystem(),
         NoOpClassUsageFileWriter.instance(),
-        Optional.empty(),
+        BaseCompileToJarStepFactory.DEFAULT_FILE_MANAGER_FACTORY,
         executionContext.getEnvironment(),
         executionContext.getProcessExecutor(),
         ImmutableList.of());
@@ -170,7 +170,7 @@ public class Jsr199JavacIntegrationTest {
         executionContext.getJavaPackageFinder(),
         createProjectFilesystem(),
         NoOpClassUsageFileWriter.instance(),
-        Optional.empty(),
+        BaseCompileToJarStepFactory.DEFAULT_FILE_MANAGER_FACTORY,
         executionContext.getEnvironment(),
         executionContext.getProcessExecutor(),
         ImmutableList.of());
@@ -270,7 +270,7 @@ public class Jsr199JavacIntegrationTest {
         executionContext.getJavaPackageFinder(),
         createProjectFilesystem(),
         NoOpClassUsageFileWriter.instance(),
-        Optional.empty(),
+        BaseCompileToJarStepFactory.DEFAULT_FILE_MANAGER_FACTORY,
         executionContext.getEnvironment(),
         executionContext.getProcessExecutor(),
         ImmutableList.of(fakeJavacJar));

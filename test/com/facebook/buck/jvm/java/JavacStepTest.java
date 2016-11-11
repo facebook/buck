@@ -84,7 +84,7 @@ public class JavacStepTest {
     JavacStep step = new JavacStep(
         Paths.get("output"),
         NoOpClassUsageFileWriter.instance(),
-        Optional.empty(),
+        BaseCompileToJarStepFactory.DEFAULT_FILE_MANAGER_FACTORY,
         Optional.empty(),
         ImmutableSortedSet.of(),
         Paths.get("pathToSrcsList"),
@@ -129,7 +129,7 @@ public class JavacStepTest {
     JavacStep step = new JavacStep(
         Paths.get("output"),
         NoOpClassUsageFileWriter.instance(),
-        Optional.empty(),
+        BaseCompileToJarStepFactory.DEFAULT_FILE_MANAGER_FACTORY,
         Optional.empty(),
         ImmutableSortedSet.of(),
         Paths.get("pathToSrcsList"),
