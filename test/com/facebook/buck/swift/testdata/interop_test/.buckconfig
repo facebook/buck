@@ -1,0 +1,10 @@
+[cxx]
+  default_platform = iphonesimulator-x86_64
+  cflags = -g -fobjc-arc -D BUCK
+
+[cache]
+  mode = dir
+
+[apple]
+  default_debug_info_format_for_binaries = NONE
+  default_debug_info_format_for_libraries = NONE

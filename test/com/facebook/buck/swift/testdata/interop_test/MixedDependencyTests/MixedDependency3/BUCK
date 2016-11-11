@@ -1,0 +1,31 @@
+apple_library(
+  name='MixedDependency3',
+  visibility=['PUBLIC'],
+  bridging_header = 'MixedDep3-Bridging-Header.h',
+  headers= glob(['**/MixedDependency3-Swift.h']),
+  exported_headers = glob(['MixedDep3.h', 'Classes/*.h']),
+  srcs = glob(['Classes/*.m', 'Classes/*.swift']),
+  tests = [':Tests'],
+  deps = ['//MixedDependencyTests/MixedDependency1:MixedDependency1',
+         '//MixedDependencyTests/MixedDependency2:MixedDependency2'],
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/UIKit.framework',
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+  ],
+)
+
+apple_test(
+  name = 'Tests',
+  info_plist = 'Tests/Info.plist',
+  bridging_header = 'MixedDep3-Bridging-Header.h',
+  info_plist_substitutions = {
+    'PRODUCT_BUNDLE_IDENTIFIER': 'com.test.test',
+  },
+  headers = glob(['Classes/*.h']),
+  srcs = glob([ 'Tests/*.m', 'Tests/*.swift']),
+  deps = [ ':MixedDependency3' ],
+  frameworks = [
+      '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+      '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework'
+  ],
+)
