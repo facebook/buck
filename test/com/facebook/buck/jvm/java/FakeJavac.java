@@ -49,7 +49,7 @@ public class FakeJavac implements Javac {
 
   @Override
   public ImmutableCollection<SourcePath> getInputs() {
-    throw new UnsupportedOperationException();
+    return ImmutableList.of();
   }
 
   @Override

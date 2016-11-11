@@ -177,7 +177,7 @@ public class ExternalJavac implements Javac {
     command.add(
         pathToJavac.isLeft() ?
             pathToJavac.getLeft().toString() :
-            context.getSourcePathResolver().getAbsolutePath(pathToJavac.getRight()).toString());
+            context.getAbsolutePathsForInputs().get(0).toString());
     command.addAll(options);
 
     ImmutableList<Path> expandedSources;

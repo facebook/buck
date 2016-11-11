@@ -31,9 +31,6 @@ import com.google.common.collect.Ordering;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.tools.JavaCompiler;
 
@@ -78,23 +75,7 @@ public class JarBackedJavac extends Jsr199Javac {
     ClassLoaderCache classLoaderCache = context.getClassLoaderCache();
     ClassLoader compilerClassLoader = classLoaderCache.getClassLoaderForClassPath(
         ClassLoader.getSystemClassLoader(),
-        FluentIterable.from(classpath)
-            .transformAndConcat(
-                new Function<SourcePath, Collection<Path>>() {
-                  @Override
-                  public Collection<Path> apply(SourcePath input) {
-                    Set<Path> paths = new HashSet<>();
-                    com.google.common.base.Optional<BuildRule> rule =
-                        com.google.common.base.Optional.fromNullable(
-                            context.getSourcePathResolver().getRule(input).orElse(null));
-                    if (rule instanceof JavaLibrary) {
-                      paths.addAll(((JavaLibrary) rule).getTransitiveClasspaths());
-                    } else {
-                      paths.add(context.getSourcePathResolver().getAbsolutePath(input));
-                    }
-                    return paths;
-                  }
-                })
+        FluentIterable.from(context.getAbsolutePathsForInputs())
             .transform(PATH_TO_URL)
             // Use "toString" since URL.equals does DNS lookups.
             .toSortedSet(Ordering.usingToString())

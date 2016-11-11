@@ -21,11 +21,13 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -154,6 +156,8 @@ public class JavacStep implements Step {
           stderr,
           Optional.of(verbosity))) {
 
+      Javac javac = getJavac();
+
       JavacExecutionContext javacExecutionContext = JavacExecutionContext.of(
           new JavacEventSinkToBuckEventBusBridge(firstOrderContext.getBuckEventBus()),
           stderr,
@@ -162,13 +166,11 @@ public class JavacStep implements Step {
           verbosity,
           firstOrderContext.getJavaPackageFinder(),
           filesystem,
-          resolver,
           usedClassesFileWriter,
           fileManagerFactory,
-          context.getEnvironment(),
-          firstOrderContext.getProcessExecutor());
-
-      Javac javac = getJavac();
+          firstOrderContext.getEnvironment(),
+          firstOrderContext.getProcessExecutor(),
+          getAbsolutePathsForJavacInputs(javac));
 
       int declaredDepsResult = javac.buildWithClasspath(
           javacExecutionContext,
@@ -234,6 +236,19 @@ public class JavacStep implements Step {
 
       return StepExecutionResult.of(declaredDepsResult, returnedStderr);
     }
+  }
+
+  private ImmutableList<Path> getAbsolutePathsForJavacInputs(Javac javac) {
+    return javac.getInputs().stream().flatMap(input -> {
+      com.google.common.base.Optional<BuildRule> rule =
+          com.google.common.base.Optional.fromNullable(
+              resolver.getRule(input).orElse(null));
+      if (rule instanceof JavaLibrary) {
+        return ((JavaLibrary) rule).getTransitiveClasspaths().stream();
+      } else {
+        return ImmutableSet.of(resolver.getAbsolutePath(input)).stream();
+      }
+    }).collect(MoreCollectors.toImmutableList());
   }
 
   @VisibleForTesting

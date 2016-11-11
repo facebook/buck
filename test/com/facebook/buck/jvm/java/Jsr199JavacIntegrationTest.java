@@ -68,9 +68,6 @@ import javax.tools.StandardJavaFileManager;
 
 public class Jsr199JavacIntegrationTest {
 
-  private static final SourcePathResolver PATH_RESOLVER =
-      new SourcePathResolver(
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
   public static final ImmutableSortedSet<Path> SOURCE_PATHS =
       ImmutableSortedSet.of(Paths.get("Example.java"));
   @Rule
@@ -125,11 +122,11 @@ public class Jsr199JavacIntegrationTest {
         executionContext.getVerbosity(),
         executionContext.getJavaPackageFinder(),
         createProjectFilesystem(),
-        PATH_RESOLVER,
         NoOpClassUsageFileWriter.instance(),
         Optional.empty(),
         executionContext.getEnvironment(),
-        executionContext.getProcessExecutor());
+        executionContext.getProcessExecutor(),
+        ImmutableList.of());
 
     int exitCode = javac.buildWithClasspath(
         javacExecutionContext,
@@ -172,11 +169,11 @@ public class Jsr199JavacIntegrationTest {
         executionContext.getVerbosity(),
         executionContext.getJavaPackageFinder(),
         createProjectFilesystem(),
-        PATH_RESOLVER,
         NoOpClassUsageFileWriter.instance(),
         Optional.empty(),
         executionContext.getEnvironment(),
-        executionContext.getProcessExecutor());
+        executionContext.getProcessExecutor(),
+        ImmutableList.of());
 
     int exitCode = javac.buildWithClasspath(
         javacExecutionContext,
@@ -272,11 +269,11 @@ public class Jsr199JavacIntegrationTest {
         executionContext.getVerbosity(),
         executionContext.getJavaPackageFinder(),
         createProjectFilesystem(),
-        PATH_RESOLVER,
         NoOpClassUsageFileWriter.instance(),
         Optional.empty(),
         executionContext.getEnvironment(),
-        executionContext.getProcessExecutor());
+        executionContext.getProcessExecutor(),
+        ImmutableList.of(fakeJavacJar));
 
     boolean caught = false;
 

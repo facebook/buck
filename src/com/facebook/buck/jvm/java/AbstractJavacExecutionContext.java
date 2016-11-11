@@ -18,17 +18,18 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
 
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.Optional;
 
 @Value.Immutable
@@ -41,9 +42,9 @@ abstract class AbstractJavacExecutionContext {
   public abstract Verbosity getVerbosity();
   public abstract JavaPackageFinder getJavaPackageFinder();
   public abstract ProjectFilesystem getProjectFilesystem();
-  public abstract SourcePathResolver getSourcePathResolver();
   public abstract ClassUsageFileWriter getUsedClassesFileWriter();
   public abstract Optional<StandardJavaFileManagerFactory> getFileManagerFactory();
   public abstract ImmutableMap<String, String> getEnvironment();
   public abstract ProcessExecutor getProcessExecutor();
+  public abstract ImmutableList<Path> getAbsolutePathsForInputs();
 }
