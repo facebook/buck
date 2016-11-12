@@ -55,7 +55,7 @@ public class PrebuiltCxxLibraryBuilder
   }
 
   public PrebuiltCxxLibraryBuilder setLinkWithoutSoname(boolean linkWithoutSoname) {
-    arg.linkWithoutSoname = Optional.of(linkWithoutSoname);
+    arg.linkWithoutSoname = linkWithoutSoname;
     return this;
   }
 
@@ -81,7 +81,7 @@ public class PrebuiltCxxLibraryBuilder
   }
 
   public PrebuiltCxxLibraryBuilder setProvided(boolean provided) {
-    arg.provided = Optional.of(provided);
+    arg.provided = provided;
     return this;
   }
 
