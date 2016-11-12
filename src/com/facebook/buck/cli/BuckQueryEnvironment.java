@@ -32,6 +32,7 @@ import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
+import com.facebook.buck.query.QueryTargetAccessor;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;

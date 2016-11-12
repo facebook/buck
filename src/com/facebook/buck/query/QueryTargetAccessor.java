@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,12 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.query;
 
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.query.QueryBuildTarget;
-import com.facebook.buck.query.QueryFileTarget;
-import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.ParamInfo;
 import com.facebook.buck.rules.PathSourcePath;

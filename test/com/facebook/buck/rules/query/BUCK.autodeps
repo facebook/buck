@@ -1,0 +1,20 @@
+{
+  "query" : {
+    "deps" : [
+      "//src/com/facebook/buck/jvm/java:rules",
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/query:query",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:interfaces",
+      "//src/com/facebook/buck/rules/query:query",
+      "//test/com/facebook/buck/jvm/java:testutil",
+      "//test/com/facebook/buck/model:testutil",
+      "//test/com/facebook/buck/testutil:testutil",
+      "//third-party/java/easymock:easymock",
+      "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

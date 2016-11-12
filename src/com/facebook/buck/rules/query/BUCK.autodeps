@@ -1,0 +1,15 @@
+{
+  "query" : {
+    "deps" : [
+      "//src/com/facebook/buck/jvm/java:support",
+      "//src/com/facebook/buck/parser:rule_pattern"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/query:query",
+      "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:interfaces",
+      "//third-party/java/guava:guava"
+    ]
+  }
+}
