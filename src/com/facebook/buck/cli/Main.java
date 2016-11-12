@@ -809,13 +809,22 @@ public final class Main {
         canonicalRootPath,
         command.getConfigOverrides().getForCell(RelativeCellName.ROOT_CELL_NAME));
     ProjectFilesystem filesystem = new ProjectFilesystem(canonicalRootPath, config);
+    DefaultCellPathResolver cellPathResolver =
+        new DefaultCellPathResolver(filesystem.getRootPath(), config);
     BuckConfig buckConfig = new BuckConfig(
         config,
         filesystem,
         architecture,
         platform,
         clientEnvironment,
-        new DefaultCellPathResolver(filesystem.getRootPath(), config));
+        cellPathResolver);
+    ImmutableSet<Path> projectWatchList = ImmutableSet.<Path>builder()
+      .add(canonicalRootPath)
+      .addAll(
+          config.getBooleanValue("project", "watch_cells", false) ?
+              cellPathResolver.getTransitivePathMapping().values() :
+              ImmutableList.of())
+      .build();
     Optional<ImmutableList<String>> allowedJavaSpecificiationVersions =
         buckConfig.getAllowedJavaSpecificationVersions();
     if (allowedJavaSpecificiationVersions.isPresent()) {
@@ -918,7 +927,7 @@ public final class Main {
                buildWatchman(
                    context,
                    parserConfig,
-                   ImmutableSet.of(canonicalRootPath),
+                   projectWatchList,
                    clientEnvironment,
                    console,
                    clock)) {

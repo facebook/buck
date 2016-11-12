@@ -537,6 +537,52 @@ public class DaemonIntegrationTest {
     whenAppBuckFileInvalidatedThenRebuildFails(WatchmanWatcher.CursorType.CLOCK_ID.toString());
   }
 
+  private void whenCrossCellSourceInvalidatedThenRebuildFails(String cursorType)
+      throws IOException, InterruptedException {
+    final ProjectWorkspace primary = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "xplat_file_watching/primary", tmp.newFolder());
+    primary.setUp();
+    final ProjectWorkspace secondary = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "xplat_file_watching/secondary", tmp.newFolder());
+    secondary.setUp();
+    TestDataHelper.overrideBuckconfig(
+        primary,
+        ImmutableMap.of(
+            "repositories", ImmutableMap.of(
+                "secondary",
+                secondary.getPath(".").normalize().toString()),
+            "project", ImmutableMap.of(
+                "watch_cells", "true",
+                "watchman_cursor", cursorType)));
+    TestDataHelper.overrideBuckconfig(
+        secondary,
+        ImmutableMap.of("project", ImmutableMap.of("watchman_cursor", cursorType)));
+
+    primary.runBuckdCommand("build", "//:cxxbinary").assertSuccess();
+
+    String fileName = "sum.cpp";
+    Files.write(secondary.getPath(fileName), "#error Failure".getBytes(Charsets.US_ASCII));
+
+    ProcessResult result = primary.runBuckdCommand("build", "//:cxxbinary");
+    assertThat(
+        "Failure should be due to compilation error.",
+        result.getStderr(),
+        containsString("#error Failure"));
+    result.assertFailure();
+  }
+
+  @Test
+  public void withNamedCursorCrossCellSourceInvalidatedThenRebuildFails()
+      throws IOException, InterruptedException {
+    whenCrossCellSourceInvalidatedThenRebuildFails(WatchmanWatcher.CursorType.NAMED.toString());
+  }
+
+  @Test
+  public void withClockIdCursorCrossCellSourceInvalidatedThenRebuildFails()
+      throws IOException, InterruptedException {
+    whenCrossCellSourceInvalidatedThenRebuildFails(WatchmanWatcher.CursorType.CLOCK_ID.toString());
+  }
+
   @Test
   public void whenBuckConfigChangesParserInvalidated()
       throws IOException, InterruptedException {
