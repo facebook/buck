@@ -132,19 +132,21 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
             .setTarget(Optional.ofNullable(metadata.getBuildTarget()))
             .getFetchBuilder()
             .setAssociatedRuleKeys(toImmutableSet(metadata.getRuleKeys()))
-            .setArtifactSizeBytes(readResult.getBytesRead())
-            .setArtifactContentHash(metadata.getArtifactPayloadMd5());
+            .setArtifactSizeBytes(readResult.getBytesRead());
         if (!metadata.isSetArtifactPayloadMd5()) {
           String msg = "Fetched artifact is missing the MD5 hash.";
           LOG.warn(msg);
-        } else if (!readResult.getMd5Hash()
-            .equals(fetchResponse.getMetadata().getArtifactPayloadMd5())) {
-          String msg = String.format(
-              "The artifact fetched from cache is corrupted. ExpectedMD5=[%s] ActualMD5=[%s]",
-              fetchResponse.getMetadata().getArtifactPayloadMd5(),
-              readResult.getMd5Hash());
-          LOG.error(msg);
-          return CacheResult.error(name, msg);
+        } else {
+          eventBuilder.getFetchBuilder().setArtifactContentHash(metadata.getArtifactPayloadMd5());
+          if (!readResult.getMd5Hash()
+              .equals(fetchResponse.getMetadata().getArtifactPayloadMd5())) {
+            String msg = String.format(
+                "The artifact fetched from cache is corrupted. ExpectedMD5=[%s] ActualMD5=[%s]",
+                fetchResponse.getMetadata().getArtifactPayloadMd5(),
+                readResult.getMd5Hash());
+            LOG.error(msg);
+            return CacheResult.error(name, msg);
+          }
         }
 
         // This makes sure we don't have 'half downloaded files' in the dir cache.

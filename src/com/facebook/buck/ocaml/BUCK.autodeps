@@ -3,6 +3,7 @@
     "deps" : [
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/io:executable-finder",
+      "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:exceptions",
