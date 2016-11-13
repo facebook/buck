@@ -45,7 +45,7 @@ public class CxxConstructorArg extends AbstractDescriptionArg
       PatternMatchedCollection.of();
   public SourceList headers = SourceList.EMPTY;
   public PatternMatchedCollection<SourceList> platformHeaders = PatternMatchedCollection.of();
-  public Optional<SourcePath> prefixHeader;
+  public Optional<SourcePath> prefixHeader = Optional.empty();
   public Optional<SourcePath> precompiledHeader = Optional.empty();
   public ImmutableList<String> compilerFlags = ImmutableList.of();
   public ImmutableMap<CxxSource.Type, ImmutableList<String>> langCompilerFlags = ImmutableMap.of();
@@ -62,8 +62,8 @@ public class CxxConstructorArg extends AbstractDescriptionArg
   public ImmutableSortedSet<FrameworkPath> frameworks = ImmutableSortedSet.of();
   public ImmutableSortedSet<FrameworkPath> libraries = ImmutableSortedSet.of();
   public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-  public Optional<String> headerNamespace;
-  public Optional<Linker.CxxRuntimeType> cxxRuntimeType;
+  public Optional<String> headerNamespace = Optional.empty();
+  public Optional<Linker.CxxRuntimeType> cxxRuntimeType = Optional.empty();
   public ImmutableList<String> includeDirs = ImmutableList.of();
 
   @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
