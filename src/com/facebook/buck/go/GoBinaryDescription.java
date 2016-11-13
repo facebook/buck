@@ -16,6 +16,7 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
@@ -45,9 +46,13 @@ public class GoBinaryDescription implements
     Flavored {
 
   private final GoBuckConfig goBuckConfig;
+  private final CxxBinaryDescription cxxBinaryDescription;
 
-  public GoBinaryDescription(GoBuckConfig goBuckConfig) {
+  public GoBinaryDescription(
+      GoBuckConfig goBuckConfig,
+      CxxBinaryDescription cxxBinaryDescription) {
     this.goBuckConfig = goBuckConfig;
+    this.cxxBinaryDescription = cxxBinaryDescription;
   }
 
   @Override
@@ -74,10 +79,12 @@ public class GoBinaryDescription implements
         resolver,
         goBuckConfig,
         args.srcs,
+        args.cgoSrcs,
         args.compilerFlags,
         args.assemblerFlags,
         args.linkerFlags,
-        platform);
+        platform,
+        cxxBinaryDescription);
   }
 
   @Override
@@ -102,6 +109,7 @@ public class GoBinaryDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public ImmutableSet<SourcePath> srcs;
+    public ImmutableSet<SourcePath> cgoSrcs = ImmutableSet.of();
     public List<String> compilerFlags = ImmutableList.of();
     public List<String> assemblerFlags = ImmutableList.of();
     public List<String> linkerFlags = ImmutableList.of();

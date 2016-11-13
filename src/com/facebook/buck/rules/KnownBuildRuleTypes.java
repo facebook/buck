@@ -699,13 +699,20 @@ public class KnownBuildRuleTypes {
     builder.register(new ExportFileDescription());
     builder.register(new GenruleDescription());
     builder.register(new GenAidlDescription());
-    builder.register(new GoBinaryDescription(goBuckConfig));
-    builder.register(new GoLibraryDescription(goBuckConfig));
+    builder.register(new GoBinaryDescription(
+        goBuckConfig,
+        cxxBinaryDescription));
+    builder.register(new GoLibraryDescription(
+        goBuckConfig,
+        cxxBinaryDescription));
     builder.register(
         new GoTestDescription(
             goBuckConfig,
-            defaultTestRuleTimeoutMs));
-    builder.register(new GraphqlLibraryDescription());
+            defaultTestRuleTimeoutMs,
+            cxxBinaryDescription));
+
+    builder.register(new GraphQlLibraryDescription());
+
     GroovyBuckConfig groovyBuckConfig = new GroovyBuckConfig(config);
     builder.register(
         new GroovyLibraryDescription(

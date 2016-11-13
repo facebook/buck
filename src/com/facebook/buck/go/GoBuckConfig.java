@@ -122,6 +122,9 @@ public class GoBuckConfig {
   Tool getAssembler() {
     return getGoTool("assembler", "asm", "asm_flags");
   }
+  Tool getCGo() {
+    return getGoTool("cgo", "cgo", "");
+  }
   Tool getPacker() {
     return getGoTool("packer", "pack", "");
   }

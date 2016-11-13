@@ -117,6 +117,21 @@ public class GoCompile extends AbstractBuildRule {
       }
     }
 
+    ImmutableList.Builder<Path> extraLibsBuilder = ImmutableList.builder();
+
+    FluentIterable.from(getDeps())
+        .filter(CGoCompile.class)
+        .forEach(cgoDep ->
+            {
+              compileSrcListBuilder.addAll(
+                  FluentIterable.from(cgoDep.getGeneratedGoSource())
+                      .transform(input -> context.getSourcePathResolver().getAbsolutePath(input))
+              );
+              extraLibsBuilder.add(cgoDep.getOutputBinary());
+            }
+        );
+
+    ImmutableList<Path> extraLibs = extraLibsBuilder.build();
     ImmutableList<Path> compileSrcs = compileSrcListBuilder.build();
     ImmutableList<Path> headerSrcs = headerSrcListBuilder.build();
     ImmutableList<Path> asmSrcs = asmSrcListBuilder.build();
@@ -208,7 +223,7 @@ public class GoCompile extends AbstractBuildRule {
           packer.getEnvironment(),
           packer.getCommandPrefix(context.getSourcePathResolver()),
           GoPackStep.Operation.APPEND,
-          asmOutputs.build(),
+          FluentIterable.from(extraLibs).append(asmOutputs.build()).toList(),
           output));
     }
 
