@@ -663,6 +663,7 @@ abstract class AbstractCxxSourceRuleFactory {
               new DepsBuilder(getPathResolver())
                   .add(requireAggregatedPreprocessDepsRule())
                   .add(preprocessorDelegate.getPreprocessor())
+                  .add(compiler)
                   .add(path)
                   .build()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
