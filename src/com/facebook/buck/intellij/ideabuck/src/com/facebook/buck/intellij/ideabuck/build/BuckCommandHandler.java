@@ -23,7 +23,6 @@ import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.process.OSProcessHandler;
 import com.intellij.execution.process.ProcessEvent;
-import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.process.ProcessListener;
 import com.intellij.execution.process.ProcessOutputTypes;
 import com.intellij.openapi.diagnostic.Logger;
@@ -53,6 +52,7 @@ public abstract class BuckCommandHandler {
   private final GeneralCommandLine commandLine;
   private final Object processStateLock = new Object();
   private static final Pattern CHARACTER_DIGITS_PATTERN = Pattern.compile("(?s).*[A-Z0-9a-z]+.*");
+  private final boolean doStartNotify;
 
   @SuppressWarnings({"FieldAccessedSynchronizedAndUnsynchronized"})
   private Process process;
@@ -76,15 +76,25 @@ public abstract class BuckCommandHandler {
    */
   private final StringBuilder stderrLine = new StringBuilder();
 
-  /**
-   * @param project            a project
-   * @param directory          a process directory
-   * @param command            a command to execute (if empty string, the parameter is ignored)
-   */
   public BuckCommandHandler(
       Project project,
       File directory,
       BuckCommand command) {
+    this(project, directory, command, /* doStartNotify */ false);
+  }
+
+    /**
+     * @param project            a project
+     * @param directory          a process directory
+     * @param command            a command to execute (if empty string, the parameter is ignored)
+     * @param doStartNotify      true if the handler should call OSHandler#startNotify
+     */
+  public BuckCommandHandler(
+      Project project,
+      File directory,
+      BuckCommand command,
+      boolean doStartNotify) {
+    this.doStartNotify = doStartNotify;
 
     String buckExecutable = BuckSettingsProvider.getInstance().getState().buckExecutable;
 
@@ -172,8 +182,7 @@ public abstract class BuckCommandHandler {
   @Nullable
   protected Process startProcess() throws ExecutionException {
     synchronized (processStateLock) {
-      final ProcessHandler processHandler = createProcess(commandLine);
-      handler = (OSProcessHandler) processHandler;
+      handler = createProcess(commandLine);
       return handler.getProcess();
     }
   }
@@ -202,7 +211,9 @@ public abstract class BuckCommandHandler {
         BuckCommandHandler.this.onTextAvailable(event.getText(), outputType);
       }
     });
-    handler.startNotify();
+    if (doStartNotify) {
+      handler.startNotify();
+    }
   }
 
   protected boolean processExitSuccesfull() {
@@ -219,35 +230,11 @@ public abstract class BuckCommandHandler {
     }
   }
 
-  public ProcessHandler createProcess(GeneralCommandLine commandLine)
+  public OSProcessHandler createProcess(GeneralCommandLine commandLine)
       throws ExecutionException {
     // TODO(t7984081): Use ProcessExecutor to start buck process.
     Process process = commandLine.createProcess();
-    return new MyOSProcessHandler(process, commandLine, getCharset());
-  }
-
-  private static class MyOSProcessHandler extends OSProcessHandler {
-    private final Charset myCharset;
-
-    public MyOSProcessHandler(
-        Process process,
-        GeneralCommandLine commandLine,
-        Charset charset) {
-      super(process, commandLine.getCommandLineString());
-      myCharset = charset;
-    }
-
-    @Override
-    public Charset getCharset() {
-      return myCharset;
-    }
-  }
-
-  /**
-   * @return a character set to use for IO.
-   */
-  public Charset getCharset() {
-    return charset;
+    return new OSProcessHandler(process, commandLine.getCommandLineString(), charset);
   }
 
   public void runInCurrentThread(@Nullable Runnable postStartAction) {
@@ -318,4 +305,8 @@ public abstract class BuckCommandHandler {
   protected abstract boolean beforeCommand();
 
   protected abstract void afterCommand();
+
+  public OSProcessHandler getHandler() {
+    return handler;
+  }
 }
