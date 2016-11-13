@@ -29,8 +29,10 @@ import com.facebook.buck.distributed.thrift.LogRequestType;
 import com.facebook.buck.slb.ThriftException;
 import com.facebook.buck.slb.ThriftService;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -38,9 +40,12 @@ import org.hamcrest.Matchers;
 import org.hamcrest.collection.IsIterableWithSize;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
 
@@ -48,6 +53,9 @@ public class ThriftScribeLoggerTest {
 
   private static final String CATEGORY = "TEST_CATEGORY";
   private static final ImmutableList<String> LINES = ImmutableList.of("t1", "t2");
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   private ListeningExecutorService executorService;
   private ThriftScribeLogger logger;
@@ -83,19 +91,7 @@ public class ThriftScribeLoggerTest {
 
   @Test
   public void requestIsCorrectlyCreated() throws Exception {
-    ThriftService<FrontendRequest, FrontendResponse> thriftService =
-        new ThriftService<FrontendRequest, FrontendResponse>() {
-          @Override
-          public void makeRequest(
-              FrontendRequest frontendRequest,
-              FrontendResponse frontendResponse) {
-            request = frontendRequest;
-          }
-
-          @Override
-          public void close() throws IOException {
-          }
-        };
+    ThriftService<FrontendRequest, FrontendResponse> thriftService = createDefaultListener();
     logger = new ThriftScribeLogger(thriftService, executorService);
     logger.log(CATEGORY, LINES);
 
@@ -110,8 +106,35 @@ public class ThriftScribeLoggerTest {
     ));
   }
 
+  private ThriftService<FrontendRequest, FrontendResponse> createDefaultListener() {
+    return new ThriftService<FrontendRequest, FrontendResponse>() {
+      @Override
+      public void makeRequest(
+          FrontendRequest frontendRequest,
+          FrontendResponse frontendResponse) {
+        request = frontendRequest;
+      }
+
+      @Override
+      public void close() throws IOException {
+      }
+    };
+  }
+
+  @Test
+  public void allLogRequestsFailAfterClosingTheLogger()
+      throws IOException, ExecutionException, InterruptedException {
+    logger = new ThriftScribeLogger(createDefaultListener(), executorService);
+    logger.close();
+    ListenableFuture<Void> future = logger.log("topspin", Lists.newArrayList("down the line"));
+    assertTrue(future.isDone());
+    expectedException.expect(ExecutionException.class);
+    expectedException.expectCause(Matchers.any(IllegalStateException.class));
+    future.get();
+  }
+
   private ThriftService<FrontendRequest, FrontendResponse>
-      getNotThrowingThriftService(final boolean wasSuccessful) {
+  getNotThrowingThriftService(final boolean wasSuccessful) {
     return new ThriftService<FrontendRequest, FrontendResponse>() {
       @Override
       public void makeRequest(

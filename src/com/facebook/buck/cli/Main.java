@@ -868,7 +868,6 @@ public final class Main {
     }
 
     try {
-
       if (commandSemaphoreAcquired) {
         commandSemaphoreNgClient = context;
       }
