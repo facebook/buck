@@ -108,6 +108,7 @@ abstract class GoDescriptors {
       List<String> assemblerFlags,
       GoPlatform platform,
       Iterable<BuildTarget> deps,
+      ImmutableSortedSet<BuildTarget> cgoNativeDeps,
       CxxBinaryDescription cxxBinaryDescription)
       throws NoSuchBuildTargetException {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
@@ -120,7 +121,8 @@ abstract class GoDescriptors {
         params.getBuildTarget(),
         resolver,
         platform,
-        deps);
+        deps
+    );
 
     ImmutableList.Builder<BuildRule> linkableDepsBuilder = ImmutableList.builder();
     for (GoLinkable linkable : linkables) {
@@ -151,9 +153,13 @@ abstract class GoDescriptors {
           cgoSrcs,
           goBuckConfig.getCGo(),
           platform,
-          cxxBinaryDescription
+          cxxBinaryDescription,
+          cgoNativeDeps
       );
     } else {
+      if (!cgoNativeDeps.isEmpty()) {
+        throw new HumanReadableException("Native dependencies can only be used along Cgo extension");
+      }
       cgoRule = new NoopBuildRule(cgoParams, pathResolver);
     }
     resolver.addToIndex(cgoRule);
@@ -226,6 +232,7 @@ abstract class GoDescriptors {
       List<String> compilerFlags,
       List<String> assemblerFlags,
       List<String> linkerFlags,
+      ImmutableSortedSet<BuildTarget> cgoNativeDeps,
       GoPlatform platform,
       CxxBinaryDescription cxxBinaryDescription
   ) throws NoSuchBuildTargetException {
@@ -248,6 +255,7 @@ abstract class GoDescriptors {
         platform,
         FluentIterable.from(params.getDeclaredDeps().get())
             .transform(HasBuildTarget::getBuildTarget),
+        cgoNativeDeps,
         cxxBinaryDescription);
     resolver.addToIndex(library);
 
@@ -337,6 +345,7 @@ abstract class GoDescriptors {
                 ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of(),
+                ImmutableSortedSet.of(),
                 goBuckConfig.getDefaultPlatform(),
                 null)
         );

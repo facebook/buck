@@ -139,11 +139,13 @@ public class CGoCompile extends NoopBuildRule {
       BuildTarget buildTarget,
       String step,
       ImmutableSortedSet<BuildRule> deps,
-      Flags flags) throws NoSuchBuildTargetException {
+      Flags flags,
+      ImmutableSortedSet<BuildTarget> nativeDeps) throws NoSuchBuildTargetException {
     CxxBinaryDescription.Arg args = new CxxBinaryDescription.Arg();
     args.linkStyle = Optional.empty();
 
     args.srcs = prepareGeneratedSources(srcs);
+    args.deps = nativeDeps;
 
     args.langCompilerFlags = ImmutableMap.of(
         CxxSource.Type.C,
@@ -191,8 +193,8 @@ public class CGoCompile extends NoopBuildRule {
       ImmutableSet<SourcePath> cgoSrcs,
       Tool cgo,
       GoPlatform platform,
-      CxxBinaryDescription cxxBinaryDescription
-  ) throws NoSuchBuildTargetException {
+      CxxBinaryDescription cxxBinaryDescription,
+      ImmutableSortedSet<BuildTarget> nativeDeps) throws NoSuchBuildTargetException {
 
     Path cgoGenDir = BuildTargets.getGenPath(
         params.getProjectFilesystem(),
@@ -259,7 +261,8 @@ public class CGoCompile extends NoopBuildRule {
         params.getBuildTarget(),
         "cgo-first-step",
         ImmutableSortedSet.of(genCSource),
-        Flags.firstStep(platform));
+        Flags.firstStep(platform),
+        nativeDeps);
 
     BuildRule cgoImport = new GenGoImport(
         params
@@ -279,7 +282,8 @@ public class CGoCompile extends NoopBuildRule {
         params.getBuildTarget(),
         "cgo-second-step",
         ImmutableSortedSet.of(cgoImport),
-        Flags.secondStep(platform)
+        Flags.secondStep(platform),
+        ImmutableSortedSet.of()
     );
 
     BuildRule entryPoint = new CGoCompile(

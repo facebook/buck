@@ -224,6 +224,7 @@ public class GoTestDescription implements
         args.compilerFlags,
         args.assemblerFlags,
         args.linkerFlags,
+        args.cgoNativeDeps,
         platform,
         cxxBinaryDescription
         );
@@ -316,6 +317,7 @@ public class GoTestDescription implements
           platform,
           FluentIterable.from(params.getDeclaredDeps().get())
               .transform(HasBuildTarget::getBuildTarget),
+          args.cgoNativeDeps,
           cxxBinaryDescription);
     } else {
       testLibrary = GoDescriptors.createGoCompileRule(
@@ -330,6 +332,7 @@ public class GoTestDescription implements
           platform,
           FluentIterable.from(params.getDeclaredDeps().get())
               .transform(HasBuildTarget::getBuildTarget),
+          args.cgoNativeDeps,
           cxxBinaryDescription);
     }
 
@@ -366,6 +369,7 @@ public class GoTestDescription implements
     public List<String> assemblerFlags = ImmutableList.of();
     public List<String> linkerFlags = ImmutableList.of();
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    public ImmutableSortedSet<BuildTarget> cgoNativeDeps = ImmutableSortedSet.of();
     public ImmutableSet<String> contacts = ImmutableSet.of();
     public Optional<Long> testRuleTimeoutMs;
     public Optional<Boolean> runTestSeparately;

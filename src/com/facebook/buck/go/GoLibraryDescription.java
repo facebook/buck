@@ -139,6 +139,7 @@ public class GoLibraryDescription implements
           FluentIterable.from(params.getDeclaredDeps().get())
               .transform(HasBuildTarget::getBuildTarget)
               .append(args.exportedDeps),
+          args.cgoNativeDeps,
           cxxBinaryDescription);
     }
 
@@ -154,6 +155,7 @@ public class GoLibraryDescription implements
     public Optional<String> packageName;
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public ImmutableSortedSet<BuildTarget> exportedDeps = ImmutableSortedSet.of();
+    public ImmutableSortedSet<BuildTarget> cgoNativeDeps = ImmutableSortedSet.of();
 
     @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 
