@@ -341,6 +341,10 @@ public class CxxBinaryDescription implements
     return defaultCxxPlatform;
   }
 
+  public CxxBuckConfig getCxxBuckConfig() {
+    return cxxBuckConfig;
+  }
+
   @Override
   public <A extends Arg, U> Optional<U> createMetadata(
       BuildTarget buildTarget,
