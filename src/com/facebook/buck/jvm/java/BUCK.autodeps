@@ -117,6 +117,7 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/step/fs:fs",
+      "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/util/sha1:sha1",
       "//third-party/java/immutables:processor",

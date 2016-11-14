@@ -98,6 +98,7 @@
   "testutil" : {
     "deps" : [
       "//src/com/facebook/buck/cxx:rules",
+      "//src/com/facebook/buck/util:io",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/cxx:testutil",
       "//test/com/facebook/buck/jvm/java:javac-env",
