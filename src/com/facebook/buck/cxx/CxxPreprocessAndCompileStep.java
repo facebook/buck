@@ -168,7 +168,7 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   private Path getArgfile() {
-    return filesystem.resolve(scratchDir).resolve("argfile.txt");
+    return filesystem.resolve(scratchDir).resolve("ppandcompile.argsfile");
   }
 
   @VisibleForTesting

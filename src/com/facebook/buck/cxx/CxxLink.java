@@ -90,7 +90,7 @@ public class CxxLink
     Path scratchDir =
         BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s-tmp");
     Path argFilePath = getProjectFilesystem().getRootPath().resolve(
-        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s__argfile.txt"));
+        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.argsfile"));
     Path fileListPath = getProjectFilesystem().getRootPath().resolve(
         BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s__filelist.txt"));
 

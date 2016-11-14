@@ -33,7 +33,7 @@ import java.util.Optional;
 
 /**
  * Prepares argfile for the CxxLinkStep, so all arguments to the linker will be stored in a
- * single file. CxxLinkStep then would pass it to the linker via @path/to/argfile.txt command.
+ * single file. CxxLinkStep then would pass it to the linker via @path/to/the.argsfile command.
  * This allows us to break the constraints that command line sets for the maximum length of
  * the commands.
  */

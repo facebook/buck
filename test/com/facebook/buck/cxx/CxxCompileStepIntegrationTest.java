@@ -202,7 +202,7 @@ public class CxxCompileStepIntegrationTest {
     int exitCode = step.execute(executionContext).getExitCode();
     assertEquals("compile step failed: " + console.getTextWrittenToStdErr(), 0, exitCode);
 
-    Path argfile = filesystem.resolve(scratchDir.resolve("argfile.txt"));
+    Path argfile = filesystem.resolve(scratchDir.resolve("ppandcompile.argsfile"));
     assertThat(filesystem, pathExists(argfile));
     assertThat(
         Files.readAllLines(argfile, StandardCharsets.UTF_8),

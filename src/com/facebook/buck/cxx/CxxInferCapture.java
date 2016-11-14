@@ -191,7 +191,8 @@ public class CxxInferCapture
   }
 
   private Path getArgfile() {
-    return output.getFileSystem().getPath(output.getParent().resolve("argfile.txt").toString());
+    return output.getFileSystem().getPath(
+        output.getParent().resolve("infer-capture.argsfile").toString());
   }
 
   private Path getDepFilePath() {
