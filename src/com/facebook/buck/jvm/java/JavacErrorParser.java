@@ -93,10 +93,15 @@ public class JavacErrorParser {
 
   private Optional<String> getMissingSymbolInLocalPackage(Matcher matcher) {
     String fileName = matcher.group("file");
-    String className = matcher.group("class");
     Path repoRoot = filesystem.getRootPath().toAbsolutePath().normalize();
-    Path relativePath = repoRoot.relativize(Paths.get(fileName));
-    String packageName = javaPackageFinder.findJavaPackage(relativePath);
+    Path filePath = Paths.get(fileName).toAbsolutePath().normalize();
+    try {
+      filePath = repoRoot.relativize(filePath);
+    } catch (IllegalArgumentException e) {
+      return Optional.empty();
+    }
+    String packageName = javaPackageFinder.findJavaPackage(filePath);
+    String className = matcher.group("class");
     return Optional.of(packageName + "." + className);
   }
 }
