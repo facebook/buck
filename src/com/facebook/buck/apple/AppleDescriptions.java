@@ -331,6 +331,9 @@ public class AppleDescriptions {
     Optional<String> appIcon = Optional.empty();
     Optional<String> launchImage = Optional.empty();
 
+    AppleAssetCatalogDescription.Arg firstConstructor = assetCatalogArgs.iterator().next();
+    AppleAssetCatalogDescription.Optimization optimization = firstConstructor.optimization;
+
     for (AppleAssetCatalogDescription.Arg arg : assetCatalogArgs) {
       assetCatalogDirsBuilder.addAll(arg.dirs);
       if (arg.appIcon.isPresent()) {
@@ -349,6 +352,11 @@ public class AppleDescriptions {
         }
 
         launchImage = arg.launchImage;
+      }
+
+      if (arg.optimization != optimization) {
+        throw new HumanReadableException("At most one asset catalog optimisation style can be " +
+            "specified in the dependencies %s", params.getBuildTarget());
       }
     }
 
@@ -373,6 +381,7 @@ public class AppleDescriptions {
             assetCatalogDirs,
             appIcon,
             launchImage,
+            optimization,
             MERGED_ASSET_CATALOG_NAME));
   }
 
