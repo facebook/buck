@@ -67,6 +67,7 @@ public class ReactNativeLibraryGraphEnhancer {
         args.srcs,
         ReactNativeFlavors.useUnbundling(baseParams.getBuildTarget()),
         ReactNativeFlavors.isDevMode(baseParams.getBuildTarget()),
+        ReactNativeFlavors.exposeSourceMap(baseParams.getBuildTarget()),
         args.bundleName,
         args.packagerFlags,
         jsPackager,

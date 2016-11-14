@@ -116,4 +116,19 @@ public class IosReactNativeLibraryIntegrationTest {
         result.getStdout().trim().split(" ")[1],
         Matchers.equalTo(path.toString()));
   }
+
+  @Test
+  public void testShowOutputReturnsSourceMapWithSourceMapFlavor() throws IOException {
+    String target = "//js:DemoAppJS#source_map";
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "targets", "--show-output", target);
+    result.assertSuccess();
+    Path path = BuildTargets.getGenPath(
+        filesystem,
+        BuildTargetFactory.newInstance(target),
+        ReactNativeBundle.SOURCE_MAP_OUTPUT_FORMAT);
+    assertThat(
+        result.getStdout().trim().split(" ")[1],
+        Matchers.equalTo(path.toString()));
+  }
 }

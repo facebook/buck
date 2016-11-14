@@ -1,18 +1,19 @@
 /*
  * Copyright 2015-present Facebook, Inc.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License. You may obtain
- *  a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- *  License for the specific language governing permissions and limitations
- *  under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
  */
+
 
 package com.facebook.buck.js;
 
@@ -30,8 +31,10 @@ public class ReactNativeFlavors {
 
   public static final Flavor DEV = ImmutableFlavor.of("dev");
 
+  public static final Flavor SOURCE_MAP = ImmutableFlavor.of("source_map");
+
   public static boolean validateFlavors(ImmutableSet<Flavor> flavors) {
-    return ImmutableSet.of(DEV, UNBUNDLE).containsAll(flavors);
+    return ImmutableSet.of(DEV, UNBUNDLE, SOURCE_MAP).containsAll(flavors);
   }
 
   public static boolean useUnbundling(BuildTarget buildTarget) {
@@ -40,5 +43,9 @@ public class ReactNativeFlavors {
 
   public static boolean isDevMode(BuildTarget buildTarget) {
     return buildTarget.getFlavors().contains(DEV);
+  }
+
+  public static boolean exposeSourceMap(BuildTarget buildTarget) {
+    return buildTarget.getFlavors().contains(SOURCE_MAP);
   }
 }

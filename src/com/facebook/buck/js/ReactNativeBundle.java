@@ -67,6 +67,9 @@ public class ReactNativeBundle
   private final boolean isDevMode;
 
   @AddToRuleKey
+  private final boolean exposeSourceMap;
+
+  @AddToRuleKey
   private final Tool jsPackager;
 
   @AddToRuleKey
@@ -80,6 +83,7 @@ public class ReactNativeBundle
 
   private final Path jsOutputDir;
   private final Path resource;
+  private final Path sourceMapOutputPath;
 
   protected ReactNativeBundle(
       BuildRuleParams ruleParams,
@@ -88,6 +92,7 @@ public class ReactNativeBundle
       ImmutableSortedSet<SourcePath> srcs,
       boolean isUnbundle,
       boolean isDevMode,
+      boolean exposeSourceMap,
       String bundleName,
       Optional<String> packagerFlags,
       Tool jsPackager,
@@ -97,6 +102,7 @@ public class ReactNativeBundle
     this.srcs = srcs;
     this.isUnbundle = isUnbundle;
     this.isDevMode = isDevMode;
+    this.exposeSourceMap = exposeSourceMap;
     this.bundleName = bundleName;
     this.packagerFlags = packagerFlags;
     this.jsPackager = jsPackager;
@@ -104,6 +110,7 @@ public class ReactNativeBundle
     BuildTarget buildTarget = ruleParams.getBuildTarget();
     this.jsOutputDir = getPathToJSBundleDir(buildTarget, getProjectFilesystem());
     this.resource = getPathToResources(buildTarget, getProjectFilesystem());
+    this.sourceMapOutputPath = getPathToSourceMap(buildTarget, getProjectFilesystem());
   }
 
   @Override
@@ -114,25 +121,25 @@ public class ReactNativeBundle
 
     // Generate the normal outputs.
     final Path jsOutput = jsOutputDir.resolve(bundleName);
+    final Path depFile = getPathToDepFile(getBuildTarget(), getProjectFilesystem());
+
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), jsOutput.getParent()));
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), resource));
-    final Path sourceMapOutput = getPathToSourceMap(getBuildTarget(), getProjectFilesystem());
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), sourceMapOutput.getParent()));
-    final Path depFile = getPathToDepFile(getBuildTarget(), getProjectFilesystem());
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), sourceMapOutputPath.getParent()));
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), depFile.getParent()));
 
-    appendWorkerSteps(steps, jsOutput, sourceMapOutput, depFile);
+    appendWorkerSteps(steps, jsOutput, sourceMapOutputPath, depFile);
 
     buildableContext.recordArtifact(jsOutputDir);
     buildableContext.recordArtifact(resource);
-    buildableContext.recordArtifact(sourceMapOutput.getParent());
+    buildableContext.recordArtifact(sourceMapOutputPath.getParent());
     return steps.build();
   }
 
   private void appendWorkerSteps(
       ImmutableList.Builder<Step> stepBuilder,
       Path outputFile,
-      Path sourceMapOutput,
+      Path sourceMapOutputPath,
       Path depFile) {
 
     // Setup the temp dir.
@@ -153,7 +160,7 @@ public class ReactNativeBundle
             isDevMode,
             getProjectFilesystem().resolve(outputFile),
             getProjectFilesystem().resolve(resource),
-            getProjectFilesystem().resolve(sourceMapOutput));
+            getProjectFilesystem().resolve(sourceMapOutputPath));
     stepBuilder.add(workerStep);
 
     // Run the package to get the used inputs.
@@ -230,7 +237,9 @@ public class ReactNativeBundle
 
   @Override
   public Path getPathToOutput() {
-    return jsOutputDir;
+    return exposeSourceMap
+      ? sourceMapOutputPath
+      : jsOutputDir;
   }
 
 }
