@@ -22,6 +22,7 @@ import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.CollectingOutputReceiver;
+import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
 import com.android.ddmlib.MultiLineReceiver;
@@ -234,6 +235,8 @@ public class AdbHelper {
   @Nullable
   @SuppressWarnings("PMD.EmptyCatchBlock")
   private AndroidDebugBridge createAdb(ExecutionContext context) throws InterruptedException {
+    DdmPreferences.setTimeOut(60000);
+
     try {
       AndroidDebugBridge.init(/* clientSupport */ false);
     } catch (IllegalStateException ex) {
