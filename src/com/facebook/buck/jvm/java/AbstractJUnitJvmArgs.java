@@ -184,6 +184,9 @@ abstract class AbstractJUnitJvmArgs {
     args.add(
         String.format("-D%s=%s", MODULE_BASE_PATH_PROPERTY, getBuckModuleBaseSourceCodePath()));
 
+    // Disable the Java icon from appearing in the OS X Dock while running tests
+    args.add("-Dapple.awt.UIElement=true");
+
     // Include log levels
     if (getStdOutLogLevel().isPresent()) {
       args.add(
