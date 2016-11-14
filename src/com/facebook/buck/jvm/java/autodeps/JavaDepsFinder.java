@@ -20,7 +20,6 @@ import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.autodeps.DepsForBuildFiles;
 import com.facebook.buck.autodeps.DepsForBuildFiles.DependencyType;
 import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -209,50 +208,46 @@ public class JavaDepsFinder {
     // Currently, we traverse the entire target graph using a single thread. However, the work to
     // visit each node could be done in parallel, so long as the updates to the above collections
     // were thread-safe.
-    new AbstractBottomUpTraversal<TargetNode<?>, RuntimeException>(graph) {
-      @Override
-      public void visit(TargetNode<?> node) {
-        BuildRuleType buildRuleType = node.getDescription().getBuildRuleType();
-        if (!RULES_TO_VISIT.contains(buildRuleType)) {
-          return;
-        }
-
-        // Set up the appropriate fields for java_library() vs. prebuilt_jar().
-        boolean autodeps;
-        ImmutableSortedSet<BuildTarget> providedDeps;
-        ImmutableSortedSet<BuildTarget> exportedDeps;
-        if (node.getConstructorArg() instanceof JavaLibraryDescription.Arg) {
-          JavaLibraryDescription.Arg arg = (JavaLibraryDescription.Arg) node.getConstructorArg();
-          autodeps = arg.autodeps.orElse(false);
-          providedDeps = arg.providedDeps;
-          exportedDeps = arg.exportedDeps;
-        } else if (node.getConstructorArg() instanceof PrebuiltJarDescription.Arg) {
-          autodeps = false;
-          providedDeps = ImmutableSortedSet.of();
-          exportedDeps = ImmutableSortedSet.of();
-        } else {
-          throw new IllegalStateException("This rule is not supported by autodeps: " + node);
-        }
-
-        if (autodeps) {
-          dependencyInfo.rulesWithAutodeps.add(node);
-          dependencyInfo.rulesWithAutodepsToProvidedDeps.putAll(node, providedDeps);
-        }
-
-        for (BuildTarget exportedDep : exportedDeps) {
-          dependencyInfo.ruleToRulesThatExportIt.put(graph.get(exportedDep), node);
-        }
-
-        Symbols symbols = getJavaFileFeatures(node, autodeps);
-        if (autodeps) {
-          dependencyInfo.ruleToRequiredSymbols.putAll(node, symbols.required);
-          dependencyInfo.ruleToExportedSymbols.putAll(node, symbols.exported);
-        }
-        for (String providedEntity : symbols.provided) {
-          dependencyInfo.symbolToProviders.put(providedEntity, node);
-        }
+    for (TargetNode<?> node : graph.getNodes()) {
+      if (!RULES_TO_VISIT.contains(node.getDescription().getBuildRuleType())) {
+        continue;
       }
-    }.traverse();
+
+      // Set up the appropriate fields for java_library() vs. prebuilt_jar().
+      boolean autodeps;
+      ImmutableSortedSet<BuildTarget> providedDeps;
+      ImmutableSortedSet<BuildTarget> exportedDeps;
+      if (node.getConstructorArg() instanceof JavaLibraryDescription.Arg) {
+        JavaLibraryDescription.Arg arg = (JavaLibraryDescription.Arg) node.getConstructorArg();
+        autodeps = arg.autodeps.orElse(false);
+        providedDeps = arg.providedDeps;
+        exportedDeps = arg.exportedDeps;
+      } else if (node.getConstructorArg() instanceof PrebuiltJarDescription.Arg) {
+        autodeps = false;
+        providedDeps = ImmutableSortedSet.of();
+        exportedDeps = ImmutableSortedSet.of();
+      } else {
+        throw new IllegalStateException("This rule is not supported by autodeps: " + node);
+      }
+
+      if (autodeps) {
+        dependencyInfo.rulesWithAutodeps.add(node);
+        dependencyInfo.rulesWithAutodepsToProvidedDeps.putAll(node, providedDeps);
+      }
+
+      for (BuildTarget exportedDep : exportedDeps) {
+        dependencyInfo.ruleToRulesThatExportIt.put(graph.get(exportedDep), node);
+      }
+
+      Symbols symbols = getJavaFileFeatures(node, autodeps);
+      if (autodeps) {
+        dependencyInfo.ruleToRequiredSymbols.putAll(node, symbols.required);
+        dependencyInfo.ruleToExportedSymbols.putAll(node, symbols.exported);
+      }
+      for (String providedEntity : symbols.provided) {
+        dependencyInfo.symbolToProviders.put(providedEntity, node);
+      }
+    }
 
     return dependencyInfo;
   }
