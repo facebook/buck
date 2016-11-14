@@ -6,6 +6,7 @@
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/slb:slb",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava"

@@ -18,6 +18,7 @@ package com.facebook.buck.rage;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -64,8 +65,7 @@ public class DefectReporterTest {
   @Test
   public void testAttachesPaths() throws Exception {
     ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
-    RageConfig config = RageConfig.builder()
-        .build();
+    RageConfig config = RageConfig.of(FakeBuckConfig.builder().build());
     Clock clock = new DefaultClock();
     DefectReporter reporter = new DefaultDefectReporter(
         filesystem,
@@ -95,8 +95,7 @@ public class DefectReporterTest {
   public void testAttachesReport() throws Exception {
     ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-    RageConfig config = RageConfig.builder()
-        .build();
+    RageConfig config = RageConfig.of(FakeBuckConfig.builder().build());
     Clock clock = new DefaultClock();
     DefectReporter reporter = new DefaultDefectReporter(
         filesystem,

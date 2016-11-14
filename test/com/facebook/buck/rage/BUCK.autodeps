@@ -9,7 +9,6 @@
       "//src/com/facebook/buck/rage:config",
       "//src/com/facebook/buck/rage:rage",
       "//src/com/facebook/buck/rules:types",
-      "//src/com/facebook/buck/slb:slb",
       "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",

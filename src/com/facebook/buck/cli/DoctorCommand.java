@@ -28,7 +28,6 @@ import com.facebook.buck.rage.DefaultDefectReporter;
 import com.facebook.buck.rage.DefaultExtraInfoCollector;
 import com.facebook.buck.rage.DefectSubmitResult;
 import com.facebook.buck.rage.PopulatedReport;
-import com.facebook.buck.rage.RageBuckConfig;
 import com.facebook.buck.rage.RageConfig;
 import com.facebook.buck.rage.UserInput;
 import com.facebook.buck.rage.VcsInfoCollector;
@@ -82,7 +81,7 @@ public class DoctorCommand extends AbstractCommand {
   private Optional<DefectSubmitResult> generateRageReport(
       CommandRunnerParams params,
       BuildLogEntry entry) throws IOException, InterruptedException {
-    RageConfig rageConfig = RageBuckConfig.create(params.getBuckConfig());
+    RageConfig rageConfig = RageConfig.of(params.getBuckConfig());
     VersionControlCmdLineInterfaceFactory vcsFactory =
         new DefaultVersionControlCmdLineInterfaceFactory(
             params.getCell().getFilesystem().getRootPath(),

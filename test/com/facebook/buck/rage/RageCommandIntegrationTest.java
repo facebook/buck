@@ -22,7 +22,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.TestBuildEnvironmentDescription;
@@ -42,7 +41,6 @@ import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 
@@ -121,7 +119,7 @@ public class RageCommandIntegrationTest {
           });
       httpd.start();
 
-      RageConfig rageConfig = createRageConfig(httpd);
+      RageConfig rageConfig = createRageConfig(httpd.getRootUri().getPort(), "");
       ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
       ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
       Clock clock = new DefaultClock();
@@ -171,10 +169,7 @@ public class RageCommandIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "interactive_report", temporaryFolder);
     workspace.setUp();
-
-    RageConfig rageConfig = RageConfig.builder()
-        .setExtraInfoCommand(ImmutableList.of("python", "extra.py"))
-        .build();
+    RageConfig rageConfig = createRageConfig(0, "python, extra.py");
     ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     Console console = new TestConsole();
     CapturingDefectReporter defectReporter = new CapturingDefectReporter();
@@ -216,7 +211,7 @@ public class RageCommandIntegrationTest {
           });
       httpd.start();
 
-      RageConfig rageConfig = createRageConfig(httpd);
+      RageConfig rageConfig = createRageConfig(httpd.getRootUri().getPort(), "");
       ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
       ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
       Clock clock = new DefaultClock();
@@ -245,20 +240,19 @@ public class RageCommandIntegrationTest {
     }
   }
 
-  private RageConfig createRageConfig(HttpdForTests httpd) {
-    final String section = "rage";
-    final String uploadPathField = "report_upload_path";
-    final String uri = "http://localhost:" + httpd.getRootUri().getPort();
+  private RageConfig createRageConfig(int port, String extraInfo) {
+    final String uri = "http://localhost:" + port;
     BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(ImmutableMap.of(
-            section,
-            ImmutableMap.of(uploadPathField, UPLOAD_PATH, "slb_server_pool", uri)
+        .setSections(
+            ImmutableMap.of(
+                RageConfig.RAGE_SECTION,
+                ImmutableMap.of(
+                    RageConfig.REPORT_UPLOAD_PATH_FIELD, UPLOAD_PATH,
+                    "slb_server_pool", uri,
+                    RageConfig.EXTRA_INFO_COMMAND_FIELD, extraInfo)
         ))
         .build();
-    return RageConfig.builder()
-        .setReportUploadPath(buckConfig.getValue(section, uploadPathField).get())
-        .setFrontendConfig(new SlbBuckConfig(buckConfig, section))
-        .build();
+    return RageConfig.of(buckConfig);
   }
 
   private static class CapturingDefectReporter implements DefectReporter {

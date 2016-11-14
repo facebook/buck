@@ -16,8 +16,12 @@
 
 package com.facebook.buck.rage;
 
+import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.unit.SizeUnit;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import org.immutables.value.Value;
@@ -26,29 +30,57 @@ import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractRageConfig {
+abstract class AbstractRageConfig implements ConfigView<BuckConfig> {
+
+  @VisibleForTesting
+  static final String RAGE_SECTION = "rage";
+  @VisibleForTesting
+  static final String REPORT_UPLOAD_PATH_FIELD = "report_upload_path";
+  private static final String REPORT_MAX_SIZE_FIELD = "report_max_size";
+  @VisibleForTesting
+  static final String EXTRA_INFO_COMMAND_FIELD = "extra_info_command";
+  private static final String RAGE_TIMEOUT_MILLIS_FIELD = "rage_timeout_millis";
+  private static final String RAGE_MAX_UPLOAD_RETRIES_FIELD = "rage_max_upload_retries";
 
   // Defaults
   public static final long HTTP_TIMEOUT_MILLIS = 15 * 1000;
   public static final String UPLOAD_PATH = "/rage/upload";
   public static final int HTTP_MAX_UPLOAD_RETRIES = 2;
 
-  public abstract Optional<Long> getReportMaxSizeBytes();
-  public abstract ImmutableList<String> getExtraInfoCommand();
-  public abstract Optional<SlbBuckConfig> getFrontendConfig();
-
-  @Value.Default
+  @Value.Parameter
   public String getReportUploadPath() {
-    return UPLOAD_PATH;
+    return getDelegate().getValue(RAGE_SECTION, REPORT_UPLOAD_PATH_FIELD).orElse(UPLOAD_PATH);
+
   }
 
-  @Value.Default
+  @Value.Parameter
+  public Optional<Long> getReportMaxSizeBytes() {
+    return getDelegate().getValue(RAGE_SECTION, REPORT_MAX_SIZE_FIELD).map(SizeUnit::parseBytes);
+  }
+
+  @Value.Parameter
   public long getHttpTimeout() {
-    return HTTP_TIMEOUT_MILLIS;
+    return getDelegate()
+        .getLong(RAGE_SECTION, RAGE_TIMEOUT_MILLIS_FIELD)
+        .orElse(HTTP_TIMEOUT_MILLIS);
   }
 
-  @Value.Default
+  @Value.Parameter
   public int getMaxUploadRetries() {
-    return HTTP_MAX_UPLOAD_RETRIES;
+    return getDelegate()
+        .getInteger(RAGE_SECTION, RAGE_MAX_UPLOAD_RETRIES_FIELD)
+        .orElse(RageConfig.HTTP_MAX_UPLOAD_RETRIES);
   }
+
+  @Value.Parameter
+  public Optional<SlbBuckConfig> getFrontendConfig() {
+    return Optional.of(new SlbBuckConfig(getDelegate(), RAGE_SECTION));
+
+  }
+
+  @Value.Parameter
+  public ImmutableList<String> getExtraInfoCommand() {
+    return getDelegate().getListWithoutComments(RAGE_SECTION, EXTRA_INFO_COMMAND_FIELD);
+  }
+
 }

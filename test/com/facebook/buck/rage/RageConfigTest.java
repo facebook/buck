@@ -50,7 +50,7 @@ public class RageConfigTest {
   public void testEmpty() {
     BuckConfig buckConfig = FakeBuckConfig.builder()
         .build();
-    RageConfig config = RageBuckConfig.create(buckConfig);
+    RageConfig config = RageConfig.of(buckConfig);
     assertThat(
         config.getReportUploadPath(),
         Matchers.equalTo(RageConfig.UPLOAD_PATH));
@@ -72,7 +72,7 @@ public class RageConfigTest {
                 "slb_server_pool", "http://buck-frontend-dual.05.atn1.facebook.com")
         ))
         .build();
-    RageConfig config = RageBuckConfig.create(buckConfig);
+    RageConfig config = RageConfig.of(buckConfig);
     assertThat(
         config.getReportUploadPath(),
         Matchers.equalTo(testPath));

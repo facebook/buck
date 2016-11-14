@@ -118,7 +118,7 @@ public class InteractiveReportIntegrationTest {
     throws IOException, InterruptedException {
     ProjectFilesystem filesystem = workspace.asCell().getFilesystem();
     ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-    RageConfig rageConfig = RageBuckConfig.create(workspace.asCell().getBuckConfig());
+    RageConfig rageConfig = RageConfig.of(workspace.asCell().getBuckConfig());
     Clock clock = new DefaultClock();
     DefectReporter defectReporter = new DefaultDefectReporter(filesystem,
         objectMapper,

@@ -1,7 +1,6 @@
 CONFIG_SRCS = [
   'AbstractRageConfig.java',
   'AbstractUserLocalConfiguration.java',
-  'RageBuckConfig.java',
 ]
 
 java_immutables_library(
