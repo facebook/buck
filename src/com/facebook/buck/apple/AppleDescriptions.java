@@ -331,10 +331,13 @@ public class AppleDescriptions {
     Optional<String> appIcon = Optional.empty();
     Optional<String> launchImage = Optional.empty();
 
-    AppleAssetCatalogDescription.Arg firstConstructor = assetCatalogArgs.iterator().next();
-    AppleAssetCatalogDescription.Optimization optimization = firstConstructor.optimization;
+    AppleAssetCatalogDescription.Optimization optimization = null;
 
     for (AppleAssetCatalogDescription.Arg arg : assetCatalogArgs) {
+      if (optimization == null) {
+        optimization = arg.optimization;
+      }
+
       assetCatalogDirsBuilder.addAll(arg.dirs);
       if (arg.appIcon.isPresent()) {
         if (appIcon.isPresent()) {
