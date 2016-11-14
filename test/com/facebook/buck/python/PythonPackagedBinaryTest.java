@@ -87,7 +87,6 @@ public class PythonPackagedBinaryTest {
             ImmutableSet.of(),
             Optional.empty()),
         ImmutableSortedSet.of(),
-        ImmutableSortedSet.of(),
         /* cache */ true,
         /* legacyOutputPath */ false);
 

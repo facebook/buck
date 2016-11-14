@@ -53,6 +53,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.shell.ShBinary;
 import com.facebook.buck.shell.ShBinaryBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
@@ -880,6 +881,39 @@ public class PythonBinaryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORMS)
         .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE);
     assertThat(standaloneBinary.findImplicitDeps(), Matchers.hasItem(pexBuilder));
+  }
+
+  @Test
+  public void pexToolBuilderAddedToRuntimeDeps() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(),
+            new DefaultTargetNodeToBuildRuleTransformer());
+
+    ShBinary pyTool =
+        (ShBinary) new ShBinaryBuilder(BuildTargetFactory.newInstance("//:py_tool"))
+            .setMain(new FakeSourcePath("run.sh"))
+            .build(resolver);
+
+    PythonBuckConfig config =
+        new PythonBuckConfig(FakeBuckConfig.builder().build(), new AlwaysFoundExecutableFinder()) {
+          @Override
+          public Optional<Tool> getPexExecutor(BuildRuleResolver resolver) {
+            return Optional.of(pyTool.getExecutableCommand());
+          }
+        };
+
+    PythonBinary standaloneBinary =
+        (PythonBinary) new PythonBinaryBuilder(
+            BuildTargetFactory.newInstance("//:bin"),
+            config,
+            PythonTestUtils.PYTHON_PLATFORMS,
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            CxxPlatformUtils.DEFAULT_PLATFORMS)
+            .setMainModule("hello")
+            .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE)
+            .build(resolver);
+    assertThat(standaloneBinary.getRuntimeDeps(), Matchers.hasItem(pyTool));
   }
 
 }

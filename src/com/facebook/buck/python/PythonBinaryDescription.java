@@ -239,13 +239,11 @@ public class PythonBinaryDescription implements
             PythonUtil.getDepsFromComponents(pathResolver, components);
         Tool pexTool = pythonBuckConfig.getPexTool(resolver);
         return new PythonPackagedBinary(
-            params.copyWithDeps(
-                Suppliers.ofInstance(
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(componentDeps)
-                        .addAll(pexTool.getDeps(pathResolver))
-                        .build()),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
+            params.appendExtraDeps(
+                ImmutableSortedSet.<BuildRule>naturalOrder()
+                    .addAll(componentDeps)
+                    .addAll(pexTool.getDeps(pathResolver))
+                    .build()),
             pathResolver,
             pythonPlatform,
             pexTool,
@@ -256,11 +254,6 @@ public class PythonBinaryDescription implements
             mainModule,
             components,
             preloadLibraries,
-            // Attach any additional declared deps that don't qualify as build time deps,
-            // as runtime deps, so that we make to include other things we depend on in
-            // the build.
-            ImmutableSortedSet.copyOf(
-                Sets.difference(params.getDeclaredDeps().get(), componentDeps)),
             pythonBuckConfig.shouldCacheBinaries(),
             pythonBuckConfig.legacyOutputPath());
 

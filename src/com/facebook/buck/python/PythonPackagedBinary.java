@@ -58,7 +58,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   private final PythonEnvironment pythonEnvironment;
   @AddToRuleKey
   private final ImmutableSet<String> preloadLibraries;
-  private final ImmutableSortedSet<BuildRule> runtimeDeps;
   private final boolean cache;
 
   protected PythonPackagedBinary(
@@ -73,7 +72,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
       String mainModule,
       PythonPackageComponents components,
       ImmutableSet<String> preloadLibraries,
-      ImmutableSortedSet<BuildRule> runtimeDeps,
       boolean cache,
       boolean legacyOutputPath) {
     super(
@@ -92,7 +90,6 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     this.mainModule = mainModule;
     this.components = components;
     this.preloadLibraries = preloadLibraries;
-    this.runtimeDeps = runtimeDeps;
     this.cache = cache;
   }
 
@@ -161,7 +158,10 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
 
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return runtimeDeps;
+    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(super.getRuntimeDeps())
+        .addAll(pathToPexExecuter.getDeps(getResolver()))
+        .build();
   }
 
   @Override
