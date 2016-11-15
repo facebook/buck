@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.android.common.utils.ILogger;
+import com.android.utils.ILogger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;

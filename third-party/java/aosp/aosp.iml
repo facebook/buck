@@ -17,6 +17,6 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="buck-lib" level="project" />
   </component>
 </module>
-

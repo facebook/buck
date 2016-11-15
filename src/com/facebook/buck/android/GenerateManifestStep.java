@@ -16,10 +16,8 @@
 
 package com.facebook.buck.android;
 
-import com.android.manifmerger.ICallback;
-import com.android.manifmerger.IMergerLog;
-import com.android.manifmerger.ManifestMerger;
-import com.android.manifmerger.MergerLog;
+import com.android.manifmerger.ManifestMerger2;
+import com.android.manifmerger.MergingReport;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -39,8 +37,6 @@ import java.nio.file.Path;
 import java.util.List;
 
 public class GenerateManifestStep implements Step {
-
-  private static final int BASE_SDK_LEVEL = 1;
 
   private final ProjectFilesystem filesystem;
   private final Path skeletonManifestPath;
@@ -86,25 +82,42 @@ public class GenerateManifestStep implements Step {
 
     File skeletonManifestFile =
         filesystem.getPathForRelativeExistingPath(skeletonManifestPath).toAbsolutePath().toFile();
-
-    ICallback callback = codename -> BASE_SDK_LEVEL;
-
-    IMergerLog log = MergerLog.wrapSdkLog(new BuckEventAndroidLogger(context.getBuckEventBus()));
-
-    ManifestMerger merger = new ManifestMerger(log, callback);
-
+    BuckEventAndroidLogger logger = new BuckEventAndroidLogger(context.getBuckEventBus());
     File outManifestFile = outManifestPath.toFile();
-    if (!merger.process(
-        outManifestFile,
-        skeletonManifestFile,
-        Iterables.toArray(libraryManifestFiles, File.class))) {
-      throw new HumanReadableException("Error generating manifest file");
+
+//    ICallback callback = codename -> BASE_SDK_LEVEL;
+//
+//    IMergerLog log = MergerLog.wrapSdkLog(logger);
+//
+//    ManifestMerger merger = new ManifestMerger(log, callback);
+//
+//    if (!merger.process(
+//        outManifestFile,
+//        skeletonManifestFile,
+//        Iterables.toArray(libraryManifestFiles, File.class))) {
+//      throw new HumanReadableException("Error generating manifest file");
+//    }
+
+    MergingReport mergingReport;
+    try {
+      mergingReport = ManifestMerger2.newMerger(
+          skeletonManifestFile,
+          logger,
+          ManifestMerger2.MergeType.APPLICATION)
+          .withFeatures(ManifestMerger2.Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT)
+          .addLibraryManifests(Iterables.toArray(libraryManifestFiles, File.class))
+          .merge();
+      if(mergingReport.getResult().isError()){
+        throw new HumanReadableException("Error generating manifest file: " + mergingReport.getReportString());
+      }
+    } catch (ManifestMerger2.MergeFailureException e) {
+      throw new HumanReadableException(e, "Error generating manifest file");
     }
 
     if (context.getPlatform() == Platform.WINDOWS) {
       // Convert line endings to Lf on Windows.
       try {
-        String xmlText = Files.toString(outManifestFile, Charsets.UTF_8);
+        String xmlText = mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED);
         xmlText = xmlText.replace("\r\n", "\n");
         Files.write(xmlText.getBytes(Charsets.UTF_8), outManifestFile);
       } catch (IOException e) {
