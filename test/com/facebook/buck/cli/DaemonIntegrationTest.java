@@ -583,56 +583,6 @@ public class DaemonIntegrationTest {
     whenCrossCellSourceInvalidatedThenRebuildFails(WatchmanWatcher.CursorType.CLOCK_ID.toString());
   }
 
-  private void whenCrossCellBuckFileInvalidatedThenRebuildFails(String cursorType)
-      throws IOException, InterruptedException {
-    final ProjectWorkspace primary = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "xplat_file_watching/primary", tmp.newFolder());
-    primary.setUp();
-    final ProjectWorkspace secondary = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "xplat_file_watching/secondary", tmp.newFolder());
-    secondary.setUp();
-    TestDataHelper.overrideBuckconfig(
-        primary,
-        ImmutableMap.of(
-            "repositories", ImmutableMap.of(
-                "secondary",
-                secondary.getPath(".").normalize().toString()),
-            "project", ImmutableMap.of(
-                "watch_cells", "true",
-                "watchman_cursor", cursorType)));
-    TestDataHelper.overrideBuckconfig(
-        secondary,
-        ImmutableMap.of("project", ImmutableMap.of("watchman_cursor", cursorType)));
-
-    primary.runBuckdCommand("build", "//:cxxbinary").assertSuccess();
-
-    String fileName = "BUCK";
-    Files.write(secondary.getPath(fileName), "Some Invalid Python".getBytes(Charsets.US_ASCII));
-
-    try {
-      primary.runBuckdCommand("build", "//:cxxbinary");
-      fail("Did not expect parsing to succeed");
-    } catch (HumanReadableException expected) {
-      assertThat(
-          "Failure should be due to syntax error.",
-          expected.getHumanReadableErrorMessage(),
-          containsString("Couldn't get dependency 'secondary//:cxxlib' of target '//:cxxbinary'"));
-    }
-  }
-
-  @Test
-  public void withNamedCursorCrossCellBuckFileInvalidatedThenRebuildFails()
-      throws IOException, InterruptedException {
-    whenCrossCellBuckFileInvalidatedThenRebuildFails(WatchmanWatcher.CursorType.NAMED.toString());
-  }
-
-  @Test
-  public void withClockIdCursorCrossCellBuckFileInvalidatedThenRebuildFails()
-      throws IOException, InterruptedException {
-    whenCrossCellBuckFileInvalidatedThenRebuildFails(
-        WatchmanWatcher.CursorType.CLOCK_ID.toString());
-  }
-
   @Test
   public void whenBuckConfigChangesParserInvalidated()
       throws IOException, InterruptedException {

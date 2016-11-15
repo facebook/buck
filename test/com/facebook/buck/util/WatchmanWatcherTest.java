@@ -119,7 +119,7 @@ public class WatchmanWatcherTest {
         StandardWatchEventKinds.ENTRY_MODIFY,
         eventCapture.getValue().kind());
     assertEquals("Path should match watchman output.",
-        FAKE_ROOT.resolve("foo/bar/baz").toString(),
+        MorePaths.pathWithPlatformSeparators("foo/bar/baz"),
         eventCapture.getValue().context().toString());
   }
 
@@ -216,10 +216,10 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.FreshInstanceAction.NONE);
     verify(eventBus);
     assertEquals("Path should match watchman output.",
-        FAKE_ROOT.resolve("foo/bar/baz").toString(),
+        MorePaths.pathWithPlatformSeparators("foo/bar/baz"),
         firstEvent.getValue().context().toString());
     assertEquals("Path should match watchman output.",
-        FAKE_ROOT.resolve("foo/bar/boz").toString(),
+        MorePaths.pathWithPlatformSeparators("foo/bar/boz"),
         secondEvent.getValue().context().toString());
   }
 

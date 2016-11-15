@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
@@ -115,7 +114,7 @@ public class WatchmanWatcherIntegrationTest {
     assertThat(events.size(), Matchers.equalTo(1));
     WatchEvent<?> event = events.get(0);
     Path eventPath = (Path) event.context();
-    assertEquals(eventPath, tmp.getRoot().resolve(path));
+    assertThat(eventPath, Matchers.equalTo(path));
     assertSame(event.kind(), StandardWatchEventKinds.ENTRY_CREATE);
   }
 

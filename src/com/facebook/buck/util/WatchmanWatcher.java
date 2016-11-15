@@ -239,7 +239,7 @@ public class WatchmanWatcher {
       WatchmanQuery query = queries.get(cellPath);
       WatchmanCursor cursor = cursors.get(cellPath);
       if (query != null && cursor != null) {
-        postEvents(buckEventBus, freshInstanceAction, cellPath, query, cursor);
+        postEvents(buckEventBus, freshInstanceAction, query, cursor);
       }
     }
   }
@@ -248,7 +248,6 @@ public class WatchmanWatcher {
   private void postEvents(
       BuckEventBus buckEventBus,
       FreshInstanceAction freshInstanceAction,
-      Path cellPath,
       WatchmanQuery query,
       WatchmanCursor cursor) throws IOException, InterruptedException {
     try {
@@ -325,10 +324,7 @@ public class WatchmanWatcher {
             return;
           }
           PathEventBuilder builder = new PathEventBuilder();
-          Preconditions.checkState(
-              !Paths.get(fileName).isAbsolute(),
-              "Watchman filename should be relative, not %s.", fileName);
-          builder.setPath(cellPath.resolve(fileName));
+          builder.setPath(Paths.get(fileName));
           Boolean fileNew = (Boolean) file.get("new");
           if (fileNew != null && fileNew) {
             builder.setCreationEvent();

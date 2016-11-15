@@ -64,7 +64,7 @@ class DaemonicCellState {
       try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
         T updatedNode = allComputedNodes.putIfAbsentAndGet(target, targetNode);
         if (updatedNode.equals(targetNode)) {
-          targetsCornucopia.put(target.withoutCell().getUnflavoredBuildTarget(), target);
+          targetsCornucopia.put(target.getUnflavoredBuildTarget(), target);
         }
         return updatedNode;
       }

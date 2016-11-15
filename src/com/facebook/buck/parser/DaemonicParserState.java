@@ -416,18 +416,10 @@ class DaemonicParserState {
     filesChangedCounter.inc();
 
     Path path = (Path) event.context();
-    Preconditions.checkState(
-        path.isAbsolute(),
-        "Watchman filename should be absolute, not %s.", path);
+
     try (AutoCloseableLock readLock = cellStateLock.readLock()) {
-      for (Map.Entry<Path, DaemonicCellState> entry : cellPathToDaemonicState.entrySet()) {
+      for (DaemonicCellState state : cellPathToDaemonicState.values()) {
         try {
-          Path cellPath = entry.getKey();
-          if (!path.startsWith(cellPath)) {
-            continue;
-          }
-          path = cellPath.relativize(path);
-          DaemonicCellState state = entry.getValue();
           // We only care about creation and deletion events because modified should result in a
           // rule key change.  For parsing, these are the only events we need to care about.
           if (isPathCreateOrDeleteEvent(event)) {
@@ -453,7 +445,6 @@ class DaemonicParserState {
                   state.getCellRoot().resolve(path).toAbsolutePath().toString());
             }
           }
-          invalidatePath(state, path);
         } catch (ExecutionException | UncheckedExecutionException e) {
           try {
             Throwables.propagateIfInstanceOf(e, BuildFileParseException.class);
@@ -464,6 +455,8 @@ class DaemonicParserState {
         }
       }
     }
+
+    invalidatePath(path);
   }
 
   public void invalidatePath(Path path) {
@@ -471,13 +464,7 @@ class DaemonicParserState {
     // The paths from watchman are not absolute. Because of this, we adopt a conservative approach
     // to invalidating the caches.
     try (AutoCloseableLock readLock = cellStateLock.readLock()) {
-      for (Map.Entry<Path, DaemonicCellState> entry : cellPathToDaemonicState.entrySet()) {
-        Path cellPath = entry.getKey();
-        if (!path.startsWith(cellPath)) {
-          continue;
-        }
-        path = cellPath.relativize(path);
-        DaemonicCellState state = entry.getValue();
+      for (DaemonicCellState state : cellPathToDaemonicState.values()) {
         invalidatePath(state, path);
       }
     }
