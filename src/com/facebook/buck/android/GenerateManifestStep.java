@@ -83,7 +83,6 @@ public class GenerateManifestStep implements Step {
     File skeletonManifestFile =
         filesystem.getPathForRelativeExistingPath(skeletonManifestPath).toAbsolutePath().toFile();
     BuckEventAndroidLogger logger = new BuckEventAndroidLogger(context.getBuckEventBus());
-    File outManifestFile = outManifestPath.toFile();
 
 //    ICallback callback = codename -> BASE_SDK_LEVEL;
 //
@@ -98,23 +97,8 @@ public class GenerateManifestStep implements Step {
 //      throw new HumanReadableException("Error generating manifest file");
 //    }
 
-    MergingReport mergingReport;
-    try {
-      mergingReport = ManifestMerger2.newMerger(
-          skeletonManifestFile,
-          logger,
-          ManifestMerger2.MergeType.APPLICATION)
-          .withFeatures(
-              ManifestMerger2.Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT,
-              ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)
-          .addLibraryManifests(Iterables.toArray(libraryManifestFiles, File.class))
-          .merge();
-      if (mergingReport.getResult().isError()) {
-        throw new HumanReadableException("Error generating manifest file: " + mergingReport.getReportString());
-      }
-    } catch (ManifestMerger2.MergeFailureException e) {
-      throw new HumanReadableException(e, "Error generating manifest file");
-    }
+    MergingReport mergingReport =
+        mergeManifests(skeletonManifestFile, libraryManifestFiles, logger);
 
     String xmlText = mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED);
     if (context.getPlatform() == Platform.WINDOWS) {
@@ -122,12 +106,33 @@ public class GenerateManifestStep implements Step {
       xmlText = xmlText.replace("\r\n", "\n");
     }
     try {
+      File outManifestFile = outManifestPath.toFile();
       Files.write(xmlText.getBytes(Charsets.UTF_8), outManifestFile);
     } catch (IOException e) {
       throw new HumanReadableException("Error converting line endings of manifest file");
     }
 
     return StepExecutionResult.SUCCESS;
+  }
+
+  private MergingReport mergeManifests(File mainManifestFile, List<File> libraryManifestFiles,
+      BuckEventAndroidLogger logger) {
+    try {
+      MergingReport mergingReport = ManifestMerger2
+          .newMerger(mainManifestFile, logger, ManifestMerger2.MergeType.APPLICATION)
+          .withFeatures(
+              ManifestMerger2.Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT,
+              ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)
+          .addLibraryManifests(Iterables.toArray(libraryManifestFiles, File.class))
+          .merge();
+      if (mergingReport.getResult().isError()) {
+        String reportString = mergingReport.getReportString();
+        throw new HumanReadableException("Error generating manifest file: " + reportString);
+      }
+      return mergingReport;
+    } catch (ManifestMerger2.MergeFailureException e) {
+      throw new HumanReadableException(e, "Error generating manifest file");
+    }
   }
 
   @Override
