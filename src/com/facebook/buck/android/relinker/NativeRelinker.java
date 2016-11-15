@@ -121,8 +121,7 @@ public class NativeRelinker {
     // This is the sub-graph that includes the linkableRules and all the dependents (including
     // non-linkable rules).
     final DirectedAcyclicGraph<BuildRule> graph = getBuildGraph(linkableRules);
-    ImmutableList<BuildRule> sortedRules =
-        TopologicalSort.sort(graph, x -> true);
+    ImmutableList<BuildRule> sortedRules = TopologicalSort.sort(graph);
     // This maps a build rule to every rule in linkableRules that depends on it. This (added to the
     // copied libraries) is the set of linkables that could use a symbol from this build rule.
     ImmutableMap<BuildRule, ImmutableSet<BuildRule>> allDependentsMap =

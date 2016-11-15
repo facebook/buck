@@ -330,7 +330,7 @@ class NativeLibraryMergeEnhancer {
               ": " + cycleString);
     }
 
-    return TopologicalSort.sort(graph, x -> true);
+    return TopologicalSort.sort(graph);
   }
 
   /**

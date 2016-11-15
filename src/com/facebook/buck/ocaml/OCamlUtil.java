@@ -79,9 +79,7 @@ public class OCamlUtil {
             OCamlLibrary.class::isInstance,
             OCamlLibrary.class::isInstance);
 
-    final ImmutableList<BuildRule> sorted = TopologicalSort.sort(
-        graph,
-        x -> true);
+    final ImmutableList<BuildRule> sorted = TopologicalSort.sort(graph);
 
     return FluentIterable
             .from(sorted)

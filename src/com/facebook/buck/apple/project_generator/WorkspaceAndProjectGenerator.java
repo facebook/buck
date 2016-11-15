@@ -832,8 +832,8 @@ public class WorkspaceAndProjectGenerator {
       selectedTestsBuilder.putAll(schemeName, testNodes);
       buildForTestNodesBuilder.putAll(
           schemeName,
-          TopologicalSort.sort(
-              projectGraph,
+          Iterables.filter(
+              TopologicalSort.sort(projectGraph),
               getTransitiveDepsAndInputs(projectGraph, testNodes, targetNodes)::contains));
     }
   }

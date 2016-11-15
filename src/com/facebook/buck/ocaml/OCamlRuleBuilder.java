@@ -153,8 +153,7 @@ public class OCamlRuleBuilder {
         BuildRuleDependencyVisitors.getBuildRuleDirectedGraphFilteredBy(
             deps,
             OCamlLibrary.class::isInstance,
-            OCamlLibrary.class::isInstance),
-        x -> true);
+            OCamlLibrary.class::isInstance));
   }
 
   private static NativeLinkableInput getNativeLinkableInput(Iterable<BuildRule> deps) {

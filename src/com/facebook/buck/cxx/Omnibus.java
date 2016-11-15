@@ -527,7 +527,7 @@ public class Omnibus {
 
     // Walk the graph in topological order, appending each nodes contributions to the link.
     ImmutableList<BuildTarget> targets =
-        TopologicalSort.sort(spec.getGraph(), x -> true).reverse();
+        TopologicalSort.sort(spec.getGraph()).reverse();
     for (BuildTarget target : targets) {
 
       // If this is a root, just place the shared library we've linked above onto the link line.

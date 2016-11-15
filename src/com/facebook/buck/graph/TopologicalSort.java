@@ -17,7 +17,6 @@
 package com.facebook.buck.graph;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -34,8 +33,7 @@ public class TopologicalSort {
   private TopologicalSort() {}
 
   public static <T extends Comparable<?>> ImmutableList<T> sort(
-      TraversableGraph<T> graph,
-      final Predicate<T> inclusionPredicate) {
+      TraversableGraph<T> graph) {
 
     // AtomicInteger is used to decrement the integer value in-place.
     Map<T, AtomicInteger> effectiveOutDegreesOfExplorableNodes = Maps.newHashMap();
@@ -56,9 +54,7 @@ public class TopologicalSort {
             "The queue of nodes to explore should not contain a node that has already been" +
                 " visited.");
 
-        if (inclusionPredicate.apply(node)) {
-          level.add(node);
-        }
+        level.add(node);
         visitedNodes.add(node);
 
         // Only add a node to the set of nodes to be explored if all the nodes it depends on have

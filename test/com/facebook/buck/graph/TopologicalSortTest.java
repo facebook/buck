@@ -61,7 +61,7 @@ public class TopologicalSortTest {
   @Test
   public void sorts() {
     DefaultTraversableGraph<String> graph = makeGraph();
-    ImmutableList<String> sorted = TopologicalSort.sort(graph, n -> true);
+    ImmutableList<String> sorted = TopologicalSort.sort(graph);
     assertEquals(graph.getNodes(), ImmutableSet.copyOf(sorted));
     assertOrdering(sorted, "B", "A");
     assertOrdering(sorted, "C", "A");
@@ -70,18 +70,6 @@ public class TopologicalSortTest {
     assertOrdering(sorted, "F", "D");
     assertOrdering(sorted, "G", "C");
     assertOrdering(sorted, "G", "D");
-  }
-
-  @Test
-  public void predicatesRemoveNodesNotSubtrees() {
-    DefaultTraversableGraph<String> graph = makeGraph();
-    ImmutableList<String> sorted = TopologicalSort.sort(graph, n -> !n.equals("D"));
-    assertEquals(ImmutableSet.of("A", "B", "C", "E", "F", "G"), ImmutableSet.copyOf(sorted));
-    assertOrdering(sorted, "B", "A");
-    assertOrdering(sorted, "C", "A");
-    assertOrdering(sorted, "E", "C");
-    assertOrdering(sorted, "G", "C");
-    assertOrdering(sorted, "F", "B");
   }
 
   private <T> void assertOrdering(List<T> list, T before, T after) {
