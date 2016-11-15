@@ -17,9 +17,15 @@ worker_tool(
 
 worker_tool(
   name = 'worker3',
-  args = '--num-jobs 2',
+  args = ['--num-jobs 2'],
   exe = ':concurrent_tool',
   persistent = True,
+)
+
+worker_tool(
+  name = 'worker_crash_on_start',
+  args = ['--num-jobs 2', '--loc /doesnotexsist'],
+  exe = ':external_tool',
 )
 
 genrule(
@@ -80,4 +86,10 @@ genrule(
   srcs = [],
   out = 'output.txt',
   cmd = '$(worker :worker3) $OUT',
+)
+genrule(
+  name = 'test10',
+  srcs = [],
+  out = 'output.txt',
+  cmd = '$(worker :worker_crash_on_start) $OUT',
 )

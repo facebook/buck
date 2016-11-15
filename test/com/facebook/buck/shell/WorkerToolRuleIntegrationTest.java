@@ -167,4 +167,11 @@ public class WorkerToolRuleIntegrationTest {
     ImmutableSet<String> processIDs = ImmutableSet.copyOf(contents.trim().split("\\s+"));
     assertThat(processIDs.size(), Matchers.equalTo(2));
   }
+
+  @Test
+  public void testWorkerCrashDoesNotHang() throws Exception {
+    workspace
+        .runBuckBuild("//:test10")
+        .assertFailure();
+  }
 }

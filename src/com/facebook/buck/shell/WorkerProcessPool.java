@@ -16,40 +16,78 @@
 
 package com.facebook.buck.shell;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nullable;
+import javax.annotation.concurrent.GuardedBy;
 
 public abstract class WorkerProcessPool {
 
-  private final Semaphore available;
   private final int capacity;
-  private final LinkedBlockingQueue<WorkerProcess> workerProcesses;
+  private final BlockingQueue<WorkerProcess> availableWorkers;
+  @GuardedBy("createdWorkers")
+  private final List<WorkerProcess> createdWorkers;
   private final HashCode poolHash;
 
   public WorkerProcessPool(int maxWorkers, HashCode poolHash) {
-    capacity = maxWorkers;
-    available = new Semaphore(capacity, true);
-    workerProcesses = new LinkedBlockingQueue<>();
+    this.capacity = maxWorkers;
+    this.availableWorkers = new LinkedBlockingQueue<>();
+    this.createdWorkers = new ArrayList<>();
     this.poolHash = poolHash;
   }
 
   public WorkerProcess borrowWorkerProcess()
       throws IOException, InterruptedException {
-    available.acquire();
-    WorkerProcess workerProcess = workerProcesses.poll();
-    return workerProcess != null ? workerProcess : startWorkerProcess();
+    WorkerProcess workerProcess = availableWorkers.poll(0, TimeUnit.SECONDS);
+    if (workerProcess == null) {
+      workerProcess = createNewWorkerIfPossible();
+    }
+    if (workerProcess != null) {
+      return workerProcess;
+    }
+    return availableWorkers.take();
   }
 
-  public void returnWorkerProcess(WorkerProcess workerProcess) throws InterruptedException {
-    workerProcesses.put(workerProcess);
-    available.release();
+  private @Nullable WorkerProcess createNewWorkerIfPossible() throws IOException {
+    synchronized (createdWorkers) {
+      if (createdWorkers.size() == capacity) {
+        return null;
+      }
+      WorkerProcess process = Preconditions.checkNotNull(startWorkerProcess());
+      createdWorkers.add(process);
+      return process;
+    }
+  }
+
+  public void returnWorkerProcess(WorkerProcess workerProcess)
+      throws InterruptedException {
+    synchronized (createdWorkers) {
+      Preconditions.checkArgument(
+          createdWorkers.contains(workerProcess),
+          "Trying to return a foreign WorkerProcess to the pool");
+    }
+    availableWorkers.put(workerProcess);
   }
 
   public void close() {
-    for (WorkerProcess process : workerProcesses) {
+    ImmutableSet<WorkerProcess> processesToClose;
+    synchronized (createdWorkers) {
+      processesToClose = ImmutableSet.copyOf(createdWorkers);
+      Preconditions.checkState(
+          availableWorkers.size() == createdWorkers.size(),
+          "WorkerProcessPool was still running when shutdown was called.");
+    }
+
+    for (WorkerProcess process : processesToClose) {
       process.close();
     }
   }
