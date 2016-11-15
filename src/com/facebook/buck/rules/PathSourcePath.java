@@ -49,7 +49,7 @@ public class PathSourcePath extends AbstractSourcePath<PathSourcePath> {
 
   @Override
   public int hashCode() {
-    return Objects.hash(filesystem.getRootPath(), relativePath.get());
+    return Objects.hash(filesystem.getRootPath(), relativePathName);
   }
 
   @Override
@@ -61,7 +61,7 @@ public class PathSourcePath extends AbstractSourcePath<PathSourcePath> {
       return false;
     }
     PathSourcePath that = (PathSourcePath) other;
-    return relativePath.get().equals(that.relativePath.get()) &&
+    return relativePathName.equals(that.relativePathName) &&
         filesystem.getRootPath().equals(that.filesystem.getRootPath());
   }
 
