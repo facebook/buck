@@ -36,6 +36,9 @@ public interface SupportsDependencyFileRuleKey extends BuildRule {
    * {@link #getInputsAfterBuildingLocally()}. This information is used by the rule key builder
    * to infer that inputs *not* in this list should be included unconditionally in the rule key.
    *
+   * If not present, we treat all the input files as covered by dep file, meaning that they will
+   * be included in the rule key only if present in the dep file.
+   *
    * TODO(jkeljo): This is only optional because I added it for Java and didn't have the time to go
    * back and figure out how to implement it for C++.
    */

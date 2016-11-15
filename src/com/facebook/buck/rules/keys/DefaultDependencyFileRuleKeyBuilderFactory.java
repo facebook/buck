@@ -89,16 +89,14 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
         Optional<ImmutableSet<SourcePath>> possibleDepFileSourcePaths) throws IOException {
       ImmutableSet<SourcePath> inputs = builder.getInputsSoFar();
 
-      ImmutableSet<SourcePath> depFileInputs = inputs;
-
+      final ImmutableSet<SourcePath> depFileInputs;
       if (possibleDepFileSourcePaths.isPresent()) {
         // possibleDepFileSourcePaths is an ImmutableSortedSet which implements contains() via
         // binary search rather than via hashing. Thus taking the intersection/difference
         // is O(n*log(n)). Here, we make a hash-based copy of the set, so that intersection
         // will be reduced to O(N).
-        ImmutableSet<SourcePath> possibleDepFileSourcePathsUnsorted = ImmutableSet.copyOf(
-            possibleDepFileSourcePaths.get()
-        );
+        ImmutableSet<SourcePath> possibleDepFileSourcePathsUnsorted =
+            ImmutableSet.copyOf(possibleDepFileSourcePaths.get());
         Sets.SetView<SourcePath> nonDepFileInputs = Sets.difference(
             inputs,
             possibleDepFileSourcePathsUnsorted);
@@ -108,6 +106,9 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
         depFileInputs = ImmutableSet.copyOf(Sets.intersection(
             inputs,
             possibleDepFileSourcePathsUnsorted));
+      } else {
+        // If not present, we treat all the input files as covered by dep file.
+        depFileInputs = inputs;
       }
 
       Optional<RuleKey> ruleKey = builder.build();
@@ -141,7 +142,7 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
       ImmutableSet<SourcePath> fastPossibleSourcePaths =
           possibleDepFileSourcePaths.isPresent() ?
               ImmutableSet.copyOf(possibleDepFileSourcePaths.get()) :
-              ImmutableSet.copyOf(inputsSoFar);
+              ImmutableSet.of();
 
       ImmutableSet<DependencyFileEntry> depFileEntriesSet = ImmutableSet.copyOf(depFileEntries);
 
@@ -156,8 +157,10 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
       //    the rule key (the benefit of dep file support is that lots of things fall in this
       //    category, so we can avoid rebuilds that would have happened with input-based rule keys)
       for (SourcePath input : inputsSoFar) {
-        if (!fastPossibleSourcePaths.contains(input)) {
-          // If this path is not a dep file path, then add it to the builder directly
+        if (possibleDepFileSourcePaths.isPresent() && !fastPossibleSourcePaths.contains(input)) {
+          // If this path is not a dep file path, then add it to the builder directly.
+          // Note that if {@code possibleDepFileSourcePaths} is not present, we treat
+          // all the input files as covered by dep file, so we'll never end up here!
           builder.addToRuleKey(input);
         } else {
           // If this input path is covered by the dep paths, check to see if it was declared
