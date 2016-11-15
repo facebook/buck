@@ -165,4 +165,18 @@ public class WatchedFileHashCacheTest {
     assertNull(cache.loadingCache.getIfPresent(child2));
   }
 
+  @Test
+  public void whenNotifiedOfParentChangeEventCacheEntryIsRemoved() throws IOException {
+      ProjectFilesystem filesystem = new FakeProjectFilesystem();
+      WatchedFileHashCache cache = new WatchedFileHashCache(filesystem);
+      Path parent = filesystem.getRootPath().getFileSystem().getPath("directory");
+      Path path = parent.resolve("SomeClass.java");
+      HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
+      cache.loadingCache.put(path, value);
+      cache.sizeCache.put(path, 1234L);
+      cache.onFileSystemChange(createPathEvent(parent, StandardWatchEventKinds.ENTRY_MODIFY));
+      assertFalse("Cache should not contain path", cache.willGet(path));
+      assertThat("Cache should not contain path", cache.sizeCache.getIfPresent(path), nullValue());
+    }
+
 }
