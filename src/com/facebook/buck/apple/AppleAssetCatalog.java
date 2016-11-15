@@ -68,9 +68,6 @@ public class AppleAssetCatalog extends AbstractBuildRule {
   @AddToRuleKey
   private final Optional<String> launchImage;
 
-  @AddToRuleKey
-  private final AppleAssetCatalogDescription.Optimization optimization;
-
   AppleAssetCatalog(
       BuildRuleParams params,
       final SourcePathResolver resolver,
@@ -79,7 +76,6 @@ public class AppleAssetCatalog extends AbstractBuildRule {
       SortedSet<SourcePath> assetCatalogDirs,
       Optional<String> appIcon,
       Optional<String> launchImage,
-      AppleAssetCatalogDescription.Optimization optimization,
       String bundleName) {
     super(params, resolver);
     Preconditions.checkArgument(
@@ -99,7 +95,6 @@ public class AppleAssetCatalog extends AbstractBuildRule {
         "%s-output.plist");
     this.appIcon = appIcon;
     this.launchImage = launchImage;
-    this.optimization = optimization;
   }
 
   @Override
@@ -124,8 +119,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
             getProjectFilesystem().resolve(outputDir),
             getProjectFilesystem().resolve(outputPlist),
             appIcon,
-            launchImage,
-            optimization));
+            launchImage));
 
     buildableContext.recordArtifact(getOutputDir());
     buildableContext.recordArtifact(outputPlist);
