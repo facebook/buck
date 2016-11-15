@@ -64,10 +64,11 @@ import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.ExecutorPool;
 import com.facebook.buck.swift.SwiftBuckConfig;
+import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.ProcessManager;
 import com.google.common.annotations.VisibleForTesting;
@@ -103,6 +104,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.channels.Channels;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -396,19 +398,18 @@ public class ProjectCommand extends BuildCommand {
 
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+    int rc = runPreprocessScriptIfNeeded(params);
+    if (rc != 0) {
+      return rc;
+    }
+
     Ide projectIde = getIdeFromBuckConfig(params.getBuckConfig()).orElse(null);
     boolean needsFullRecursiveParse = deprecatedIntelliJProjectGenerationEnabled &&
         projectIde != Ide.XCODE;
 
     try (CommandThreadManager pool = new CommandThreadManager(
         "Project",
-        getConcurrencyLimit(params.getBuckConfig()));
-        ExecutionContext executionContext = createExecutionContext(params)) {
-
-      int rc = runPreprocessScriptIfNeeded(params, executionContext);
-      if (rc != 0) {
-        return rc;
-      }
+        getConcurrencyLimit(params.getBuckConfig()))) {
 
       ImmutableSet<BuildTarget> passedInTargetsSet;
       TargetGraph projectGraph;
@@ -719,20 +720,14 @@ public class ProjectCommand extends BuildCommand {
   }
 
   private int runPreprocessScriptIfNeeded(
-      CommandRunnerParams params,
-      ExecutionContext executionContext)
+      CommandRunnerParams params)
       throws IOException, InterruptedException {
     Optional<String> pathToPreProcessScript = getPathToPreProcessScript(params.getBuckConfig());
     if (!pathToPreProcessScript.isPresent()) {
       return 0;
     }
-    return runScript(params, executionContext, pathToPreProcessScript.get());
-  }
 
-  private int runScript(
-      CommandRunnerParams params,
-      ExecutionContext executionContext,
-      String pathToScript) throws IOException, InterruptedException {
+    String pathToScript = pathToPreProcessScript.get();
     if (!Paths.get(pathToScript).isAbsolute()) {
       pathToScript = params
           .getCell()
@@ -742,19 +737,31 @@ public class ProjectCommand extends BuildCommand {
           .toString();
     }
 
-    Map<String, String> environment = new HashMap<>();
-    environment.put("BUCK_PROJECT_TARGETS", Joiner.on(" ").join(getArguments()));
-
-    ProcessExecutorParams processParams = ProcessExecutorParams.builder()
-        .setCommand(ImmutableList.of(pathToScript))
-        .setRedirectOutput(ProcessBuilder.Redirect.INHERIT)
-        .setRedirectError(ProcessBuilder.Redirect.INHERIT)
-        .setEnvironment(environment)
-        .build();
-    ProcessExecutor.Result postProcessResult =
-        executionContext.getProcessExecutor().launchAndExecute(processParams);
-
-    return postProcessResult.getExitCode();
+    ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
+    ProcessExecutorParams processExecutorParams =
+        ProcessExecutorParams.builder()
+            .addCommand(pathToScript)
+            .setEnvironment(
+                ImmutableMap.<String, String>builder()
+                    .putAll(params.getEnvironment())
+                    .put("BUCK_PROJECT_TARGETS", Joiner.on(" ").join(getArguments()))
+                    .build())
+            .setDirectory(params.getCell().getFilesystem().getRootPath())
+            .build();
+    ForwardingProcessListener processListener =
+        new ForwardingProcessListener(
+            // Using rawStream to avoid shutting down SuperConsole. This is safe to do
+            // because this process finishes before we start parsing process.
+            Channels.newChannel(params.getConsole().getStdOut().getRawStream()),
+            Channels.newChannel(params.getConsole().getStdErr().getRawStream()));
+    ListeningProcessExecutor.LaunchedProcess process =
+        processExecutor.launchProcess(processExecutorParams, processListener);
+    try {
+      return processExecutor.waitForProcess(process);
+    } finally {
+      processExecutor.destroyProcess(process, /* force */ false);
+      processExecutor.waitForProcess(process);
+    }
   }
 
   /**
