@@ -107,22 +107,22 @@ public class GenerateManifestStep implements Step {
           .withFeatures(ManifestMerger2.Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT)
           .addLibraryManifests(Iterables.toArray(libraryManifestFiles, File.class))
           .merge();
-      if(mergingReport.getResult().isError()){
+      if (mergingReport.getResult().isError()) {
         throw new HumanReadableException("Error generating manifest file: " + mergingReport.getReportString());
       }
     } catch (ManifestMerger2.MergeFailureException e) {
       throw new HumanReadableException(e, "Error generating manifest file");
     }
 
+    String xmlText = mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED);
     if (context.getPlatform() == Platform.WINDOWS) {
       // Convert line endings to Lf on Windows.
-      try {
-        String xmlText = mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED);
-        xmlText = xmlText.replace("\r\n", "\n");
-        Files.write(xmlText.getBytes(Charsets.UTF_8), outManifestFile);
-      } catch (IOException e) {
-        throw new HumanReadableException("Error converting line endings of manifest file");
-      }
+      xmlText = xmlText.replace("\r\n", "\n");
+    }
+    try {
+      Files.write(xmlText.getBytes(Charsets.UTF_8), outManifestFile);
+    } catch (IOException e) {
+      throw new HumanReadableException("Error converting line endings of manifest file");
     }
 
     return StepExecutionResult.SUCCESS;
