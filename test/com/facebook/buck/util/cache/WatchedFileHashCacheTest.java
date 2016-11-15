@@ -21,7 +21,9 @@ import static com.facebook.buck.testutil.WatchEventsForTests.createPathEvent;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -135,6 +137,32 @@ public class WatchedFileHashCacheTest {
             StandardWatchEventKinds.ENTRY_CREATE));
     assertFalse("Cache should not contain path", cache.willGet(dir));
     assertThat("Cache should not contain path", cache.sizeCache.getIfPresent(dir), nullValue());
+  }
+
+  @Test
+  public void whenDirectoryIsPutThenInvalidatedCacheDoesNotContainPathOrChildren()
+      throws IOException {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    WatchedFileHashCache cache = new WatchedFileHashCache(filesystem);
+
+    Path dir = filesystem.getRootPath().getFileSystem().getPath("dir");
+    filesystem.mkdirs(dir);
+    Path child1 = dir.resolve("child1");
+    filesystem.touch(child1);
+    Path child2 = dir.resolve("child2");
+    filesystem.touch(child2);
+
+    cache.get(filesystem.resolve(dir));
+    assertTrue(cache.willGet(filesystem.resolve(dir)));
+    assertTrue(cache.willGet(filesystem.resolve(child1)));
+    assertTrue(cache.willGet(filesystem.resolve(child2)));
+
+    // Trigger an event on the directory.
+    cache.onFileSystemChange(createPathEvent(dir, StandardWatchEventKinds.ENTRY_MODIFY));
+
+    assertNull(cache.loadingCache.getIfPresent(dir));
+    assertNull(cache.loadingCache.getIfPresent(child1));
+    assertNull(cache.loadingCache.getIfPresent(child2));
   }
 
 }

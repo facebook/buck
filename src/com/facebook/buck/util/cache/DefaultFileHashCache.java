@@ -153,22 +153,26 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     return willGet(archiveMemberPath.getArchivePath());
   }
 
-  void invalidateImmediateEntry(Path path) {
+  private void invalidateImmediate(Path path) {
     loadingCache.invalidate(path);
     sizeCache.invalidate(path);
+  }
+
+  void invalidateResolved(Path path) {
+    Preconditions.checkArgument(!path.isAbsolute());
+    HashCodeAndFileType cached = loadingCache.getIfPresent(path);
+    invalidateImmediate(path);
+    if (cached != null) {
+      for (Path child : cached.getChildren()) {
+        invalidateImmediate(path.resolve(child));
+      }
+    }
   }
 
   @Override
   public void invalidate(Path rawPath) {
     Path path = resolvePath(rawPath);
-    HashCodeAndFileType cached = loadingCache.getIfPresent(path);
-    if (cached != null) {
-      for (Path child : cached.getChildren()) {
-        invalidateImmediateEntry(path.resolve(child));
-      }
-      loadingCache.invalidate(path);
-    }
-    sizeCache.invalidate(path);
+    invalidateResolved(path);
   }
 
   @Override
