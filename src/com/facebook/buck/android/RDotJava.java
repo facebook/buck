@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
+import com.facebook.buck.jvm.java.ClasspathChecker;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacStep;
 import com.facebook.buck.jvm.java.NoOpClassUsageFileWriter;
@@ -67,6 +68,7 @@ public class RDotJava {
         buildTarget,
         Optional.empty(),
         resolver,
-        filesystem);
+        filesystem,
+        new ClasspathChecker());
   }
 }

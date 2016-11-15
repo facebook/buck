@@ -82,7 +82,8 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
             invokingRule,
             suggestBuildRules,
             resolver,
-            filesystem));
+            filesystem,
+            new ClasspathChecker()));
   }
 
   @Override

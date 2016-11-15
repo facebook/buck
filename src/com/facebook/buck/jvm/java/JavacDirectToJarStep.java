@@ -187,7 +187,8 @@ public class JavacDirectToJarStep implements Step {
         invokingRule,
         suggestBuildRules,
         resolver,
-        filesystem);
+        filesystem,
+        new ClasspathChecker());
   }
 
   private StandardJavaFileManagerFactory createFileManagerFactory(

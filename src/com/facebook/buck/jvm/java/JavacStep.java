@@ -78,6 +78,8 @@ public class JavacStep implements Step {
 
   private final Javac javac;
 
+  private final ClasspathChecker classpathChecker;
+
   private static final Pattern IS_WARNING =
       Pattern.compile(":\\s*warning:", Pattern.CASE_INSENSITIVE);
 
@@ -120,7 +122,8 @@ public class JavacStep implements Step {
       BuildTarget invokingRule,
       Optional<SuggestBuildRules> suggestBuildRules,
       SourcePathResolver resolver,
-      ProjectFilesystem filesystem) {
+      ProjectFilesystem filesystem,
+      ClasspathChecker classpathChecker) {
     this.outputDirectory = outputDirectory;
     this.usedClassesFileWriter = usedClassesFileWriter;
     this.fileManagerFactory = fileManagerFactory;
@@ -134,6 +137,7 @@ public class JavacStep implements Step {
     this.suggestBuildRules = suggestBuildRules;
     this.resolver = resolver;
     this.filesystem = filesystem;
+    this.classpathChecker = classpathChecker;
   }
 
   @Override
@@ -146,6 +150,14 @@ public class JavacStep implements Step {
       ExecutionContext context,
       ProjectFilesystem filesystem)
       throws InterruptedException, IOException {
+    try {
+      javacOptions.validateOptions(classpathChecker::validateClasspath);
+    } catch (IOException e) {
+      context.postEvent(
+          ConsoleEvent.severe("Invalid Java compiler options: %s", e.getMessage()));
+      return StepExecutionResult.ERROR;
+    }
+
     Verbosity verbosity =
         context.getVerbosity().isSilent() ? Verbosity.STANDARD_INFORMATION : context.getVerbosity();
     try (

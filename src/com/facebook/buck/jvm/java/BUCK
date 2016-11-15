@@ -157,6 +157,7 @@ java_immutables_library(
     'AccumulateClassNamesStep.java',
     'BaseCompileToJarStepFactory.java',
     'CalculateAbiStep.java',
+    'ClasspathChecker.java',
     'CompileToJarStepFactory.java',
     'CopyResourcesStep.java',
     'GenerateCodeCoverageReportStep.java',

@@ -35,6 +35,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -151,6 +153,20 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
         return new JdkProvidedInMemoryJavac();
     }
     throw new AssertionError("Unknown javac source: " + javacSource);
+  }
+
+  public void validateOptions(Function<String, Boolean> classpathChecker) throws IOException {
+    if (getBootclasspath().isPresent()) {
+      String bootclasspath = getBootclasspath().get();
+      try {
+        if (!classpathChecker.apply(bootclasspath)) {
+          throw new IOException(
+              String.format("Bootstrap classpath %s contains no valid entries", bootclasspath));
+        }
+      } catch (UncheckedIOException e) {
+        throw e.getCause();
+      }
+    }
   }
 
   public void appendOptionsTo(
