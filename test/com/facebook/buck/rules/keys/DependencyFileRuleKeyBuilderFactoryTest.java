@@ -48,7 +48,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 
 public class DependencyFileRuleKeyBuilderFactoryTest {
 
@@ -78,10 +77,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             0,
             hashCache,
             pathResolver)
-            .build(
-                rule,
-                Optional.empty(),
-                ImmutableList.of()).get().getFirst();
+            .build(rule, ImmutableList.of()).get().getFirst();
 
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache = new FakeFileHashCache(
@@ -94,10 +90,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             0,
             hashCache,
             pathResolver)
-            .build(
-                rule,
-                Optional.empty(),
-                ImmutableList.of()).get().getFirst();
+            .build(rule, ImmutableList.of()).get().getFirst();
 
     assertThat(inputKey1, Matchers.equalTo(inputKey2));
   }
@@ -128,10 +121,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             0,
             hashCache,
             pathResolver)
-            .build(
-                rule,
-                Optional.empty(),
-                ImmutableList.of()).get().getFirst();
+            .build(rule, ImmutableList.of()).get().getFirst();
 
     // Now, build a rule key with a different hash for the output for the above rule.
     hashCache = new FakeFileHashCache(
@@ -144,10 +134,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             0,
             hashCache,
             pathResolver)
-            .build(
-                rule,
-                Optional.empty(),
-                ImmutableList.of()).get().getFirst();
+            .build(rule, ImmutableList.of()).get().getFirst();
 
     assertThat(inputKey1, Matchers.equalTo(inputKey2));
   }
@@ -217,7 +204,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
 
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//:rule").build();
     final PathSourcePath inputSourcePath = new PathSourcePath(filesystem, localInput);
-    BuildRule rule = new FakeDepFileBuildRule(params, pathResolver) {
+    FakeDepFileBuildRule rule = new FakeDepFileBuildRule(params, pathResolver) {
       @AddToRuleKey
       SourcePath input = inputSourcePath;
     }

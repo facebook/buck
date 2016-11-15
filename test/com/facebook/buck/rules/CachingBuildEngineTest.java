@@ -1466,7 +1466,7 @@ public class CachingBuildEngineTest {
               .setProjectFilesystem(filesystem)
               .build();
       final Path output = Paths.get("output");
-      final BuildRule rule =
+      final DepFileBuildRule rule =
           new DepFileBuildRule(params, pathResolver) {
             @AddToRuleKey
             private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
@@ -1499,7 +1499,6 @@ public class CachingBuildEngineTest {
       // Run the build.
       RuleKey depFileRuleKey = depFileFactory.build(
           rule,
-          Optional.empty(),
           ImmutableList.of(DependencyFileEntry.of(input, Optional.empty())))
           .get().getFirst();
       BuildResult result =
@@ -1619,7 +1618,7 @@ public class CachingBuildEngineTest {
               .setProjectFilesystem(filesystem)
               .build();
       final Path output = Paths.get("output");
-      BuildRule rule =
+      DepFileBuildRule rule =
           new DepFileBuildRule(params, pathResolver) {
             @AddToRuleKey
             private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
@@ -1651,7 +1650,6 @@ public class CachingBuildEngineTest {
       filesystem.writeContentsToPath("something", input);
       RuleKey depFileRuleKey = depFileFactory.build(
           rule,
-          Optional.empty(),
           ImmutableList.of(DependencyFileEntry.of(input, Optional.empty())))
           .get().getFirst();
 
@@ -1694,7 +1692,7 @@ public class CachingBuildEngineTest {
               .build();
       final Path output = Paths.get("output");
       final ImmutableSet<SourcePath> inputsBefore = ImmutableSet.of();
-      BuildRule rule =
+      DepFileBuildRule rule =
           new DepFileBuildRule(params, pathResolver) {
             @AddToRuleKey
             private final SourcePath path = new PathSourcePath(filesystem, inputFile);
@@ -1729,7 +1727,6 @@ public class CachingBuildEngineTest {
       // Prepopulate the dep file rule key and dep file.
       RuleKey depFileRuleKey = depFileFactory.build(
           rule,
-          Optional.of(inputsBefore),
           ImmutableList.of()).get().getFirst();
       filesystem.writeContentsToPath(
           depFileRuleKey.toString(),
@@ -1781,7 +1778,7 @@ public class CachingBuildEngineTest {
               .setProjectFilesystem(filesystem)
               .build();
       final Path output = Paths.get("output");
-      BuildRule rule =
+      DepFileBuildRule rule =
           new DepFileBuildRule(params, pathResolver) {
             @AddToRuleKey
             private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
@@ -1813,7 +1810,6 @@ public class CachingBuildEngineTest {
       filesystem.writeContentsToPath("something", input);
       RuleKey depFileRuleKey = depFileFactory.build(
           rule,
-          Optional.empty(),
           ImmutableList.of(DependencyFileEntry.of(input, Optional.empty())))
           .get().getFirst();
 
@@ -1860,7 +1856,7 @@ public class CachingBuildEngineTest {
               .setProjectFilesystem(filesystem)
               .build();
       final Path output = Paths.get("output");
-      BuildRule rule =
+      DepFileBuildRule rule =
           new DepFileBuildRule(params, pathResolver) {
             @AddToRuleKey
             private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
@@ -1892,8 +1888,7 @@ public class CachingBuildEngineTest {
           new DependencyFileRuleKeyBuilderFactory() {
             @Override
             public Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> build(
-                BuildRule rule,
-                Optional<ImmutableSet<SourcePath>> possibleDepFileSourcePaths,
+                SupportsDependencyFileRuleKey rule,
                 ImmutableList<DependencyFileEntry> inputs) {
               if (rule.getBuildTarget().equals(target)) {
                 return Optional.empty();
@@ -1904,7 +1899,7 @@ public class CachingBuildEngineTest {
 
             @Override
             public Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> buildManifestKey(
-                BuildRule rule) {
+                SupportsDependencyFileRuleKey rule) {
               if (rule.getBuildTarget().equals(target)) {
                 return Optional.empty();
               }
@@ -1918,7 +1913,6 @@ public class CachingBuildEngineTest {
 
       RuleKey depFileRuleKey = depFileFactory.build(
           rule,
-          Optional.empty(),
           ImmutableList.of(DependencyFileEntry.of(input, Optional.empty())))
           .get().getFirst();
 
@@ -1999,7 +1993,7 @@ public class CachingBuildEngineTest {
               .setProjectFilesystem(filesystem)
               .build();
       final Path output = Paths.get("output");
-      BuildRule rule =
+      DepFileBuildRule rule =
           new DepFileBuildRule(params, pathResolver) {
             @AddToRuleKey
             private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
@@ -2106,7 +2100,7 @@ public class CachingBuildEngineTest {
               .setProjectFilesystem(filesystem)
               .build();
       final Path output = Paths.get("output");
-      BuildRule rule =
+      DepFileBuildRule rule =
           new DepFileBuildRule(params, pathResolver) {
             @AddToRuleKey
             private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
@@ -2224,7 +2218,7 @@ public class CachingBuildEngineTest {
               .setProjectFilesystem(filesystem)
               .build();
       final Path output = Paths.get("output");
-      BuildRule rule =
+      DepFileBuildRule rule =
           new DepFileBuildRule(params, pathResolver) {
             @AddToRuleKey
             private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());
@@ -2334,7 +2328,7 @@ public class CachingBuildEngineTest {
               .setProjectFilesystem(filesystem)
               .build();
       final Path output = Paths.get("output");
-      BuildRule rule =
+      DepFileBuildRule rule =
           new DepFileBuildRule(params, pathResolver) {
             @AddToRuleKey
             private final SourcePath path = new BuildTargetSourcePath(genrule.getBuildTarget());

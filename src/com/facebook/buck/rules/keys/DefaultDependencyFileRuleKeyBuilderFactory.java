@@ -58,18 +58,18 @@ public class DefaultDependencyFileRuleKeyBuilderFactory
 
   @Override
   public Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> build(
-      BuildRule rule,
-      Optional<ImmutableSet<SourcePath>> possibleDepFileSourcePaths,
+      SupportsDependencyFileRuleKey rule,
       ImmutableList<DependencyFileEntry> depFileEntries) throws IOException {
-    return new DependencyFileRuleKeyBuilder(rule).build(possibleDepFileSourcePaths, depFileEntries);
+    return new DependencyFileRuleKeyBuilder(rule)
+        .build(rule.getPossibleInputSourcePaths(), depFileEntries);
   }
 
   @Override
-  public Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> buildManifestKey(BuildRule rule)
+  public Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> buildManifestKey(
+      SupportsDependencyFileRuleKey rule)
       throws IOException {
-    SupportsDependencyFileRuleKey depFileSupportingRule = (SupportsDependencyFileRuleKey) rule;
-
-    return new ManifestKeyBuilder(rule).build(depFileSupportingRule.getPossibleInputSourcePaths());
+    return new ManifestKeyBuilder(rule)
+        .build(rule.getPossibleInputSourcePaths());
   }
 
   private class ManifestKeyBuilder {

@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.google.common.collect.ImmutableList;
@@ -74,14 +75,14 @@ public class FakeRuleKeyBuilderFactory
 
   @Override
   public Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> build(
-      BuildRule rule,
-      Optional<ImmutableSet<SourcePath>> possibleDepFileSourcePaths,
+      SupportsDependencyFileRuleKey rule,
       ImmutableList<DependencyFileEntry> inputs) throws IOException {
     return Optional.of(new Pair<>(build(rule), ImmutableSet.<SourcePath>of()));
   }
 
   @Override
-  public Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> buildManifestKey(BuildRule rule) {
+  public Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> buildManifestKey(
+      SupportsDependencyFileRuleKey rule) {
     return Optional.of(new Pair<>(build(rule), ImmutableSet.<SourcePath>of()));
   }
 

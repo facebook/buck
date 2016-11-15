@@ -710,7 +710,8 @@ public class CachingBuildEngine implements BuildEngine {
               if (useManifestCaching(rule)) {
                 Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> manifestKey =
                     ruleKeyFactories.getUnchecked(rule.getProjectFilesystem())
-                        .depFileRuleKeyBuilderFactory.buildManifestKey(rule);
+                        .depFileRuleKeyBuilderFactory.buildManifestKey(
+                            (SupportsDependencyFileRuleKey) rule);
                 if (manifestKey.isPresent()) {
                   buildInfoRecorder.addBuildMetadata(
                       BuildInfo.MetadataKey.MANIFEST_KEY,
@@ -1487,10 +1488,7 @@ public class CachingBuildEngine implements BuildEngine {
 
     try {
       return this.ruleKeyFactories.getUnchecked(rule.getProjectFilesystem())
-          .depFileRuleKeyBuilderFactory.build(
-              rule,
-              ((SupportsDependencyFileRuleKey) rule).getPossibleInputSourcePaths(),
-              inputs);
+          .depFileRuleKeyBuilderFactory.build(((SupportsDependencyFileRuleKey) rule), inputs);
     } catch (NoSuchFileException e) {
       if (!allowMissingInputs) {
         throw e;
@@ -1506,7 +1504,8 @@ public class CachingBuildEngine implements BuildEngine {
   }
 
   @VisibleForTesting
-  protected Optional<RuleKey> getManifestRuleKey(BuildRule rule) throws IOException {
+  protected Optional<RuleKey> getManifestRuleKey(
+      SupportsDependencyFileRuleKey rule) throws IOException {
     Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> result =
         ruleKeyFactories.getUnchecked(rule.getProjectFilesystem())
             .depFileRuleKeyBuilderFactory.buildManifestKey(rule);
@@ -1602,7 +1601,7 @@ public class CachingBuildEngine implements BuildEngine {
 
     final Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> manifestKey =
         ruleKeyFactories.getUnchecked(rule.getProjectFilesystem())
-            .depFileRuleKeyBuilderFactory.buildManifestKey(rule);
+            .depFileRuleKeyBuilderFactory.buildManifestKey((SupportsDependencyFileRuleKey) rule);
     if (!manifestKey.isPresent()) {
       buildInfoRecorder.addBuildMetadata(
           BuildInfo.MetadataKey.MANIFEST_KEY,

@@ -35,8 +35,7 @@ public interface DependencyFileRuleKeyBuilderFactory {
    *     if no rule key was computed.
    */
   Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> build(
-      BuildRule rule,
-      Optional<ImmutableSet<SourcePath>> possibleDepFileSourcePaths,
+      SupportsDependencyFileRuleKey rule,
       ImmutableList<DependencyFileEntry> inputs) throws IOException;
 
   /**
@@ -45,7 +44,7 @@ public interface DependencyFileRuleKeyBuilderFactory {
    *         because all other inputs would be accounted for in the manifest key itself), or absent
    *         if no rule key was computed.
    */
-  Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> buildManifestKey(BuildRule rule)
-      throws IOException;
+  Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> buildManifestKey(
+      SupportsDependencyFileRuleKey rule) throws IOException;
 
 }
