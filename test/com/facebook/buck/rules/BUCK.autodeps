@@ -94,7 +94,6 @@
       "//test/com/facebook/buck/testutil:testutil",
       "//third-party/java/cglib:cglib",
       "//third-party/java/jackson:jackson-databind",
-      "//third-party/java/jsr:jsr305",
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [
@@ -118,7 +117,8 @@
       "//src/com/facebook/buck/util/concurrent:concurrent",
       "//src/com/facebook/buck/util/sha1:sha1",
       "//test/com/facebook/buck/util:testutil",
-      "//third-party/java/guava:guava"
+      "//third-party/java/guava:guava",
+      "//third-party/java/jsr:jsr305"
     ]
   }
 }

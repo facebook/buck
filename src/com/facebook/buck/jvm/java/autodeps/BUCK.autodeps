@@ -10,7 +10,6 @@
   "autodeps" : {
     "deps" : [
       "//src/com/facebook/buck/android:rules",
-      "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/jvm/java:config",
       "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/jvm/java:support",
