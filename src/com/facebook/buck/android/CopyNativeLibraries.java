@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.android.common.SdkConstants;
+import com.android.SdkConstants;
 import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
