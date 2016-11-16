@@ -95,7 +95,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
       // Maven rules will depend upon their vanilla versions, so the latter have to be constructed
       // without the maven flavor to prevent output-path conflict
       params = params.copyWithBuildTarget(
-          params.getBuildTarget().withoutFlavors(ImmutableSet.of(JavaLibrary.MAVEN_JAR)));
+          params.getBuildTarget().withoutFlavors(JavaLibrary.MAVEN_JAR));
     }
 
     if (flavors.contains(JavaLibrary.SRC_JAR)) {

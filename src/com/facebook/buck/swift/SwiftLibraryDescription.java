@@ -275,7 +275,7 @@ public class SwiftLibraryDescription implements
         .from(swiftRuntimeLinkable.getNativeLinkableInput(
                 cxxPlatform, Linker.LinkableDepType.SHARED));
     BuildTarget requiredBuildTarget = buildTarget
-        .withoutFlavors(ImmutableSet.of(CxxDescriptionEnhancer.SHARED_FLAVOR))
+        .withoutFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .withAppendedFlavors(SWIFT_COMPILE_FLAVOR);
     SwiftCompile rule = (SwiftCompile) resolver.requireRule(requiredBuildTarget);
     inputBuilder.addAllArgs(rule.getLinkArgs());

@@ -90,7 +90,7 @@ abstract class GoDescriptors {
               sourceTarget,
               resolver,
               platform,
-              sourceTarget.withoutFlavors(ImmutableSet.of(TRANSITIVE_LINKABLES_FLAVOR))));
+              sourceTarget.withoutFlavors(TRANSITIVE_LINKABLES_FLAVOR)));
     }
     return linkables.toSet();
   }

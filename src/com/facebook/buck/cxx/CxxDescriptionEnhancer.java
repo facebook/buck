@@ -544,7 +544,7 @@ public class CxxDescriptionEnhancer {
                         .iterator())
                 .add(
                     target
-                        .withoutFlavors(ImmutableSet.of(platform.getFlavor()))
+                        .withoutFlavors(platform.getFlavor())
                         .getShortNameAndFlavorPostfix())
                 .build());
     String extension = platform.getSharedLibraryExtension();

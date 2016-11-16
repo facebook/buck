@@ -210,7 +210,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
           .filter(BuildTargets.containsFlavor(WATCH))
           .transform(
               input -> BuildTarget.builder(
-                  input.withoutFlavors(ImmutableSet.of(WATCH)))
+                  input.withoutFlavors(WATCH))
                   .addFlavors(actualWatchFlavor)
                   .build());
 

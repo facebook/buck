@@ -192,7 +192,7 @@ class SwiftLibrary
       throws NoSuchBuildTargetException {
     BuildTarget requiredBuildTarget = getBuildTarget()
         .withAppendedFlavors(flavors)
-        .withoutFlavors(ImmutableSet.of(SWIFT_COMPANION_FLAVOR))
+        .withoutFlavors(SWIFT_COMPANION_FLAVOR)
         .withAppendedFlavors(SWIFT_COMPILE_FLAVOR);
     BuildRule rule = ruleResolver.requireRule(requiredBuildTarget);
     if (!(rule instanceof SwiftCompile)) {
@@ -204,7 +204,7 @@ class SwiftLibrary
 
   private BuildRule requireSwiftLinkRule(Flavor... flavors) throws NoSuchBuildTargetException {
     BuildTarget requiredBuildTarget = getBuildTarget()
-        .withoutFlavors(ImmutableSet.of(SWIFT_COMPANION_FLAVOR))
+        .withoutFlavors(SWIFT_COMPANION_FLAVOR)
         .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
         .withAppendedFlavors(flavors);
     BuildRule rule = ruleResolver.requireRule(requiredBuildTarget);

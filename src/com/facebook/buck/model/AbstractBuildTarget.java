@@ -195,6 +195,10 @@ abstract class AbstractBuildTarget
     return builder.build();
   }
 
+  public BuildTarget withoutFlavors(Flavor... flavors) {
+    return withoutFlavors(ImmutableSet.copyOf(flavors));
+  }
+
   public BuildTarget withAppendedFlavors(Set<Flavor> flavorsToAppend) {
     BuildTarget.Builder builder = BuildTarget.builder(getBuildTarget());
     builder.addAllFlavors(flavorsToAppend);

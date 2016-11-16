@@ -457,7 +457,7 @@ public class AppleDescriptions {
       FlavorDomain<AppleCxxPlatform> appleCxxPlatforms) {
     if (debugFormat == AppleDebugFormat.DWARF_AND_DSYM) {
       BuildTarget dsymBuildTarget = params.getBuildTarget()
-          .withoutFlavors(ImmutableSet.of(CxxStrip.RULE_FLAVOR))
+          .withoutFlavors(CxxStrip.RULE_FLAVOR)
           .withoutFlavors(StripStyle.FLAVOR_DOMAIN.getFlavors())
           .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
           .withAppendedFlavors(AppleDsym.RULE_FLAVOR);
@@ -602,11 +602,12 @@ public class AppleDescriptions {
     }
 
     BuildTarget unstrippedTarget = flavoredBinaryRule.getBuildTarget()
-        .withoutFlavors(ImmutableSet.of(CxxStrip.RULE_FLAVOR))
+        .withoutFlavors(
+            CxxStrip.RULE_FLAVOR,
+            AppleDebuggableBinary.RULE_FLAVOR,
+            AppleBinaryDescription.APP_FLAVOR)
         .withoutFlavors(StripStyle.FLAVOR_DOMAIN.getFlavors())
-        .withoutFlavors(ImmutableSet.of(AppleDebuggableBinary.RULE_FLAVOR))
-        .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
-        .withoutFlavors(ImmutableSet.of(AppleBinaryDescription.APP_FLAVOR));
+        .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
     BuildRule unstrippedBinaryRule = resolver.requireRule(unstrippedTarget);
 
     BuildRule targetDebuggableBinaryRule;
