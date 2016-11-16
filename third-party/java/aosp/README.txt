@@ -1,13 +1,11 @@
-Android SDK (4.2.1_r1 branch) code for Manifest Merging
+manifest-merger-25.2.0 and dependencies
 
 == Steps
 
-1) Downloaded the Android SDK source code, follow http://source.android.com/source/downloading.html
-(use branch android-4.2.1_r1)
-2) Copied java class com.android.manifmerger.ManifestMerger and all its dependencies to the aosp/
-module.
-3) In the Android SDK's source code manifmerger, sdklib and utils are separate modules. These are
-copied into a single module which alters certain package paths. For example,
-com.android.SDKConstants becomes com.android.common.SDKConstants.
-4) Added support for re-ordering <activity-alias> so they always go after <activity> elements.
-5) Added support for merging <meta-data> elements of <application>.
+1) Downloaded manifest-merger-25.2.0 and its dependencies:
+common-25.2.0
+annotations-25.2.0
+sdk-common-25.2.0
+sdklib-25.2.0
+layoutlib-api-25.2.0
+2) Copied com.android.manifmerger.ManifestMerger2 and all required dependencies to the aosp/ module.

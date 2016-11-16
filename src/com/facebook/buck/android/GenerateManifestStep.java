@@ -84,19 +84,6 @@ public class GenerateManifestStep implements Step {
         filesystem.getPathForRelativeExistingPath(skeletonManifestPath).toAbsolutePath().toFile();
     BuckEventAndroidLogger logger = new BuckEventAndroidLogger(context.getBuckEventBus());
 
-//    ICallback callback = codename -> BASE_SDK_LEVEL;
-//
-//    IMergerLog log = MergerLog.wrapSdkLog(logger);
-//
-//    ManifestMerger merger = new ManifestMerger(log, callback);
-//
-//    if (!merger.process(
-//        outManifestFile,
-//        skeletonManifestFile,
-//        Iterables.toArray(libraryManifestFiles, File.class))) {
-//      throw new HumanReadableException("Error generating manifest file");
-//    }
-
     MergingReport mergingReport =
         mergeManifests(skeletonManifestFile, libraryManifestFiles, logger);
 
