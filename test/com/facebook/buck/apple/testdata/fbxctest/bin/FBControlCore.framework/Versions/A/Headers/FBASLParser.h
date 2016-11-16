@@ -13,6 +13,8 @@
 @class FBDiagnosticBuilder;
 @class FBProcessInfo;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Reads ASL Messages using asl(3).
  */
@@ -33,3 +35,5 @@
 - (FBDiagnostic *)diagnosticForProcessInfo:(FBProcessInfo *)processInfo logBuilder:(FBDiagnosticBuilder *)logBuilder;
 
 @end
+
+NS_ASSUME_NONNULL_END

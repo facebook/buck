@@ -9,6 +9,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  A Protocol for Classes that recieve Logger Messages.
  */
@@ -84,3 +86,5 @@
 + (id<FBControlCoreLogger>)aslLoggerWritingToFileDescriptor:(int)fileDescriptor withDebugLogging:(BOOL)debugLogging;
 
 @end
+
+NS_ASSUME_NONNULL_END

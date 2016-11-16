@@ -12,6 +12,8 @@
 @class FBSimulatorProcessFetcher;
 @protocol FBControlCoreLogger;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  A Strategy for killing 'com.apple.CoreSimulatorService' processes that are not from the current Xcode version.
  */
@@ -35,3 +37,5 @@
 - (BOOL)killSpuriousCoreSimulatorServicesWithError:(NSError **)error;
 
 @end
+
+NS_ASSUME_NONNULL_END

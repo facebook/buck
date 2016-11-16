@@ -11,10 +11,11 @@
 
 #import <FBSimulatorControl/FBSimulatorPool.h>
 
-@class FBApplicationDescriptor ;
+@class FBApplicationDescriptor;
 @class FBSimulatorConfiguration;
 @class FBSimulatorControlConfiguration;
 @class FBSimulatorPool;
+@class FBSimulatorServiceContext;
 @class FBSimulatorSet;
 @protocol FBControlCoreLogger;
 
@@ -46,21 +47,25 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (nullable instancetype)withConfiguration:(FBSimulatorControlConfiguration *)configuration error:(NSError **)error;
 
-
 #pragma mark Properties
 
 /**
- The Pool that the FBSimulatorControl instance uses.
- */
-@property (nonatomic, strong, readonly) FBSimulatorPool *pool;
-
-/**
- The Pool that the FBSimulatorControl instance uses.
+ The Set of Simulators managed by FBSimulatorControl.
  */
 @property (nonatomic, strong, readonly) FBSimulatorSet *set;
 
 /**
- The Configuration that FBSimulatorControl uses.
+ The Pool adds conveniences to the management of the Simulator Set.
+ */
+@property (nonatomic, strong, readonly) FBSimulatorPool *pool;
+
+/**
+ The Service Context.
+ */
+@property (nonatomic, strong, readonly) FBSimulatorServiceContext *serviceContext;
+
+/**
+ The Configuration that FBSimulatorControl was instantiated with.
  */
 @property (nonatomic, copy, readwrite) FBSimulatorControlConfiguration *configuration;
 

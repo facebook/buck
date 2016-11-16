@@ -11,6 +11,8 @@
 
 #import <FBSimulatorControl/FBFramebufferDelegate.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  A Framebuffer Delegate that renders to a window.
 
@@ -28,3 +30,5 @@
 + (instancetype)withName:(NSString *)name;
 
 @end
+
+NS_ASSUME_NONNULL_END

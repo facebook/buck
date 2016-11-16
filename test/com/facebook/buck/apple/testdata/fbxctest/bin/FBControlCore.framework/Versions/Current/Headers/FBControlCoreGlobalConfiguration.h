@@ -9,6 +9,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import <FBControlCore/FBJSONConversion.h>
+
 @protocol FBControlCoreLogger;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -27,7 +29,7 @@ extern NSString *const FBControlCoreDebugLogging;
  Environment Globals & other derived constants.
  These values can be accessed before the Private Frameworks are loaded.
  */
-@interface FBControlCoreGlobalConfiguration : NSObject
+@interface FBControlCoreGlobalConfiguration : NSObject <FBJSONSerializable>
 
 /**
  The File Path to of Xcode's /Xcode.app/Contents/Developer directory.
@@ -123,6 +125,14 @@ extern NSString *const FBControlCoreDebugLogging;
  @param logger the new default logger
  */
 + (void)setDefaultLogger:(id<FBControlCoreLogger>)logger;
+
+/**
+ Sets whether verbose debug logging should be enabled.
+ This affects a number of subsystems.
+
+ @param enabled YES if should be enabled, NO otherwise.
+ */
++ (void)setDebugLoggingEnabled:(BOOL)enabled;
 
 /**
  Update the current process environment to enable logging to stderr.

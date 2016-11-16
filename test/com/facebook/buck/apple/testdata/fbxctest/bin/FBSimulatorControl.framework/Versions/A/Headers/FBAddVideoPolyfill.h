@@ -11,6 +11,8 @@
 
 @class FBSimulator;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  A Polyfill to -[SimDevice addVideo:error:] on versions of CoreSimulator prior to the existence of this API.
  */
@@ -31,6 +33,8 @@
  @param error an error out.
  @return YES if successful, NO otherwise.
  */
-- (BOOL)addVideos:(NSArray *)paths error:(NSError **)error;
+- (BOOL)addVideos:(NSArray<NSString *> *)paths error:(NSError **)error;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -14,6 +14,8 @@
 
 @class FBProcessLaunchConfiguration;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Concrete Value of Process Information.
  */
@@ -27,7 +29,7 @@
  @param arguments the arguments that the process was launched with.
  @param environment the environment that the
  */
-- (instancetype)initWithProcessIdentifier:(pid_t)processIdentifier launchPath:(NSString *)launchPath arguments:(NSArray *)arguments environment:(NSDictionary *)environment;
+- (instancetype)initWithProcessIdentifier:(pid_t)processIdentifier launchPath:(NSString *)launchPath arguments:(NSArray<NSString *> *)arguments environment:(NSDictionary<NSString *, NSString *> *)environment;
 
 /**
  The Process Identifier for the running process
@@ -55,3 +57,5 @@
 @property (nonatomic, copy, readonly) NSDictionary<NSString *, NSString *> *environment;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -16,6 +16,8 @@
 @class FBBinaryDescriptor;
 @class FBProcessLaunchConfiguration;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  An Object responsible for building `FBSimulatorHistory` be converting events into state.
  Links are maintained to previous states, so the entire history of the Simulator can be interrogated at any time.
@@ -46,3 +48,5 @@
 @property (nonatomic, assign, readwrite, getter=isPersistenceEnabled) BOOL peristenceEnabled;
 
 @end
+
+NS_ASSUME_NONNULL_END

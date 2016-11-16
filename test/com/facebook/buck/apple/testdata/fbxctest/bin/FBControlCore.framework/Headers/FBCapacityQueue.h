@@ -9,6 +9,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  A Simple Queue that Pushes to the end and pops from the front.
  Evicts from the front when capacity is reached.
@@ -29,14 +31,14 @@
  @param item the item to push.
  @return the item that was evicted if capacity was reached.
  */
-- (id)push:(id)item;
+- (nullable id)push:(id)item;
 
 /**
  Pops an item from the front of the front of the queue.
 
  @return the item at the front of the queue, nil otherwise.
  */
-- (id)pop;
+- (nullable id)pop;
 
 /**
  Pops all items from the queue.
@@ -53,3 +55,5 @@
 - (NSUInteger)count;
 
 @end
+
+NS_ASSUME_NONNULL_END

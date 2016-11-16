@@ -9,6 +9,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface FBRunLoopSpinner : NSObject
 
 /**
@@ -16,7 +18,7 @@
  @param block the block to wait for to finish.
  @return object returned by `block`
  */
-+ (id)spinUntilBlockFinished:(id (^)())block;
++ (nullable id)spinUntilBlockFinished:(id (^)())block;
 
 /**
  Updates the message that is logged at an interval.
@@ -88,7 +90,7 @@
  @param untilExists the mapping to a value.
  @returns the return value of untilTrue, or nil if a timeout was reached.
  */
-- (id)spinRunLoopWithTimeout:(NSTimeInterval)timeout untilExists:( id (^)(void) )untilExists;
+- (nullable id)spinRunLoopWithTimeout:(NSTimeInterval)timeout untilExists:( id (^)(void) )untilExists;
 
 /**
  Spins the Run Loop until the group completes, or a timeout is reached.
@@ -100,3 +102,5 @@
 - (BOOL)spinRunLoopWithTimeout:(NSTimeInterval)timeout notifiedBy:(dispatch_group_t)group onQueue:(dispatch_queue_t)queue;
 
 @end
+
+NS_ASSUME_NONNULL_END

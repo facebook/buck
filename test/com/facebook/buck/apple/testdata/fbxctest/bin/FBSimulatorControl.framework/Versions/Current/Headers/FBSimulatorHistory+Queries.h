@@ -14,6 +14,8 @@
 @class FBAgentLaunchConfiguration;
 @class FBApplicationLaunchConfiguration;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Queries for obtain specific information from the Simulator's History.
  */
@@ -89,7 +91,7 @@
 
  @return An FBProcessInfo for the most recently launched Application, nil if no Application has been launched.
  */
-- (FBProcessInfo *)lastLaunchedApplicationProcess;
+- (nullable FBProcessInfo *)lastLaunchedApplicationProcess;
 
 /**
  Returns Process Info for the Agent that was launched most recently.
@@ -97,7 +99,7 @@
 
  @return An FBProcessInfo for the most recently launched Agent, nil if no Agent has been launched.
  */
-- (FBProcessInfo *)lastLaunchedAgentProcess;
+- (nullable FBProcessInfo *)lastLaunchedAgentProcess;
 
 /**
  Returns the Launch Configration for the Application that was launched most recently.
@@ -105,7 +107,7 @@
 
  @return A FBApplicationLaunchConfiguration for the most recently launched Application, nil if no Application has been launched.
  */
-- (FBApplicationLaunchConfiguration *)lastLaunchedApplication;
+- (nullable FBApplicationLaunchConfiguration *)lastLaunchedApplication;
 
 /**
  Returns the Launch Configration for the Agent that was launched most recently.
@@ -113,7 +115,7 @@
 
  @return An A FBAgentLaunchConfiguration for the most recently launched Agent, nil if no Agent has been launched.
  */
-- (FBAgentLaunchConfiguration *)lastLaunchedAgent;
+- (nullable FBAgentLaunchConfiguration *)lastLaunchedAgent;
 
 /**
  Returns the Process State for the given launch configuration, does not reach into previous states.
@@ -121,7 +123,7 @@
  @param launchConfig the Launch Configuration to filter running processes by.
  @return a FBUserLaunchedProcess for a running process that matches the launch configuration, nil otherwise.
  */
-- (FBProcessInfo *)runningProcessForLaunchConfiguration:(FBProcessLaunchConfiguration *)launchConfig;
+- (nullable FBProcessInfo *)runningProcessForLaunchConfiguration:(FBProcessLaunchConfiguration *)launchConfig;
 
 /**
  Returns the Process State for the given binary, does not reach into previous states.
@@ -129,7 +131,7 @@
  @param binary the Binary of the Launched process to filter running processes by.
  @return a FBUserLaunchedProcess for a running process that matches the launch configuration, nil otherwise.
  */
-- (FBProcessInfo *)runningProcessForBinary:(FBBinaryDescriptor *)binary;
+- (nullable FBProcessInfo *)runningProcessForBinary:(FBBinaryDescriptor *)binary;
 
 /**
  Returns the Process State for the given Application, does not reach into previous states.
@@ -153,7 +155,7 @@
  @param state the state change to search for.
  @return the history of the prior change to the given state, or nil if this change never occurred.
  */
-- (instancetype)lastChangeOfState:(FBSimulatorState)state;
+- (nullable instancetype)lastChangeOfState:(FBSimulatorState)state;
 
 /**
  An NSArray<FBSimulatorHistory> of the changes to the `simulatorState` property.
@@ -166,3 +168,5 @@
 - (NSDate *)startDate;
 
 @end
+
+NS_ASSUME_NONNULL_END

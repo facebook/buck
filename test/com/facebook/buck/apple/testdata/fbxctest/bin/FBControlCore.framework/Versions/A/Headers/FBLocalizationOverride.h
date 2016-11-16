@@ -11,6 +11,8 @@
 
 #import <FBControlCore/FBControlCore.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Model Representing the Override of Language & Keyboard Settings.
  */
@@ -35,3 +37,5 @@
 @property (nonatomic, copy, readonly) NSArray<NSString *> *arguments;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -9,6 +9,8 @@
 
 #import <FBSimulatorControl/FBSimulatorInteraction.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface FBSimulatorInteraction (Upload)
 
 /**
@@ -36,3 +38,5 @@
 - (instancetype)uploadVideos:(NSArray<NSString *> *)videoPaths;
 
 @end
+
+NS_ASSUME_NONNULL_END

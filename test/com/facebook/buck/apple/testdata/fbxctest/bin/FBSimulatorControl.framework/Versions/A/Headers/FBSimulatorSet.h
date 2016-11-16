@@ -35,11 +35,12 @@ NS_ASSUME_NONNULL_BEGIN
  Creates and returns an FBSimulatorSet, performing the preconditions defined in the configuration.
 
  @param configuration the configuration to use. Must not be nil.
+ @param deviceSet the Device Set to wrap.
  @param logger the logger to use to verbosely describe what is going on. May be nil.
  @param error any error that occurred during the creation of the pool.
  @returns a new FBSimulatorPool.
  */
-+ (instancetype)setWithConfiguration:(FBSimulatorControlConfiguration *)configuration control:(FBSimulatorControl *)control logger:(nullable id<FBControlCoreLogger>)logger error:(NSError **)error;
++ (instancetype)setWithConfiguration:(FBSimulatorControlConfiguration *)configuration deviceSet:(SimDeviceSet *)deviceSet logger:(nullable id<FBControlCoreLogger>)logger error:(NSError **)error;
 
 #pragma mark Querying
 
@@ -162,11 +163,6 @@ NS_ASSUME_NONNULL_BEGIN
  Returns the configuration for the reciever.
  */
 @property (nonatomic, copy, readonly) FBSimulatorControlConfiguration *configuration;
-
-/**
- The FBSimulatorControl Instance to which the Set Belongs.
- */
-@property (nonatomic, weak, readonly) FBSimulatorControl *control;
 
 /**
  The SimDeviceSet to that is owned by the reciever.

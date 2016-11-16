@@ -12,6 +12,8 @@
 @class FBAgentLaunchConfiguration;
 @class FBBinaryDescriptor;
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface FBSimulatorInteraction (Agents)
 
 /**
@@ -31,3 +33,5 @@
 - (instancetype)killAgent:(FBBinaryDescriptor *)agent;
 
 @end
+
+NS_ASSUME_NONNULL_END

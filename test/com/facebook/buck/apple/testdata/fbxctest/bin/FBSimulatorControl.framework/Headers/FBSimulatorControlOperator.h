@@ -11,6 +11,8 @@
 
 @class FBSimulator;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Operator that uses FBSimulatorControl to control DVTiPhoneSimulator/SimDevice wrapped by FBSimulator
  */
@@ -25,3 +27,5 @@
 + (instancetype)operatorWithSimulator:(FBSimulator *)simulator;
 
 @end
+
+NS_ASSUME_NONNULL_END

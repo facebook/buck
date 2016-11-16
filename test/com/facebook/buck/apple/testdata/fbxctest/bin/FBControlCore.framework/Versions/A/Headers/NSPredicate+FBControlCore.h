@@ -9,6 +9,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Additional Predicates for FBControlCore.
  */
@@ -35,3 +37,5 @@
 + (NSPredicate *)notNullPredicate;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -9,6 +9,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Conveniences for concurent collection operations.
  The Predicates and Blocks Passed to these functions must work in a thread-safe manner, inspecting immutable values is the way to go.
@@ -63,3 +65,5 @@
 + (NSArray *)filterMap:(NSArray *)array predicate:(NSPredicate *)predicate map:(id (^)(id))block;
 
 @end
+
+NS_ASSUME_NONNULL_END

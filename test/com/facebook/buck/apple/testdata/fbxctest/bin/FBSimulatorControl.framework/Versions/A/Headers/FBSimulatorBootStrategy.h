@@ -10,7 +10,7 @@
 #import <Foundation/Foundation.h>
 
 @class FBSimulator;
-@class FBSimulatorLaunchConfiguration;
+@class FBSimulatorBootConfiguration;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param simulator the simulator to boot.
  @return a new FBSimulatorBootStrategy instance.
  */
-+ (instancetype)withConfiguration:(FBSimulatorLaunchConfiguration *)configuration simulator:(FBSimulator *)simulator;
++ (instancetype)withConfiguration:(FBSimulatorBootConfiguration *)configuration simulator:(FBSimulator *)simulator;
 
 /**
  Boots the Simulator.

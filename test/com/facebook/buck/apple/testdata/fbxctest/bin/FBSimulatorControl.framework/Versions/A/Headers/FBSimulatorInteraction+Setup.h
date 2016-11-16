@@ -9,12 +9,12 @@
 
 #import <FBSimulatorControl/FBSimulatorInteraction.h>
 
-@class FBSimulatorLaunchConfiguration;
+@class FBSimulatorBootConfiguration;
 
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- Interactions for Simulators that should occur Prior to the launch of the Simulator.
+ Interactions for Simulators that should occur Prior to the Boot of the Simulator.
  */
 @interface FBSimulatorInteraction (Setup)
 
@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param configuration the configuration to use.
  @return the reciever, for chaining.
  */
-- (instancetype)prepareForLaunch:(FBSimulatorLaunchConfiguration *)configuration;
+- (instancetype)prepareForBoot:(FBSimulatorBootConfiguration *)configuration;
 
 /**
  Overrides the Global Localization of the Simulator.

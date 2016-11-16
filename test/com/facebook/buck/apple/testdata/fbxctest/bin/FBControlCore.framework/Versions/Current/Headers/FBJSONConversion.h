@@ -9,6 +9,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Protocol for denoting objects that are serializable with NSJSONSerialization.
  */
@@ -36,6 +38,8 @@
  @param error an error out for any that occurs
  @return an instance of the reciever's class if one could be made, nil otherwise
  */
-+ (instancetype)inflateFromJSON:(id)json error:(NSError **)error;
++ (nullable instancetype)inflateFromJSON:(id)json error:(NSError **)error;
 
 @end
+
+NS_ASSUME_NONNULL_END

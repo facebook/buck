@@ -71,7 +71,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (nullable NSDictionary<NSString *, id> *)listServicesWithError:(NSError **)error;
 
-#pragma mark Stopping Services
+#pragma mark Manipulating Services
 
 /**
  Stops the Provided Process, by Service Name.
@@ -81,6 +81,15 @@ NS_ASSUME_NONNULL_BEGIN
  @return the Service Name of the Stopped process, or nil if the process does not exist.
  */
 - (nullable NSString *)stopServiceWithName:(NSString *)serviceName error:(NSError **)error;
+
+/**
+ Starts the Provided Process, by Service Name.
+
+ @param serviceName the name of the Process to Stop.
+ @param error an error for any error that occurs.
+ @return the Service Name of the Stopped process, or nil if the process does not exist.
+ */
+- (nullable NSString *)startServiceWithName:(NSString *)serviceName error:(NSError **)error;
 
 @end
 

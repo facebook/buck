@@ -15,6 +15,8 @@
 @protocol FBControlCoreLogger;
 @protocol FBSimulatorEventSink;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  A Simulator Framebuffer Delegate that encodes video and writes to a file.
 
@@ -48,3 +50,5 @@
 - (void)stopRecording:(dispatch_group_t)group;
 
 @end
+
+NS_ASSUME_NONNULL_END

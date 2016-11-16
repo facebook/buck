@@ -14,6 +14,8 @@
 @class FBFramebuffer;
 @class FBFramebufferFrame;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  A Delegate for updates from a Simulator's Framebuffer.
  */
@@ -36,3 +38,5 @@
 - (void)framebuffer:(FBFramebuffer *)framebuffer didBecomeInvalidWithError:(NSError *)error teardownGroup:(dispatch_group_t)teardownGroup;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -17,6 +17,8 @@
 @class SimDeviceFramebufferService;
 @protocol FBFramebufferDelegate;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  A container and client for a Simulator's Framebuffer that forwards important events to delegates.
 
@@ -62,3 +64,5 @@
 @property (nonatomic, strong, readonly) FBFramebufferVideo *video;
 
 @end
+
+NS_ASSUME_NONNULL_END

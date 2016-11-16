@@ -9,11 +9,11 @@
 
 #import <Foundation/Foundation.h>
 
-@class FBTestRunConfiguration;
+@class FBXCTestConfiguration;
 
 @interface FBXCTestRunner : NSObject
 
-+ (instancetype)testRunnerWithConfiguration:(FBTestRunConfiguration *)configuration;
++ (instancetype)testRunnerWithConfiguration:(FBXCTestConfiguration *)configuration;
 
 - (BOOL)executeTestsWithError:(NSError **)error;
 

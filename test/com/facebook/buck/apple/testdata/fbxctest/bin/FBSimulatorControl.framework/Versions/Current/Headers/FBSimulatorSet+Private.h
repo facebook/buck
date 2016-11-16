@@ -13,7 +13,7 @@
 
 @interface FBSimulatorSet ()
 
-- (instancetype)initWithConfiguration:(FBSimulatorControlConfiguration *)configuration deviceSet:(SimDeviceSet *)deviceSet control:(FBSimulatorControl *)control logger:(id<FBControlCoreLogger>)logger;
+- (instancetype)initWithConfiguration:(FBSimulatorControlConfiguration *)configuration deviceSet:(SimDeviceSet *)deviceSet logger:(id<FBControlCoreLogger>)logger;
 
 @property (nonatomic, strong, readonly) FBSimulatorInflationStrategy *inflationStrategy;
 

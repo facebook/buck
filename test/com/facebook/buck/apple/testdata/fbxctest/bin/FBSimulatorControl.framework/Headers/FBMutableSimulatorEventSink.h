@@ -9,6 +9,8 @@
 
 #import <FBSimulatorControl/FBSimulatorEventSink.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  An Event Sink that can be changed with an Event Sink of the User's choosing at Runtime.
  This allows th
@@ -21,3 +23,5 @@
 @property (nonatomic, strong, readwrite) id<FBSimulatorEventSink> eventSink;
 
 @end
+
+NS_ASSUME_NONNULL_END

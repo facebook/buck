@@ -11,6 +11,8 @@
 
 #import <FBSimulatorControl/FBSimulatorEventSink.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Notification that is fired when a Simulator Launches.
  */
@@ -119,3 +121,5 @@ extern NSString *const FBSimulatorTestManagerKey;
 + (instancetype)withSimulator:(FBSimulator *)simulator;
 
 @end
+
+NS_ASSUME_NONNULL_END

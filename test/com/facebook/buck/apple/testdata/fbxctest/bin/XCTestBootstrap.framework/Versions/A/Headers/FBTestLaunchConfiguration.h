@@ -19,15 +19,39 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  A Value object with the information required to launch a XCTest.
  */
-@interface FBTestLaunchConfiguration : NSObject <NSCopying, FBDebugDescribeable>
+@interface FBTestLaunchConfiguration : NSObject <NSCopying, FBJSONSerializable, FBDebugDescribeable>
 
-/*! Configuration used to launch test runner application. */
-@property (nonatomic, copy, readonly) FBApplicationLaunchConfiguration *applicationLaunchConfiguration;
+/**
+ The Designated Initializer
 
-/*! Path to XCTest bundle used for testing */
+ @param testBundlePath path to test bundle
+ @return a new FBTestLaunchConfiguration Instance
+ */
++ (instancetype)configurationWithTestBundlePath:(NSString *)testBundlePath;
+
+/**
+ Path to XCTest bundle used for testing
+ */
 @property (nonatomic, copy, readonly) NSString *testBundlePath;
 
-/*! Determines whether should initialize for UITesting */
+/**
+ Configuration used to launch test runner application.
+ */
+@property (nonatomic, copy, readonly, nullable) FBApplicationLaunchConfiguration *applicationLaunchConfiguration;
+
+/**
+ Path to host app.
+ */
+@property (nonatomic, copy, readonly, nullable) NSString *testHostPath;
+
+/**
+ Timeout for the Test Launch.
+ */
+@property (nonatomic, assign, readonly) NSTimeInterval timeout;
+
+/**
+ Determines whether should initialize for UITesting
+ */
 @property (nonatomic, assign, readonly) BOOL shouldInitializeUITesting;
 
 /**
@@ -39,12 +63,20 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)withApplicationLaunchConfiguration:(FBApplicationLaunchConfiguration *)applicationLaunchConfiguration;
 
 /**
- Adds path to test bundle, that should be launched
+ Adds timeout.
 
- @param testBundlePath path to test bundle
+ @param timeout timeout
  @return new test launch configuration with changes applied.
  */
-- (instancetype)withTestBundlePath:(NSString *)testBundlePath;
+- (instancetype)withTimeout:(NSTimeInterval)timeout;
+
+/**
+ Adds test host path.
+
+ @param testHostPath test host path
+ @return new test launch configuration with changes applied.
+ */
+- (instancetype)withTestHostPath:(NSString *)testHostPath;
 
 /**
  Determines whether should initialize for UITesting

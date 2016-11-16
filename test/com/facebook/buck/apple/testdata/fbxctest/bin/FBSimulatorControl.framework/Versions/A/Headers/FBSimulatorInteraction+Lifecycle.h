@@ -13,7 +13,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class FBSimulatorLaunchConfiguration;
+@class FBSimulatorBootConfiguration;
 
 /**
  Interactions for the Lifecycle of the Simulator.
@@ -34,7 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
 
  @return the reciever, for chaining.
  */
-- (instancetype)bootSimulator:(FBSimulatorLaunchConfiguration *)configuration;
+- (instancetype)bootSimulator:(FBSimulatorBootConfiguration *)configuration;
 
 /**
  Shuts the Simulator down.

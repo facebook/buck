@@ -11,6 +11,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class FBApplicationLaunchConfiguration;
+
 /**
  Defines an interface for interacting with iOS Applications.
  */
@@ -33,6 +35,24 @@ NS_ASSUME_NONNULL_BEGIN
  @return YES if the command succeeds, NO otherwise,
  */
 - (BOOL)isApplicationInstalledWithBundleID:(NSString *)bundleID error:(NSError **)error;
+
+/**
+ Launches an Application with the provided Application Launch Configuration.
+
+ @param configuration the Application Launch Configuration to use.
+ @param error an error out for any error that occurs.
+ @return YES if the operation succeeds, otherwise NO.
+ */
+- (BOOL)launchApplication:(FBApplicationLaunchConfiguration *)configuration error:(NSError **)error;
+
+/**
+ Kills application with given bundleID
+
+ @param bundleID bundle ID of installed application
+ @param error an error out for any error that occurs.
+ @return YES if the operation succeeds, otherwise NO.
+ */
+- (BOOL)killApplicationWithBundleID:(NSString *)bundleID error:(NSError **)error;
 
 @end
 

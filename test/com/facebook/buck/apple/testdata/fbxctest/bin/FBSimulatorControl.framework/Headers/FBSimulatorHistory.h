@@ -15,6 +15,8 @@
 @class FBBinaryDescriptor;
 @class FBProcessLaunchConfiguration;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  A Diagnostic key for the Termination Status.
  */
@@ -42,21 +44,21 @@ extern NSString *const FBSimulatorHistoryDiagnosticNameTerminationStatus;
 
  Is an NSArray<FBProcessInfo>
  */
-@property (nonatomic, copy, readonly) NSArray *launchedProcesses;
+@property (nonatomic, copy, readonly) NSArray<FBProcessInfo *> *launchedProcesses;
 
 /**
  Mapping for Process Info to the configuration of the last time the process was launched.
 
  Is an NSDictionary<FBProcessInfo, FBProcessLaunchConfiguration>
  */
-@property (nonatomic, copy, readonly) NSDictionary *processLaunchConfigurations;
+@property (nonatomic, copy, readonly) NSDictionary<FBProcessInfo *, FBProcessLaunchConfiguration *> *processLaunchConfigurations;
 
 /**
  Per-Process Metadata. Is used to store small amounts of information about processes.
 
  Is an NSDictionary<FBProcessInfo, NSDictionary<NSString, id<NSCopying, NSCoding>>>.
  */
-@property (nonatomic, copy, readonly) NSDictionary *processMetadata;
+@property (nonatomic, copy, readonly) NSDictionary<FBProcessInfo *, NSDictionary<NSString *, id<NSCopying, NSCoding>> *> *processMetadata;
 
 /**
  The last state, may be nil if this is the first instance.
@@ -69,3 +71,5 @@ extern NSString *const FBSimulatorHistoryDiagnosticNameTerminationStatus;
 - (NSString *)recursiveChangeDescription;
 
 @end
+
+NS_ASSUME_NONNULL_END

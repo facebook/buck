@@ -11,6 +11,8 @@
 
 #import <FBSimulatorControl/FBSimulatorInteraction.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Interactions dependent on the existence of an FBSimulatorConnection on a booted Simulator.
  */
@@ -54,3 +56,5 @@
 - (instancetype)setLocation:(double)latitude longitude:(double)longitude;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -276,6 +276,16 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (instancetype)iOS_9_3;
 
+/**
+ iOS 10.0
+ */
+- (instancetype)iOS_10_0;
+
+/**
+ iOS 10.1
+ */
+- (instancetype)iOS_10_1;
+
 #pragma mark tvOS Versions
 
 /**
@@ -293,6 +303,16 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (instancetype)tvOS_9_2;
 
+/**
+ tvOS 10.0
+ */
+- (instancetype)tvOS_10_0;
+
+/**
+ tvOS 10.1
+ */
+- (instancetype)tvOS_10_1;
+
 #pragma mark watchOS Versions
 
 /**
@@ -309,6 +329,16 @@ NS_ASSUME_NONNULL_BEGIN
  watchOS 2.2
  */
 - (instancetype)watchOS_2_2;
+
+/**
+ watchOS 3.0
+ */
+- (instancetype)watchOS_3_0;
+
+/**
+ watchOS 3.1
+ */
+- (instancetype)watchOS_3_1;
 
 #pragma mark Auxillary Directory
 

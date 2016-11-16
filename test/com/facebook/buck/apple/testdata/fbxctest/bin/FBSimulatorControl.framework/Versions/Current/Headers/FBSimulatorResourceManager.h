@@ -10,6 +10,9 @@
 #import <FBSimulatorControl/FBSimulatorEventSink.h>
 
 @class FBTestManager;
+
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  An event sink responsible for cleaning up resources that are allocated for Simulators and their subprocesses.
  */
@@ -21,3 +24,5 @@
 @property (nonatomic, copy, readonly, nonnull) NSSet<FBTestManager *> *testManagers;
 
 @end
+
+NS_ASSUME_NONNULL_END

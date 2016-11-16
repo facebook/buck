@@ -19,9 +19,19 @@ NS_ASSUME_NONNULL_BEGIN
 @interface FBXCTestLogger : NSObject<FBControlCoreLogger>
 
 /**
- A Test Logger that will write to a temporary directory.
+ A Test Logger that will write to a default directory.
+
+ @return a new FBXCTestLogger Instance
  */
-+ (instancetype)loggerInTemporaryDirectory;
++ (instancetype)defaultLoggerInDefaultDirectory;
+
+/**
+ A Test Logger that will write to a default directory.
+
+ @param name a unique name for the logger.
+ @return a new FBXCTestLogger Instance
+ */
++ (instancetype)loggerInDefaultDirectory:(NSString *)name;
 
 /**
  Returns the last n lines of logger output, for debugging purposes.

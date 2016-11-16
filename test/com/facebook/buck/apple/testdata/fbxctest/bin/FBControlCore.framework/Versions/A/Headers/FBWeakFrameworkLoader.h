@@ -12,6 +12,8 @@
 @class FBWeakFramework;
 @protocol FBControlCoreLogger;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  A Utility Class for loading weak-linked Frameworks at runtime.
  */
@@ -30,3 +32,5 @@
 + (BOOL)loadPrivateFrameworks:(NSArray<FBWeakFramework *> *)weakFrameworks logger:(id<FBControlCoreLogger>)logger error:(NSError **)error;
 
 @end
+
+NS_ASSUME_NONNULL_END

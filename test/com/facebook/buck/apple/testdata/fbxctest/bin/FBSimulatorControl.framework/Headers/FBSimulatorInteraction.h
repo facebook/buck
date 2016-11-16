@@ -9,12 +9,14 @@
 
 #import <Foundation/Foundation.h>
 
-#import <FBSimulatorControl/FBInteraction.h>
+#import <FBControlCore/FBControlCore.h>
 #import <FBSimulatorControl/FBSimulator.h>
 
-@class FBApplicationDescriptor ;
+@class FBApplicationDescriptor;
 @class FBSimulator;
 @class FBSimulatorConfiguration;
+
+NS_ASSUME_NONNULL_BEGIN
 
 /**
  Interactions for FBSimulator Instances.
@@ -29,3 +31,5 @@
 + (instancetype)withSimulator:(FBSimulator *)simulator;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -15,6 +15,8 @@
 @class FBSimulatorProcessFetcher;
 @class SimDevice;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  A Typedef for a SimDevice Callback.
  */
@@ -67,7 +69,7 @@ typedef void (^FBSimDeviceWrapperCallback)(void);
  @param error an error out for any error that occured.
  @return YES if the Application was installed successfully, NO otherwise.
  */
-- (BOOL)installApplication:(NSURL *)appURL withOptions:(NSDictionary *)options error:(NSError **)error;
+- (BOOL)installApplication:(NSURL *)appURL withOptions:(nullable NSDictionary<NSString *, id> *)options error:(NSError **)error;
 
 /**
  Uninstalls an Application on the Simulator.
@@ -77,7 +79,7 @@ typedef void (^FBSimDeviceWrapperCallback)(void);
  @param error an error out for any error that occured.
  @return YES if the Application was installed successfully, NO otherwise.
  */
-- (BOOL)uninstallApplication:(NSString *)bundleID withOptions:(NSDictionary *)options error:(NSError **)error;
+- (BOOL)uninstallApplication:(NSString *)bundleID withOptions:(nullable NSDictionary<NSString *, id> *)options error:(NSError **)error;
 
 /**
  Spawns an long-lived executable on the Simulator.
@@ -87,9 +89,9 @@ typedef void (^FBSimDeviceWrapperCallback)(void);
  @param options the Options to use in the launch.
  @param terminationHandler a Termination Handler for when the process dies.
  @param error an error out for any error that occured.
- @return the Process Identifier of the launched process, -1 otherwise.
+ @return the Process Identifier of the launched process, nil otherwise.
  */
-- (FBProcessInfo *)spawnLongRunningWithPath:(NSString *)launchPath options:(NSDictionary *)options terminationHandler:(FBSimDeviceWrapperCallback)terminationHandler error:(NSError **)error;
+- (nullable FBProcessInfo *)spawnLongRunningWithPath:(NSString *)launchPath options:(nullable NSDictionary<NSString *, id> *)options terminationHandler:(nullable FBSimDeviceWrapperCallback)terminationHandler error:(NSError **)error;
 
 /**
  Spawns an short-lived executable on the Simulator.
@@ -102,7 +104,7 @@ typedef void (^FBSimDeviceWrapperCallback)(void);
  @param error an error out for any error that occured.
  @return the Process Identifier of the launched process, -1 otherwise.
  */
-- (pid_t)spawnShortRunningWithPath:(NSString *)launchPath options:(NSDictionary *)options timeout:(NSTimeInterval)timeout error:(NSError **)error;
+- (pid_t)spawnShortRunningWithPath:(NSString *)launchPath options:(nullable NSDictionary<NSString *, id> *)options timeout:(NSTimeInterval)timeout error:(NSError **)error;
 
 /**
  Adds a Video to the Camera Roll.
@@ -111,6 +113,8 @@ typedef void (^FBSimDeviceWrapperCallback)(void);
  @param paths an Array of paths of videos to upload.
  @return YES if the upload was successful, NO otherwise.
  */
-- (BOOL)addVideos:(NSArray *)paths error:(NSError **)error;
+- (BOOL)addVideos:(NSArray<NSString *> *)paths error:(NSError **)error;
 
 @end
+
+NS_ASSUME_NONNULL_END

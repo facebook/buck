@@ -14,9 +14,9 @@
 @class FBApplicationLaunchConfiguration;
 @class FBFramebuffer;
 @class FBSimulator;
+@class FBSimulatorBootConfiguration;
 @class FBSimulatorBridge;
 @class FBSimulatorHID;
-@class FBSimulatorLaunchConfiguration;
 
 NS_ASSUME_NONNULL_BEGIN
 

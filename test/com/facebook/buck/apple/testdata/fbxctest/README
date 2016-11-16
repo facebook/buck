@@ -1,7 +1,7 @@
-Buck version: 55bda87065cf13bc62add87b978c5eae1396a0b8
-Xcode version: Xcode 8.0 Build version 8A218a
-xctool commit: c5d98ef3fee4467e163498fdeb59ac1cf38ec2b3
-fbxctest commit: 59a8753f08ded04bbde911045b3b31fe97ab1f72
+Buck version: 10ab3c83c03560ae0272055dbc878d73425cf5f7
+Xcode version: Xcode 8.1 Build version 8B62
+xctool commit: d86432ec74062e5b560dc7e3d41803b0f16cda13
+fbxctest commit: 0368828c98a511d16516eec2f17982b9aec066b1
 
 1. Download and build xctool from https://github.com/facebook/xctool.
 2. You will need to move the lib folder to the directory of fbxctest.

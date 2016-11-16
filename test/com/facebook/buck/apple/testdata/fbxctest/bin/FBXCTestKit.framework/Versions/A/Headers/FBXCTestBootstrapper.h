@@ -9,8 +9,20 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
+/**
+ The Entry-Point for fbxctest.
+ */
 @interface FBXCTestBootstrapper : NSObject
 
-+ (BOOL)bootstrap;
+/**
+ Starts fbxctest.
+
+ @return YES if successful, NO otherwise.
+ */
+- (BOOL)bootstrap;
 
 @end
+
+NS_ASSUME_NONNULL_END

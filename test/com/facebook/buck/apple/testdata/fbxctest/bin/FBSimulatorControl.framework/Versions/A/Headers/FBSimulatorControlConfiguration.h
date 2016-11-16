@@ -25,6 +25,8 @@ typedef NS_OPTIONS(NSUInteger, FBSimulatorManagementOptions){
   FBSimulatorManagementOptionsUseSimDeviceTimeoutResiliance = 1 << 5, /** Uses an alternative strategy for communicating with the Simulator that may be more robust with Xcode 7.1 */
 };
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  A Value object with the information required to create a Simulator Pool.
  */
@@ -37,12 +39,12 @@ typedef NS_OPTIONS(NSUInteger, FBSimulatorManagementOptions){
  @param deviceSetPath the Path to the Device Set. If nil, the default Device Set will be used.
  @returns a new Configuration Object with the arguments applied.
  */
-+ (instancetype _Nonnull)configurationWithDeviceSetPath:(NSString *_Nullable)deviceSetPath options:(FBSimulatorManagementOptions)options;
++ (instancetype)configurationWithDeviceSetPath:(nullable NSString *)deviceSetPath options:(FBSimulatorManagementOptions)options;
 
 /**
  The Location of the SimDeviceSet. If no path is provided, the default device set will be used.
  */
-@property (nonatomic, copy, readonly) NSString *_Nullable deviceSetPath;
+@property (nonatomic, copy, nullable, readonly) NSString *deviceSetPath;
 
 /**
  The Options for Simulator Management.
@@ -59,6 +61,8 @@ typedef NS_OPTIONS(NSUInteger, FBSimulatorManagementOptions){
 /**
  The Location of the Default SimDeviceSet
  */
-+ (NSString *_Nonnull)defaultDeviceSetPath;
++ (NSString *)defaultDeviceSetPath;
 
 @end
+
+NS_ASSUME_NONNULL_END

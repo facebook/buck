@@ -13,6 +13,8 @@
 
 @class FBSimulator;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  An Event Relay that writes messages to a logger.
  */
@@ -25,6 +27,8 @@
  @param logger the Logger to write messages to. May be nil.
  @return a new FBSimulatorLoggingEventSink instance.
  */
-+ (instancetype)withSimulator:(FBSimulator *)simulator logger:(id<FBControlCoreLogger>)logger;
++ (instancetype)withSimulator:(FBSimulator *)simulator logger:(nullable id<FBControlCoreLogger>)logger;
 
 @end
+
+NS_ASSUME_NONNULL_END

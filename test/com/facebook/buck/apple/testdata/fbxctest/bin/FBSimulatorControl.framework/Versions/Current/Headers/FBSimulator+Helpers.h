@@ -149,17 +149,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (nullable FBProcessInfo *)runningApplicationWithBundleID:(NSString *)bundleID error:(NSError **)error;
 
-/*
- A Set of launchd_sim service names that are used to determine whether relevant System daemons are available after booting.
-
- There is a period of time between when CoreSimulator says that the Simulator is 'Booted'
- and when it is stable enough state to launch Applications/Daemons, these Service Names
- represent the Services that are known to signify readyness.
-
- @return the required Service Names.
- */
-- (NSSet<NSString *> *)requiredLaunchdServicesToVerifyBooted;
-
 /**
  A Dictionary Representing the iPhone Simulator.app Preferences.
  */

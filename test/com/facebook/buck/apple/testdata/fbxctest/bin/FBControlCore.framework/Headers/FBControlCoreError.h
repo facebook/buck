@@ -15,6 +15,8 @@
 
 @protocol FBControlCoreLogger;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  The Error Domain for FBControlCore.
  */
@@ -45,7 +47,7 @@ extern NSString *const FBControlCoreErrorDomain;
 - (BOOL)failBool:(NSError **)error;
 - (unsigned int)failUInt:(NSError **)error;
 - (CGRect)failRect:(NSError **)error;
-- (id)fail:(NSError **)error;
+- (nullable id)fail:(NSError **)error;
 
 /**
  Attach additional diagnostic information.
@@ -126,16 +128,18 @@ extern NSString *const FBControlCoreErrorDomain;
 /**
  Return nil with a simple failure message.
  */
-+ (id)failWithErrorMessage:(NSString *)errorMessage errorOut:(NSError **)errorOut;
++ (nullable id)failWithErrorMessage:(NSString *)errorMessage errorOut:(NSError **)errorOut;
 
 /**
  Return nil, wrapping `failureCause` in the FBControlCore domain.
  */
-+ (id)failWithError:(NSError *)failureCause errorOut:(NSError **)errorOut;
++ (nullable id)failWithError:(NSError *)failureCause errorOut:(NSError **)errorOut;
 
 /**
  Return nil, wrapping `failureCause` in the FBControlCore domain with an additional description.
  */
-+ (id)failWithError:(NSError *)failureCause description:(NSString *)description errorOut:(NSError **)errorOut;
++ (nullable id)failWithError:(NSError *)failureCause description:(NSString *)description errorOut:(NSError **)errorOut;
 
 @end
+
+NS_ASSUME_NONNULL_END

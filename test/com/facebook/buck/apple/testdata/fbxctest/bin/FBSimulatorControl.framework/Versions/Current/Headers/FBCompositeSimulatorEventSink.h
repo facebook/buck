@@ -9,6 +9,8 @@
 
 #import <FBSimulatorControl/FBSimulatorEventSink.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface FBCompositeSimulatorEventSink : NSObject <FBSimulatorEventSink>
 
 /**
@@ -16,6 +18,8 @@
 
  @param sinks the sinks to call.
  */
-+ (instancetype)withSinks:(NSArray *)sinks;
++ (instancetype)withSinks:(NSArray<id<FBSimulatorEventSink>> *)sinks;
 
 @end
+
+NS_ASSUME_NONNULL_END

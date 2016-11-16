@@ -195,6 +195,12 @@ NS_ASSUME_NONNULL_BEGIN
 @interface FBControlCoreConfiguration_iOS_10_0 : FBControlCoreConfiguration_iOS_Base
 @end
 
+@interface FBControlCoreConfiguration_iOS_10_1 : FBControlCoreConfiguration_iOS_Base
+@end
+
+@interface FBControlCoreConfiguration_iOS_10_2 : FBControlCoreConfiguration_iOS_Base
+@end
+
 @interface FBControlCoreConfiguration_tvOS_Base : FBControlCoreConfiguration_OS_Base
 @end
 
@@ -210,6 +216,9 @@ NS_ASSUME_NONNULL_BEGIN
 @interface FBControlCoreConfiguration_tvOS_10_0 : FBControlCoreConfiguration_tvOS_Base
 @end
 
+@interface FBControlCoreConfiguration_tvOS_10_1 : FBControlCoreConfiguration_tvOS_Base
+@end
+
 @interface FBControlCoreConfiguration_watchOS_Base : FBControlCoreConfiguration_OS_Base
 @end
 
@@ -223,6 +232,9 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface FBControlCoreConfiguration_watchOS_3_0 : FBControlCoreConfiguration_watchOS_Base
+@end
+
+@interface FBControlCoreConfiguration_watchOS_3_1 : FBControlCoreConfiguration_watchOS_Base
 @end
 
 /**

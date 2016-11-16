@@ -42,12 +42,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  A Container for a Search.
-
  */
 @interface FBLogSearch : NSObject
 
 /**
- A
+ A Log search on a body of text.
+
+ @param text the text to search through.
+ @param predicate the predicate to search with.
+ @return a Log Search.
  */
 + (FBLogSearch *)withText:(NSString *)text predicate:(FBLogSearchPredicate *)predicate;
 

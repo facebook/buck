@@ -95,12 +95,12 @@ typedef NS_OPTIONS(NSUInteger, FBSimulatorAllocationOptions){
 /**
  An Array of all the Simulators that this Pool has allocated.
  */
-@property (nonatomic, copy, readonly) NSArray *allocatedSimulators;
+@property (nonatomic, copy, readonly) NSArray<FBSimulator *> *allocatedSimulators;
 
 /**
  An Array of all the Simulators that this Pool have not allocated.
  */
-@property (nonatomic, copy, readonly) NSArray *unallocatedSimulators;
+@property (nonatomic, copy, readonly) NSArray<FBSimulator *> *unallocatedSimulators;
 
 @end
 

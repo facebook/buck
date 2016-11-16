@@ -9,6 +9,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Conveniences for working with collections.
  */
@@ -33,3 +35,5 @@
 + (NSIndexSet *)indecesFromArray:(NSArray<NSNumber *> *)array;
 
 @end
+
+NS_ASSUME_NONNULL_END

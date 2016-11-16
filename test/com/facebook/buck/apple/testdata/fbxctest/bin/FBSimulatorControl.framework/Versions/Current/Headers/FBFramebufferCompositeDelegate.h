@@ -11,6 +11,8 @@
 
 #import <FBSimulatorControl/FBFramebufferDelegate.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  A Framebuffer Delegate that forwards all messages to an array of delegates.
  */
@@ -22,6 +24,8 @@
  @param delegates the delegates to call.
  @return a composite framebuffer delegate.
  */
-+ (instancetype)withDelegates:(NSArray *)delegates;
++ (instancetype)withDelegates:(NSArray<id<FBFramebufferDelegate>> *)delegates;
 
 @end
+
+NS_ASSUME_NONNULL_END

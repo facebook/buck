@@ -9,9 +9,16 @@
 
 #import <FBSimulatorControl/FBSimulatorInteraction.h>
 
-
+/**
+ Interactions for the Keychain
+ */
 @interface FBSimulatorInteraction (Keychain)
 
-- (instancetype)clearKeychainForApplication:(NSString *)bundleID;
+/**
+ Cleans the keychain of the Simulator.
+
+ @return the reciever for chaining.
+ */
+- (instancetype)clearKeychain;
 
 @end

@@ -9,6 +9,9 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
+@class FBApplicationLaunchConfiguration;
 @class FBTestManagerAPIMediator;
 
 /**
@@ -20,14 +23,12 @@
  Request to launch an Application Process.
 
  @param mediator a mediator requesting launch
- @param path a path for application to launch
- @param bundleID a bundleID for application to launch
- @param arguments arguments that application should be launched with
- @param environmentVariables environment variables that application should be launched with
+ @param configuration the configuration of the Application to launch.
+ @param path the path of the application on the host filesystem.
  @param error error for error handling
  @return YES if the request was successful, otherwise NO.
  */
-- (BOOL)testManagerMediator:(FBTestManagerAPIMediator *)mediator launchProcessWithPath:(NSString *)path bundleID:(NSString *)bundleID arguments:(NSArray<NSString *> *)arguments environmentVariables:(NSDictionary<NSString *, NSString *> *)environmentVariables error:(NSError **)error;
+- (BOOL)testManagerMediator:(FBTestManagerAPIMediator *)mediator launchApplication:(FBApplicationLaunchConfiguration *)configuration atPath:(NSString *)path error:(NSError **)error;
 
 /**
  Request to kill an application with bundle id
@@ -40,3 +41,5 @@
 - (BOOL)testManagerMediator:(FBTestManagerAPIMediator *)mediator killApplicationWithBundleID:(NSString *)bundleID error:(NSError **)error;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -14,6 +14,8 @@
 
 @class FBSimulator;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  The Error Domain for FBSimulatorControl.
  */
@@ -33,3 +35,5 @@ extern NSString *const FBSimulatorControlErrorDomain;
 - (instancetype)inSimulator:(FBSimulator *)simulator;
 
 @end
+
+NS_ASSUME_NONNULL_END

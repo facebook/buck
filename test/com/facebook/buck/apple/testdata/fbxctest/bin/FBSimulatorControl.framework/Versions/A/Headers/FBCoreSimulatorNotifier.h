@@ -15,6 +15,8 @@
 @class FBSimulatorSet;
 @class SimDevice;
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  A class for wrapping Core Simulator Notifiers in a `FBTerminationHandle`
  */
@@ -48,3 +50,5 @@
 + (instancetype)notifierForSet:(FBSimulatorSet *)set block:(void (^)(NSDictionary *info))block;
 
 @end
+
+NS_ASSUME_NONNULL_END

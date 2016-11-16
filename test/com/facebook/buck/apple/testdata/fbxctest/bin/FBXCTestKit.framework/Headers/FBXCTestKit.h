@@ -8,7 +8,8 @@
  */
 
 #import <FBXCTestKit/FBJSONTestReporter.h>
-#import <FBXCTestKit/FBTestRunConfiguration.h>
+#import <FBXCTestKit/FBXCTestConfiguration.h>
+#import <FBXCTestKit/FBXCTestShimConfiguration.h>
 #import <FBXCTestKit/FBXCTestBootstrapper.h>
 #import <FBXCTestKit/FBXCTestRunner.h>
 #import <FBXCTestKit/FBXCTestLogger.h>

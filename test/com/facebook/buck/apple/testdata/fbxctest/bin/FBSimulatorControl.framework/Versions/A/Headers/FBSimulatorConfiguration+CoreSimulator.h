@@ -79,6 +79,15 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)checkRuntimeRequirementsReturningError:(NSError **)error;
 
 /**
+ Obtains the supported OS Versions for a Device.
+ Will not return OS Versions that cannot be used.
+
+ @param device the device to obtain runtimes for.
+ @return an Array of OS Versions the Device can use.
+ */
++ (NSArray<id<FBControlCoreConfiguration_OS>> *)supportedOSVersionsForDevice:(id<FBControlCoreConfiguration_Device>)device;
+
+/**
  Returns an Array of all the Simulator Configurations that are available for the current environment.
  This means each available runtime is combined with each available device.
 

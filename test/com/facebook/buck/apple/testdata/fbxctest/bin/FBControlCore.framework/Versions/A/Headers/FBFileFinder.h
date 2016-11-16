@@ -9,6 +9,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Utility methods for files.
  */
@@ -41,3 +43,5 @@
 + (NSArray<NSString *> *)contentsOfDirectoryWithBasePath:(NSString *)basePath;
 
 @end
+
+NS_ASSUME_NONNULL_END
