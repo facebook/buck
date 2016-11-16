@@ -7,6 +7,15 @@ import os.path
 COLLAPSE_SLASHES = re.compile(r'/+')
 
 
+class SyncCookieState(object):
+    """Process-wide state used to enable Watchman sync cookies only on the
+    first query issued.
+    """
+
+    def __init__(self):
+        self.use_sync_cookies = True
+
+
 def format_watchman_query_params(includes, excludes, include_dotfiles, relative_root,
                                  watchman_use_glob_generator):
     match_exprs = ["allof", ["anyof", ["type", "f"], ["type", "l"]]]
@@ -113,4 +122,4 @@ def glob_watchman(includes, excludes, include_dotfiles, base_path, watchman_watc
     return sorted(result)
 
 
-__all__ = [glob_watchman]
+__all__ = [glob_watchman, SyncCookieState]

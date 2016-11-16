@@ -12,7 +12,7 @@ from pywatchman import bser, WatchmanError
 from contextlib import contextmanager, nested
 from .glob_internal import glob_internal
 from .glob_mercurial import glob_mercurial_manifest, load_mercurial_repo_info
-from .glob_watchman import glob_watchman
+from .glob_watchman import SyncCookieState, glob_watchman
 from .util import Diagnostic, cygwin_adjusted_path, get_caller_frame, is_special, is_in_dir
 from .module_whitelist import ImportWhitelistManager, NoopImportWhitelistManager
 import StringIO
@@ -59,16 +59,6 @@ BUILD_FUNCTIONS = []
 DEFAULT_WATCHMAN_QUERY_TIMEOUT = 5.0
 
 ORIGINAL_IMPORT = __builtin__.__import__
-
-
-class SyncCookieState(object):
-    """
-    Process-wide state used to enable Watchman sync cookies only on
-    the first query issued.
-    """
-
-    def __init__(self):
-        self.use_sync_cookies = True
 
 
 class AbstractContext(object):
