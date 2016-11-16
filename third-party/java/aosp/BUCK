@@ -4,6 +4,10 @@ java_library(
   tests = [
     ':tests',
   ],
+  deps = [
+      '//third-party/java/guava:guava',
+      '//third-party/java/gson:gson',
+  ],
   licenses = [
     'NOTICE',
   ],
