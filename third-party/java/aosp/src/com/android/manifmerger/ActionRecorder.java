@@ -21,8 +21,8 @@ import static com.android.manifmerger.XmlNode.NodeKey;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
-import com.android.ide.common.blame.SourceFilePosition;
-import com.android.ide.common.blame.SourcePosition;
+import com.android.common.ide.common.blame.SourceFilePosition;
+import com.android.common.ide.common.blame.SourcePosition;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
@@ -59,7 +59,7 @@ import java.util.Map;
  * <ul>
  *     <li>{@link com.android.manifmerger.Actions.ActionType} to identify whether the action
  *     applies to an attribute or an element.</li>
- *     <li>{@link com.android.ide.common.blame.SourceFilePosition} to identify the source xml
+ *     <li>{@link SourceFilePosition} to identify the source xml
  *     location for the node.</li>
  * </ul>
  *

@@ -15,12 +15,12 @@
  */
 package com.android.manifmerger;
 
-import com.android.SdkConstants;
+import com.android.common.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.ide.common.blame.SourceFilePosition;
-import com.android.ide.common.blame.SourcePosition;
-import com.android.utils.SdkUtils;
-import com.android.utils.XmlUtils;
+import com.android.common.ide.common.blame.SourceFilePosition;
+import com.android.common.ide.common.blame.SourcePosition;
+import com.android.common.utils.SdkUtils;
+import com.android.common.utils.XmlUtils;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;

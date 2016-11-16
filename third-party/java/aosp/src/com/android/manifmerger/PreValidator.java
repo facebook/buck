@@ -20,9 +20,9 @@ import static com.android.manifmerger.MergingReport.Record.Severity.ERROR;
 import static com.android.manifmerger.MergingReport.Record.Severity.WARNING;
 import static com.android.manifmerger.XmlNode.NodeKey;
 
-import com.android.SdkConstants;
+import com.android.common.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.xml.AndroidManifest;
+import com.android.common.xml.AndroidManifest;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -68,7 +68,7 @@ public class PreValidator {
      * </ul>
      *
      * A successful validation does not mean that the merging will be successful, it only means
-     * that the {@link com.android.SdkConstants#TOOLS_URI} instructions are correct and consistent.
+     * that the {@link SdkConstants#TOOLS_URI} instructions are correct and consistent.
      *
      * @param mergingReport report to log warnings and errors.
      * @param xmlDocument the loaded xml part.
@@ -219,7 +219,7 @@ public class PreValidator {
     }
 
     /**
-     * Validate attributes part of the {@link com.android.SdkConstants#ANDROID_URI}
+     * Validate attributes part of the {@link SdkConstants#ANDROID_URI}
      * @param mergingReport report to log warnings and errors.
      * @param xmlElement xml element to check its attributes.
      */
@@ -235,7 +235,7 @@ public class PreValidator {
     }
 
     /**
-     * Validates attributes part of the {@link com.android.SdkConstants#TOOLS_URI}
+     * Validates attributes part of the {@link SdkConstants#TOOLS_URI}
      * @param mergingReport report to log warnings and errors.
      * @param xmlElement xml element to check its attributes.
      */

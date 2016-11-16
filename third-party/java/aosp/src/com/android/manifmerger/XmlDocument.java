@@ -20,18 +20,18 @@ import static com.android.manifmerger.ManifestModel.NodeTypes.USES_PERMISSION;
 import static com.android.manifmerger.ManifestModel.NodeTypes.USES_SDK;
 import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
 
-import com.android.SdkConstants;
+import com.android.common.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.blame.SourceFile;
-import com.android.ide.common.blame.SourceFilePosition;
-import com.android.ide.common.blame.SourcePosition;
-import com.android.ide.common.xml.XmlFormatPreferences;
-import com.android.ide.common.xml.XmlFormatStyle;
-import com.android.ide.common.xml.XmlPrettyPrinter;
-import com.android.sdklib.SdkVersionInfo;
-import com.android.utils.Pair;
-import com.android.utils.PositionXmlParser;
+import com.android.common.ide.common.blame.SourceFile;
+import com.android.common.ide.common.blame.SourceFilePosition;
+import com.android.common.ide.common.blame.SourcePosition;
+import com.android.common.ide.common.xml.XmlFormatPreferences;
+import com.android.common.ide.common.xml.XmlFormatStyle;
+import com.android.common.ide.common.xml.XmlPrettyPrinter;
+import com.android.common.sdklib.SdkVersionInfo;
+import com.android.common.utils.Pair;
+import com.android.common.utils.PositionXmlParser;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -184,7 +184,7 @@ public class XmlDocument {
 
     /**
      * Compares this document to another {@link com.android.manifmerger.XmlDocument} ignoring all
-     * attributes belonging to the {@link com.android.SdkConstants#TOOLS_URI} namespace.
+     * attributes belonging to the {@link SdkConstants#TOOLS_URI} namespace.
      *
      * @param other the other document to compare against.
      * @return  a {@link String} describing the differences between the two XML elements or

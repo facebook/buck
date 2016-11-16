@@ -16,10 +16,10 @@
 
 package com.android.manifmerger;
 
-import com.android.SdkConstants;
+import com.android.common.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.blame.SourcePosition;
+import com.android.common.ide.common.blame.SourcePosition;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

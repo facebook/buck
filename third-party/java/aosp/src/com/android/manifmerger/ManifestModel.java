@@ -16,17 +16,17 @@
 
 package com.android.manifmerger;
 
-import static com.android.SdkConstants.ANDROID_URI;
-import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.common.SdkConstants.ANDROID_URI;
+import static com.android.common.SdkConstants.ATTR_NAME;
 import static com.android.manifmerger.AttributeModel.Hexadecimal32BitsWithMinimumValue;
 import static com.android.manifmerger.AttributeModel.MultiValueValidator;
 
-import com.android.SdkConstants;
+import com.android.common.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
-import com.android.utils.SdkUtils;
-import com.android.xml.AndroidManifest;
+import com.android.common.utils.SdkUtils;
+import com.android.common.xml.AndroidManifest;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;

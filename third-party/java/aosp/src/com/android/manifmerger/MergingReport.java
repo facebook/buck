@@ -20,10 +20,10 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.Immutable;
-import com.android.ide.common.blame.SourceFile;
-import com.android.ide.common.blame.SourceFilePosition;
-import com.android.ide.common.blame.SourcePosition;
-import com.android.utils.ILogger;
+import com.android.common.ide.common.blame.SourceFile;
+import com.android.common.ide.common.blame.SourceFilePosition;
+import com.android.common.ide.common.blame.SourcePosition;
+import com.android.common.utils.ILogger;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 

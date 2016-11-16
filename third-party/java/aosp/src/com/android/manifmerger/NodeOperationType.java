@@ -16,7 +16,7 @@
 
 package com.android.manifmerger;
 
-import com.android.utils.SdkUtils;
+import com.android.common.utils.SdkUtils;
 
 /**
  * Defines node operation types as it can be provided by user's through attributes on the

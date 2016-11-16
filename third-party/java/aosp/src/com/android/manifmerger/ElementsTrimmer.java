@@ -16,11 +16,11 @@
 
 package com.android.manifmerger;
 
-import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.common.SdkConstants.ANDROID_URI;
 
-import com.android.SdkConstants;
+import com.android.common.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.xml.AndroidManifest;
+import com.android.common.xml.AndroidManifest;
 
 import org.w3c.dom.Attr;
 

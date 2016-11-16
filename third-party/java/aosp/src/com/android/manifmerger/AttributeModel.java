@@ -18,6 +18,7 @@ package com.android.manifmerger;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.common.SdkConstants;
 import com.google.common.base.Joiner;
 
 import java.util.regex.Matcher;
@@ -40,7 +41,7 @@ class AttributeModel {
      * Define a new attribute with specific characteristics.
      *
      * @param name name of the attribute, so far assumed to be in the
-     *             {@link com.android.SdkConstants#ANDROID_URI} namespace.
+     *             {@link SdkConstants#ANDROID_URI} namespace.
      * @param isPackageDependent true if the attribute support smart substitution of package name.
      * @param defaultValue an optional default value.
      * @param onReadValidator an optional validator to validate values against.

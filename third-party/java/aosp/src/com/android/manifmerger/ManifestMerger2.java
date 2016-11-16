@@ -20,12 +20,12 @@ import static com.android.manifmerger.PlaceholderHandler.APPLICATION_ID;
 import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
 import static com.android.manifmerger.PlaceholderHandler.PACKAGE_NAME;
 
-import com.android.SdkConstants;
+import com.android.common.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
-import com.android.utils.ILogger;
-import com.android.utils.Pair;
+import com.android.common.utils.ILogger;
+import com.android.common.utils.Pair;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;

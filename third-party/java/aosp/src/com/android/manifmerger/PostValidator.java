@@ -18,7 +18,7 @@ package com.android.manifmerger;
 
 import static com.android.manifmerger.Actions.ActionType;
 
-import com.android.SdkConstants;
+import com.android.common.SdkConstants;
 import com.android.annotations.NonNull;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -64,7 +64,7 @@ public class PostValidator {
     }
 
     /**
-     * Enforces {@link com.android.SdkConstants#ANDROID_URI} declaration in the top level element.
+     * Enforces {@link SdkConstants#ANDROID_URI} declaration in the top level element.
      * It is possible that the original manifest file did not contain any attribute declaration,
      * therefore not requiring a xmlns: declaration. Yet the implicit elements handling may have
      * added attributes requiring the namespace declaration.
@@ -293,7 +293,7 @@ public class PostValidator {
 
     /**
      * Validates all {@link com.android.manifmerger.XmlElement} attributes belonging to the
-     * {@link com.android.SdkConstants#ANDROID_URI} namespace.
+     * {@link SdkConstants#ANDROID_URI} namespace.
      *
      * @param xmlElement xml element to check the attributes from.
      * @param mergingReport report for errors and warnings.

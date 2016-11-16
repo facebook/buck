@@ -18,11 +18,11 @@ package com.android.manifmerger;
 
 import static com.android.manifmerger.MergingReport.Result.ERROR;
 
-import com.android.SdkConstants;
+import com.android.common.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
-import com.android.utils.ILogger;
+import com.android.common.utils.ILogger;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -37,7 +37,7 @@ import java.util.List;
 /**
  * Removes all "tools:" statements from the resulting xml.
  *
- * All attributes belonging to the {@link com.android.SdkConstants#ANDROID_URI} namespace will be
+ * All attributes belonging to the {@link SdkConstants#ANDROID_URI} namespace will be
  * removed. If an element contained a "tools:node=\"remove\"" attribute, the element will be
  * deleted.
  */
@@ -50,7 +50,7 @@ public class ToolsInstructionsCleaner {
             NodeOperationType.REMOVE_ALL.toCamelCaseName();
 
     /**
-     * Cleans all attributes belonging to the {@link com.android.SdkConstants#TOOLS_URI} namespace.
+     * Cleans all attributes belonging to the {@link SdkConstants#TOOLS_URI} namespace.
      *
      * @param document the xml document to clean
      * @param logger logger to use in case of errors and warnings.

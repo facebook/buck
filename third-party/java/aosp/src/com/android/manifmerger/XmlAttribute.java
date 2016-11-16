@@ -16,12 +16,12 @@
 
 package com.android.manifmerger;
 
-import com.android.SdkConstants;
+import com.android.common.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.blame.SourceFile;
-import com.android.ide.common.blame.SourceFilePosition;
-import com.android.ide.common.blame.SourcePosition;
+import com.android.common.ide.common.blame.SourceFile;
+import com.android.common.ide.common.blame.SourceFilePosition;
+import com.android.common.ide.common.blame.SourcePosition;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;

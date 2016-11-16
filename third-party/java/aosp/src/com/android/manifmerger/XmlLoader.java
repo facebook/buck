@@ -19,8 +19,8 @@ package com.android.manifmerger;
 import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
 
 import com.android.annotations.NonNull;
-import com.android.ide.common.blame.SourceFile;
-import com.android.utils.PositionXmlParser;
+import com.android.common.ide.common.blame.SourceFile;
+import com.android.common.utils.PositionXmlParser;
 import com.google.common.base.Optional;
 
 import org.w3c.dom.Document;

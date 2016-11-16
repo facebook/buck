@@ -18,12 +18,12 @@ package com.android.manifmerger;
 
 import static com.android.manifmerger.ManifestModel.NodeTypes;
 
-import com.android.SdkConstants;
+import com.android.common.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.blame.SourceFile;
-import com.android.ide.common.blame.SourcePosition;
-import com.android.utils.XmlUtils;
+import com.android.common.ide.common.blame.SourceFile;
+import com.android.common.ide.common.blame.SourcePosition;
+import com.android.common.utils.XmlUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 

@@ -16,15 +16,15 @@
 
 package com.android.manifmerger;
 
-import com.android.SdkConstants;
+import com.android.common.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.blame.SourceFile;
-import com.android.ide.common.blame.SourcePosition;
-import com.android.ide.common.res2.MergingException;
-import com.android.utils.ILogger;
-import com.android.utils.SdkUtils;
-import com.android.utils.XmlUtils;
+import com.android.common.ide.common.blame.SourceFile;
+import com.android.common.ide.common.blame.SourcePosition;
+import com.android.common.ide.common.res2.MergingException;
+import com.android.common.utils.ILogger;
+import com.android.common.utils.SdkUtils;
+import com.android.common.utils.XmlUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -681,7 +681,7 @@ public class XmlElement extends OrphanXmlElement {
 
     /**
      * Compares this element with another {@link XmlElement} ignoring all attributes belonging to
-     * the {@link com.android.SdkConstants#TOOLS_URI} namespace.
+     * the {@link SdkConstants#TOOLS_URI} namespace.
      *
      * @param other the other element to compare against.
      * @return a {@link String} describing the differences between the two XML elements or
