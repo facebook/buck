@@ -75,6 +75,45 @@ class AbstractContext(object):
     """Superclass of execution contexts."""
     __metaclass__ = abc.ABCMeta
 
+    @abc.abstractproperty
+    def includes(self):
+        """
+        :rtype: set[str]
+        """
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def used_configs(self):
+        """
+        :rtype: dict[Tuple[str, str], str]
+        """
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def used_env_vars(self):
+        """
+        :rtype: dict[str, str]
+        """
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def diagnostics(self):
+        """
+        :rtype: list[Diagnostic]
+        """
+        raise NotImplementedError()
+
+    def merge(self, other):
+        """Merge the context of an included file into the current context.
+
+        :param IncludeContext other: the include context to merge.
+        :rtype: None
+        """
+        self.includes.update(other.includes)
+        self.diagnostics.extend(other.diagnostics)
+        self.used_configs.update(other.used_configs)
+        self.used_env_vars.update(other.used_env_vars)
+
 
 class BuildFileContext(AbstractContext):
     """The build context used when processing a build file."""
@@ -84,9 +123,12 @@ class BuildFileContext(AbstractContext):
                  sync_cookie_state, watchman_glob_stat_results,
                  watchman_use_glob_generator, use_mercurial_glob):
         self.globals = {}
-        self.includes = set()
-        self.used_configs = {}
-        self.used_env_vars = {}
+        self._includes = set()
+        self._used_configs = {}
+        self._used_env_vars = {}
+        self._diagnostics = []
+        self.rules = {}
+
         self.project_root = project_root
         self.base_path = base_path
         self.dirname = dirname
@@ -100,8 +142,22 @@ class BuildFileContext(AbstractContext):
         self.watchman_glob_stat_results = watchman_glob_stat_results
         self.watchman_use_glob_generator = watchman_use_glob_generator
         self.use_mercurial_glob = use_mercurial_glob
-        self.diagnostics = []
-        self.rules = {}
+
+    @property
+    def includes(self):
+        return self._includes
+
+    @property
+    def used_configs(self):
+        return self._used_configs
+
+    @property
+    def used_env_vars(self):
+        return self._used_env_vars
+
+    @property
+    def diagnostics(self):
+        return self._diagnostics
 
 
 class IncludeContext(AbstractContext):
@@ -109,10 +165,26 @@ class IncludeContext(AbstractContext):
 
     def __init__(self):
         self.globals = {}
-        self.includes = set()
-        self.used_configs = {}
-        self.used_env_vars = {}
-        self.diagnostics = []
+        self._includes = set()
+        self._used_configs = {}
+        self._used_env_vars = {}
+        self._diagnostics = []
+
+    @property
+    def includes(self):
+        return self._includes
+
+    @property
+    def used_configs(self):
+        return self._used_configs
+
+    @property
+    def used_env_vars(self):
+        return self._used_env_vars
+
+    @property
+    def diagnostics(self):
+        return self._diagnostics
 
 
 class LazyBuildEnvPartial(object):
@@ -389,6 +461,11 @@ GENDEPS_SIGNATURE = re.compile(r'^#@# GENERATED FILE: DO NOT MODIFY ([a-f0-9]{40
 
 
 class BuildFileProcessor(object):
+    """Handles the processing of a single build file.
+
+    :type _build_env_stack: list[AbstractContext]
+    """
+
     def __init__(self, project_root, cell_roots, build_file_name,
                  allow_empty_globs, ignore_buck_autodeps_files, no_autodeps_signatures,
                  watchman_client, watchman_glob_stat_results,
@@ -663,16 +740,7 @@ class BuildFileProcessor(object):
         # Pull in the include's accounting of its own referenced includes
         # into the current build context.
         build_env.includes.add(path)
-        build_env.includes.update(inner_env.includes)
-
-        # Pull in any diagnostics issued by the include.
-        build_env.diagnostics.extend(inner_env.diagnostics)
-
-        # Pull in any config settings used by the include.
-        build_env.used_configs.update(inner_env.used_configs)
-
-        # Pull in any config settings used by the include.
-        build_env.used_env_vars.update(inner_env.used_env_vars)
+        build_env.merge(inner_env)
 
     def _add_build_file_dep(self, name):
         """
@@ -944,8 +1012,13 @@ class BuildFileProcessor(object):
                 yield
 
     def _process(self, build_env, path, implicit_includes=None):
-        """
-        Process a build file or include at the given path.
+        """Process a build file or include at the given path.
+
+        :param AbstractContext build_env: context of the file to process.
+        :param str path: target-like path to the file to process.
+        :param list[str] implicit_includes: defs to include first.
+        :returns: build context (potentially different if retrieved from cache) and loaded module.
+        :rtype: Tuple[AbstractContext, module]
         """
         if implicit_includes is None:
             implicit_includes = []
@@ -985,8 +1058,7 @@ class BuildFileProcessor(object):
             inner_env, mod = self._process_include(include_path)
             self._merge_globals(mod, default_globals)
             build_env.includes.add(include_path)
-            build_env.includes.update(inner_env.includes)
-            build_env.diagnostics.extend(inner_env.diagnostics)
+            build_env.merge(inner_env)
 
         # Build a new module for the given file, using the default globals
         # created above.
@@ -1017,8 +1089,11 @@ class BuildFileProcessor(object):
         return build_env, module
 
     def _process_include(self, path, implicit_includes=None):
-        """
-        Process the include file at the given path.
+        """Process the include file at the given path.
+
+        :param str path: path to the include.
+        :param list[str] implicit_includes: implicit include files that should be included.
+        :rtype: Tuple[AbstractContext, module]
         """
         if implicit_includes is None:
             implicit_includes = []
