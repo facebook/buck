@@ -110,7 +110,7 @@ abstract class RustCompile extends AbstractBuildRule {
     this.linkerArgs = linkerArgs;
     this.linkStyle = linkStyle;
     this.scratchDir =
-        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "container");
+        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s-container");
 
     this.nativePaths = nativePaths;
 
