@@ -9,8 +9,36 @@ from __future__ import with_statement
 from collections import namedtuple
 import copy
 import functools
+import inspect
 import subprocess
 import sys
+import os
+
+
+def is_in_dir(filepath, directory):
+    """Returns true if `filepath` is in `directory`."""
+    path = os.path.abspath(filepath)
+    # Make 'directory' end with '/' (os.sep) to detect that '/a/foo.py' is not in '/a/f' etc.
+    directory = os.path.join(os.path.abspath(directory), '')
+    return os.path.commonprefix([path, directory]) == directory
+
+
+def get_caller_frame(skip=None):
+    """Get the stack frame from where the function was called.
+
+    :param list[str] skip:
+    :rtype: types.FrameType
+    """
+    if skip is None:
+        skip = []
+    skip = set([__name__] + skip)
+    # Look up the caller's stack frame, skipping specified names.
+    frame = inspect.currentframe()
+    # Use 'get' as '__name__' may not exist if 'eval' was used ('get' will return None then).
+    while frame.f_globals.get('__name__') in skip:
+        frame = frame.f_back
+
+    return frame
 
 
 def cygwin_adjusted_path(path):

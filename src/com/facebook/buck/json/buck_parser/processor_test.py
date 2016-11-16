@@ -749,15 +749,6 @@ class BuckTest(unittest.TestCase):
             build_file_processor.process,
             build_file.root, build_file.prefix, build_file.path, [])
 
-    def test_is_in_dir(self):
-        build_file_processor = self.create_build_file_processor()
-        assert build_file_processor._is_in_dir('foo/bar.py', 'foo')
-        assert build_file_processor._is_in_dir('foo/bar.py', 'foo/')
-        assert build_file_processor._is_in_dir('/foo/bar.py', '/')
-        assert not build_file_processor._is_in_dir('foo.py', 'foo')
-        assert not build_file_processor._is_in_dir('foo/bar.py', 'foo/bar')
-        assert not build_file_processor._is_in_dir('foo/bars', 'foo/bar')
-
     def test_wrap_access_prints_warnings(self):
         self.enable_build_file_sandboxing = True
         path = os.path.normpath(os.path.join(self.project_root, 'foo.py'))
@@ -832,3 +823,7 @@ class BuckTest(unittest.TestCase):
         self.assertEqual(
             'parse',
             decoded_result['diagnostics'][0]['source'])
+
+
+if __name__ == '__main__':
+    unittest.main()

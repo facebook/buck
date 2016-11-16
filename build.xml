@@ -686,6 +686,7 @@
       <arg value="unittest" />
       <arg value="buck_parser.buck_test" />
       <arg value="buck_parser.processor_test" />
+      <arg value="buck_parser.util_test" />
     </exec>
   </target>
 
