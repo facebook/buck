@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DependencyAggregation;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -52,6 +53,7 @@ import org.immutables.value.Value;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -89,6 +91,8 @@ abstract class AbstractCxxSourceRuleFactory {
   public abstract Optional<SourcePath> getPrefixHeader();
   @Value.Parameter
   public abstract PicType getPicType();
+  @Value.Parameter
+  public abstract Optional<SymlinkTree> getSandboxTree();
 
   private ImmutableSortedSet<BuildRule> getPreprocessDeps() {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
@@ -97,6 +101,11 @@ abstract class AbstractCxxSourceRuleFactory {
     }
     if (getPrefixHeader().isPresent()) {
       builder.addAll(getPathResolver().filterBuildRuleInputs(getPrefixHeader().get()));
+    }
+    if (getSandboxTree().isPresent()) {
+      SymlinkTree tree = getSandboxTree().get();
+      builder.add(tree);
+      builder.addAll(getPathResolver().filterBuildRuleInputs(tree.getLinks().values()));
     }
     return builder.build();
   }
@@ -270,7 +279,8 @@ abstract class AbstractCxxSourceRuleFactory {
             source.getPath(),
             source.getType(),
             getCxxPlatform().getCompilerDebugPathSanitizer(),
-            getCxxPlatform().getAssemblerDebugPathSanitizer());
+            getCxxPlatform().getAssemblerDebugPathSanitizer(),
+            getSandboxTree());
     getResolver().addToIndex(result);
     return result;
   }
@@ -375,7 +385,10 @@ abstract class AbstractCxxSourceRuleFactory {
    * given {@link CxxSource}.
    */
   @VisibleForTesting
-  public CxxPreprocessAndCompile createCompileBuildRule(String name, CxxSource source) {
+  public CxxPreprocessAndCompile createCompileBuildRule(
+      String name,
+      CxxSource source,
+      boolean afterPreprocessing) {
 
     Preconditions.checkArgument(CxxSourceTypes.isCompilableType(source.getType()));
 
@@ -416,13 +429,17 @@ abstract class AbstractCxxSourceRuleFactory {
         source.getPath(),
         source.getType(),
         getCxxPlatform().getCompilerDebugPathSanitizer(),
-        getCxxPlatform().getAssemblerDebugPathSanitizer());
+        getCxxPlatform().getAssemblerDebugPathSanitizer(),
+        afterPreprocessing ? Optional.empty() : getSandboxTree());
     getResolver().addToIndex(result);
     return result;
   }
 
   @VisibleForTesting
-  CxxPreprocessAndCompile requireCompileBuildRule(String name, CxxSource source) {
+  CxxPreprocessAndCompile requireCompileBuildRule(
+      String name,
+      CxxSource source,
+      boolean afterPreprocessing) {
 
     BuildTarget target = createCompileBuildTarget(name);
     Optional<CxxPreprocessAndCompile> existingRule = getResolver().getRuleOptionalWithType(
@@ -435,7 +452,7 @@ abstract class AbstractCxxSourceRuleFactory {
       return existingRule.get();
     }
 
-    return createCompileBuildRule(name, source);
+    return createCompileBuildRule(name, source, afterPreprocessing);
 
   }
 
@@ -579,7 +596,8 @@ abstract class AbstractCxxSourceRuleFactory {
         precompiledHeaderReference,
         getCxxPlatform().getCompilerDebugPathSanitizer(),
         getCxxPlatform().getAssemblerDebugPathSanitizer(),
-        strategy);
+        strategy,
+        getSandboxTree());
     getResolver().addToIndex(result);
     return result;
   }
@@ -723,6 +741,8 @@ abstract class AbstractCxxSourceRuleFactory {
               CxxSourceTypes.isPreprocessableType(source.getType()) ||
                   CxxSourceTypes.isCompilableType(source.getType()));
 
+          source = getSandboxedCxxSource(source);
+
           switch (strategy) {
 
             case PIPED:
@@ -734,7 +754,7 @@ abstract class AbstractCxxSourceRuleFactory {
               if (CxxSourceTypes.isPreprocessableType(source.getType())) {
                 rule = requirePreprocessAndCompileBuildRule(name, source, strategy);
               } else {
-                rule = requireCompileBuildRule(name, source);
+                rule = requireCompileBuildRule(name, source, false);
               }
 
               return rule;
@@ -753,7 +773,7 @@ abstract class AbstractCxxSourceRuleFactory {
               }
 
               // Now build the compile build rule.
-              CxxPreprocessAndCompile rule = requireCompileBuildRule(name, source);
+              CxxPreprocessAndCompile rule = requireCompileBuildRule(name, source, true);
               return rule;
             }
 
@@ -765,6 +785,25 @@ abstract class AbstractCxxSourceRuleFactory {
         .collect(MoreCollectors.toImmutableMap(
             Function.identity(),
             input -> new BuildTargetSourcePath(input.getBuildTarget())));
+  }
+
+  private CxxSource getSandboxedCxxSource(CxxSource source) {
+    if (getSandboxTree().isPresent()) {
+      SymlinkTree sandboxTree = getSandboxTree().get();
+      Path sourcePath = Paths.get(
+          getPathResolver().getSourcePathName(
+              getParams().getBuildTarget(),
+              source.getPath()));
+      Path sandboxPath = CxxDescriptionEnhancer.getLinkOutputPath(
+          sandboxTree.getBuildTarget(),
+          getParams().getProjectFilesystem());
+      BuildTargetSourcePath path =
+          new BuildTargetSourcePath(
+              sandboxTree.getBuildTarget(),
+              sandboxPath.resolve(sourcePath));
+      source = CxxSource.copyOf(source).withPath(path);
+    }
+    return source;
   }
 
   private static boolean shouldUsePrecompiledHeaders(
@@ -801,7 +840,8 @@ abstract class AbstractCxxSourceRuleFactory {
       Optional<SourcePath> prefixHeader,
       CxxPreprocessMode strategy,
       ImmutableMap<String, CxxSource> sources,
-      PicType pic) {
+      PicType pic,
+      Optional<SymlinkTree> sandboxTree) {
     CxxSourceRuleFactory factory = CxxSourceRuleFactory.of(
         params,
         resolver,
@@ -811,7 +851,8 @@ abstract class AbstractCxxSourceRuleFactory {
         cxxPreprocessorInput,
         compilerFlags,
         prefixHeader,
-        pic);
+        pic,
+        sandboxTree);
     return factory.requirePreprocessAndCompileRules(strategy, sources);
   }
 
@@ -889,7 +930,8 @@ abstract class AbstractCxxSourceRuleFactory {
               getFrameworks(),
               getSystemIncludeRoots()),
           CxxDescriptionEnhancer.frameworkPathToSearchPath(getCxxPlatform(), getPathResolver()),
-          getIncludes());
+          getIncludes(),
+          getSandboxTree());
       return new PreprocessorDelegateCacheValue(delegate);
     }
   }

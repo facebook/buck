@@ -172,7 +172,8 @@ public class CxxLuaExtensionDescription implements
             args.prefixHeader,
             cxxBuckConfig.getPreprocessMode(),
             srcs,
-            CxxSourceRuleFactory.PicType.PIC);
+            CxxSourceRuleFactory.PicType.PIC,
+            Optional.empty());
 
     ImmutableList.Builder<com.facebook.buck.rules.args.Arg> argsBuilder = ImmutableList.builder();
     argsBuilder.addAll(

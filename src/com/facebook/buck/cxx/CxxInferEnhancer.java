@@ -435,7 +435,8 @@ public final class CxxInferEnhancer {
             args.langCompilerFlags,
             cxxPlatform),
         args.prefixHeader,
-        CxxSourceRuleFactory.PicType.PDC);
+        CxxSourceRuleFactory.PicType.PDC,
+        Optional.empty());
     return factory.requireInferCaptureBuildRules(
         sources,
         inferBuckConfig,

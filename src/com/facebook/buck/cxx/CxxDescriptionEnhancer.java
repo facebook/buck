@@ -78,6 +78,7 @@ public class CxxDescriptionEnhancer {
 
   private static final Logger LOG = Logger.get(CxxDescriptionEnhancer.class);
 
+  public static final Flavor SANDBOX_TREE_FLAVOR = ImmutableFlavor.of("sandbox");
   public static final Flavor HEADER_SYMLINK_TREE_FLAVOR = ImmutableFlavor.of("private-headers");
   public static final Flavor EXPORTED_HEADER_SYMLINK_TREE_FLAVOR = ImmutableFlavor.of("headers");
   public static final Flavor STATIC_FLAVOR = ImmutableFlavor.of("static");
@@ -131,6 +132,33 @@ public class CxxDescriptionEnhancer {
         headers);
   }
 
+  public static SymlinkTree createSandboxSymlinkTree(
+      BuildRuleParams params,
+      SourcePathResolver pathResolver,
+      CxxPlatform cxxPlatform,
+      ImmutableMap<Path, SourcePath> map) {
+    BuildTarget sandboxSymlinkTreeTarget =
+        CxxDescriptionEnhancer.createSandboxSymlinkTreeTarget(
+            params.getBuildTarget(),
+            cxxPlatform.getFlavor());
+    Path sandboxSymlinkTreeRoot =
+        CxxDescriptionEnhancer.getSandboxSymlinkTreePath(
+            params.getProjectFilesystem(),
+            sandboxSymlinkTreeTarget);
+
+    BuildRuleParams paramsWithoutDeps =
+        params.copyWithChanges(
+            sandboxSymlinkTreeTarget,
+            Suppliers.ofInstance(ImmutableSortedSet.of()),
+            Suppliers.ofInstance(ImmutableSortedSet.of()));
+
+    return new SymlinkTree(
+        paramsWithoutDeps,
+        pathResolver,
+        sandboxSymlinkTreeRoot,
+        map);
+  }
+
   public static HeaderSymlinkTree requireHeaderSymlinkTree(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
@@ -165,6 +193,20 @@ public class CxxDescriptionEnhancer {
     return symlinkTree;
   }
 
+  private static SymlinkTree requireSandboxSymlinkTree(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+    BuildRuleParams untypedParams = CxxLibraryDescription.getUntypedParams(params);
+    BuildTarget headerSymlinkTreeTarget =
+        CxxDescriptionEnhancer.createSandboxSymlinkTreeTarget(
+            untypedParams.getBuildTarget(),
+            cxxPlatform.getFlavor());
+    BuildRule rule = ruleResolver.requireRule(headerSymlinkTreeTarget);
+    Preconditions.checkState(rule instanceof SymlinkTree);
+    return (SymlinkTree) rule;
+  }
+
   /**
    * @return the {@link BuildTarget} to use for the {@link BuildRule} generating the
    *    symlink tree of headers.
@@ -181,6 +223,17 @@ public class CxxDescriptionEnhancer {
         .build();
   }
 
+  @VisibleForTesting
+  public static BuildTarget createSandboxSymlinkTreeTarget(
+      BuildTarget target,
+      Flavor platform) {
+    return BuildTarget
+        .builder(target)
+        .addFlavors(platform)
+        .addFlavors(SANDBOX_TREE_FLAVOR)
+        .build();
+  }
+
   /**
    * @return the absolute {@link Path} to use for the symlink tree of headers.
    */
@@ -194,6 +247,13 @@ public class CxxDescriptionEnhancer {
             filesystem,
             createHeaderSymlinkTreeTarget(target, platform, headerVisibility),
             "%s"));
+  }
+
+  public static Path getSandboxSymlinkTreePath(
+      ProjectFilesystem filesystem,
+      BuildTarget target) {
+    return target.getCellPath().resolve(
+        getLinkOutputPath(target, filesystem));
   }
 
   public static Flavor getHeaderSymlinkTreeFlavor(HeaderVisibility headerVisibility) {
@@ -650,7 +710,8 @@ public class CxxDescriptionEnhancer {
             srcs,
             linkStyle == Linker.LinkableDepType.STATIC ?
                 CxxSourceRuleFactory.PicType.PDC :
-                CxxSourceRuleFactory.PicType.PIC);
+                CxxSourceRuleFactory.PicType.PIC,
+            Optional.empty());
 
     // Build up the linker flags, which support macro expansion.
     ImmutableList<String> resolvedLinkerFlags =
@@ -1058,6 +1119,15 @@ public class CxxDescriptionEnhancer {
                 exportedHeaders,
                 args.frameworks));
 
+    Optional<SymlinkTree> sandboxTree = Optional.empty();
+    if (args.getClass().equals(CxxLibraryDescription.Arg.class) && cxxBuckConfig.sandboxSources()) {
+      sandboxTree =
+          createSandboxTree(
+              params,
+              ruleResolver,
+              cxxPlatform
+          );
+    }
     // Create rule to build the object files.
     return CxxSourceRuleFactory.requirePreprocessAndCompileRules(
         params,
@@ -1078,7 +1148,15 @@ public class CxxDescriptionEnhancer {
             sourcePathResolver,
             cxxPlatform,
             args),
-        pic);
+        pic,
+        sandboxTree);
+  }
+
+  private static Optional<SymlinkTree> createSandboxTree(
+      BuildRuleParams params,
+      BuildRuleResolver ruleResolver,
+      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+    return Optional.of(requireSandboxSymlinkTree(params, ruleResolver, cxxPlatform));
   }
 
   /**

@@ -48,6 +48,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -120,11 +121,17 @@ public class MultiarchFileTest {
   @Test
   public void descriptionWithMultiplePlatformArgsShouldGenerateMultiarchFile()
       throws Exception {
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//foo:thing#iphoneos-i386,iphoneos-x86_64");
+    BuildTarget sandboxTarget = BuildTargetFactory.newInstance(
+        "//foo:thing#iphoneos-i386,iphoneos-x86_64,sandbox");
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(new AppleLibraryBuilder(sandboxTarget).build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRule multiarchRule = nodeBuilderFactory
-        .getNodeBuilder(BuildTargetFactory.newInstance("//foo:thing#iphoneos-i386,iphoneos-x86_64"))
+        .getNodeBuilder(target)
         .build(resolver, filesystem);
 
     assertThat(multiarchRule, instanceOf(MultiarchFile.class));

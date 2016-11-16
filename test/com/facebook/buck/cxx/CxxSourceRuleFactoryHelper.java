@@ -34,15 +34,27 @@ public class CxxSourceRuleFactoryHelper {
       Path cellRoot,
       BuildTarget target,
       CxxPlatform cxxPlatform) {
+    return of(
+        cellRoot,
+        target,
+        cxxPlatform,
+        CxxPlatformUtils.DEFAULT_CONFIG);
+  }
+
+  public static CxxSourceRuleFactory of(
+      Path cellRoot,
+      BuildTarget target,
+      CxxPlatform cxxPlatform,
+      CxxBuckConfig cxxBuckConfig) {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     return CxxSourceRuleFactory.builder()
         .setParams(new FakeBuildRuleParamsBuilder(target)
-                .setProjectFilesystem(new FakeProjectFilesystem(cellRoot))
-                .build())
+            .setProjectFilesystem(new FakeProjectFilesystem(cellRoot))
+            .build())
         .setResolver(resolver)
         .setPathResolver(new SourcePathResolver(resolver))
-        .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
+        .setCxxBuckConfig(cxxBuckConfig)
         .setCxxPlatform(cxxPlatform)
         .setPicType(CxxSourceRuleFactory.PicType.PDC)
         .build();
@@ -53,6 +65,20 @@ public class CxxSourceRuleFactoryHelper {
       BuildTarget target,
       CxxPlatform cxxPlatform,
       CxxSourceRuleFactory.PicType picType) {
+    return of(
+        cellRoot,
+        target,
+        cxxPlatform,
+        CxxPlatformUtils.DEFAULT_CONFIG,
+        picType);
+  }
+
+  public static CxxSourceRuleFactory of(
+      Path cellRoot,
+      BuildTarget target,
+      CxxPlatform cxxPlatform,
+      CxxBuckConfig cxxBuckConfig,
+      CxxSourceRuleFactory.PicType picType) {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     return CxxSourceRuleFactory.builder()
@@ -61,7 +87,7 @@ public class CxxSourceRuleFactoryHelper {
             .build())
         .setResolver(resolver)
         .setPathResolver(new SourcePathResolver(resolver))
-        .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
+        .setCxxBuckConfig(cxxBuckConfig)
         .setCxxPlatform(cxxPlatform)
         .setPicType(picType)
         .build();

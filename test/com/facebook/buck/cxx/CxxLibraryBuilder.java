@@ -45,6 +45,10 @@ public class CxxLibraryBuilder extends
         target);
   }
 
+  public CxxLibraryBuilder(BuildTarget target, CxxBuckConfig cxxBuckConfig) {
+    this(target, cxxBuckConfig, createDefaultPlatforms());
+  }
+
   public CxxLibraryBuilder(BuildTarget target) {
     this(target, createDefaultConfig(), createDefaultPlatforms());
   }

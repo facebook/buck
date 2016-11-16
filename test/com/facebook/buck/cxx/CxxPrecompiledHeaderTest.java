@@ -37,6 +37,7 @@ import com.google.common.collect.Iterables;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class CxxPrecompiledHeaderTest {
 
@@ -70,7 +71,8 @@ public class CxxPrecompiledHeaderTest {
             CxxDescriptionEnhancer.frameworkPathToSearchPath(
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 sourcePathResolver),
-            ImmutableList.of()),
+            ImmutableList.of(),
+            Optional.empty()),
         new CompilerDelegate(
             sourcePathResolver,
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,

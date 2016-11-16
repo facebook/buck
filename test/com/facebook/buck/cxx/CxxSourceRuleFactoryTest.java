@@ -229,7 +229,8 @@ public class CxxSourceRuleFactoryTest {
       CxxPreprocessAndCompile cxxCompile =
           cxxSourceRuleFactory.requireCompileBuildRule(
               nameCompile,
-              cxxSourceCompile);
+              cxxSourceCompile,
+              false);
       assertEquals(ImmutableSortedSet.<BuildRule>of(dep), cxxCompile.getDeps());
 
       String namePreprocessAndCompile = "foo/bar.cpp";
@@ -277,7 +278,7 @@ public class CxxSourceRuleFactoryTest {
       // Verify building a non-PIC compile rule does *not* have the "-fPIC" flag and has the
       // expected compile target.
       CxxPreprocessAndCompile noPicCompile =
-          cxxSourceRuleFactoryPDC.requireCompileBuildRule(name, cxxSource);
+          cxxSourceRuleFactoryPDC.requireCompileBuildRule(name, cxxSource, false);
       assertFalse(noPicCompile.makeMainStep(scratchDir, false).getCommand().contains("-fPIC"));
       assertEquals(
           cxxSourceRuleFactoryPDC.createCompileBuildTarget(name),
@@ -286,7 +287,7 @@ public class CxxSourceRuleFactoryTest {
       // Verify building a PIC compile rule *does* have the "-fPIC" flag and has the
       // expected compile target.
       CxxPreprocessAndCompile picCompile =
-          cxxSourceRuleFactoryPIC.requireCompileBuildRule(name, cxxSource);
+          cxxSourceRuleFactoryPIC.requireCompileBuildRule(name, cxxSource, false);
       assertTrue(picCompile.makeMainStep(scratchDir, false).getCommand().contains("-fPIC"));
       assertEquals(
           cxxSourceRuleFactoryPIC.createCompileBuildTarget(name),
@@ -724,7 +725,7 @@ public class CxxSourceRuleFactoryTest {
             source,
             CxxPreprocessMode.SEPARATE);
       } else {
-        rule = cxxSourceRuleFactory.requireCompileBuildRule(sourceName, source);
+        rule = cxxSourceRuleFactory.requireCompileBuildRule(sourceName, source, false);
       }
       ImmutableList<String> command = rule.makeMainStep(scratchDir, false).getCommand();
       assertContains(command, expectedCompilerFlags);
@@ -776,7 +777,7 @@ public class CxxSourceRuleFactoryTest {
           input,
           ImmutableList.of());
       CxxPreprocessAndCompile cxxCompile =
-          cxxSourceRuleFactory.createCompileBuildRule(name, cxxSource);
+          cxxSourceRuleFactory.createCompileBuildRule(name, cxxSource, false);
       assertThat(
           cxxCompile.makeMainStep(scratchDir, false).getCommand(),
           hasItems("-x", expected));

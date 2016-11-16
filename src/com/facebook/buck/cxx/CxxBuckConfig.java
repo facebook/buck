@@ -281,6 +281,10 @@ public class CxxBuckConfig {
     return delegate.getBooleanValue(cxxSection, "pch_enabled", true);
   }
 
+  public boolean sandboxSources() {
+    return delegate.getBooleanValue(cxxSection, "sandbox_sources", false);
+  }
+
   public Archive.Contents getArchiveContents() {
     return delegate.getEnum(
         cxxSection,

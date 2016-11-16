@@ -21,16 +21,17 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.cxx.CxxLink;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -40,18 +41,21 @@ import org.junit.Test;
 
 public class AppleLibraryDescriptionTest {
 
-
   @Test
   public void linkerFlagsLocationMacro() throws Exception {
     assumeThat(Platform.detect(), is(Platform.MACOS));
+    BuildTarget sandboxTarget = BuildTargetFactory.newInstance("//:rule#sandbox,default");
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(new AppleLibraryBuilder(sandboxTarget).build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule#shared,default");
     Genrule dep =
         (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
             .build(resolver);
     AppleLibraryBuilder builder =
-        new AppleLibraryBuilder(BuildTargetFactory.newInstance("//:rule#shared,default"))
+        new AppleLibraryBuilder(target)
             .setLinkerFlags(ImmutableList.of("--linker-script=$(location //:dep)"))
             .setSrcs(
                 ImmutableSortedSet.of(

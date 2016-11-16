@@ -21,19 +21,19 @@ cxx_library(
   exported_headers = [
     'echo.h',
   ],
-  exported_deps = [
-    ':has-srcs',
-  ],
 )
 
 cxx_library(
   name = 'has-srcs',
-  srcs = [ 'echo.cpp' ],
+  exported_deps = [
+    ':header',
+  ],
 )
 
 cxx_binary(
   name = 'transitive',
+  srcs = [ 'echo.cpp' ],
   deps = [
-    ':header',
+    ':has-srcs',
   ],
 )

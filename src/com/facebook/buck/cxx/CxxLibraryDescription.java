@@ -62,7 +62,9 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -85,6 +87,7 @@ public class CxxLibraryDescription implements
   public enum Type implements FlavorConvertible {
     HEADERS(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
     EXPORTED_HEADERS(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
+    SANDBOX_TREE(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR),
     SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR),
     STATIC_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR),
     STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR),
@@ -657,6 +660,12 @@ public class CxxLibraryDescription implements
               platform.get(),
               args,
               CxxSourceRuleFactory.PicType.PIC);
+        case SANDBOX_TREE:
+          return createSandboxTreeBuildRule(
+              resolver,
+              args,
+              platform,
+              untypedParams);
       }
       throw new RuntimeException("unhandled library build type");
     }
@@ -743,7 +752,7 @@ public class CxxLibraryDescription implements
         args.canBeAsset.orElse(false));
   }
 
-  private static Optional<Map.Entry<Flavor, Type>> getLibType(BuildTarget buildTarget) {
+  public static Optional<Map.Entry<Flavor, Type>> getLibType(BuildTarget buildTarget) {
     return LIBRARY_TYPE.getFlavorAndValue(buildTarget);
   }
 
@@ -762,6 +771,51 @@ public class CxxLibraryDescription implements
         target,
         params.getDeclaredDeps(),
         params.getExtraDeps());
+  }
+
+  private static <A extends Arg> BuildRule createSandboxTreeBuildRule(
+      BuildRuleResolver resolver,
+      A args,
+      Optional<CxxPlatform> platform,
+      BuildRuleParams typeParams) {
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    ImmutableCollection<SourcePath> privateHeaders = CxxDescriptionEnhancer.parseHeaders(
+        typeParams.getBuildTarget(),
+        sourcePathResolver,
+        platform,
+        args).values();
+    ImmutableCollection<SourcePath> publicHeaders = CxxDescriptionEnhancer.parseExportedHeaders(
+        typeParams.getBuildTarget(),
+        sourcePathResolver,
+        platform,
+        args).values();
+    ImmutableCollection<CxxSource> sources = CxxDescriptionEnhancer.parseCxxSources(
+        typeParams.getBuildTarget(),
+        sourcePathResolver,
+        platform.get(),
+        args).values();
+    HashMap<Path, SourcePath> links = new HashMap<>();
+    for (SourcePath headerPath : privateHeaders) {
+      links.put(
+          Paths.get(sourcePathResolver.getSourcePathName(typeParams.getBuildTarget(), headerPath)),
+          headerPath);
+    }
+    for (SourcePath headerPath : publicHeaders) {
+      links.put(
+          Paths.get(sourcePathResolver.getSourcePathName(typeParams.getBuildTarget(), headerPath)),
+          headerPath);
+    }
+    for (CxxSource source : sources) {
+      SourcePath sourcePath = source.getPath();
+      links.put(
+          Paths.get(sourcePathResolver.getSourcePathName(typeParams.getBuildTarget(), sourcePath)),
+          sourcePath);
+    }
+    return CxxDescriptionEnhancer.createSandboxSymlinkTree(
+        typeParams,
+        sourcePathResolver,
+        platform.get(),
+        ImmutableMap.copyOf(links));
   }
 
   @Override

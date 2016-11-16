@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 
 import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -53,16 +54,22 @@ import java.util.Optional;
 @RunWith(Parameterized.class)
 public class CxxPreprocessAndCompileIntegrationTest {
 
-  @Parameterized.Parameters(name = "{0}")
+  @Parameterized.Parameters(name = "{0} {1}")
   public static Collection<Object[]> data() {
     return ImmutableList.of(
-        new Object[] {CxxPreprocessMode.COMBINED},
-        new Object[] {CxxPreprocessMode.SEPARATE},
-        new Object[] {CxxPreprocessMode.PIPED});
+        new Object[] {CxxPreprocessMode.COMBINED, true},
+        new Object[] {CxxPreprocessMode.SEPARATE, true},
+        new Object[] {CxxPreprocessMode.PIPED, true},
+        new Object[] {CxxPreprocessMode.COMBINED, false},
+        new Object[] {CxxPreprocessMode.SEPARATE, false},
+        new Object[] {CxxPreprocessMode.PIPED, false});
   }
 
-  @Parameterized.Parameter
+  @Parameterized.Parameter(0)
   public CxxPreprocessMode mode;
+
+  @Parameterized.Parameter(1)
+  public boolean sandboxSource;
 
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
@@ -76,6 +83,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
     workspace.writeContentsToPath(
         "[cxx]\n" +
         "  preprocess_mode = " + mode.toString().toLowerCase() + "\n" +
+        "  sandbox_sources = " + sandboxSource + "\n" +
         "  asflags = -g\n" +
         "  cppflags = -g\n" +
         "  cflags = -g\n" +
@@ -103,7 +111,9 @@ public class CxxPreprocessAndCompileIntegrationTest {
   public void sanitizeWorkingDirectoryWhenBuildingAssembly() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//:simple_assembly#default,static");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
+    ProjectWorkspace.ProcessResult processResult =
+        workspace.runBuckBuild(target.getFullyQualifiedName());
+    processResult.assertSuccess();
     Path lib =
         workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s/libsimple_assembly.a"));
     String contents =
@@ -620,8 +630,12 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void parentDirectoryReferenceInSource() throws IOException {
+    Assume.assumeFalse("parent directories do not work in sandbox mode", sandboxSource);
     workspace.writeContentsToPath(
-        "\n[project]\n  check_package_boundary = false\n",
+        "[cxx]\n" +
+         "  preprocess_mode = " + mode.toString().toLowerCase() + "\n" +
+         "  sandbox_sources = " + sandboxSource + "\n" +
+        "[project]\n  check_package_boundary = false\n",
         ".buckconfig");
     workspace.runBuckBuild("//parent_dir_ref:simple#default,static").assertSuccess();
   }

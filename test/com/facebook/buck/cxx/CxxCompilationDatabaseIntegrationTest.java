@@ -43,17 +43,32 @@ import com.google.common.collect.Iterables;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+@RunWith(Parameterized.class)
 public class
 CxxCompilationDatabaseIntegrationTest {
+
+  @Parameterized.Parameters(name = "sandbox_sources={0}")
+  public static Collection<Object[]> data() {
+    return ImmutableList.of(
+        new Object[] {false},
+        new Object[] {true}
+    );
+  }
+
+  @Parameterized.Parameter(0)
+  public boolean sandboxSources;
 
   private static final String COMPILER_PATH =
       Platform.detect() == Platform.MACOS ? "/usr/bin/clang++" : "/usr/bin/g++";
@@ -79,7 +94,9 @@ CxxCompilationDatabaseIntegrationTest {
         this, "compilation_database", tmp);
     workspace.setUp();
     // cxx_test requires gtest_dep to be set
-    workspace.writeContentsToPath("[cxx]\ngtest_dep = //:fake-gtest", ".buckconfig");
+    workspace.writeContentsToPath(
+        "[cxx]\ngtest_dep = //:fake-gtest\nsandbox_sources=" + sandboxSources,
+        ".buckconfig");
   }
 
   @Test
@@ -183,9 +200,11 @@ CxxCompilationDatabaseIntegrationTest {
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
         CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
     assertEquals(1, fileToEntry.size());
+    String path =
+        sandboxSources ? "buck-out/gen/library_with_header#default,sandbox/bar.cpp" : "bar.cpp";
     assertHasEntry(
         fileToEntry,
-        "bar.cpp",
+        path,
         new ImmutableList.Builder<String>()
             .add(COMPILER_PATH)
             .add("-fPIC")
@@ -209,7 +228,7 @@ CxxCompilationDatabaseIntegrationTest {
                             ImmutableFlavor.of("compile-pic-" + sanitize("bar.cpp.o"))),
                         "%s/bar.cpp.o")
                     .toString())
-            .add(rootPath.resolve(Paths.get("bar.cpp")).toRealPath().toString())
+            .add(rootPath.resolve(Paths.get(path)).toString())
             .build());
   }
 

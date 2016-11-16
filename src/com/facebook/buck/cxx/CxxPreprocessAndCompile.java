@@ -26,6 +26,7 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -35,7 +36,9 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.io.IOException;
@@ -63,6 +66,7 @@ public class CxxPreprocessAndCompile
   private final CxxSource.Type inputType;
   private final DebugPathSanitizer compilerSanitizer;
   private final DebugPathSanitizer assemblerSanitizer;
+  private final Optional<SymlinkTree> sandboxTree;
 
   @VisibleForTesting
   public CxxPreprocessAndCompile(
@@ -76,8 +80,10 @@ public class CxxPreprocessAndCompile
       CxxSource.Type inputType,
       Optional<PrecompiledHeaderReference> precompiledHeader,
       DebugPathSanitizer compilerSanitizer,
-      DebugPathSanitizer assemblerSanitizer) {
+      DebugPathSanitizer assemblerSanitizer,
+      Optional<SymlinkTree> sandboxTree) {
     super(params, resolver);
+    this.sandboxTree = sandboxTree;
     Preconditions.checkState(operation.isPreprocess() == preprocessDelegate.isPresent());
     if (precompiledHeader.isPresent()) {
       Preconditions.checkState(
@@ -106,7 +112,8 @@ public class CxxPreprocessAndCompile
       SourcePath input,
       CxxSource.Type inputType,
       DebugPathSanitizer compilerSanitizer,
-      DebugPathSanitizer assemblerSanitizer) {
+      DebugPathSanitizer assemblerSanitizer,
+      Optional<SymlinkTree> sandboxTree) {
     return new CxxPreprocessAndCompile(
         params,
         resolver,
@@ -118,7 +125,8 @@ public class CxxPreprocessAndCompile
         inputType,
         Optional.empty(),
         compilerSanitizer,
-        assemblerSanitizer);
+        assemblerSanitizer,
+        sandboxTree);
   }
 
   /**
@@ -133,7 +141,8 @@ public class CxxPreprocessAndCompile
       SourcePath input,
       CxxSource.Type inputType,
       DebugPathSanitizer compilerSanitizer,
-      DebugPathSanitizer assemblerSanitizer) {
+      DebugPathSanitizer assemblerSanitizer,
+      Optional<SymlinkTree> sandboxTree) {
     return new CxxPreprocessAndCompile(
         params,
         resolver,
@@ -145,7 +154,8 @@ public class CxxPreprocessAndCompile
         inputType,
         Optional.empty(),
         compilerSanitizer,
-        assemblerSanitizer);
+        assemblerSanitizer,
+        sandboxTree);
   }
 
   /**
@@ -162,7 +172,8 @@ public class CxxPreprocessAndCompile
       Optional<PrecompiledHeaderReference> precompiledHeader,
       DebugPathSanitizer compilerSanitizer,
       DebugPathSanitizer assemblerSanitizer,
-      CxxPreprocessMode strategy) {
+      CxxPreprocessMode strategy,
+      Optional<SymlinkTree> sandboxTree) {
     return new CxxPreprocessAndCompile(
         params,
         resolver,
@@ -176,7 +187,8 @@ public class CxxPreprocessAndCompile
         inputType,
         precompiledHeader,
         compilerSanitizer,
-        assemblerSanitizer);
+        assemblerSanitizer,
+        sandboxTree);
   }
 
   @Override
@@ -185,6 +197,13 @@ public class CxxPreprocessAndCompile
     // the rule key, as changing this changes the generated object file.
     if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO) {
       sink.setReflectively("compilationDirectory", compilerSanitizer.getCompilationDirectory());
+    }
+    if (sandboxTree.isPresent()) {
+      ImmutableMap<Path, SourcePath> links = sandboxTree.get().getLinks();
+      for (Path path : ImmutableSortedSet.copyOf(links.keySet())) {
+        SourcePath source = links.get(path);
+        sink.setReflectively("sandbox(" + path.toString() + ")", source);
+      }
     }
   }
 

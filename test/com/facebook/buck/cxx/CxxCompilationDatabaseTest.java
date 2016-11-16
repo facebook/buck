@@ -120,7 +120,8 @@ public class CxxCompilationDatabaseTest {
                         throw new UnsupportedOperationException("should not be called");
                       }
                     },
-                    ImmutableList.of()),
+                    ImmutableList.of(),
+                    Optional.empty()),
                 new CompilerDelegate(
                     testSourcePathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -130,7 +131,8 @@ public class CxxCompilationDatabaseTest {
                 new FakeSourcePath(filesystem, "test.cpp"),
                 CxxSource.Type.CXX,
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER);
+                CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
+                Optional.empty());
         rules.add(preprocessRule);
         compileBuildRuleParams = new FakeBuildRuleParamsBuilder(compileTarget)
             .setProjectFilesystem(filesystem)
@@ -149,7 +151,8 @@ public class CxxCompilationDatabaseTest {
                 new FakeSourcePath(filesystem, "test.ii"),
                 CxxSource.Type.CXX_CPP_OUTPUT,
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER));
+                CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
+                Optional.empty()));
         break;
       case COMBINED:
       case PIPED:
@@ -178,7 +181,8 @@ public class CxxCompilationDatabaseTest {
                         throw new UnsupportedOperationException("should not be called");
                       }
                     },
-                    ImmutableList.of()),
+                    ImmutableList.of(),
+                    Optional.empty()),
                 new CompilerDelegate(
                     testSourcePathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -190,7 +194,8 @@ public class CxxCompilationDatabaseTest {
                 Optional.empty(),
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
-                strategy));
+                strategy,
+                Optional.empty()));
         break;
       default:
         throw new RuntimeException("Invalid strategy");

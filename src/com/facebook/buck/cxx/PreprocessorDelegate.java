@@ -18,10 +18,12 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
@@ -63,6 +65,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   private final Path workingDir;
   private final SourcePathResolver resolver;
   private final HeaderVerification headerVerification;
+  private final Optional<SymlinkTree> sandbox;
 
   private final Function<Path, Path> minLengthPathRepresentation =
       new Function<Path, Path>() {
@@ -91,6 +94,12 @@ class PreprocessorDelegate implements RuleKeyAppendable {
               for (CxxHeaders include : includes) {
                 include.addToHeaderPathNormalizer(builder);
               }
+              if (sandbox.isPresent()) {
+                BuildTargetSourcePath root = new BuildTargetSourcePath(
+                    sandbox.get().getBuildTarget(),
+                    sandbox.get().getRoot());
+                builder.addSymlinkTree(root, sandbox.get().getLinks());
+              }
               return builder.build();
             }
           });
@@ -104,7 +113,8 @@ class PreprocessorDelegate implements RuleKeyAppendable {
       Preprocessor preprocessor,
       PreprocessorFlags preprocessorFlags,
       RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction,
-      List<CxxHeaders> includes) {
+      List<CxxHeaders> includes,
+      Optional<SymlinkTree> sandbox) {
     this.preprocessor = preprocessor;
     this.includes = ImmutableList.copyOf(includes);
     this.preprocessorFlags = preprocessorFlags;
@@ -113,6 +123,7 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     this.workingDir = workingDir;
     this.resolver = resolver;
     this.frameworkPathSearchPathFunction = frameworkPathSearchPathFunction;
+    this.sandbox = sandbox;
   }
 
   public Preprocessor getPreprocessor() {

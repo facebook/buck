@@ -50,7 +50,7 @@ cxx_library(
 
 cxx_library(
   name = 'bar',
-  headers = [
+  exported_headers = [
     'bar.h',
   ],
   srcs = [
@@ -63,7 +63,7 @@ cxx_library(
 
 cxx_library(
   name = 'func',
-  headers = [
+  exported_headers = [
     'func.h',
   ],
   srcs = [

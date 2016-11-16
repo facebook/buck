@@ -95,7 +95,8 @@ public class AppleTestDescription implements
   private static final Set<Flavor> AUXILIARY_LIBRARY_FLAVORS = ImmutableSet.of(
       CxxCompilationDatabase.COMPILATION_DATABASE,
       CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
-      CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR);
+      CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
+      CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR);
 
   private final AppleConfig appleConfig;
   private final AppleLibraryDescription appleLibraryDescription;

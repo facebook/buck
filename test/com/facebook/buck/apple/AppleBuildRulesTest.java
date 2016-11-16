@@ -59,11 +59,16 @@ public class AppleBuildRulesTest {
 
   @Test
   public void testAppleTestIsXcodeTargetTestBuildRuleType() throws Exception {
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386");
+    BuildTarget sandboxTarget =
+        BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386,sandbox");
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-
+        new BuildRuleResolver(
+            TargetGraphFactory.newInstance(new AppleTestBuilder(sandboxTarget).build()),
+            new DefaultTargetNodeToBuildRuleTransformer());
     AppleTestBuilder appleTestBuilder = new AppleTestBuilder(
-        BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386"))
+        target)
         .setContacts(ImmutableSortedSet.of())
         .setLabels(ImmutableSortedSet.of())
         .setDeps(ImmutableSortedSet.of());

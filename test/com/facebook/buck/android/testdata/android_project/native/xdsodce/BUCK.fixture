@@ -1,5 +1,6 @@
 cxx_library(
   name = 'top',
+  header_namespace = '',
   headers = [
     'top.h',
   ],
@@ -17,7 +18,8 @@ cxx_library(
 
 cxx_library(
   name = 'mid',
-  headers = [
+  header_namespace = '',
+  exported_headers = [
     'mid.h',
   ],
   srcs = [
@@ -30,7 +32,8 @@ cxx_library(
 
 cxx_library(
   name = 'bot',
-  headers = [
+  header_namespace = '',
+  exported_headers = [
     'bot.h',
   ],
   srcs = [
