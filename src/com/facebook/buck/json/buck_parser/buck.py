@@ -463,7 +463,7 @@ GENDEPS_SIGNATURE = re.compile(r'^#@# GENERATED FILE: DO NOT MODIFY ([a-f0-9]{40
 class BuildFileProcessor(object):
     """Handles the processing of a single build file.
 
-    :type _build_env_stack: list[AbstractContext]
+    :type _current_build_env: AbstractContext | None
     """
 
     def __init__(self, project_root, cell_roots, build_file_name,
@@ -486,7 +486,7 @@ class BuildFileProcessor(object):
         if ignore_paths is None:
             ignore_paths = []
         self._cache = {}
-        self._build_env_stack = []
+        self._current_build_env = None
         self._sync_cookie_state = SyncCookieState()
 
         self._project_root = project_root
@@ -643,7 +643,7 @@ class BuildFileProcessor(object):
         """
 
         # Grab the current build context from the top of the stack.
-        build_env = self._build_env_stack[-1]
+        build_env = self._current_build_env
 
         # Lookup the value and record it in this build file's context.
         value = self._configs.get((section, field))
@@ -656,14 +656,14 @@ class BuildFileProcessor(object):
         return value
 
     def _glob(self, includes, excludes=None, include_dotfiles=False, search_base=None):
-        build_env = self._build_env_stack[-1]
+        build_env = self._current_build_env
         return glob(
             includes, excludes=excludes, include_dotfiles=include_dotfiles,
             search_base=search_base, build_env=build_env,
             allow_safe_import=self._allow_unsafe_import)
 
     def _subdir_glob(self, glob_specs, excludes=None, prefix=None, search_base=None):
-        build_env = self._build_env_stack[-1]
+        build_env = self._current_build_env
         return subdir_glob(
             glob_specs, excludes=excludes, prefix=prefix, search_base=search_base,
             build_env=build_env, allow_safe_import=self._allow_unsafe_import)
@@ -677,7 +677,7 @@ class BuildFileProcessor(object):
         """
 
         # Grab the current build context from the top of the stack.
-        build_env = self._build_env_stack[-1]
+        build_env = self._current_build_env
 
         # Lookup the value and record it in this build file's context.
         build_env.used_env_vars[name] = value
@@ -723,7 +723,7 @@ class BuildFileProcessor(object):
             implicit_includes = []
 
         # Grab the current build context from the top of the stack.
-        build_env = self._build_env_stack[-1]
+        build_env = self._current_build_env
 
         # Resolve the named include to its path and process it to get its
         # build context and module.
@@ -752,34 +752,29 @@ class BuildFileProcessor(object):
         """
 
         # Grab the current build context from the top of the stack.
-        build_env = self._build_env_stack[-1]
+        build_env = self._current_build_env
 
         path = self._get_include_path(name)
         build_env.includes.add(path)
 
-    def _push_build_env(self, build_env):
-        """
-        Set the given build context as the current context.
-        """
-
-        self._build_env_stack.append(build_env)
-        self._update_functions(build_env)
-
-    def _pop_build_env(self):
-        """
-        Restore the previous build context as the current context.
-        """
-
-        self._build_env_stack.pop()
-        if self._build_env_stack:
-            self._update_functions(self._build_env_stack[-1])
+    @contextmanager
+    def _set_build_env(self, build_env):
+        """Set the given build context as the current context, unsetting it upon exit."""
+        old_env = self._current_build_env
+        self._current_build_env = build_env
+        self._update_functions(self._current_build_env)
+        try:
+            yield
+        finally:
+            self._current_build_env = old_env
+            self._update_functions(self._current_build_env)
 
     def _emit_warning(self, message, source):
         """
         Add a warning to the current build_env's diagnostics.
         """
-        if self._build_env_stack:
-            self._build_env_stack[-1].diagnostics.append(
+        if self._current_build_env is not None:
+            self._current_build_env.diagnostics.append(
                 Diagnostic(
                     message=message,
                     level='warning',
@@ -949,7 +944,7 @@ class BuildFileProcessor(object):
             with self._wrap_file_access(wrap=False):
                 if self._called_from_project_file():
                     path = os.path.abspath(filename)
-                    if path not in self._build_env_stack[-1].includes:
+                    if path not in self._current_build_env.includes:
                         dep_path = '//' + os.path.relpath(path, self._project_root)
                         warning_message = (
                             "Access to a non-tracked file detected! {0} is not a ".format(path) +
@@ -1029,61 +1024,57 @@ class BuildFileProcessor(object):
             return cached
 
         # Install the build context for this input as the current context.
-        self._push_build_env(build_env)
+        with self._set_build_env(build_env):
+            # The globals dict that this file will be executed under.
+            default_globals = {}
 
-        # The globals dict that this file will be executed under.
-        default_globals = {}
+            # Install the 'include_defs' function into our global object.
+            default_globals['include_defs'] = functools.partial(
+                self._include_defs,
+                implicit_includes=implicit_includes)
 
-        # Install the 'include_defs' function into our global object.
-        default_globals['include_defs'] = functools.partial(
-            self._include_defs,
-            implicit_includes=implicit_includes)
+            # Install the 'add_dependency' function into our global object.
+            default_globals['add_build_file_dep'] = self._add_build_file_dep
 
-        # Install the 'add_dependency' function into our global object.
-        default_globals['add_build_file_dep'] = self._add_build_file_dep
+            # Install the 'read_config' function into our global object.
+            default_globals['read_config'] = self._read_config
 
-        # Install the 'read_config' function into our global object.
-        default_globals['read_config'] = self._read_config
+            # Install the 'allow_unsafe_import' function into our global object.
+            default_globals['allow_unsafe_import'] = self._allow_unsafe_import
 
-        # Install the 'allow_unsafe_import' function into our global object.
-        default_globals['allow_unsafe_import'] = self._allow_unsafe_import
+            # Install the 'glob' and 'glob_subdir' functions into our global object.
+            default_globals['glob'] = self._glob
+            default_globals['subdir_glob'] = self._subdir_glob
 
-        # Install the 'glob' and 'glob_subdir' functions into our global object.
-        default_globals['glob'] = self._glob
-        default_globals['subdir_glob'] = self._subdir_glob
+            # If any implicit includes were specified, process them first.
+            for include in implicit_includes:
+                include_path = self._get_include_path(include)
+                inner_env, mod = self._process_include(include_path)
+                self._merge_globals(mod, default_globals)
+                build_env.includes.add(include_path)
+                build_env.merge(inner_env)
 
-        # If any implicit includes were specified, process them first.
-        for include in implicit_includes:
-            include_path = self._get_include_path(include)
-            inner_env, mod = self._process_include(include_path)
-            self._merge_globals(mod, default_globals)
-            build_env.includes.add(include_path)
-            build_env.merge(inner_env)
+            # Build a new module for the given file, using the default globals
+            # created above.
+            module = imp.new_module(path)
+            module.__file__ = path
+            module.__dict__.update(default_globals)
 
-        # Build a new module for the given file, using the default globals
-        # created above.
-        module = imp.new_module(path)
-        module.__file__ = path
-        module.__dict__.update(default_globals)
+            # We don't open this file as binary, as we assume it's a textual source
+            # file.
+            with self._wrap_file_access(wrap=False):
+                with open(path, 'r') as f:
+                    contents = f.read()
 
-        # We don't open this file as binary, as we assume it's a textual source
-        # file.
-        with self._wrap_file_access(wrap=False):
-            with open(path, 'r') as f:
-                contents = f.read()
+            # Enable absolute imports.  This prevents the compiler from trying to
+            # do a relative import first, and warning that this module doesn't
+            # exist in sys.modules.
+            future_features = __future__.absolute_import.compiler_flag
+            code = compile(contents, path, 'exec', future_features, 1)
 
-        # Enable absolute imports.  This prevents the compiler from trying to
-        # do a relative import first, and warning that this module doesn't
-        # exist in sys.modules.
-        future_features = __future__.absolute_import.compiler_flag
-        code = compile(contents, path, 'exec', future_features, 1)
-
-        # Execute code with build file sandboxing
-        with self._build_file_sandboxing():
-            exec(code, module.__dict__)
-
-        # Restore the previous build context.
-        self._pop_build_env()
+            # Execute code with build file sandboxing
+            with self._build_file_sandboxing():
+                exec(code, module.__dict__)
 
         self._cache[path] = build_env, module
         return build_env, module
