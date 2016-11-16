@@ -24,6 +24,7 @@ import com.intellij.execution.configurations.LocatableConfigurationBase;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
@@ -38,7 +39,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 
-public class TestConfiguration extends LocatableConfigurationBase {
+public class TestConfiguration extends LocatableConfigurationBase
+    implements RunConfigurationWithSuppressedDefaultRunAction {
 
   public final Data data = new Data();
 

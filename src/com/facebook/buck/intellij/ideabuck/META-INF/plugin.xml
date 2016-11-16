@@ -147,6 +147,8 @@
         serviceImplementation="com.facebook.buck.intellij.ideabuck.ui.BuckUIManager"/>
     <configurationType
             implementation="com.facebook.buck.intellij.ideabuck.configurations.TestConfigurationType"/>
+    <programRunner
+            implementation="com.facebook.buck.intellij.ideabuck.configurations.TestProgramRunner"/>
   </extensions>
 
   <actions>

@@ -37,6 +37,14 @@ public class BuckBuildCommandHandler extends BuckCommandHandler {
     super(project, VfsUtil.virtualToIoFile(root), command);
   }
 
+  public BuckBuildCommandHandler(
+      final Project project,
+      final VirtualFile root,
+      final BuckCommand command,
+      final boolean doStartNotify) {
+    super(project, VfsUtil.virtualToIoFile(root), command, doStartNotify);
+  }
+
   @Override
   protected boolean beforeCommand() {
     BuckBuildManager buildManager = BuckBuildManager.getInstance(project());
