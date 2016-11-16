@@ -18,6 +18,8 @@ package com.facebook.buck.android;
 
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.MergingReport;
+import com.android.utils.ILogger;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -82,7 +84,7 @@ public class GenerateManifestStep implements Step {
 
     File skeletonManifestFile =
         filesystem.getPathForRelativeExistingPath(skeletonManifestPath).toAbsolutePath().toFile();
-    BuckEventAndroidLogger logger = new BuckEventAndroidLogger(context.getBuckEventBus());
+    BuckEventAndroidLogger logger = new ManifestMergerLogger(context.getBuckEventBus());
 
     MergingReport mergingReport =
         mergeManifests(skeletonManifestFile, libraryManifestFiles, logger);
@@ -150,5 +152,21 @@ public class GenerateManifestStep implements Step {
         skeletonManifestPath,
         libraryManifestPaths,
         outManifestPath);
+  }
+
+  private static class ManifestMergerLogger extends BuckEventAndroidLogger implements ILogger {
+    public ManifestMergerLogger(BuckEventBus eventBus) {
+      super(eventBus);
+    }
+
+    @Override
+    public void info(String msgFormat, Object... args) {
+      // suppress
+    }
+
+    @Override
+    public void verbose(String msgFormat, Object... args) {
+      // suppress
+    }
   }
 }
