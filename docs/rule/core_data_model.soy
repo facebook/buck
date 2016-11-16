@@ -1,0 +1,52 @@
+{namespace buck.core_data_model}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'core_data_model()' /}
+    {param prettify: true /}
+    {param description}
+      A rule that is used to represent Core Data models (Apple platforms only).
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+An <code>core_data_model()</code> rule contains models for Apple's Core Data framework. This rule does not have any output on its own and can be built only as a dependency
+(either direct or transitive) of an <a href="{ROOT}rule/apple_bundle.html">
+<code>apple_bundle()</code> rule</a>, in which case all <code>core_data_model()</code> rules
+that the bundle rule depends on are merged and placed into the final output bundle together.
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'path' /}
+  {param desc}
+  Relative path of the .xcdatamodeld package directory.
+  {/param}
+{/call}
+
+{/param} // args
+
+{param examples}
+{literal}<pre class="prettyprint lang-py">
+core_data_model(
+  name = 'MyCoreDataModel',
+  path = 'MyCoreDataModel.xcdatamodeld',
+)
+</pre>{/literal}
+{/param} // examples
+{/call} // buck.rule
+
+    {/param}
+  {/call}
+{/template}

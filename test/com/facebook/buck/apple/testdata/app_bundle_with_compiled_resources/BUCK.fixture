@@ -1,19 +1,30 @@
 apple_resource(
   name = 'DemoAppResources',
-  files = glob(['*.xib','*.storyboard']) + ['Model.xcdatamodeld'],
+  files = glob(['*.xib','*.storyboard']),
   dirs = [],
+)
+
+core_data_model(
+  name = 'DemoAppCoreDataModel',
+  path = 'Model.xcdatamodeld',
 )
 
 apple_bundle(
   name = 'DemoApp',
   binary = ':DemoAppBinary',
+  deps = [':DemoAppCoreDataModel'],
   extension = 'app',
   info_plist = 'Info.plist',
 )
 
+core_data_model(
+  name = 'DemoAppCoreDataModel2',
+  path = 'Model2.xcdatamodeld',
+)
+
 apple_binary(
   name = 'DemoAppBinary',
-  deps = [':DemoAppResources'],
+  deps = [':DemoAppResources', ':DemoAppCoreDataModel2'],
   preprocessor_flags = ['-fobjc-arc'],
   headers = [],
   srcs = ['AppDelegate.m'],

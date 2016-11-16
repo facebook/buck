@@ -1531,11 +1531,7 @@ public class ProjectGenerator {
       PBXGroup targetGroup) throws IOException {
     addCoreDataModelBuildPhase(
         targetGroup,
-        targetNode.getDeps().stream()
-            .map(targetGraph::get)
-            .filter(input -> CoreDataModelDescription.TYPE.equals(input.getType()))
-            .map(input -> (CoreDataModelDescription.Arg) input.getConstructorArg())
-            .collect(MoreCollectors.toImmutableSet()));
+        AppleBuildRules.collectTransitiveCoreDataModels(targetGraph, ImmutableList.of(targetNode)));
   }
 
   private Function<String, Path> getConfigurationNameToXcconfigPath(final BuildTarget buildTarget) {

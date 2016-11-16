@@ -794,6 +794,7 @@ public class AppleBundleIntegrationTest {
         .resolve(target.getShortName() + ".app");
     assertTrue(Files.exists(workspace.getPath(appPath.resolve("AppViewController.nib"))));
     assertTrue(Files.exists(workspace.getPath(appPath.resolve("Model.momd"))));
+    assertTrue(Files.exists(workspace.getPath(appPath.resolve("Model2.momd"))));
   }
 
   @Test

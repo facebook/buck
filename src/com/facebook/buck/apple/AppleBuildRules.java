@@ -26,6 +26,8 @@ import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.swift.SwiftLibraryDescription;
+import com.facebook.buck.util.MoreCollectors;
+
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -33,8 +35,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 
@@ -296,6 +300,23 @@ public final class AppleBuildRules {
         .transform(
             input -> (AppleAssetCatalogDescription.Arg) input.getConstructorArg())
         .toSet();
+  }
+
+  public static <T> ImmutableSet<CoreDataModelDescription.Arg> collectTransitiveCoreDataModels(
+      TargetGraph targetGraph,
+      Collection<TargetNode<T>> targetNodes) {
+    return targetNodes
+        .stream()
+        .flatMap(
+            targetNode -> StreamSupport.stream(
+                newRecursiveRuleDependencyTransformer(
+                    targetGraph,
+                    RecursiveDependenciesMode.COPYING,
+                    ImmutableSet.of(CoreDataModelDescription.TYPE))
+                .apply(targetNode)
+                .spliterator(), false))
+        .map(input -> (CoreDataModelDescription.Arg) input.getConstructorArg())
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   public static ImmutableSet<AppleAssetCatalogDescription.Arg> collectDirectAssetCatalogs(
