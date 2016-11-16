@@ -121,4 +121,10 @@ public class BuckCommand extends AbstractContainerCommand {
       return subcommand.getClass().getSimpleName().toLowerCase();
     }
   }
+
+  @Override
+  public boolean isSourceControlStatsGatheringEnabled() {
+    return false;
+  }
+
 }
