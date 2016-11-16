@@ -237,7 +237,7 @@ final class QueryParser {
         if (token.kind == TokenKind.LPAREN) {
           QueryFunction function = functions.get(word);
           if (function == null) {
-            throw syntaxError(token);
+            throw new QueryException(syntaxError(token), "Unknown function '%s'", word);
           }
           ImmutableList.Builder<Argument> argsBuilder = ImmutableList.builder();
           TokenKind tokenKind = TokenKind.LPAREN;
