@@ -39,7 +39,13 @@ import java.io.IOException;
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractPrecompiledHeaderReference {
-  public abstract SourcePath getSourcePath();
+
+  public abstract CxxPrecompiledHeader getPrecompiledHeader();
+
+  @Value.Derived
+  public SourcePath getSourcePath() {
+    return new BuildTargetSourcePath(getPrecompiledHeader().getBuildTarget());
+  }
 
   /**
    * Returns a {@code Supplier} that can be invoked to read the dependency file lines.
@@ -51,17 +57,14 @@ abstract class AbstractPrecompiledHeaderReference {
    *
    * @return {@code Supplier} that can be invoked to read the dependency file lines.
    */
-  public abstract Supplier<ImmutableList<String>> getDepFileLines();
-
-  public static PrecompiledHeaderReference from(final CxxPrecompiledHeader rule) {
-    return PrecompiledHeaderReference.of(
-        new BuildTargetSourcePath(rule.getBuildTarget()),
-        () -> {
-          try {
-            return rule.readDepFileLines();
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
-        });
+  @Value.Derived
+  public Supplier<ImmutableList<String>> getDepFileLines() {
+    return () -> {
+      try {
+        return getPrecompiledHeader().readDepFileLines();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    };
   }
 }

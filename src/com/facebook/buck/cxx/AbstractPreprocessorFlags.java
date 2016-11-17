@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -100,19 +101,33 @@ abstract class AbstractPreprocessorFlags {
         sanitizer.sanitizeFlags(getOtherFlags().getRuleFlags()));
   }
 
+  private ImmutableList<String> getPrefixOrPCHFlags(
+      SourcePathResolver resolver,
+      Optional<CxxPrecompiledHeader> pch) {
+    ImmutableList.Builder<String> builder = ImmutableList.<String>builder();
+    if (pch.isPresent()) {
+      builder.add("-include-pch", resolver.getAbsolutePath(
+          new BuildTargetSourcePath(pch.get().getBuildTarget()))
+          .toString());
+      // Force clang to accept pch even if mtime of its input changes, since buck tracks
+      // input contents, this should be safe.
+      builder.add("-Wp,-fno-validate-pch");
+    } else if (getPrefixHeader().isPresent()) {
+      Path absPath = resolver.getAbsolutePath(getPrefixHeader().get());
+      builder.add("-include", absPath.toString());
+    }
+    return builder.build();
+  }
+
   public CxxToolFlags toToolFlags(
       SourcePathResolver resolver,
       Function<Path, Path> pathShortener,
       Function<FrameworkPath, Path> frameworkPathTransformer,
-      Preprocessor preprocessor) {
+      Preprocessor preprocessor,
+      Optional<CxxPrecompiledHeader> pch) {
     ExplicitCxxToolFlags.Builder builder = CxxToolFlags.explicitBuilder();
     ExplicitCxxToolFlags.addCxxToolFlags(builder, getOtherFlags());
-    builder.addAllRuleFlags(
-        MoreIterables.zipAndConcat(
-            Iterables.cycle("-include"),
-            FluentIterable.from(OptionalCompat.asSet(getPrefixHeader()))
-                .transform(resolver::getAbsolutePath)
-                .transform(Object::toString)));
+    builder.addAllRuleFlags(getPrefixOrPCHFlags(resolver, pch));
     builder.addAllRuleFlags(
         CxxHeaders.getArgs(getIncludes(), resolver, Optional.of(pathShortener), preprocessor));
     builder.addAllRuleFlags(

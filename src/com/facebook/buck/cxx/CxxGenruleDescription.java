@@ -524,7 +524,8 @@ public class CxxGenruleDescription
               pathResolver,
               Functions.identity(),
               CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
-              preprocessor);
+              preprocessor,
+              /*pch*/ Optional.empty());
       return Joiner.on(' ').join(Iterables.transform(flags.getAllFlags(), Escaper.SHELL_ESCAPER));
     }
 

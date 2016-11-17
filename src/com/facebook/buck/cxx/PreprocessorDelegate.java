@@ -148,10 +148,12 @@ class PreprocessorDelegate implements RuleKeyAppendable {
    *
    * @param compilerFlags flags to append.
    */
-  public ImmutableList<String> getCommand(CxxToolFlags compilerFlags) {
+  public ImmutableList<String> getCommand(
+      CxxToolFlags compilerFlags,
+      Optional<CxxPrecompiledHeader> pch) {
     return ImmutableList.<String>builder()
         .addAll(getCommandPrefix())
-        .addAll(getArguments(compilerFlags))
+        .addAll(getArguments(compilerFlags, pch))
         .build();
   }
 
@@ -159,21 +161,24 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     return preprocessor.getCommandPrefix(resolver);
   }
 
-  public ImmutableList<String> getArguments(CxxToolFlags compilerFlags) {
+  public ImmutableList<String> getArguments(
+      CxxToolFlags compilerFlags,
+      Optional<CxxPrecompiledHeader> pch) {
     return ImmutableList.copyOf(
-        CxxToolFlags.concat(getFlagsWithSearchPaths(), compilerFlags).getAllFlags());
+        CxxToolFlags.concat(getFlagsWithSearchPaths(pch), compilerFlags).getAllFlags());
   }
 
   public ImmutableMap<String, String> getEnvironment() {
     return preprocessor.getEnvironment(resolver);
   }
 
-  public CxxToolFlags getFlagsWithSearchPaths() {
+  public CxxToolFlags getFlagsWithSearchPaths(Optional<CxxPrecompiledHeader> pch) {
     return preprocessorFlags.toToolFlags(
         resolver,
         minLengthPathRepresentation,
         frameworkPathSearchPathFunction,
-        preprocessor);
+        preprocessor,
+        pch);
   }
 
   public void checkForConflictingHeaders() throws ConflictingHeadersException {
@@ -248,12 +253,15 @@ class PreprocessorDelegate implements RuleKeyAppendable {
    *
    * Generated PCH files can only be used when compiling with similar compiler flags. This
    * guarantees the uniqueness of the generated file.
+   *
+   * Note: when building the hash for identifying the PCH itself, just pass
+   * {@code Optional.empty()}.
    */
-  public String hashCommand(CxxToolFlags extraFlags) {
+  public String hashCommand(CxxToolFlags extraFlags, Optional<CxxPrecompiledHeader> pch) {
     Hasher hasher = Hashing.murmur3_128().newHasher();
     String workingDirString = workingDir.toString();
     // Skips the executable argument (the first one) as that is not sanitized.
-    for (String part : sanitizer.sanitizeFlags(Iterables.skip(getCommand(extraFlags), 1))) {
+    for (String part : sanitizer.sanitizeFlags(Iterables.skip(getCommand(extraFlags, pch), 1))) {
       // TODO(#10251354): find a better way of dealing with getting a project dir normalized hash
       if (part.startsWith(workingDirString)) {
         part = "<WORKINGDIR>" + part.substring(workingDirString.length());

@@ -574,7 +574,7 @@ abstract class AbstractCxxSourceRuleFactory {
           requirePrecompiledHeaderBuildRule(preprocessorDelegateValue, source);
       depsBuilder.add(precompiledHeader);
       precompiledHeaderReference =
-          Optional.of(PrecompiledHeaderReference.from(precompiledHeader));
+          Optional.of(PrecompiledHeaderReference.of(precompiledHeader));
     }
 
     // Build the CxxCompile rule and add it to our sorted set of build rules.
@@ -894,7 +894,11 @@ abstract class AbstractCxxSourceRuleFactory {
           .build(new CacheLoader<CxxToolFlags, String>() {
             @Override
             public String load(CxxToolFlags key) {
-              return PreprocessorDelegateCacheValue.this.preprocessorDelegate.hashCommand(key);
+              // Note: this hash call is mainly for the benefit of precompiled headers, to produce
+              // the PCH's hash of build flags.  (Since there's no PCH yet, the PCH argument is
+              // passed as empty here.)
+              return PreprocessorDelegateCacheValue.this.preprocessorDelegate.hashCommand(
+                  key, Optional.empty());
             }
           });
     }
@@ -920,7 +924,7 @@ abstract class AbstractCxxSourceRuleFactory {
       PreprocessorDelegate delegate = new PreprocessorDelegate(
           getPathResolver(),
           getCxxPlatform().getCompilerDebugPathSanitizer(),
-          getCxxBuckConfig().getHeaderVerification(),
+        getCxxBuckConfig().getHeaderVerification(),
           getParams().getProjectFilesystem().getRootPath(),
           preprocessor,
           PreprocessorFlags.of(

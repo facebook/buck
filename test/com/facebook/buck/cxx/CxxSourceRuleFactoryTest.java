@@ -69,6 +69,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 @RunWith(Enclosed.class)
@@ -188,7 +189,9 @@ public class CxxSourceRuleFactoryTest {
       assertNotEquals(
           -1,
           Collections.indexOfSubList(
-              cxxPreprocess.getPreprocessorDelegate().get().getCommand(CxxToolFlags.of()),
+              cxxPreprocess.getPreprocessorDelegate().get().getCommand(
+                  CxxToolFlags.of(),
+                  Optional.empty()),
               platformFlags));
       CxxPreprocessAndCompile cxxPreprocessAndCompile =
           cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(
@@ -198,7 +201,9 @@ public class CxxSourceRuleFactoryTest {
       assertNotEquals(
           -1,
           Collections.indexOfSubList(
-              cxxPreprocessAndCompile.getPreprocessorDelegate().get().getCommand(CxxToolFlags.of()),
+              cxxPreprocessAndCompile.getPreprocessorDelegate().get().getCommand(
+                  CxxToolFlags.of(),
+                  Optional.empty()),
               platformFlags));
     }
 
@@ -676,7 +681,9 @@ public class CxxSourceRuleFactoryTest {
       CxxPreprocessAndCompile cPreprocess =
           cxxSourceRuleFactory.requirePreprocessBuildRule(sourceName, cSource);
       ImmutableList<String> cPreprocessCommand =
-          cPreprocess.getPreprocessorDelegate().get().getCommand(CxxToolFlags.of());
+          cPreprocess.getPreprocessorDelegate().get().getCommand(
+              CxxToolFlags.of(),
+              Optional.empty());
       assertContains(cPreprocessCommand, expectedTypeSpecificPreprocessorFlags);
       assertContains(cPreprocessCommand, expectedPreprocessorFlags);
       assertContains(cPreprocessCommand, perFileFlags);

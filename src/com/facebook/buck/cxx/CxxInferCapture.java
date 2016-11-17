@@ -89,7 +89,7 @@ public class CxxInferCapture
   }
 
   private CxxToolFlags getSearchPathFlags() {
-    return preprocessorDelegate.getFlagsWithSearchPaths();
+    return preprocessorDelegate.getFlagsWithSearchPaths(/* no pch */ Optional.empty());
   }
 
   private ImmutableList<String> getFrontendCommand() {

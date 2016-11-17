@@ -181,7 +181,7 @@ public class CxxPrecompiledHeader
         Optional.of(
             new CxxPreprocessAndCompileStep.ToolCommand(
                 preprocessorDelegate.getCommandPrefix(),
-                preprocessorDelegate.getArguments(compilerFlags),
+                preprocessorDelegate.getArguments(compilerFlags, /* no pch */Optional.empty()),
                 preprocessorDelegate.getEnvironment(),
                 preprocessorDelegate.getFlagsForColorDiagnostics())),
         Optional.empty(),

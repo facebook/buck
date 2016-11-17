@@ -62,7 +62,7 @@ public class CxxPreprocessAndCompile
   private final Path output;
   @AddToRuleKey
   private final SourcePath input;
-  private final Optional<PrecompiledHeaderReference> precompiledHeader;
+  private final Optional<PrecompiledHeaderReference> precompiledHeaderRef;
   private final CxxSource.Type inputType;
   private final DebugPathSanitizer compilerSanitizer;
   private final DebugPathSanitizer assemblerSanitizer;
@@ -78,14 +78,14 @@ public class CxxPreprocessAndCompile
       Path output,
       SourcePath input,
       CxxSource.Type inputType,
-      Optional<PrecompiledHeaderReference> precompiledHeader,
+      Optional<PrecompiledHeaderReference> precompiledHeaderRef,
       DebugPathSanitizer compilerSanitizer,
       DebugPathSanitizer assemblerSanitizer,
       Optional<SymlinkTree> sandboxTree) {
     super(params, resolver);
     this.sandboxTree = sandboxTree;
     Preconditions.checkState(operation.isPreprocess() == preprocessDelegate.isPresent());
-    if (precompiledHeader.isPresent()) {
+    if (precompiledHeaderRef.isPresent()) {
       Preconditions.checkState(
           operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO,
           "Precompiled headers can only be used for same process preprocess/compile operations.");
@@ -96,7 +96,7 @@ public class CxxPreprocessAndCompile
     this.output = output;
     this.input = input;
     this.inputType = inputType;
-    this.precompiledHeader = precompiledHeader;
+    this.precompiledHeaderRef = precompiledHeaderRef;
     this.compilerSanitizer = compilerSanitizer;
     this.assemblerSanitizer = assemblerSanitizer;
     performChecks(params);
@@ -177,7 +177,7 @@ public class CxxPreprocessAndCompile
       Path output,
       SourcePath input,
       CxxSource.Type inputType,
-      Optional<PrecompiledHeaderReference> precompiledHeader,
+      Optional<PrecompiledHeaderReference> precompiledHeaderRef,
       DebugPathSanitizer compilerSanitizer,
       DebugPathSanitizer assemblerSanitizer,
       CxxPreprocessMode strategy,
@@ -193,7 +193,7 @@ public class CxxPreprocessAndCompile
         output,
         input,
         inputType,
-        precompiledHeader,
+        precompiledHeaderRef,
         compilerSanitizer,
         assemblerSanitizer,
         sandboxTree);
@@ -242,7 +242,8 @@ public class CxxPreprocessAndCompile
       preprocessorCommand = Optional.of(
           new CxxPreprocessAndCompileStep.ToolCommand(
               preprocessDelegate.get().getCommandPrefix(),
-              preprocessDelegate.get().getArguments(compilerDelegate.getCompilerFlags()),
+              preprocessDelegate.get().getArguments(
+                  compilerDelegate.getCompilerFlags(), Optional.empty()),
               preprocessDelegate.get().getEnvironment(),
               preprocessDelegate.get().getFlagsForColorDiagnostics()));
     } else {
@@ -253,19 +254,14 @@ public class CxxPreprocessAndCompile
     if (operation.isCompile()) {
       ImmutableList<String> arguments;
       if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO) {
-        arguments =
-            compilerDelegate.getArguments(preprocessDelegate.get().getFlagsWithSearchPaths());
-        if (precompiledHeader.isPresent()) {
-          arguments = ImmutableList.<String>builder()
-              .addAll(arguments)
-              .add(
-                  "-include-pch",
-                  getResolver().getAbsolutePath(precompiledHeader.get().getSourcePath()).toString())
-              // Force clang to accept pch even if mtime of its input changes, since buck tracks
-              // input contents, this should be safe.
-              .add("-Wp,-fno-validate-pch")
-              .build();
+        Optional<CxxPrecompiledHeader> pch;
+        if (precompiledHeaderRef.isPresent()) {
+          pch = Optional.of(precompiledHeaderRef.get().getPrecompiledHeader());
+        } else {
+          pch = Optional.empty();
         }
+        arguments =
+            compilerDelegate.getArguments(preprocessDelegate.get().getFlagsWithSearchPaths(pch));
       } else {
         arguments = compilerDelegate.getArguments(CxxToolFlags.of());
       }
@@ -347,7 +343,8 @@ public class CxxPreprocessAndCompile
     PreprocessorDelegate effectivePreprocessorDelegate = preprocessRule.preprocessDelegate.get();
     ImmutableList.Builder<String> cmd = ImmutableList.builder();
     cmd.addAll(
-        compilerDelegate.getCommand(effectivePreprocessorDelegate.getFlagsWithSearchPaths()));
+        compilerDelegate.getCommand(
+            effectivePreprocessorDelegate.getFlagsWithSearchPaths(/*pch*/ Optional.empty())));
     // use the input of the preprocessor, since the fact that this is going through preprocessor is
     // hidden to compdb.
     cmd.add("-x", preprocessRule.inputType.getLanguage());
@@ -387,9 +384,9 @@ public class CxxPreprocessAndCompile
     // If present, include all inputs coming from the preprocessor tool.
     if (preprocessDelegate.isPresent()) {
       Iterable<String> depFileLines = readDepFileLines();
-      if (precompiledHeader.isPresent()) {
+      if (precompiledHeaderRef.isPresent()) {
         depFileLines =
-            Iterables.concat(precompiledHeader.get().getDepFileLines().get(), depFileLines);
+            Iterables.concat(precompiledHeaderRef.get().getDepFileLines().get(), depFileLines);
       }
       inputs.addAll(preprocessDelegate.get().getInputsAfterBuildingLocally(depFileLines));
     }

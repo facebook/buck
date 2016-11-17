@@ -264,7 +264,8 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
             getResolver(),
             Functions.identity(),
             CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, getResolver()),
-            preprocessor);
+            preprocessor,
+            /*pch*/ Optional.empty());
     return MoreIterables.zipAndConcat(
         Iterables.cycle("-optP"),
         cxxToolFlags.getAllFlags());
