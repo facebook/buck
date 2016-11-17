@@ -16,12 +16,12 @@
 
 package com.facebook.buck.util;
 
-import com.android.common.annotations.Nullable;
-
 import java.io.InterruptedIOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+
+import javax.annotation.Nullable;
 
 /**
  * A wrapper around a {@link Thread} which implements the {@link AutoCloseable} interface to be

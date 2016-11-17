@@ -16,11 +16,12 @@
 
 package com.facebook.buck.cli;
 
-import com.android.common.annotations.Nullable;
 import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.util.HumanReadableException;
 
 import org.kohsuke.args4j.Option;
+
+import javax.annotation.Nullable;
 
 public abstract class AbstractDistBuildCommand extends AbstractCommand {
 

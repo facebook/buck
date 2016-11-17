@@ -16,10 +16,9 @@
 
 package com.facebook.buck.cli;
 
-import com.android.common.annotations.Nullable;
 import com.facebook.buck.distributed.BuildJobStateSerializer;
-import com.facebook.buck.distributed.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.DistBuildService;
+import com.facebook.buck.distributed.DistBuildSlaveExecutor;
 import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -33,6 +32,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nullable;
 
 public class DistBuildRunCommand extends AbstractDistBuildCommand {
 

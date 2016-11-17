@@ -16,7 +16,6 @@
 
 package com.facebook.buck.tools.dxanalysis;
 
-import com.android.common.annotations.Nullable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -32,6 +31,8 @@ import org.objectweb.asm.tree.ClassNode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import javax.annotation.Nullable;
 
 /**
  * A static analyzer to find uses of reference equality checks on the RegisterSpec class,
