@@ -67,7 +67,7 @@ public class SwiftLibraryIntegrationTest {
     // Setup the map representing the link tree.
     ImmutableMap<Path, SourcePath> links = ImmutableMap.of();
 
-    BuildRule symlinkTreeBuildRule = new HeaderSymlinkTreeWithHeaderMap(
+    BuildRule symlinkTreeBuildRule = HeaderSymlinkTreeWithHeaderMap.create(
         new FakeBuildRuleParamsBuilder(symlinkTarget).build(),
         pathResolver,
         symlinkTreeRoot,

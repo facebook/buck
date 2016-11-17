@@ -1,0 +1,20 @@
+apple_library(
+  name = 'one',
+  exported_headers = ['one/one.h'],
+  srcs = ['one/one.m'],
+)
+
+apple_library(
+  name = 'parent',
+  srcs = [ 'parent.swift' ],
+  deps = [ ':one' ],
+)
+
+apple_binary(
+  name = 'main',
+  srcs = ['main.swift'],
+  deps = [':parent'],
+  frameworks = [
+    '$SDKROOT/System/Library/Frameworks/Foundation.framework',
+  ],
+)

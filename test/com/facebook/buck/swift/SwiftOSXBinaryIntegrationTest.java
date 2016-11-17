@@ -125,4 +125,24 @@ public class SwiftOSXBinaryIntegrationTest {
         containsString("Hello ObjC\n"));
   }
 
+  @Test
+  public void testSwiftImportObjcGeneratedModule() throws IOException {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX),
+        is(true));
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "modules_import", tmp);
+    workspace.setUp();
+    workspace.writeContentsToPath(
+        "[swift]\n  version = 2.3\n",
+        ".buckconfig.local");
+
+    ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand(
+        "run", ":main#macosx-x86_64");
+    runResult.assertSuccess();
+    assertThat(
+        runResult.getStdout(),
+        equalTo("One = 1\n"));
+  }
+
 }
