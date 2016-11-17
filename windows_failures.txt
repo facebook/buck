@@ -1,5 +1,6 @@
 !TestBuildWithBuck
 !TestUUIDFix
+!com.facebook.buck.android.AaptPackageResourcesIntegrationTest
 !com.facebook.buck.cli.ExternalTestRunnerIntegrationTest
 !com.facebook.buck.cli.RunCommandIntegrationTest
 !com.facebook.buck.cxx.ArchiveStepIntegrationTest#thatGeneratedArchivesAreDeterministic
@@ -13,8 +14,11 @@
 !com.facebook.buck.cxx.CxxErrorTransformerFactoryTest
 !com.facebook.buck.cxx.CxxGtestTestTest
 !com.facebook.buck.cxx.CxxLibraryDescriptionTest#createBuildRule
+!com.facebook.buck.cxx.CxxLibraryDescriptionTest#createBuildRule.*
 !com.facebook.buck.cxx.CxxLibraryDescriptionTest#createCxxLibraryBuildRules
+!com.facebook.buck.cxx.CxxLibraryDescriptionTest#createCxxLibraryBuildRules.*
 !com.facebook.buck.cxx.CxxLibraryDescriptionTest#sharedLibraryShouldLinkOwnRequiredLibraries
+!com.facebook.buck.cxx.CxxLibraryDescriptionTest#sharedLibraryShouldLinkOwnRequiredLibraries.*
 !com.facebook.buck.cxx.CxxLibraryIntegrationTest
 !com.facebook.buck.cxx.CxxLinkIntegrationTest
 !com.facebook.buck.cxx.CxxPreprocessAndCompileIntegrationTest
