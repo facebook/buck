@@ -25,12 +25,12 @@ import com.google.common.base.Suppliers;
 public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTransformer {
 
   @Override
-  public <T> BuildRule transform(
+  public <T, U extends Description<T>> BuildRule transform(
       TargetGraph targetGraph,
       BuildRuleResolver ruleResolver,
-      TargetNode<T> targetNode)
+      TargetNode<T, U> targetNode)
       throws NoSuchBuildTargetException {
-    Description<T> description = targetNode.getDescription();
+    U description = targetNode.getDescription();
     T arg = targetNode.getConstructorArg();
 
     // The params used for the Buildable only contain the declared parameters. However, the deps of

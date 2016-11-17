@@ -36,18 +36,18 @@ import org.junit.Test;
 
 public class ProjectCommandIntellijTest {
 
-  private TargetNode<?> dummyRootBinNode;
-  private TargetNode<?> barLibNode;
-  private TargetNode<?> fooLibNode;
-  private TargetNode<?> fooBinNode;
-  private TargetNode<?> bazLibNode;
-  private TargetNode<?> bazTestNode;
-  private TargetNode<?> fooTestNode;
-  private TargetNode<?> fooBinTestNode;
-  private TargetNode<?> quxBinNode;
-  private TargetNode<?> fooProjectNode;
-  private TargetNode<?> bazProjectNode;
-  private TargetNode<?> dummyProjectNode;
+  private TargetNode<?, ?> dummyRootBinNode;
+  private TargetNode<?, ?> barLibNode;
+  private TargetNode<?, ?> fooLibNode;
+  private TargetNode<?, ?> fooBinNode;
+  private TargetNode<?, ?> bazLibNode;
+  private TargetNode<?, ?> bazTestNode;
+  private TargetNode<?, ?> fooTestNode;
+  private TargetNode<?, ?> fooBinTestNode;
+  private TargetNode<?, ?> quxBinNode;
+  private TargetNode<?, ?> fooProjectNode;
+  private TargetNode<?, ?> bazProjectNode;
+  private TargetNode<?, ?> dummyProjectNode;
 
   TargetGraph targetGraph;
 
@@ -148,7 +148,7 @@ public class ProjectCommandIntellijTest {
         /* withDependenciesTests = */ false);
 
     assertEquals(
-        ImmutableSortedSet.<TargetNode<?>>of(
+        ImmutableSortedSet.<TargetNode<?, ?>>of(
             dummyRootBinNode,
             dummyProjectNode,
             fooProjectNode,
@@ -171,7 +171,7 @@ public class ProjectCommandIntellijTest {
         /* withDependenciesTests = */ true);
 
     assertEquals(
-        ImmutableSortedSet.<TargetNode<?>>of(
+        ImmutableSortedSet.<TargetNode<?, ?>>of(
             dummyRootBinNode,
             dummyProjectNode,
             fooProjectNode,
@@ -197,7 +197,7 @@ public class ProjectCommandIntellijTest {
         /* withDependenciesTests = */ false);
 
     assertEquals(
-        ImmutableSortedSet.<TargetNode<?>>of(
+        ImmutableSortedSet.<TargetNode<?, ?>>of(
             dummyRootBinNode,
             dummyProjectNode,
             fooProjectNode,
@@ -218,7 +218,7 @@ public class ProjectCommandIntellijTest {
         /* withDependenciesTests = */ true);
 
     assertEquals(
-        ImmutableSortedSet.<TargetNode<?>>of(
+        ImmutableSortedSet.<TargetNode<?, ?>>of(
             dummyRootBinNode,
             dummyProjectNode,
             fooProjectNode,

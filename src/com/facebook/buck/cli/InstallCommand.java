@@ -305,7 +305,7 @@ public class InstallCommand extends BuildCommand {
                 .first()
                 .get();
 
-        TargetNode<?> node = params.getParser().getTargetNode(
+        TargetNode<?, ?> node = params.getParser().getTargetNode(
             params.getBuckEventBus(),
             params.getCell(),
             getEnableParserProfiling(),

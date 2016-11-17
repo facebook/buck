@@ -119,7 +119,7 @@ public abstract class TargetNodeTranslator {
     }
   }
 
-  private <A> Optional<A> translateConstructorArg(TargetNode<A> node) {
+  private <A> Optional<A> translateConstructorArg(TargetNode<A, ?> node) {
     boolean modified = false;
 
     // Generate the new constructor arg from the original
@@ -143,7 +143,7 @@ public abstract class TargetNodeTranslator {
    * @return a copy of the given {@link TargetNode} with all found {@link BuildTarget}s translated,
    *         or {@link Optional#empty()} if the node requires no translation.
    */
-  public <A> Optional<TargetNode<A>> translateNode(TargetNode<A> node) {
+  public <A> Optional<TargetNode<A, ?>> translateNode(TargetNode<A, ?> node) {
     Optional<BuildTarget> target = translateBuildTarget(node.getBuildTarget());
     Optional<A> constructorArg = translateConstructorArg(node);
     Optional<ImmutableSet<BuildTarget>> declaredDeps = translateSet(node.getDeclaredDeps());

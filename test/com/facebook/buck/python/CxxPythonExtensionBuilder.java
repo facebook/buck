@@ -26,8 +26,12 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
 
-public class CxxPythonExtensionBuilder extends
-    AbstractCxxSourceBuilder<CxxPythonExtensionDescription.Arg, CxxPythonExtensionBuilder> {
+public class CxxPythonExtensionBuilder
+    extends
+    AbstractCxxSourceBuilder<
+        CxxPythonExtensionDescription.Arg,
+        CxxPythonExtensionDescription,
+        CxxPythonExtensionBuilder> {
 
   public CxxPythonExtensionBuilder(
       BuildTarget target,

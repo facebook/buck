@@ -25,8 +25,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class CxxTestBuilder extends
-    AbstractCxxSourceBuilder<CxxTestDescription.Arg, CxxTestBuilder> {
+public class CxxTestBuilder
+    extends
+    AbstractCxxSourceBuilder<CxxTestDescription.Arg, CxxTestDescription, CxxTestBuilder> {
 
   public CxxTestBuilder(
       BuildTarget target,

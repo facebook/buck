@@ -46,12 +46,12 @@ import java.util.Optional;
 import java.util.Set;
 
 final class OwnersReport {
-  final ImmutableSetMultimap<TargetNode<?>, Path> owners;
+  final ImmutableSetMultimap<TargetNode<?, ?>, Path> owners;
   final ImmutableSet<Path> inputsWithNoOwners;
   final ImmutableSet<String> nonExistentInputs;
   final ImmutableSet<String> nonFileInputs;
 
-  OwnersReport(SetMultimap<TargetNode<?>, Path> owners,
+  OwnersReport(SetMultimap<TargetNode<?, ?>, Path> owners,
       Set<Path> inputsWithNoOwners,
       Set<String> nonExistentInputs,
       Set<String> nonFileInputs) {
@@ -70,7 +70,7 @@ final class OwnersReport {
   }
 
   OwnersReport updatedWith(OwnersReport other) {
-    SetMultimap<TargetNode<?>, Path> updatedOwners =
+    SetMultimap<TargetNode<?, ?>, Path> updatedOwners =
         TreeMultimap.create(owners);
     updatedOwners.putAll(other.owners);
 
@@ -93,7 +93,7 @@ final class OwnersReport {
   @VisibleForTesting
   static OwnersReport generateOwnersReport(
       Cell rootCell,
-      TargetNode<?> targetNode,
+      TargetNode<?, ?> targetNode,
       Iterable<String> filePaths) {
 
     // Process arguments assuming they are all relative file paths.
@@ -114,7 +114,7 @@ final class OwnersReport {
 
     // Try to find owners for each valid and existing file.
     Set<Path> inputsWithNoOwners = Sets.newHashSet(inputs);
-    SetMultimap<TargetNode<?>, Path> owners = TreeMultimap.create();
+    SetMultimap<TargetNode<?, ?>, Path> owners = TreeMultimap.create();
     for (final Path commandInput : inputs) {
       Predicate<Path> startsWith =
           input -> !commandInput.equals(input) && commandInput.startsWith(input);
@@ -161,7 +161,7 @@ final class OwnersReport {
       ProjectFilesystem cellFilesystem = rootCell.getFilesystem();
       final Path rootPath = cellFilesystem.getRootPath();
       Preconditions.checkState(rootPath.isAbsolute());
-      Map<Path, ImmutableSet<TargetNode<?>>> targetNodes = Maps.newHashMap();
+      Map<Path, ImmutableSet<TargetNode<?, ?>>> targetNodes = Maps.newHashMap();
       OwnersReport report = emptyReport();
 
       for (Path filePath : getArgumentsAsPaths(rootPath, arguments)) {
@@ -202,7 +202,7 @@ final class OwnersReport {
           }
         }
 
-        for (TargetNode<?> targetNode : targetNodes.get(buckFile)) {
+        for (TargetNode<?, ?> targetNode : targetNodes.get(buckFile)) {
           report = report.updatedWith(
               generateOwnersReport(
                   rootCell,

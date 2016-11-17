@@ -23,7 +23,7 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 
 import java.util.Optional;
 
-public class DTestBuilder extends AbstractNodeBuilder<DTestDescription.Arg> {
+public class DTestBuilder extends AbstractNodeBuilder<DTestDescription.Arg, DTestDescription> {
 
   public DTestBuilder(
       BuildTarget target,

@@ -28,7 +28,8 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
 
-public class JavaBinaryRuleBuilder extends AbstractNodeBuilder<JavaBinaryDescription.Args> {
+public class JavaBinaryRuleBuilder
+    extends AbstractNodeBuilder<JavaBinaryDescription.Args, JavaBinaryDescription> {
 
   public JavaBinaryRuleBuilder(BuildTarget target) {
     super(

@@ -25,7 +25,8 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class PrebuiltNativeLibraryBuilder
-    extends AbstractNodeBuilder<PrebuiltNativeLibraryDescription.Arg> {
+    extends
+    AbstractNodeBuilder<PrebuiltNativeLibraryDescription.Arg, PrebuiltNativeLibraryDescription> {
 
   private PrebuiltNativeLibraryBuilder(BuildTarget target) {
     super(new PrebuiltNativeLibraryDescription(), target);

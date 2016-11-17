@@ -18,6 +18,6 @@ package com.facebook.buck.rules;
 
 public interface AssociatedTargetNodePredicate {
   public boolean apply(
-      TargetNode<?> targetNode,
+      TargetNode<?, ?> targetNode,
       TargetGraph targetGraph);
 }

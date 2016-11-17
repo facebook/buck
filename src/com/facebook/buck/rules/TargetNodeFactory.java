@@ -45,9 +45,9 @@ public class TargetNodeFactory {
    * See <a href="https://docs.oracle.com/javase/tutorial/java/generics/capture.html">Wildcard Capture and Helper Methods</a>.
    */
   @SuppressWarnings("unchecked")
-  public <T> TargetNode<T> createFromObject(
+  public <T, U extends Description<T>> TargetNode<T, U> createFromObject(
       HashCode rawInputsHashCode,
-      Description<T> description,
+      U description,
       Object constructorArg,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
@@ -67,9 +67,9 @@ public class TargetNodeFactory {
   }
 
   @SuppressWarnings("unchecked")
-  public <T> TargetNode<T> create(
+  public <T, U extends Description<T>> TargetNode<T, U> create(
       HashCode rawInputsHashCode,
-      Description<T> description,
+      U description,
       T constructorArg,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
@@ -155,9 +155,9 @@ public class TargetNodeFactory {
   }
 
   @SuppressWarnings("unchecked")
-  public <T> TargetNode<T> copyNodeWithDescription(
-      TargetNode<?> originalNode,
-      Description<T> description) {
+  public <T, U extends Description<T>> TargetNode<T, U> copyNodeWithDescription(
+      TargetNode<?, ?> originalNode,
+      U description) {
     try {
       return create(
           originalNode.getRawInputsHashCode(),
@@ -177,8 +177,8 @@ public class TargetNodeFactory {
     }
   }
 
-  public <T> TargetNode<T> copyNodeWithFlavors(
-      TargetNode<T> originalNode,
+  public <T, U extends Description<T>> TargetNode<T, U> copyNodeWithFlavors(
+      TargetNode<T, U> originalNode,
       ImmutableSet<Flavor> flavors) {
     try {
       return create(

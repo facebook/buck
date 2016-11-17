@@ -38,18 +38,18 @@ import javax.annotation.Nullable;
  * Represents the graph of {@link com.facebook.buck.rules.TargetNode}s constructed
  * by parsing the build files.
  */
-public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
+public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?, ?>> {
   public static final TargetGraph EMPTY = new TargetGraph(
-      new MutableDirectedGraph<TargetNode<?>>(),
+      new MutableDirectedGraph<TargetNode<?, ?>>(),
       ImmutableMap.of(),
       ImmutableSet.of());
 
-  private final ImmutableMap<BuildTarget, TargetNode<?>> targetsToNodes;
+  private final ImmutableMap<BuildTarget, TargetNode<?, ?>> targetsToNodes;
   private final ImmutableSetMultimap<BuildTarget, TargetGroup> groupsByBuildTarget;
 
   public TargetGraph(
-      MutableDirectedGraph<TargetNode<?>> graph,
-      ImmutableMap<BuildTarget, TargetNode<?>> index,
+      MutableDirectedGraph<TargetNode<?, ?>> graph,
+      ImmutableMap<BuildTarget, TargetNode<?, ?>> index,
       ImmutableSet<TargetGroup> groups) {
     super(graph);
     this.targetsToNodes = index;
@@ -69,16 +69,16 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
   }
 
   private void verifyVisibilityIntegrity() {
-    for (TargetNode<?> node : getNodes()) {
-      for (TargetNode<?> dep : getOutgoingNodesFor(node)) {
+    for (TargetNode<?, ?> node : getNodes()) {
+      for (TargetNode<?, ?> dep : getOutgoingNodesFor(node)) {
         dep.isVisibleToOrThrow(this, node);
       }
     }
   }
 
   @Nullable
-  public TargetNode<?> getInternal(BuildTarget target) {
-    TargetNode<?> node = targetsToNodes.get(target);
+  public TargetNode<?, ?> getInternal(BuildTarget target) {
+    TargetNode<?, ?> node = targetsToNodes.get(target);
     if (node == null) {
       node = targetsToNodes.get(BuildTarget.of(target.getUnflavoredBuildTarget()));
       if (node == null) {
@@ -89,19 +89,19 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
     return node;
   }
 
-  public Optional<TargetNode<?>> getOptional(BuildTarget target) {
+  public Optional<TargetNode<?, ?>> getOptional(BuildTarget target) {
     return Optional.ofNullable(getInternal(target));
   }
 
-  public TargetNode<?> get(BuildTarget target) {
-    TargetNode<?> node = getInternal(target);
+  public TargetNode<?, ?> get(BuildTarget target) {
+    TargetNode<?, ?> node = getInternal(target);
     if (node == null) {
       throw new NoSuchNodeException(target);
     }
     return node;
   }
 
-  public Iterable<TargetNode<?>> getAll(Iterable<BuildTarget> targets) {
+  public Iterable<TargetNode<?, ?>> getAll(Iterable<BuildTarget> targets) {
     return Iterables.transform(
         targets,
         this::get);
@@ -131,14 +131,14 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
    * @param roots An iterable containing the roots of the new subgraph.
    * @return A subgraph of the current graph.
    */
-  public <T> TargetGraph getSubgraph(Iterable<? extends TargetNode<? extends T>> roots) {
-    final MutableDirectedGraph<TargetNode<?>> subgraph =
+  public <T> TargetGraph getSubgraph(Iterable<? extends TargetNode<? extends T, ?>> roots) {
+    final MutableDirectedGraph<TargetNode<?, ?>> subgraph =
         new MutableDirectedGraph<>();
-    final Map<BuildTarget, TargetNode<?>> index = new HashMap<>();
+    final Map<BuildTarget, TargetNode<?, ?>> index = new HashMap<>();
 
-    new AbstractBreadthFirstTraversal<TargetNode<?>>(roots) {
+    new AbstractBreadthFirstTraversal<TargetNode<?, ?>>(roots) {
       @Override
-      public ImmutableSet<TargetNode<?>>visit(TargetNode<?> node) {
+      public ImmutableSet<TargetNode<?, ?>>visit(TargetNode<?, ?> node) {
         subgraph.addNode(node);
         MoreMaps.putCheckEquals(index, node.getBuildTarget(), node);
         if (node.getBuildTarget().isFlavored()) {
@@ -149,9 +149,9 @@ public class TargetGraph extends DefaultDirectedAcyclicGraph<TargetNode<?>> {
               unflavoredBuildTarget,
               targetsToNodes.get(unflavoredBuildTarget));
         }
-        ImmutableSet<TargetNode<?>> dependencies =
+        ImmutableSet<TargetNode<?, ?>> dependencies =
             ImmutableSet.copyOf(getAll(node.getDeps()));
-        for (TargetNode<?> dependency : dependencies) {
+        for (TargetNode<?, ?> dependency : dependencies) {
           subgraph.addEdge(node, dependency);
         }
         return dependencies;

@@ -119,7 +119,7 @@ public class Parser {
     return state.getAllRawNodes(cell, buildFile);
   }
 
-  public ImmutableSet<TargetNode<?>> getAllTargetNodes(
+  public ImmutableSet<TargetNode<?, ?>> getAllTargetNodes(
       BuckEventBus eventBus,
       Cell cell,
       boolean enableProfiling,
@@ -147,7 +147,7 @@ public class Parser {
     }
   }
 
-  public TargetNode<?> getTargetNode(
+  public TargetNode<?, ?> getTargetNode(
       BuckEventBus eventBus,
       Cell cell,
       boolean enableProfiling,
@@ -172,7 +172,7 @@ public class Parser {
   public SortedMap<String, Object> getRawTargetNode(
       PerBuildState state,
       Cell cell,
-      TargetNode<?> targetNode) throws BuildFileParseException {
+      TargetNode<?, ?> targetNode) throws BuildFileParseException {
     try {
 
       Cell owningCell = cell.getCell(targetNode.getBuildTarget());
@@ -206,7 +206,7 @@ public class Parser {
       Cell cell,
       boolean enableProfiling,
       ListeningExecutorService executor,
-      TargetNode<?> targetNode) throws BuildFileParseException {
+      TargetNode<?, ?> targetNode) throws BuildFileParseException {
 
     try (
         PerBuildState state =
@@ -277,14 +277,14 @@ public class Parser {
       groups.put(group.getBuildTarget(), group);
     }
 
-    final MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
-    final Map<BuildTarget, TargetNode<?>> index = new HashMap<>();
+    final MutableDirectedGraph<TargetNode<?, ?>> graph = new MutableDirectedGraph<>();
+    final Map<BuildTarget, TargetNode<?, ?>> index = new HashMap<>();
 
     ParseEvent.Started parseStart = ParseEvent.started(toExplore);
     eventBus.post(parseStart);
 
     GraphTraversable<BuildTarget> traversable = target -> {
-      TargetNode<?> node;
+      TargetNode<?, ?> node;
       try {
         node = state.getTargetNode(target);
       } catch (BuildFileParseException | BuildTargetException e) {
@@ -333,7 +333,7 @@ public class Parser {
     TargetGraph targetGraph = null;
     try {
       for (BuildTarget target : targetNodeTraversal.traverse(toExplore)) {
-        TargetNode<?> targetNode = state.getTargetNode(target);
+        TargetNode<?, ?> targetNode = state.getTargetNode(target);
 
         Preconditions.checkNotNull(targetNode, "No target node found for %s", target);
         graph.addNode(targetNode);
@@ -550,11 +550,11 @@ public class Parser {
       targetFutures.add(
           Futures.transform(
               state.getAllTargetNodesJob(cell, buildFile),
-              new Function<ImmutableSet<TargetNode<?>>,
+              new Function<ImmutableSet<TargetNode<?, ?>>,
                            ImmutableList<Map.Entry<Integer, ImmutableSet<BuildTarget>>>>() {
                 @Override
                 public ImmutableList<Map.Entry<Integer, ImmutableSet<BuildTarget>>> apply(
-                    ImmutableSet<TargetNode<?>> nodes) {
+                    ImmutableSet<TargetNode<?, ?>> nodes) {
                   ImmutableList.Builder<Map.Entry<Integer, ImmutableSet<BuildTarget>>> targets =
                       ImmutableList.builder();
                   for (int index : buildFileSpecs) {
@@ -603,12 +603,12 @@ public class Parser {
 
   private static ImmutableSet<BuildTarget> applySpecFilter(
       TargetNodeSpec spec,
-      ImmutableSet<TargetNode<?>> targetNodes,
+      ImmutableSet<TargetNode<?, ?>> targetNodes,
       ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode) {
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-    ImmutableMap<BuildTarget, Optional<TargetNode<?>>> partialTargets =
+    ImmutableMap<BuildTarget, Optional<TargetNode<?, ?>>> partialTargets =
         spec.filter(targetNodes);
-    for (Map.Entry<BuildTarget, Optional<TargetNode<?>>> partialTarget :
+    for (Map.Entry<BuildTarget, Optional<TargetNode<?, ?>>> partialTarget :
              partialTargets.entrySet()) {
       BuildTarget target = applyDefaultFlavors(
             partialTarget.getKey(),
@@ -622,7 +622,7 @@ public class Parser {
 
   private static BuildTarget applyDefaultFlavors(
       BuildTarget target,
-      Optional<TargetNode<?>> targetNode,
+      Optional<TargetNode<?, ?>> targetNode,
       TargetNodeSpec.TargetType targetType,
       ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode) {
     if (target.isFlavored() ||
@@ -632,7 +632,7 @@ public class Parser {
       return target;
     }
 
-    TargetNode<?> node = targetNode.get();
+    TargetNode<?, ?> node = targetNode.get();
 
     ImmutableSortedSet<Flavor> defaultFlavors = ImmutableSortedSet.of();
     if (node.getConstructorArg() instanceof HasDefaultFlavors) {

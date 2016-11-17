@@ -34,7 +34,7 @@ import java.util.Optional;
 abstract class AbstractTargetNodePredicateSpec implements TargetNodeSpec {
 
   @Value.Parameter
-  public abstract Predicate<? super TargetNode<?>> getPredicate();
+  public abstract Predicate<? super TargetNode<?, ?>> getPredicate();
 
   @Override
   @Value.Parameter
@@ -46,11 +46,12 @@ abstract class AbstractTargetNodePredicateSpec implements TargetNodeSpec {
   }
 
   @Override
-  public ImmutableMap<BuildTarget, Optional<TargetNode<?>>> filter(Iterable<TargetNode<?>> nodes) {
-    ImmutableMap.Builder<BuildTarget, Optional<TargetNode<?>>> resultBuilder =
+  public ImmutableMap<BuildTarget, Optional<TargetNode<?, ?>>> filter(
+      Iterable<TargetNode<?, ?>> nodes) {
+    ImmutableMap.Builder<BuildTarget, Optional<TargetNode<?, ?>>> resultBuilder =
         ImmutableMap.builder();
 
-    for (TargetNode<?> node : nodes) {
+    for (TargetNode<?, ?> node : nodes) {
       if (getPredicate().apply(node)) {
         resultBuilder.put(node.getBuildTarget(), Optional.of(node));
       }

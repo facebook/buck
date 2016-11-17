@@ -25,7 +25,10 @@ import com.google.common.collect.ImmutableSortedSet;
 
 
 public class PrebuiltCxxLibraryGroupBuilder
-    extends AbstractNodeBuilder<PrebuiltCxxLibraryGroupDescription.Args> {
+    extends
+    AbstractNodeBuilder<
+        PrebuiltCxxLibraryGroupDescription.Args,
+        PrebuiltCxxLibraryGroupDescription> {
 
   public PrebuiltCxxLibraryGroupBuilder(BuildTarget target) {
     super(PrebuiltCxxLibraryGroupDescription.of(), target);

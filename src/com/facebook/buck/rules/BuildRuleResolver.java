@@ -74,13 +74,13 @@ public class BuildRuleResolver {
             new CacheLoader<Pair<BuildTarget, Class<?>>, Optional<?>>() {
               @Override
               public Optional<?> load(Pair<BuildTarget, Class<?>> key) throws Exception {
-                TargetNode<?> node = BuildRuleResolver.this.targetGraph.get(key.getFirst());
+                TargetNode<?, ?> node = BuildRuleResolver.this.targetGraph.get(key.getFirst());
                 return load(node, key.getSecond());
               }
 
               @SuppressWarnings("unchecked")
               private <T, U> Optional<U> load(
-                  TargetNode<T> node,
+                  TargetNode<T, ?> node,
                   Class<U> metadataClass) throws NoSuchBuildTargetException {
                 T arg = node.getConstructorArg();
                 if (metadataClass.isAssignableFrom(arg.getClass())) {
@@ -132,7 +132,7 @@ public class BuildRuleResolver {
     if (rule != null) {
       return rule;
     }
-    TargetNode<?> node = targetGraph.get(target);
+    TargetNode<?, ?> node = targetGraph.get(target);
     rule = buildRuleGenerator.transform(targetGraph, this, node);
     BuildRule oldRule = buildRuleIndex.put(target, rule);
     Preconditions.checkState(

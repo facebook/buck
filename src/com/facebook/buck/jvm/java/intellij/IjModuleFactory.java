@@ -81,45 +81,45 @@ public class IjModuleFactory {
      *     be found (the structure will be the same as the package path of the R class). A path
      *     should be returned only if the given TargetNode requires the R.class to compile.
      */
-    Optional<Path> getDummyRDotJavaPath(TargetNode<?> targetNode);
+    Optional<Path> getDummyRDotJavaPath(TargetNode<?, ?> targetNode);
 
     /**
      * @param targetNode node describing the Android binary to get the manifest of.
      * @return path on disk to the AndroidManifest.
      */
-    Path getAndroidManifestPath(TargetNode<AndroidBinaryDescription.Arg> targetNode);
+    Path getAndroidManifestPath(TargetNode<AndroidBinaryDescription.Arg, ?> targetNode);
 
     /**
      * @param targetNode node describing the Android library to get the manifest of.
      * @return path on disk to the AndroidManifest.
      */
     Optional<Path> getLibraryAndroidManifestPath(
-        TargetNode<AndroidLibraryDescription.Arg> targetNode);
+        TargetNode<AndroidLibraryDescription.Arg, ?> targetNode);
 
     /**
      * @param targetNode node describing the Android binary to get the Proguard config of.
      * @return path on disk to the proguard config.
      */
-    Optional<Path> getProguardConfigPath(TargetNode<AndroidBinaryDescription.Arg> targetNode);
+    Optional<Path> getProguardConfigPath(TargetNode<AndroidBinaryDescription.Arg, ?> targetNode);
 
     /**
      * @param targetNode node describing the Android resources to get the path of.
      * @return path on disk to the resources folder.
      */
-    Optional<Path> getAndroidResourcePath(TargetNode<AndroidResourceDescription.Arg> targetNode);
+    Optional<Path> getAndroidResourcePath(TargetNode<AndroidResourceDescription.Arg, ?> targetNode);
 
     /**
      * @param targetNode node describing the Android assets to get the path of.
      * @return path on disk to the assets folder.
      */
-    Optional<Path> getAssetsPath(TargetNode<AndroidResourceDescription.Arg> targetNode);
+    Optional<Path> getAssetsPath(TargetNode<AndroidResourceDescription.Arg, ?> targetNode);
 
     /**
      * @param targetNode node which may use annotation processors.
      * @return path to the annotation processor output if any annotation proceessors are configured
      *        for the given node.
      */
-    Optional<Path> getAnnotationOutputPath(TargetNode<? extends JvmLibraryArg> targetNode);
+    Optional<Path> getAnnotationOutputPath(TargetNode<? extends JvmLibraryArg, ?> targetNode);
   }
 
   /**
@@ -285,7 +285,7 @@ public class IjModuleFactory {
    */
   private interface IjModuleRule<T> {
     BuildRuleType getType();
-    void apply(TargetNode<T> targetNode, ModuleBuildContext context);
+    void apply(TargetNode<T, ?> targetNode, ModuleBuildContext context);
   }
 
   private static final String SDK_TYPE_JAVA = "JavaSDK";
@@ -340,7 +340,7 @@ public class IjModuleFactory {
   @SuppressWarnings({"unchecked", "rawtypes"})
   public IjModule createModule(
       Path moduleBasePath,
-      ImmutableSet<TargetNode<?>> targetNodes) {
+      ImmutableSet<TargetNode<?, ?>> targetNodes) {
     Preconditions.checkArgument(!targetNodes.isEmpty());
 
 
@@ -350,7 +350,7 @@ public class IjModuleFactory {
 
     ModuleBuildContext context = new ModuleBuildContext(moduleBuildTargets);
 
-    for (TargetNode<?> targetNode : targetNodes) {
+    for (TargetNode<?, ?> targetNode : targetNodes) {
       IjModuleRule<?> rule = Preconditions.checkNotNull(moduleRuleIndex.get(targetNode.getType()));
       rule.apply((TargetNode) targetNode, context);
     }
@@ -382,9 +382,9 @@ public class IjModuleFactory {
   }
 
   private Optional<String> getSourceLevel(
-      Iterable<TargetNode<?>> targetNodes) {
+      Iterable<TargetNode<?, ?>> targetNodes) {
     Optional<String> result = Optional.empty();
-    for (TargetNode<?> targetNode : targetNodes) {
+    for (TargetNode<?, ?> targetNode : targetNodes) {
       BuildRuleType type = targetNode.getType();
       if (!type.equals(JavaLibraryDescription.TYPE)) {
         continue;
@@ -463,7 +463,7 @@ public class IjModuleFactory {
   private void addDepsAndFolder(
       IjFolder.IJFolderFactory folderFactory,
       IjModuleGraph.DependencyType dependencyType,
-      TargetNode<?> targetNode,
+      TargetNode<?, ?> targetNode,
       boolean wantsPackagePrefix,
       ModuleBuildContext context,
       ImmutableSet<Path> inputPaths
@@ -480,7 +480,7 @@ public class IjModuleFactory {
   private void addDepsAndFolder(
       IjFolder.IJFolderFactory folderFactory,
       IjModuleGraph.DependencyType dependencyType,
-      TargetNode<?> targetNode,
+      TargetNode<?, ?> targetNode,
       boolean wantsPackagePrefix,
       ModuleBuildContext context
   ) {
@@ -494,7 +494,7 @@ public class IjModuleFactory {
   }
 
   private void addDepsAndSources(
-      TargetNode<?> targetNode,
+      TargetNode<?, ?> targetNode,
       boolean wantsPackagePrefix,
       ModuleBuildContext context) {
     addDepsAndFolder(
@@ -506,7 +506,7 @@ public class IjModuleFactory {
   }
 
   private void addDepsAndTestSources(
-      TargetNode<?> targetNode,
+      TargetNode<?, ?> targetNode,
       boolean wantsPackagePrefix,
       ModuleBuildContext context) {
     addDepsAndFolder(
@@ -519,7 +519,7 @@ public class IjModuleFactory {
 
   private static void addDeps(
       ImmutableMultimap<Path, Path> foldersToInputsIndex,
-      TargetNode<?> targetNode,
+      TargetNode<?, ?> targetNode,
       IjModuleGraph.DependencyType dependencyType,
       ModuleBuildContext context) {
     context.addDeps(
@@ -529,7 +529,7 @@ public class IjModuleFactory {
   }
 
   private <T extends JavaLibraryDescription.Arg> void addCompiledShadowIfNeeded(
-      TargetNode<T> targetNode,
+      TargetNode<T, ?> targetNode,
       ModuleBuildContext context) {
     if (excludeShadows) {
       return;
@@ -546,10 +546,10 @@ public class IjModuleFactory {
   @SuppressWarnings("unchecked")
   private void addAnnotationOutputIfNeeded(
       IjFolder.IJFolderFactory folderFactory,
-      TargetNode<?> targetNode,
+      TargetNode<?, ?> targetNode,
       ModuleBuildContext context) {
-    TargetNode<? extends JvmLibraryArg> jvmLibraryTargetNode =
-        (TargetNode<? extends JvmLibraryArg>) targetNode;
+    TargetNode<? extends JvmLibraryArg, ?> jvmLibraryTargetNode =
+        (TargetNode<? extends JvmLibraryArg, ?>) targetNode;
 
     Optional<Path> annotationOutput =
         moduleFactoryResolver.getAnnotationOutputPath(jvmLibraryTargetNode);
@@ -575,7 +575,9 @@ public class IjModuleFactory {
     }
 
     @Override
-    public void apply(TargetNode<AndroidBinaryDescription.Arg> target, ModuleBuildContext context) {
+    public void apply(
+        TargetNode<AndroidBinaryDescription.Arg, ?> target,
+        ModuleBuildContext context) {
       context.addDeps(target.getDeps(), IjModuleGraph.DependencyType.PROD);
 
       IjModuleAndroidFacet.Builder androidFacetBuilder = context.getOrCreateAndroidFacetBuilder();
@@ -596,7 +598,7 @@ public class IjModuleFactory {
     }
 
     @Override
-    public void apply(TargetNode<AndroidLibraryDescription.Arg> target,
+    public void apply(TargetNode<AndroidLibraryDescription.Arg, ?> target,
         ModuleBuildContext context) {
       addDepsAndSources(
           target,
@@ -628,7 +630,7 @@ public class IjModuleFactory {
 
     @Override
     public void apply(
-        TargetNode<AndroidResourceDescription.Arg> target,
+        TargetNode<AndroidResourceDescription.Arg, ?> target,
         ModuleBuildContext context) {
 
       IjModuleAndroidFacet.Builder androidFacetBuilder = context.getOrCreateAndroidFacetBuilder();
@@ -684,7 +686,7 @@ public class IjModuleFactory {
     }
 
     @Override
-    public void apply(TargetNode<CxxLibraryDescription.Arg> target, ModuleBuildContext context) {
+    public void apply(TargetNode<CxxLibraryDescription.Arg, ?> target, ModuleBuildContext context) {
       addSourceFolders(
           SourceFolder.FACTORY,
           getSourceFoldersToInputsIndex(target.getInputs()),
@@ -701,7 +703,9 @@ public class IjModuleFactory {
     }
 
     @Override
-    public void apply(TargetNode<JavaLibraryDescription.Arg> target, ModuleBuildContext context) {
+    public void apply(
+        TargetNode<JavaLibraryDescription.Arg, ?> target,
+        ModuleBuildContext context) {
       addDepsAndSources(
           target,
           true /* wantsPackagePrefix */,
@@ -718,7 +722,9 @@ public class IjModuleFactory {
     }
 
     @Override
-    public void apply(TargetNode<GroovyLibraryDescription.Arg> target, ModuleBuildContext context) {
+    public void apply(
+        TargetNode<GroovyLibraryDescription.Arg, ?> target,
+        ModuleBuildContext context) {
       addDepsAndSources(
           target,
           false /* wantsPackagePrefix */,
@@ -734,7 +740,9 @@ public class IjModuleFactory {
     }
 
     @Override
-    public void apply(TargetNode<GroovyTestDescription.Arg> target, ModuleBuildContext context) {
+    public void apply(
+        TargetNode<GroovyTestDescription.Arg, ?> target,
+        ModuleBuildContext context) {
       addDepsAndTestSources(
           target,
           false /* wantsPackagePrefix */,
@@ -750,7 +758,7 @@ public class IjModuleFactory {
     }
 
     @Override
-    public void apply(TargetNode<JavaTestDescription.Arg> target, ModuleBuildContext context) {
+    public void apply(TargetNode<JavaTestDescription.Arg, ?> target, ModuleBuildContext context) {
       addDepsAndTestSources(
           target,
           true /* wantsPackagePrefix */,

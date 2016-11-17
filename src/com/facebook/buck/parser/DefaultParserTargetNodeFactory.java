@@ -54,19 +54,19 @@ import java.util.Optional;
  * Creates {@link TargetNode} instances from raw data coming in form the
  * {@link com.facebook.buck.json.ProjectBuildFileParser}.
  */
-public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<TargetNode<?>> {
+public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<TargetNode<?, ?>> {
 
   private static final Logger LOG = Logger.get(DefaultParserTargetNodeFactory.class);
 
   private final ConstructorArgMarshaller marshaller;
   private final Optional<LoadingCache<Cell, BuildFileTree>> buildFileTrees;
-  private final TargetNodeListener<TargetNode<?>> nodeListener;
+  private final TargetNodeListener<TargetNode<?, ?>> nodeListener;
   private final TargetNodeFactory targetNodeFactory;
 
   private DefaultParserTargetNodeFactory(
       ConstructorArgMarshaller marshaller,
       Optional<LoadingCache<Cell, BuildFileTree>> buildFileTrees,
-      TargetNodeListener<TargetNode<?>> nodeListener,
+      TargetNodeListener<TargetNode<?, ?>> nodeListener,
       TargetNodeFactory targetNodeFactory) {
     this.marshaller = marshaller;
     this.buildFileTrees = buildFileTrees;
@@ -74,10 +74,10 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
     this.targetNodeFactory = targetNodeFactory;
   }
 
-  public static ParserTargetNodeFactory<TargetNode<?>> createForParser(
+  public static ParserTargetNodeFactory<TargetNode<?, ?>> createForParser(
       ConstructorArgMarshaller marshaller,
       LoadingCache<Cell, BuildFileTree> buildFileTrees,
-      TargetNodeListener<TargetNode<?>> nodeListener,
+      TargetNodeListener<TargetNode<?, ?>> nodeListener,
       TargetNodeFactory targetNodeFactory) {
     return new DefaultParserTargetNodeFactory(
         marshaller,
@@ -86,7 +86,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
         targetNodeFactory);
   }
 
-  public static ParserTargetNodeFactory<TargetNode<?>> createForDistributedBuild(
+  public static ParserTargetNodeFactory<TargetNode<?, ?>> createForDistributedBuild(
       ConstructorArgMarshaller marshaller,
       TargetNodeFactory targetNodeFactory) {
     return new DefaultParserTargetNodeFactory(
@@ -99,7 +99,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
   }
 
   @Override
-  public TargetNode<?> createTargetNode(
+  public TargetNode<?, ?> createTargetNode(
       Cell cell,
       Path buildFile,
       BuildTarget target,
@@ -168,7 +168,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
         Hasher hasher = Hashing.sha1().newHasher();
         hasher.putString(BuckVersion.getVersion(), UTF_8);
         JsonObjectHashing.hashJsonObject(hasher, rawNode);
-        TargetNode<?> node = targetNodeFactory.createFromObject(
+        TargetNode<?, ?> node = targetNodeFactory.createFromObject(
             hasher.hash(),
             description,
             constructorArg,

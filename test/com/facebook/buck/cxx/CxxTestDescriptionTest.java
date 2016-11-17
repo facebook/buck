@@ -256,7 +256,7 @@ public class CxxTestDescriptionTest {
   @Test
   public void linkerFlagsLocationMacro() throws Exception {
     BuildTarget gtestTarget = BuildTargetFactory.newInstance("//:gtest_dep");
-    TargetNode<?> gtest = new CxxLibraryBuilder(gtestTarget).build();
+    TargetNode<?, ?> gtest = new CxxLibraryBuilder(gtestTarget).build();
     BuildRuleResolver resolver =
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(gtest),
@@ -399,7 +399,7 @@ public class CxxTestDescriptionTest {
     for (CxxTestType framework : CxxTestType.values()) {
       BuildRuleResolver resolver =
           new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-      TargetNode<?> cxxTestWithResources =
+      TargetNode<?, ?> cxxTestWithResources =
           createTestBuilder(resolver, filesystem)
               .setFramework(framework)
               .setResources(ImmutableSortedSet.of(resource))

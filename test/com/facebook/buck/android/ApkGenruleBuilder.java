@@ -21,7 +21,8 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 
 import java.util.Optional;
 
-public class ApkGenruleBuilder extends AbstractNodeBuilder<ApkGenruleDescription.Arg> {
+public class ApkGenruleBuilder
+    extends AbstractNodeBuilder<ApkGenruleDescription.Arg, ApkGenruleDescription> {
 
   private ApkGenruleBuilder(BuildTarget target) {
     super(new ApkGenruleDescription(), target);

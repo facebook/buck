@@ -31,9 +31,9 @@ public class TargetGraphFactory {
 
   private TargetGraphFactory() {}
 
-  public static TargetGraph newInstance(Iterable<TargetNode<?>> nodes) {
-    Map<BuildTarget, TargetNode<?>> builder = new HashMap<>();
-    for (TargetNode<?> node : nodes) {
+  public static TargetGraph newInstance(Iterable<TargetNode<?, ?>> nodes) {
+    Map<BuildTarget, TargetNode<?, ?>> builder = new HashMap<>();
+    for (TargetNode<?, ?> node : nodes) {
       builder.put(node.getBuildTarget(), node);
       BuildTarget unflavoredTarget =
           BuildTarget.of(node.getBuildTarget().getUnflavoredBuildTarget());
@@ -41,10 +41,10 @@ public class TargetGraphFactory {
         builder.put(unflavoredTarget, node);
       }
     }
-    ImmutableMap<BuildTarget, TargetNode<?>> map = ImmutableMap.copyOf(builder);
+    ImmutableMap<BuildTarget, TargetNode<?, ?>> map = ImmutableMap.copyOf(builder);
 
-    MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
-    for (TargetNode<?> node : map.values()) {
+    MutableDirectedGraph<TargetNode<?, ?>> graph = new MutableDirectedGraph<>();
+    for (TargetNode<?, ?> node : map.values()) {
       graph.addNode(node);
       for (BuildTarget dep : node.getDeps()) {
         graph.addEdge(node, Preconditions.checkNotNull(map.get(dep), dep));
@@ -53,7 +53,7 @@ public class TargetGraphFactory {
     return new TargetGraph(graph, map, ImmutableSet.of());
   }
 
-  public static TargetGraph newInstance(TargetNode<?>... nodes) {
+  public static TargetGraph newInstance(TargetNode<?, ?>... nodes) {
     return newInstance(ImmutableSet.copyOf(nodes));
   }
 

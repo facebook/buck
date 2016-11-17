@@ -19,7 +19,11 @@ package com.facebook.buck.apple;
 import com.facebook.buck.model.BuildTarget;
 
 public class AppleLibraryBuilder
-    extends AbstractAppleNativeTargetBuilder<AppleLibraryDescription.Arg, AppleLibraryBuilder> {
+    extends
+    AbstractAppleNativeTargetBuilder<
+        AppleLibraryDescription.Arg,
+        AppleLibraryDescription,
+        AppleLibraryBuilder> {
 
   @Override
   protected AppleLibraryBuilder getThis() {

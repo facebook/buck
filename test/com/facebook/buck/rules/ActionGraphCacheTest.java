@@ -58,8 +58,8 @@ public class ActionGraphCacheTest {
   private static final boolean CHECK_GRAPHS = true;
   private static final boolean NOT_CHECK_GRAPHS = false;
 
-  private TargetNode<?> nodeA;
-  private TargetNode<?> nodeB;
+  private TargetNode<?, ?> nodeA;
+  private TargetNode<?, ?> nodeB;
   private TargetGraph targetGraph;
   private BuckEventBus eventBus;
   private BroadcastEventListener broadcastEventListener;
@@ -230,10 +230,10 @@ public class ActionGraphCacheTest {
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 4);
   }
 
-  private TargetNode<?> createTargetNode(String name, TargetNode<?>... deps) {
+  private TargetNode<?, ?> createTargetNode(String name, TargetNode<?, ?>... deps) {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:" + name);
     JavaLibraryBuilder targetNodeBuilder = JavaLibraryBuilder.createBuilder(buildTarget);
-    for (TargetNode<?> dep : deps) {
+    for (TargetNode<?, ?> dep : deps) {
       targetNodeBuilder.addDep(dep.getBuildTarget());
     }
     return targetNodeBuilder.build();

@@ -26,7 +26,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 public class PrebuiltHaskellLibraryBuilder
-    extends AbstractNodeBuilder<PrebuiltHaskellLibraryDescription.Arg> {
+    extends
+    AbstractNodeBuilder<PrebuiltHaskellLibraryDescription.Arg, PrebuiltHaskellLibraryDescription> {
 
   public PrebuiltHaskellLibraryBuilder(BuildTarget target) {
     super(

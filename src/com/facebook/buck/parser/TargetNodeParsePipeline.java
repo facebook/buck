@@ -52,11 +52,11 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 public class TargetNodeParsePipeline
-    extends ConvertingPipeline<Map<String, Object>, TargetNode<?>> {
+    extends ConvertingPipeline<Map<String, Object>, TargetNode<?, ?>> {
 
   private static final Logger LOG = Logger.get(TargetNodeParsePipeline.class);
 
-  private final ParserTargetNodeFactory<TargetNode<?>> delegate;
+  private final ParserTargetNodeFactory<TargetNode<?, ?>> delegate;
   private final BuckEventBus eventBus;
   private final boolean speculativeDepsTraversal;
   private final RawNodeParsePipeline rawNodeParsePipeline;
@@ -72,8 +72,8 @@ public class TargetNodeParsePipeline
    * @param rawNodeParsePipeline
    */
   public TargetNodeParsePipeline(
-      Cache<BuildTarget, TargetNode<?>> cache,
-      ParserTargetNodeFactory<TargetNode<?>> targetNodeDelegate,
+      Cache<BuildTarget, TargetNode<?, ?>> cache,
+      ParserTargetNodeFactory<TargetNode<?, ?>> targetNodeDelegate,
       ListeningExecutorService executorService,
       BuckEventBus eventBus,
       boolean speculativeDepsTraversal, RawNodeParsePipeline rawNodeParsePipeline) {
@@ -94,7 +94,7 @@ public class TargetNodeParsePipeline
   }
 
   @Override
-  protected TargetNode<?> computeNode(
+  protected TargetNode<?, ?> computeNode(
       final Cell cell,
       final BuildTarget buildTarget,
       final Map<String, Object> rawNode) throws BuildTargetException {
@@ -112,7 +112,7 @@ public class TargetNodeParsePipeline
               scope,
               getMinimumPerfEventTimeMs(),
               TimeUnit.MILLISECONDS);
-      final TargetNode<?> targetNode = delegate.createTargetNode(
+      final TargetNode<?, ?> targetNode = delegate.createTargetNode(
           cell,
           cell.getAbsolutePathToBuildFile(buildTarget),
           buildTarget,

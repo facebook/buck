@@ -51,24 +51,24 @@ import java.util.stream.Collectors;
 public class DistBuildTargetGraphCodec {
 
   private final ObjectMapper objectMapper;
-  private final ParserTargetNodeFactory<TargetNode<?>> parserTargetNodeFactory;
-  private final Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode;
+  private final ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory;
+  private final Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode;
 
   public DistBuildTargetGraphCodec(
       ObjectMapper objectMapper,
-      ParserTargetNodeFactory<TargetNode<?>> parserTargetNodeFactory,
-      Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode) {
+      ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory,
+      Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode) {
     this.objectMapper = objectMapper;
     this.parserTargetNodeFactory = parserTargetNodeFactory;
     this.nodeToRawNode = nodeToRawNode;
   }
 
   public BuildJobStateTargetGraph dump(
-      Collection<TargetNode<?>> targetNodes,
+      Collection<TargetNode<?, ?>> targetNodes,
       Function<Path, Integer> cellIndexer) {
     BuildJobStateTargetGraph result = new BuildJobStateTargetGraph();
 
-    for (TargetNode<?> targetNode : targetNodes) {
+    for (TargetNode<?, ?> targetNode : targetNodes) {
       Map<String, Object> rawTargetNode = nodeToRawNode.apply(targetNode);
       ProjectFilesystem projectFilesystem = targetNode.getFilesystem();
 
@@ -123,7 +123,7 @@ public class DistBuildTargetGraphCodec {
       BuildJobStateTargetGraph remoteTargetGraph,
       Function<Integer, Cell> cellLookup) throws IOException {
 
-    ImmutableMap.Builder<BuildTarget, TargetNode<?>> targetNodeIndexBuilder =
+    ImmutableMap.Builder<BuildTarget, TargetNode<?, ?>> targetNodeIndexBuilder =
         ImmutableMap.builder();
 
     for (BuildJobStateTargetNode remoteNode : remoteTargetGraph.getNodes()) {
@@ -137,7 +137,7 @@ public class DistBuildTargetGraphCodec {
           .resolve(target.getBasePath())
           .resolve(cell.getBuildFileName());
 
-      TargetNode<?> targetNode = parserTargetNodeFactory.createTargetNode(
+      TargetNode<?, ?> targetNode = parserTargetNodeFactory.createTargetNode(
           cell,
           buildFilePath,
           target,
@@ -145,10 +145,10 @@ public class DistBuildTargetGraphCodec {
           input -> SimplePerfEvent.scope(Optional.empty(), input));
       targetNodeIndexBuilder.put(targetNode.getBuildTarget(), targetNode);
     }
-    ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex = targetNodeIndexBuilder.build();
+    ImmutableMap<BuildTarget, TargetNode<?, ?>> targetNodeIndex = targetNodeIndexBuilder.build();
 
-    MutableDirectedGraph<TargetNode<?>> mutableTargetGraph = new MutableDirectedGraph<>();
-    for (TargetNode<?> targetNode : targetNodeIndex.values()) {
+    MutableDirectedGraph<TargetNode<?, ?>> mutableTargetGraph = new MutableDirectedGraph<>();
+    for (TargetNode<?, ?> targetNode : targetNodeIndex.values()) {
       mutableTargetGraph.addNode(targetNode);
       for (BuildTarget dep : targetNode.getDeps()) {
         mutableTargetGraph.addEdge(

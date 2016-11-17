@@ -143,11 +143,11 @@ public class ActionGraphCache {
     final int numberOfNodes = targetGraph.getNodes().size();
     final AtomicInteger processedNodes = new AtomicInteger(0);
 
-    AbstractBottomUpTraversal<TargetNode<?>, RuntimeException> bottomUpTraversal =
-        new AbstractBottomUpTraversal<TargetNode<?>, RuntimeException>(targetGraph) {
+    AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException> bottomUpTraversal =
+        new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(targetGraph) {
 
           @Override
-          public void visit(TargetNode<?> node) {
+          public void visit(TargetNode<?, ?> node) {
             try {
               resolver.requireRule(node.getBuildTarget());
             } catch (NoSuchBuildTargetException e) {

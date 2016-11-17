@@ -22,7 +22,8 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 
 import java.util.Optional;
 
-public class CxxGenruleBuilder extends AbstractNodeBuilder<CxxGenruleDescription.Arg> {
+public class CxxGenruleBuilder
+    extends AbstractNodeBuilder<CxxGenruleDescription.Arg, CxxGenruleDescription> {
 
   public CxxGenruleBuilder(
       BuildTarget target,

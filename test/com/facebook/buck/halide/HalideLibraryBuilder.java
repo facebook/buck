@@ -36,8 +36,12 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public class HalideLibraryBuilder extends
-    AbstractCxxSourceBuilder<HalideLibraryDescription.Arg, HalideLibraryBuilder> {
+public class HalideLibraryBuilder
+    extends
+    AbstractCxxSourceBuilder<
+        HalideLibraryDescription.Arg,
+        HalideLibraryDescription,
+        HalideLibraryBuilder> {
   public HalideLibraryBuilder(
       BuildTarget target,
       HalideBuckConfig halideBuckConfig,

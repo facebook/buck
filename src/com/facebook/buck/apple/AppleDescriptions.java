@@ -323,7 +323,7 @@ public class AppleDescriptions {
       SourcePathResolver sourcePathResolver,
       ApplePlatform applePlatform,
       Tool actool) {
-    TargetNode<?> targetNode = targetGraph.get(params.getBuildTarget());
+    TargetNode<?, ?> targetNode = targetGraph.get(params.getBuildTarget());
 
     ImmutableSet<AppleAssetCatalogDescription.Arg> assetCatalogArgs =
         AppleBuildRules.collectRecursiveAssetCatalogs(targetGraph, ImmutableList.of(targetNode));
@@ -385,7 +385,7 @@ public class AppleDescriptions {
       SourcePathResolver sourcePathResolver,
       String moduleName,
       AppleCxxPlatform appleCxxPlatform) {
-    TargetNode<?> targetNode = targetGraph.get(params.getBuildTarget());
+    TargetNode<?, ?> targetNode = targetGraph.get(params.getBuildTarget());
 
     ImmutableSet<CoreDataModelDescription.Arg> coreDataModelArgs =
         AppleBuildRules.collectTransitiveCoreDataModels(targetGraph, ImmutableList.of(targetNode));
@@ -731,7 +731,7 @@ public class AppleDescriptions {
     }
     BuildTarget buildTarget = buildTargetBuilder.build();
 
-    final TargetNode<?> binaryTargetNode = targetGraph.get(buildTarget);
+    final TargetNode<?, ?> binaryTargetNode = targetGraph.get(buildTarget);
 
     if (binaryTargetNode.getDescription() instanceof AppleTestDescription) {
       return resolver.getRule(binary);

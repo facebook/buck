@@ -24,7 +24,8 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
 
-public class PythonLibraryBuilder extends AbstractNodeBuilder<PythonLibraryDescription.Arg> {
+public class PythonLibraryBuilder
+    extends AbstractNodeBuilder<PythonLibraryDescription.Arg, PythonLibraryDescription> {
 
   public PythonLibraryBuilder(BuildTarget target) {
     super(new PythonLibraryDescription(), target);

@@ -27,7 +27,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class PrebuiltCxxLibraryBuilder
-    extends AbstractCxxBuilder<PrebuiltCxxLibraryDescription.Arg> {
+    extends AbstractCxxBuilder<PrebuiltCxxLibraryDescription.Arg, PrebuiltCxxLibraryDescription> {
 
   public PrebuiltCxxLibraryBuilder(
       BuildTarget target,

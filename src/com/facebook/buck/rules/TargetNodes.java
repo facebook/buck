@@ -33,7 +33,7 @@ public class TargetNodes {
    *
    * Otherwise, returns an empty set.
    */
-  public static ImmutableSortedSet<BuildTarget> getTestTargetsForNode(TargetNode<?> node) {
+  public static ImmutableSortedSet<BuildTarget> getTestTargetsForNode(TargetNode<?, ?> node) {
     if (node.getConstructorArg() instanceof HasTests) {
       return ((HasTests) node.getConstructorArg()).getTests();
     } else {

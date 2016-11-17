@@ -36,7 +36,7 @@ abstract class AbstractIjLibrary implements IjProjectElement {
   public abstract String getName();
 
   @Override
-  public abstract ImmutableSet<TargetNode<?>> getTargets();
+  public abstract ImmutableSet<TargetNode<?, ?>> getTargets();
 
   /**
    * @return path to the binary (.jar or .aar) the library represents.

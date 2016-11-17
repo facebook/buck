@@ -24,7 +24,8 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-public class ExportFileBuilder extends AbstractNodeBuilder<ExportFileDescription.Arg> {
+public class ExportFileBuilder
+    extends AbstractNodeBuilder<ExportFileDescription.Arg, ExportFileDescription> {
   private ExportFileBuilder(BuildTarget target) {
     super(new ExportFileDescription(), target);
   }

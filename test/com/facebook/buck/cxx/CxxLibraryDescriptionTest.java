@@ -145,7 +145,7 @@ public class CxxLibraryDescriptionTest {
     }
   }
 
-  private TargetNode<CxxLibraryDescription.Arg> mkSandboxNode(BuildTarget libTarget) {
+  private TargetNode<CxxLibraryDescription.Arg, ?> mkSandboxNode(BuildTarget libTarget) {
     Optional<Map.Entry<Flavor, CxxLibraryDescription.Type>> type =
         CxxLibraryDescription.getLibType(libTarget);
     Set<Flavor> flavors = Sets.newHashSet(libTarget.getFlavors());

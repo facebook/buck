@@ -35,38 +35,11 @@ import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Optional;
 
-class VersionRootBuilder extends AbstractNodeBuilder<VersionRootBuilder.Arg> {
+class VersionRootBuilder
+    extends AbstractNodeBuilder<VersionRootBuilder.Arg, VersionRootBuilder.Description> {
 
   public VersionRootBuilder(BuildTarget target) {
-    super(
-        new VersionRoot<Arg>() {
-
-          @Override
-          public BuildRuleType getBuildRuleType() {
-            return BuildRuleType.of("version_root");
-          }
-
-          @Override
-          public Arg createUnpopulatedConstructorArg() {
-            return new Arg();
-          }
-
-          @Override
-          public <A extends Arg> BuildRule createBuildRule(
-              TargetGraph targetGraph,
-              BuildRuleParams params,
-              BuildRuleResolver resolver,
-              A args) throws NoSuchBuildTargetException {
-            throw new IllegalStateException();
-          }
-
-          @Override
-          public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
-            return true;
-          }
-
-        },
-        target);
+    super(new VersionRootBuilder.Description(), target);
   }
 
   public VersionRootBuilder(String target) {
@@ -119,6 +92,34 @@ class VersionRootBuilder extends AbstractNodeBuilder<VersionRootBuilder.Arg> {
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public ImmutableSortedMap<BuildTarget, Optional<Constraint>> versionedDeps =
         ImmutableSortedMap.of();
+  }
+
+  public static class Description implements VersionRoot<Arg> {
+
+    @Override
+    public BuildRuleType getBuildRuleType() {
+      return BuildRuleType.of("version_root");
+    }
+
+    @Override
+    public Arg createUnpopulatedConstructorArg() {
+      return new Arg();
+    }
+
+    @Override
+    public <A extends Arg> BuildRule createBuildRule(
+        TargetGraph targetGraph,
+        BuildRuleParams params,
+        BuildRuleResolver resolver,
+        A args) throws NoSuchBuildTargetException {
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
+      return true;
+    }
+
   }
 
 }

@@ -34,7 +34,7 @@ public class VersionUniverseVersionSelectorTest {
 
   @Test
   public void validImplication() throws Exception {
-    TargetNode<?> root =
+    TargetNode<?, ?> root =
         new VersionRootBuilder("//:root")
             .setVersionUniverse("universe")
             .build();
@@ -62,7 +62,7 @@ public class VersionUniverseVersionSelectorTest {
 
   @Test
   public void unusedImplication() throws Exception {
-    TargetNode<?> root =
+    TargetNode<?, ?> root =
         new VersionRootBuilder("//:root")
             .setVersionUniverse("universe")
             .build();
@@ -90,7 +90,7 @@ public class VersionUniverseVersionSelectorTest {
 
   @Test
   public void firstConfiguredVersionUniverseUsedByDefault() throws VersionException {
-    TargetNode<?> root =
+    TargetNode<?, ?> root =
         new VersionRootBuilder("//:root")
             .build();
     VersionUniverseVersionSelector selector =

@@ -23,11 +23,13 @@ import com.facebook.buck.rules.SourcePath;
 import com.google.common.collect.ImmutableSortedSet;
 
 
-public abstract class AbstractXcodeScriptBuilder<T extends AbstractXcodeScriptBuilder<T>>
-    extends AbstractNodeBuilder<XcodeScriptDescriptionArg> {
+public abstract class AbstractXcodeScriptBuilder<
+    T extends AbstractXcodeScriptBuilder<T, U>,
+    U extends Description<XcodeScriptDescriptionArg>>
+    extends AbstractNodeBuilder<XcodeScriptDescriptionArg, U> {
 
   public AbstractXcodeScriptBuilder(
-      Description<XcodeScriptDescriptionArg> description,
+      U description,
       BuildTarget target) {
     super(description, target);
   }

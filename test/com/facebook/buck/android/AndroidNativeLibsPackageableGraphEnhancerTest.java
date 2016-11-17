@@ -132,7 +132,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
         BuildTargetFactory.newInstance("//:cxxlib"))
         .setSoname("somelib.so")
         .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("test/bar.cpp"))));
-    TargetNode<CxxLibraryDescription.Arg> cxxLibraryDescription = cxxLibraryBuilder.build();
+    TargetNode<CxxLibraryDescription.Arg, ?> cxxLibraryDescription = cxxLibraryBuilder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(cxxLibraryDescription);
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());

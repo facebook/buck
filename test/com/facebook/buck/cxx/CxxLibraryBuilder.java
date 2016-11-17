@@ -29,8 +29,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public class CxxLibraryBuilder extends
-    AbstractCxxSourceBuilder<CxxLibraryDescription.Arg, CxxLibraryBuilder> {
+public class CxxLibraryBuilder
+    extends
+    AbstractCxxSourceBuilder<CxxLibraryDescription.Arg, CxxLibraryDescription, CxxLibraryBuilder> {
 
   public CxxLibraryBuilder(
       BuildTarget target,

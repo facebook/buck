@@ -25,7 +25,7 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import java.util.Optional;
 
 public class RobolectricTestBuilder
-    extends AbstractNodeBuilder<RobolectricTestDescription.Arg> {
+    extends AbstractNodeBuilder<RobolectricTestDescription.Arg, RobolectricTestDescription> {
 
   private RobolectricTestBuilder(BuildTarget target) {
     super(

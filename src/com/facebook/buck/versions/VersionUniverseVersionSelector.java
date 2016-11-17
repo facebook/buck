@@ -50,7 +50,7 @@ public class VersionUniverseVersionSelector implements VersionSelector {
   }
 
   @SuppressWarnings("unchecked")
-  private <A> Optional<String> getVersionUniverseName(TargetNode<A> root) {
+  private <A> Optional<String> getVersionUniverseName(TargetNode<A, ?> root) {
     A arg = root.getConstructorArg();
     try {
       return (Optional<String>) arg.getClass().getField("versionUniverse").get(arg);
@@ -60,7 +60,7 @@ public class VersionUniverseVersionSelector implements VersionSelector {
   }
 
   @VisibleForTesting
-  protected Optional<Map.Entry<String, VersionUniverse>> getVersionUniverse(TargetNode<?> root) {
+  protected Optional<Map.Entry<String, VersionUniverse>> getVersionUniverse(TargetNode<?, ?> root) {
     Optional<String> universeName = getVersionUniverseName(root);
     if (!universeName.isPresent() && !universes.isEmpty()) {
       return Optional.of(Iterables.get(universes.entrySet(), 0));
@@ -85,7 +85,7 @@ public class VersionUniverseVersionSelector implements VersionSelector {
       ImmutableMap<BuildTarget, ImmutableSet<Version>> domain)
       throws VersionException {
 
-    TargetNode<?> node = targetGraph.get(root);
+    TargetNode<?, ?> node = targetGraph.get(root);
     ImmutableMap.Builder<BuildTarget, Version> selectedVersions = ImmutableMap.builder();
 
     Optional<Map.Entry<String, VersionUniverse>> universe = getVersionUniverse(node);

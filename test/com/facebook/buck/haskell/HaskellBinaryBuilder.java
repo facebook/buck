@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableList;
 
 
 public class HaskellBinaryBuilder
-    extends AbstractNodeBuilder<HaskellBinaryDescription.Arg> {
+    extends AbstractNodeBuilder<HaskellBinaryDescription.Arg, HaskellBinaryDescription> {
 
   public HaskellBinaryBuilder(
       BuildTarget target,

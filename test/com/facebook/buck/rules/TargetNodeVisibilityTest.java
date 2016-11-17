@@ -62,7 +62,7 @@ public class TargetNodeVisibilityTest {
           "//src/com/facebook/something2",
           "nonPublic").build();
   private static final TargetGraph GRAPH = new TargetGraph(
-      new MutableDirectedGraph<TargetNode<?>>(),
+      new MutableDirectedGraph<TargetNode<?, ?>>(),
       ImmutableMap.of(),
       ImmutableSet.of());
 
@@ -73,8 +73,8 @@ public class TargetNodeVisibilityTest {
   @Test
   public void testVisibilityPublic()
       throws NoSuchBuildTargetException {
-    TargetNode<?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
-    TargetNode<?> orcaRule = createTargetNode(orcaTarget);
+    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
+    TargetNode<?, ?> orcaRule = createTargetNode(orcaTarget);
 
     assertTrue(publicTargetNode.isVisibleTo(GRAPH, orcaRule));
     assertFalse(orcaRule.isVisibleTo(GRAPH, publicTargetNode));
@@ -83,10 +83,10 @@ public class TargetNodeVisibilityTest {
   @Test
   public void testVisibilityNonPublic()
       throws NoSuchBuildTargetException {
-    TargetNode<?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, VISIBLETO_ORCA);
-    TargetNode<?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, VISIBLETO_ORCA);
-    TargetNode<?> orcaRule = createTargetNode(orcaTarget);
-    TargetNode<?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
+    TargetNode<?, ?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, VISIBLETO_ORCA);
+    TargetNode<?, ?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, VISIBLETO_ORCA);
+    TargetNode<?, ?> orcaRule = createTargetNode(orcaTarget);
+    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
 
     assertTrue(shouldBeVisibleMessage(nonPublicTargetNode1, orcaTarget),
         nonPublicTargetNode1.isVisibleTo(GRAPH, orcaRule));
@@ -102,8 +102,8 @@ public class TargetNodeVisibilityTest {
   @Test
   public void testVisibilityNonPublicFailure()
       throws NoSuchBuildTargetException {
-    TargetNode<?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, VISIBLETO_ORCA);
-    TargetNode<?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
+    TargetNode<?, ?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, VISIBLETO_ORCA);
+    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
 
     try {
       nonPublicTargetNode1.isVisibleToOrThrow(GRAPH, publicTargetNode);
@@ -120,10 +120,10 @@ public class TargetNodeVisibilityTest {
   @Test
   public void testVisibilityMix()
       throws NoSuchBuildTargetException {
-    TargetNode<?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, VISIBLETO_ORCA);
-    TargetNode<?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, VISIBLETO_ORCA);
-    TargetNode<?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
-    TargetNode<?> orcaRule = createTargetNode(orcaTarget);
+    TargetNode<?, ?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, VISIBLETO_ORCA);
+    TargetNode<?, ?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, VISIBLETO_ORCA);
+    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
+    TargetNode<?, ?> orcaRule = createTargetNode(orcaTarget);
 
     assertTrue(shouldBeVisibleMessage(nonPublicTargetNode1, orcaTarget),
         nonPublicTargetNode1.isVisibleTo(GRAPH, orcaRule));
@@ -138,10 +138,11 @@ public class TargetNodeVisibilityTest {
   @Test
   public void testVisibilityMixFailure()
       throws NoSuchBuildTargetException {
-    TargetNode<?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, VISIBLETO_ORCA);
-    TargetNode<?> nonPublicTargetNode2 = createTargetNode(nonPublicTarget2, VISIBLETO_SOME_OTHER);
-    TargetNode<?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
-    TargetNode<?> orcaRule = createTargetNode(orcaTarget);
+    TargetNode<?, ?> nonPublicTargetNode1 = createTargetNode(nonPublicTarget1, VISIBLETO_ORCA);
+    TargetNode<?, ?> nonPublicTargetNode2 =
+        createTargetNode(nonPublicTarget2, VISIBLETO_SOME_OTHER);
+    TargetNode<?, ?> publicTargetNode = createTargetNode(publicTarget, VISIBLETO_PUBLIC);
+    TargetNode<?, ?> orcaRule = createTargetNode(orcaTarget);
 
     publicTargetNode.isVisibleToOrThrow(GRAPH, orcaRule);
     nonPublicTargetNode1.isVisibleToOrThrow(GRAPH, orcaRule);
@@ -163,31 +164,31 @@ public class TargetNodeVisibilityTest {
   public void testVisibilityForDirectory()
       throws NoSuchBuildTargetException {
     BuildTarget libTarget = BuildTarget.builder(filesystem.getRootPath(), "//lib", "lib").build();
-    TargetNode<?> targetInSpecifiedDirectory = createTargetNode(
+    TargetNode<?, ?> targetInSpecifiedDirectory = createTargetNode(
         BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook", "test").build());
-    TargetNode<?> targetUnderSpecifiedDirectory = createTargetNode(
+    TargetNode<?, ?> targetUnderSpecifiedDirectory = createTargetNode(
         BuildTarget.builder(filesystem.getRootPath(), "//src/com/facebook/buck", "test").build());
-    TargetNode<?> targetInOtherDirectory = createTargetNode(
+    TargetNode<?, ?> targetInOtherDirectory = createTargetNode(
         BuildTarget.builder(filesystem.getRootPath(), "//src/com/instagram", "test").build());
-    TargetNode<?> targetInParentDirectory = createTargetNode(
+    TargetNode<?, ?> targetInParentDirectory = createTargetNode(
         BuildTarget.builder(filesystem.getRootPath(), "//", "test").build());
 
     // Build rule that visible to targets in or under directory src/com/facebook
-    TargetNode<?> directoryTargetNode = createTargetNode(libTarget, "//src/com/facebook/...");
+    TargetNode<?, ?> directoryTargetNode = createTargetNode(libTarget, "//src/com/facebook/...");
     assertTrue(directoryTargetNode.isVisibleTo(GRAPH, targetInSpecifiedDirectory));
     assertTrue(directoryTargetNode.isVisibleTo(GRAPH, targetUnderSpecifiedDirectory));
     assertFalse(directoryTargetNode.isVisibleTo(GRAPH, targetInOtherDirectory));
     assertFalse(directoryTargetNode.isVisibleTo(GRAPH, targetInParentDirectory));
 
     // Build rule that's visible to all targets, equals to PUBLIC.
-    TargetNode<?> pubicTargetNode = createTargetNode(libTarget, "//...");
+    TargetNode<?, ?> pubicTargetNode = createTargetNode(libTarget, "//...");
     assertTrue(pubicTargetNode.isVisibleTo(GRAPH, targetInSpecifiedDirectory));
     assertTrue(pubicTargetNode.isVisibleTo(GRAPH, targetUnderSpecifiedDirectory));
     assertTrue(pubicTargetNode.isVisibleTo(GRAPH, targetInOtherDirectory));
     assertTrue(pubicTargetNode.isVisibleTo(GRAPH, targetInParentDirectory));
   }
 
-  private String shouldBeVisibleMessage(TargetNode<?> rule, BuildTarget target) {
+  private String shouldBeVisibleMessage(TargetNode<?, ?> rule, BuildTarget target) {
     return String.format(
         "%1$s should be visible to %2$s because the visibility list of %1$s contains %2$s",
         rule.getBuildTarget(),
@@ -220,7 +221,7 @@ public class TargetNodeVisibilityTest {
     }
   }
 
-  private static TargetNode<?> createTargetNode(
+  private static TargetNode<?, ?> createTargetNode(
       BuildTarget buildTarget,
       String... visibilities)
       throws NoSuchBuildTargetException {

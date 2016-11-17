@@ -94,7 +94,7 @@ public class BuildRuleResolverTest {
   @Test
   public void testRequireNonExistingBuildRule() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    TargetNode<?> library =
+    TargetNode<?, ?> library =
         JavaLibraryBuilder.createBuilder(target)
             .build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(library);
@@ -110,7 +110,7 @@ public class BuildRuleResolverTest {
   public void testRequireExistingBuildRule() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
-    TargetNode<?> library = builder.build();
+    TargetNode<?, ?> library = builder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(library);
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
@@ -137,7 +137,7 @@ public class BuildRuleResolverTest {
   public void getRuleWithTypeWrongType() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
-    TargetNode<?> library = builder.build();
+    TargetNode<?, ?> library = builder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(library);
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());

@@ -21,15 +21,18 @@ import com.facebook.buck.cxx.AbstractCxxSourceBuilder;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.Description;
 
 import java.util.Optional;
 
 public class CxxLuaExtensionBuilder
-    extends AbstractCxxSourceBuilder<CxxLuaExtensionDescription.Arg, CxxLuaExtensionBuilder> {
+    extends
+    AbstractCxxSourceBuilder<
+        CxxLuaExtensionDescription.Arg,
+        CxxLuaExtensionDescription,
+        CxxLuaExtensionBuilder> {
 
   public CxxLuaExtensionBuilder(
-      Description<CxxLuaExtensionDescription.Arg> description,
+      CxxLuaExtensionDescription description,
       BuildTarget target) {
     super(description, target);
   }

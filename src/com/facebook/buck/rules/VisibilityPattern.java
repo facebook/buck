@@ -16,7 +16,10 @@
 package com.facebook.buck.rules;
 
 public interface VisibilityPattern {
-  boolean checkVisibility(TargetGraph graphContext, TargetNode<?> viewer, TargetNode<?> viewed);
+  boolean checkVisibility(
+      TargetGraph graphContext,
+      TargetNode<?, ?> viewer,
+      TargetNode<?, ?> viewed);
 
   /**
    * Value used in a build file to specify this pattern.

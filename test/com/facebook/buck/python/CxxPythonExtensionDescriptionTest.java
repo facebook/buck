@@ -297,7 +297,7 @@ public class CxxPythonExtensionDescriptionTest {
         .setExportedLinkerFlags(ImmutableList.of("-lpython3"))
         .build(resolver, filesystem);
     CxxPythonExtensionDescription desc =
-        (CxxPythonExtensionDescription) new CxxPythonExtensionBuilder(
+        new CxxPythonExtensionBuilder(
             target,
             FlavorDomain.of("Python Platform", PY2, PY3),
             new CxxBuckConfig(FakeBuckConfig.builder().build()),

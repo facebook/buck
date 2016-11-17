@@ -28,7 +28,8 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class AndroidLibraryBuilder extends AbstractNodeBuilder<AndroidLibraryDescription.Arg> {
+public class AndroidLibraryBuilder
+    extends AbstractNodeBuilder<AndroidLibraryDescription.Arg, AndroidLibraryDescription> {
 
   private AndroidLibraryBuilder(BuildTarget target) {
     super(new AndroidLibraryDescription(ANDROID_JAVAC_OPTIONS, JAVA_ONLY_COMPILER_FACTORY), target);

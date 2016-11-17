@@ -100,7 +100,7 @@ public class ResolveAliasHelper {
     }
 
     // Get all valid targets in our target directory by reading the build file.
-    ImmutableSet<TargetNode<?>> targetNodes;
+    ImmutableSet<TargetNode<?, ?>> targetNodes;
     try {
       targetNodes = parser.getAllTargetNodes(
           params.getBuckEventBus(),
@@ -113,7 +113,7 @@ public class ResolveAliasHelper {
     }
 
     // Check that the given target is a valid target.
-    for (TargetNode<?> candidate : targetNodes) {
+    for (TargetNode<?, ?> candidate : targetNodes) {
       if (candidate.getBuildTarget().equals(buildTarget)) {
         return buildTarget.getFullyQualifiedName();
       }

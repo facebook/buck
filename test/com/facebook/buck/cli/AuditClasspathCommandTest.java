@@ -80,28 +80,28 @@ public class AuditClasspathCommandTest {
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//:keystore");
     BuildTarget testAndroidTarget = BuildTargetFactory.newInstance("//:test-android-binary");
 
-    TargetNode<?> javaLibraryNode = JavaLibraryBuilder
+    TargetNode<?, ?> javaLibraryNode = JavaLibraryBuilder
         .createBuilder(javaLibraryTarget)
         .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java"))
         .addTest(testJavaTarget)
         .build();
-    TargetNode<?> androidLibraryNode = AndroidLibraryBuilder
+    TargetNode<?, ?> androidLibraryNode = AndroidLibraryBuilder
         .createBuilder(androidLibraryTarget)
         .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
         .addDep(javaLibraryTarget)
         .build();
-    TargetNode<?> keystoreNode = KeystoreBuilder
+    TargetNode<?, ?> keystoreNode = KeystoreBuilder
         .createBuilder(keystoreTarget)
         .setStore(new FakeSourcePath("debug.keystore"))
         .setProperties(new FakeSourcePath("keystore.properties"))
         .build();
-    TargetNode<?> testAndroidNode = AndroidBinaryBuilder
+    TargetNode<?, ?> testAndroidNode = AndroidBinaryBuilder
         .createBuilder(testAndroidTarget)
         .setManifest(new FakeSourcePath("AndroidManifest.xml"))
         .setKeystore(keystoreTarget)
         .setOriginalDeps(ImmutableSortedSet.of(androidLibraryTarget, javaLibraryTarget))
         .build();
-    TargetNode<?> testJavaNode = JavaTestBuilder
+    TargetNode<?, ?> testJavaNode = JavaTestBuilder
         .createBuilder(testJavaTarget)
         .addDep(javaLibraryTarget)
         .addSrc(Paths.get("src/com/facebook/test/ProjectTests.java"))
@@ -211,13 +211,13 @@ public class AuditClasspathCommandTest {
     // Build a DependencyGraph of build rules manually.
 
     BuildTarget javaTarget = BuildTargetFactory.newInstance("//:test-java-library");
-    TargetNode<?> javaNode = JavaLibraryBuilder
+    TargetNode<?, ?> javaNode = JavaLibraryBuilder
         .createBuilder(javaTarget)
         .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java"))
         .build();
 
     BuildTarget androidTarget = BuildTargetFactory.newInstance("//:test-android-library");
-    TargetNode<?> androidNode = AndroidLibraryBuilder
+    TargetNode<?, ?> androidNode = AndroidLibraryBuilder
         .createBuilder(androidTarget)
         .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
         .addDep(javaTarget)

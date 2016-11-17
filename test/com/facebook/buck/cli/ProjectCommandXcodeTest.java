@@ -48,18 +48,18 @@ import java.util.Optional;
 
 public class ProjectCommandXcodeTest {
 
-  private TargetNode<?> barLibNode;
-  private TargetNode<?> fooLibNode;
-  private TargetNode<?> fooBinBinaryNode;
-  private TargetNode<?> fooBinNode;
-  private TargetNode<?> bazLibNode;
-  private TargetNode<?> bazTestNode;
-  private TargetNode<?> fooTestNode;
-  private TargetNode<?> fooBinTestNode;
-  private TargetNode<?> quxBinNode;
-  private TargetNode<?> workspaceNode;
-  private TargetNode<?> workspaceExtraTestNode;
-  private TargetNode<?> smallWorkspaceNode;
+  private TargetNode<?, ?> barLibNode;
+  private TargetNode<?, ?> fooLibNode;
+  private TargetNode<?, ?> fooBinBinaryNode;
+  private TargetNode<?, ?> fooBinNode;
+  private TargetNode<?, ?> bazLibNode;
+  private TargetNode<?, ?> bazTestNode;
+  private TargetNode<?, ?> fooTestNode;
+  private TargetNode<?, ?> fooBinTestNode;
+  private TargetNode<?, ?> quxBinNode;
+  private TargetNode<?, ?> workspaceNode;
+  private TargetNode<?, ?> workspaceExtraTestNode;
+  private TargetNode<?, ?> smallWorkspaceNode;
 
   TargetGraph targetGraph;
 
@@ -189,7 +189,7 @@ public class ProjectCommandXcodeTest {
         /* withDependenciesTests = */ false);
 
     assertEquals(
-        ImmutableSortedSet.<TargetNode<?>>of(
+        ImmutableSortedSet.<TargetNode<?, ?>>of(
             workspaceNode,
             fooBinNode,
             fooBinBinaryNode,
@@ -212,7 +212,7 @@ public class ProjectCommandXcodeTest {
         /* withDependenciesTests */ true);
 
     assertEquals(
-        ImmutableSortedSet.<TargetNode<?>>of(
+        ImmutableSortedSet.<TargetNode<?, ?>>of(
             workspaceNode,
             fooBinNode,
             fooBinBinaryNode,
@@ -238,7 +238,7 @@ public class ProjectCommandXcodeTest {
         /* withDependenciesTests */ false);
 
     assertEquals(
-        ImmutableSortedSet.<TargetNode<?>>of(
+        ImmutableSortedSet.<TargetNode<?, ?>>of(
             workspaceNode,
             fooBinNode,
             fooBinBinaryNode,
@@ -259,7 +259,7 @@ public class ProjectCommandXcodeTest {
         /* withDependenciesTests */ true);
 
     assertEquals(
-        ImmutableSortedSet.<TargetNode<?>>of(
+        ImmutableSortedSet.<TargetNode<?, ?>>of(
             workspaceNode,
             fooBinNode,
             fooBinBinaryNode,

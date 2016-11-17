@@ -23,7 +23,8 @@ import com.google.common.hash.HashCode;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class RemoteFileBuilder extends AbstractNodeBuilder<RemoteFileDescription.Arg> {
+public class RemoteFileBuilder
+    extends AbstractNodeBuilder<RemoteFileDescription.Arg, RemoteFileDescription> {
   protected RemoteFileBuilder(Downloader downloader, BuildTarget target) {
     super(new RemoteFileDescription(downloader), target);
   }

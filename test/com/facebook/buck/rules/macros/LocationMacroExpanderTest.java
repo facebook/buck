@@ -130,7 +130,7 @@ public class LocationMacroExpanderTest {
   public void extractRuleKeyAppendable() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     String input = "//some/other:rule";
-    TargetNode<?> node = GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance(input))
+    TargetNode<?, ?> node = GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance(input))
         .setOut("out")
         .build();
     BuildRuleResolver resolver = new BuildRuleResolver(

@@ -58,14 +58,14 @@ public class TargetGraphHashing {
   private final BuckEventBus eventBus;
   private final TargetGraph targetGraph;
   private final FileHashLoader fileHashLoader;
-  private final Iterable<TargetNode<?>> roots;
+  private final Iterable<TargetNode<?, ?>> roots;
   private int numThreads = 1;
 
   public TargetGraphHashing(
       final BuckEventBus eventBus,
       final TargetGraph targetGraph,
       final FileHashLoader fileHashLoader,
-      final Iterable<TargetNode<?>> roots
+      final Iterable<TargetNode<?, ?>> roots
   ) {
     this.eventBus = eventBus;
     this.targetGraph = targetGraph;
@@ -83,7 +83,7 @@ public class TargetGraphHashing {
             eventBus,
             PerfEventId.of("ShowTargetHashes"))) {
 
-      AcyclicDepthFirstPostOrderTraversal<TargetNode<?>> traversal =
+      AcyclicDepthFirstPostOrderTraversal<TargetNode<?, ?>> traversal =
           new AcyclicDepthFirstPostOrderTraversal<>(
               node -> targetGraph.getAll(node.getDeps()).iterator());
 
@@ -91,7 +91,7 @@ public class TargetGraphHashing {
       Queue<ForkJoinTask<HashCode>> tasksToSchedule = new ArrayDeque<>();
       // Create our mapping of build-rules to tasks and arrange in bottom-up order
       // Start all the node tasks, bottom up
-      for (final TargetNode<?> node : traversal.traverse(roots)) {
+      for (final TargetNode<?, ?> node : traversal.traverse(roots)) {
         HashNodeTask task = new HashNodeTask(node, buildTargetHashes);
         buildTargetHashes.put(node.getBuildTarget(), task);
         tasksToSchedule.add(task);
@@ -117,11 +117,11 @@ public class TargetGraphHashing {
   }
 
   private class HashNodeTask extends RecursiveTask<HashCode> {
-    private final TargetNode<?> node;
+    private final TargetNode<?, ?> node;
     private Map<BuildTarget, ForkJoinTask<HashCode>> buildTargetHashes;
 
     HashNodeTask(
-        final TargetNode<?> node,
+        final TargetNode<?, ?> node,
         Map<BuildTarget, ForkJoinTask<HashCode>> buildTargetHashes) {
       this.node = node;
       this.buildTargetHashes = buildTargetHashes;

@@ -41,7 +41,7 @@ public class TargetNodeTranslatorTest {
     BuildTarget b = BuildTargetFactory.newInstance("//:b");
     BuildTarget c = BuildTargetFactory.newInstance("//:c");
     final BuildTarget d = BuildTargetFactory.newInstance("//:d");
-    TargetNode<CxxLibraryDescription.Arg> node =
+    TargetNode<CxxLibraryDescription.Arg, ?> node =
         new CxxLibraryBuilder(a)
             .setDeps(ImmutableSortedSet.of(b))
             .setExportedDeps(ImmutableSortedSet.of(c))
@@ -58,7 +58,7 @@ public class TargetNodeTranslatorTest {
             return Optional.empty();
           }
         };
-    Optional<TargetNode<CxxLibraryDescription.Arg>> translated = translator.translateNode(node);
+    Optional<TargetNode<CxxLibraryDescription.Arg, ?>> translated = translator.translateNode(node);
     assertThat(
         translated.get().getBuildTarget(),
         Matchers.equalTo(d));
@@ -81,7 +81,7 @@ public class TargetNodeTranslatorTest {
     BuildTarget a = BuildTargetFactory.newInstance("//:a");
     BuildTarget b = BuildTargetFactory.newInstance("//:b");
     BuildTarget c = BuildTargetFactory.newInstance("//:c");
-    TargetNode<CxxLibraryDescription.Arg> node =
+    TargetNode<CxxLibraryDescription.Arg, ?> node =
         new CxxLibraryBuilder(a)
             .setDeps(ImmutableSortedSet.of(b))
             .setExportedDeps(ImmutableSortedSet.of(c))
@@ -98,13 +98,13 @@ public class TargetNodeTranslatorTest {
             return Optional.empty();
           }
         };
-    Optional<TargetNode<CxxLibraryDescription.Arg>> translated = translator.translateNode(node);
+    Optional<TargetNode<CxxLibraryDescription.Arg, ?>> translated = translator.translateNode(node);
     assertFalse(translated.isPresent());
   }
 
   @Test
   public void selectedVersions() {
-    TargetNode<VersionPropagatorBuilder.Arg> node =
+    TargetNode<VersionPropagatorBuilder.Arg, ?> node =
         new VersionPropagatorBuilder("//:a")
             .build();
     final ImmutableMap<BuildTarget, Version> selectedVersions =
@@ -123,7 +123,7 @@ public class TargetNodeTranslatorTest {
             return Optional.of(selectedVersions);
           }
         };
-    Optional<TargetNode<VersionPropagatorBuilder.Arg>> translated =
+    Optional<TargetNode<VersionPropagatorBuilder.Arg, ?>> translated =
         translator.translateNode(node);
     assertTrue(translated.isPresent());
     assertThat(

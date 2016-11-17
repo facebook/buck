@@ -25,7 +25,8 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-public class GenruleBuilder extends AbstractNodeBuilder<GenruleDescription.Arg> {
+public class GenruleBuilder
+    extends AbstractNodeBuilder<GenruleDescription.Arg, GenruleDescription> {
   private GenruleBuilder(BuildTarget target) {
     super(new GenruleDescription(), target);
   }

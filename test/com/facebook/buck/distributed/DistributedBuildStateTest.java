@@ -181,7 +181,7 @@ public class DistributedBuildStateTest {
         DistBuildState.load(dump, rootCellWhenLoading, knownBuildRuleTypesFactory);
     TargetGraph reconstructedGraph = distributedBuildState.createTargetGraph(targetGraphCodec);
     assertThat(reconstructedGraph.getNodes(), Matchers.hasSize(1));
-    TargetNode<JavaLibraryDescription.Arg> reconstructedJavaLibrary =
+    TargetNode<JavaLibraryDescription.Arg, ?> reconstructedJavaLibrary =
         FluentIterable.from(reconstructedGraph.getNodes()).get(0)
         .castArg(JavaLibraryDescription.Arg.class).get();
     ProjectFilesystem reconstructedCellFilesystem =
@@ -288,9 +288,9 @@ public class DistributedBuildStateTest {
     ObjectMapper objectMapper = ObjectMappers.newDefaultInstance(); // NOPMD confused by lambda
     BuckEventBus eventBus = BuckEventBusFactory.newInstance();
 
-    Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode;
+    Function<? super TargetNode<?, ?>, ? extends Map<String, Object>> nodeToRawNode;
     if (parser.isPresent()) {
-     nodeToRawNode = (Function<TargetNode<?>, Map<String, Object>>) input -> {
+     nodeToRawNode = (Function<TargetNode<?, ?>, Map<String, Object>>) input -> {
        try {
          return parser.get().getRawTargetNode(
              eventBus,
@@ -308,7 +308,7 @@ public class DistributedBuildStateTest {
 
     DistBuildTypeCoercerFactory typeCoercerFactory =
         new DistBuildTypeCoercerFactory(objectMapper);
-    ParserTargetNodeFactory<TargetNode<?>> parserTargetNodeFactory =
+    ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             new ConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory));

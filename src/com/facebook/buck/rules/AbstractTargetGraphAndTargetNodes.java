@@ -28,7 +28,7 @@ import org.immutables.value.Value;
 abstract class AbstractTargetGraphAndTargetNodes {
   abstract TargetGraph getTargetGraph();
 
-  abstract Iterable<TargetNode<?>> getTargetNodes();
+  abstract Iterable<TargetNode<?, ?>> getTargetNodes();
 
   public static TargetGraphAndTargetNodes fromTargetGraphAndBuildTargets(
       TargetGraphAndBuildTargets targetGraphAndBuildTargets) {

@@ -22,7 +22,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 
 
-public class DBinaryBuilder extends AbstractNodeBuilder<DBinaryDescription.Arg> {
+public class DBinaryBuilder
+    extends AbstractNodeBuilder<DBinaryDescription.Arg, DBinaryDescription> {
 
   public DBinaryBuilder(
       BuildTarget target,

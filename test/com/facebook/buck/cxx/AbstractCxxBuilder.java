@@ -23,9 +23,9 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.Description;
 
-public class AbstractCxxBuilder<T> extends AbstractNodeBuilder<T> {
+public class AbstractCxxBuilder<T, U extends Description<T>> extends AbstractNodeBuilder<T, U> {
 
-  public AbstractCxxBuilder(Description<T> description, BuildTarget target) {
+  public AbstractCxxBuilder(U description, BuildTarget target) {
     super(description, target);
   }
 

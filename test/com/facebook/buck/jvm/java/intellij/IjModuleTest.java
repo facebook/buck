@@ -32,7 +32,7 @@ public class IjModuleTest {
 
   @Test
   public void testPathToModuleFile() {
-    TargetNode<?> javaLibrary = JavaLibraryBuilder
+    TargetNode<?, ?> javaLibrary = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/src/com/facebook/foo:foo"))
         .build();
 
@@ -47,7 +47,7 @@ public class IjModuleTest {
         javaLibraryModule.getModuleImlFilePath());
   }
 
-  private static <T> IjModule createModule(TargetNode<?> targetNode) {
+  private static <T> IjModule createModule(TargetNode<?, ?> targetNode) {
     Path moduleBasePath = targetNode.getBuildTarget().getBasePath();
     return IjModule.builder()
         .setTargets(ImmutableSet.of(targetNode))

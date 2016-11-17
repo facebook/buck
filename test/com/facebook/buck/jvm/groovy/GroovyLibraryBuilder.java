@@ -28,7 +28,8 @@ import com.google.common.hash.HashCode;
 
 import java.nio.file.Path;
 
-public class GroovyLibraryBuilder extends AbstractNodeBuilder<GroovyLibraryDescription.Arg> {
+public class GroovyLibraryBuilder
+    extends AbstractNodeBuilder<GroovyLibraryDescription.Arg, GroovyLibraryDescription> {
 
   private final ProjectFilesystem projectFilesystem;
 

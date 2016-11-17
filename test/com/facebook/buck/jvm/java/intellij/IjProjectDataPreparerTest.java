@@ -64,12 +64,12 @@ public class IjProjectDataPreparerTest {
 
   @Test
   public void testWriteModule() throws Exception {
-    TargetNode<?> guavaTargetNode = JavaLibraryBuilder
+    TargetNode<?, ?> guavaTargetNode = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third_party/guava:guava"))
         .addSrc(Paths.get("third_party/guava/src/Collections.java"))
         .build();
 
-    TargetNode<?> baseTargetNode = JavaLibraryBuilder
+    TargetNode<?, ?> baseTargetNode = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
         .addDep(guavaTargetNode.getBuildTarget())
         .addSrc(Paths.get("java/com/example/base/Base.java"))
@@ -110,34 +110,34 @@ public class IjProjectDataPreparerTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testDependencies() throws Exception {
-    TargetNode<?> hamcrestTargetNode = PrebuiltJarBuilder
+    TargetNode<?, ?> hamcrestTargetNode = PrebuiltJarBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third-party/hamcrest:hamcrest"))
         .setBinaryJar(Paths.get("third-party/hamcrest/hamcrest.jar"))
         .build();
 
-    TargetNode<?> guavaTargetNode = PrebuiltJarBuilder
+    TargetNode<?, ?> guavaTargetNode = PrebuiltJarBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third-party/guava:guava"))
         .setBinaryJar(Paths.get("third-party/guava/guava.jar"))
         .build();
 
-    TargetNode<?> baseTargetNode = JavaLibraryBuilder
+    TargetNode<?, ?> baseTargetNode = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
         .addDep(guavaTargetNode.getBuildTarget())
         .addSrc(Paths.get("java/com/example/base/Base.java"))
         .build();
 
-    TargetNode<?> baseGenruleTarget = GenruleBuilder
+    TargetNode<?, ?> baseGenruleTarget = GenruleBuilder
         .newGenruleBuilder(BuildTargetFactory.newInstance("//java/com/example/base:genrule"))
         .build();
 
-    TargetNode<?> baseInlineTestsTargetNode = JavaLibraryBuilder
+    TargetNode<?, ?> baseInlineTestsTargetNode = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:tests"))
         .addDep(hamcrestTargetNode.getBuildTarget())
         .addSrc(Paths.get("java/com/example/base/TestBase.java"))
         .addSrcTarget(baseGenruleTarget.getBuildTarget())
         .build();
 
-    TargetNode<?> baseTestsTargetNode = JavaTestBuilder
+    TargetNode<?, ?> baseTestsTargetNode = JavaTestBuilder
         .createBuilder(BuildTargetFactory.newInstance("//javatests/com/example/base:base"))
         .addDep(baseTargetNode.getBuildTarget())
         .addDep(hamcrestTargetNode.getBuildTarget())
@@ -233,7 +233,7 @@ public class IjProjectDataPreparerTest {
   public void testEmptyRootModule() throws Exception {
 
     Path baseTargetSrcFilePath = Paths.get("java/com/example/base/Base.java");
-    TargetNode<?> baseTargetNode = JavaLibraryBuilder
+    TargetNode<?, ?> baseTargetNode = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
         .addSrc(baseTargetSrcFilePath)
         .build();
@@ -267,18 +267,18 @@ public class IjProjectDataPreparerTest {
 
   @Test
   public void testModuleIndex() throws Exception {
-    TargetNode<?> guavaTargetNode = PrebuiltJarBuilder
+    TargetNode<?, ?> guavaTargetNode = PrebuiltJarBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third-party/guava:guava"))
         .setBinaryJar(Paths.get("third-party/guava/guava.jar"))
         .build();
 
-    TargetNode<?> baseTargetNode = JavaLibraryBuilder
+    TargetNode<?, ?> baseTargetNode = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
         .addDep(guavaTargetNode.getBuildTarget())
         .addSrc(Paths.get("java/com/example/base/Base.java"))
         .build();
 
-    TargetNode<?> baseTestsTargetNode = JavaTestBuilder
+    TargetNode<?, ?> baseTestsTargetNode = JavaTestBuilder
         .createBuilder(BuildTargetFactory.newInstance("//javatests/com/example/base:base"))
         .addDep(baseTargetNode.getBuildTarget())
         .addSrc(Paths.get("javatests/com/example/base/Base.java"))
@@ -355,24 +355,24 @@ public class IjProjectDataPreparerTest {
     FakeProjectFilesystem filesystemForExcludesTest =
         new FakeProjectFilesystem(new FakeClock(0), Paths.get(".").toAbsolutePath(), paths);
 
-    TargetNode<?> guavaTargetNode = PrebuiltJarBuilder
+    TargetNode<?, ?> guavaTargetNode = PrebuiltJarBuilder
         .createBuilder(BuildTargetFactory.newInstance("//lib:guava"))
         .setBinaryJar(Paths.get("lib/guava.jar"))
         .build();
 
-    TargetNode<?> srcTargetNode = JavaLibraryBuilder
+    TargetNode<?, ?> srcTargetNode = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/src:src"))
         .addDep(guavaTargetNode.getBuildTarget())
         .addSrc(Paths.get("java/com/src/Source.java"))
         .build();
 
-    TargetNode<?> src2TargetNode = JavaLibraryBuilder
+    TargetNode<?, ?> src2TargetNode = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com:src2"))
         .addDep(guavaTargetNode.getBuildTarget())
         .addSrc(Paths.get("java/com/src2/Code.java"))
         .build();
 
-    TargetNode<?> rootTargetNode = JavaLibraryBuilder
+    TargetNode<?, ?> rootTargetNode = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//:root"))
         .build();
 
@@ -400,14 +400,14 @@ public class IjProjectDataPreparerTest {
 
   @Test
   public void testCreatePackageLookupPahtSet() {
-    TargetNode<?> guavaTargetNode = PrebuiltJarBuilder
+    TargetNode<?, ?> guavaTargetNode = PrebuiltJarBuilder
         .createBuilder(BuildTargetFactory.newInstance("//lib:guava"))
         .setBinaryJar(Paths.get("lib/guava.jar"))
         .build();
 
     Path sourcePath = Paths.get("java/com/src/Source.java");
     Path subSourcePath = Paths.get("java/com/src/subpackage/SubSource.java");
-    TargetNode<?> srcTargetNode = JavaLibraryBuilder
+    TargetNode<?, ?> srcTargetNode = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/src:src"))
         .addDep(guavaTargetNode.getBuildTarget())
         .addSrc(sourcePath)

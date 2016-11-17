@@ -23,7 +23,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 
-public class ShBinaryBuilder extends AbstractNodeBuilder<ShBinaryDescription.Arg> {
+public class ShBinaryBuilder
+    extends AbstractNodeBuilder<ShBinaryDescription.Arg, ShBinaryDescription> {
 
   public ShBinaryBuilder(BuildTarget target) {
     super(new ShBinaryDescription(), target);

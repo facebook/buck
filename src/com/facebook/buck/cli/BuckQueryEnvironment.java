@@ -178,7 +178,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     }
   }
 
-  TargetNode<?> getNode(QueryTarget target)
+  TargetNode<?, ?> getNode(QueryTarget target)
       throws QueryException {
     if (!(target instanceof QueryBuildTarget)) {
       throw new IllegalArgumentException(String.format(
@@ -218,9 +218,9 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     return builder.build();
   }
 
-  public ImmutableSet<TargetNode<?>> getNodesFromQueryTargets(Iterable<QueryTarget> input)
+  public ImmutableSet<TargetNode<?, ?>> getNodesFromQueryTargets(Iterable<QueryTarget> input)
       throws QueryException {
-    ImmutableSet.Builder<TargetNode<?>> builder = ImmutableSet.builder();
+    ImmutableSet.Builder<TargetNode<?, ?>> builder = ImmutableSet.builder();
     for (QueryTarget target : input) {
       builder.add(getNode(target));
     }
@@ -228,9 +228,9 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   /** Given a set of target nodes, returns the build targets. */
-  private static Set<BuildTarget> getTargetsFromNodes(Iterable<TargetNode<?>> input) {
+  private static Set<BuildTarget> getTargetsFromNodes(Iterable<TargetNode<?, ?>> input) {
     Set<BuildTarget> result = new LinkedHashSet<>();
-    for (TargetNode<?> node : input) {
+    for (TargetNode<?, ?> node : input) {
       result.add(node.getBuildTarget());
     }
     return result;
@@ -241,7 +241,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       throws QueryException, InterruptedException {
     Set<QueryTarget> result = new LinkedHashSet<>();
     for (QueryTarget target : targets) {
-      TargetNode<?> node = getNode(target);
+      TargetNode<?, ?> node = getNode(target);
       result.addAll(getTargetsFromBuildTargetsContainer(graph.getOutgoingNodesFor(node)));
     }
     return result;
@@ -252,7 +252,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       throws QueryException, InterruptedException {
     Set<QueryTarget> result = new LinkedHashSet<>();
     for (QueryTarget target : targets) {
-      TargetNode<?> node = getNode(target);
+      TargetNode<?, ?> node = getNode(target);
       result.addAll(getTargetsFromBuildTargetsContainer(graph.getIncomingNodesFor(node)));
     }
     return result;
@@ -261,7 +261,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   @Override
   public ImmutableSet<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets)
       throws QueryException, InterruptedException {
-    Set<TargetNode<?>> nodes = new LinkedHashSet<>();
+    Set<TargetNode<?, ?>> nodes = new LinkedHashSet<>();
     for (QueryTarget target : targets) {
       nodes.add(getNode(target));
     }

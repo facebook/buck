@@ -180,7 +180,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
     return QueryTargetAccessor.filterAttributeContents(getNode(target), attribute, predicate);
   }
 
-  private TargetNode<?> getNode(QueryTarget target) {
+  private TargetNode<?, ?> getNode(QueryTarget target) {
     Preconditions.checkState(target instanceof QueryBuildTarget);
     Preconditions.checkArgument(targetGraph.isPresent());
     BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();

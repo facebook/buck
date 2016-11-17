@@ -443,17 +443,17 @@ public class BuildCommand extends AbstractCommand {
 
     DistBuildTypeCoercerFactory typeCoercerFactory =
         new DistBuildTypeCoercerFactory(params.getObjectMapper());
-    ParserTargetNodeFactory<TargetNode<?>> parserTargetNodeFactory =
+    ParserTargetNodeFactory<TargetNode<?, ?>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             new ConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory));
     DistBuildTargetGraphCodec targetGraphCodec = new DistBuildTargetGraphCodec(
         params.getObjectMapper(),
         parserTargetNodeFactory,
-        new Function<TargetNode<?>, Map<String, Object>>() {
+        new Function<TargetNode<?, ?>, Map<String, Object>>() {
           @Nullable
           @Override
-          public Map<String, Object> apply(TargetNode<?> input) {
+          public Map<String, Object> apply(TargetNode<?, ?> input) {
             try {
               return params.getParser().getRawTargetNode(
                   params.getBuckEventBus(),

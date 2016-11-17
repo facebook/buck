@@ -25,15 +25,15 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.python.PythonPlatform;
 import com.facebook.buck.python.PythonTestUtils;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.Description;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
 
-public class LuaBinaryBuilder extends AbstractNodeBuilder<LuaBinaryDescription.Arg> {
+public class LuaBinaryBuilder
+    extends AbstractNodeBuilder<LuaBinaryDescription.Arg, LuaBinaryDescription> {
 
   public LuaBinaryBuilder(
-      Description<LuaBinaryDescription.Arg> description,
+      LuaBinaryDescription description,
       BuildTarget target) {
     super(description, target);
   }

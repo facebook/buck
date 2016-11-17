@@ -81,7 +81,7 @@ public class GenruleDescriptionTest {
     }  catch (ConstructorArgMarshalException e) {
       fail("Expected constructorArg to be correctly populated.");
     }
-    TargetNode<GenruleDescription.Arg> targetNode =
+    TargetNode<GenruleDescription.Arg, ?> targetNode =
         new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
             .create(
                 Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),

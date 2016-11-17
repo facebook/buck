@@ -43,11 +43,11 @@ class FetchTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTran
   }
 
   @Override
-  public <T> BuildRule transform(
+  public <T, U extends Description<T>> BuildRule transform(
       TargetGraph targetGraph,
       BuildRuleResolver ruleResolver,
-      TargetNode<T> targetNode) throws NoSuchBuildTargetException {
-    TargetNode<?> node = substituteTargetNodeIfNecessary(targetNode);
+      TargetNode<T, U> targetNode) throws NoSuchBuildTargetException {
+    TargetNode<?, ?> node = substituteTargetNodeIfNecessary(targetNode);
     return delegate.transform(targetGraph, ruleResolver, node);
   }
 
@@ -55,7 +55,7 @@ class FetchTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTran
     return downloadableTargets.build();
   }
 
-  private TargetNode<?> substituteTargetNodeIfNecessary(TargetNode<?> node) {
+  private TargetNode<?, ?> substituteTargetNodeIfNecessary(TargetNode<?, ?> node) {
     for (Description<?> description : descriptions) {
       if (node.getDescription().getBuildRuleType().equals(description.getBuildRuleType())) {
         downloadableTargets.add(node.getBuildTarget());

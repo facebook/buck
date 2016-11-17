@@ -54,7 +54,7 @@ public class VersionedTargetGraphBuilderTest {
         ImmutableSortedMap.of(BuildTargetFactory.newInstance(dep), Version.of(version)));
   }
 
-  private static void assertEquals(TargetNode<?> expected, TargetNode<?> actual) {
+  private static void assertEquals(TargetNode<?, ?> expected, TargetNode<?, ?> actual) {
     assertThat(
         actual.getBuildTarget(),
         Matchers.equalTo(expected.getBuildTarget()));
@@ -84,19 +84,19 @@ public class VersionedTargetGraphBuilderTest {
   }
 
   private static void assertEquals(TargetGraph expected, TargetGraph actual) {
-    ImmutableMap<BuildTarget, TargetNode<?>> expectedNodes =
+    ImmutableMap<BuildTarget, TargetNode<?, ?>> expectedNodes =
         Maps.uniqueIndex(expected.getNodes(), HasBuildTarget::getBuildTarget);
-    ImmutableMap<BuildTarget, TargetNode<?>> actualNodes =
+    ImmutableMap<BuildTarget, TargetNode<?, ?>> actualNodes =
         Maps.uniqueIndex(actual.getNodes(), HasBuildTarget::getBuildTarget);
     assertThat(actualNodes.keySet(), Matchers.equalTo(expectedNodes.keySet()));
-    for (Map.Entry<BuildTarget, TargetNode<?>> ent : expectedNodes.entrySet()) {
+    for (Map.Entry<BuildTarget, TargetNode<?, ?>> ent : expectedNodes.entrySet()) {
       assertEquals(ent.getValue(), actualNodes.get(ent.getKey()));
     }
   }
 
   @Test
   public void singleRootNode() throws Exception {
-    TargetNode<?> root = new VersionRootBuilder("//:root").build();
+    TargetNode<?, ?> root = new VersionRootBuilder("//:root").build();
     TargetGraph graph = TargetGraphFactory.newInstance(root);
     VersionedTargetGraphBuilder builder =
         new VersionedTargetGraphBuilder(

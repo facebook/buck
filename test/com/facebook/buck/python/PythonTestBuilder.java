@@ -30,7 +30,8 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
 
-public class PythonTestBuilder extends AbstractNodeBuilder<PythonTestDescription.Arg> {
+public class PythonTestBuilder
+    extends AbstractNodeBuilder<PythonTestDescription.Arg, PythonTestDescription> {
 
   protected PythonTestBuilder(
       BuildTarget target,

@@ -46,7 +46,7 @@ abstract class AbstractIjModule implements IjProjectElement {
   }
 
   @Override
-  public abstract ImmutableSet<TargetNode<?>> getTargets();
+  public abstract ImmutableSet<TargetNode<?, ?>> getTargets();
 
   /**
    * @return path to the top-most directory the module is responsible for. This is also where the
@@ -97,7 +97,7 @@ abstract class AbstractIjModule implements IjProjectElement {
   @Value.Check
   protected void allRulesAreChildrenOfBasePath() {
     Path moduleBasePath = getModuleBasePath();
-    for (TargetNode<?> target : getTargets()) {
+    for (TargetNode<?, ?> target : getTargets()) {
       Path targetBasePath = target.getBuildTarget().getBasePath();
       Preconditions.checkArgument(
           targetBasePath.startsWith(moduleBasePath),

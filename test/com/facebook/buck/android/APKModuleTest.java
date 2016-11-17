@@ -85,7 +85,7 @@ public class APKModuleTest {
    */
   @Test
   public void testAPKModuleGraphSimple() throws Exception {
-    ImmutableSet.Builder<TargetNode<?>> nodeBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<TargetNode<?, ?>> nodeBuilder = ImmutableSet.builder();
     BuildTarget commonLibraryTarget = BuildTargetFactory.newInstance(
         "//src/com/facebook/test-common-library:test-common-library");
     nodeBuilder.add(
@@ -213,7 +213,7 @@ public class APKModuleTest {
   @Test
   public void testAPKModuleGraphSharedDependency() throws Exception {
 
-    ImmutableSet.Builder<TargetNode<?>> nodeBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<TargetNode<?, ?>> nodeBuilder = ImmutableSet.builder();
     BuildTarget commonLibraryTarget = BuildTargetFactory.newInstance("//:test-common-library");
     nodeBuilder.add(
         AndroidLibraryBuilder
@@ -315,7 +315,7 @@ public class APKModuleTest {
   */
   @Test
   public void testAPKModuleGraphComplexDependencyTree() throws Exception {
-    ImmutableSet.Builder<TargetNode<?>> nodeBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<TargetNode<?, ?>> nodeBuilder = ImmutableSet.builder();
     BuildTarget commonLibraryTarget = BuildTargetFactory.newInstance("//:test-common-library");
     nodeBuilder.add(
         AndroidLibraryBuilder

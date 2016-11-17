@@ -24,7 +24,11 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 public final class AppleTestBuilder
-    extends AbstractAppleNativeTargetBuilder<AppleTestDescription.Arg, AppleTestBuilder> {
+    extends
+    AbstractAppleNativeTargetBuilder<
+        AppleTestDescription.Arg,
+        AppleTestDescription,
+        AppleTestBuilder> {
 
   @Override
   protected AppleTestBuilder getThis() {

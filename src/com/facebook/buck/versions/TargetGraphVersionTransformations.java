@@ -17,6 +17,7 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -30,21 +31,22 @@ class TargetGraphVersionTransformations {
 
   private TargetGraphVersionTransformations() {}
 
-  public static boolean isVersionPropagator(TargetNode<?> node) {
+  public static boolean isVersionPropagator(TargetNode<?, ?> node) {
     return node.getDescription() instanceof VersionPropagator;
   }
 
-  public static boolean isVersionRoot(TargetNode<?> node) {
+  public static boolean isVersionRoot(TargetNode<?, ?> node) {
     return (
         node.getDescription() instanceof VersionRoot &&
         ((VersionRoot<?>) node.getDescription()).isVersionRoot(node.getBuildTarget().getFlavors()));
   }
 
-  public static Optional<TargetNode<VersionedAlias.Arg>> getVersionedNode(TargetNode<?> node) {
+  public static Optional<TargetNode<VersionedAlias.Arg, ?>> getVersionedNode(
+      TargetNode<?, ?> node) {
     return node.castArg(VersionedAlias.Arg.class);
   }
 
-  private static Optional<Field> getVersionedDepsField(TargetNode<?> node) {
+  private static Optional<Field> getVersionedDepsField(TargetNode<?, ?> node) {
     try {
       return Optional.of(node.getConstructorArg().getClass().getField(VERSIONED_DEPS_FIELD_NAME));
     } catch (NoSuchFieldException e) {
@@ -54,7 +56,7 @@ class TargetGraphVersionTransformations {
 
   @SuppressWarnings("unchecked")
   public static ImmutableMap<BuildTarget, Optional<Constraint>> getVersionedDeps(
-      TargetNode<?> node) {
+      TargetNode<?, ?> node) {
     Optional<Field> versionedDepsField = getVersionedDepsField(node);
     if (versionedDepsField.isPresent()) {
       try {
@@ -69,7 +71,8 @@ class TargetGraphVersionTransformations {
     return ImmutableMap.of();
   }
 
-  public static <A> Iterable<BuildTarget> getDeps(TargetNode<A> node) {
+  public static <A, B extends Description<A>> Iterable<BuildTarget> getDeps(
+      TargetNode<A, B> node) {
     return Iterables.concat(
         node.getDeclaredDeps(),
         node.getExtraDeps(),

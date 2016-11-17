@@ -264,7 +264,7 @@ public class QueryCommand extends AbstractCommand {
       if (!(target instanceof QueryBuildTarget)) {
         continue;
       }
-      TargetNode<?> node = env.getNode(target);
+      TargetNode<?, ?> node = env.getNode(target);
       try {
         SortedMap<String, Object> sortedTargetRule =  params.getParser().getRawTargetNode(
             env.getParserState(),

@@ -34,11 +34,12 @@ import java.util.Optional;
 
 public abstract class AbstractAppleNativeTargetBuilder<
     ARG extends AppleNativeTargetDescriptionArg,
-    BUILDER extends AbstractAppleNativeTargetBuilder<ARG, BUILDER>>
-    extends AbstractNodeBuilder<ARG> {
+    DESCRIPTION extends Description<ARG>,
+    BUILDER extends AbstractAppleNativeTargetBuilder<ARG, DESCRIPTION, BUILDER>>
+    extends AbstractNodeBuilder<ARG, DESCRIPTION> {
 
   public AbstractAppleNativeTargetBuilder(
-      Description<ARG> description,
+      DESCRIPTION description,
       BuildTarget target) {
     super(description, target);
   }

@@ -25,7 +25,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 public class XcodeWorkspaceConfigBuilder
-    extends AbstractNodeBuilder<XcodeWorkspaceConfigDescription.Arg> {
+    extends
+    AbstractNodeBuilder<XcodeWorkspaceConfigDescription.Arg, XcodeWorkspaceConfigDescription> {
 
   protected XcodeWorkspaceConfigBuilder(BuildTarget target) {
     super(new XcodeWorkspaceConfigDescription(), target);

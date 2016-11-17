@@ -207,6 +207,6 @@ public class MultiarchFileTest {
    * Rule builders pass BuildTarget as a constructor arg, so this is unfortunately necessary.
    */
   private interface NodeBuilderFactory {
-    AbstractNodeBuilder<?> getNodeBuilder(BuildTarget target);
+    AbstractNodeBuilder<?, ?> getNodeBuilder(BuildTarget target);
   }
 }

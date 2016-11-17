@@ -53,8 +53,8 @@ public class VisibilityPatternParser {
     @Override
     public boolean checkVisibility(
         TargetGraph graphContext,
-        TargetNode<?> viewer,
-        TargetNode<?> viewed) {
+        TargetNode<?, ?> viewer,
+        TargetNode<?, ?> viewed) {
       return viewerPattern.apply(viewer.getBuildTarget());
     }
 
@@ -70,8 +70,8 @@ public class VisibilityPatternParser {
     @Override
     public boolean checkVisibility(
         TargetGraph graphContext,
-        TargetNode<?> viewer,
-        TargetNode<?> viewed) {
+        TargetNode<?, ?> viewer,
+        TargetNode<?, ?> viewed) {
       return true;
     }
 
@@ -88,8 +88,8 @@ public class VisibilityPatternParser {
     @Override
     public boolean checkVisibility(
         TargetGraph graphContext,
-        TargetNode<?> viewer,
-        TargetNode<?> viewed) {
+        TargetNode<?, ?> viewer,
+        TargetNode<?, ?> viewed) {
       return !Sets.intersection(
           graphContext.getGroupsContainingTarget(viewer.getBuildTarget()),
           graphContext.getGroupsContainingTarget(viewed.getBuildTarget())).isEmpty();

@@ -24,7 +24,8 @@ import com.google.common.collect.ImmutableList;
 
 import java.util.Optional;
 
-public class WorkerToolBuilder extends AbstractNodeBuilder<WorkerToolDescription.Arg> {
+public class WorkerToolBuilder extends
+    AbstractNodeBuilder<WorkerToolDescription.Arg, WorkerToolDescription> {
   private WorkerToolBuilder(BuildTarget target) {
     super(new WorkerToolDescription(FakeBuckConfig.builder().build()), target);
   }

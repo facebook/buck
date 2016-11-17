@@ -452,7 +452,7 @@ public class TestCommand extends BuildCommand {
 
           LOG.debug("Got explicit build targets %s", explicitBuildTargets);
           ImmutableSet.Builder<BuildTarget> testTargetsBuilder = ImmutableSet.builder();
-          for (TargetNode<?> node : targetGraph.getAll(explicitBuildTargets)) {
+          for (TargetNode<?, ?> node : targetGraph.getAll(explicitBuildTargets)) {
             ImmutableSortedSet<BuildTarget> nodeTests = TargetNodes.getTestTargetsForNode(node);
             if (!nodeTests.isEmpty()) {
               LOG.debug("Got tests for target %s: %s", node.getBuildTarget(), nodeTests);

@@ -30,7 +30,8 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-public class JavaTestBuilder extends AbstractNodeBuilder<JavaTestDescription.Arg> {
+public class JavaTestBuilder
+    extends AbstractNodeBuilder<JavaTestDescription.Arg, JavaTestDescription> {
   private JavaTestBuilder(BuildTarget target) {
     super(
         new JavaTestDescription(

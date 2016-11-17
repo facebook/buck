@@ -1705,7 +1705,7 @@ public class ParserTest {
 
     // First, only load one target from the build file so the file is parsed, but only one of the
     // TargetNodes will be cached.
-    TargetNode<?> targetNode = parser.getTargetNode(
+    TargetNode<?, ?> targetNode = parser.getTargetNode(
         eventBus,
         cell,
         false,
@@ -1714,7 +1714,7 @@ public class ParserTest {
     assertThat(targetNode.getBuildTarget(), equalTo(fooLib1Target));
 
     // Now, try to load the entire build file and get all TargetNodes.
-    ImmutableSet<TargetNode<?>> targetNodes = parser.getAllTargetNodes(
+    ImmutableSet<TargetNode<?, ?>> targetNodes = parser.getAllTargetNodes(
         eventBus,
         cell,
         false,
@@ -1739,7 +1739,7 @@ public class ParserTest {
         "java_library(name = 'lib')\n".getBytes(UTF_8));
     BuildTarget fooLibTarget = BuildTarget.builder(cellRoot, "//foo", "lib").build();
 
-    TargetNode<?> targetNode = parser.getTargetNode(
+    TargetNode<?, ?> targetNode = parser.getTargetNode(
         eventBus,
         cell,
         false,
@@ -2006,7 +2006,7 @@ public class ParserTest {
             .build();
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
-    TargetNode<GenruleDescription.Arg> node = parser
+    TargetNode<GenruleDescription.Arg, ?> node = parser
         .getTargetNode(eventBus, cell, false, executorService, buildTarget)
         .castArg(GenruleDescription.Arg.class)
         .get();
@@ -2522,7 +2522,7 @@ public class ParserTest {
   public static synchronized ImmutableSet<BuildTarget> filterAllTargetsInProject(
       Parser parser,
       Cell cell,
-      Predicate<TargetNode<?>> filter,
+      Predicate<TargetNode<?, ?>> filter,
       BuckEventBus buckEventBus,
       ListeningExecutorService executor)
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
@@ -2560,7 +2560,7 @@ public class ParserTest {
         buildTargetsList);
 
     ImmutableMap.Builder<BuildTarget, HashCode> toReturn = ImmutableMap.builder();
-    for (TargetNode<?> node : targetGraph.getNodes()) {
+    for (TargetNode<?, ?> node : targetGraph.getNodes()) {
       toReturn.put(node.getBuildTarget(), node.getRawInputsHashCode());
     }
 

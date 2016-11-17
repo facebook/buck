@@ -106,7 +106,7 @@ public class IjProject {
           }
 
           @Override
-          public Optional<Path> getPathIfJavaLibrary(TargetNode<?> targetNode) {
+          public Optional<Path> getPathIfJavaLibrary(TargetNode<?, ?> targetNode) {
             BuildRule rule = buildRuleResolver.getRule(targetNode.getBuildTarget());
             if (!(rule instanceof JavaLibrary)) {
               return Optional.empty();
@@ -123,7 +123,7 @@ public class IjProject {
         new IjModuleFactory.IjModuleFactoryResolver() {
 
           @Override
-          public Optional<Path> getDummyRDotJavaPath(TargetNode<?> targetNode) {
+          public Optional<Path> getDummyRDotJavaPath(TargetNode<?, ?> targetNode) {
             BuildTarget dummyRDotJavaTarget = AndroidLibraryGraphEnhancer.getDummyRDotJavaTarget(
                 targetNode.getBuildTarget());
             Optional<BuildRule> dummyRDotJavaRule =
@@ -137,13 +137,14 @@ public class IjProject {
           }
 
           @Override
-          public Path getAndroidManifestPath(TargetNode<AndroidBinaryDescription.Arg> targetNode) {
+          public Path getAndroidManifestPath(
+              TargetNode<AndroidBinaryDescription.Arg, ?> targetNode) {
             return sourcePathResolver.getAbsolutePath(targetNode.getConstructorArg().manifest);
           }
 
           @Override
           public Optional<Path> getLibraryAndroidManifestPath(
-              TargetNode<AndroidLibraryDescription.Arg> targetNode) {
+              TargetNode<AndroidLibraryDescription.Arg, ?> targetNode) {
             Optional<SourcePath> manifestPath = targetNode.getConstructorArg().manifest;
             return manifestPath.map(sourcePathResolver::getAbsolutePath).map(Optional::of).orElse(
                 intellijConfig.getAndroidManifest());
@@ -151,7 +152,7 @@ public class IjProject {
 
           @Override
           public Optional<Path> getProguardConfigPath(
-              TargetNode<AndroidBinaryDescription.Arg> targetNode) {
+              TargetNode<AndroidBinaryDescription.Arg, ?> targetNode) {
             return targetNode
                 .getConstructorArg()
                 .proguardConfig.map(this::getRelativePathAndRecordRule);
@@ -159,7 +160,7 @@ public class IjProject {
 
           @Override
           public Optional<Path> getAndroidResourcePath(
-              TargetNode<AndroidResourceDescription.Arg> targetNode) {
+              TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
             return targetNode
                 .getConstructorArg()
                 .res.map(this::getRelativePathAndRecordRule);
@@ -167,7 +168,7 @@ public class IjProject {
 
           @Override
           public Optional<Path> getAssetsPath(
-              TargetNode<AndroidResourceDescription.Arg> targetNode) {
+              TargetNode<AndroidResourceDescription.Arg, ?> targetNode) {
             return targetNode
                 .getConstructorArg()
                 .assets.map(this::getRelativePathAndRecordRule);
@@ -175,7 +176,7 @@ public class IjProject {
 
           @Override
           public Optional<Path> getAnnotationOutputPath(
-              TargetNode<? extends JvmLibraryArg> targetNode) {
+              TargetNode<? extends JvmLibraryArg, ?> targetNode) {
             AnnotationProcessingParams annotationProcessingParams =
                 targetNode
                 .getConstructorArg()

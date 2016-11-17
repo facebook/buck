@@ -35,7 +35,8 @@ import java.util.Optional;
  * responsible for processing the raw (python) inputs of a build rule, and gathering any build
  * targets and paths referenced from those inputs.
  */
-public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget {
+public class TargetNode<T, U extends Description<T>>
+    implements Comparable<TargetNode<?, ?>>, HasBuildTarget {
 
   private final TargetNodeFactory factory;
 
@@ -44,7 +45,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
   private final BuildTarget buildTarget;
   private final CellPathResolver cellNames;
 
-  private final Description<T> description;
+  private final U description;
 
   private final T constructorArg;
   private final ImmutableSet<Path> inputs;
@@ -57,7 +58,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
   TargetNode(
       TargetNodeFactory factory,
       HashCode rawInputsHashCode,
-      Description<T> description,
+      U description,
       T constructorArg,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
@@ -88,7 +89,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     return rawInputsHashCode;
   }
 
-  public Description<T> getDescription() {
+  public U getDescription() {
     return description;
   }
 
@@ -135,7 +136,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
    * most of what is now `BuildRuleParams` to `DescriptionParams` and set them up
    * while building the target graph.
    */
-  public boolean isVisibleTo(TargetGraph graph, TargetNode<?> viewer) {
+  public boolean isVisibleTo(TargetGraph graph, TargetNode<?, ?> viewer) {
 
     // if i am in a restricted visibility group that the viewer isn't, the viewer can't see me.
     // this check *must* take priority even over the sibling check, because if it didn't then that
@@ -161,7 +162,7 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     return false;
   }
 
-  public void isVisibleToOrThrow(TargetGraph graphContext, TargetNode<?> viewer) {
+  public void isVisibleToOrThrow(TargetGraph graphContext, TargetNode<?, ?> viewer) {
     if (!isVisibleTo(graphContext, viewer)) {
       throw new HumanReadableException(
           "%s depends on %s, which is not visible",
@@ -174,16 +175,16 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
    * Type safe checked cast of the constructor arg.
    */
   @SuppressWarnings("unchecked")
-  public <U> Optional<TargetNode<U>> castArg(Class<U> cls) {
+  public <V> Optional<TargetNode<V, ?>> castArg(Class<V> cls) {
     if (cls.isInstance(constructorArg)) {
-      return Optional.of((TargetNode<U>) this);
+      return Optional.of((TargetNode<V, ?>) this);
     } else {
       return Optional.empty();
     }
   }
 
   @Override
-  public int compareTo(TargetNode<?> o) {
+  public int compareTo(TargetNode<?, ?> o) {
     return getBuildTarget().compareTo(o.getBuildTarget());
   }
 
@@ -192,15 +193,15 @@ public class TargetNode<T> implements Comparable<TargetNode<?>>, HasBuildTarget 
     return getBuildTarget().getFullyQualifiedName();
   }
 
-  public <U> TargetNode<U> withDescription(Description<U> description) {
+  public <V, W extends Description<V>> TargetNode<V, W> withDescription(W description) {
     return factory.copyNodeWithDescription(this, description);
   }
 
-  public TargetNode<T> withFlavors(ImmutableSet<Flavor> flavors) {
+  public TargetNode<T, U> withFlavors(ImmutableSet<Flavor> flavors) {
     return factory.copyNodeWithFlavors(this, flavors);
   }
 
-  public TargetNode<T> withTargetConstructorArgDepsAndSelectedVerisons(
+  public TargetNode<T, U> withTargetConstructorArgDepsAndSelectedVerisons(
       BuildTarget target,
       T constructorArg,
       ImmutableSet<BuildTarget> declaredDeps,

@@ -128,10 +128,10 @@ public class AuditInputCommand extends AbstractCommand {
     final SortedMap<String, ImmutableSortedSet<Path>> targetToInputs =
         new TreeMap<>();
 
-    new AbstractBottomUpTraversal<TargetNode<?>, RuntimeException>(graph) {
+    new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(graph) {
 
       @Override
-      public void visit(TargetNode<?> node) {
+      public void visit(TargetNode<?, ?> node) {
         Optional<Cell> cellRoot = params.getCell().getCellIfKnown(node.getBuildTarget());
         Cell cell = cellRoot.isPresent() ? cellRoot.get() : params.getCell();
         LOG.debug(
@@ -170,12 +170,12 @@ public class AuditInputCommand extends AbstractCommand {
     // Traverse the TargetGraph and print out all of the inputs used to produce each TargetNode.
     // Keep track of the inputs that have been displayed to ensure that they are not displayed more
     // than once.
-    new AbstractBottomUpTraversal<TargetNode<?>, RuntimeException>(graph) {
+    new AbstractBottomUpTraversal<TargetNode<?, ?>, RuntimeException>(graph) {
 
       final Set<Path> inputs = Sets.newHashSet();
 
       @Override
-      public void visit(TargetNode<?> node) {
+      public void visit(TargetNode<?, ?> node) {
         Optional<Cell> cellRoot = params.getCell().getCellIfKnown(node.getBuildTarget());
         Cell cell = cellRoot.isPresent() ? cellRoot.get() : params.getCell();
         for (Path input : node.getInputs()) {

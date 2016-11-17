@@ -25,7 +25,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 public class AndroidPrebuiltAarBuilder
-    extends AbstractNodeBuilder<AndroidPrebuiltAarDescription.Arg> {
+    extends AbstractNodeBuilder<AndroidPrebuiltAarDescription.Arg, AndroidPrebuiltAarDescription> {
 
  private AndroidPrebuiltAarBuilder(BuildTarget target) {
   super(new AndroidPrebuiltAarDescription(JavaCompilationConstants.ANDROID_JAVAC_OPTIONS), target);

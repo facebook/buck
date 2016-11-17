@@ -227,7 +227,7 @@ class NewNativeTargetProjectMutator {
   }
 
   public NewNativeTargetProjectMutator setPreBuildRunScriptPhasesFromTargetNodes(
-      Iterable<TargetNode<?>> nodes) {
+      Iterable<TargetNode<?, ?>> nodes) {
     preBuildRunScriptPhases = createScriptsForTargetNodes(nodes);
     return this;
   }
@@ -244,7 +244,7 @@ class NewNativeTargetProjectMutator {
   }
 
   public NewNativeTargetProjectMutator setPostBuildRunScriptPhasesFromTargetNodes(
-      Iterable<TargetNode<?>> nodes) {
+      Iterable<TargetNode<?, ?>> nodes) {
     postBuildRunScriptPhases = createScriptsForTargetNodes(nodes);
     return this;
   }
@@ -621,10 +621,10 @@ class NewNativeTargetProjectMutator {
   }
 
   private ImmutableList<PBXShellScriptBuildPhase> createScriptsForTargetNodes(
-      Iterable<TargetNode<?>> nodes) throws IllegalStateException {
+      Iterable<TargetNode<?, ?>> nodes) throws IllegalStateException {
     ImmutableList.Builder<PBXShellScriptBuildPhase> builder =
       ImmutableList.builder();
-    for (TargetNode<?> node : nodes) {
+    for (TargetNode<?, ?> node : nodes) {
       PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
       if (XcodePrebuildScriptDescription.TYPE.equals(node.getType()) ||
           XcodePostbuildScriptDescription.TYPE.equals(node.getType())) {
@@ -658,7 +658,7 @@ class NewNativeTargetProjectMutator {
     }
   }
 
-  private String generateXcodeShellScript(TargetNode<?> targetNode) {
+  private String generateXcodeShellScript(TargetNode<?, ?> targetNode) {
     Preconditions.checkArgument(targetNode.getConstructorArg() instanceof ReactNativeLibraryArgs);
 
     ST template;

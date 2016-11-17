@@ -72,7 +72,7 @@ public class TargetGraphHashingTest {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus eventBus = new BuckEventBus(new IncrementingFakeClock(), new BuildId());
 
-    TargetNode<?> node = createJavaLibraryTargetNodeWithSrcs(
+    TargetNode<?, ?> node = createJavaLibraryTargetNodeWithSrcs(
         BuildTargetFactory.newInstance("//foo:lib"),
         HashCode.fromLong(64738),
         ImmutableSet.of(Paths.get("foo/FooLib.java")));
@@ -115,11 +115,11 @@ public class TargetGraphHashingTest {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus eventBus = new BuckEventBus(new IncrementingFakeClock(), new BuildId());
 
-    TargetNode<?> nodeA = createJavaLibraryTargetNodeWithSrcs(
+    TargetNode<?, ?> nodeA = createJavaLibraryTargetNodeWithSrcs(
         BuildTargetFactory.newInstance("//foo:lib"),
         HashCode.fromLong(64738),
         ImmutableSet.of(Paths.get("foo/FooLib.java")));
-    TargetNode<?> nodeB = createJavaLibraryTargetNodeWithSrcs(
+    TargetNode<?, ?> nodeB = createJavaLibraryTargetNodeWithSrcs(
         BuildTargetFactory.newInstance("//bar:lib"),
         HashCode.fromLong(49152),
         ImmutableSet.of(Paths.get("bar/BarLib.java")));
@@ -173,11 +173,11 @@ public class TargetGraphHashingTest {
       HashCode nodeHash,
       BuildTarget depTarget,
       HashCode depHash) {
-    TargetNode<?> dep = createJavaLibraryTargetNodeWithSrcs(
+    TargetNode<?, ?> dep = createJavaLibraryTargetNodeWithSrcs(
         depTarget,
         depHash,
         ImmutableSet.of(Paths.get("dep/DepLib.java")));
-    TargetNode<?> node = createJavaLibraryTargetNodeWithSrcs(
+    TargetNode<?, ?> node = createJavaLibraryTargetNodeWithSrcs(
         nodeTarget,
         nodeHash,
         ImmutableSet.of(Paths.get("foo/FooLib.java")),
@@ -239,13 +239,13 @@ public class TargetGraphHashingTest {
         not(equalTo(resultB.get(depTarget))));
   }
 
-  private static TargetNode<?> createJavaLibraryTargetNodeWithSrcs(
+  private static TargetNode<?, ?> createJavaLibraryTargetNodeWithSrcs(
       BuildTarget buildTarget,
       HashCode hashCode,
       ImmutableSet<Path> srcs,
-      TargetNode<?>... deps) {
+      TargetNode<?, ?>... deps) {
     JavaLibraryBuilder targetNodeBuilder = JavaLibraryBuilder.createBuilder(buildTarget, hashCode);
-    for (TargetNode<?> dep : deps) {
+    for (TargetNode<?, ?> dep : deps) {
       targetNodeBuilder.addDep(dep.getBuildTarget());
     }
     for (Path src : srcs) {

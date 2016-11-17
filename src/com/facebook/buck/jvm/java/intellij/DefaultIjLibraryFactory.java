@@ -48,14 +48,14 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
      * @param targetNode node to look up.
      * @return path to the output of target but only if that path points to a .jar.
      */
-    Optional<Path> getPathIfJavaLibrary(TargetNode<?> targetNode);
+    Optional<Path> getPathIfJavaLibrary(TargetNode<?, ?> targetNode);
   }
 
   /**
    * Rule describing how to create a {@link IjLibrary} from a {@link TargetNode}.
    */
   private interface IjLibraryRule {
-    void applyRule(TargetNode<?> targetNode, IjLibrary.Builder library);
+    void applyRule(TargetNode<?, ?> targetNode, IjLibrary.Builder library);
   }
 
   /**
@@ -65,11 +65,11 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
   abstract class TypedIjLibraryRule<T> implements IjLibraryRule {
     abstract BuildRuleType getType();
 
-    abstract void apply(TargetNode<T> targetNode, IjLibrary.Builder library);
+    abstract void apply(TargetNode<T, ?> targetNode, IjLibrary.Builder library);
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public void applyRule(TargetNode<?> targetNode, IjLibrary.Builder library) {
+    public void applyRule(TargetNode<?, ?> targetNode, IjLibrary.Builder library) {
       apply((TargetNode) targetNode, library);
     }
   }
@@ -77,7 +77,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
   private Map<BuildRuleType, IjLibraryRule> libraryRuleIndex = new HashMap<>();
   private Set<String> uniqueLibraryNamesSet = new HashSet<>();
   private IjLibraryFactoryResolver libraryFactoryResolver;
-  private Map<TargetNode<?>, Optional<IjLibrary>> libraryCache;
+  private Map<TargetNode<?, ?>, Optional<IjLibrary>> libraryCache;
 
   public DefaultIjLibraryFactory(IjLibraryFactoryResolver libraryFactoryResolver) {
     this.libraryFactoryResolver = libraryFactoryResolver;
@@ -94,7 +94,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
   }
 
   @Override
-  public Optional<IjLibrary> getLibrary(TargetNode<?> target) {
+  public Optional<IjLibrary> getLibrary(TargetNode<?, ?> target) {
     Optional<IjLibrary> library = libraryCache.get(target);
     if (library == null) {
       library = createLibrary(target);
@@ -103,7 +103,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
     return library;
   }
 
-  private Optional<IjLibraryRule> getRule(TargetNode<?> targetNode) {
+  private Optional<IjLibraryRule> getRule(TargetNode<?, ?> targetNode) {
     IjLibraryRule rule = libraryRuleIndex.get(targetNode.getType());
     if (rule == null) {
       rule = libraryFactoryResolver.getPathIfJavaLibrary(targetNode)
@@ -113,7 +113,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
     return Optional.ofNullable(rule);
   }
 
-  private Optional<IjLibrary> createLibrary(final TargetNode<?> targetNode) {
+  private Optional<IjLibrary> createLibrary(final TargetNode<?, ?> targetNode) {
     return getRule(targetNode).map(rule -> {
       // Use a "library_" prefix so that the names don't clash with module names.
       String libraryName = Util.intelliJLibraryName(targetNode.getBuildTarget());
@@ -138,7 +138,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
 
     @Override
     public void applyRule(
-        TargetNode<?> targetNode, IjLibrary.Builder library) {
+        TargetNode<?, ?> targetNode, IjLibrary.Builder library) {
       library.setBinaryJar(binaryJarPath);
     }
   }
@@ -153,7 +153,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
 
     @Override
     public void apply(
-        TargetNode<AndroidPrebuiltAarDescription.Arg> targetNode, IjLibrary.Builder library) {
+        TargetNode<AndroidPrebuiltAarDescription.Arg, ?> targetNode, IjLibrary.Builder library) {
       library.setBinaryJar(libraryFactoryResolver.getPathIfJavaLibrary(targetNode));
 
       AndroidPrebuiltAarDescription.Arg arg = targetNode.getConstructorArg();
@@ -173,7 +173,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
 
     @Override
     public void apply(
-        TargetNode<PrebuiltJarDescription.Arg> targetNode, IjLibrary.Builder library) {
+        TargetNode<PrebuiltJarDescription.Arg, ?> targetNode, IjLibrary.Builder library) {
       PrebuiltJarDescription.Arg arg = targetNode.getConstructorArg();
       library.setBinaryJar(libraryFactoryResolver.getPath(arg.binaryJar));
       library.setSourceJar(

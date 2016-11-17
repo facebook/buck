@@ -24,11 +24,11 @@ import com.google.common.collect.Iterables;
 
 public class TargetGraphAndTargets {
   private final TargetGraph targetGraph;
-  private final ImmutableSet<TargetNode<?>> projectRoots;
+  private final ImmutableSet<TargetNode<?, ?>> projectRoots;
 
   private TargetGraphAndTargets(
       TargetGraph targetGraph,
-      Iterable<TargetNode<?>> projectRoots) {
+      Iterable<TargetNode<?, ?>> projectRoots) {
     this.targetGraph = targetGraph;
     this.projectRoots = ImmutableSet.copyOf(projectRoots);
   }
@@ -37,7 +37,7 @@ public class TargetGraphAndTargets {
     return targetGraph;
   }
 
-  public ImmutableSet<TargetNode<?>> getProjectRoots() {
+  public ImmutableSet<TargetNode<?, ?>> getProjectRoots() {
     return projectRoots;
   }
 
@@ -52,7 +52,7 @@ public class TargetGraphAndTargets {
       ImmutableSet<BuildTarget> buildTargets,
       TargetGraph projectGraph,
       boolean shouldIncludeDependenciesTests) {
-    Iterable<TargetNode<?>> projectRoots = projectGraph.getAll(buildTargets);
+    Iterable<TargetNode<?, ?>> projectRoots = projectGraph.getAll(buildTargets);
     if (shouldIncludeDependenciesTests) {
       return getExplicitTestTargets(projectGraph.getSubgraph(projectRoots).getNodes());
     }
@@ -69,7 +69,7 @@ public class TargetGraphAndTargets {
   public static ImmutableSet<BuildTarget> getExplicitTestTargets(
       TargetGraphAndTargetNodes targetGraphAndTargetNodes,
       boolean shouldIncludeDependenciesTests) {
-    Iterable<TargetNode<?>> nodes = targetGraphAndTargetNodes.getTargetNodes();
+    Iterable<TargetNode<?, ?>> nodes = targetGraphAndTargetNodes.getTargetNodes();
     if (shouldIncludeDependenciesTests) {
       return getExplicitTestTargets(
           targetGraphAndTargetNodes.getTargetGraph().getSubgraph(nodes).getNodes());
@@ -82,13 +82,13 @@ public class TargetGraphAndTargets {
    * @return A set of all test targets that test the targets in {@code nodes}.
    */
   public static ImmutableSet<BuildTarget> getExplicitTestTargets(
-      Iterable<TargetNode<?>> nodes) {
+      Iterable<TargetNode<?, ?>> nodes) {
     return FluentIterable
         .from(nodes)
         .transformAndConcat(
-            new Function<TargetNode<?>, Iterable<BuildTarget>>() {
+            new Function<TargetNode<?, ?>, Iterable<BuildTarget>>() {
               @Override
-              public Iterable<BuildTarget> apply(TargetNode<?> node) {
+              public Iterable<BuildTarget> apply(TargetNode<?, ?> node) {
                 return TargetNodes.getTestTargetsForNode(node);
               }
             })
@@ -103,17 +103,17 @@ public class TargetGraphAndTargets {
       ImmutableSet<BuildTarget> explicitTests) {
     // Get the roots of the main graph. This contains all the targets in the project slice, or all
     // the valid project roots if a project slice is not specified.
-    Iterable<TargetNode<?>> projectRoots = projectGraph.getAll(graphRoots);
+    Iterable<TargetNode<?, ?>> projectRoots = projectGraph.getAll(graphRoots);
 
     // Optionally get the roots of the test graph. This contains all the tests that cover the roots
     // of the main graph or their dependencies.
-    ImmutableSet<TargetNode<?>> associatedTests = ImmutableSet.of();
+    ImmutableSet<TargetNode<?, ?>> associatedTests = ImmutableSet.of();
     if (isWithTests) {
       associatedTests =
           ImmutableSet.copyOf(ImmutableSet.copyOf(projectGraph.getAll(explicitTests)));
     }
 
-    ImmutableSet<TargetNode<?>> associatedProjects = getAssociatedTargetNodes(
+    ImmutableSet<TargetNode<?, ?>> associatedProjects = getAssociatedTargetNodes(
         projectGraph,
         Iterables.concat(projectRoots, associatedTests),
         associatedProjectPredicate);
@@ -131,9 +131,9 @@ public class TargetGraphAndTargets {
    * @param associatedTargetNodePredicate A predicate to determine whether a node is related or not.
    * @return A set of nodes related to {@code subgraphRoots} or their dependencies.
    */
-  private static ImmutableSet<TargetNode<?>> getAssociatedTargetNodes(
+  private static ImmutableSet<TargetNode<?, ?>> getAssociatedTargetNodes(
       TargetGraph projectGraph,
-      Iterable<TargetNode<?>> subgraphRoots,
+      Iterable<TargetNode<?, ?>> subgraphRoots,
       final AssociatedTargetNodePredicate associatedTargetNodePredicate) {
     final TargetGraph subgraph = projectGraph.getSubgraph(subgraphRoots);
 

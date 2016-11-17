@@ -31,83 +31,84 @@ import java.util.Optional;
 
 public abstract class AbstractCxxSourceBuilder<
     T extends CxxConstructorArg,
-    U extends AbstractCxxSourceBuilder<T, U>>
-    extends AbstractCxxBuilder<T> {
+    U extends Description<T>,
+    V extends AbstractCxxSourceBuilder<T, U, V>>
+    extends AbstractCxxBuilder<T, U> {
 
   public AbstractCxxSourceBuilder(
-      Description<T> description,
+      U description,
       BuildTarget target) {
     super(description, target);
   }
 
-  public U setSrcs(ImmutableSortedSet<SourceWithFlags> srcs)  {
+  public V setSrcs(ImmutableSortedSet<SourceWithFlags> srcs)  {
     arg.srcs = srcs;
     return getThis();
   }
 
-  public U setHeaders(ImmutableSortedSet<SourcePath> headers)  {
+  public V setHeaders(ImmutableSortedSet<SourcePath> headers)  {
     arg.headers = SourceList.ofUnnamedSources(headers);
     return getThis();
   }
 
-  public U setHeaders(ImmutableSortedMap<String, SourcePath> headers)  {
+  public V setHeaders(ImmutableSortedMap<String, SourcePath> headers)  {
     arg.headers = SourceList.ofNamedSources(headers);
     return getThis();
   }
 
-  public U setCompilerFlags(ImmutableList<String> compilerFlags) {
+  public V setCompilerFlags(ImmutableList<String> compilerFlags) {
     arg.compilerFlags = compilerFlags;
     return getThis();
   }
 
-  public U setPreprocessorFlags(ImmutableList<String> preprocessorFlags) {
+  public V setPreprocessorFlags(ImmutableList<String> preprocessorFlags) {
     arg.preprocessorFlags = preprocessorFlags;
     return getThis();
   }
 
-  public U setLinkerFlags(ImmutableList<String> linkerFlags) {
+  public V setLinkerFlags(ImmutableList<String> linkerFlags) {
     arg.linkerFlags = linkerFlags;
     return getThis();
   }
 
-  public U setPlatformCompilerFlags(
+  public V setPlatformCompilerFlags(
       PatternMatchedCollection<ImmutableList<String>> platformCompilerFlags) {
     arg.platformCompilerFlags = platformCompilerFlags;
     return getThis();
   }
 
-  public U setPlatformPreprocessorFlags(
+  public V setPlatformPreprocessorFlags(
       PatternMatchedCollection<ImmutableList<String>> platformPreprocessorFlags) {
     arg.platformPreprocessorFlags = platformPreprocessorFlags;
     return getThis();
   }
 
-  public U setPlatformLinkerFlags(
+  public V setPlatformLinkerFlags(
       PatternMatchedCollection<ImmutableList<String>> platformLinkerFlags) {
     arg.platformLinkerFlags = platformLinkerFlags;
     return getThis();
   }
 
-  public U setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {
+  public V setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {
     arg.frameworks = frameworks;
     return getThis();
   }
 
-  public U setLibraries(ImmutableSortedSet<FrameworkPath> libraries) {
+  public V setLibraries(ImmutableSortedSet<FrameworkPath> libraries) {
     arg.libraries = libraries;
     return getThis();
   }
 
-  public U setDeps(ImmutableSortedSet<BuildTarget> deps) {
+  public V setDeps(ImmutableSortedSet<BuildTarget> deps) {
     arg.deps = deps;
     return getThis();
   }
 
-  public U setHeaderNamespace(String namespace) {
+  public V setHeaderNamespace(String namespace) {
     arg.headerNamespace = Optional.of(namespace);
     return getThis();
   }
 
-  protected abstract U getThis();
+  protected abstract V getThis();
 
 }

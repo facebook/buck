@@ -19,7 +19,8 @@ package com.facebook.buck.apple;
 import com.facebook.buck.model.BuildTarget;
 
 public class XcodePostbuildScriptBuilder
-    extends AbstractXcodeScriptBuilder<XcodePostbuildScriptBuilder> {
+    extends
+    AbstractXcodeScriptBuilder<XcodePostbuildScriptBuilder, XcodePostbuildScriptDescription> {
 
   protected XcodePostbuildScriptBuilder(BuildTarget target) {
     super(new XcodePostbuildScriptDescription(), target);

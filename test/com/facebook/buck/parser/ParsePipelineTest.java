@@ -108,7 +108,7 @@ public class ParsePipelineTest {
   public void speculativeDepsTraversal() throws Exception {
     final Fixture fixture = createMultiThreadedFixture("pipeline_test");
     final Cell cell = fixture.getCell();
-    TargetNode<?> libTargetNode = fixture.getTargetNodeParsePipeline().getNode(
+    TargetNode<?, ?> libTargetNode = fixture.getTargetNodeParsePipeline().getNode(
         cell,
         BuildTargetFactory.newInstance(cell.getFilesystem(), "//:lib"));
 
@@ -122,14 +122,15 @@ public class ParsePipelineTest {
   public void speculativeDepsTraversalWhenGettingAllNodes() throws Exception {
     final Fixture fixture = createMultiThreadedFixture("pipeline_test");
     final Cell cell = fixture.getCell();
-    ImmutableSet<TargetNode<?>> libTargetNodes = fixture.getTargetNodeParsePipeline().getAllNodes(
-        cell,
-        fixture.getCell().getFilesystem().resolve("BUCK"));
+    ImmutableSet<TargetNode<?, ?>> libTargetNodes =
+        fixture.getTargetNodeParsePipeline().getAllNodes(
+            cell,
+            fixture.getCell().getFilesystem().resolve("BUCK"));
     FluentIterable<BuildTarget> allDeps = FluentIterable.from(libTargetNodes)
         .transformAndConcat(
-            new Function<TargetNode<?>, Iterable<BuildTarget>>() {
+            new Function<TargetNode<?, ?>, Iterable<BuildTarget>>() {
               @Override
-              public Iterable<BuildTarget> apply(TargetNode<?> input) {
+              public Iterable<BuildTarget> apply(TargetNode<?, ?> input) {
                 return input.getDeps();
               }
             });
@@ -316,7 +317,7 @@ public class ParsePipelineTest {
           cell,
           BuildTargetFactory.newInstance(cell.getFilesystem(), "//:group_one"));
 
-      TargetNode<?> node = fixture.getTargetNodeParsePipeline().getNode(
+      TargetNode<?, ?> node = fixture.getTargetNodeParsePipeline().getNode(
           cell,
           BuildTargetFactory.newInstance(cell.getFilesystem(), "//:foo"));
 
@@ -385,7 +386,8 @@ public class ParsePipelineTest {
     private final RawNodeParsePipeline rawNodeParsePipeline;
     private final ProjectBuildFileParserPool projectBuildFileParserPool;
     private final Cell cell;
-    private final TypedParsePipelineCache<BuildTarget, TargetNode<?>> targetNodeParsePipelineCache;
+    private final TypedParsePipelineCache<BuildTarget, TargetNode<?, ?>>
+        targetNodeParsePipelineCache;
     private final TypedParsePipelineCache<BuildTarget, TargetGroup> targetGroupParsePipelineCache;
     private final RawNodeParsePipelineCache rawNodeParsePipelineCache;
     private final ListeningExecutorService executorService;
@@ -427,7 +429,7 @@ public class ParsePipelineTest {
             }
             return buildFileParser;
           });
-      final TargetNodeListener<TargetNode<?>> nodeListener =
+      final TargetNodeListener<TargetNode<?, ?>> nodeListener =
           (buildFile, node) -> {
           };
       LoadingCache<Cell, BuildFileTree> buildFileTrees = CacheBuilder.newBuilder().build(
@@ -478,7 +480,8 @@ public class ParsePipelineTest {
       return cell;
     }
 
-    public TypedParsePipelineCache<BuildTarget, TargetNode<?>> getTargetNodeParsePipelineCache() {
+    public TypedParsePipelineCache<BuildTarget, TargetNode<?, ?>>
+    getTargetNodeParsePipelineCache() {
       return targetNodeParsePipelineCache;
     }
 

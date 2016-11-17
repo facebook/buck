@@ -41,7 +41,7 @@ public class QueryTargetAccessor {
   private QueryTargetAccessor() { }
 
   public static <T> ImmutableSet<QueryTarget> getTargetsInAttribute(
-      TargetNode<T> node,
+      TargetNode<T, ?> node,
       String attribute) {
     try {
       final ImmutableSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
@@ -71,7 +71,7 @@ public class QueryTargetAccessor {
    * Filters the objects in the given attribute that satisfy the given predicate.
    */
   public static <T> ImmutableSet<Object> filterAttributeContents(
-      TargetNode<T> node,
+      TargetNode<T, ?> node,
       String attribute,
       final Predicate<Object> predicate) {
     try {

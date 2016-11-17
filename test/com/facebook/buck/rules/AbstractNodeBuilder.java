@@ -39,13 +39,13 @@ import javax.annotation.Nullable;
  * and {@link ActionGraph} ({@link TargetNode} and {@link BuildRule} respectively) mirroring the
  * behavior seen when running the actual parser as closely as possible.
  */
-public abstract class AbstractNodeBuilder<A> {
+public abstract class AbstractNodeBuilder<A, B extends Description<A>> {
   private static final DefaultTypeCoercerFactory TYPE_COERCER_FACTORY =
       new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance());
   private static final VisibilityPatternParser VISIBILITY_PATTERN_PARSER =
       new VisibilityPatternParser();
 
-  protected final Description<A> description;
+  protected final B description;
   protected final ProjectFilesystem filesystem;
   protected final BuildTarget target;
   protected final A arg;
@@ -54,20 +54,20 @@ public abstract class AbstractNodeBuilder<A> {
   private final HashCode rawHashCode;
 
   protected AbstractNodeBuilder(
-      Description<A> description,
+      B description,
       BuildTarget target) {
     this(description, target, new FakeProjectFilesystem(), null);
   }
 
   protected AbstractNodeBuilder(
-      Description<A> description,
+      B description,
       BuildTarget target,
       ProjectFilesystem projectFilesystem) {
     this(description, target, projectFilesystem, null);
   }
 
   protected AbstractNodeBuilder(
-      Description<A> description,
+      B description,
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
       HashCode hashCode) {
@@ -109,7 +109,7 @@ public abstract class AbstractNodeBuilder<A> {
     return rule;
   }
 
-  public TargetNode<A> build() {
+  public TargetNode<A, B> build() {
     try {
       HashCode hash = rawHashCode == null ?
           Hashing.sha1().hashString(target.getFullyQualifiedName(), UTF_8) :
@@ -135,7 +135,7 @@ public abstract class AbstractNodeBuilder<A> {
   public BuildRuleParams createBuildRuleParams(
       BuildRuleResolver resolver,
       ProjectFilesystem filesystem) {
-    TargetNode<?> node = build();
+    TargetNode<?, ?> node = build();
     return new FakeBuildRuleParamsBuilder(target)
         .setProjectFilesystem(filesystem)
         .setDeclaredDeps(resolver.getAllRules(node.getDeclaredDeps()))

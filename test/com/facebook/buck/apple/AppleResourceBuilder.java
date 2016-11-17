@@ -22,7 +22,8 @@ import com.facebook.buck.rules.SourcePath;
 
 import java.util.Set;
 
-public class AppleResourceBuilder extends AbstractNodeBuilder<AppleResourceDescription.Arg> {
+public class AppleResourceBuilder
+    extends AbstractNodeBuilder<AppleResourceDescription.Arg, AppleResourceDescription> {
 
   protected AppleResourceBuilder(BuildTarget target) {
     super(new AppleResourceDescription(), target);

@@ -39,7 +39,7 @@ abstract class AbstractProjectPredicates {
    * project.
    */
   @Value.Parameter
-  public abstract Predicate<TargetNode<?>> getProjectRootsPredicate();
+  public abstract Predicate<TargetNode<?, ?>> getProjectRootsPredicate();
 
   /**
    * {@link AssociatedTargetNodePredicate} returning nodes associated
@@ -53,7 +53,7 @@ abstract class AbstractProjectPredicates {
    * the specified IDE.
    */
   public static ProjectPredicates forIde(ProjectCommand.Ide targetIde) {
-    Predicate<TargetNode<?>> projectRootsPredicate;
+    Predicate<TargetNode<?, ?>> projectRootsPredicate;
     AssociatedTargetNodePredicate associatedProjectPredicate;
 
     // Prepare the predicates to create the project graph based on the IDE.

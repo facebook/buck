@@ -143,7 +143,7 @@ public class AuditClasspathCommand extends AbstractCommand {
 
   @VisibleForTesting
   int printDotOutput(CommandRunnerParams params, TargetGraph targetGraph) {
-    Dot<TargetNode<?>> dot = new Dot<>(
+    Dot<TargetNode<?, ?>> dot = new Dot<>(
         targetGraph,
         "target_graph",
         targetNode -> "\"" + targetNode.getBuildTarget().getFullyQualifiedName() + "\"",

@@ -291,7 +291,7 @@ public class NewNativeTargetProjectMutatorTest {
     PBXBuildPhase copyFilesPhase = new PBXCopyFilesBuildPhase(specBuilder.build());
     mutator.setCopyFilesPhases(ImmutableList.of(copyFilesPhase));
 
-    TargetNode<?> postbuildNode = XcodePostbuildScriptBuilder
+    TargetNode<?, ?> postbuildNode = XcodePostbuildScriptBuilder
         .createBuilder(BuildTargetFactory.newInstance("//foo:script"))
         .setCmd("echo \"hello world!\"")
         .build();
@@ -338,7 +338,7 @@ public class NewNativeTargetProjectMutatorTest {
   public void testScriptBuildPhase() throws NoSuchBuildTargetException{
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
-    TargetNode<?> prebuildNode = XcodePrebuildScriptBuilder
+    TargetNode<?, ?> prebuildNode = XcodePrebuildScriptBuilder
         .createBuilder(BuildTargetFactory.newInstance("//foo:script"))
         .setSrcs(ImmutableSortedSet.of(new FakeSourcePath("script/input.png")))
         .setOutputs(ImmutableSortedSet.of("helloworld.txt"))
@@ -380,7 +380,7 @@ public class NewNativeTargetProjectMutatorTest {
                     ImmutableMap.of("packager_worker", "react-native/packager.sh")))
             .setFilesystem(filesystem)
             .build());
-    TargetNode<?> reactNativeNode =
+    TargetNode<?, ?> reactNativeNode =
         IosReactNativeLibraryBuilder.builder(depBuildTarget, buckConfig)
             .setBundleName("Apps/Foo/FooBundle.js")
             .setEntryPath(new PathSourcePath(filesystem, Paths.get("js/FooApp.js")))

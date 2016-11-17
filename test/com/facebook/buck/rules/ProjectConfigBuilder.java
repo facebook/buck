@@ -22,7 +22,8 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-public class ProjectConfigBuilder extends AbstractNodeBuilder<ProjectConfigDescription.Arg> {
+public class ProjectConfigBuilder
+    extends AbstractNodeBuilder<ProjectConfigDescription.Arg, ProjectConfigDescription> {
 
   private ProjectConfigBuilder(BuildTarget target) {
     super(new ProjectConfigDescription(), target);

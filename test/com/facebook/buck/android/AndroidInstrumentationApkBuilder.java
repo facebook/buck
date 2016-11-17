@@ -28,7 +28,10 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 
 public class AndroidInstrumentationApkBuilder
-    extends AbstractNodeBuilder<AndroidInstrumentationApkDescription.Arg> {
+    extends
+    AbstractNodeBuilder<
+        AndroidInstrumentationApkDescription.Arg,
+        AndroidInstrumentationApkDescription> {
 
   private AndroidInstrumentationApkBuilder(BuildTarget target) {
     super(

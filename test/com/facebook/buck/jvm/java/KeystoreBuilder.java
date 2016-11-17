@@ -20,7 +20,8 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.SourcePath;
 
-public class KeystoreBuilder extends AbstractNodeBuilder<KeystoreDescription.Arg> {
+public class KeystoreBuilder
+    extends AbstractNodeBuilder<KeystoreDescription.Arg, KeystoreDescription> {
 
   private KeystoreBuilder(BuildTarget target) {
     super(new KeystoreDescription(), target);

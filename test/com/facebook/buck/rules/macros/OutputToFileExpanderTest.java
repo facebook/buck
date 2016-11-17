@@ -58,7 +58,7 @@ public class OutputToFileExpanderTest {
     OutputToFileExpander expander = new OutputToFileExpander(source);
     BuildTarget target = BuildTargetFactory.newInstance("//some:example");
     JavaLibraryBuilder builder = JavaLibraryBuilder.createBuilder(target);
-    TargetNode<?> node = builder.build();
+    TargetNode<?, ?> node = builder.build();
     BuildRuleResolver resolver = new BuildRuleResolver(
         TargetGraphFactory.newInstance(node),
         new DefaultTargetNodeToBuildRuleTransformer());

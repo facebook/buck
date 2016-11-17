@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 public class HaskellLibraryBuilder
-    extends AbstractNodeBuilder<HaskellLibraryDescription.Arg> {
+    extends AbstractNodeBuilder<HaskellLibraryDescription.Arg, HaskellLibraryDescription> {
 
   public HaskellLibraryBuilder(
       BuildTarget target,
