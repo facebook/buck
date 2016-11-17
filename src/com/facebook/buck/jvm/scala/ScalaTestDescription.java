@@ -31,7 +31,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
@@ -56,8 +55,6 @@ import java.util.logging.Level;
 public class ScalaTestDescription implements Description<ScalaTestDescription.Arg>,
     ImplicitDepsInferringDescription<ScalaTestDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("scala_test");
-
   private final ScalaBuckConfig config;
   private final JavaOptions javaOptions;
   private final Optional<Long> defaultTestRuleTimeoutMs;
@@ -72,11 +69,6 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
     this.javaOptions = javaOptions;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatform = cxxPlatform;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

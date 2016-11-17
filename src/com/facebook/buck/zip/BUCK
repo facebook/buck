@@ -52,7 +52,7 @@ java_library(
   srcs = [
     'SrcZipAwareFileBundler.java',
     'Zip.java',
-    'ZipDescription.java',
+    'ZipFileDescription.java',
   ],
   autodeps = True,
   visibility = [

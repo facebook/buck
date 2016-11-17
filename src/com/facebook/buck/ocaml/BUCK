@@ -1,7 +1,7 @@
 standard_java_library(
   immutable_types = [
-    'OCamlBuildContext',
-    'OCamlGeneratedBuildRules',
+    'OcamlBuildContext',
+    'OcamlGeneratedBuildRules',
   ],
   tests = [
     '//test/com/facebook/buck/ocaml:ocaml',

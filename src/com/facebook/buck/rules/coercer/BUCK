@@ -18,7 +18,7 @@ java_immutables_library(
     'BuildConfigFields',
     'FrameworkPath',
     'ManifestEntries',
-    'OCamlSource',
+    'OcamlSource',
     'SourceList',
     'SourceWithFlagsList',
   ],

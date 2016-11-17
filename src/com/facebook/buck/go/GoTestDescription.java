@@ -28,7 +28,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
@@ -61,7 +60,6 @@ public class GoTestDescription implements
     MetadataProvidingDescription<GoTestDescription.Arg>,
     ImplicitDepsInferringDescription<GoTestDescription.Arg> {
 
-  private static final BuildRuleType TYPE = BuildRuleType.of("go_test");
   private static final Flavor TEST_LIBRARY_FLAVOR = ImmutableFlavor.of("test-library");
 
   private final GoBuckConfig goBuckConfig;
@@ -72,11 +70,6 @@ public class GoTestDescription implements
       Optional<Long> defaultTestRuleTimeoutMs) {
     this.goBuckConfig = goBuckConfig;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

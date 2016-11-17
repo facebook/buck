@@ -27,7 +27,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
@@ -52,8 +51,6 @@ public class JavaBinaryDescription implements
     Description<JavaBinaryDescription.Args>,
     ImplicitDepsInferringDescription<JavaBinaryDescription.Args> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("java_binary");
-
   private static final Flavor FAT_JAR_INNER_JAR_FLAVOR = ImmutableFlavor.of("inner-jar");
 
   private final JavacOptions javacOptions;
@@ -67,11 +64,6 @@ public class JavaBinaryDescription implements
     this.javaOptions = javaOptions;
     this.javacOptions = Preconditions.checkNotNull(javacOptions);
     this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

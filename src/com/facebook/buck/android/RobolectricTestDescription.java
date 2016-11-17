@@ -34,7 +34,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
@@ -55,7 +54,6 @@ import java.util.Optional;
 
 public class RobolectricTestDescription implements Description<RobolectricTestDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("robolectric_test");
 
   private final JavaOptions javaOptions;
   private final JavacOptions templateOptions;
@@ -71,11 +69,6 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
     this.templateOptions = templateOptions;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatform = cxxPlatform;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

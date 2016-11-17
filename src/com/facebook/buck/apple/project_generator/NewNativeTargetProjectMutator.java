@@ -50,6 +50,7 @@ import com.facebook.buck.js.ReactNativeBundle;
 import com.facebook.buck.js.ReactNativeLibraryArgs;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetNode;
@@ -626,8 +627,13 @@ class NewNativeTargetProjectMutator {
       ImmutableList.builder();
     for (TargetNode<?, ?> node : nodes) {
       PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
-      if (XcodePrebuildScriptDescription.TYPE.equals(node.getType()) ||
-          XcodePostbuildScriptDescription.TYPE.equals(node.getType())) {
+      boolean nodeIsPrebuildScript =
+          Description.getBuildRuleType(XcodePrebuildScriptDescription.class)
+              .equals(node.getType());
+      boolean nodeIsPostbuildScript =
+          Description.getBuildRuleType(XcodePostbuildScriptDescription.class)
+              .equals(node.getType());
+      if (nodeIsPrebuildScript || nodeIsPostbuildScript) {
         XcodeScriptDescriptionArg arg = (XcodeScriptDescriptionArg) node.getConstructorArg();
         shellScriptBuildPhase
             .getInputPaths()
@@ -639,7 +645,9 @@ class NewNativeTargetProjectMutator {
                     .toSet());
         shellScriptBuildPhase.getOutputPaths().addAll(arg.outputs);
         shellScriptBuildPhase.setShellScript(arg.cmd);
-      } else if (IosReactNativeLibraryDescription.TYPE.equals(node.getType())) {
+      } else if (
+          Description.getBuildRuleType(IosReactNativeLibraryDescription.class)
+              .equals(node.getType())) {
         shellScriptBuildPhase.setShellScript(generateXcodeShellScript(node));
       } else {
         // unreachable

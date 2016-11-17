@@ -27,7 +27,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
@@ -54,7 +53,6 @@ public class ApplePackageDescription implements
     Description<ApplePackageDescription.Arg>,
     Flavored,
     ImplicitDepsInferringDescription<ApplePackageDescription.Arg> {
-  public static final BuildRuleType TYPE = BuildRuleType.of("apple_package");
 
   private final CxxPlatform defaultCxxPlatform;
   private final AppleConfig config;
@@ -104,10 +102,6 @@ public class ApplePackageDescription implements
           sourcePathResolver,
           bundle);
     }
-  }
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

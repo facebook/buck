@@ -44,7 +44,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
@@ -78,7 +77,6 @@ import java.util.regex.Pattern;
 public class AndroidBinaryDescription
     implements Description<AndroidBinaryDescription.Arg>, Flavored {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("android_binary");
   private static final Logger LOG = Logger.get(AndroidBinaryDescription.class);
 
   /**
@@ -118,11 +116,6 @@ public class AndroidBinaryDescription
     this.cxxBuckConfig = cxxBuckConfig;
     this.nativePlatforms = nativePlatforms;
     this.dxExecutorService = dxExecutorService;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

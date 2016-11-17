@@ -56,6 +56,7 @@ import com.facebook.buck.rules.ActionGraphCache;
 import com.facebook.buck.rules.AssociatedTargetNodePredicate;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -548,7 +549,8 @@ public class ProjectCommand extends BuildCommand {
         }
         BuildRuleType nodeType = node.get().getType();
         boolean canGenerateXcodeProject = canGenerateImplicitWorkspaceForType(nodeType);
-        canGenerateXcodeProject |= nodeType.equals(XcodeWorkspaceConfigDescription.TYPE);
+        canGenerateXcodeProject |=
+            nodeType.equals(Description.getBuildRuleType(XcodeWorkspaceConfigDescription.class));
         if (guessedIde == null && canGenerateXcodeProject) {
           guessedIde = Ide.XCODE;
         } else if (guessedIde == Ide.XCODE && !canGenerateXcodeProject ||
@@ -983,7 +985,7 @@ public class ProjectCommand extends BuildCommand {
       TargetNode<?, ?> inputNode = targetGraphAndTargets.getTargetGraph().get(inputTarget);
       XcodeWorkspaceConfigDescription.Arg workspaceArgs;
       BuildRuleType type = inputNode.getType();
-      if (type == XcodeWorkspaceConfigDescription.TYPE) {
+      if (type == Description.getBuildRuleType(XcodeWorkspaceConfigDescription.class)) {
         TargetNode<XcodeWorkspaceConfigDescription.Arg, ?> castedWorkspaceNode =
             castToXcodeWorkspaceTargetNode(inputNode);
         workspaceArgs = castedWorkspaceNode.getConstructorArg();
@@ -1128,7 +1130,9 @@ public class ProjectCommand extends BuildCommand {
   @SuppressWarnings(value = "unchecked")
   private static TargetNode<XcodeWorkspaceConfigDescription.Arg, ?> castToXcodeWorkspaceTargetNode(
       TargetNode<?, ?> targetNode) {
-    Preconditions.checkArgument(targetNode.getType() == XcodeWorkspaceConfigDescription.TYPE);
+    Preconditions.checkArgument(
+        targetNode.getType() ==
+            Description.getBuildRuleType(XcodeWorkspaceConfigDescription.class));
     return (TargetNode<XcodeWorkspaceConfigDescription.Arg, ?>) targetNode;
   }
 
@@ -1304,7 +1308,7 @@ public class ProjectCommand extends BuildCommand {
     ImmutableSet.Builder<BuildTarget> resultBuilder = ImmutableSet.builder();
     for (TargetNode<?, ?> node : targetNodes) {
       BuildRuleType type = node.getType();
-      if (type == XcodeWorkspaceConfigDescription.TYPE) {
+      if (type == Description.getBuildRuleType(XcodeWorkspaceConfigDescription.class)) {
         TargetNode<XcodeWorkspaceConfigDescription.Arg, ?> castedWorkspaceNode =
             castToXcodeWorkspaceTargetNode(node);
         Optional<BuildTarget> srcTarget = castedWorkspaceNode.getConstructorArg().srcTarget;
@@ -1324,9 +1328,9 @@ public class ProjectCommand extends BuildCommand {
     // We weren't given a workspace target, but we may have been given something that could
     // still turn into a workspace (for example, a library or an actual app rule). If that's the
     // case we still want to generate a workspace.
-    return type == AppleBinaryDescription.TYPE ||
-        type == AppleBundleDescription.TYPE ||
-        type == AppleLibraryDescription.TYPE;
+    return type == Description.getBuildRuleType(AppleBinaryDescription.class) ||
+        type == Description.getBuildRuleType(AppleBundleDescription.class) ||
+        type == Description.getBuildRuleType(AppleLibraryDescription.class);
   }
 
   /**
@@ -1350,7 +1354,7 @@ public class ProjectCommand extends BuildCommand {
   }
 
   private static boolean isTargetWithAnnotations(TargetNode<?, ?> target) {
-    if (target.getType() != JavaLibraryDescription.TYPE) {
+    if (target.getType() != Description.getBuildRuleType(JavaLibraryDescription.class)) {
       return false;
     }
     JavaLibraryDescription.Arg arg = ((JavaLibraryDescription.Arg) target.getConstructorArg());

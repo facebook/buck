@@ -52,8 +52,6 @@ public class CxxBinaryDescription implements
     ImplicitFlavorsInferringDescription,
     MetadataProvidingDescription<CxxBinaryDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("cxx_binary");
-
   private final CxxBuckConfig cxxBuckConfig;
   private final InferBuckConfig inferBuckConfig;
   private final CxxPlatform defaultCxxPlatform;
@@ -253,11 +251,6 @@ public class CxxBinaryDescription implements
   }
 
   @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
-  }
-
-  @Override
   public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
@@ -354,7 +347,7 @@ public class CxxBinaryDescription implements
   @Override
   public ImmutableSortedSet<Flavor> addImplicitFlavors(
       ImmutableSortedSet<Flavor> argDefaultFlavors) {
-    return addImplicitFlavorsForRuleTypes(argDefaultFlavors, TYPE);
+    return addImplicitFlavorsForRuleTypes(argDefaultFlavors, Description.getBuildRuleType(this));
   }
 
   public ImmutableSortedSet<Flavor> addImplicitFlavorsForRuleTypes(

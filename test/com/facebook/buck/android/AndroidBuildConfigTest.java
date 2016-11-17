@@ -26,6 +26,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -84,7 +85,9 @@ public class AndroidBuildConfigTest {
 
   @Test
   public void testGetTypeMethodOfBuilder() {
-    assertEquals("android_build_config", AndroidBuildConfigDescription.TYPE.getName());
+    assertEquals(
+        "android_build_config",
+        Description.getBuildRuleType(AndroidBuildConfigDescription.class).getName());
   }
 
   @Test

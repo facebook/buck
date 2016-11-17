@@ -24,7 +24,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
@@ -44,8 +43,6 @@ public class DTestDescription implements
     Description<DTestDescription.Arg>,
     ImplicitDepsInferringDescription<DTestDescription.Arg> {
 
-  private static final BuildRuleType TYPE = BuildRuleType.of("d_test");
-
   private final DBuckConfig dBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform cxxPlatform;
@@ -60,11 +57,6 @@ public class DTestDescription implements
     this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatform = cxxPlatform;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

@@ -28,7 +28,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.RuleKeyAppendable;
@@ -68,8 +67,6 @@ import java.util.regex.Pattern;
 public class CxxGenruleDescription
     extends AbstractGenruleDescription<AbstractGenruleDescription.Arg>
     implements Flavored {
-
-  public static final BuildRuleType TYPE = BuildRuleType.of("cxx_genrule");
 
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
@@ -132,11 +129,6 @@ public class CxxGenruleDescription
 
   private static String shquoteJoin(Iterable<String> args) {
     return Joiner.on(' ').join(Iterables.transform(args, Escaper.SHELL_ESCAPER));
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

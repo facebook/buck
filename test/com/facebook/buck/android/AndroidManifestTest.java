@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
@@ -82,7 +83,9 @@ public class AndroidManifestTest {
 
   @Test
   public void testGetTypeMethodOfBuilder() {
-    assertEquals("android_manifest", AndroidManifestDescription.TYPE.getName());
+    assertEquals(
+        "android_manifest",
+        Description.getBuildRuleType(AndroidManifestDescription.class).getName());
   }
 
   private AndroidManifest createSimpleAndroidManifestRule() {

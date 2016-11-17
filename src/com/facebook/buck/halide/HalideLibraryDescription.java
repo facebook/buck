@@ -40,7 +40,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
@@ -68,9 +67,6 @@ public class HalideLibraryDescription
     implements Description<HalideLibraryDescription.Arg>, Flavored {
 
   public static final Flavor HALIDE_COMPILER_FLAVOR = ImmutableFlavor.of("halide-compiler");
-
-  public static final BuildRuleType TYPE = BuildRuleType.of("halide_library");
-
   public static final Flavor HALIDE_COMPILE_FLAVOR = ImmutableFlavor.of("halide-compile");
 
   private final CxxPlatform defaultCxxPlatform;
@@ -95,11 +91,6 @@ public class HalideLibraryDescription
         flavors.contains(HALIDE_COMPILE_FLAVOR) ||
         flavors.contains(HALIDE_COMPILER_FLAVOR) ||
         StripStyle.FLAVOR_DOMAIN.containsAnyOf(flavors);
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

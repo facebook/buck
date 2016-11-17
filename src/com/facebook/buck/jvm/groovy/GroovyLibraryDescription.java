@@ -27,7 +27,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
@@ -45,8 +44,6 @@ import java.util.Optional;
 
 public class GroovyLibraryDescription implements Description<GroovyLibraryDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("groovy_library");
-
   private final GroovyBuckConfig groovyBuckConfig;
   // For cross compilation
   private final JavacOptions defaultJavacOptions;
@@ -56,11 +53,6 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
       JavacOptions defaultJavacOptions) {
     this.groovyBuckConfig = groovyBuckConfig;
     this.defaultJavacOptions = defaultJavacOptions;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

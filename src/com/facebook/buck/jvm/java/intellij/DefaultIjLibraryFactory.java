@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.intellij;
 import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
@@ -148,7 +149,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
 
     @Override
     public BuildRuleType getType() {
-      return AndroidPrebuiltAarDescription.TYPE;
+      return Description.getBuildRuleType(AndroidPrebuiltAarDescription.class);
     }
 
     @Override
@@ -168,7 +169,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
 
     @Override
     public BuildRuleType getType() {
-      return PrebuiltJarDescription.TYPE;
+      return Description.getBuildRuleType(PrebuiltJarDescription.class);
     }
 
     @Override

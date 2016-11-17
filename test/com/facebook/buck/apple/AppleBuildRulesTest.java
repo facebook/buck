@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -49,12 +50,16 @@ public class AppleBuildRulesTest {
 
   @Test
   public void testAppleLibraryIsXcodeTargetBuildRuleType() throws Exception {
-    assertTrue(AppleBuildRules.isXcodeTargetBuildRuleType(AppleLibraryDescription.TYPE));
+    assertTrue(
+        AppleBuildRules.isXcodeTargetBuildRuleType(
+            Description.getBuildRuleType(AppleLibraryDescription.class)));
   }
 
   @Test
   public void testIosResourceIsNotXcodeTargetBuildRuleType() throws Exception {
-    assertFalse(AppleBuildRules.isXcodeTargetBuildRuleType(AppleResourceDescription.TYPE));
+    assertFalse(
+        AppleBuildRules.isXcodeTargetBuildRuleType(
+            Description.getBuildRuleType(AppleResourceDescription.class)));
   }
 
   @Test

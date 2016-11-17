@@ -30,7 +30,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
@@ -63,7 +62,6 @@ public class ThriftLibraryDescription
     Flavored,
     ImplicitDepsInferringDescription<ThriftConstructorArg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("thrift_library");
   private static final Flavor INCLUDE_SYMLINK_TREE_FLAVOR =
       ImmutableFlavor.of("include_symlink_tree");
 
@@ -398,11 +396,6 @@ public class ThriftLibraryDescription
   @Override
   public ThriftConstructorArg createUnpopulatedConstructorArg() {
     return new ThriftConstructorArg();
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

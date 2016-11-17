@@ -34,7 +34,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
@@ -65,7 +64,6 @@ public class HaskellLibraryDescription implements
     ImplicitDepsInferringDescription<HaskellLibraryDescription.Arg>,
     Flavored {
 
-  private static final BuildRuleType TYPE = BuildRuleType.of("haskell_library");
   private static final FlavorDomain<Type> LIBRARY_TYPE =
       FlavorDomain.from("Haskell Library Type", Type.class);
 
@@ -80,11 +78,6 @@ public class HaskellLibraryDescription implements
     this.haskellConfig = haskellConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatforms = cxxPlatforms;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

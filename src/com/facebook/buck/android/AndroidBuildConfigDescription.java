@@ -25,7 +25,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
@@ -44,18 +43,11 @@ import java.util.Optional;
 public class AndroidBuildConfigDescription
     implements Description<AndroidBuildConfigDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("android_build_config");
-
   private static final Flavor GEN_JAVA_FLAVOR = ImmutableFlavor.of("gen_java_android_build_config");
   private final JavacOptions androidJavacOptions;
 
   public AndroidBuildConfigDescription(JavacOptions androidJavacOptions) {
     this.androidJavacOptions = androidJavacOptions;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

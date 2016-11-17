@@ -25,6 +25,7 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGroup;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
@@ -131,7 +132,8 @@ public class TargetGroupParsePipeline
   }
 
   public static boolean isTargetGroup(Map<String, Object> from) {
-    return TargetGroupDescription.TYPE.getName()
+    return Description.getBuildRuleType(TargetGroupDescription.class)
+        .getName()
         .equals(from.get(BuckPyFunction.TYPE_PROPERTY_NAME));
   }
 }

@@ -21,7 +21,6 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -39,19 +38,12 @@ public class IosReactNativeLibraryDescription
     Flavored,
     ImplicitDepsInferringDescription<ReactNativeLibraryArgs> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("ios_react_native_library");
-
   private final ReactNativeLibraryGraphEnhancer enhancer;
   private final Supplier<SourcePath> packager;
 
   public IosReactNativeLibraryDescription(final ReactNativeBuckConfig buckConfig) {
     this.enhancer = new ReactNativeLibraryGraphEnhancer(buckConfig);
     this.packager = buckConfig::getPackagerSourcePath;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

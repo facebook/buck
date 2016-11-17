@@ -29,7 +29,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
@@ -56,8 +55,6 @@ import java.util.Optional;
 public class AndroidPrebuiltAarDescription
     implements Description<AndroidPrebuiltAarDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("android_prebuilt_aar");
-
   private static final Flavor AAR_PREBUILT_JAR_FLAVOR = ImmutableFlavor.of("aar_prebuilt_jar");
   public static final Flavor AAR_UNZIP_FLAVOR = ImmutableFlavor.of("aar_unzip");
 
@@ -65,11 +62,6 @@ public class AndroidPrebuiltAarDescription
 
   public AndroidPrebuiltAarDescription(JavacOptions javacOptions) {
     this.javacOptions = javacOptions;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

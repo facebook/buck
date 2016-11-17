@@ -19,6 +19,8 @@ package com.facebook.buck.rules;
 
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.util.MoreStrings;
+import com.google.common.base.CaseFormat;
 
 /**
  * The Source of Truth about a {@link BuildRule}, providing mechanisms to expose the arguments that
@@ -34,7 +36,22 @@ public interface Description<T> {
   /**
    * @return The {@link BuildRuleType} being described.
    */
-  BuildRuleType getBuildRuleType();
+  static BuildRuleType getBuildRuleType(Class<? extends Description<?>> descriptionClass) {
+    return getBuildRuleType(descriptionClass.getSimpleName());
+  }
+
+  static BuildRuleType getBuildRuleType(Description<?> description) {
+    return getBuildRuleType(description.getClass().getSimpleName());
+  }
+
+  static BuildRuleType getBuildRuleType(String descriptionClassName) {
+    descriptionClassName =
+        MoreStrings.stripPrefix(descriptionClassName, "Abstract").orElse(descriptionClassName);
+    descriptionClassName =
+        MoreStrings.stripSuffix(descriptionClassName, "Description").orElse(descriptionClassName);
+    return BuildRuleType.of(
+        CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, descriptionClassName));
+  }
 
   /**
    * @return An instance of the argument that must later be passed to createBuildRule().

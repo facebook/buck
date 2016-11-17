@@ -29,7 +29,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRule;
@@ -58,12 +57,7 @@ import java.nio.file.Paths;
  */
 public class OwnersReportTest {
 
-  public static class FakeDescription implements Description<FakeDescription.FakeArg> {
-
-    @Override
-    public BuildRuleType getBuildRuleType() {
-      return BuildRuleType.of("fake_rule");
-    }
+  public static class FakeRuleDescription implements Description<FakeRuleDescription.FakeArg> {
 
     @Override
     public FakeArg createUnpopulatedConstructorArg() {
@@ -87,8 +81,8 @@ public class OwnersReportTest {
   private static TargetNode<?, ?> createTargetNode(
       BuildTarget buildTarget,
       ImmutableSet<Path> inputs) {
-    Description<FakeDescription.FakeArg> description = new FakeDescription();
-    FakeDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
+    Description<FakeRuleDescription.FakeArg> description = new FakeRuleDescription();
+    FakeRuleDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
     arg.inputs = inputs;
     try {
       FakeProjectFilesystem filesystem = new FakeProjectFilesystem();

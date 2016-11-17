@@ -96,6 +96,12 @@ public final class MoreStrings {
         Optional.empty();
   }
 
+  public static Optional<String> stripSuffix(String s, String suffix) {
+    return s.endsWith(suffix) ?
+        Optional.of(s.substring(0, s.length() - suffix.length())) :
+        Optional.empty();
+  }
+
   public static String truncatePretty(String data) {
     final int keepFirstChars = 10000;
     final int keepLastChars = 10000;

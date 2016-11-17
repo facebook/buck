@@ -25,7 +25,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -58,7 +57,6 @@ public class CxxTestDescription implements
     ImplicitDepsInferringDescription<CxxTestDescription.Arg>,
     MetadataProvidingDescription<CxxTestDescription.Arg> {
 
-  private static final BuildRuleType TYPE = BuildRuleType.of("cxx_test");
   private static final CxxTestType DEFAULT_TEST_TYPE = CxxTestType.GTEST;
 
   private final CxxBuckConfig cxxBuckConfig;
@@ -75,11 +73,6 @@ public class CxxTestDescription implements
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

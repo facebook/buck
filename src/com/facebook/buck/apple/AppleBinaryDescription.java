@@ -37,7 +37,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -65,14 +64,14 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 
-public class AppleBinaryDescription implements
+public class AppleBinaryDescription
+    implements
     Description<AppleBinaryDescription.Arg>,
     Flavored,
     ImplicitDepsInferringDescription<AppleBinaryDescription.Arg>,
     ImplicitFlavorsInferringDescription,
     MetadataProvidingDescription<AppleBinaryDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("apple_binary");
   public static final Flavor APP_FLAVOR = ImmutableFlavor.of("app");
   public static final Sets.SetView<Flavor> NON_DELEGATE_FLAVORS = Sets.union(
       AppleDebugFormat.FLAVOR_DOMAIN.getFlavors(),
@@ -108,11 +107,6 @@ public class AppleBinaryDescription implements
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
     this.defaultDebugFormat = defaultDebugFormat;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override
@@ -441,8 +435,8 @@ public class AppleBinaryDescription implements
     // Use defaults.apple_binary if present, but fall back to defaults.cxx_binary otherwise.
     return delegate.addImplicitFlavorsForRuleTypes(
         argDefaultFlavors,
-        TYPE,
-        CxxBinaryDescription.TYPE);
+        Description.getBuildRuleType(this),
+        Description.getBuildRuleType(CxxBinaryDescription.class));
   }
 
   @Override

@@ -26,16 +26,19 @@ import java.util.AbstractMap;
 import java.util.Map;
 
 class VersionedAliasBuilder
-    extends AbstractNodeBuilder<AbstractVersionedAlias.Arg, AbstractVersionedAlias> {
+    extends
+    AbstractNodeBuilder<
+        AbstractVersionedAliasDescription.Arg,
+        AbstractVersionedAliasDescription> {
 
   public VersionedAliasBuilder(
-      AbstractVersionedAlias description,
+      AbstractVersionedAliasDescription description,
       BuildTarget target) {
     super(description, target);
   }
 
   public VersionedAliasBuilder(BuildTarget target) {
-    this(VersionedAlias.of(), target);
+    this(VersionedAliasDescription.of(), target);
   }
 
   public VersionedAliasBuilder(String target) {

@@ -59,7 +59,7 @@ public class TargetNodeTest {
   public void testIgnoreNonBuildTargetOrPathOrSourcePathArgument()
       throws NoSuchBuildTargetException {
 
-    TargetNode<Arg, TestDescription> targetNode = createTargetNode(TARGET_THREE);
+    TargetNode<Arg, ExampleDescription> targetNode = createTargetNode(TARGET_THREE);
 
     assertTrue(targetNode.getExtraDeps().isEmpty());
     assertTrue(targetNode.getDeclaredDeps().isEmpty());
@@ -79,7 +79,7 @@ public class TargetNodeTest {
         "appleSource", "//example/path:five",
         "source", "AnotherClass.java");
 
-    TargetNode<Arg, TestDescription> targetNode =
+    TargetNode<Arg, ExampleDescription> targetNode =
         createTargetNode(TARGET_THREE, depsTargets, rawNode);
 
     assertThat(
@@ -107,11 +107,11 @@ public class TargetNodeTest {
 
     ProjectFilesystem rootOne = FakeProjectFilesystem.createJavaOnlyFilesystem("/one");
     BuildTarget buildTargetOne = BuildTargetFactory.newInstance(rootOne, "//foo:bar");
-    TargetNode<Arg, TestDescription> targetNodeOne = createTargetNode(buildTargetOne);
+    TargetNode<Arg, ExampleDescription> targetNodeOne = createTargetNode(buildTargetOne);
 
     ProjectFilesystem rootTwo = FakeProjectFilesystem.createJavaOnlyFilesystem("/two");
     BuildTarget buildTargetTwo = BuildTargetFactory.newInstance(rootTwo, "//foo:bar");
-    TargetNode<Arg, TestDescription> targetNodeTwo = createTargetNode(buildTargetTwo);
+    TargetNode<Arg, ExampleDescription> targetNodeTwo = createTargetNode(buildTargetTwo);
 
     boolean isVisible = targetNodeOne.isVisibleTo(GRAPH, targetNodeTwo);
 
@@ -128,12 +128,7 @@ public class TargetNodeTest {
     public Optional<BuildTarget> target;
   }
 
-  public static class TestDescription implements Description<Arg> {
-
-    @Override
-    public BuildRuleType getBuildRuleType() {
-      return BuildRuleType.of("example");
-    }
+  public static class ExampleDescription implements Description<Arg> {
 
     @Override
     public Arg createUnpopulatedConstructorArg() {
@@ -150,7 +145,7 @@ public class TargetNodeTest {
     }
   }
 
-  private static TargetNode<Arg, TestDescription> createTargetNode(
+  private static TargetNode<Arg, ExampleDescription> createTargetNode(
       BuildTarget buildTarget)
       throws NoSuchBuildTargetException {
     ImmutableMap<String, Object> rawNode = ImmutableMap.of(
@@ -162,13 +157,13 @@ public class TargetNodeTest {
     return createTargetNode(buildTarget, ImmutableSet.of(), rawNode);
   }
 
-  private static TargetNode<Arg, TestDescription> createTargetNode(
+  private static TargetNode<Arg, ExampleDescription> createTargetNode(
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableMap<String, Object> rawNode) throws NoSuchBuildTargetException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    TestDescription description = new TestDescription();
+    ExampleDescription description = new ExampleDescription();
 
     return new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
         .create(

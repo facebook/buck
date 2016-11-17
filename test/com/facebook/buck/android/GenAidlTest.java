@@ -31,6 +31,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
@@ -82,7 +83,9 @@ public class GenAidlTest {
         importPath);
 
     GenAidlDescription description = new GenAidlDescription();
-    assertEquals(GenAidlDescription.TYPE, description.getBuildRuleType());
+    assertEquals(
+        Description.getBuildRuleType(GenAidlDescription.class),
+        Description.getBuildRuleType(description));
     assertTrue(genAidlRule.getProperties().is(ANDROID));
 
     List<Step> steps = genAidlRule.getBuildSteps(null, new FakeBuildableContext());

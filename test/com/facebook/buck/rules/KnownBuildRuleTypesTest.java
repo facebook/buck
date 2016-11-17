@@ -69,26 +69,20 @@ public class KnownBuildRuleTypesTest {
 
   private static BuildRuleParams buildRuleParams;
 
-  private static class TestDescription implements Description<TestDescription.Arg> {
+  private static class KnownRuleTestDescription
+      implements Description<KnownRuleTestDescription.Arg> {
 
     static class Arg extends AbstractDescriptionArg {
     };
 
-    public static final BuildRuleType TYPE = BuildRuleType.of("known_rule_test");
-
     private final String value;
 
-    private TestDescription(String value) {
+    private KnownRuleTestDescription(String value) {
       this.value = value;
     }
 
     public String getValue() {
       return value;
-    }
-
-    @Override
-    public BuildRuleType getBuildRuleType() {
-      return TYPE;
     }
 
     @Override
@@ -139,7 +133,8 @@ public class KnownBuildRuleTypesTest {
 
   private DefaultJavaLibrary createJavaLibrary(KnownBuildRuleTypes buildRuleTypes) {
     JavaLibraryDescription description =
-        (JavaLibraryDescription) buildRuleTypes.getDescription(JavaLibraryDescription.TYPE);
+        (JavaLibraryDescription) buildRuleTypes.getDescription(
+            Description.getBuildRuleType(JavaLibraryDescription.class));
 
     JavaLibraryDescription.Arg arg = new JavaLibraryDescription.Arg();
     populateJavaArg(arg);
@@ -201,9 +196,9 @@ public class KnownBuildRuleTypesTest {
     CxxPlatform defaultPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
 
     KnownBuildRuleTypes.Builder buildRuleTypesBuilder = KnownBuildRuleTypes.builder();
-    buildRuleTypesBuilder.register(new TestDescription("Foo"));
-    buildRuleTypesBuilder.register(new TestDescription("Bar"));
-    buildRuleTypesBuilder.register(new TestDescription("Raz"));
+    buildRuleTypesBuilder.register(new KnownRuleTestDescription("Foo"));
+    buildRuleTypesBuilder.register(new KnownRuleTestDescription("Bar"));
+    buildRuleTypesBuilder.register(new KnownRuleTestDescription("Raz"));
 
     buildRuleTypesBuilder.setCxxPlatforms(
         cxxPlatforms);
@@ -224,13 +219,14 @@ public class KnownBuildRuleTypesTest {
 
     boolean foundTestDescription = false;
     for (Description<?> description : buildRuleTypes.getAllDescriptions()) {
-      if (description.getBuildRuleType().equals(TestDescription.TYPE)) {
+      if (Description.getBuildRuleType(description)
+          .equals(Description.getBuildRuleType(KnownRuleTestDescription.class))) {
         assertFalse("Should only find one test description", foundTestDescription);
         foundTestDescription = true;
         assertEquals(
             "Last description should have won",
             "Raz",
-            ((TestDescription) description).getValue());
+            ((KnownRuleTestDescription) description).getValue());
       }
     }
   }

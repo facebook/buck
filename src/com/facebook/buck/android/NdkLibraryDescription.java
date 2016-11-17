@@ -34,7 +34,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -67,8 +66,6 @@ import java.util.regex.Pattern;
 
 public class NdkLibraryDescription implements Description<NdkLibraryDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("ndk_library");
-
   private static final Pattern EXTENSIONS_REGEX =
       Pattern.compile(
               ".*\\." +
@@ -88,11 +85,6 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> cxxPlatforms) {
     this.ndkVersion = ndkVersion;
     this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

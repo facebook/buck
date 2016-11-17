@@ -22,7 +22,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -41,14 +40,9 @@ import java.nio.file.Path;
 public class CoreDataModelDescription implements
     Description<CoreDataModelDescription.Arg>,
     Flavored {
-  public static final BuildRuleType TYPE = BuildRuleType.of("core_data_model");
+
   private static final String CORE_DATA_MODEL_EXTENSION = "xcdatamodel";
   private static final String VERSIONED_CORE_DATA_MODEL_EXTENSION = "xcdatamodeld";
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
-  }
 
   @Override
   public Arg createUnpopulatedConstructorArg() {

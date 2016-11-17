@@ -32,7 +32,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePath;
@@ -56,8 +55,6 @@ import java.util.Optional;
 public class AndroidInstrumentationApkDescription
     implements Description<AndroidInstrumentationApkDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("android_instrumentation_apk");
-
   private final ProGuardConfig proGuardConfig;
   private final JavacOptions javacOptions;
   private final ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms;
@@ -75,11 +72,6 @@ public class AndroidInstrumentationApkDescription
     this.nativePlatforms = nativePlatforms;
     this.dxExecutorService = dxExecutorService;
     this.cxxBuckConfig = cxxBuckConfig;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

@@ -38,7 +38,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
@@ -70,7 +69,6 @@ public class AppleLibraryDescription implements
     ImplicitDepsInferringDescription<AppleLibraryDescription.Arg>,
     ImplicitFlavorsInferringDescription,
     MetadataProvidingDescription<AppleLibraryDescription.Arg> {
-  public static final BuildRuleType TYPE = BuildRuleType.of("apple_library");
 
   @SuppressWarnings("PMD") // PMD doesn't understand method references
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
@@ -138,11 +136,6 @@ public class AppleLibraryDescription implements
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
     this.defaultDebugFormat = defaultDebugFormat;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override
@@ -440,8 +433,8 @@ public class AppleLibraryDescription implements
     // Use defaults.apple_library if present, but fall back to defaults.cxx_library otherwise.
     return delegate.addImplicitFlavorsForRuleTypes(
         argDefaultFlavors,
-        TYPE,
-        CxxLibraryDescription.TYPE);
+        Description.getBuildRuleType(this),
+        Description.getBuildRuleType(CxxLibraryDescription.class));
   }
 
   @Override

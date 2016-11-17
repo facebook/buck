@@ -26,7 +26,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -45,17 +44,10 @@ public class GoBinaryDescription implements
     ImplicitDepsInferringDescription<GoBinaryDescription.Arg>,
     Flavored {
 
-  private static final BuildRuleType TYPE = BuildRuleType.of("go_binary");
-
   private final GoBuckConfig goBuckConfig;
 
   public GoBinaryDescription(GoBuckConfig goBuckConfig) {
     this.goBuckConfig = goBuckConfig;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

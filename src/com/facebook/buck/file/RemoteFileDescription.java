@@ -20,7 +20,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -33,16 +32,10 @@ import java.util.Optional;
 
 public class RemoteFileDescription implements Description<RemoteFileDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("remote_file");
   private final Downloader downloader;
 
   public RemoteFileDescription(Downloader downloader) {
     this.downloader = downloader;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

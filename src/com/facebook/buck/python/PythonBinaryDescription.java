@@ -32,7 +32,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
@@ -67,8 +66,6 @@ public class PythonBinaryDescription implements
 
   private static final Logger LOG = Logger.get(PythonBinaryDescription.class);
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("python_binary");
-
   private final PythonBuckConfig pythonBuckConfig;
   private final FlavorDomain<PythonPlatform> pythonPlatforms;
   private final CxxBuckConfig cxxBuckConfig;
@@ -86,11 +83,6 @@ public class PythonBinaryDescription implements
     this.cxxBuckConfig = cxxBuckConfig;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

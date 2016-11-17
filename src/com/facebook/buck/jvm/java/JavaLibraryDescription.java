@@ -26,7 +26,6 @@ import com.facebook.buck.model.HasTests;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
@@ -48,7 +47,6 @@ import java.util.Optional;
 
 public class JavaLibraryDescription implements Description<JavaLibraryDescription.Arg>, Flavored {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("java_library");
   public static final ImmutableSet<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       JavaLibrary.SRC_JAR,
       JavaLibrary.MAVEN_JAR);
@@ -58,11 +56,6 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
 
   public JavaLibraryDescription(JavacOptions defaultOptions) {
     this.defaultOptions = defaultOptions;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

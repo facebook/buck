@@ -25,7 +25,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
@@ -49,18 +48,11 @@ import java.util.Optional;
 public class ScalaLibraryDescription implements Description<ScalaLibraryDescription.Arg>,
     ImplicitDepsInferringDescription<ScalaLibraryDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("scala_library");
-
   private final ScalaBuckConfig scalaBuckConfig;
 
   public ScalaLibraryDescription(
       ScalaBuckConfig scalaBuckConfig) {
     this.scalaBuckConfig = scalaBuckConfig;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

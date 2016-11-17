@@ -43,6 +43,7 @@ import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.AdbOptions;
@@ -313,7 +314,8 @@ public class InstallCommand extends BuildCommand {
             target);
 
         if (node != null &&
-            node.getDescription().getBuildRuleType().equals(AppleBundleDescription.TYPE)) {
+            Description.getBuildRuleType(node.getDescription())
+                .equals(Description.getBuildRuleType(AppleBundleDescription.class))) {
           for (Flavor flavor : node.getBuildTarget().getFlavors()) {
             if (ApplePlatform.needsInstallHelper(flavor.getName())) {
               AppleConfig appleConfig = new AppleConfig(params.getBuckConfig());

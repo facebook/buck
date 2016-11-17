@@ -19,7 +19,6 @@ package com.facebook.buck.apple;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
@@ -35,12 +34,6 @@ import java.util.SortedSet;
  * catalog for an iOS or Mac OS X library or binary.
  */
 public class AppleAssetCatalogDescription implements Description<AppleAssetCatalogDescription.Arg> {
-  public static final BuildRuleType TYPE = BuildRuleType.of("apple_asset_catalog");
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
-  }
 
   @Override
   public Arg createUnpopulatedConstructorArg() {

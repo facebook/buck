@@ -42,6 +42,7 @@ import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
@@ -396,7 +397,10 @@ public class TargetsCommandTest {
             targetGraph,
             Optional.empty(),
             Optional.empty(),
-            Optional.of(ImmutableSet.of(JavaTestDescription.TYPE, JavaLibraryDescription.TYPE)),
+            Optional.of(
+                ImmutableSet.of(
+                    Description.getBuildRuleType(JavaTestDescription.class),
+                    Description.getBuildRuleType(JavaLibraryDescription.class))),
             false,
             "BUCK");
     assertEquals(
@@ -412,7 +416,10 @@ public class TargetsCommandTest {
             targetGraph,
             Optional.empty(),
             Optional.of(ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))),
-            Optional.of(ImmutableSet.of(JavaTestDescription.TYPE, JavaLibraryDescription.TYPE)),
+            Optional.of(
+                ImmutableSet.of(
+                    Description.getBuildRuleType(JavaTestDescription.class),
+                    Description.getBuildRuleType(JavaLibraryDescription.class))),
             false,
             "BUCK");
     assertEquals(

@@ -108,9 +108,10 @@ class BuckPythonProgram implements AutoCloseable {
       out.write("from buck_parser.buck import *\n\n");
       BuckPyFunction function = new BuckPyFunction(marshaller);
       for (Description<?> description : descriptions) {
-        out.write(function.toPythonFunction(
-            description.getBuildRuleType(),
-            description.createUnpopulatedConstructorArg()));
+        out.write(
+            function.toPythonFunction(
+                Description.getBuildRuleType(description),
+                description.createUnpopulatedConstructorArg()));
         out.write('\n');
       }
     }

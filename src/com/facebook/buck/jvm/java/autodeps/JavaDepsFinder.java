@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildEngineBuildContext;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
@@ -155,10 +156,10 @@ public class JavaDepsFinder {
   }
 
   private static final Set<BuildRuleType> RULES_TO_VISIT = ImmutableSet.of(
-      AndroidLibraryDescription.TYPE,
-      JavaLibraryDescription.TYPE,
-      JavaTestDescription.TYPE,
-      PrebuiltJarDescription.TYPE);
+      Description.getBuildRuleType(AndroidLibraryDescription.class),
+      Description.getBuildRuleType(JavaLibraryDescription.class),
+      Description.getBuildRuleType(JavaTestDescription.class),
+      Description.getBuildRuleType(PrebuiltJarDescription.class));
 
   /**
    * Java dependency information that is extracted from a {@link TargetGraph}.
@@ -209,7 +210,7 @@ public class JavaDepsFinder {
     // visit each node could be done in parallel, so long as the updates to the above collections
     // were thread-safe.
     for (TargetNode<?, ?> node : graph.getNodes()) {
-      if (!RULES_TO_VISIT.contains(node.getDescription().getBuildRuleType())) {
+      if (!RULES_TO_VISIT.contains(Description.getBuildRuleType(node.getDescription()))) {
         continue;
       }
 
@@ -269,7 +270,8 @@ public class JavaDepsFinder {
       final Predicate<TargetNode<?, ?>> isVisibleDepNotAlreadyInProvidedDeps =
           provider -> provider.isVisibleTo(graph, rule) &&
               !providedDeps.contains(provider.getBuildTarget());
-      final boolean isJavaTestRule = rule.getType() == JavaTestDescription.TYPE;
+      final boolean isJavaTestRule =
+          rule.getType() == Description.getBuildRuleType(JavaTestDescription.class);
 
       for (DependencyType type : DependencyType.values()) {
         HashMultimap<TargetNode<?, ?>, String> ruleToSymbolsMap;

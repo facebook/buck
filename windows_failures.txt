@@ -28,10 +28,10 @@
 !com.facebook.buck.cxx.HeaderMapStepTest
 !com.facebook.buck.cxx.OmnibusTest
 !com.facebook.buck.cxx.ToolTest
-!com.facebook.buck.dotnet.CSharpLibraryIntegrationTest
-!com.facebook.buck.dotnet.CSharpLibraryIntegrationTest#shouldBeAbleToEmbedResourcesIntoTheBuiltDll
-!com.facebook.buck.dotnet.CSharpLibraryIntegrationTest#shouldCompileLibraryWithAPrebuiltDependency
-!com.facebook.buck.dotnet.CSharpLibraryIntegrationTest#shouldCompileLibraryWithSystemProvidedDeps
+!com.facebook.buck.dotnet.CsharpLibraryIntegrationTest
+!com.facebook.buck.dotnet.CsharpLibraryIntegrationTest#shouldBeAbleToEmbedResourcesIntoTheBuiltDll
+!com.facebook.buck.dotnet.CsharpLibraryIntegrationTest#shouldCompileLibraryWithAPrebuiltDependency
+!com.facebook.buck.dotnet.CsharpLibraryIntegrationTest#shouldCompileLibraryWithSystemProvidedDeps
 !com.facebook.buck.python.PrebuiltPythonLibraryIntegrationTest
 !com.facebook.buck.python.PythonBinaryIntegrationTest
 !com.facebook.buck.python.PythonSrcZipIntegrationTest#testDependingOnSrcZipWorks

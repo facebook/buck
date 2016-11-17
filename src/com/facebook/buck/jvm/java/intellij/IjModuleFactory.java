@@ -30,6 +30,7 @@ import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
@@ -61,15 +62,15 @@ public class IjModuleFactory {
    * These target types are mapped onto .iml module files.
    */
   public static final ImmutableSet<BuildRuleType> SUPPORTED_MODULE_TYPES = ImmutableSet.of(
-      AndroidBinaryDescription.TYPE,
-      AndroidLibraryDescription.TYPE,
-      AndroidResourceDescription.TYPE,
-      CxxLibraryDescription.TYPE,
-      JavaLibraryDescription.TYPE,
-      JavaTestDescription.TYPE,
-      RobolectricTestDescription.TYPE,
-      GroovyLibraryDescription.TYPE,
-      GroovyTestDescription.TYPE);
+      Description.getBuildRuleType(AndroidBinaryDescription.class),
+      Description.getBuildRuleType(AndroidLibraryDescription.class),
+      Description.getBuildRuleType(AndroidResourceDescription.class),
+      Description.getBuildRuleType(CxxLibraryDescription.class),
+      Description.getBuildRuleType(JavaLibraryDescription.class),
+      Description.getBuildRuleType(JavaTestDescription.class),
+      Description.getBuildRuleType(RobolectricTestDescription.class),
+      Description.getBuildRuleType(GroovyLibraryDescription.class),
+      Description.getBuildRuleType(GroovyTestDescription.class));
 
   /**
    * Provides the {@link IjModuleFactory} with {@link Path}s to various elements of the project.
@@ -386,7 +387,7 @@ public class IjModuleFactory {
     Optional<String> result = Optional.empty();
     for (TargetNode<?, ?> targetNode : targetNodes) {
       BuildRuleType type = targetNode.getType();
-      if (!type.equals(JavaLibraryDescription.TYPE)) {
+      if (!type.equals(Description.getBuildRuleType(JavaLibraryDescription.class))) {
         continue;
       }
 
@@ -571,7 +572,7 @@ public class IjModuleFactory {
 
     @Override
     public BuildRuleType getType() {
-      return AndroidBinaryDescription.TYPE;
+      return Description.getBuildRuleType(AndroidBinaryDescription.class);
     }
 
     @Override
@@ -594,7 +595,7 @@ public class IjModuleFactory {
 
     @Override
     public BuildRuleType getType() {
-      return AndroidLibraryDescription.TYPE;
+      return Description.getBuildRuleType(AndroidLibraryDescription.class);
     }
 
     @Override
@@ -625,7 +626,7 @@ public class IjModuleFactory {
 
     @Override
     public BuildRuleType getType() {
-      return AndroidResourceDescription.TYPE;
+      return Description.getBuildRuleType(AndroidResourceDescription.class);
     }
 
     @Override
@@ -682,7 +683,7 @@ public class IjModuleFactory {
 
     @Override
     public BuildRuleType getType() {
-      return CxxLibraryDescription.TYPE;
+      return Description.getBuildRuleType(CxxLibraryDescription.class);
     }
 
     @Override
@@ -699,7 +700,7 @@ public class IjModuleFactory {
 
     @Override
     public BuildRuleType getType() {
-      return JavaLibraryDescription.TYPE;
+      return Description.getBuildRuleType(JavaLibraryDescription.class);
     }
 
     @Override
@@ -718,7 +719,7 @@ public class IjModuleFactory {
 
     @Override
     public BuildRuleType getType() {
-      return GroovyLibraryDescription.TYPE;
+      return Description.getBuildRuleType(GroovyLibraryDescription.class);
     }
 
     @Override
@@ -736,7 +737,7 @@ public class IjModuleFactory {
 
     @Override
     public BuildRuleType getType() {
-      return GroovyTestDescription.TYPE;
+      return Description.getBuildRuleType(GroovyTestDescription.class);
     }
 
     @Override
@@ -754,7 +755,7 @@ public class IjModuleFactory {
 
     @Override
     public BuildRuleType getType() {
-      return JavaTestDescription.TYPE;
+      return Description.getBuildRuleType(JavaTestDescription.class);
     }
 
     @Override
@@ -771,7 +772,7 @@ public class IjModuleFactory {
 
     @Override
     public BuildRuleType getType() {
-      return RobolectricTestDescription.TYPE;
+      return Description.getBuildRuleType(RobolectricTestDescription.class);
     }
   }
 }

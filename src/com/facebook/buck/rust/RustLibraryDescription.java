@@ -24,7 +24,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -45,8 +44,6 @@ public class RustLibraryDescription implements
     Description<RustLibraryDescription.Arg>,
     ImplicitDepsInferringDescription<RustLibraryDescription.Arg> {
 
-  private static final BuildRuleType TYPE = BuildRuleType.of("rust_library");
-
   private final RustBuckConfig rustBuckConfig;
   private final CxxPlatform cxxPlatform;
 
@@ -55,11 +52,6 @@ public class RustLibraryDescription implements
       CxxPlatform cxxPlatform) {
     this.rustBuckConfig = rustBuckConfig;
     this.cxxPlatform = cxxPlatform;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

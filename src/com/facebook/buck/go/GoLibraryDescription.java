@@ -26,7 +26,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
@@ -53,17 +52,10 @@ public class GoLibraryDescription implements
     Flavored,
     MetadataProvidingDescription<GoLibraryDescription.Arg> {
 
-  private static final BuildRuleType TYPE = BuildRuleType.of("go_library");
-
   private final GoBuckConfig goBuckConfig;
 
   public GoLibraryDescription(GoBuckConfig goBuckConfig) {
     this.goBuckConfig = goBuckConfig;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

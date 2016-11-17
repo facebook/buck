@@ -38,7 +38,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CellPathResolver;
@@ -75,8 +74,6 @@ public class AppleTestDescription implements
     Description<AppleTestDescription.Arg>,
     Flavored,
     ImplicitDepsInferringDescription<AppleTestDescription.Arg> {
-
-  public static final BuildRuleType TYPE = BuildRuleType.of("apple_test");
 
   /**
    * Flavors for the additional generated build rules.
@@ -130,11 +127,6 @@ public class AppleTestDescription implements
     this.xcodeDeveloperDirectorySupplier = xcodeDeveloperDirectorySupplier;
     this.defaultDebugFormat = defaultDebugFormat;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override
@@ -418,7 +410,7 @@ public class AppleTestDescription implements
           "Apple test rule '%s' has test_host_app '%s' not of type '%s'.",
           params.getBuildTarget(),
           testHostAppBuildTarget,
-          AppleBundleDescription.TYPE);
+          Description.getBuildRuleType(AppleBundleDescription.class));
     }
 
     AppleBundle testHostApp = (AppleBundle) rule;

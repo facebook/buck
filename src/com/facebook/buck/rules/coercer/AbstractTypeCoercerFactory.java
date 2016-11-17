@@ -88,7 +88,7 @@ public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
     TypeCoercer<SourceWithFlags> sourceWithFlagsTypeCoercer = new SourceWithFlagsTypeCoercer(
         sourcePathTypeCoercer,
         new ListTypeCoercer<>(stringTypeCoercer));
-    TypeCoercer<OCamlSource> ocamlSourceTypeCoercer = new OCamlSourceTypeCoercer(
+    TypeCoercer<OcamlSource> ocamlSourceTypeCoercer = new OcamlSourceTypeCoercer(
         sourcePathTypeCoercer);
     TypeCoercer<Float> floatTypeCoercer = new NumberTypeCoercer<>(Float.class);
     TypeCoercer<NeededCoverageSpec> neededCoverageSpecTypeCoercer =

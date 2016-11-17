@@ -47,7 +47,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
@@ -92,7 +91,6 @@ public class LuaBinaryDescription implements
     Description<LuaBinaryDescription.Arg>,
     ImplicitDepsInferringDescription<LuaBinaryDescription.Arg> {
 
-  private static final BuildRuleType TYPE = BuildRuleType.of("lua_binary");
   private static final Flavor BINARY_FLAVOR = ImmutableFlavor.of("binary");
 
   private final LuaConfig luaConfig;
@@ -112,11 +110,6 @@ public class LuaBinaryDescription implements
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.cxxPlatforms = cxxPlatforms;
     this.pythonPlatforms = pythonPlatforms;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

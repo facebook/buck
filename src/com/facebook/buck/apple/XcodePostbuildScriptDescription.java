@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -42,13 +41,6 @@ import com.facebook.buck.rules.TargetGraph;
  */
 public class XcodePostbuildScriptDescription
   implements Description<XcodeScriptDescriptionArg> {
-
-  public static final BuildRuleType TYPE = BuildRuleType.of("xcode_postbuild_script");
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
-  }
 
   @Override
   public XcodeScriptDescriptionArg createUnpopulatedConstructorArg() {

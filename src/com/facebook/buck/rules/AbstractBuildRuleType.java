@@ -21,7 +21,7 @@ import com.google.common.base.Preconditions;
 
 import org.immutables.value.Value;
 
-@Value.Immutable
+@Value.Immutable(intern = true)
 @BuckStyleImmutable
 abstract class AbstractBuildRuleType {
 

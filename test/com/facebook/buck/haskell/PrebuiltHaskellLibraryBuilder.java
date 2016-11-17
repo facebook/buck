@@ -27,11 +27,11 @@ import java.util.Optional;
 
 public class PrebuiltHaskellLibraryBuilder
     extends
-    AbstractNodeBuilder<PrebuiltHaskellLibraryDescription.Arg, PrebuiltHaskellLibraryDescription> {
+    AbstractNodeBuilder<HaskellPrebuiltLibraryDescription.Arg, HaskellPrebuiltLibraryDescription> {
 
   public PrebuiltHaskellLibraryBuilder(BuildTarget target) {
     super(
-        new PrebuiltHaskellLibraryDescription(),
+        new HaskellPrebuiltLibraryDescription(),
         target);
   }
 

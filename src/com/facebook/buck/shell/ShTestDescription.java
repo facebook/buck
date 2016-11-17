@@ -21,7 +21,6 @@ import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -55,8 +54,6 @@ public class ShTestDescription implements
     Description<ShTestDescription.Arg>,
     ImplicitDepsInferringDescription<ShTestDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("sh_test");
-
   private static final MacroHandler MACRO_HANDLER =
       new MacroHandler(
           ImmutableMap.of(
@@ -69,11 +66,6 @@ public class ShTestDescription implements
   public ShTestDescription(
       Optional<Long> defaultTestRuleTimeoutMs) {
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

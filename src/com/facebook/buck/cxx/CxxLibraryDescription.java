@@ -106,8 +106,6 @@ public class CxxLibraryDescription implements
     }
   }
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("cxx_library");
-
   private static final FlavorDomain<Type> LIBRARY_TYPE =
       FlavorDomain.from("C/C++ Library Type", Type.class);
 
@@ -819,11 +817,6 @@ public class CxxLibraryDescription implements
   }
 
   @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
-  }
-
-  @Override
   public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
@@ -883,9 +876,7 @@ public class CxxLibraryDescription implements
   @Override
   public ImmutableSortedSet<Flavor> addImplicitFlavors(
       ImmutableSortedSet<Flavor> argDefaultFlavors) {
-    return addImplicitFlavorsForRuleTypes(
-        argDefaultFlavors,
-        TYPE);
+    return addImplicitFlavorsForRuleTypes(argDefaultFlavors, Description.getBuildRuleType(this));
   }
 
   public ImmutableSortedSet<Flavor> addImplicitFlavorsForRuleTypes(

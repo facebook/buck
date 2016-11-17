@@ -26,7 +26,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -42,8 +41,6 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 public class GwtBinaryDescription implements Description<GwtBinaryDescription.Arg> {
-
-  public static final BuildRuleType TYPE = BuildRuleType.of("gwt_binary");
 
   /** Default value for {@link Arg#style}. */
   private static final Style DEFAULT_STYLE = Style.OBF;
@@ -66,11 +63,6 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
 
   public GwtBinaryDescription(JavaOptions javaOptions) {
     this.javaOptions = javaOptions;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

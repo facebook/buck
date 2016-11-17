@@ -195,12 +195,7 @@ public class TargetNodeVisibilityTest {
         target);
   }
 
-  public static class FakeDescription implements Description<FakeDescription.FakeArg> {
-
-    @Override
-    public BuildRuleType getBuildRuleType() {
-      return BuildRuleType.of("fake_rule");
-    }
+  public static class FakeRuleDescription implements Description<FakeRuleDescription.FakeArg> {
 
     @Override
     public FakeArg createUnpopulatedConstructorArg() {
@@ -231,8 +226,8 @@ public class TargetNodeVisibilityTest {
     for (String visibility : visibilities) {
       builder.add(parser.parse(cellNames, visibility));
     }
-    Description<FakeDescription.FakeArg> description = new FakeDescription();
-    FakeDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
+    Description<FakeRuleDescription.FakeArg> description = new FakeRuleDescription();
+    FakeRuleDescription.FakeArg arg = description.createUnpopulatedConstructorArg();
     return new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
         .create(
             Hashing.sha1().hashString(buildTarget.getFullyQualifiedName(), UTF_8),

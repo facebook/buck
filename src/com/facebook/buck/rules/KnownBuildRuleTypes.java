@@ -77,8 +77,8 @@ import com.facebook.buck.d.DBinaryDescription;
 import com.facebook.buck.d.DBuckConfig;
 import com.facebook.buck.d.DLibraryDescription;
 import com.facebook.buck.d.DTestDescription;
-import com.facebook.buck.dotnet.CSharpLibraryDescription;
-import com.facebook.buck.dotnet.PrebuiltDotNetLibraryDescription;
+import com.facebook.buck.dotnet.CsharpLibraryDescription;
+import com.facebook.buck.dotnet.PrebuiltDotnetLibraryDescription;
 import com.facebook.buck.file.Downloader;
 import com.facebook.buck.file.ExplodingDownloader;
 import com.facebook.buck.file.RemoteFileDescription;
@@ -87,7 +87,7 @@ import com.facebook.buck.go.GoBinaryDescription;
 import com.facebook.buck.go.GoBuckConfig;
 import com.facebook.buck.go.GoLibraryDescription;
 import com.facebook.buck.go.GoTestDescription;
-import com.facebook.buck.graphql.GraphQlLibraryDescription;
+import com.facebook.buck.graphql.GraphqlLibraryDescription;
 import com.facebook.buck.groups.TargetGroupDescription;
 import com.facebook.buck.gwt.GwtBinaryDescription;
 import com.facebook.buck.halide.HalideBuckConfig;
@@ -95,7 +95,7 @@ import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.haskell.HaskellBinaryDescription;
 import com.facebook.buck.haskell.HaskellBuckConfig;
 import com.facebook.buck.haskell.HaskellLibraryDescription;
-import com.facebook.buck.haskell.PrebuiltHaskellLibraryDescription;
+import com.facebook.buck.haskell.HaskellPrebuiltLibraryDescription;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.js.AndroidReactNativeLibraryDescription;
@@ -128,10 +128,10 @@ import com.facebook.buck.lua.LuaLibraryDescription;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.ocaml.OCamlBinaryDescription;
-import com.facebook.buck.ocaml.OCamlBuckConfig;
-import com.facebook.buck.ocaml.OCamlLibraryDescription;
-import com.facebook.buck.ocaml.PrebuiltOCamlLibraryDescription;
+import com.facebook.buck.ocaml.OcamlBinaryDescription;
+import com.facebook.buck.ocaml.OcamlBuckConfig;
+import com.facebook.buck.ocaml.OcamlLibraryDescription;
+import com.facebook.buck.ocaml.PrebuiltOcamlLibraryDescription;
 import com.facebook.buck.python.CxxPythonExtensionDescription;
 import com.facebook.buck.python.PrebuiltPythonLibraryDescription;
 import com.facebook.buck.python.PythonBinaryDescription;
@@ -159,8 +159,8 @@ import com.facebook.buck.thrift.ThriftPythonEnhancer;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.versions.VersionedAlias;
-import com.facebook.buck.zip.ZipDescription;
+import com.facebook.buck.versions.VersionedAliasDescription;
+import com.facebook.buck.zip.ZipFileDescription;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -593,7 +593,7 @@ public class KnownBuildRuleTypes {
     builder.register(new HaskellLibraryDescription(haskellBuckConfig, cxxBuckConfig, cxxPlatforms));
     builder.register(
         new HaskellBinaryDescription(haskellBuckConfig, cxxPlatforms, defaultCxxPlatform));
-    builder.register(new PrebuiltHaskellLibraryDescription());
+    builder.register(new HaskellPrebuiltLibraryDescription());
 
     // Create an executor service exclusively for the smart dexing step.
     ListeningExecutorService dxExecutorService =
@@ -666,7 +666,7 @@ public class KnownBuildRuleTypes {
             appleConfig.getDefaultDebugInfoFormatForTests(),
             defaultTestRuleTimeoutMs));
     builder.register(new CoreDataModelDescription());
-    builder.register(new CSharpLibraryDescription());
+    builder.register(new CsharpLibraryDescription());
     builder.register(cxxBinaryDescription);
     builder.register(cxxLibraryDescription);
     builder.register(new CxxGenruleDescription(cxxPlatforms));
@@ -696,7 +696,7 @@ public class KnownBuildRuleTypes {
         new GoTestDescription(
             goBuckConfig,
             defaultTestRuleTimeoutMs));
-    builder.register(new GraphQlLibraryDescription());
+    builder.register(new GraphqlLibraryDescription());
     GroovyBuckConfig groovyBuckConfig = new GroovyBuckConfig(config);
     builder.register(
         new GroovyLibraryDescription(
@@ -746,15 +746,15 @@ public class KnownBuildRuleTypes {
             pythonPlatforms));
     builder.register(new LuaLibraryDescription());
     builder.register(new NdkLibraryDescription(ndkVersion, ndkCxxPlatforms));
-    OCamlBuckConfig ocamlBuckConfig = new OCamlBuckConfig(platform, config);
-    builder.register(new OCamlBinaryDescription(ocamlBuckConfig));
-    builder.register(new OCamlLibraryDescription(ocamlBuckConfig));
+    OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(platform, config);
+    builder.register(new OcamlBinaryDescription(ocamlBuckConfig));
+    builder.register(new OcamlLibraryDescription(ocamlBuckConfig));
     builder.register(new PrebuiltCxxLibraryDescription(cxxBuckConfig, cxxPlatforms));
     builder.register(PrebuiltCxxLibraryGroupDescription.of());
-    builder.register(new PrebuiltDotNetLibraryDescription());
+    builder.register(new PrebuiltDotnetLibraryDescription());
     builder.register(new PrebuiltJarDescription());
     builder.register(new PrebuiltNativeLibraryDescription());
-    builder.register(new PrebuiltOCamlLibraryDescription());
+    builder.register(new PrebuiltOcamlLibraryDescription());
     builder.register(new PrebuiltPythonLibraryDescription());
     builder.register(new ProjectConfigDescription());
     builder.register(pythonBinaryDescription);
@@ -806,13 +806,13 @@ public class KnownBuildRuleTypes {
     builder.register(new XcodePostbuildScriptDescription());
     builder.register(new XcodePrebuildScriptDescription());
     builder.register(new XcodeWorkspaceConfigDescription());
-    builder.register(new ZipDescription());
+    builder.register(new ZipFileDescription());
     builder.register(new TargetGroupDescription());
 
     builder.setCxxPlatforms(cxxPlatforms);
     builder.setDefaultCxxPlatform(defaultCxxPlatform);
 
-    builder.register(VersionedAlias.of());
+    builder.register(VersionedAliasDescription.of());
 
     return builder;
   }
@@ -832,7 +832,7 @@ public class KnownBuildRuleTypes {
     }
 
     public Builder register(Description<?> description) {
-      BuildRuleType type = description.getBuildRuleType();
+      BuildRuleType type = Description.getBuildRuleType(description);
       types.put(type.getName(), type);
       descriptions.put(type, description);
       return this;

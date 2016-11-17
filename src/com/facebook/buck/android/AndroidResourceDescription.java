@@ -24,7 +24,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.PathSourcePath;
@@ -49,8 +48,6 @@ import java.util.Optional;
 
 public class AndroidResourceDescription implements Description<AndroidResourceDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("android_resource");
-
   private static final ImmutableSet<String> NON_ASSET_FILENAMES = ImmutableSet.of(
       ".gitkeep",
       ".svn",
@@ -60,11 +57,6 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
       "cvs",
       "thumbs.db",
       "picasa.ini");
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
-  }
 
   @Override
   public Arg createUnpopulatedConstructorArg() {

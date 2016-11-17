@@ -20,7 +20,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -34,13 +33,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenruleDescription.Arg> {
-
-  public static final BuildRuleType TYPE = BuildRuleType.of("apk_genrule");
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
-  }
 
   @Override
   public Arg createUnpopulatedConstructorArg() {

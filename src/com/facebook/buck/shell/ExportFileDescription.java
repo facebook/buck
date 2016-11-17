@@ -21,7 +21,6 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitInputsInferringDescription;
 import com.facebook.buck.rules.PathSourcePath;
@@ -38,13 +37,6 @@ import java.util.Optional;
 public class ExportFileDescription implements
     Description<ExportFileDescription.Arg>,
     ImplicitInputsInferringDescription<ExportFileDescription.Arg> {
-
-  public static final BuildRuleType TYPE = BuildRuleType.of("export_file");
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
-  }
 
   @Override
   public Arg createUnpopulatedConstructorArg() {

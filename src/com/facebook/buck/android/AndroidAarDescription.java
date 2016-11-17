@@ -26,7 +26,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
@@ -56,8 +55,6 @@ import java.util.Optional;
  */
 public class AndroidAarDescription implements Description<AndroidAarDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("android_aar");
-
   private static final Flavor AAR_ANDROID_MANIFEST_FLAVOR =
       ImmutableFlavor.of("aar_android_manifest");
   private static final Flavor AAR_ASSEMBLE_RESOURCE_FLAVOR =
@@ -78,11 +75,6 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     this.androidManifestDescription = androidManifestDescription;
     this.cxxBuckConfig = cxxBuckConfig;
     this.nativePlatforms = nativePlatforms;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

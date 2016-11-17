@@ -23,6 +23,7 @@ import com.facebook.buck.js.ReactNativeLibraryArgs;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Preconditions;
@@ -51,7 +52,7 @@ public class AppleResources {
             AppleBuildRules.newRecursiveRuleDependencyTransformer(
                 targetGraph,
                 AppleBuildRules.RecursiveDependenciesMode.COPYING,
-                ImmutableSet.of(AppleResourceDescription.TYPE)))
+                ImmutableSet.of(Description.getBuildRuleType(AppleResourceDescription.class))))
         .transform(
             input -> (AppleResourceDescription.Arg) input.getConstructorArg())
         .toSet();
@@ -63,7 +64,9 @@ public class AppleResources {
     AppleBundleResources.Builder builder = AppleBundleResources.builder();
 
     ImmutableSet<BuildRuleType> types =
-        ImmutableSet.of(AppleResourceDescription.TYPE, IosReactNativeLibraryDescription.TYPE);
+        ImmutableSet.of(
+            Description.getBuildRuleType(AppleResourceDescription.class),
+            Description.getBuildRuleType(IosReactNativeLibraryDescription.class));
 
     Iterable<TargetNode<?, ?>> resourceNodes =
         AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
@@ -102,7 +105,7 @@ public class AppleResources {
     ImmutableSet.Builder<AppleResourceDescription.Arg> builder = ImmutableSet.builder();
     Iterable<TargetNode<?, ?>> deps = targetGraph.getAll(targetNode.getDeps());
     for (TargetNode<?, ?> node : deps) {
-      if (node.getType().equals(AppleResourceDescription.TYPE)) {
+      if (node.getType().equals(Description.getBuildRuleType(AppleResourceDescription.class))) {
         builder.add((AppleResourceDescription.Arg) node.getConstructorArg());
       }
     }

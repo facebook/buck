@@ -41,9 +41,9 @@ class TargetGraphVersionTransformations {
         ((VersionRoot<?>) node.getDescription()).isVersionRoot(node.getBuildTarget().getFlavors()));
   }
 
-  public static Optional<TargetNode<VersionedAlias.Arg, ?>> getVersionedNode(
+  public static Optional<TargetNode<VersionedAliasDescription.Arg, ?>> getVersionedNode(
       TargetNode<?, ?> node) {
-    return node.castArg(VersionedAlias.Arg.class);
+    return node.castArg(VersionedAliasDescription.Arg.class);
   }
 
   private static Optional<Field> getVersionedDepsField(TargetNode<?, ?> node) {

@@ -26,7 +26,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
@@ -45,17 +44,10 @@ import java.util.Optional;
 
 public class KotlinLibraryDescription implements Description<KotlinLibraryDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("kotlin_library");
-
   private final KotlinBuckConfig kotlinBuckConfig;
 
   public KotlinLibraryDescription(KotlinBuckConfig kotlinBuckConfig) {
     this.kotlinBuckConfig = kotlinBuckConfig;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

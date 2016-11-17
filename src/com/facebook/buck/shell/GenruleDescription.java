@@ -19,20 +19,12 @@ package com.facebook.buck.shell;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 
 import java.util.Optional;
 
 public class GenruleDescription extends AbstractGenruleDescription<GenruleDescription.Arg> {
-
-  public static final BuildRuleType TYPE = BuildRuleType.of("genrule");
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
-  }
 
   @Override
   public Arg createUnpopulatedConstructorArg() {

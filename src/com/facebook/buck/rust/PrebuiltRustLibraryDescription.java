@@ -22,7 +22,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -35,8 +34,6 @@ import java.util.Optional;
 public class PrebuiltRustLibraryDescription
     implements Description<PrebuiltRustLibraryDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("prebuilt_rust_library");
-
   @SuppressWarnings("unused")
   private final RustBuckConfig rustBuckConfig;
   private final CxxPlatform cxxPlatform;
@@ -44,11 +41,6 @@ public class PrebuiltRustLibraryDescription
   public PrebuiltRustLibraryDescription(RustBuckConfig rustBuckConfig, CxxPlatform cxxPlatform) {
     this.rustBuckConfig = rustBuckConfig;
     this.cxxPlatform = cxxPlatform;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

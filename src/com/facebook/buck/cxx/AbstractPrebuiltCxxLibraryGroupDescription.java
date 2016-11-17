@@ -27,7 +27,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
@@ -82,12 +81,6 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
     }
     return Optional.of(
         new Pair<>(result.get().getMacroType(), result.get().getMacroInput().get(0)));
-  }
-
-  @Override
-  @Value.Derived
-  public BuildRuleType getBuildRuleType() {
-    return BuildRuleType.of("prebuilt_cxx_library_group");
   }
 
   @Override

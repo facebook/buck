@@ -21,6 +21,7 @@ import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.HumanReadableException;
@@ -232,7 +233,7 @@ public class IjModuleGraph {
 
   private static boolean isNonDefaultJava(TargetNode<?, ?> node, JavacOptions defaultJavacOptions) {
     BuildRuleType type = node.getType();
-    if (!type.equals(JavaLibraryDescription.TYPE)) {
+    if (!type.equals(Description.getBuildRuleType(JavaLibraryDescription.class))) {
       return false;
     }
 

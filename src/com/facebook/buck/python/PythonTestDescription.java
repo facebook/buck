@@ -30,7 +30,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
@@ -64,8 +63,6 @@ public class PythonTestDescription implements
     Description<PythonTestDescription.Arg>,
     ImplicitDepsInferringDescription<PythonTestDescription.Arg> {
 
-  private static final BuildRuleType TYPE = BuildRuleType.of("python_test");
-
   private static final Flavor BINARY_FLAVOR = ImmutableFlavor.of("binary");
 
   private static final MacroHandler MACRO_HANDLER =
@@ -96,11 +93,6 @@ public class PythonTestDescription implements
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatforms = cxxPlatforms;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

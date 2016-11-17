@@ -27,7 +27,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
@@ -42,8 +41,6 @@ import java.nio.file.Path;
 
 public class DLibraryDescription implements Description<DLibraryDescription.Arg> {
 
-  private static final BuildRuleType TYPE = BuildRuleType.of("d_library");
-
   private final DBuckConfig dBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform cxxPlatform;
@@ -55,11 +52,6 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
     this.dBuckConfig = dBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatform = cxxPlatform;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

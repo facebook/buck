@@ -23,7 +23,6 @@ import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
@@ -35,11 +34,13 @@ import java.util.Optional;
 
 class VersionPropagatorBuilder
     extends
-    AbstractNodeBuilder<VersionPropagatorBuilder.Arg, VersionPropagatorBuilder.Description> {
+    AbstractNodeBuilder<
+        VersionPropagatorBuilder.Arg,
+        VersionPropagatorBuilder.VersionPropagatorDescription> {
 
   public VersionPropagatorBuilder(BuildTarget target) {
     super(
-        new VersionPropagatorBuilder.Description(),
+        new VersionPropagatorDescription(),
         target);
   }
 
@@ -85,12 +86,7 @@ class VersionPropagatorBuilder
         ImmutableSortedMap.of();
   }
 
-  public static class Description implements VersionPropagator<Arg> {
-
-    @Override
-    public BuildRuleType getBuildRuleType() {
-      return BuildRuleType.of("version_propagator");
-    }
+  public static class VersionPropagatorDescription implements VersionPropagator<Arg> {
 
     @Override
     public Arg createUnpopulatedConstructorArg() {

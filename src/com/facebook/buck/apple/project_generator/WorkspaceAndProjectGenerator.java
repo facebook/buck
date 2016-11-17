@@ -39,6 +39,7 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -641,7 +642,8 @@ public class WorkspaceAndProjectGenerator {
       BuildTarget extraSchemeTarget = extraSchemeEntry.getValue();
       Optional<TargetNode<?, ?>> extraSchemeNode = projectGraph.getOptional(extraSchemeTarget);
       if (!extraSchemeNode.isPresent() ||
-          extraSchemeNode.get().getType() != XcodeWorkspaceConfigDescription.TYPE) {
+          extraSchemeNode.get().getType() !=
+              Description.getBuildRuleType(XcodeWorkspaceConfigDescription.class)) {
         throw new HumanReadableException(
             "Extra scheme target '%s' should be of type 'xcode_workspace_config'",
             extraSchemeTarget);
@@ -672,7 +674,8 @@ public class WorkspaceAndProjectGenerator {
     ImmutableSet.Builder<BuildTarget> binaryTargetsInsideBundlesBuilder =
         ImmutableSet.builder();
     for (TargetNode<?, ?> projectTargetNode : projectGraph.getAll(projectBuildTargets)) {
-      if (projectTargetNode.getType() == AppleBundleDescription.TYPE) {
+      if (projectTargetNode.getType() ==
+          Description.getBuildRuleType(AppleBundleDescription.class)) {
         AppleBundleDescription.Arg appleBundleDescriptionArg =
             (AppleBundleDescription.Arg) projectTargetNode.getConstructorArg();
         // We don't support apple_bundle rules referring to apple_binary rules

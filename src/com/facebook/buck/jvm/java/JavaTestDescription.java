@@ -26,7 +26,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
@@ -55,8 +54,6 @@ public class JavaTestDescription implements
     Description<JavaTestDescription.Arg>,
     ImplicitDepsInferringDescription<JavaTestDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("java_test");
-
   private final JavaOptions javaOptions;
   private final JavacOptions templateJavacOptions;
   private final Optional<Long> defaultTestRuleTimeoutMs;
@@ -71,11 +68,6 @@ public class JavaTestDescription implements
     this.templateJavacOptions = templateOptions;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
     this.cxxPlatform = cxxPlatform;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

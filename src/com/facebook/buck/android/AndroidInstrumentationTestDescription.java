@@ -22,7 +22,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.InstallableApk;
@@ -38,8 +37,6 @@ import java.util.Optional;
 public class AndroidInstrumentationTestDescription
     implements Description<AndroidInstrumentationTestDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("android_instrumentation_test");
-
   private final JavaOptions javaOptions;
   private final Optional<Long> defaultTestRuleTimeoutMs;
 
@@ -48,11 +45,6 @@ public class AndroidInstrumentationTestDescription
       Optional<Long> defaultTestRuleTimeoutMs) {
     this.javaOptions = javaOptions;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

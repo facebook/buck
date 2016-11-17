@@ -45,7 +45,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
@@ -85,8 +84,6 @@ public class CxxPythonExtensionDescription implements
           "C/C++ Library Type",
           ImmutableMap.of(
               CxxDescriptionEnhancer.SHARED_FLAVOR, Type.EXTENSION));
-
-  public static final BuildRuleType TYPE = BuildRuleType.of("cxx_python_extension");
 
   private final FlavorDomain<PythonPlatform> pythonPlatforms;
   private final CxxBuckConfig cxxBuckConfig;
@@ -424,11 +421,6 @@ public class CxxPythonExtensionDescription implements
       }
 
     };
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

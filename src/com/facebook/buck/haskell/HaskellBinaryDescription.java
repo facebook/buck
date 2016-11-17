@@ -32,7 +32,6 @@ import com.facebook.buck.rules.BinaryWrapperRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
@@ -60,7 +59,6 @@ public class HaskellBinaryDescription implements
     ImplicitDepsInferringDescription<HaskellBinaryDescription.Arg>,
     Flavored {
 
-  private static final BuildRuleType TYPE = BuildRuleType.of("haskell_binary");
   private static final FlavorDomain<Type> BINARY_TYPE =
       FlavorDomain.from("Haskell Binary Type", Type.class);
 
@@ -74,11 +72,6 @@ public class HaskellBinaryDescription implements
     this.haskellConfig = haskellConfig;
     this.cxxPlatforms = cxxPlatforms;
     this.defaultCxxPlatform = defaultCxxPlatform;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

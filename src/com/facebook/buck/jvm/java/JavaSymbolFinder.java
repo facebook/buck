@@ -29,6 +29,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.Console;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
@@ -60,9 +61,9 @@ import java.util.Set;
 public class JavaSymbolFinder {
 
   private static ImmutableSet<String> javaRuleTypes = ImmutableSet.of(
-      JavaLibraryDescription.TYPE.getName(),
-      AndroidLibraryDescription.TYPE.getName(),
-      JavaTestDescription.TYPE.getName());
+      Description.getBuildRuleType(JavaLibraryDescription.class).getName(),
+      Description.getBuildRuleType(AndroidLibraryDescription.class).getName(),
+      Description.getBuildRuleType(JavaTestDescription.class).getName());
 
   private final ProjectFilesystem projectFilesystem;
   private final SrcRootsFinder srcRootsFinder;

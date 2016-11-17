@@ -27,7 +27,6 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
@@ -48,8 +47,6 @@ public class DBinaryDescription implements
     Description<DBinaryDescription.Arg>,
     ImplicitDepsInferringDescription<DBinaryDescription.Arg> {
 
-  private static final BuildRuleType TYPE = BuildRuleType.of("d_binary");
-
   public static final Flavor BINARY_FLAVOR = ImmutableFlavor.of("binary");
 
   private final DBuckConfig dBuckConfig;
@@ -63,11 +60,6 @@ public class DBinaryDescription implements
     this.dBuckConfig = dBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatform = cxxPlatform;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override

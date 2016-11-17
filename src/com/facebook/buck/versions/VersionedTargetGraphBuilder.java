@@ -156,7 +156,7 @@ public class VersionedTargetGraphBuilder {
 
     Map<BuildTarget, ImmutableSet<Version>> versionDomain = new HashMap<>();
 
-    Optional<TargetNode<VersionedAlias.Arg, ?>> versionedNode =
+    Optional<TargetNode<VersionedAliasDescription.Arg, ?>> versionedNode =
         TargetGraphVersionTransformations.getVersionedNode(node);
     if (versionedNode.isPresent()) {
       ImmutableMap<Version, BuildTarget> versions =
@@ -215,8 +215,8 @@ public class VersionedTargetGraphBuilder {
   private TargetNode<?, ?> resolveVersions(
       TargetNode<?, ?> node,
       ImmutableMap<BuildTarget, Version> selectedVersions) {
-    Optional<TargetNode<VersionedAlias.Arg, ?>> versionedNode =
-        node.castArg(VersionedAlias.Arg.class);
+    Optional<TargetNode<VersionedAliasDescription.Arg, ?>> versionedNode =
+        node.castArg(VersionedAliasDescription.Arg.class);
     if (versionedNode.isPresent()) {
       node =
           getNode(

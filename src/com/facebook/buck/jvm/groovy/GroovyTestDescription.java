@@ -30,7 +30,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
@@ -50,8 +49,6 @@ import java.util.logging.Level;
 
 public class GroovyTestDescription implements Description<GroovyTestDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("groovy_test");
-
   private final GroovyBuckConfig groovyBuckConfig;
   private final JavaOptions javaOptions;
   private final JavacOptions defaultJavacOptions;
@@ -66,11 +63,6 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
     this.javaOptions = javaOptions;
     this.defaultJavacOptions = defaultJavacOptions;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
   }
 
   @Override
