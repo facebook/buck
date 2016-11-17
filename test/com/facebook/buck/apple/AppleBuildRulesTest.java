@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -29,7 +30,6 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.TargetGraph;
@@ -67,7 +67,8 @@ public class AppleBuildRulesTest {
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386");
     BuildTarget sandboxTarget =
-        BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386,sandbox");
+        BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386")
+            .withFlavors(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR);
     BuildRuleResolver resolver =
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(new AppleTestBuilder(sandboxTarget).build()),
@@ -79,16 +80,22 @@ public class AppleBuildRulesTest {
         .setDeps(ImmutableSortedSet.of());
 
     TargetNode<?, ?> appleTestNode = appleTestBuilder.build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        ImmutableSet.<TargetNode<?, ?>>of(appleTestNode));
+
     BuildRule testRule = appleTestBuilder.build(
         resolver,
         new FakeProjectFilesystem(),
-        TargetGraphFactory.newInstance(ImmutableSet.of(appleTestNode)));
+        targetGraph);
     assertTrue(AppleBuildRules.isXcodeTargetTestBuildRule(testRule));
   }
 
   @Test
   public void testAppleLibraryIsNotXcodeTargetTestBuildRuleType() throws Exception {
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder("//foo:lib").build();
+    BuildRuleParams params = new FakeBuildRuleParamsBuilder(
+        BuildTargetFactory.newInstance("//foo:lib"))
+        .build();
     AppleLibraryDescription.Arg arg =
         createDescriptionArgWithDefaults(FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION);
     BuildRule libraryRule = FakeAppleRuleDescriptions

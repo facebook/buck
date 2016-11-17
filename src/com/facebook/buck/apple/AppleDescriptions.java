@@ -20,12 +20,14 @@ import static com.facebook.buck.swift.SwiftUtil.Constants.SWIFT_EXTENSION;
 
 import com.facebook.buck.cxx.BuildRuleWithBinary;
 import com.facebook.buck.cxx.CxxBinaryDescription;
+import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.FrameworkDependencies;
+import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.io.MorePaths;
@@ -461,6 +463,7 @@ public class AppleDescriptions {
           .withoutFlavors(CxxStrip.RULE_FLAVOR)
           .withoutFlavors(StripStyle.FLAVOR_DOMAIN.getFlavors())
           .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
+          .withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor())
           .withAppendedFlavors(AppleDsym.RULE_FLAVOR);
       Optional<BuildRule> dsymRule = resolver.getRuleOptional(dsymBuildTarget);
       if (!dsymRule.isPresent()) {
@@ -601,14 +604,20 @@ public class AppleDescriptions {
     if (!AppleDebuggableBinary.isBuildRuleDebuggable(flavoredBinaryRule)) {
       debugFormat = AppleDebugFormat.NONE;
     }
-
     BuildTarget unstrippedTarget = flavoredBinaryRule.getBuildTarget()
         .withoutFlavors(
             CxxStrip.RULE_FLAVOR,
             AppleDebuggableBinary.RULE_FLAVOR,
             AppleBinaryDescription.APP_FLAVOR)
         .withoutFlavors(StripStyle.FLAVOR_DOMAIN.getFlavors())
-        .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
+        .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
+        .withoutFlavors(AppleDebuggableBinary.RULE_FLAVOR)
+        .withoutFlavors(ImmutableSet.of(AppleBinaryDescription.APP_FLAVOR));
+    Optional<LinkerMapMode> linkerMapMode =
+        LinkerMapMode.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
+    if (linkerMapMode.isPresent()) {
+      unstrippedTarget = unstrippedTarget.withAppendedFlavors(linkerMapMode.get().getFlavor());
+    }
     BuildRule unstrippedBinaryRule = resolver.requireRule(unstrippedTarget);
 
     BuildRule targetDebuggableBinaryRule;
@@ -830,5 +839,15 @@ public class AppleDescriptions {
   private static BuildRuleParams stripBundleSpecificFlavors(BuildRuleParams params) {
     return params.copyWithBuildTarget(
         params.getBuildTarget().withoutFlavors(BUNDLE_SPECIFIC_FLAVORS));
+  }
+
+  public static boolean flavorsDoNotAllowLinkerMapMode(BuildRuleParams params) {
+    ImmutableSet<Flavor> flavors = params.getBuildTarget().getFlavors();
+    return flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE) ||
+        flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE) ||
+        flavors.contains(CxxDescriptionEnhancer.STATIC_FLAVOR) ||
+        flavors.contains(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR) ||
+        flavors.contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR) ||
+        flavors.contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR);
   }
 }

@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxLink;
+import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -78,15 +79,12 @@ public class MultiarchFile extends AbstractBuildRule implements ProvidesLinkedBi
     steps.add(new MkdirStep(getProjectFilesystem(), output.getParent()));
 
     lipoBinaries(steps);
-    copyLinkerMapFiles(buildableContext, steps);
+    copyLinkMaps(buildableContext, steps);
 
     return steps.build();
   }
 
-  private void copyLinkerMapFiles(
-      BuildableContext buildableContext,
-      ImmutableList.Builder<Step> steps) {
-    // Copy link maps.
+  private void copyLinkMaps(BuildableContext buildableContext, ImmutableList.Builder<Step> steps) {
     Path linkMapDir = Paths.get(output + "-LinkMap");
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), linkMapDir));
 
@@ -97,7 +95,8 @@ public class MultiarchFile extends AbstractBuildRule implements ProvidesLinkedBi
         if (rule instanceof CxxBinary) {
           rule = ((CxxBinary) rule).getLinkRule();
         }
-        if (rule instanceof CxxLink) {
+        if (rule instanceof CxxLink &&
+            !rule.getBuildTarget().getFlavors().contains(LinkerMapMode.NO_LINKER_MAP.getFlavor())) {
           Optional<Path> maybeLinkerMapPath = ((CxxLink) rule).getLinkerMapPath();
           if (maybeLinkerMapPath.isPresent()) {
             Path source = maybeLinkerMapPath.get();

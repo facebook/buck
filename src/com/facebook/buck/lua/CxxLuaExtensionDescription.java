@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.HeaderSymlinkTree;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.NativeLinkTargetMode;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
@@ -218,7 +219,13 @@ public class CxxLuaExtensionDescription implements
         Optional.empty(),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
-            .setArgs(getExtensionArgs(params, ruleResolver, pathResolver, cxxPlatform, args))
+            .setArgs(
+                getExtensionArgs(
+                    params.withoutFlavor(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
+                    ruleResolver,
+                    pathResolver,
+                    cxxPlatform,
+                    args))
             .build());
   }
 

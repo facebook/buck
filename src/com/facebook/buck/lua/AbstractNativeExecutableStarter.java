@@ -227,6 +227,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
 
   @Override
   public SourcePath build() throws NoSuchBuildTargetException {
+    BuildTarget linkTarget = getTarget();
     getRuleResolver().addToIndex(
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             getCxxBuckConfig(),
@@ -234,7 +235,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
             getBaseParams(),
             getRuleResolver(),
             getPathResolver(),
-            getTarget(),
+            linkTarget,
             Linker.LinkType.EXECUTABLE,
             Optional.empty(),
             getOutput(),
@@ -244,7 +245,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
             Optional.empty(),
             ImmutableSet.of(),
             getNativeLinkableInput()));
-    return new BuildTargetSourcePath(getTarget());
+    return new BuildTargetSourcePath(linkTarget);
   }
 
   @Override

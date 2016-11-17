@@ -132,7 +132,8 @@ public class CxxLibraryDescription implements
         flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE) ||
         flavors.contains(CxxInferEnhancer.InferFlavors.INFER.get()) ||
         flavors.contains(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get()) ||
-        flavors.contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get());
+        flavors.contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get()) ||
+        LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(flavors);
 
   }
 
@@ -255,6 +256,9 @@ public class CxxLibraryDescription implements
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist)
       throws NoSuchBuildTargetException {
+    Optional<LinkerMapMode> flavoredLinkerMapMode = LinkerMapMode.FLAVOR_DOMAIN.getValue(
+        params.getBuildTarget());
+    params = LinkerMapMode.removeLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
 
     // Create rules for compiling the PIC object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
@@ -270,7 +274,8 @@ public class CxxLibraryDescription implements
     // Setup the rules to link the shared library.
     BuildTarget sharedTarget =
         CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
-            params.getBuildTarget(),
+            LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode)
+                .getBuildTarget(),
             cxxPlatform.getFlavor(),
             linkType);
 
@@ -289,7 +294,7 @@ public class CxxLibraryDescription implements
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
-        params,
+        LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode),
         ruleResolver,
         pathResolver,
         sharedTarget,

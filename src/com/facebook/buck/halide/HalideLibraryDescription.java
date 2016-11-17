@@ -30,6 +30,7 @@ import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
@@ -124,7 +125,10 @@ public class HalideLibraryDescription
 
     Optional<StripStyle> flavoredStripStyle =
         StripStyle.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
+    Optional<LinkerMapMode> flavoredLinkerMapMode =
+        LinkerMapMode.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
     params = CxxStrip.removeStripStyleFlavorInParams(params, flavoredStripStyle);
+    params = LinkerMapMode.removeLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
 
     ImmutableMap<String, CxxSource> srcs = CxxDescriptionEnhancer.parseCxxSources(
         params.getBuildTarget(),
@@ -152,6 +156,7 @@ public class HalideLibraryDescription
             srcs,
             /* headers */ ImmutableMap.of(),
             flavoredStripStyle,
+            flavoredLinkerMapMode,
             Linker.LinkableDepType.STATIC,
             preprocessorFlags,
             platformPreprocessorFlags,
@@ -167,6 +172,7 @@ public class HalideLibraryDescription
             cxxRuntimeType);
 
     params = CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle);
+    params = LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
     CxxBinary cxxBinary = new CxxBinary(
         params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(pathResolver)),
         ruleResolver,

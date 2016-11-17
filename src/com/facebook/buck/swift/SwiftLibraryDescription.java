@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
@@ -71,7 +72,8 @@ public class SwiftLibraryDescription implements
 
   private static final Set<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       SWIFT_COMPANION_FLAVOR,
-      SWIFT_COMPILE_FLAVOR);
+      SWIFT_COMPILE_FLAVOR,
+      LinkerMapMode.NO_LINKER_MAP.getFlavor());
 
   public enum Type implements FlavorConvertible {
     SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR),
@@ -132,6 +134,11 @@ public class SwiftLibraryDescription implements
       BuildRuleParams params,
       final BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
+
+    Optional<LinkerMapMode> flavoredLinkerMapMode =
+        LinkerMapMode.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
+    params = LinkerMapMode.removeLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
+
     final BuildTarget buildTarget = params.getBuildTarget();
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
@@ -163,6 +170,9 @@ public class SwiftLibraryDescription implements
             .builder(params.getBuildTarget().getUnflavoredBuildTarget())
             .addAllFlavors(flavors)
             .build();
+        if (flavoredLinkerMapMode.isPresent()) {
+          target = target.withAppendedFlavors(flavoredLinkerMapMode.get().getFlavor());
+        }
         BuildRuleParams typeParams =
             params.copyWithChanges(
                 target,
@@ -177,7 +187,8 @@ public class SwiftLibraryDescription implements
                 target,
                 swiftPlatform.get(),
                 cxxPlatform,
-                args.soname);
+                args.soname,
+                flavoredLinkerMapMode);
           case STATIC:
           case MACH_O_BUNDLE:
           // TODO(tho@uber.com) create build rule for other types.
@@ -232,6 +243,7 @@ public class SwiftLibraryDescription implements
     }
 
     // Otherwise, we return the generic placeholder of this library.
+    params = LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
     return new SwiftLibrary(
         params,
         resolver,
@@ -250,7 +262,9 @@ public class SwiftLibraryDescription implements
       BuildTarget buildTarget,
       SwiftPlatform swiftPlatform,
       CxxPlatform cxxPlatform,
-      Optional<String> soname) throws NoSuchBuildTargetException {
+      Optional<String> soname,
+      Optional<LinkerMapMode> flavoredLinkerMapMode) throws NoSuchBuildTargetException {
+
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
     String sharedLibrarySoname = CxxDescriptionEnhancer.getSharedLibrarySoname(
         soname,
@@ -269,13 +283,14 @@ public class SwiftLibraryDescription implements
                 cxxPlatform, Linker.LinkableDepType.SHARED));
     BuildTarget requiredBuildTarget = buildTarget
         .withoutFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
+        .withoutFlavors(LinkerMapMode.FLAVOR_DOMAIN.getFlavors())
         .withAppendedFlavors(SWIFT_COMPILE_FLAVOR);
     SwiftCompile rule = (SwiftCompile) resolver.requireRule(requiredBuildTarget);
     inputBuilder.addAllArgs(rule.getLinkArgs());
     return resolver.addToIndex(CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
-        params,
+        LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode),
         resolver,
         sourcePathResolver,
         buildTarget,

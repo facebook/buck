@@ -30,6 +30,7 @@ import com.facebook.buck.cxx.HeaderSymlinkTree;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.ImmutableCxxPreprocessorInputCacheKey;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.cxx.NativeLinkableInput;
 import com.facebook.buck.model.BuildTarget;
@@ -192,7 +193,9 @@ class SwiftLibrary
       throws NoSuchBuildTargetException {
     BuildTarget requiredBuildTarget = getBuildTarget()
         .withAppendedFlavors(flavors)
-        .withoutFlavors(SWIFT_COMPANION_FLAVOR)
+        .withoutFlavors(ImmutableSet.of(CxxDescriptionEnhancer.SHARED_FLAVOR))
+        .withoutFlavors(ImmutableSet.of(SWIFT_COMPANION_FLAVOR))
+        .withoutFlavors(LinkerMapMode.FLAVOR_DOMAIN.getFlavors())
         .withAppendedFlavors(SWIFT_COMPILE_FLAVOR);
     BuildRule rule = ruleResolver.requireRule(requiredBuildTarget);
     if (!(rule instanceof SwiftCompile)) {

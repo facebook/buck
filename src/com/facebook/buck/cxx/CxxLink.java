@@ -84,7 +84,8 @@ public class CxxLink
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
     Optional<Path> linkerMapPath = getLinkerMapPath();
-    if (linkerMapPath.isPresent()) {
+    if (linkerMapPath.isPresent() &&
+        LinkerMapMode.isLinkerMapEnabledForBuildTarget(getBuildTarget())) {
       buildableContext.recordArtifact(linkerMapPath.get());
     }
     Path scratchDir =

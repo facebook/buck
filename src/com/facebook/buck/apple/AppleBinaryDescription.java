@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.FrameworkDependencies;
+import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.file.WriteFile;
@@ -85,7 +86,8 @@ public class AppleBinaryDescription
       CxxCompilationDatabase.UBER_COMPILATION_DATABASE,
       AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
       AppleDebugFormat.DWARF.getFlavor(),
-      AppleDebugFormat.NONE.getFlavor());
+      AppleDebugFormat.NONE.getFlavor(),
+      LinkerMapMode.NO_LINKER_MAP.getFlavor());
 
   private final CxxBinaryDescription delegate;
   private final SwiftLibraryDescription swiftDelegate;
@@ -183,8 +185,7 @@ public class AppleBinaryDescription
         params = params.appendExtraDeps(ImmutableSet.of(swiftCompanionBuildRule.get()));
       }
     }
-
-    // remove debug format flavors so binary will have the same output regardless of debug format
+    // remove some flavors so binary will have the same output regardless their values
     BuildTarget unstrippedBinaryBuildTarget = params.getBuildTarget()
         .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
         .withoutFlavors(StripStyle.FLAVOR_DOMAIN.getFlavors());
@@ -294,6 +295,11 @@ public class AppleBinaryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
+
+    if (AppleDescriptions.flavorsDoNotAllowLinkerMapMode(params)) {
+      params = params.withoutFlavor(LinkerMapMode.NO_LINKER_MAP.getFlavor());
+    }
+
     Optional<MultiarchFileInfo> fatBinaryInfo = MultiarchFileInfos.create(
         platformFlavorsToAppleCxxPlatforms,
         params.getBuildTarget());

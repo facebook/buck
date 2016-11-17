@@ -20,7 +20,9 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLink;
+import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
@@ -44,12 +46,18 @@ public class AppleLibraryDescriptionTest {
   @Test
   public void linkerFlagsLocationMacro() throws Exception {
     assumeThat(Platform.detect(), is(Platform.MACOS));
-    BuildTarget sandboxTarget = BuildTargetFactory.newInstance("//:rule#sandbox,default");
+    BuildTarget sandboxTarget = BuildTargetFactory.newInstance("//:rule")
+        .withFlavors(
+            CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR,
+            DefaultCxxPlatforms.FLAVOR);
     BuildRuleResolver resolver =
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(new AppleLibraryBuilder(sandboxTarget).build()),
             new DefaultTargetNodeToBuildRuleTransformer());
-    BuildTarget target = BuildTargetFactory.newInstance("//:rule#shared,default");
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule")
+        .withFlavors(
+            DefaultCxxPlatforms.FLAVOR,
+            CxxDescriptionEnhancer.SHARED_FLAVOR);
     Genrule dep =
         (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")

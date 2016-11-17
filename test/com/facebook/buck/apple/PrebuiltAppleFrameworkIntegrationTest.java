@@ -76,7 +76,6 @@ public class PrebuiltAppleFrameworkIntegrationTest {
         workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
-
     Path testBinaryPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
     assertTrue(Files.exists(testBinaryPath));
 

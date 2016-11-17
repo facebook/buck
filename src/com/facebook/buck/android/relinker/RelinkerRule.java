@@ -19,6 +19,7 @@ import com.facebook.buck.android.NdkCxxPlatforms;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.ImmutableFlavor;
@@ -157,7 +158,9 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
 
       relinkerSteps.addAll(
           new CxxLink(
-              buildRuleParams.withFlavor(ImmutableFlavor.of("cxx-link")),
+              buildRuleParams
+                  .withFlavor(ImmutableFlavor.of("cxx-link"))
+                  .withoutFlavor(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
               getResolver(),
               linker,
               getLibFilePath(),

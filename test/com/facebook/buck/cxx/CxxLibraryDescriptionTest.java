@@ -397,7 +397,8 @@ public class CxxLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule")
         .withFlavors(
             CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
-            CxxDescriptionEnhancer.SHARED_FLAVOR);
+            CxxDescriptionEnhancer.SHARED_FLAVOR,
+            LinkerMapMode.NO_LINKER_MAP.getFlavor());
     BuildRuleResolver resolver =
         new BuildRuleResolver(
             prepopulateWithSandbox(target),

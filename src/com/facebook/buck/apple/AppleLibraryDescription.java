@@ -25,6 +25,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.Linker;
+import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
 import com.facebook.buck.cxx.StripStyle;
 import com.facebook.buck.model.BuildTarget;
@@ -85,6 +86,7 @@ public class AppleLibraryDescription implements
       StripStyle.NON_GLOBAL_SYMBOLS.getFlavor(),
       StripStyle.ALL_SYMBOLS.getFlavor(),
       StripStyle.DEBUGGING_SYMBOLS.getFlavor(),
+      LinkerMapMode.NO_LINKER_MAP.getFlavor(),
       ImmutableFlavor.of("default"));
 
   private enum Type implements FlavorConvertible {
@@ -243,7 +245,7 @@ public class AppleLibraryDescription implements
       }
     }
 
-    // We explicitly remove strip flavor from params to make sure rule
+    // We explicitly remove flavors from params to make sure rule
     // has the same output regardless if we will strip or not.
     Optional<StripStyle> flavoredStripStyle =
         StripStyle.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
@@ -274,8 +276,11 @@ public class AppleLibraryDescription implements
                     delegate.getCxxPlatforms().getFlavors(),
                     params.getBuildTarget().getFlavors()),
                 defaultCxxPlatform.getFlavor()));
+
+    params = CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle);
+
     BuildRule strippedBinaryRule = CxxDescriptionEnhancer.createCxxStripRule(
-        CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle),
+        params,
         resolver,
         representativePlatform.getStrip(),
         flavoredStripStyle.orElse(StripStyle.NON_GLOBAL_SYMBOLS),
@@ -283,7 +288,7 @@ public class AppleLibraryDescription implements
         unstrippedBinaryRule);
 
     return AppleDescriptions.createAppleDebuggableBinary(
-        CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle),
+        params,
         resolver,
         strippedBinaryRule,
         (ProvidesLinkedBinaryDeps) unstrippedBinaryRule,
@@ -353,9 +358,12 @@ public class AppleLibraryDescription implements
         args,
         params.getBuildTarget());
 
-    // remove all debug format related flavors from cxx rule so it always ends up in the same output
+    // remove some flavors from cxx rule that don't affect the rule output
     BuildTarget unstrippedTarget = params.getBuildTarget()
         .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
+    if (AppleDescriptions.flavorsDoNotAllowLinkerMapMode(params)) {
+      unstrippedTarget = unstrippedTarget.withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor());
+    }
 
     Optional<BuildRule> existingRule = resolver.getRuleOptional(unstrippedTarget);
     if (existingRule.isPresent()) {

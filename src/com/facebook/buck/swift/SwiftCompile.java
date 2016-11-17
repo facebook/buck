@@ -25,6 +25,7 @@ import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.LinkerMapMode;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -46,6 +47,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -124,6 +126,17 @@ class SwiftCompile
     this.hasMainEntry = FluentIterable.from(srcs).firstMatch(
         input -> SWIFT_MAIN_FILENAME.equalsIgnoreCase(
             getResolver().getAbsolutePath(input).getFileName().toString())).isPresent();
+    performChecks(params);
+  }
+
+  private void performChecks(BuildRuleParams params) {
+    Preconditions.checkArgument(
+        !LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(params.getBuildTarget().getFlavors()),
+        "SwiftCompile %s should not be created with LinkerMapMode flavor (%s)",
+        this,
+        LinkerMapMode.FLAVOR_DOMAIN);
+    Preconditions.checkArgument(
+        !params.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR));
   }
 
   private SwiftCompileStep makeCompileStep() {
