@@ -158,7 +158,7 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
     return this.incomingEdges.containsKey(node);
   }
 
-  /** @return an unmodifiable view of the nodes in this graph */
+  @Override
   public Set<T> getNodes() {
     return Collections.unmodifiableSet(nodes);
   }

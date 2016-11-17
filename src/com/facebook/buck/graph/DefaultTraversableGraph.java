@@ -60,7 +60,7 @@ public class DefaultTraversableGraph<T> implements TraversableGraph<T> {
     return ImmutableSet.copyOf(Sets.difference(nodes, incomingEdges.keySet()));
   }
 
-  /** @return an unmodifiable view of the nodes in this graph */
+  @Override
   public ImmutableSet<T> getNodes() {
     return nodes;
   }
