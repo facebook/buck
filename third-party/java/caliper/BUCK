@@ -1,9 +1,6 @@
 prebuilt_jar(
   name = 'caliper',
   binary_jar = ':caliper_shaded',
-  deps = [
-    ':java-allocation-instrumenter',
-  ],
   licenses = [
     'LICENSE.txt',
   ],
@@ -29,17 +26,6 @@ genrule(
 prebuilt_jar(
   name = 'caliper-all',
   binary_jar = 'caliper-1.0-all.jar',
-  deps = [
-    ':java-allocation-instrumenter',
-  ],
-  licenses = [
-    'LICENSE.txt',
-  ],
-)
-
-prebuilt_jar(
-  name = 'java-allocation-instrumenter',
-  binary_jar = 'java-allocation-instrumenter-3.0.jar',
   licenses = [
     'LICENSE.txt',
   ],
