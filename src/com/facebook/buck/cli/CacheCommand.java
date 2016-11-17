@@ -18,25 +18,36 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
-import com.facebook.buck.io.LazyPath;
+import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.LazyPath;
+import com.facebook.buck.parser.ParseEvent;
+import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildInfo;
 import com.facebook.buck.rules.RuleKey;
+import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
 
@@ -58,10 +69,17 @@ public class CacheCommand extends AbstractCommand {
   public List<String> getArguments() {
     return arguments;
   }
+  Optional<Path> outputPath = Optional.empty();
 
   @VisibleForTesting
   void setArguments(List<String> arguments) {
     this.arguments = arguments;
+  }
+
+  public void fakeOutParseEvents(BuckEventBus eventBus) {
+    ParseEvent.Started parseStart = ParseEvent.started(ImmutableList.of());
+    eventBus.post(parseStart);
+    eventBus.post(ParseEvent.finished(parseStart, Optional.empty()));
   }
 
   @Override
@@ -80,78 +98,125 @@ public class CacheCommand extends AbstractCommand {
       return 1;
     }
 
-    Path outputPath = null;
     if (outputDir != null) {
-      outputPath = Paths.get(outputDir);
-      Files.createDirectories(outputPath);
+      outputPath = Optional.of(Paths.get(outputDir));
+      Files.createDirectories(outputPath.get());
     }
 
     ArtifactCache cache = params.getArtifactCache();
 
-    Path tmpDir = Files.createTempDirectory("buck-cache-command");
-    int exitCode = 0;
-    for (String arg : arguments) {
-      // Do the fetch.
-      RuleKey ruleKey = new RuleKey(arg);
-      Path artifact = tmpDir.resolve(arg);
-      // TODO(skotchvail): don't use intermediate files, that just slows us down
-      // instead, unzip from the ~/buck-cache/ directly
-      CacheResult success = cache.fetch(ruleKey, LazyPath.ofInstance(artifact));
+    List<RuleKey> ruleKeys = new ArrayList<>();
+    for (String hash : arguments) {
+      ruleKeys.add(new RuleKey(hash));
+    }
 
-      // Display the result.
-      if (outputPath != null) {
-        if (!extractArtifact(
-            params,
-            outputPath,
-            tmpDir,
-            ruleKey,
-            artifact,
-            success)) {
-          exitCode = 1;
-        }
-      } else if (success.getType().isSuccess()) {
-        params.getConsole().printSuccess(
-            String.format(
-                "Successfully downloaded artifact with id %s at %s.",
-                ruleKey,
-                artifact));
+    Path tmpDir = Files.createTempDirectory("buck-cache-command");
+
+    BuildEvent.Started started = BuildEvent.started(getArguments(), false);
+
+    List<ArtifactRunner> results = null;
+    try (CommandThreadManager pool = new CommandThreadManager(
+        "Build",
+        getConcurrencyLimit(params.getBuckConfig()))) {
+      WeightedListeningExecutorService executor = pool.getExecutor();
+
+      fakeOutParseEvents(params.getBuckEventBus());
+
+      // Post the build started event, setting it to the Parser recorded start time if appropriate.
+      if (params.getParser().getParseStartTime().isPresent()) {
+        params.getBuckEventBus().post(
+            started,
+            params.getParser().getParseStartTime().get());
       } else {
-        params.getConsole().printErrorText(
-            String.format(
-                "Failed to retrieve an artifact with id %s.", ruleKey));
-        exitCode = 1;
+        params.getBuckEventBus().post(started);
+      }
+
+      // Fetch all artifacts
+      List<ListenableFuture<ArtifactRunner>> futures = new ArrayList<>();
+      for (RuleKey ruleKey : ruleKeys) {
+        futures.add(executor.submit(new ArtifactRunner(ruleKey, tmpDir, cache)));
+      }
+
+      // Wait for all executions to complete or fail.
+      try {
+        results = Futures.allAsList(futures).get();
+      } catch (ExecutionException ex) {
+        params.getConsole().printBuildFailure("Failed");
+        ex.printStackTrace(params.getConsole().getStdErr());
       }
     }
 
-    if (outputPath != null) {
-      if (exitCode == 0) {
+    int totalRuns = results.size();
+    String resultString = "";
+    int goodRuns = 0;
+    for (ArtifactRunner r: results) {
+      if (r.completed){
+        goodRuns++;
+      }
+      resultString += r.resultString;
+
+      if (!outputPath.isPresent()) {
+        // legacy output
+        if (r.completed) {
+          params.getConsole().printSuccess(
+              String.format(
+                  "Successfully downloaded artifact with id %s at %s.",
+                  r.ruleKey,
+                  r.artifact));
+        } else {
+          params.getConsole().printErrorText(
+              String.format(
+                  "Failed to retrieve an artifact with id %s.", r.ruleKey));
+        }
+      }
+    }
+
+    int exitCode = (totalRuns == goodRuns) ? 0 : 1;
+    params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
+
+    if (outputPath.isPresent()) {
+      if (totalRuns == goodRuns) {
         params.getConsole().printSuccess(
           "Successfully downloaded all artifacts.");
       } else {
-        params.getConsole().printErrorText(
-          "Failed to download all artifacts");
+        params.getConsole().printErrorText(String.format(
+          "Downloaded %d of %d artifacts", goodRuns, totalRuns));
       }
+      params.getConsole().getStdOut().println(resultString);
     }
 
     return exitCode;
   }
 
+  private String cacheResultToString(CacheResult cacheResult) {
+    CacheResultType type = cacheResult.getType();
+    String typeString = type.toString();
+    switch (type) {
+      case ERROR:
+        return String.format("%s %s", typeString, cacheResult.getCacheError());
+      case HIT:
+        return String.format("%s %s", typeString, cacheResult.getCacheSource());
+      case MISS:
+      case IGNORED:
+      case LOCAL_KEY_UNCHANGED_HIT:
+      default:
+        return typeString;
+    }
+  }
+
   private boolean extractArtifact(
-      CommandRunnerParams params,
       Path outputPath,
       Path tmpDir,
       RuleKey ruleKey,
       Path artifact,
-      CacheResult success) {
+      CacheResult success,
+      StringBuilder resultString) {
 
-    PrintStream stdOut = params.getConsole().getStdOut();
-    if (!success.getType().isSuccess()) {
-      stdOut.println(String.format(
-          "%s !(Failed to retrieve an artifact)", ruleKey));
-      return false;
+    String buckTarget = "Unknown Target";
+    ImmutableMap<String, String> metadata = success.getMetadata();
+    if (metadata.containsKey(BuildInfo.MetadataKey.TARGET)) {
+      buckTarget = success.metadata().get().get(BuildInfo.MetadataKey.TARGET);
     }
-
-    String buckTarget = success.metadata().get().get(BuildInfo.MetadataKey.TARGET);
     ImmutableList<Path> paths;
     try {
       paths = Unzip.extractZipFile(
@@ -159,8 +224,8 @@ public class CacheCommand extends AbstractCommand {
           tmpDir,
           Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
     } catch (IOException e) {
-      stdOut.println(String.format(
-        "%s %s !(Unable to extract) %s.", ruleKey, buckTarget, e));
+      resultString.append(String.format(
+        "%s %s !(Unable to extract) %s\n", ruleKey, buckTarget, e));
       return false;
     }
     int filesMoved = 0;
@@ -173,18 +238,18 @@ public class CacheCommand extends AbstractCommand {
       try {
         Files.createDirectories(destination.getParent());
         Files.move(path, destination, StandardCopyOption.ATOMIC_MOVE);
-        stdOut.println(String.format(
-            "%s %s => %s", ruleKey, buckTarget, relative));
+        resultString.append(String.format(
+            "%s %s => %s\n", ruleKey, buckTarget, relative));
         filesMoved += 1;
       } catch (IOException e) {
-        stdOut.println(String.format(
-            "%s %s !(could not move file) %s", ruleKey, buckTarget, relative));
+        resultString.append(String.format(
+            "%s %s !(could not move file) %s\n", ruleKey, buckTarget, relative));
         return false;
       }
     }
     if (filesMoved == 0) {
-      stdOut.println(String.format(
-          "%s %s !(Nothing to extract)", ruleKey, buckTarget));
+      resultString.append(String.format(
+        "%s %s !(Nothing to extract)\n", ruleKey, buckTarget));
     }
     return filesMoved > 0;
   }
@@ -199,4 +264,69 @@ public class CacheCommand extends AbstractCommand {
     return false;
   }
 
+  class ArtifactRunner implements Callable<ArtifactRunner> {
+
+    RuleKey ruleKey;
+    Path tmpDir;
+    Path artifact;
+    String statusString;
+    String cacheResult;
+    StringBuilder resultString;
+    ArtifactCache cache;
+    boolean completed;
+
+    public ArtifactRunner(
+        RuleKey ruleKey,
+        Path tmpDir,
+        ArtifactCache cache) {
+      this.ruleKey = ruleKey;
+      this.tmpDir = tmpDir;
+      this.cache = cache;
+      this.artifact = tmpDir.resolve(ruleKey.toString());
+      this.statusString = "Created";
+      this.cacheResult = "Unknown";
+      this.resultString = new StringBuilder();
+      this.completed = false;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("ruleKey: %s status: %s cache: %s", ruleKey, statusString, cacheResult);
+    }
+
+    @Override
+    public ArtifactRunner call() throws Exception {
+      statusString = "Fetching";
+      // TODO(skotchvail): don't use intermediate files, that just slows us down
+      // instead, unzip from the ~/buck-cache/ directly
+      CacheResult success = cache.fetch(ruleKey, LazyPath.ofInstance(artifact));
+      cacheResult = cacheResultToString(success);
+      boolean cacheSuccess = success.getType().isSuccess();
+      if (!cacheSuccess) {
+        statusString = String.format("FAILED FETCHING %s %s", ruleKey, cacheResult);
+        resultString.append(String.format(
+            "%s !(Failed to retrieve an artifact)\n", ruleKey));
+      } else if (!outputPath.isPresent()) {
+        this.completed = true;
+        statusString = "SUCCESS";
+        resultString.append(String.format(
+            "%s !success\n", ruleKey));
+      } else {
+        statusString = "Extracting";
+        if (extractArtifact(
+            outputPath.get(),
+            tmpDir,
+            ruleKey,
+            artifact,
+            success,
+            this.resultString)) {
+          this.completed = true;
+          statusString = "SUCCESS";
+        } else {
+          statusString = "FAILED Extracting";
+        }
+      }
+      return this;
+    }
+  }
 }
