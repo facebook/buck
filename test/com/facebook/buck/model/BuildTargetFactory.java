@@ -21,6 +21,7 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -46,15 +47,22 @@ public class BuildTargetFactory {
       String fullyQualifiedName) {
     root = root == null ? new FakeProjectFilesystem().getRootPath() : root;
 
-    String[] parts = fullyQualifiedName.split(":");
+    int buildTarget = fullyQualifiedName.indexOf("//");
+    Optional<String> cellName = Optional.empty();
+    if (buildTarget > 0) {
+      cellName = Optional.of(fullyQualifiedName.substring(0, buildTarget));
+    }
+    String[] parts = fullyQualifiedName.substring(buildTarget).split(":");
     Preconditions.checkArgument(parts.length == 2);
     String[] nameAndFlavor = parts[1].split("#");
     if (nameAndFlavor.length != 2) {
-      return BuildTarget.builder(root, parts[0], parts[1]).build();
+      return BuildTarget.builder(
+          UnflavoredBuildTarget.of(root, cellName, parts[0], parts[1])).build();
     }
     String[] flavors = nameAndFlavor[1].split(",");
     BuildTarget.Builder buildTargetBuilder =
-        BuildTarget.builder(root, parts[0], nameAndFlavor[0]);
+        BuildTarget.builder(
+            UnflavoredBuildTarget.of(root, cellName, parts[0], nameAndFlavor[0]));
     for (String flavor : flavors) {
       buildTargetBuilder.addFlavors(ImmutableFlavor.of(flavor));
     }

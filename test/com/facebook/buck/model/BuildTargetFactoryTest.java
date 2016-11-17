@@ -22,6 +22,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class BuildTargetFactoryTest {
 
@@ -53,6 +54,15 @@ public class BuildTargetFactoryTest {
             .addFlavors(ImmutableFlavor.of("two"))
             .addFlavors(ImmutableFlavor.of("three"))
             .build(),
+        buildTarget);
+  }
+
+  @Test
+  public void testTargetWithCell() {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(ROOT, "xplat//example/base:one");
+    assertEquals(
+        BuildTarget.builder(
+            UnflavoredBuildTarget.of(ROOT, Optional.of("xplat"), "//example/base", "one")).build(),
         buildTarget);
   }
 }
