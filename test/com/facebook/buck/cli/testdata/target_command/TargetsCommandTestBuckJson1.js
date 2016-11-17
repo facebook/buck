@@ -17,6 +17,7 @@
   "licenses": null,
   "javac": null,
   "javacJar": null,
+  "compilerClassName": null,
   "javaVersion": null,
   "manifestFile": null,
   "mavenCoords":null,

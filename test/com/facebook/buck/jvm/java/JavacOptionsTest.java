@@ -216,6 +216,21 @@ public class JavacOptionsTest {
         Matchers.containsInAnyOrder(javacJarPath));
   }
 
+  @Test
+  public void customCompilerClassNameIsSet()
+      throws IOException {
+    FakeSourcePath javacJarPath = new FakeSourcePath("javac_jar");
+
+    JavacOptions options = createStandardBuilder()
+        .setJavacJarPath(javacJarPath)
+        .setCompilerClassName("test.compiler")
+        .build();
+
+    Javac javac = options.getJavac();
+    assertTrue(javac instanceof JarBackedJavac);
+    assertEquals(((JarBackedJavac) javac).getCompilerClassName(), "test.compiler");
+  }
+
   private JavacOptions.Builder createStandardBuilder() {
     return JavacOptions.builderForUseInJavaBuckConfig()
         .setSourceLevel("5")

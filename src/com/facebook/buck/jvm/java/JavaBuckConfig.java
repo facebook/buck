@@ -103,6 +103,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         .setJavacPath(
             getJavacPath().map(Either::ofLeft))
         .setJavacJarPath(getJavacJarPath())
+        .setCompilerClassName(getCompilerClassName())
         .setSourceLevel(sourceLevel.orElse(TARGETED_JAVA_VERSION))
         .setTargetLevel(targetLevel.orElse(TARGETED_JAVA_VERSION))
         .setSpoolMode(spoolMode)
@@ -140,6 +141,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
   Optional<SourcePath> getJavacJarPath() {
     return delegate.getSourcePath("tools", "javac_jar");
+  }
+
+  Optional<String> getCompilerClassName() {
+    return delegate.getValue("tools", "compiler_class_name");
   }
 
   public boolean getSkipCheckingMissingDeps() {
