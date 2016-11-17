@@ -1,8 +1,8 @@
 diff --git a/caliper/src/main/java/com/google/caliper/runner/Instrument.java b/caliper/src/main/java/com/google/caliper/runner/Instrument.java
-index 0f32fa9..8c4cb2d 100644
+index 0f32fa9..4cd26af 100644
 --- a/caliper/src/main/java/com/google/caliper/runner/Instrument.java
 +++ b/caliper/src/main/java/com/google/caliper/runner/Instrument.java
-@@ -153,7 +153,7 @@ public abstract class Instrument {
+@@ -153,7 +153,8 @@ public abstract class Instrument {
        // do compilation serially
        "-Xbatch",
        // make sure compilation doesn't run in parallel with itself
