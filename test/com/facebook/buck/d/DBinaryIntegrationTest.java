@@ -60,7 +60,8 @@ public class DBinaryIntegrationTest {
             .resolve(
                 BuildTargets.getGenPath(
                     filesystem,
-                    BuildTargetFactory.newInstance("//:test#binary"),
+                    BuildTargetFactory.newInstance("//:test")
+                        .withFlavors(DBinaryDescription.BINARY_FLAVOR),
                     "%s/test"))
             .toString());
     assertEquals(0, result.getExitCode());
@@ -86,7 +87,8 @@ public class DBinaryIntegrationTest {
             .resolve(
                 BuildTargets.getGenPath(
                     filesystem,
-                    BuildTargetFactory.newInstance("//:xyzzy#binary"),
+                    BuildTargetFactory.newInstance("//:xyzzy")
+                        .withFlavors(DBinaryDescription.BINARY_FLAVOR),
                     "%s/xyzzy"))
             .toString());
     assertEquals(0, result.getExitCode());

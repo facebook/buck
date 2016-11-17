@@ -36,7 +36,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
@@ -395,9 +394,10 @@ public class CxxLibraryDescriptionTest {
     String soname = "test_soname";
 
     // Generate the C++ library rules.
-    BuildTarget target =
-        BuildTargetFactory.newInstance(
-            String.format("//:rule#shared,%s", CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()));
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule")
+        .withFlavors(
+            CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor(),
+            CxxDescriptionEnhancer.SHARED_FLAVOR);
     BuildRuleResolver resolver =
         new BuildRuleResolver(
             prepopulateWithSandbox(target),
@@ -842,7 +842,10 @@ public class CxxLibraryDescriptionTest {
 
   @Test
   public void linkerFlagsLocationMacro() throws Exception {
-    BuildTarget target = BuildTargetFactory.newInstance("//:rule#shared,platform");
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule")
+        .withFlavors(
+            CxxDescriptionEnhancer.SHARED_FLAVOR,
+            CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor());
     BuildRuleResolver resolver =
         new BuildRuleResolver(
             prepopulateWithSandbox(target),
@@ -1329,7 +1332,7 @@ public class CxxLibraryDescriptionTest {
         new CxxLibraryBuilder(
             BuildTargetFactory
                 .newInstance("//:foo")
-                .withFlavors(platform.getFlavor(), ImmutableFlavor.of("shared")),
+                .withFlavors(platform.getFlavor(), CxxDescriptionEnhancer.SHARED_FLAVOR),
             cxxBuckConfig);
     libraryBuilder
         .setLibraries(
@@ -1362,7 +1365,10 @@ public class CxxLibraryDescriptionTest {
         FrameworkPath.ofSourcePath(new FakeSourcePath("/another/path/liba.dylib")));
 
     CxxLibraryBuilder libraryBuilder =
-        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:foo#shared"), cxxBuckConfig);
+        new CxxLibraryBuilder(
+            BuildTargetFactory.newInstance("//:foo")
+                .withFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR),
+            cxxBuckConfig);
     libraryBuilder
         .setLibraries(libraries)
         .setSrcs(

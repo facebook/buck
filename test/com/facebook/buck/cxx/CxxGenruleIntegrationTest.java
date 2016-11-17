@@ -170,7 +170,8 @@ public class CxxGenruleIntegrationTest {
             BuildTargets
                 .getGenPath(
                     workspace.asCell().getFilesystem(),
-                    BuildTargetFactory.newInstance("//:binary#default"),
+                    BuildTargetFactory.newInstance("//:binary")
+                        .withFlavors(DefaultCxxPlatforms.FLAVOR),
                     "%s")
                 .toString()));
   }

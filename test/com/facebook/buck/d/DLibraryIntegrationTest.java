@@ -53,7 +53,8 @@ public class DLibraryIntegrationTest {
             .resolve(
                 BuildTargets.getGenPath(
                     new FakeProjectFilesystem(),
-                    BuildTargetFactory.newInstance("//:greet#binary"),
+                    BuildTargetFactory.newInstance("//:greet")
+                        .withFlavors(DBinaryDescription.BINARY_FLAVOR),
                     "%s/greet"))
             .toString());
     assertEquals(0, result.getExitCode());

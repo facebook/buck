@@ -50,7 +50,7 @@ public class DBinaryDescription implements
 
   private static final BuildRuleType TYPE = BuildRuleType.of("d_binary");
 
-  private static final Flavor BINARY_FLAVOR = ImmutableFlavor.of("binary");
+  public static final Flavor BINARY_FLAVOR = ImmutableFlavor.of("binary");
 
   private final DBuckConfig dBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;

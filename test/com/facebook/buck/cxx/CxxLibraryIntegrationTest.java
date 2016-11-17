@@ -111,7 +111,10 @@ public class CxxLibraryIntegrationTest {
             workspace.getPath(
                 BuildTargets.getGenPath(
                     new ProjectFilesystem(workspace.getDestPath()),
-                    BuildTargetFactory.newInstance("//subdir:library#default,shared"),
+                    BuildTargetFactory.newInstance("//subdir:library")
+                        .withFlavors(
+                            DefaultCxxPlatforms.FLAVOR,
+                            CxxDescriptionEnhancer.SHARED_FLAVOR),
                     "%s/libsubdir_library.so"))));
     result.assertSuccess();
   }
