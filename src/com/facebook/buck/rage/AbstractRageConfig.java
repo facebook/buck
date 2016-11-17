@@ -41,11 +41,15 @@ abstract class AbstractRageConfig implements ConfigView<BuckConfig> {
   static final String EXTRA_INFO_COMMAND_FIELD = "extra_info_command";
   private static final String RAGE_TIMEOUT_MILLIS_FIELD = "rage_timeout_millis";
   private static final String RAGE_MAX_UPLOAD_RETRIES_FIELD = "rage_max_upload_retries";
+  @VisibleForTesting
+  static final String PROTOCOL_VERSION_FIELD = "protocol_version";
 
-  // Defaults
-  public static final long HTTP_TIMEOUT_MILLIS = 15 * 1000;
+  // Default values
+  public static final long HTTP_TIMEOUT_MILLIS = 60 * 1000;
   public static final String UPLOAD_PATH = "/rage/upload";
   public static final int HTTP_MAX_UPLOAD_RETRIES = 2;
+  public static final RageProtocolVersion DEFAULT_RAGE_PROTOCOL_VERSION =
+      RageProtocolVersion.SIMPLE;
 
   @Value.Parameter
   public String getReportUploadPath() {
@@ -81,6 +85,18 @@ abstract class AbstractRageConfig implements ConfigView<BuckConfig> {
   @Value.Parameter
   public ImmutableList<String> getExtraInfoCommand() {
     return getDelegate().getListWithoutComments(RAGE_SECTION, EXTRA_INFO_COMMAND_FIELD);
+  }
+
+  @Value.Parameter
+  public RageProtocolVersion getProtocolVersion() {
+    return getDelegate()
+        .getEnum(RAGE_SECTION, PROTOCOL_VERSION_FIELD, RageProtocolVersion.class)
+        .orElse(DEFAULT_RAGE_PROTOCOL_VERSION);
+  }
+
+  public enum RageProtocolVersion {
+    SIMPLE,
+    JSON,
   }
 
 }

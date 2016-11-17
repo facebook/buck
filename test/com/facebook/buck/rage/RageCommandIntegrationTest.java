@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
+import static com.facebook.buck.rage.AbstractRageConfig.RageProtocolVersion;
+
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBusFactory;
@@ -47,6 +49,7 @@ import com.google.common.io.ByteStreams;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -65,6 +68,8 @@ public class RageCommandIntegrationTest {
 
   private static final String UPLOAD_PATH = "/rage";
 
+  private ObjectMapper objectMapper;
+
   @Rule
   public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
@@ -75,6 +80,11 @@ public class RageCommandIntegrationTest {
           "2016-06-21_16h16m24s_buildcommand_ac8bd626-6137-4747-84dd-5d4f215c876c/";
   private static final String AUTODEPS_COMMAND_DIR_PATH = "buck-out/log/" +
           "2016-06-21_16h18m51s_autodepscommand_d09893d5-b11e-4e3f-a5bf-70c60a06896e/";
+
+  @Before
+  public void setUp() throws Exception {
+    objectMapper = ObjectMappers.newDefaultInstance();
+  }
 
   @Test
   public void testRageNonInteractiveReport() throws Exception {
@@ -119,9 +129,11 @@ public class RageCommandIntegrationTest {
           });
       httpd.start();
 
-      RageConfig rageConfig = createRageConfig(httpd.getRootUri().getPort(), "");
+      RageConfig rageConfig = createRageConfig(
+          httpd.getRootUri().getPort(),
+          "",
+          RageProtocolVersion.SIMPLE);
       ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
-      ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
       Clock clock = new DefaultClock();
       DefectReporter reporter = new DefaultDefectReporter(filesystem,
           objectMapper,
@@ -169,7 +181,10 @@ public class RageCommandIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "interactive_report", temporaryFolder);
     workspace.setUp();
-    RageConfig rageConfig = createRageConfig(0, "python, extra.py");
+    RageConfig rageConfig = createRageConfig(
+        0,
+        "python, extra.py",
+        RageProtocolVersion.SIMPLE);
     ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
     Console console = new TestConsole();
     CapturingDefectReporter defectReporter = new CapturingDefectReporter();
@@ -211,7 +226,10 @@ public class RageCommandIntegrationTest {
           });
       httpd.start();
 
-      RageConfig rageConfig = createRageConfig(httpd.getRootUri().getPort(), "");
+      RageConfig rageConfig = createRageConfig(
+          httpd.getRootUri().getPort(),
+          "",
+          RageProtocolVersion.SIMPLE);
       ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
       ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
       Clock clock = new DefaultClock();
@@ -235,20 +253,85 @@ public class RageCommandIntegrationTest {
       // If upload fails it should store the zip locally and inform the user.
       assertFalse(submitReport.getReportSubmitErrorMessage().get().isEmpty());
       ZipInspector zipInspector = new ZipInspector(
-          filesystem.resolve(submitReport.getReportSubmitLocation()));
+          filesystem.resolve(submitReport.getReportSubmitLocation().get()));
       assertEquals(zipInspector.getZipFileEntries().size(), 7);
     }
   }
 
-  private RageConfig createRageConfig(int port, String extraInfo) {
-    final String uri = "http://localhost:" + port;
+  @Test
+  public void testJsonUpload() throws Exception {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "interactive_report", temporaryFolder);
+    workspace.setUp();
+
+    try (HttpdForTests httpd = new HttpdForTests()) {
+      httpd.addHandler(
+          new AbstractHandler() {
+            @Override
+            public void handle(
+                String s,
+                Request request,
+                HttpServletRequest httpServletRequest,
+                HttpServletResponse httpResponse) throws IOException, ServletException {
+              httpResponse.setStatus(200);
+              if (request.getUri().getPath().equals("/status.php")) {
+                return;
+              }
+
+              RageJsonResponse json = RageJsonResponse.of(
+                  /* isRequestSuccessful */ true,
+                  /* errorMessage */ Optional.empty(),
+                  /* rageUrl */ Optional.of("http://remoteUrlToVisit"),
+                  /* message */ Optional.of("This is supposed to be JSON."));
+              try (DataOutputStream out =
+                       new DataOutputStream(httpResponse.getOutputStream())) {
+                objectMapper.writeValue(out, json);
+              }
+            }
+          });
+      httpd.start();
+
+      RageConfig rageConfig = createRageConfig(
+          httpd.getRootUri().getPort(),
+          "",
+          RageProtocolVersion.JSON);
+      ProjectFilesystem filesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+      ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
+      Clock clock = new DefaultClock();
+      DefectReporter reporter = new DefaultDefectReporter(
+          filesystem,
+          objectMapper,
+          rageConfig,
+          BuckEventBusFactory.newInstance(clock),
+          clock);
+      AutomatedReport automatedReport = new AutomatedReport(
+          reporter,
+          filesystem,
+          objectMapper,
+          new CapturingPrintStream(),
+          TestBuildEnvironmentDescription.INSTANCE,
+          VcsInfoCollector.create(new NoOpCmdLineInterface()),
+          rageConfig,
+          Optional::empty);
+
+      DefectSubmitResult submitReport = automatedReport.collectAndSubmitResult().get();
+      assertEquals("http://remoteUrlToVisit", submitReport.getReportSubmitLocation().get());
+      assertEquals("This is supposed to be JSON.", submitReport.getReportSubmitMessage().get());
+    }
+  }
+
+  private RageConfig createRageConfig(
+      int port,
+      String extraInfo,
+      RageProtocolVersion version) {
     BuckConfig buckConfig = FakeBuckConfig.builder()
         .setSections(
             ImmutableMap.of(
                 RageConfig.RAGE_SECTION,
                 ImmutableMap.of(
                     RageConfig.REPORT_UPLOAD_PATH_FIELD, UPLOAD_PATH,
-                    "slb_server_pool", uri,
+                    RageConfig.PROTOCOL_VERSION_FIELD, version.name(),
+                    "slb_server_pool", "http://localhost:" + port,
                     RageConfig.EXTRA_INFO_COMMAND_FIELD, extraInfo)
         ))
         .build();
@@ -266,6 +349,7 @@ public class RageCommandIntegrationTest {
     public DefectSubmitResult submitReport(DefectReport defectReport) throws IOException {
       this.defectReport = defectReport;
       return DefectSubmitResult.builder()
+          .setRequestProtocol(RageProtocolVersion.SIMPLE)
           .setReportSubmitLocation("")
           .build();
     }

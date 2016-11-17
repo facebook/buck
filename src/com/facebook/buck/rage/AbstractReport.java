@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rage;
 
+import static com.facebook.buck.rage.AbstractRageConfig.RageProtocolVersion;
+
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigPaths;
@@ -149,22 +151,37 @@ public abstract class AbstractReport {
           "commands except buck launch & buck rage.");
       return;
     }
-
-    String reportLocation = defectSubmitResult.get().getReportSubmitLocation();
-    if (defectSubmitResult.get().getUploadSuccess().isPresent()) {
-      if (defectSubmitResult.get().getUploadSuccess().get()) {
-        output.printf(
-            "Uploading report to %s\n%s",
-            reportLocation,
-            defectSubmitResult.get().getReportSubmitMessage().get());
+    DefectSubmitResult result = defectSubmitResult.get();
+    // If request has an empty isRequestSuccessful, it means we did not try to upload it somewhere.
+    if (!result.getIsRequestSuccessful().isPresent()) {
+      if (result.getReportSubmitLocation().isPresent()) {
+        output.printf("Report saved at %s\n", result.getReportSubmitLocation().get());
       } else {
         output.printf(
-            "%s\nReport saved at %s\n",
-            defectSubmitResult.get().getReportSubmitErrorMessage().get(),
-            reportLocation);
+            "=> Failed to save report locally. Reason: %s\n",
+            result.getReportSubmitErrorMessage().orElse("Unknown"));
       }
+      return;
+    }
+
+    if (result.getIsRequestSuccessful().get()) {
+     if (result.getRequestProtocol().equals(RageProtocolVersion.SIMPLE)) {
+       output.printf("%s", result.getReportSubmitMessage().get());
+     } else {
+       String message = "=> Upload was successful.\n";
+       if (result.getReportSubmitLocation().isPresent()) {
+         message += "=> Report was uploaded to " + result.getReportSubmitLocation().get() + "\n";
+       }
+       if (result.getReportSubmitMessage().isPresent()) {
+         message += "=> Full Response was: " + result.getReportSubmitMessage().get() + "\n";
+       }
+       output.print(message);
+     }
     } else {
-      output.printf("Report saved at %s\n", reportLocation);
+      output.printf(
+          "=> Failed to upload report because of error: %s.\n=> Report was saved locally at %s\n",
+          result.getReportSubmitErrorMessage().get(),
+          result.getReportSubmitLocation());
     }
   }
 

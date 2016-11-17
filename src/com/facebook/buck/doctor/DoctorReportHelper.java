@@ -235,18 +235,20 @@ public class DoctorReportHelper {
   }
 
   public final void presentRageResult(Optional<DefectSubmitResult> result) {
-    String reportLocation = result.get().getReportSubmitLocation();
-    if (result.get().getUploadSuccess().isPresent()) {
-      if (result.get().getUploadSuccess().get()) {
-        console.getStdOut().print(result.get().getReportSubmitMessage().get());
-      } else {
+    if (!result.isPresent()) {
+      console.getStdOut().println("Failed to generate a rage DefectSubmitResult.");
+      return;
+    }
+
+    DefectSubmitResult submitResult = result.get();
+    if (submitResult.getIsRequestSuccessful().isPresent()) {
+      if (submitResult.getReportSubmitLocation().isPresent()) {
         console.getStdOut().printf(
-            "Upload failed (%s)\nReport saved at %s\n",
-            result.get().getReportSubmitErrorMessage().get(),
-            reportLocation);
+            "Report was uploaded to %s.",
+            submitResult.getReportSubmitLocation().get());
       }
     } else {
-      console.getStdOut().printf("Report saved at %s\n", reportLocation);
+      console.getStdOut().printf("Report saved at %s\n", submitResult.getReportSubmitLocation());
     }
   }
 

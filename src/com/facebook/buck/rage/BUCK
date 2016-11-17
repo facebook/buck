@@ -1,6 +1,7 @@
 CONFIG_SRCS = [
   'AbstractRageConfig.java',
   'AbstractUserLocalConfiguration.java',
+  'AbstractRageJsonResponse.java'
 ]
 
 java_immutables_library(
@@ -8,6 +9,7 @@ java_immutables_library(
   srcs = CONFIG_SRCS,
   immutable_types = [
     'RageConfig',
+    'RageJsonResponse',
   ],
   autodeps = True,
   visibility = [

@@ -9,7 +9,8 @@
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/slb:slb",
       "//src/com/facebook/buck/util/immutables:immutables",
-      "//third-party/java/guava:guava"
+      "//third-party/java/guava:guava",
+      "//third-party/java/jackson:jackson-databind"
     ]
   },
   "rage" : {

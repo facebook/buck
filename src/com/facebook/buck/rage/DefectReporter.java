@@ -36,10 +36,33 @@ public interface DefectReporter {
   @Value.Immutable
   @BuckStyleImmutable
   interface AbstractDefectSubmitResult {
-    String getReportSubmitLocation();
+
+    /**
+     * If value is empty then no request was made and report was saved locally.
+     * @return if request was successful.
+     */
+    Optional<Boolean> getIsRequestSuccessful();
+
+    /**
+     * Returns the protocol version of the request based on
+     * {@link AbstractRageConfig.RageProtocolVersion}.
+     */
+    AbstractRageConfig.RageProtocolVersion getRequestProtocol();
+
+    /**
+     * @return The location where the report was saved, it can be a remote link or a local path
+     */
+    Optional<String> getReportSubmitLocation();
+
+    /**
+     * @return the content of the response.
+     */
     Optional<String> getReportSubmitMessage();
+
+    /**
+     * @return if an error occurred it will have the error.
+     */
     Optional<String> getReportSubmitErrorMessage();
-    Optional<Boolean> getUploadSuccess();
   }
 
   @Value.Immutable

@@ -86,7 +86,7 @@ public class DefectReporterTest {
             .setUserLocalConfiguration(TEST_USER_LOCAL_CONFIGURATION)
             .build());
 
-    Path reportPath = filesystem.resolve(defectSubmitResult.getReportSubmitLocation());
+    Path reportPath = filesystem.resolve(defectSubmitResult.getReportSubmitLocation().get());
     ZipInspector inspector = new ZipInspector(reportPath);
     inspector.assertFileContents(fileToBeIncluded, fileToBeIncludedContent);
   }
@@ -110,7 +110,7 @@ public class DefectReporterTest {
             .setUserLocalConfiguration(TEST_USER_LOCAL_CONFIGURATION)
             .build());
 
-    Path reportPath = filesystem.resolve(defectSubmitResult.getReportSubmitLocation());
+    Path reportPath = filesystem.resolve(defectSubmitResult.getReportSubmitLocation().get());
     try (ZipFile zipFile = new ZipFile(reportPath.toFile())) {
       ZipEntry entry = zipFile.getEntry("report.json");
       JsonNode reportNode = objectMapper.readTree(zipFile.getInputStream(entry));

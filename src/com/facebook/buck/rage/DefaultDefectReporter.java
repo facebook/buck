@@ -18,7 +18,6 @@ package com.facebook.buck.rage;
 
 import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
 
-import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.CommandThreadFactory;
@@ -27,6 +26,7 @@ import com.facebook.buck.slb.HttpResponse;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.RetryingHttpService;
+import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.zip.CustomZipEntry;
 import com.facebook.buck.zip.CustomZipOutputStream;
@@ -64,6 +64,7 @@ public class DefaultDefectReporter implements DefectReporter {
   private static final String REPORT_FILE_NAME = "report.json";
   private static final String DIFF_FILE_NAME = "changes.diff";
   private static final int HTTP_SUCCESS_CODE = 200;
+  private static final String REQUEST_PROTOCOL_VERSION = "x-buck-protocol-version";
 
   private final ProjectFilesystem filesystem;
   private final ObjectMapper objectMapper;
@@ -119,8 +120,9 @@ public class DefaultDefectReporter implements DefectReporter {
   @Override
   public DefectSubmitResult submitReport(DefectReport defectReport) throws IOException {
     DefectSubmitResult.Builder defectSubmitResult = DefectSubmitResult.builder();
-
+    defectSubmitResult.setRequestProtocol(rageConfig.getProtocolVersion());
     Optional<SlbBuckConfig>  frontendConfig = rageConfig.getFrontendConfig();
+
     if (frontendConfig.isPresent()) {
       Optional<ClientSideSlb> slb =
           frontendConfig.get().tryCreatingClientSideSlb(
@@ -131,8 +133,8 @@ public class DefaultDefectReporter implements DefectReporter {
         try {
           return uploadReport(defectReport, defectSubmitResult, slb.get());
         } catch (IOException e) {
+          defectSubmitResult.setIsRequestSuccessful(false);
           defectSubmitResult.setReportSubmitErrorMessage(e.getMessage());
-          defectSubmitResult.setUploadSuccess(false);
         }
       }
     }
@@ -145,7 +147,9 @@ public class DefaultDefectReporter implements DefectReporter {
     try (OutputStream outputStream = filesystem.newFileOutputStream(defectReportPath)) {
       writeReport(defectReport, outputStream);
     }
+
     return defectSubmitResult
+        .setIsRequestSuccessful(Optional.empty())
         .setReportSubmitLocation(defectReportPath.toString())
         .build();
 }
@@ -187,6 +191,9 @@ public class DefaultDefectReporter implements DefectReporter {
 
     try {
       Request.Builder requestBuilder = new Request.Builder();
+      requestBuilder.addHeader(
+          REQUEST_PROTOCOL_VERSION,
+          rageConfig.getProtocolVersion().name().toLowerCase());
       requestBuilder.post(
           new RequestBody() {
             @Override
@@ -209,11 +216,24 @@ public class DefaultDefectReporter implements DefectReporter {
       }
 
       if (response.code() == HTTP_SUCCESS_CODE) {
-        return defectSubmitResult
-            .setReportSubmitLocation(response.requestUrl())
-            .setReportSubmitMessage(responseBody)
-            .setUploadSuccess(true)
-            .build();
+        defectSubmitResult.setIsRequestSuccessful(true);
+        if (rageConfig.getProtocolVersion().equals(AbstractRageConfig.RageProtocolVersion.SIMPLE)) {
+          return defectSubmitResult
+              .setReportSubmitMessage(responseBody)
+              .setReportSubmitLocation(responseBody)
+              .build();
+        } else {
+          // Decode Json response.
+          RageJsonResponse json = objectMapper.readValue(
+              responseBody.getBytes(Charsets.UTF_8),
+              RageJsonResponse.class);
+          return defectSubmitResult
+              .setIsRequestSuccessful(json.getRequestSuccessful())
+              .setReportSubmitErrorMessage(json.getErrorMessage())
+              .setReportSubmitMessage(json.getMessage())
+              .setReportSubmitLocation(json.getRageUrl())
+              .build();
+        }
       } else {
         throw new IOException(
             String.format(
