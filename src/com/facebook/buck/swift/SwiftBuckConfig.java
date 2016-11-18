@@ -26,7 +26,7 @@ import java.util.Optional;
  */
 public class SwiftBuckConfig {
   private static final String SECTION_NAME = "swift";
-  private static final String COMPILE_FLAGS_NAME = "compile_flags";
+  private static final String COMPILER_FLAGS_NAME = "compiler_flags";
 
   private final BuckConfig delegate;
 
@@ -35,7 +35,7 @@ public class SwiftBuckConfig {
   }
 
   public Optional<Iterable<String>> getFlags() {
-    Optional<String> value = delegate.getValue(SECTION_NAME, COMPILE_FLAGS_NAME);
+    Optional<String> value = delegate.getValue(SECTION_NAME, COMPILER_FLAGS_NAME);
     return value.map(input -> Splitter.on(" ").split(input.trim()));
   }
 

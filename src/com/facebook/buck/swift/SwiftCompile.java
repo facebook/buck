@@ -82,6 +82,9 @@ class SwiftCompile
   @AddToRuleKey
   private final ImmutableSortedSet<SourcePath> srcs;
 
+  @AddToRuleKey
+  private final ImmutableList<String> compilerFlags;
+
   private final Path headerPath;
   private final CxxPlatform cxxPlatform;
   private final ImmutableSet<FrameworkPath> frameworks;
@@ -103,6 +106,7 @@ class SwiftCompile
       String moduleName,
       Path outputPath,
       Iterable<SourcePath> srcs,
+      ImmutableList<String> compilerFlags,
       Optional<Boolean> enableObjcInterop,
       Optional<SourcePath> bridgingHeader) throws NoSuchBuildTargetException {
     super(params, resolver);
@@ -121,6 +125,7 @@ class SwiftCompile
     this.objectPath = outputPath.resolve(escapedModuleName + ".o");
 
     this.srcs = ImmutableSortedSet.copyOf(srcs);
+    this.compilerFlags = compilerFlags;
     this.enableObjcInterop = enableObjcInterop.orElse(true);
     this.bridgingHeader = bridgingHeader;
     this.hasMainEntry = FluentIterable.from(srcs).firstMatch(
@@ -186,6 +191,7 @@ class SwiftCompile
         objectPath.toString(),
         "-emit-objc-header-path",
         headerPath.toString());
+    compilerCommand.addAll(compilerFlags);
     for (SourcePath sourcePath : srcs) {
       compilerCommand.add(getResolver().getRelativePath(sourcePath).toString());
     }
