@@ -58,6 +58,12 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
       "thumbs.db",
       "picasa.ini");
 
+  private final boolean isGrayscaleImageProcessingEnabled;
+
+  public AndroidResourceDescription(boolean enableGrayscaleImageProcessing) {
+    isGrayscaleImageProcessingEnabled = enableGrayscaleImageProcessing;
+  }
+
   @Override
   public Arg createUnpopulatedConstructorArg() {
     return new Arg();
@@ -111,7 +117,8 @@ public class AndroidResourceDescription implements Description<AndroidResourceDe
         assetsInputsAndKey.getSecond(),
         args.manifest.orElse(null),
         args.hasWhitelistedStrings.orElse(false),
-        args.resourceUnion.orElse(false));
+        args.resourceUnion.orElse(false),
+        isGrayscaleImageProcessingEnabled);
   }
 
   private Pair<ImmutableSortedSet<SourcePath>, Optional<SourcePath>> collectInputFilesAndKey(

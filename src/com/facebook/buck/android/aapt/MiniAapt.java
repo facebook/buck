@@ -96,6 +96,7 @@ public class MiniAapt implements Step {
   private final ImmutableSet<Path> pathsToSymbolsOfDeps;
   private final AaptResourceCollector resourceCollector;
   private final boolean resourceUnion;
+  private final boolean isGrayscaleImageProcessingEnabled;
 
   public MiniAapt(
       SourcePathResolver resolver,
@@ -109,7 +110,8 @@ public class MiniAapt implements Step {
         resDirectory,
         pathToTextSymbolsFile,
         pathsToSymbolsOfDeps,
-        false);
+        /* resourceUnion */ false,
+        /* isGrayscaleImageProcessingEnabled */ false);
   }
 
   public MiniAapt(
@@ -118,7 +120,8 @@ public class MiniAapt implements Step {
       SourcePath resDirectory,
       Path pathToTextSymbolsFile,
       ImmutableSet<Path> pathsToSymbolsOfDeps,
-      boolean resourceUnion) {
+      boolean resourceUnion,
+      boolean isGrayscaleImageProcessingEnabled) {
     this.resolver = resolver;
     this.filesystem = filesystem;
     this.resDirectory = resDirectory;
@@ -126,6 +129,7 @@ public class MiniAapt implements Step {
     this.pathsToSymbolsOfDeps = pathsToSymbolsOfDeps;
     this.resourceCollector = new AaptResourceCollector();
     this.resourceUnion = resourceUnion;
+    this.isGrayscaleImageProcessingEnabled = isGrayscaleImageProcessingEnabled;
   }
 
   private static XPathExpression createExpression(String expressionStr) {
@@ -311,6 +315,7 @@ public class MiniAapt implements Step {
     String resourceName = dotIndex != -1 ? filename.substring(0, dotIndex) : filename;
 
     // Look into the XML file.
+    boolean isGrayscaleImage = false;
     boolean isCustomDrawable = false;
     if (filename.endsWith(".xml")) {
       try (InputStream stream = filesystem.newFileInputStream(resourceFile)) {
@@ -318,12 +323,16 @@ public class MiniAapt implements Step {
         Element root = dom.getDocumentElement();
         isCustomDrawable = root.getNodeName().startsWith(CUSTOM_DRAWABLE_PREFIX);
       }
+    } else if (isGrayscaleImageProcessingEnabled) {
+      isGrayscaleImage = filename.endsWith(".g.png");
     }
 
     if (isCustomDrawable) {
       resourceCollector.addCustomDrawableResourceIfNotPresent(
           RType.DRAWABLE,
           resourceName);
+    } else if (isGrayscaleImage) {
+      resourceCollector.addGrayscaleImageResourceIfNotPresent(RType.DRAWABLE, resourceName);
     } else {
       resourceCollector.addIntResourceIfNotPresent(
           RType.DRAWABLE,

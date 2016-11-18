@@ -30,7 +30,7 @@ public class AndroidResourceBuilder
     extends AbstractNodeBuilder<AndroidResourceDescription.Arg, AndroidResourceDescription> {
 
   private AndroidResourceBuilder(BuildTarget target) {
-    super(new AndroidResourceDescription(), target);
+    super(new AndroidResourceDescription(false), target);
   }
 
   public static AndroidResourceBuilder createBuilder(BuildTarget target) {

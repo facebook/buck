@@ -248,6 +248,7 @@ public class MergeAndroidResourcesStep implements Step {
         writer.format("public class %s {\n", rName);
 
         ImmutableList.Builder<String> customDrawablesBuilder = ImmutableList.builder();
+        ImmutableList.Builder<String> grayscaleImagesBuilder = ImmutableList.builder();
         RDotTxtEntry.RType lastType = null;
 
         for (RDotTxtEntry res : packageToResources.get(rDotJavaPackage)) {
@@ -272,8 +273,12 @@ public class MergeAndroidResourcesStep implements Step {
               res.name,
               res.idValue);
 
-          if (type == RDotTxtEntry.RType.DRAWABLE && res.custom) {
+          if (type == RDotTxtEntry.RType.DRAWABLE &&
+              res.customType == RDotTxtEntry.CustomDrawableType.CUSTOM) {
             customDrawablesBuilder.add(res.idValue);
+          } else if (type == RDotTxtEntry.RType.DRAWABLE &&
+              res.customType == RDotTxtEntry.CustomDrawableType.GRAYSCALE_IMAGE) {
+            grayscaleImagesBuilder.add(res.idValue);
           }
         }
 
@@ -288,6 +293,14 @@ public class MergeAndroidResourcesStep implements Step {
           // Add a new field for the custom drawables.
           writer.format("  public static final int[] custom_drawables = ");
           writer.format("{ %s };\n", Joiner.on(",").join(customDrawables));
+          writer.format("\n");
+        }
+
+        ImmutableList<String> grayscaleImages = grayscaleImagesBuilder.build();
+        if (grayscaleImages.size() > 0) {
+          // Add a new field for the custom drawables.
+          writer.format("  public static final int[] grayscale_images = ");
+          writer.format("{ %s };\n", Joiner.on(",").join(grayscaleImages));
           writer.format("\n");
         }
 

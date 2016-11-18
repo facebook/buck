@@ -957,6 +957,13 @@ public class BuckConfig implements ConfigPathGetter {
         false);
   }
 
+  public boolean isGrayscaleImageProcessingEnabled() {
+    return config.getBooleanValue(
+        RESOURCES_SECTION_HEADER,
+        "resource_grayscale_enabled",
+        false);
+  }
+
   public ImmutableMap<String, ResourceAmounts> getResourceAmountsPerRuleType() {
     ImmutableMap.Builder<String, ResourceAmounts> result = ImmutableMap.builder();
     ImmutableMap<String, String> entries = getEntriesForSection(RESOURCES_PER_RULE_SECTION_HEADER);

@@ -135,6 +135,8 @@ public class AndroidResource extends AbstractBuildRule
   @AddToRuleKey
   private final boolean resourceUnion;
 
+  private final boolean isGrayscaleImageProcessingEnabled;
+
   private final ImmutableSortedSet<BuildRule> deps;
 
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
@@ -176,7 +178,8 @@ public class AndroidResource extends AbstractBuildRule
       @Nullable SourcePath manifestFile,
       Supplier<ImmutableSortedSet<? extends SourcePath>> symbolFilesFromDeps,
       boolean hasWhitelistedStrings,
-      boolean resourceUnion) {
+      boolean resourceUnion,
+      boolean isGrayscaleImageProcessingEnabled) {
     super(
         buildRuleParams.appendExtraDeps(
             Suppliers.compose(resolver::filterBuildRuleInputs, symbolFilesFromDeps)),
@@ -231,6 +234,7 @@ public class AndroidResource extends AbstractBuildRule
             " was requested before it was made available.");
       }
     };
+    this.isGrayscaleImageProcessingEnabled = isGrayscaleImageProcessingEnabled;
   }
 
   public AndroidResource(
@@ -259,7 +263,8 @@ public class AndroidResource extends AbstractBuildRule
         additionalAssetsKey,
         manifestFile,
         hasWhitelistedStrings,
-        false);
+        /* resourceUnion */ false,
+        /* isGrayscaleImageProcessingEnabled */ false);
   }
 
   public AndroidResource(
@@ -275,7 +280,8 @@ public class AndroidResource extends AbstractBuildRule
       Optional<SourcePath> additionalAssetsKey,
       @Nullable SourcePath manifestFile,
       boolean hasWhitelistedStrings,
-      boolean resourceUnion) {
+      boolean resourceUnion,
+      boolean isGrayscaleImageProcessingEnabled) {
     this(
         buildRuleParams,
         resolver,
@@ -294,7 +300,8 @@ public class AndroidResource extends AbstractBuildRule
             .transform(HasAndroidResourceDeps::getPathToTextSymbolsFile)
             .toSortedSet(Ordering.natural()),
         hasWhitelistedStrings,
-        resourceUnion);
+        resourceUnion,
+        isGrayscaleImageProcessingEnabled);
   }
 
   @Override
@@ -362,7 +369,8 @@ public class AndroidResource extends AbstractBuildRule
             Preconditions.checkNotNull(res),
             Preconditions.checkNotNull(pathToTextSymbolsFile),
             pathsToSymbolsOfDeps,
-            resourceUnion));
+            resourceUnion,
+            isGrayscaleImageProcessingEnabled));
 
     buildableContext.recordArtifact(Preconditions.checkNotNull(pathToTextSymbolsFile));
 

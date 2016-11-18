@@ -633,7 +633,7 @@ public class KnownBuildRuleTypes {
     builder.register(new AndroidManifestDescription());
     builder.register(new AndroidPrebuiltAarDescription(defaultJavacOptions));
     builder.register(new AndroidReactNativeLibraryDescription(reactNativeBuckConfig));
-    builder.register(new AndroidResourceDescription());
+    builder.register(new AndroidResourceDescription(config.isGrayscaleImageProcessingEnabled()));
     builder.register(new ApkGenruleDescription());
     builder.register(new AppleAssetCatalogDescription());
     builder.register(
