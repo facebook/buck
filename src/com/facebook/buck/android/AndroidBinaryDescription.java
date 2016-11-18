@@ -55,10 +55,10 @@ import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.RichStream;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -266,9 +266,9 @@ public class AndroidBinaryDescription
 
       ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex = builder.build();
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex =
-          FluentIterable.from(buildRulesToExcludeFromDex)
+          RichStream.from(buildRulesToExcludeFromDex)
               .filter(JavaLibrary.class)
-              .toSortedSet(HasBuildTarget.BUILD_TARGET_COMPARATOR);
+              .toImmutableSortedSet(HasBuildTarget.BUILD_TARGET_COMPARATOR);
 
       SourcePathResolver pathResolver = new SourcePathResolver(resolver);
       return new AndroidBinary(

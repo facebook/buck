@@ -77,9 +77,9 @@ public final class MoreCollectors {
    * @return a {@code Collector} that builds an {@code ImmutableSortedSet}.
    */
   public static <T> Collector<T, ?, ImmutableSortedSet<T>> toImmutableSortedSet(
-      Comparator<T> ordering) {
+      Comparator<? super T> ordering) {
     return Collector.of(
-        () -> ImmutableSortedSet.orderedBy(ordering),
+        () -> new ImmutableSortedSet.Builder<T>(ordering),
         ImmutableSortedSet.Builder::add,
         (left, right) -> left.addAll(right.build()),
         ImmutableSortedSet.Builder::build);

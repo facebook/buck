@@ -108,7 +108,7 @@ public interface RichStream<T> extends Stream<T> {
     return collect(MoreCollectors.toImmutableSet());
   }
 
-  default ImmutableSortedSet<T> toImmutableSortedSet(Comparator<T> ordering) {
+  default ImmutableSortedSet<T> toImmutableSortedSet(Comparator<? super T> ordering) {
     return collect(MoreCollectors.toImmutableSortedSet(ordering));
   }
 
