@@ -136,9 +136,11 @@ CxxCompilationDatabaseIntegrationTest {
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
         CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
     assertEquals(1, fileToEntry.size());
+    String path =
+        sandboxSources ? "buck-out/gen/binary_with_dep#default,sandbox/foo.cpp" : "foo.cpp";
     assertHasEntry(
         fileToEntry,
-        "foo.cpp",
+        path,
         new ImmutableList.Builder<String>()
             .add(COMPILER_PATH)
             .add("-I")
@@ -160,7 +162,7 @@ CxxCompilationDatabaseIntegrationTest {
                             ImmutableFlavor.of("compile-" + sanitize("foo.cpp.o"))),
                         "%s/foo.cpp.o")
                     .toString())
-            .add(rootPath.resolve(Paths.get("foo.cpp")).toRealPath().toString())
+            .add(rootPath.resolve(Paths.get(path)).toString())
             .build());
   }
 
@@ -263,9 +265,11 @@ CxxCompilationDatabaseIntegrationTest {
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
         CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
     assertEquals(1, fileToEntry.size());
+    String path =
+        sandboxSources ? "buck-out/gen/test#default,sandbox/test.cpp" : "test.cpp";
     assertHasEntry(
         fileToEntry,
-        "test.cpp",
+        path,
         new ImmutableList.Builder<String>()
             .add(COMPILER_PATH)
             .add("-fPIC")
@@ -289,7 +293,7 @@ CxxCompilationDatabaseIntegrationTest {
                             ImmutableFlavor.of("compile-pic-" + sanitize("test.cpp.o"))),
                         "%s/test.cpp.o")
                     .toString())
-            .add(rootPath.resolve(Paths.get("test.cpp")).toRealPath().toString())
+            .add(rootPath.resolve(Paths.get(path)).toString())
             .build());
   }
 
@@ -328,9 +332,11 @@ CxxCompilationDatabaseIntegrationTest {
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
         CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
     assertEquals(1, fileToEntry.size());
+    String path =
+        sandboxSources ? "buck-out/gen/test#default,sandbox/test.cpp" : "test.cpp";
     assertHasEntry(
         fileToEntry,
-        "test.cpp",
+        path,
         new ImmutableList.Builder<String>()
             .add(COMPILER_PATH)
             .add("-fPIC")
@@ -354,7 +360,7 @@ CxxCompilationDatabaseIntegrationTest {
                             ImmutableFlavor.of("compile-pic-" + sanitize("test.cpp.o"))),
                         "%s/test.cpp.o")
                     .toString())
-            .add(rootPath.resolve(Paths.get("test.cpp")).toRealPath().toString())
+            .add(rootPath.resolve(Paths.get(path)).toString())
             .build());
   }
 

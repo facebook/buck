@@ -1,6 +1,6 @@
 cxx_library(
   name = 'foo',
-  headers = [
+  exported_headers = [
     'foo.h',
   ],
   srcs = [

@@ -272,7 +272,10 @@ public class PythonBinaryDescriptionTest {
   public void runtimeDepOnDeps() throws Exception {
     for (PythonBuckConfig.PackageStyle packageStyle : PythonBuckConfig.PackageStyle.values()) {
       BuildRuleResolver resolver =
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+          new BuildRuleResolver(
+              TargetGraphFactory.newInstance(
+                  new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep#sandbox")).build()),
+              new DefaultTargetNodeToBuildRuleTransformer());
       BuildRule cxxBinary =
           new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
               .build(resolver);

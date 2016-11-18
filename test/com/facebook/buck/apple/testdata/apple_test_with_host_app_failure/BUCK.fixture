@@ -7,8 +7,7 @@ apple_resource(
 apple_binary(
     name = 'TestHostBinary',
     srcs = ['TestHostApp.m'],
-    # TODO(bhamiltoncx): We should be able to make this a private header
-    exported_headers = ['TestHostApp.h'],
+    headers = ['TestHostApp.h'],
     frameworks = [
         '$SDKROOT/System/Library/Frameworks/Foundation.framework',
         '$SDKROOT/System/Library/Frameworks/UIKit.framework',
@@ -21,6 +20,7 @@ apple_bundle(
     deps = [':TestHostAppResources'],
     extension = 'app',
     info_plist = 'TestHostApp.plist',
+    tests = [':AppTest'],
 )
 
 apple_test(

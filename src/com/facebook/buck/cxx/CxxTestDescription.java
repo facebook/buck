@@ -124,6 +124,15 @@ public class CxxTestDescription implements
       );
     }
 
+    if (params.getBuildTarget().getFlavors()
+        .contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
+      return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
+          resolver,
+          args,
+          cxxPlatform,
+          params);
+    }
+
     // Generate the link rule that builds the test binary.
     final CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(

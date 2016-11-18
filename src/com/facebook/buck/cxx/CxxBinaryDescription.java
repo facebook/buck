@@ -220,6 +220,14 @@ public class CxxBinaryDescription implements
           new CxxInferSourceFilter(inferBuckConfig));
     }
 
+    if (flavors.contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)) {
+      return CxxDescriptionEnhancer.createSandboxTreeBuildRule(
+          resolver,
+          args,
+          cxxPlatform,
+          params);
+    }
+
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
             params,

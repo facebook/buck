@@ -552,6 +552,13 @@ public class ProjectWorkspace {
     writeContentsToPath("[cache]\n  mode = dir", ".buckconfig.local");
   }
 
+  public void setupCxxSandboxing(boolean sandboxSources) throws IOException {
+    writeContentsToPath(
+        "\n[cxx]\n  sandbox_sources = " + sandboxSources,
+        ".buckconfig.local",
+        StandardOpenOption.APPEND);
+  }
+
   public void copyFile(String source, String dest) throws IOException {
     Path destination = getPath(dest);
     Files.deleteIfExists(destination);
@@ -574,9 +581,11 @@ public class ProjectWorkspace {
     writeContentsToPath(fileContents, pathRelativeToProjectRoot);
   }
 
-  public void writeContentsToPath(String contents, String pathRelativeToProjectRoot)
-      throws IOException {
-    Files.write(getPath(pathRelativeToProjectRoot), contents.getBytes(UTF_8));
+  public void writeContentsToPath(
+      String contents,
+      String pathRelativeToProjectRoot,
+      OpenOption... options) throws IOException {
+    Files.write(getPath(pathRelativeToProjectRoot), contents.getBytes(UTF_8), options);
   }
 
   /**

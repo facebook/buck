@@ -20,9 +20,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.BuildRule;
@@ -36,6 +38,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -48,17 +51,66 @@ import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
 
 import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 
+@RunWith(Parameterized.class)
 public class CxxBinaryDescriptionTest {
+
+  @Parameterized.Parameters(name = "{0}")
+  public static Collection<Object[]> data() {
+    return ImmutableList.of(
+        new Object[] {"sandbox_sources=false"},
+        new Object[] {"sandbox_sources=true"}
+    );
+  }
+
+  private final CxxBuckConfig cxxBuckConfig;
+
+  public CxxBinaryDescriptionTest(String sandboxConfig) {
+    this.cxxBuckConfig = new CxxBuckConfig(
+        FakeBuckConfig.builder().setSections("[cxx]", sandboxConfig).build());
+  }
+
+  private TargetGraph prepopulateWithSandbox(BuildTarget libTarget) {
+    if (cxxBuckConfig.sandboxSources()) {
+      return TargetGraphFactory.newInstance(mkSandboxNode(libTarget));
+    } else {
+      return TargetGraph.EMPTY;
+    }
+  }
+
+  private TargetNode<CxxBinaryDescription.Arg, ?> mkSandboxNode(BuildTarget libTarget) {
+    Optional<Map.Entry<Flavor, CxxLibraryDescription.Type>> type =
+        CxxLibraryDescription.getLibType(libTarget);
+    Set<Flavor> flavors = Sets.newHashSet(libTarget.getFlavors());
+    if (type.isPresent()) {
+      flavors.remove(type.get().getKey());
+    }
+    BuildTarget target = BuildTarget
+        .builder(libTarget.getUnflavoredBuildTarget())
+        .addAllFlavors(flavors)
+        .addFlavors(CxxLibraryDescription.Type.SANDBOX_TREE.getFlavor())
+        .build();
+    return new CxxBinaryBuilder(target, cxxBuckConfig).build();
+  }
 
   @Test
   public void createBuildRule() throws Exception {
+    Assume.assumeFalse("this test is not for sandboxing", cxxBuckConfig.sandboxSources());
+
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     CxxPlatform cxxPlatform = CxxBinaryBuilder.createDefaultPlatform();
 
@@ -97,7 +149,7 @@ public class CxxBinaryDescriptionTest {
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     CxxBinaryBuilder cxxBinaryBuilder =
-        new CxxBinaryBuilder(target)
+        new CxxBinaryBuilder(target, cxxBuckConfig)
               .setSrcs(
                   ImmutableSortedSet.of(
                       SourceWithFlags.of(new FakeSourcePath("test/bar.cpp")),
@@ -210,9 +262,11 @@ public class CxxBinaryDescriptionTest {
   public void staticPicLinkStyle() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(
+            prepopulateWithSandbox(target),
+            new DefaultTargetNodeToBuildRuleTransformer());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    new CxxBinaryBuilder(target)
+    new CxxBinaryBuilder(target, cxxBuckConfig)
         .setSrcs(
             ImmutableSortedSet.of(
                 SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))))
@@ -224,14 +278,16 @@ public class CxxBinaryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildTarget leafBinaryTarget = BuildTargetFactory.newInstance("//:dep");
-    CxxBinaryBuilder leafCxxBinaryBuilder = new CxxBinaryBuilder(leafBinaryTarget);
+    CxxBinaryBuilder leafCxxBinaryBuilder =
+        new CxxBinaryBuilder(leafBinaryTarget, cxxBuckConfig);
 
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:lib");
     CxxLibraryBuilder cxxLibraryBuilder =
         new CxxLibraryBuilder(libraryTarget).setDeps(ImmutableSortedSet.of(leafBinaryTarget));
 
     BuildTarget topLevelBinaryTarget = BuildTargetFactory.newInstance("//:bin");
-    CxxBinaryBuilder topLevelCxxBinaryBuilder = new CxxBinaryBuilder(topLevelBinaryTarget)
+    CxxBinaryBuilder topLevelCxxBinaryBuilder =
+        new CxxBinaryBuilder(topLevelBinaryTarget, cxxBuckConfig)
         .setDeps(ImmutableSortedSet.of(libraryTarget));
 
     BuildRuleResolver resolver =
@@ -252,14 +308,17 @@ public class CxxBinaryDescriptionTest {
 
   @Test
   public void linkerFlagsLocationMacro() throws Exception {
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(
+            prepopulateWithSandbox(target),
+            new DefaultTargetNodeToBuildRuleTransformer());
     Genrule dep =
         (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
             .build(resolver);
     CxxBinaryBuilder builder =
-        new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+        new CxxBinaryBuilder(target, cxxBuckConfig)
             .setLinkerFlags(ImmutableList.of("--linker-script=$(location //:dep)"));
     assertThat(
         builder.findImplicitDeps(),
@@ -276,14 +335,18 @@ public class CxxBinaryDescriptionTest {
 
   @Test
   public void platformLinkerFlagsLocationMacroWithMatch() throws Exception {
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(
+            prepopulateWithSandbox(target),
+            new DefaultTargetNodeToBuildRuleTransformer());
     Genrule dep =
         (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
             .build(resolver);
     CxxBinaryBuilder builder =
-        new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+        new CxxBinaryBuilder(target, cxxBuckConfig)
             .setPlatformLinkerFlags(
                 new PatternMatchedCollection.Builder<ImmutableList<String>>()
                     .add(
@@ -307,14 +370,17 @@ public class CxxBinaryDescriptionTest {
 
   @Test
   public void platformLinkerFlagsLocationMacroWithoutMatch() throws Exception {
+    BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+        new BuildRuleResolver(
+            prepopulateWithSandbox(target),
+            new DefaultTargetNodeToBuildRuleTransformer());
     Genrule dep =
         (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
             .build(resolver);
     CxxBinaryBuilder builder =
-        new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+        new CxxBinaryBuilder(target, cxxBuckConfig)
             .setPlatformLinkerFlags(
                 new PatternMatchedCollection.Builder<ImmutableList<String>>()
                     .add(
@@ -345,7 +411,8 @@ public class CxxBinaryDescriptionTest {
         new CxxBinaryBuilder(
             BuildTargetFactory
                 .newInstance("//:foo")
-                .withFlavors(platform.getFlavor(), ImmutableFlavor.of("shared")));
+                .withFlavors(platform.getFlavor(), ImmutableFlavor.of("shared")),
+            cxxBuckConfig);
     binaryBuilder
         .setLibraries(
             ImmutableSortedSet.of(
@@ -376,7 +443,8 @@ public class CxxBinaryDescriptionTest {
                 .withFlavors(
                     platform.getFlavor(),
                     ImmutableFlavor.of("shared"),
-                    StripStyle.ALL_SYMBOLS.getFlavor()));
+                    StripStyle.ALL_SYMBOLS.getFlavor()),
+            cxxBuckConfig);
     binaryBuilder
         .setSrcs(
             ImmutableSortedSet.of(

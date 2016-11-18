@@ -58,6 +58,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -68,6 +69,7 @@ import com.google.common.io.Files;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -203,7 +205,9 @@ public class CxxDescriptionEnhancer {
             untypedParams.getBuildTarget(),
             cxxPlatform.getFlavor());
     BuildRule rule = ruleResolver.requireRule(headerSymlinkTreeTarget);
-    Preconditions.checkState(rule instanceof SymlinkTree);
+    Preconditions.checkState(
+        rule instanceof SymlinkTree,
+        rule.getBuildTarget() + " " + rule.getClass().toString());
     return (SymlinkTree) rule;
   }
 
@@ -707,6 +711,15 @@ public class CxxDescriptionEnhancer {
                 FluentIterable.from(params.getDeps())
                     .filter(CxxPreprocessorDep.class::isInstance)));
 
+    Optional<SymlinkTree> sandboxTree = Optional.empty();
+    if (cxxBuckConfig.sandboxSources()) {
+      sandboxTree =
+          createSandboxTree(
+              params,
+              resolver,
+              cxxPlatform);
+    }
+
     // Generate and add all the build rules to preprocess and compile the source to the
     // resolver and get the `SourcePath`s representing the generated object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
@@ -728,7 +741,7 @@ public class CxxDescriptionEnhancer {
             linkStyle == Linker.LinkableDepType.STATIC ?
                 CxxSourceRuleFactory.PicType.PDC :
                 CxxSourceRuleFactory.PicType.PIC,
-            Optional.empty());
+            sandboxTree);
 
     // Build up the linker flags, which support macro expansion.
     ImmutableList<String> resolvedLinkerFlags =
@@ -1143,7 +1156,7 @@ public class CxxDescriptionEnhancer {
                 args.frameworks));
 
     Optional<SymlinkTree> sandboxTree = Optional.empty();
-    if (args.getClass().equals(CxxLibraryDescription.Arg.class) && cxxBuckConfig.sandboxSources()) {
+    if (cxxBuckConfig.sandboxSources()) {
       sandboxTree =
           createSandboxTree(
               params,
@@ -1286,6 +1299,53 @@ public class CxxDescriptionEnhancer {
     }
     throw new RuntimeException(
         String.format("Unsupported LinkableDepType: '%s'", linkableDepType));
+  }
+
+  public static SymlinkTree createSandboxTreeBuildRule(
+      BuildRuleResolver resolver,
+      LinkableCxxConstructorArg args,
+      CxxPlatform platform,
+      BuildRuleParams params) {
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    ImmutableCollection<SourcePath> privateHeaders = parseHeaders(
+        params.getBuildTarget(),
+        sourcePathResolver,
+        Optional.of(platform),
+        args).values();
+    ImmutableCollection<CxxSource> sources = parseCxxSources(
+        params.getBuildTarget(),
+        sourcePathResolver,
+        platform,
+        args).values();
+    HashMap<Path, SourcePath> links = new HashMap<>();
+    for (SourcePath headerPath : privateHeaders) {
+      links.put(
+          Paths.get(sourcePathResolver.getSourcePathName(params.getBuildTarget(), headerPath)),
+          headerPath);
+    }
+    if (args instanceof CxxLibraryDescription.Arg) {
+      ImmutableCollection<SourcePath> publicHeaders = CxxDescriptionEnhancer.parseExportedHeaders(
+          params.getBuildTarget(),
+          sourcePathResolver,
+          Optional.of(platform),
+          (CxxLibraryDescription.Arg) args).values();
+      for (SourcePath headerPath : publicHeaders) {
+        links.put(
+            Paths.get(sourcePathResolver.getSourcePathName(params.getBuildTarget(), headerPath)),
+            headerPath);
+      }
+    }
+    for (CxxSource source : sources) {
+      SourcePath sourcePath = source.getPath();
+      links.put(
+          Paths.get(sourcePathResolver.getSourcePathName(params.getBuildTarget(), sourcePath)),
+          sourcePath);
+    }
+    return createSandboxSymlinkTree(
+        params,
+        sourcePathResolver,
+        platform,
+        ImmutableMap.copyOf(links));
   }
 
   /**

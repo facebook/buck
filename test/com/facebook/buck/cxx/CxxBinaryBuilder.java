@@ -37,8 +37,26 @@ public class CxxBinaryBuilder
         target);
   }
 
+  public CxxBinaryBuilder(
+      BuildTarget target,
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<CxxPlatform> cxxPlatforms,
+      CxxBuckConfig cxxBuckConfig) {
+    super(
+        new CxxBinaryDescription(
+            cxxBuckConfig,
+            new InferBuckConfig(FakeBuckConfig.builder().build()),
+            defaultCxxPlatform,
+            cxxPlatforms),
+        target);
+  }
+
   public CxxBinaryBuilder(BuildTarget target) {
     this(target, createDefaultPlatform(), createDefaultPlatforms());
+  }
+
+  public CxxBinaryBuilder(BuildTarget target, CxxBuckConfig cxxBuckConfig) {
+    this(target, createDefaultPlatform(), createDefaultPlatforms(), cxxBuckConfig);
   }
 
   @Override
