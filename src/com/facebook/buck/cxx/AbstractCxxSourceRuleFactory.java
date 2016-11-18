@@ -69,7 +69,6 @@ abstract class AbstractCxxSourceRuleFactory {
   private static final Logger LOG = Logger.get(AbstractCxxSourceRuleFactory.class);
   private static final String COMPILE_FLAVOR_PREFIX = "compile-";
   private static final String PREPROCESS_FLAVOR_PREFIX = "preprocess-";
-  private static final String PCH_FLAVOR_PREFIX = "pch-";
   private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
       ImmutableFlavor.of("preprocessor-deps");
 
@@ -626,15 +625,9 @@ abstract class AbstractCxxSourceRuleFactory {
   CxxPrecompiledHeader requirePrecompiledHeaderBuildRule(
       PreprocessorDelegateCacheValue preprocessorDelegateCacheValue,
       CxxSource source) {
-    CxxToolFlags compilerFlags = computeCompilerFlags(source.getType(), source.getFlags());
-    // Clang will only use precompiled headers generated with the same flags and language settings.
-    // As such, each prefix header may generate multiple pch files, and need unique build targets
-    // to be differentiated in the build graph.
-    String pchIdentifier = String.format(
-        "%s%s-%s",
-        PCH_FLAVOR_PREFIX,
-        source.getType().getLanguage(),
-        preprocessorDelegateCacheValue.getCommandHash(compilerFlags));
+
+    PreprocessorDelegate preprocessorDelegate =
+        preprocessorDelegateCacheValue.getPreprocessorDelegate();
 
     // Detect the rule for which we are building this PCH:
     SourcePath sourcePath = Preconditions.checkNotNull(this.getPrefixHeader().orElse(null));
@@ -649,19 +642,59 @@ abstract class AbstractCxxSourceRuleFactory {
       targetToBuildFor = getParams().getBuildTarget();
     }
 
+    // Clang will only use precompiled headers generated with the same flags and language settings.
+    // As such, each prefix header may generate multiple pch files, and need unique build targets
+    // to be differentiated in the build graph.
+    CxxToolFlags compilerFlags = computeCompilerFlags(source.getType(), source.getFlags());
+    ImmutableList<String> allFlags = preprocessorDelegate.getCommand(
+        compilerFlags,
+        /* no pch object yet */ Optional.empty());
+    ImmutableList.Builder<String> iDirsBuilder = ImmutableList.<String>builder();
+    ImmutableList.Builder<String> iSystemDirsBuilder = ImmutableList.<String>builder();
+    ImmutableList.Builder<String> nonIncludeFlagsBuilder = ImmutableList.<String>builder();
+    CxxPrecompiledHeader.separateIncludePathArgs(
+        allFlags,
+        iDirsBuilder,
+        iSystemDirsBuilder,
+        nonIncludeFlagsBuilder);
+
+    ImmutableList.Builder<String> flagBuilder = ImmutableList.<String>builder();
+
+    // Compute two different hashes; one for non-include paths, just for PCH compatibility
+    // with respect to defines / f-flags / m-flags / other things that must agree in PCH + build.
+    // It's possible that targets -- in fact hopefully many targets -- share the same base hash
+    // so that it's possible to reuse PCHs with that base hash, even if include path flags differ
+    // in (most likely) non-incompatible ways.
+    flagBuilder.addAll(nonIncludeFlagsBuilder.build());
+    final String baseHash = preprocessorDelegate.hashCommand(flagBuilder.build()).substring(0, 10);
+
+    // The full hash is a globally-unique identifier, using the above mentioned flags followed by
+    // other include path dirs.
+    flagBuilder.addAll(iDirsBuilder.build());
+    flagBuilder.addAll(iSystemDirsBuilder.build());
+    final String fullHash = preprocessorDelegate.hashCommand(flagBuilder.build()).substring(0, 10);
+
+    // Language needs to be part of the key, PCHs built under a different language are incompatible.
+    // (Replace `c++` with `cxx`; avoid default scrubbing which would make it the cryptic `c__`.)
+    final String langCode = source.getType().getLanguage().replaceAll("c\\+\\+", "cxx");
+
+    final String pchBaseID = "pch-" + langCode + "-" + baseHash;
+    final String pchFullID = pchBaseID + "-" + fullHash;
+
     BuildTarget target = BuildTarget
         .builder(targetToBuildFor)
         .addFlavors(getCxxPlatform().getFlavor())
-        .addFlavors(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(pchIdentifier)))
+        .addFlavors(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(pchFullID)))
         .build();
+
     Optional<CxxPrecompiledHeader> existingRule =
         getResolver().getRuleOptionalWithType(target, CxxPrecompiledHeader.class);
     if (existingRule.isPresent()) {
       return existingRule.get();
     }
+
     Path output = BuildTargets.getGenPath(getParams().getProjectFilesystem(), target, "%s.gch");
-    PreprocessorDelegate preprocessorDelegate =
-        preprocessorDelegateCacheValue.getPreprocessorDelegate();
+
     Compiler compiler =
         CxxSourceTypes.getCompiler(
             getCxxPlatform(),
