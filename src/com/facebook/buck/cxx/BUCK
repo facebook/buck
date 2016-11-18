@@ -92,7 +92,6 @@ java_immutables_library(
   autodeps = True,
   resources = [
     'modulemap.st',
-    'umbrella_header.st',
   ],
   visibility = [
     'PUBLIC'
