@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -27,6 +28,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -45,7 +47,6 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
 
   private static final String MODULE_MAP = "module.modulemap";
   private static final String MODULEMAP_TEMPLATE_PATH = getTemplate("modulemap.st");
-  private static final String UMBRELLA_HEADER_TEMPLATE_PATH = getTemplate("umbrella_header.st");
 
   private static String getTemplate(String template) {
     try {
@@ -108,6 +109,7 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
     LOG.debug("Generating post-build steps to write header map to %s", headerMapPath);
     Path buckOut =
         getProjectFilesystem().resolve(getProjectFilesystem().getBuckPaths().getBuckOut());
+
     ImmutableMap.Builder<Path, Path> headerMapEntries = ImmutableMap.builder();
     for (Path key : getLinks().keySet()) {
       // The key is the path that will be referred to in headers. It can be anything. However, the
@@ -123,33 +125,28 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
 
     if (shouldCreateModule) {
       String moduleName = getBuildTarget().getShortName();
-      String umbrellaHeaderName = moduleName + "-umbrella.h";
-      builder
-          .add(createUmbrellaHeaderStep(umbrellaHeaderName))
-          .add(createCreateModuleStep(moduleName, umbrellaHeaderName));
+      Optional<String> umbrellaHeader = getLinks().keySet().stream()
+          .filter(input -> moduleName.equals(MorePaths.getNameWithoutExtension(input)))
+          .map(Path::toString)
+          .findFirst();
+      builder.add(new MkdirStep(getProjectFilesystem(), getRoot().resolve(moduleName)));
+      builder.add(createCreateModuleStep(moduleName, umbrellaHeader));
     }
     return builder.build();
   }
 
-  // TODO(nguyentruongtho) use existing umbrella header is present, umbrella header file name
-  // should be named in this format: <module_name>-umbrella.h
-  private Step createUmbrellaHeaderStep(String umbrellaHeaderName) {
+  private Step createCreateModuleStep(String moduleName, Optional<String> umbrellaHeader) {
+    ST st = new ST(MODULEMAP_TEMPLATE_PATH)
+        .add("module_name", moduleName)
+        .add("use_umbrella_header", umbrellaHeader.isPresent());
+    if (umbrellaHeader.isPresent()) {
+      st.add("umbrella_header_name", umbrellaHeader.get());
+    } else {
+      st.add("umbrella_directory", moduleName);
+    }
     return new WriteFileStep(
         getProjectFilesystem(),
-        new ST(UMBRELLA_HEADER_TEMPLATE_PATH)
-            .add("exported_headers", getLinks().keySet())
-            .render(),
-        getProjectFilesystem().relativize(getRoot().resolve(umbrellaHeaderName)),
-        /* executable */ false);
-  }
-
-  private Step createCreateModuleStep(String moduleName, String umbrellaHeaderFilename) {
-    return new WriteFileStep(
-        getProjectFilesystem(),
-        new ST(MODULEMAP_TEMPLATE_PATH)
-            .add("module_name", moduleName)
-            .add("umbrella_header_name", umbrellaHeaderFilename)
-            .render(),
+        st.render(),
         getProjectFilesystem().relativize(getRoot().resolve(MODULE_MAP)),
         false);
   }
