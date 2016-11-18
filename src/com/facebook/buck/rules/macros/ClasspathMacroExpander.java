@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.jvm.java.HasClasspathEntries;
-import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.rules.BuildRule;
@@ -25,17 +24,13 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
 import java.io.File;
-import java.nio.file.Path;
-import java.util.Objects;
+import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
 
 /**
  * Used to expand the macro {@literal $(classpath //some:target)} to the transitive classpath of
@@ -84,22 +79,14 @@ public class ClasspathMacroExpander
   @Override
   protected String expand(SourcePathResolver resolver, BuildRule rule)
       throws MacroException {
-    return Joiner.on(File.pathSeparator).join(
-        FluentIterable.from(getHasClasspathEntries(rule).getTransitiveClasspathDeps())
-            .transform(
-                new Function<JavaLibrary, Path>() {
-                  @Nullable
-                  @Override
-                  public Path apply(JavaLibrary input) {
-                    return input.getPathToOutput() == null
-                        ? null
-                        : input.getProjectFilesystem()
-                              .resolve(input.getPathToOutput());
-                  }
-                })
-            .filter(Objects::nonNull)
-            .transform(Object::toString)
-            .toSortedSet(Ordering.natural()));
+    return getHasClasspathEntries(rule)
+        .getTransitiveClasspathDeps()
+        .stream()
+        .filter(dep -> dep.getPathToOutput() != null)
+        .map(dep -> dep.getProjectFilesystem().resolve(dep.getPathToOutput()))
+        .map(Object::toString)
+        .sorted(Ordering.natural())
+        .collect(Collectors.joining(File.pathSeparator));
   }
 
   @Override
@@ -109,13 +96,12 @@ public class ClasspathMacroExpander
       BuildRuleResolver resolver,
       BuildTarget input)
       throws MacroException {
-    return FluentIterable.from(
-            getHasClasspathEntries(resolve(resolver, input))
-                .getTransitiveClasspathDeps())
-        .filter(
-            input1 -> input1.getPathToOutput() != null)
-        .transform(SourcePaths.getToBuildTargetSourcePath())
-        .toSortedSet(Ordering.natural());
+    return ImmutableSortedSet.copyOf(getHasClasspathEntries(resolve(resolver, input))
+        .getTransitiveClasspathDeps()
+        .stream()
+        .filter(dep -> dep.getPathToOutput() != null)
+        .map(dep -> SourcePaths.getToBuildTargetSourcePath().apply(dep))
+        .collect(Collectors.toSet()));
   }
 
 }
