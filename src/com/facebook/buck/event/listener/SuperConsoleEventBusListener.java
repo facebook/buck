@@ -54,7 +54,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -70,7 +70,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
@@ -345,7 +344,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         if (port.isPresent()) {
           buildTrace = String.format(
               locale,
-              "Details: http://localhost:%s/trace/%s",
+              "    Details: http://localhost:%s/trace/%s",
               port.get(),
               buildFinished.getBuildId());
         }
@@ -356,11 +355,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         // All steps past this point require a build.
         return lines.build();
       }
-      String suffix = Joiner.on(" ")
-          .join(FluentIterable.of(new String[] {jobSummary, buildTrace})
-              .filter(Objects::nonNull));
+
       Optional<String> suffixOptional =
-          suffix.isEmpty() ? Optional.empty() : Optional.of(suffix);
+          Strings.isNullOrEmpty(jobSummary) ? Optional.empty() : Optional.of(jobSummary);
       // Check to see if the build encompasses the time spent parsing. This is true for runs of
       // buck build but not so for runs of e.g. buck project. If so, subtract parse times
       // from the build time.
@@ -382,6 +379,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
           this.buildFinished,
           getApproximateBuildProgress(),
           lines);
+
+      if (buildTrace != null) {
+        lines.add(buildTrace);
+      }
 
       int maxThreadLines = defaultThreadLineLimit;
       if (anyWarningsPrinted.get() && threadLineLimitOnWarning < maxThreadLines) {
