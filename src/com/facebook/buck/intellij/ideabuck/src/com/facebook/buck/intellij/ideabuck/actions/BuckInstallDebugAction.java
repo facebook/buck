@@ -16,11 +16,10 @@
 
 package com.facebook.buck.intellij.ideabuck.actions;
 
+import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 
 import javax.swing.Icon;
-
-import icons.BuckIcons;
 
 public class BuckInstallDebugAction extends BuckInstallAction{
   public static final String ACTION_TITLE = "Run buck install and debug";

@@ -20,10 +20,9 @@ import com.facebook.buck.intellij.ideabuck.build.BuckBuildCommandHandler;
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
+import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
-
-import icons.BuckIcons;
 
 /**
  * Run buck build command.

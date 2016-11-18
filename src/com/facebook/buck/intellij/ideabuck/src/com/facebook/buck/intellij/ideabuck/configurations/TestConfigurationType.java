@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.configurations;
 
+import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.intellij.execution.configuration.ConfigurationFactoryEx;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ConfigurationType;
@@ -26,8 +27,6 @@ import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.Icon;
-
-import icons.BuckIcons;
 
 public class TestConfigurationType implements ConfigurationType {
   public static TestConfigurationType getInstance() {

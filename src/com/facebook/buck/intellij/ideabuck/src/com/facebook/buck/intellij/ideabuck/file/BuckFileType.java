@@ -16,12 +16,11 @@
 
 package com.facebook.buck.intellij.ideabuck.file;
 
+import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.facebook.buck.intellij.ideabuck.lang.BuckLanguage;
 import com.intellij.openapi.fileTypes.LanguageFileType;
 
 import javax.swing.Icon;
-
-import icons.BuckIcons;
 
 /**
  * Buck language type

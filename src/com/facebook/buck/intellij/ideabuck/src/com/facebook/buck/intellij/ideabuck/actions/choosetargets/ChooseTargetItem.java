@@ -16,9 +16,9 @@
 
 package com.facebook.buck.intellij.ideabuck.actions.choosetargets;
 
+import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.intellij.navigation.ItemPresentation;
 import com.intellij.navigation.NavigationItem;
-import icons.BuckIcons;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.Icon;

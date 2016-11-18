@@ -19,6 +19,7 @@ package com.facebook.buck.intellij.ideabuck.actions;
 import com.facebook.buck.intellij.ideabuck.actions.choosetargets.ChooseTargetItem;
 import com.facebook.buck.intellij.ideabuck.actions.choosetargets.ChooseTargetModel;
 import com.facebook.buck.intellij.ideabuck.config.BuckSettingsProvider;
+import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.facebook.buck.intellij.ideabuck.ui.BuckToolWindowFactory;
 import com.intellij.ide.actions.GotoActionBase;
 import com.intellij.ide.util.gotoByName.ChooseByNamePopup;
@@ -34,8 +35,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyAdapter;
 
 import javax.swing.KeyStroke;
-
-import icons.BuckIcons;
 
 /**
  * Pop up a GUI for choose buck targets (alias).

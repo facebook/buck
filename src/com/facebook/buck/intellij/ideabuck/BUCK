@@ -35,11 +35,11 @@ java_library(
   srcs = [
     ':generate_zip',
     'src/com/facebook/buck/intellij/ideabuck/file/BuckFileType.java',
+    'src/com/facebook/buck/intellij/ideabuck/icons/BuckIcons.java',
     'src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckElementType.java',
     'src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckPsiUtils.java',
     'src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckTokenType.java',
     'src/com/facebook/buck/intellij/ideabuck/lang/BuckLanguage.java',
-    'src/icons/BuckIcons.java',
   ],
 )
 
@@ -50,9 +50,9 @@ java_library(
     ],
     excludes = [
       'src/com/facebook/buck/intellij/ideabuck/file/BuckFileType.java',
+      'src/com/facebook/buck/intellij/ideabuck/icons/BuckIcons.java',
       'src/com/facebook/buck/intellij/ideabuck/lang/psi/*.java',
       'src/com/facebook/buck/intellij/ideabuck/lang/BuckLanguage.java',
-      'src/icons/*.java',
     ]
   ),
   source = '1.8',

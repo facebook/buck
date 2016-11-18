@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package icons;
+package com.facebook.buck.intellij.ideabuck.icons;
 
 import com.intellij.openapi.util.IconLoader;
 

@@ -21,14 +21,13 @@ import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
 import com.facebook.buck.intellij.ideabuck.config.BuckSettingsProvider;
+import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.Icon;
-
-import icons.BuckIcons;
 
 /**
  * Run buck install command.

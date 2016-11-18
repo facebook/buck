@@ -18,12 +18,12 @@ package com.facebook.buck.intellij.ideabuck.config;
 
 import com.facebook.buck.intellij.ideabuck.file.BuckFileUtil;
 import com.facebook.buck.intellij.ideabuck.highlight.BuckSyntaxHighlighter;
+import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.fileTypes.SyntaxHighlighter;
 import com.intellij.openapi.options.colors.AttributesDescriptor;
 import com.intellij.openapi.options.colors.ColorDescriptor;
 import com.intellij.openapi.options.colors.ColorSettingsPage;
-import icons.BuckIcons;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.Icon;

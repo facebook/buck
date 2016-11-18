@@ -17,6 +17,7 @@
 package com.facebook.buck.intellij.ideabuck.actions;
 
 import com.facebook.buck.intellij.ideabuck.file.BuckFileUtil;
+import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
@@ -27,8 +28,6 @@ import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.Navigatable;
-
-import icons.BuckIcons;
 
 /**
  * Go to its BUCK file for current source file.
