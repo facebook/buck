@@ -46,12 +46,10 @@ public class ClassUsageTrackerTest {
   private static final FileSystem UNIX_FILE_SYSTEM =
       Jimfs.newFileSystem(Configuration.unix());
 
-  private static final String OTHER_FILE_NAME = JavaFileObject.Kind.OTHER.toString();
-  private static final String SOURCE_FILE_NAME = JavaFileObject.Kind.SOURCE.toString();
-  private static final String HTML_FILE_NAME = JavaFileObject.Kind.HTML.toString();
   private static final String WINDOWS_FILE_NAME = "Windows";
 
-  private static final String[] FILE_NAMES = { "A", "B", "C", "D", "E", "F" };
+  private static final String[] FILE_NAMES = {
+      "A", "B", "C", "D", "E", "F", "NonJava", "OTHER", "SOURCE", "HTML" };
   private static final String SINGLE_FILE_NAME = "C";
   private static final String SINGLE_NON_JAVA_FILE_NAME = "NonJava";
   private static final File SINGLE_FILE = new File("C");
@@ -66,11 +64,6 @@ public class ClassUsageTrackerTest {
     tracker = new ClassUsageTracker();
     FakeStandardJavaFileManager fakeFileManager = new FakeStandardJavaFileManager();
     fileManager = tracker.wrapFileManager(fakeFileManager);
-
-    fakeFileManager.addFile(TEST_JAR_PATH, OTHER_FILE_NAME, JavaFileObject.Kind.OTHER);
-    fakeFileManager.addFile(TEST_JAR_PATH, SOURCE_FILE_NAME, JavaFileObject.Kind.SOURCE);
-    fakeFileManager.addFile(TEST_JAR_PATH, HTML_FILE_NAME, JavaFileObject.Kind.HTML);
-    fakeFileManager.addFile(TEST_JAR_PATH, SINGLE_NON_JAVA_FILE_NAME, JavaFileObject.Kind.OTHER);
 
     fakeFileManager.addFile(
         WINDOWS_JAR_PATH,
@@ -139,21 +132,21 @@ public class ClassUsageTrackerTest {
   }
 
   @Test
-  public void readingNonJavaFileFromGetFileForInputShouldNotBeTracked() throws IOException {
+  public void readingNonJavaFileFromGetFileForInputShouldBeTracked() throws IOException {
     final FileObject fileObject =
         fileManager.getFileForInput(null, null, SINGLE_NON_JAVA_FILE_NAME);
 
     fileObject.openInputStream();
-    assertFalse(fileWasRead(TEST_JAR_PATH, SINGLE_NON_JAVA_FILE_NAME));
+    assertTrue(fileWasRead(TEST_JAR_PATH, SINGLE_NON_JAVA_FILE_NAME));
   }
 
   @Test
-  public void readingNonJavaFileFromGetFileForOutputShouldNotBeTracked() throws IOException {
+  public void readingNonJavaFileFromGetFileForOutputShouldBeTracked() throws IOException {
     final FileObject fileObject =
         fileManager.getFileForOutput(null, null, SINGLE_NON_JAVA_FILE_NAME, null);
 
     fileObject.openInputStream();
-    assertFalse(fileWasRead(TEST_JAR_PATH, SINGLE_NON_JAVA_FILE_NAME));
+    assertTrue(fileWasRead(TEST_JAR_PATH, SINGLE_NON_JAVA_FILE_NAME));
   }
 
   @Test

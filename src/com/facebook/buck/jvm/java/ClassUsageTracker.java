@@ -80,9 +80,6 @@ class ClassUsageTracker {
     }
 
     JavaFileObject javaFileObject = (JavaFileObject) fileObject;
-    if (javaFileObject.getKind() != JavaFileObject.Kind.CLASS) {
-      return;
-    }
 
     URI classFileJarUri = javaFileObject.toUri();
     if (!classFileJarUri.getScheme().equals(JAR_SCHEME)) {

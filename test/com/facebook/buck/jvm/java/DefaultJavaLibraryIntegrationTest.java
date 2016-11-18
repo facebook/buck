@@ -470,6 +470,41 @@ public class DefaultJavaLibraryIntegrationTest {
   }
 
   @Test
+  public void testResourceFileChangeCanTakeAdvantageOfDepBasedKeys() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "resource_in_dep_file", tmp);
+    workspace.setUp();
+
+    // Warm the used classes file
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", ":main");
+    buildResult.assertSuccess("Successful build should exit with 0.");
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//:main");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:util");
+
+    // Edit the unread_file.txt resource
+    workspace.replaceFileContents("unread_file.txt", "hello", "goodbye");
+
+    // Run `buck build` again.
+    ProcessResult buildResult2 = workspace.runBuckCommand("build", "//:main");
+    buildResult2.assertSuccess("Successful build should exit with 0.");
+
+    // If all goes well, we'll fetch //:main's dep file from the cache and realize we don't need
+    // to rebuild it because //:main didn't use unread_file.
+    workspace.getBuildLog().assertTargetBuiltLocally("//:util");
+    workspace.getBuildLog().assertTargetHadMatchingDepfileRuleKey("//:main");
+
+    // Edit read_file.txt resource
+    workspace.replaceFileContents("read_file.txt", "me", "you");
+    workspace.runBuckCommand("build", ":main").assertSuccess();
+
+    // Since that file was used during the compilation, we must rebuild
+    workspace.getBuildLog().assertTargetBuiltLocally("//:util");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:main");
+  }
+
+  @Test
   public void testFileChangeThatDoesNotModifyAbiOfAUsedClassAvoidsRebuildEvenWithBuckClean()
       throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(
