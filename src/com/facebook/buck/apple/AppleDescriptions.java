@@ -393,7 +393,7 @@ public class AppleDescriptions {
         AppleBuildRules.collectTransitiveCoreDataModels(targetGraph, ImmutableList.of(targetNode));
 
     BuildRuleParams coreDataModelParams = params.copyWithChanges(
-        params.getBuildTarget().withAppendedFlavors(AppleAssetCatalog.FLAVOR),
+        params.getBuildTarget().withAppendedFlavors(CoreDataModel.FLAVOR),
         Suppliers.ofInstance(ImmutableSortedSet.of()),
         Suppliers.ofInstance(ImmutableSortedSet.of()));
 
