@@ -16,9 +16,9 @@
 
 package com.facebook.buck.android;
 
+import com.android.common.utils.ILogger;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.MergingReport;
-import com.android.utils.ILogger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
@@ -104,7 +104,8 @@ public class GenerateManifestStep implements Step {
     return StepExecutionResult.SUCCESS;
   }
 
-  private MergingReport mergeManifests(File mainManifestFile, List<File> libraryManifestFiles,
+  private MergingReport mergeManifests(
+      File mainManifestFile, List<File> libraryManifestFiles,
       BuckEventAndroidLogger logger) {
     try {
       MergingReport mergingReport = ManifestMerger2
