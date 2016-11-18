@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package unit.util;
+package com.facebook.buck.intellij.ideabuck.test.util;
 
 import org.eclipse.jetty.websocket.api.CloseStatus;
 import org.eclipse.jetty.websocket.api.RemoteEndpoint;

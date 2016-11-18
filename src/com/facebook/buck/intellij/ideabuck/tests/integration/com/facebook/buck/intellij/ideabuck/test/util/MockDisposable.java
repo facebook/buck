@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package unit.util;
+package com.facebook.buck.intellij.ideabuck.test.util;
 
 import com.intellij.openapi.Disposable;
 

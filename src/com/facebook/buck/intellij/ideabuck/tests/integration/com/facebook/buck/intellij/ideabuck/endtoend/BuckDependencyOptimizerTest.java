@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package endtoend;
+package com.facebook.buck.intellij.ideabuck.endtoend;
 
 import com.intellij.codeInsight.actions.OptimizeImportsAction;
 import com.intellij.ide.DataManager;

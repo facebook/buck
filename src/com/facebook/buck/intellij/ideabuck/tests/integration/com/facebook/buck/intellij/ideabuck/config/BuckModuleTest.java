@@ -14,13 +14,13 @@
  * under the License.
  */
 
-package unit;
+package com.facebook.buck.intellij.ideabuck.config;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.intellij.ideabuck.config.BuckModule;
 import com.facebook.buck.intellij.ideabuck.file.BuckFileType;
+import com.facebook.buck.intellij.ideabuck.test.util.MockDisposable;
 import com.facebook.buck.intellij.ideabuck.ui.utils.BuckPluginNotifications;
 import com.intellij.ide.ui.UISettings;
 import com.intellij.ide.util.ProjectPropertiesComponentImpl;
@@ -42,8 +42,6 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
-
-import unit.util.MockDisposable;
 
 public class BuckModuleTest {
   class NotificationsAdapterTester extends NotificationsAdapter {

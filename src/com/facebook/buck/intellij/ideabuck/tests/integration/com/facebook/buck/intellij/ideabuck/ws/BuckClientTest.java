@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.intellij.ideabuck.test.util.MockDisposable;
+import com.facebook.buck.intellij.ideabuck.test.util.MockSession;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.BuckEventsHandlerInterface;
 import com.intellij.mock.MockApplication;
 import com.intellij.mock.MockApplicationEx;
@@ -29,9 +31,6 @@ import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.project.Project;
 
 import org.junit.Test;
-
-import unit.util.MockDisposable;
-import unit.util.MockSession;
 
 public class BuckClientTest {
 

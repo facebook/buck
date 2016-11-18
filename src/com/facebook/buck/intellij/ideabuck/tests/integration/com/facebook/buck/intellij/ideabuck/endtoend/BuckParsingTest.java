@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package endtoend;
+package com.facebook.buck.intellij.ideabuck.endtoend;
 
 import com.facebook.buck.intellij.ideabuck.file.BuckFileUtil;
 import com.facebook.buck.intellij.ideabuck.lang.BuckParserDefinition;

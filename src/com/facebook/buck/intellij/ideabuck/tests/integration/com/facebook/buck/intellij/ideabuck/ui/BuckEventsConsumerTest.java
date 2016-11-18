@@ -14,14 +14,16 @@
  * under the License.
  */
 
-package unit;
+package com.facebook.buck.intellij.ideabuck.ui;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.intellij.ideabuck.ui.BuckEventsConsumer;
-import com.facebook.buck.intellij.ideabuck.ui.BuckUIManager;
+import com.facebook.buck.intellij.ideabuck.test.util.MockDisposable;
+import com.facebook.buck.intellij.ideabuck.test.util.MockTestResults;
+import com.facebook.buck.intellij.ideabuck.test.util.MockTreeModelListener;
+import com.facebook.buck.intellij.ideabuck.test.util.MyMockApplication;
 import com.google.common.collect.ImmutableSet;
 import com.intellij.mock.Mock;
 import com.intellij.mock.MockApplication;
@@ -41,11 +43,6 @@ import org.junit.Test;
 import java.lang.reflect.Field;
 
 import javax.swing.tree.DefaultTreeModel;
-
-import unit.util.MockDisposable;
-import unit.util.MockTestResults;
-import unit.util.MockTreeModelListener;
-import unit.util.MyMockApplication;
 
 public class BuckEventsConsumerTest {
   @Test

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package endtoend;
+package com.facebook.buck.intellij.ideabuck.endtoend;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.psi.codeStyle.CodeStyleManager;

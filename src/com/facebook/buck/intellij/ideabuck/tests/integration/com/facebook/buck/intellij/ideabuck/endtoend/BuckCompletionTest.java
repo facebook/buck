@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package endtoend;
+package com.facebook.buck.intellij.ideabuck.endtoend;
 
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.util.ArrayUtil;

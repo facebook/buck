@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package unit.util;
+package com.facebook.buck.intellij.ideabuck.test.util;
 
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.parts.TestCaseSummary;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.parts.TestResults;
