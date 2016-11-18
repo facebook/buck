@@ -257,11 +257,15 @@ class PreprocessorDelegate implements RuleKeyAppendable {
    * Note: when building the hash for identifying the PCH itself, just pass
    * {@code Optional.empty()}.
    */
-  public String hashCommand(CxxToolFlags extraFlags, Optional<CxxPrecompiledHeader> pch) {
+  public String hashCommand(CxxToolFlags flags, Optional<CxxPrecompiledHeader> pch) {
+    return hashCommand(getCommand(flags, pch));
+  }
+
+  public String hashCommand(ImmutableList<String> flags) {
     Hasher hasher = Hashing.murmur3_128().newHasher();
     String workingDirString = workingDir.toString();
     // Skips the executable argument (the first one) as that is not sanitized.
-    for (String part : sanitizer.sanitizeFlags(Iterables.skip(getCommand(extraFlags, pch), 1))) {
+    for (String part : sanitizer.sanitizeFlags(Iterables.skip(flags, 1))) {
       // TODO(#10251354): find a better way of dealing with getting a project dir normalized hash
       if (part.startsWith(workingDirString)) {
         part = "<WORKINGDIR>" + part.substring(workingDirString.length());

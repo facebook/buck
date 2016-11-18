@@ -674,6 +674,7 @@ abstract class AbstractCxxSourceRuleFactory {
             compiler,
             computeCompilerFlags(source.getType(), source.getFlags()));
     SourcePath path = Preconditions.checkNotNull(preprocessorDelegate.getPrefixHeader().get());
+
     CxxPrecompiledHeader rule = new CxxPrecompiledHeader(
         getParams().copyWithChanges(
             target,
@@ -693,7 +694,8 @@ abstract class AbstractCxxSourceRuleFactory {
         path,
         source.getType(),
         getCxxPlatform().getCompilerDebugPathSanitizer(),
-        getCxxPlatform().getAssemblerDebugPathSanitizer());
+        getCxxPlatform().getAssemblerDebugPathSanitizer(),
+        getCxxBuckConfig().isPchIlogEnabled());
     getResolver().addToIndex(rule);
     return rule;
   }

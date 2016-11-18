@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.ByteSource;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystem;
@@ -263,5 +264,41 @@ public class MorePaths {
 
   public static Function<String, Path> toPathFn(final FileSystem fileSystem) {
     return input -> fileSystem.getPath(input);
+  }
+
+  private static Path dropPathPart(Path p, int i) {
+    if (i == 0) {
+      return p.subpath(1, p.getNameCount());
+    } else if (i == p.getNameCount() - 1) {
+      return p.subpath(0, p.getNameCount() - 1);
+    } else {
+      return p.subpath(0, i).resolve(p.subpath(i + 1, p.getNameCount()));
+    }
+  }
+
+  /**
+   * Drop any "." parts (useless).  Do keep ".." parts; don't normalize them away.
+   *
+   * Note that while Path objects provide a {@link Path#normalize()} method for eliminating
+   * redundant parts of paths like in {@code foo/a/../b/c}, changing its internal parts
+   * (and actually using the filesystem), we don't use those methods to clean up the incoming paths;
+   * we only strip empty parts, and those consisting only of {@code .} because doing so maps
+   * exactly-same paths together, and can't influence where it may point to, whereas {@code ..} and
+   * symbolic links might.
+   */
+  public static Path fixPath(Path p) {
+    int i = 0;
+    while (i < p.getNameCount()) {
+      if (p.getName(i).toString().equals(".")) {
+        p = dropPathPart(p, i);
+      } else {
+        i++;
+      }
+    }
+    return p;
+  }
+
+  public static Path fixPath(String path) {
+    return fixPath(new File(path).toPath());
   }
 }

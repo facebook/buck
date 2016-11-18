@@ -76,6 +76,8 @@ public class CxxPreprocessAndCompileStep implements Step {
    */
   private final Path scratchDir;
   private final boolean useArgfile;
+  private final Optional<CxxPrecompiledHeader> pch;
+
   private static final FileLastModifiedDateContentsScrubber FILE_LAST_MODIFIED_DATE_SCRUBBER =
       new FileLastModifiedDateContentsScrubber();
 
@@ -88,6 +90,7 @@ public class CxxPreprocessAndCompileStep implements Step {
       CxxSource.Type inputType,
       Optional<ToolCommand> preprocessorCommand,
       Optional<ToolCommand> compilerCommand,
+      Optional<CxxPrecompiledHeader> pch,
       HeaderPathNormalizer headerPathNormalizer,
       DebugPathSanitizer compilerSanitizer,
       DebugPathSanitizer assemblerSanitizer,
@@ -98,6 +101,10 @@ public class CxxPreprocessAndCompileStep implements Step {
     Preconditions.checkState(operation.isPreprocess() == preprocessorCommand.isPresent());
     Preconditions.checkState(operation.isCompile() == compilerCommand.isPresent());
 
+    Preconditions.checkArgument(
+        (operation == Operation.GENERATE_PCH) == (pch.isPresent()),
+        "need a PCH instance if generating a pch file for it");
+
     this.filesystem = filesystem;
     this.operation = operation;
     this.output = output;
@@ -106,6 +113,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     this.inputType = inputType;
     this.preprocessorCommand = preprocessorCommand;
     this.compilerCommand = compilerCommand;
+    this.pch = pch;
     this.headerPathNormalizer = headerPathNormalizer;
     this.compilerSanitizer = compilerSanitizer;
     this.assemblerSanitizer = assemblerSanitizer;
@@ -222,6 +230,70 @@ public class CxxPreprocessAndCompileStep implements Step {
       } catch (Exception ex) {
         LOG.warn(ex, "error closing processor");
       }
+    }
+  }
+
+  private int executePreprocessPCH(ExecutionContext context, Path output)
+      throws IOException, InterruptedException {
+    Preconditions.checkState(preprocessorCommand.isPresent());
+
+    ImmutableList.Builder<String> commandBuilder =
+        ImmutableList.<String>builder()
+            .addAll(preprocessorCommand.get().getCommandPrefix())
+            .addAll(makePreprocessArguments(context.getAnsi().isAnsiTerminal()))
+            ;
+
+    commandBuilder.add("-Wp,-dI");
+    commandBuilder.add("-o").add(output.toString());
+
+    ByteArrayOutputStream preprocessError = new ByteArrayOutputStream();
+    ProcessExecutorParams preprocessParams = makeSubprocessBuilder(
+            context,
+            preprocessorCommand.get().getEnvironment())
+        .setCommand(commandBuilder.build())
+        .build();
+
+    ProcessExecutor.LaunchedProcess preprocess = null;
+    LineProcessorRunnable errorProcessorPreprocess = null;
+
+    CxxErrorTransformerFactory errorStreamTransformerFactory =
+        createErrorTransformerFactory(context);
+
+    ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
+    try {
+
+      preprocess = executor.launchProcess(preprocessParams);
+      errorProcessorPreprocess = errorStreamTransformerFactory.createTransformerThread(
+          context,
+          preprocess.getErrorStream(),
+          preprocessError);
+      errorProcessorPreprocess.start();
+
+      int preprocessStatus = executor.waitForLaunchedProcess(preprocess).getExitCode();
+      safeCloseProcessor(errorProcessorPreprocess);
+
+      String preprocessErr = new String(preprocessError.toByteArray());
+      if (!preprocessErr.isEmpty()) {
+        context.getBuckEventBus().post(
+            createConsoleEvent(
+                context,
+                preprocessorCommand.get().supportsColorsInDiagnostics(),
+                preprocessStatus == 0 ? Level.WARNING : Level.SEVERE,
+                preprocessErr));
+      }
+
+      if (preprocessStatus != 0) {
+        LOG.warn("error %d %s(preprocess) %s: %s", preprocessStatus,
+            operation.toString().toLowerCase(), input, preprocessErr);
+      }
+      return preprocessStatus;
+
+    } finally {
+      if (preprocess != null) {
+        executor.destroyLaunchedProcess(preprocess);
+        executor.waitForLaunchedProcess(preprocess);
+      }
+      safeCloseProcessor(errorProcessorPreprocess);
     }
   }
 
@@ -507,6 +579,22 @@ public class CxxPreprocessAndCompileStep implements Step {
                 depFile,
                 input,
                 output);
+      }
+
+      if (exitCode == 0 && operation == Operation.GENERATE_PCH && pch.get().pchIlogEnabled) {
+        try {
+          final Path outputDir = output.getParent();
+          final String filenameBase = outputDir.relativize(output).toString();
+          final Path iiPath = filesystem.resolve(scratchDir).resolve(filenameBase + ".ii");
+          final Path iLogPath = filesystem.resolve(outputDir).resolve(filenameBase + ".ilog");
+          exitCode = executePreprocessPCH(context, iiPath);
+          if (exitCode == 0) {
+            IncludeLog.parseAndWriteBuckCompatibleIncludeLogfile(context, iiPath, iLogPath);
+          }
+        } catch (IOException e) {
+          context.logError(e, "error while building precompiled header's include log");
+          return StepExecutionResult.ERROR;
+        }
       }
 
       // If the compilation completed successfully and we didn't effect debug-info normalization

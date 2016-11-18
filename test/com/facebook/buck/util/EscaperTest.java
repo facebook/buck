@@ -120,4 +120,78 @@ public class EscaperTest {
         Escaper.escapePathForCIncludeString(Paths.get("some/path/to.file")),
         equalTo("some/path/to.file"));
   }
+
+  @Test
+  public void testDecodeNumericEscapeOctal1Char() {
+    StringBuilder builder = new StringBuilder();
+    assertEquals(
+        2,
+        Escaper.decodeNumericEscape(builder, "\\1", /*pos*/1, /*maxCodeLen*/3, /*base*/8));
+    final String str = builder.toString();
+    assertEquals(1, str.length());
+    assertEquals("\1", str);
+  }
+
+  @Test
+  public void testDecodeNumericEscapeOctal2Char() {
+    // http://en.cppreference.com/w/cpp/language/ascii
+    StringBuilder builder = new StringBuilder();
+    assertEquals(
+        3,
+        Escaper.decodeNumericEscape(builder, "\\43", /*pos*/1, /*maxCodeLen*/3, /*base*/8));
+    final String str = builder.toString();
+    assertEquals(1, str.length());
+    assertEquals("#", str);
+  }
+
+  @Test
+  public void testDecodeNumericEscapeOctal3Char() {
+    // http://en.cppreference.com/w/cpp/language/ascii
+    StringBuilder builder = new StringBuilder();
+    assertEquals(
+        4,
+        Escaper.decodeNumericEscape(builder, "\\170", /*pos*/1, /*maxCodeLen*/3, /*base*/8));
+    final String str = builder.toString();
+    assertEquals(1, str.length());
+    assertEquals("x", str);
+  }
+
+  @Test
+  public void testDecodeNumericEscapeHex2Char() {
+    // http://en.cppreference.com/w/cpp/language/ascii
+    StringBuilder builder = new StringBuilder();
+    assertEquals(
+        4,
+        Escaper.decodeNumericEscape(builder, "\\x53", /*pos*/2, /*maxCodeLen*/2, /*base*/16));
+    final String str = builder.toString();
+    assertEquals(1, str.length());
+    assertEquals("S", str);
+  }
+
+  @Test
+  public void testDecodeNumericEscapeUnicode4Char() {
+    // http://en.cppreference.com/w/cpp/language/ascii
+    StringBuilder builder = new StringBuilder();
+    assertEquals(
+        6,
+        Escaper.decodeNumericEscape(
+            builder, "\\u0070", /*pos*/2, /*maxCodeLen*/4, /*base*/16, /*maxCodes*/2));
+    final String str = builder.toString();
+    assertEquals(1, str.length());
+    assertEquals('p', str.charAt(0));
+  }
+
+  @Test
+  public void testDecodeNumericEscapeUnicode8Char() {
+    // http://en.cppreference.com/w/cpp/language/ascii
+    StringBuilder builder = new StringBuilder();
+    assertEquals(
+        10,
+        Escaper.decodeNumericEscape(
+            builder, "\\u00700071", /*pos*/2, /*maxCodeLen*/4, /*base*/16, /*maxCodes*/2));
+    final String str = builder.toString();
+    assertEquals(2, str.length());
+    assertEquals('p', str.charAt(0));
+    assertEquals('q', str.charAt(1));
+  }
 }

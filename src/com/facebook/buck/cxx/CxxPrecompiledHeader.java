@@ -37,6 +37,8 @@ import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.Optional;
 
 /**
@@ -81,6 +83,7 @@ public class CxxPrecompiledHeader
 
   private final DebugPathSanitizer compilerSanitizer;
   private final DebugPathSanitizer assemblerSanitizer;
+  protected final boolean pchIlogEnabled;
 
   public CxxPrecompiledHeader(
       BuildRuleParams buildRuleParams,
@@ -92,7 +95,8 @@ public class CxxPrecompiledHeader
       SourcePath input,
       CxxSource.Type inputType,
       DebugPathSanitizer compilerSanitizer,
-      DebugPathSanitizer assemblerSanitizer) {
+      DebugPathSanitizer assemblerSanitizer,
+      boolean pchIlogEnabled) {
     super(buildRuleParams, resolver);
     this.preprocessorDelegate = preprocessorDelegate;
     this.compilerDelegate = compilerDelegate;
@@ -102,6 +106,7 @@ public class CxxPrecompiledHeader
     this.inputType = inputType;
     this.compilerSanitizer = compilerSanitizer;
     this.assemblerSanitizer = assemblerSanitizer;
+    this.pchIlogEnabled = pchIlogEnabled;
   }
 
   @Override
@@ -132,6 +137,10 @@ public class CxxPrecompiledHeader
     return output;
   }
 
+  private Path getSuffixedOutput(String suffix) {
+    return Paths.get(getPathToOutput().toString() + suffix);
+  }
+
   @Override
   public boolean useDependencyFileRuleKeys() {
     return true;
@@ -156,11 +165,19 @@ public class CxxPrecompiledHeader
   }
 
   private Path getDepFilePath() {
-    return output.getFileSystem().getPath(output.toString() + ".dep");
+    return getSuffixedOutput(".dep");
   }
 
   public ImmutableList<String> readDepFileLines() throws IOException {
     return ImmutableList.copyOf(getProjectFilesystem().readLines(getDepFilePath()));
+  }
+
+  private Path getIncludeLogPath() {
+    return getSuffixedOutput(".ilog");
+  }
+
+  public IncludeLog getIncludeLog() throws IOException {
+    return IncludeLog.read(getIncludeLogPath());
   }
 
   @VisibleForTesting
@@ -185,12 +202,52 @@ public class CxxPrecompiledHeader
                 preprocessorDelegate.getEnvironment(),
                 preprocessorDelegate.getFlagsForColorDiagnostics())),
         Optional.empty(),
+        Optional.of(this),
         preprocessorDelegate.getHeaderPathNormalizer(),
         compilerSanitizer,
         assemblerSanitizer,
         preprocessorDelegate.getHeaderVerification(),
         scratchDir,
-        true,
+        /* useArgFile*/ true,
         compilerDelegate.getCompiler());
+  }
+
+  /**
+   * Helper method for dealing with compiler flags in a precompiled header build.
+   *
+   * Triage the given list of compiler flags, and divert {@code -I} flags' arguments to
+   * {@code iDirsBuilder}, do similar for {@code -isystem} flags and {@code iSystemDirsBuilder},
+   * and finally output other non-include-path related stuff to {@code nonIncludeFlagsBuilder}.
+   *
+   * Note that while Buck doesn't tend to produce {@code -I} and {@code -isystem} flags without
+   * a space between the flag and its argument, though historically compilers have accepted that.
+   * We'll accept that here as well, inserting a break between the flag and its parameter.
+   *
+   * @param iDirsBuilder a builder which will receive a list of directories provided with the
+   *        {@code -I} option (the flag itself will not be added to this builder)
+   * @param iSystemDirsBuilder a builder which will receive a list of directories provided with the
+   *        {@code -isystem} option (the flag itself will not be added to this builder)
+   * @param nonIncludeFlagsBuilder builder that receives all the stuff not outputted to the above.
+   */
+  public static void separateIncludePathArgs(
+      ImmutableList<String> flags,
+      ImmutableList.Builder<String> iDirsBuilder,
+      ImmutableList.Builder<String> iSystemDirsBuilder,
+      ImmutableList.Builder<String> nonIncludeFlagsBuilder) {
+    Iterator<String> it = flags.iterator();
+    while (it.hasNext()) {
+      String flag = it.next();
+      if (flag.equals("-I") && it.hasNext()) {
+        iDirsBuilder.add(it.next());
+      } else if (flag.startsWith("-I")) {
+        iDirsBuilder.add(flag.substring("-I".length()));
+      } else if (flag.equals("-isystem") && it.hasNext()) {
+        iSystemDirsBuilder.add(it.next());
+      } else if (flag.startsWith("-isystem")) {
+        iSystemDirsBuilder.add(flag.substring("-isystem".length()));
+      } else {
+        nonIncludeFlagsBuilder.add(flag);
+      }
+    }
   }
 }

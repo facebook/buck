@@ -225,4 +225,41 @@ public class MorePathsTest {
     Path emptyPath = Paths.get("");
     assertThat(MorePaths.normalize(emptyPath), equalTo(emptyPath));
   }
+
+  @Test
+  public void fixPathCommonTest() {
+    final Path inputPath = Paths.get("subdir/subdir2/foo/bar/x.file");
+    final Path expecting = Paths.get("subdir/subdir2/foo/bar/x.file");
+    assertEquals(expecting, MorePaths.fixPath(inputPath));
+  }
+
+  @Test
+  public void fixPathAbsoluteTest() {
+    final Path inputPath = Paths.get("/subdir/subdir2/foo/bar/x.file");
+    final Path expecting = Paths.get("/subdir/subdir2/foo/bar/x.file");
+    assertEquals(expecting, MorePaths.fixPath(inputPath));
+  }
+
+  @Test
+  public void fixPathEmptyPartTest() {
+    final Path inputPath = Paths.get("subdir/subdir2//foo///bar/////x.file");
+    final Path expecting = Paths.get("subdir/subdir2/foo/bar/x.file");
+    assertEquals(expecting, MorePaths.fixPath(inputPath));
+  }
+
+  @Test
+  public void fixPathDotPartTest() {
+    final Path inputPath = Paths.get("subdir/subdir2/./foo/././bar/./x.file");
+    final Path expecting = Paths.get("subdir/subdir2/foo/bar/x.file");
+    assertEquals(expecting, MorePaths.fixPath(inputPath));
+  }
+
+  @Test
+  public void fixPathDotDotPartTest() {
+    final Path inputPath = Paths.get("subdir/subdir2/foo/../bar/x.file");
+    final Path expecting = Paths.get("subdir/subdir2/foo/../bar/x.file");
+    // should be the same!  Does not fully "normalize" path.
+    assertEquals(expecting, MorePaths.fixPath(inputPath));
+  }
+
 }

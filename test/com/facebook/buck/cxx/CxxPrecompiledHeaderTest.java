@@ -60,7 +60,7 @@ public class CxxPrecompiledHeaderTest {
     CxxPrecompiledHeader precompiledHeader = new CxxPrecompiledHeader(
         params,
         sourcePathResolver,
-        Paths.get("foo.pch"),
+        Paths.get("foo.hash1.hash2.gch"),
         new PreprocessorDelegate(
             sourcePathResolver,
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -83,7 +83,8 @@ public class CxxPrecompiledHeaderTest {
         new FakeSourcePath("foo.h"),
         CxxSource.Type.C,
         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-        CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER);
+        CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
+        /* pchILogEnabled: not needed for this test */ false);
     ImmutableList<Step> postBuildSteps = precompiledHeader.getBuildSteps(
         FakeBuildContext.NOOP_CONTEXT,
         new FakeBuildableContext());

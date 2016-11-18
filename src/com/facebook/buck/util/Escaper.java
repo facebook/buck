@@ -323,4 +323,120 @@ public final class Escaper {
     return Integer.toHexString(ch).toUpperCase();
   }
 
+  /**
+   * Unescape a path string obtained from preprocessor output, as in:
+   * <a href="https://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html">
+   * https://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html
+   * </a>.
+   * @see #decodeNumericEscape(StringBuilder, String, int, int, int, int)
+   */
+  public static String unescapeLineMarkerPath(String escaped) {
+    StringBuilder ret = new StringBuilder();
+    for (int i = 0; i < escaped.length(); /* i incremented below */) {
+      // consume character, advance index
+      char c = escaped.charAt(i);
+      i++;
+
+      if (c != '\\') {
+        ret.append(c);
+      } else {
+        // So sayeth the GCC docs:
+        // "filename will never contain any non-printing characters; they are replaced with octal
+        // escape sequences."  -- https://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html
+
+        if (i >= escaped.length()) {
+          throw new IllegalArgumentException("malformed string: ends with single backslash");
+        }
+
+        c = escaped.charAt(i); // peek (don't consume) next char
+
+        switch (c) {
+          // standard escapes: http://en.cppreference.com/w/cpp/language/escape
+          case '\\':
+          case '"':
+          case '\'':
+          case '?':
+            ret.append(c);
+            i++;  // consume it
+            break;
+
+          case '0':
+          case '1':
+          case '2':
+          case '3':
+          case '4':
+          case '5':
+          case '6':
+          case '7':
+            i = decodeNumericEscape(ret, escaped, i, /*maxCodeLength=*/3, /*base*/8);
+            break;
+
+          case 'x':
+            i = decodeNumericEscape(ret, escaped, i, /*maxCodeLength=*/2, /*base*/16);
+            break;
+
+          case 'u':
+            i = decodeNumericEscape(
+                ret, escaped, i, /*maxCodeLength=*/4, /*base*/16, /*maxCodes*/2);
+            break;
+
+          default:
+            throw new IllegalArgumentException("malformed string: bad char in escape seq: " + c);
+        }
+      }
+    }
+    return ret.toString();
+  }
+
+  /**
+   * Decode a numeric escape as explained in this page:
+   * <a href="http://en.cppreference.com/w/cpp/language/escape">
+   * http://en.cppreference.com/w/cpp/language/escape
+   * </a>.  The pointed-to substring shouldn't contain the leading backslash + optional 'x' or 'u'.
+   * @param out receives decoded characters
+   * @param escaped the string containing the escape sequence
+   * @param pos starting index of escape (but after the backslash)
+   * @param base number base, e.g. 8 for octal, or 16 for hex or unicode.
+   * @param maxCodes maximum number of sequences of escape numbers to decode.  This is mainly
+   *        to support unicode escape sequences which might represent one or two characters.
+   * @return position to first character just after the consumed numeric code.  Is number of
+   *         consumed code bytes + {@code pos} argument.
+   */
+  public static int decodeNumericEscape(
+      StringBuilder out, String escaped, int pos, int maxCodeLength, int base, int maxCodes) {
+    final String table = "0123456789abcdef";
+    for (int code = 0; code < maxCodes; code++) {
+      char c = 0;
+      boolean valid = false;
+      for (int i = 0; i < maxCodeLength && pos < escaped.length(); i++) {
+        final char digit = (char) table.indexOf(Character.toLowerCase(escaped.charAt(pos)));
+        if (digit == -1 || digit >= base) {
+          break;
+        }
+
+        // "digit" is a valid value for the digit read, in the range [0, base).
+        // Now we can increment the position, consuming that digit.
+        pos++;
+
+        c = (char) ((c * base) + digit);
+        valid = true;
+      }
+
+      if (valid) {
+        out.append(c);
+      }
+    }
+
+    return pos;
+  }
+
+  /**
+   * Call {@link #decodeNumericEscape(StringBuilder, String, int, int, int, int)} to
+   * parse at most one escaped character; i.e. calls that method with {@code maxCodes = 1}.
+   */
+  public static int decodeNumericEscape(
+      StringBuilder out, String escaped, int pos, int maxCodeLength, int base) {
+    return decodeNumericEscape(out, escaped, pos, maxCodeLength, base, 1);
+  }
+
 }

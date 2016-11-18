@@ -291,6 +291,7 @@ public class CxxPreprocessAndCompile
         inputType,
         preprocessorCommand,
         compilerCommand,
+        /*pch*/ Optional.empty(),
         headerPathNormalizer,
         compilerSanitizer,
         assemblerSanitizer,

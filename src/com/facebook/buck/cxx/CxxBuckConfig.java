@@ -281,6 +281,10 @@ public class CxxBuckConfig {
     return delegate.getBooleanValue(cxxSection, "pch_enabled", true);
   }
 
+  public boolean isPchIlogEnabled() {
+    return delegate.getBooleanValue(cxxSection, "pch_ilog_enabled", false);
+  }
+
   public boolean sandboxSources() {
     return delegate.getBooleanValue(cxxSection, "sandbox_sources", false);
   }
