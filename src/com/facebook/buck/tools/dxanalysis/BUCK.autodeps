@@ -1,12 +1,10 @@
 {
   "lib" : {
-    "deps" : [
-      "//third-party/java/jsr:jsr305"
-    ],
+    "deps" : [ ],
     "exported_deps" : [
-      "//third-party/java/aosp:aosp",
       "//third-party/java/asm:asm",
-      "//third-party/java/guava:guava"
+      "//third-party/java/guava:guava",
+      "//third-party/java/jsr:jsr305"
     ]
   }
 }

@@ -47,7 +47,6 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util/environment:platform",
-      "//third-party/java/aosp:aosp",
       "//third-party/java/immutables:processor",
       "//third-party/java/jackson:jackson-core"
     ],
