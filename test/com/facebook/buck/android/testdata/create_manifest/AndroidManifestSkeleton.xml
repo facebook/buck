@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
         xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
         package="com.sample.android"
         android:versionCode="1"
         android:versionName="1.0">
@@ -23,6 +24,8 @@
         <provider
                 android:name="com.sample.prefs.SamplePreferencesContentProvider"
                 android:authorities="com.sample.provider.SamplePrefsProvider"/>
+
+        <activity android:name="com.sample.simple.activity.SimpleActivity" android:label="Simple" tools:replace="label"/>
     </application>
 
 </manifest>

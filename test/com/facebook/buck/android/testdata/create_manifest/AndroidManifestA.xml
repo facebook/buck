@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.sample.util">
+    <uses-sdk
+            android:minSdkVersion="8"
+            android:targetSdkVersion="10"/>
     <application>
         <service android:name="com.sample.util.service.SampleService"/>
     </application>

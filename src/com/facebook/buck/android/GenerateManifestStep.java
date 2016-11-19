@@ -112,7 +112,8 @@ public class GenerateManifestStep implements Step {
           .newMerger(mainManifestFile, logger, ManifestMerger2.MergeType.APPLICATION)
           .withFeatures(
               ManifestMerger2.Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT,
-              ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)
+              ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS,
+              ManifestMerger2.Invoker.Feature.SKIP_BLAME)
           .addLibraryManifests(Iterables.toArray(libraryManifestFiles, File.class))
           .merge();
       if (mergingReport.getResult().isError()) {
