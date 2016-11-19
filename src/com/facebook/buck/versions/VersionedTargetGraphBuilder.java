@@ -94,7 +94,7 @@ public class VersionedTargetGraphBuilder {
    */
   private final AtomicInteger roots = new AtomicInteger();
 
-  public VersionedTargetGraphBuilder(
+  VersionedTargetGraphBuilder(
       ForkJoinPool pool,
       VersionSelector versionSelector,
       TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets) {
@@ -143,6 +143,14 @@ public class VersionedTargetGraphBuilder {
     Preconditions.checkArgument(
         !TargetGraphVersionTransformations.getVersionedNode(dst).isPresent());
     graph.addEdge(src, dst);
+  }
+
+  private TargetNode<?, ?> indexPutIfAbsent(TargetNode<?, ?> node) {
+    TargetNode<?, ?> putted = index.putIfAbsent(node.getBuildTarget(), node);
+    if (putted == null) {
+      index.put(node.getBuildTarget().withFlavors(), node);
+    }
+    return putted;
   }
 
   /**
@@ -336,7 +344,7 @@ public class VersionedTargetGraphBuilder {
     /**
      * Process a non-root node in the graph.
      */
-    protected TargetNode<?, ?> processNode(TargetNode<?, ?> node) throws VersionException {
+    TargetNode<?, ?> processNode(TargetNode<?, ?> node) throws VersionException {
 
       // If we've already processed this node, exit now.
       TargetNode<?, ?> processed = index.get(node.getBuildTarget());
@@ -345,7 +353,7 @@ public class VersionedTargetGraphBuilder {
       }
 
       // Add the node to the graph and recurse on its deps.
-      TargetNode<?, ?> oldNode = index.putIfAbsent(node.getBuildTarget(), node);
+      TargetNode<?, ?> oldNode = indexPutIfAbsent(node);
       if (oldNode != null) {
         node = oldNode;
       } else {
@@ -432,7 +440,7 @@ public class VersionedTargetGraphBuilder {
 
     private final TargetNode<?, ?> node;
 
-    public RootAction(TargetNode<?, ?> node) {
+    RootAction(TargetNode<?, ?> node) {
       this.node = node;
     }
 
@@ -470,7 +478,7 @@ public class VersionedTargetGraphBuilder {
           newNode.getConstructorArg());
 
       // Add the new node, and it's dep edges, to the new graph.
-      TargetNode<?, ?> oldNode = index.putIfAbsent(newTarget, newNode);
+      TargetNode<?, ?> oldNode = indexPutIfAbsent(newNode);
       if (oldNode != null) {
         newNode = oldNode;
       } else {
@@ -564,7 +572,7 @@ public class VersionedTargetGraphBuilder {
 
     private final Iterable<TargetNode<?, ?>> nodes;
 
-    public NodePackAction(Iterable<TargetNode<?, ?>> nodes) {
+    NodePackAction(Iterable<TargetNode<?, ?>> nodes) {
       this.nodes = nodes;
     }
 
