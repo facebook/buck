@@ -19,6 +19,7 @@ src/com/facebook/buck/intellij/ideabuck/third-party/*.iml
 /.bucklogging.local.properties
 .buckversion
 .fakebuckversion
+/.nobuckcheck
 
 # Compiled Python
 *.pyc
