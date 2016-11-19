@@ -35,6 +35,7 @@ import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -55,7 +56,8 @@ public class CxxTestDescription implements
     Description<CxxTestDescription.Arg>,
     Flavored,
     ImplicitDepsInferringDescription<CxxTestDescription.Arg>,
-    MetadataProvidingDescription<CxxTestDescription.Arg> {
+    MetadataProvidingDescription<CxxTestDescription.Arg>,
+    VersionRoot<CxxTestDescription.Arg> {
 
   private static final CxxTestType DEFAULT_TEST_TYPE = CxxTestType.GTEST;
 
@@ -364,6 +366,11 @@ public class CxxTestDescription implements
     return CxxDescriptionEnhancer
         .createCompilationDatabaseDependencies(buildTarget, cxxPlatforms, resolver, args).map(
             metadataClass::cast);
+  }
+
+  @Override
+  public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
+    return true;
   }
 
   @SuppressFieldNotInitialized

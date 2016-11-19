@@ -34,6 +34,7 @@ import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -50,7 +51,8 @@ public class CxxBinaryDescription implements
     Flavored,
     ImplicitDepsInferringDescription<CxxBinaryDescription.Arg>,
     ImplicitFlavorsInferringDescription,
-    MetadataProvidingDescription<CxxBinaryDescription.Arg> {
+    MetadataProvidingDescription<CxxBinaryDescription.Arg>,
+    VersionRoot<CxxBinaryDescription.Arg> {
 
   private final CxxBuckConfig cxxBuckConfig;
   private final InferBuckConfig inferBuckConfig;
@@ -387,6 +389,11 @@ public class CxxBinaryDescription implements
       // we'll default to no flavor, which implicitly builds the default platform.
       return ImmutableSortedSet.of();
     }
+  }
+
+  @Override
+  public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
+    return true;
   }
 
   @SuppressFieldNotInitialized

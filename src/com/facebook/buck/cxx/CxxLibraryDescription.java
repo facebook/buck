@@ -46,6 +46,7 @@ import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -73,7 +74,8 @@ public class CxxLibraryDescription implements
     ImplicitDepsInferringDescription<CxxLibraryDescription.Arg>,
     ImplicitFlavorsInferringDescription,
     Flavored,
-    MetadataProvidingDescription<CxxLibraryDescription.Arg> {
+    MetadataProvidingDescription<CxxLibraryDescription.Arg>,
+    VersionPropagator<CxxLibraryDescription.Arg> {
 
   private static final Logger LOG = Logger.get(CxxLibraryDescription.class);
 
