@@ -122,9 +122,12 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   private final TestResultFormatter testFormatter;
 
-  private final AtomicInteger testPasses = new AtomicInteger(0);
-  private final AtomicInteger testFailures = new AtomicInteger(0);
-  private final AtomicInteger testSkips = new AtomicInteger(0);
+  private final AtomicInteger numPassingTests = new AtomicInteger(0);
+  private final AtomicInteger numFailingTests = new AtomicInteger(0);
+  private final AtomicInteger numExcludedTests = new AtomicInteger(0);
+  private final AtomicInteger numDisabledTests = new AtomicInteger(0);
+  private final AtomicInteger numAssumptionViolationTests = new AtomicInteger(0);
+  private final AtomicInteger numDryRunTests = new AtomicInteger(0);
 
   private final AtomicReference<TestRunEvent.Started> testRunStarted;
   private final AtomicReference<TestRunEvent.Finished> testRunFinished;
@@ -583,9 +586,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   }
 
   private Optional<String> renderTestSuffix() {
-    int testPassesVal = testPasses.get();
-    int testFailuresVal = testFailures.get();
-    int testSkipsVal = testSkips.get();
+    int testPassesVal = numPassingTests.get();
+    int testFailuresVal = numFailingTests.get();
+    int testSkipsVal =
+        numDisabledTests.get() +
+        numAssumptionViolationTests.get() +
+        // don't count: numExcludedTests.get() +
+        numDryRunTests.get();
     if (testSkipsVal > 0) {
       return Optional.of(
           String.format(
@@ -762,10 +769,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     ResultType resultType = testResult.getType();
     switch (resultType) {
       case SUCCESS:
-        testPasses.incrementAndGet();
+        numPassingTests.incrementAndGet();
         break;
       case FAILURE:
-        testFailures.incrementAndGet();
+        numFailingTests.incrementAndGet();
         // We don't use TestResultFormatter.reportResultSummary() here since that also
         // includes the stack trace and stdout/stderr.
         logEvents.add(
@@ -779,13 +786,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
                     testResult.getMessage())));
         break;
       case ASSUMPTION_VIOLATION:
-        testSkips.incrementAndGet();
+        numAssumptionViolationTests.incrementAndGet();
         break;
       case DISABLED:
+        numDisabledTests.incrementAndGet();
         break;
       case DRY_RUN:
+        numDryRunTests.incrementAndGet();
         break;
       case EXCLUDED:
+        numExcludedTests.incrementAndGet();
         break;
     }
   }
