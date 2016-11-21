@@ -46,9 +46,13 @@ public class TemporaryPaths extends ExternalResource {
   }
 
   @Override
-  protected void before() throws Throwable {
+  public void before() throws Exception {
+    if (root != null) {
+      return;
+    }
     root = Files.createTempDirectory("junit-temp-path").toRealPath();
   }
+
 
   public Path getRoot() {
     return root;
@@ -60,7 +64,7 @@ public class TemporaryPaths extends ExternalResource {
 
   @Override
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  protected void after() {
+  public void after() {
     if (root == null) {
       return;
     }
