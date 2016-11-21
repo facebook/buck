@@ -40,10 +40,12 @@ public enum JarShape {
       // pull in any transitive deps. To do this, iterate over our transitive deps and pull out any
       // maven deps. Then remove _their_ deps, and we're done.lo
       Set<JavaLibrary> toPackage = new HashSet<>();
-      Set<HasMavenCoordinates> mavenDeps;
 
-      toPackage.addAll(((HasClasspathEntries) root).getTransitiveClasspathDeps());
-      mavenDeps = toPackage.stream()
+      ImmutableSet<JavaLibrary> classpathDeps =
+          ((HasClasspathEntries) root).getTransitiveClasspathDeps();
+
+      toPackage.addAll(classpathDeps);
+      Set<HasMavenCoordinates> mavenDeps = toPackage.stream()
           .filter(HasMavenCoordinates::isMavenCoordsPresent)
           .filter(lib -> !lib.equals(root))
           .collect(Collectors.toSet());
@@ -62,7 +64,7 @@ public enum JarShape {
 
       return new Summary(
           toPackage,
-          ((HasClasspathEntries) root).getTransitiveClasspathDeps(),
+          classpathDeps,
           mavenDeps);
     }
   },
