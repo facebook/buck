@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.rules.BuildRule;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -35,36 +34,30 @@ public enum JarShape {
       }
 
       // We only need the first order maven deps, since maven's depenedency resolution process will
-      // pull in any transitive deps. Gather candidate maven deps using a BFS
-      Set<HasMavenCoordinates> mavenDeps = new HashSet<>();
-      Set<JavaLibrary> combinedTransitiveDeps = new HashSet<>();
+      // pull in any transitive deps. To do this, iterate over our transitive deps and pull out any
+      // maven deps. Then remove _their_ deps, and we're done.lo
+      Set<JavaLibrary> toPackage = new HashSet<>();
+      Set<HasMavenCoordinates> mavenDeps;
 
-      new AbstractBreadthFirstTraversal<JavaLibrary>((JavaLibrary) root) {
-        @Override
-        public Iterable<JavaLibrary> visit(JavaLibrary javaLibrary) throws RuntimeException {
-          if (!javaLibrary.equals(root) && javaLibrary.getMavenCoords().isPresent()) {
-            mavenDeps.add(javaLibrary);
-            // We may have a transitive dep on another maven dep.
-            combinedTransitiveDeps.addAll(
-                javaLibrary.getTransitiveClasspathDeps().stream()
-                    .filter(input -> !(input.equals(javaLibrary)))
-                    .collect(Collectors.toSet()));
-            return ImmutableSet.of();
-          }
-          return javaLibrary.getTransitiveClasspathDeps();
-        }
-      }.start();
-      mavenDeps.removeAll(combinedTransitiveDeps);
-
-      ImmutableSet<JavaLibrary> classpath = ((HasClasspathEntries) root).getTransitiveClasspathDeps();
-      Set<JavaLibrary> toPackage = classpath.stream()
-          .filter(input -> !combinedTransitiveDeps.contains(input))
-          .filter(input -> !mavenDeps.contains(input))
+      toPackage.addAll(((HasClasspathEntries) root).getTransitiveClasspathDeps());
+      mavenDeps = toPackage.stream()
+          .filter(HasMavenCoordinates::isMavenCoordsPresent)
+          .filter(lib -> !lib.equals(root))
           .collect(Collectors.toSet());
+
+      for (HasMavenCoordinates mavenDep : mavenDeps) {
+        ImmutableSet<JavaLibrary> transitive =
+            ((HasClasspathEntries) mavenDep).getTransitiveClasspathDeps();
+        toPackage.removeAll(transitive);
+        mavenDeps.removeAll(
+            transitive.stream()
+                .filter(dep -> !dep.equals(mavenDep))
+                .collect(Collectors.toSet()));
+      }
 
       return new Summary(
           toPackage,
-          classpath,
+          ((HasClasspathEntries) root).getTransitiveClasspathDeps(),
           mavenDeps);
     }
   },
