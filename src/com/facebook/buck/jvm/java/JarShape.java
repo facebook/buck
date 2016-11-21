@@ -47,16 +47,18 @@ public enum JarShape {
           .filter(HasMavenCoordinates::isMavenCoordsPresent)
           .filter(lib -> !lib.equals(root))
           .collect(Collectors.toSet());
+      Set<JavaLibrary> toRemoveFromMavenDeps = new HashSet<>();
 
       for (HasMavenCoordinates mavenDep : mavenDeps) {
         ImmutableSet<JavaLibrary> transitive =
             ((HasClasspathEntries) mavenDep).getTransitiveClasspathDeps();
         toPackage.removeAll(transitive);
-        mavenDeps.removeAll(
+        toRemoveFromMavenDeps.addAll(
             transitive.stream()
                 .filter(dep -> !dep.equals(mavenDep))
                 .collect(Collectors.toSet()));
       }
+      mavenDeps.removeAll(toRemoveFromMavenDeps);
 
       return new Summary(
           toPackage,
