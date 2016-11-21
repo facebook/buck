@@ -54,7 +54,7 @@ import java.util.Optional;
 @RunWith(Parameterized.class)
 public class CxxPreprocessAndCompileIntegrationTest {
 
-  @Parameterized.Parameters(name = "{0} {1}")
+  @Parameterized.Parameters(name = "preprocess_mode={0},sandbox_sources={1}")
   public static Collection<Object[]> data() {
     return ImmutableList.of(
         new Object[] {CxxPreprocessMode.COMBINED, true},

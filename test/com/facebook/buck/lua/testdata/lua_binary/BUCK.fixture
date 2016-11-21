@@ -48,7 +48,7 @@ cxx_lua_extension(
 
 cxx_library(
   name = 'dep',
-  headers = [
+  exported_headers = [
     'dep.h',
   ],
   srcs = [

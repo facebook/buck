@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SymlinkTree;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
@@ -401,6 +402,14 @@ public final class CxxInferEnhancer {
         cxxPlatform,
         headers,
         HeaderVisibility.PRIVATE);
+    Optional<SymlinkTree> sandboxTree = Optional.empty();
+    if (cxxBuckConfig.sandboxSources()) {
+      sandboxTree =
+          CxxDescriptionEnhancer.createSandboxTree(
+              params,
+              resolver,
+              cxxPlatform);
+    }
 
     ImmutableList<CxxPreprocessorInput> preprocessorInputs;
 
@@ -436,7 +445,7 @@ public final class CxxInferEnhancer {
             cxxPlatform),
         args.prefixHeader,
         CxxSourceRuleFactory.PicType.PDC,
-        Optional.empty());
+        sandboxTree);
     return factory.requireInferCaptureBuildRules(
         sources,
         inferBuckConfig,

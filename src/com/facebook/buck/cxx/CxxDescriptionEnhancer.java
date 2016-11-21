@@ -695,6 +695,14 @@ public class CxxDescriptionEnhancer {
         cxxPlatform,
         headers,
         HeaderVisibility.PRIVATE);
+    Optional<SymlinkTree> sandboxTree = Optional.empty();
+    if (cxxBuckConfig.sandboxSources()) {
+      sandboxTree =
+          createSandboxTree(
+              params,
+              resolver,
+              cxxPlatform);
+    }
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput =
         collectCxxPreprocessorInput(
             params,
@@ -710,15 +718,6 @@ public class CxxDescriptionEnhancer {
                 cxxPlatform,
                 FluentIterable.from(params.getDeps())
                     .filter(CxxPreprocessorDep.class::isInstance)));
-
-    Optional<SymlinkTree> sandboxTree = Optional.empty();
-    if (cxxBuckConfig.sandboxSources()) {
-      sandboxTree =
-          createSandboxTree(
-              params,
-              resolver,
-              cxxPlatform);
-    }
 
     // Generate and add all the build rules to preprocess and compile the source to the
     // resolver and get the `SourcePath`s representing the generated object files.
@@ -1135,6 +1134,15 @@ public class CxxDescriptionEnhancer {
                 args),
             HeaderVisibility.PRIVATE);
 
+    Optional<SymlinkTree> sandboxTree = Optional.empty();
+    if (cxxBuckConfig.sandboxSources()) {
+      sandboxTree =
+          createSandboxTree(
+              params,
+              ruleResolver,
+              cxxPlatform);
+    }
+
     ImmutableList<CxxPreprocessorInput> cxxPreprocessorInputFromDependencies =
         CxxDescriptionEnhancer.collectCxxPreprocessorInput(
             params,
@@ -1155,15 +1163,6 @@ public class CxxDescriptionEnhancer {
                 exportedHeaders,
                 args.frameworks));
 
-    Optional<SymlinkTree> sandboxTree = Optional.empty();
-    if (cxxBuckConfig.sandboxSources()) {
-      sandboxTree =
-          createSandboxTree(
-              params,
-              ruleResolver,
-              cxxPlatform
-          );
-    }
     // Create rule to build the object files.
     return CxxSourceRuleFactory.requirePreprocessAndCompileRules(
         params,
@@ -1188,7 +1187,7 @@ public class CxxDescriptionEnhancer {
         sandboxTree);
   }
 
-  private static Optional<SymlinkTree> createSandboxTree(
+  public static Optional<SymlinkTree> createSandboxTree(
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
@@ -1303,7 +1302,7 @@ public class CxxDescriptionEnhancer {
 
   public static SymlinkTree createSandboxTreeBuildRule(
       BuildRuleResolver resolver,
-      LinkableCxxConstructorArg args,
+      CxxConstructorArg args,
       CxxPlatform platform,
       BuildRuleParams params) {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);

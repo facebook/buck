@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -401,7 +402,8 @@ public class AppleTestIntegrationTest {
         containsString("0 Passed   0 Skipped   1 Failed   FooXCTest"));
     assertThat(
         result.getStderr(),
-        containsString("FAILURE FooXCTest -[FooXCTest testTwoPlusTwoEqualsFive]: FooXCTest.m:9"));
+        matchesPattern(
+            "(?s).*FAILURE FooXCTest -\\[FooXCTest testTwoPlusTwoEqualsFive\\]:.*FooXCTest.m:9.*"));
   }
 
   @Test(timeout = 180000)
@@ -493,7 +495,8 @@ public class AppleTestIntegrationTest {
         containsString("0 Passed   0 Skipped   1 Failed   AppTest"));
     assertThat(
         result.getStderr(),
-        containsString("FAILURE AppTest -[AppTest testMagicValueShouldFail]: AppTest.m:13"));
+        matchesPattern(
+            "(?s).*FAILURE AppTest -\\[AppTest testMagicValueShouldFail\\]:.*AppTest\\.m:13.*"));
   }
 
   @Test

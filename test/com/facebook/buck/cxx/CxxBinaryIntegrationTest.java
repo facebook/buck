@@ -155,6 +155,7 @@ public class CxxBinaryIntegrationTest {
       if (buildTarget.getFlavors()
               .contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR) ||
           buildTarget.getFlavors().contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR) ||
+          buildTarget.getFlavors().contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR) ||
           bt.equals(inferAnalysisTarget.toString()) ||
           bt.equals(captureBuildTarget.toString()) ||
           bt.equals(inferReportTarget.toString()) ||
@@ -285,8 +286,10 @@ public class CxxBinaryIntegrationTest {
                 target -> (
                     !target.getFlavors()
                         .contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR) &&
-                    !target.getFlavors()
-                        .contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)))
+                        !target.getFlavors()
+                            .contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR) &&
+                        !target.getFlavors()
+                            .contains(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR)))
             .transform(Object::toString)
             // Filter out any rules that are explicitly built locally.
             .filter(Predicates.not(locallyBuiltTargets::contains))
@@ -340,6 +343,10 @@ public class CxxBinaryIntegrationTest {
             inputBuildTarget,
             cxxPlatform.getFlavor(),
             HeaderVisibility.PRIVATE);
+    BuildTarget sandboxTreeTarget =
+        CxxDescriptionEnhancer.createSandboxSymlinkTreeTarget(
+            inputBuildTarget,
+            cxxPlatform.getFlavor());
     // this is flavored, and denotes the analysis step (generates a local report)
     BuildTarget inferAnalysisTarget =
         inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get());
@@ -351,15 +358,21 @@ public class CxxBinaryIntegrationTest {
     BuildTarget aggregatedDepsTarget =
         cxxSourceRuleFactory.createAggregatedPreprocessDepsBuildTarget();
 
-    BuckBuildLog buildLog = workspace.getBuildLog();
-    assertThat(
-        buildLog.getAllTargets(),
-        containsInAnyOrder(
+    ImmutableList.Builder<BuildTarget> targetsBuilder =
+        new ImmutableList.Builder<BuildTarget>().add(
             aggregatedDepsTarget,
             headerSymlinkTreeTarget,
             captureBuildTarget,
             inferAnalysisTarget,
-            inferReportTarget));
+            inferReportTarget);
+    if (sandboxSources) {
+      targetsBuilder.add(sandboxTreeTarget);
+    }
+
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    assertThat(
+        buildLog.getAllTargets(),
+        containsInAnyOrder(targetsBuilder.build().toArray()));
     buildLog.assertTargetBuiltLocally(aggregatedDepsTarget.toString());
     buildLog.assertTargetBuiltLocally(headerSymlinkTreeTarget.toString());
     buildLog.assertTargetBuiltLocally(captureBuildTarget.toString());
@@ -431,6 +444,11 @@ public class CxxBinaryIntegrationTest {
     BuildTarget topCaptureBuildTarget =
         cxxSourceRuleFactory.createInferCaptureBuildTarget(sourceName);
 
+    BuildTarget topSandboxTreeTarget =
+        CxxDescriptionEnhancer.createSandboxSymlinkTreeTarget(
+            inputBuildTarget,
+            cxxPlatform.getFlavor());
+
     // this is unflavored, but necessary to run the compiler successfully
     BuildTarget topHeaderSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
@@ -463,6 +481,11 @@ public class CxxBinaryIntegrationTest {
 
     BuildTarget depOneCaptureBuildTarget =
         depOneSourceRuleFactory.createInferCaptureBuildTarget(depOneSourceName);
+
+    BuildTarget depOneSandboxTreeTarget =
+        CxxDescriptionEnhancer.createSandboxSymlinkTreeTarget(
+            depOneBuildTarget,
+            cxxPlatform.getFlavor());
 
     BuildTarget depOneHeaderSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
@@ -497,6 +520,11 @@ public class CxxBinaryIntegrationTest {
     BuildTarget depTwoCaptureBuildTarget =
         depTwoSourceRuleFactory.createInferCaptureBuildTarget("dep_two.c");
 
+    BuildTarget depTwoSandboxTreeTarget =
+        CxxDescriptionEnhancer.createSandboxSymlinkTreeTarget(
+            depTwoBuildTarget,
+            cxxPlatform.getFlavor());
+
     BuildTarget depTwoHeaderSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             depTwoBuildTarget,
@@ -517,9 +545,8 @@ public class CxxBinaryIntegrationTest {
     BuildTarget depTwoAggregatedDepsTarget =
         depTwoSourceRuleFactory.createAggregatedPreprocessDepsBuildTarget();
 
-    // Check all the targets are in the buildLog
-    assertEquals(
-        ImmutableSet.of(
+    ImmutableSet.Builder<BuildTarget> buildTargets =
+        ImmutableSet.<BuildTarget>builder().add(
             topAggregatedDepsTarget,
             topCaptureBuildTarget,
             topHeaderSymlinkTreeTarget,
@@ -534,7 +561,16 @@ public class CxxBinaryIntegrationTest {
             depTwoCaptureBuildTarget,
             depTwoHeaderSymlinkTreeTarget,
             depTwoExportedHeaderSymlinkTreeTarget,
-            depTwoInferAnalysisTarget),
+            depTwoInferAnalysisTarget);
+    if (sandboxSources) {
+      buildTargets.add(
+          topSandboxTreeTarget,
+          depOneSandboxTreeTarget,
+          depTwoSandboxTreeTarget);
+    }
+    // Check all the targets are in the buildLog
+    assertEquals(
+        buildTargets.build(),
         workspace.getBuildLog().getAllTargets());
 
     /*

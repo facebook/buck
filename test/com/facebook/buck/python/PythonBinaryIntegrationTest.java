@@ -64,7 +64,7 @@ import java.util.Optional;
 @RunWith(Parameterized.class)
 public class PythonBinaryIntegrationTest {
 
-  @Parameterized.Parameters(name = "{0}(dir={1}),{2}")
+  @Parameterized.Parameters(name = "{0}(dir={1}),{2},sandbox_sources={3}")
   public static Collection<Object[]> data() {
     ImmutableList.Builder<Object[]> validPermutations = ImmutableList.builder();
     for (PythonBuckConfig.PackageStyle packageStyle : PythonBuckConfig.PackageStyle.values()) {
@@ -74,7 +74,10 @@ public class PythonBinaryIntegrationTest {
         }
 
         for (NativeLinkStrategy linkStrategy : NativeLinkStrategy.values()) {
-          validPermutations.add(new Object[]{packageStyle, pexDirectory, linkStrategy});
+          for (boolean sandboxSource : new boolean[]{true, false}) {
+            validPermutations.add(
+                new Object[]{packageStyle, pexDirectory, linkStrategy, sandboxSource});
+          }
         }
       }
     }
@@ -90,6 +93,9 @@ public class PythonBinaryIntegrationTest {
   @Parameterized.Parameter(value = 2)
   public NativeLinkStrategy nativeLinkStrategy;
 
+  @Parameterized.Parameter(value = 3)
+  public boolean sandboxSources;
+
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
 
@@ -104,7 +110,9 @@ public class PythonBinaryIntegrationTest {
         "[python]\n" +
             "  package_style = " + packageStyle.toString().toLowerCase() + "\n" +
             "  native_link_strategy = " + nativeLinkStrategy.toString().toLowerCase() + "\n" +
-            "  pex_flags = " + pexFlags + "\n",
+            "  pex_flags = " + pexFlags + "\n" +
+          "[cxx]\n" +
+            "  sandbox_sources=" + sandboxSources,
         ".buckconfig");
     PythonBuckConfig config = getPythonBuckConfig();
     assertThat(config.getPackageStyle(), equalTo(packageStyle));
