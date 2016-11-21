@@ -4188,6 +4188,20 @@ public class ProjectGeneratorTest {
         .setDeps(ImmutableSortedSet.of(framework2Target))
         .build();
 
+    BuildTarget framework1FlavoredTarget = BuildTarget.builder(rootPath, "//foo", "framework_1")
+        .addFlavors(
+            DEFAULT_FLAVOR,
+            CxxDescriptionEnhancer.SHARED_FLAVOR,
+            ImmutableFlavor.of("iphoneos-arm64"))
+        .build();
+    TargetNode<?, ?> framework1FlavoredNode = AppleBundleBuilder
+        .createBuilder(framework1FlavoredTarget)
+        .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
+        .setInfoPlist(new FakeSourcePath("Info.plist"))
+        .setBinary(framework1BinaryTarget)
+        .setDeps(ImmutableSortedSet.of(framework2Target))
+        .build();
+
     BuildTarget sharedLibraryTarget = BuildTarget
         .builder(rootPath, "//dep", "shared")
         .addFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR)
@@ -4203,12 +4217,13 @@ public class ProjectGeneratorTest {
         .setExtension(Either.ofLeft(AppleBundleExtension.APP))
         .setInfoPlist(new FakeSourcePath("Info.plist"))
         .setBinary(sharedLibraryTarget)
-        .setDeps(ImmutableSortedSet.of(framework1Target))
+        .setDeps(ImmutableSortedSet.of(framework1Target, framework1FlavoredTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
         ImmutableSet.of(
             framework1Node,
+            framework1FlavoredNode,
             framework2Node,
             framework1BinaryNode,
             framework2BinaryNode,
@@ -4226,10 +4241,13 @@ public class ProjectGeneratorTest {
 
     PBXBuildPhase buildPhase = target.getBuildPhases().get(0);
     assertThat(buildPhase instanceof PBXCopyFilesBuildPhase, Matchers.equalTo(true));
-      PBXCopyFilesBuildPhase copyFilesBuildPhase = (PBXCopyFilesBuildPhase) buildPhase;
-      ImmutableSet<String> frameworkNames =
-          FluentIterable.from(copyFilesBuildPhase.getFiles())
-              .transform(input -> input.getFileRef().getName()).toSortedSet(Ordering.natural());
+
+    PBXCopyFilesBuildPhase copyFilesBuildPhase = (PBXCopyFilesBuildPhase) buildPhase;
+    assertThat(copyFilesBuildPhase.getFiles().size(), Matchers.equalTo(2));
+
+    ImmutableSet<String> frameworkNames =
+        FluentIterable.from(copyFilesBuildPhase.getFiles())
+            .transform(input -> input.getFileRef().getName()).toSortedSet(Ordering.natural());
     assertThat(frameworkNames,
         Matchers.equalToObject(
             ImmutableSortedSet.of("framework_1.framework", "framework_2_override.framework")));

@@ -152,6 +152,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -1945,10 +1946,18 @@ public class ProjectGenerator {
       CopyFilePhaseDestinationSpec destinationSpec,
       Iterable<TargetNode<?, ?>> targetNodes) {
     PBXCopyFilesBuildPhase copyFilesBuildPhase = new PBXCopyFilesBuildPhase(destinationSpec);
+    HashSet<UnflavoredBuildTarget> frameworkTargets = new HashSet<UnflavoredBuildTarget>();
+
     for (TargetNode<?, ?> targetNode : targetNodes) {
       PBXFileReference fileReference = getLibraryFileReference(targetNode);
       PBXBuildFile buildFile = new PBXBuildFile(fileReference);
       if (fileReference.getExplicitFileType().equals(Optional.of("wrapper.framework"))) {
+        UnflavoredBuildTarget buildTarget = targetNode.getBuildTarget().getUnflavoredBuildTarget();
+        if (frameworkTargets.contains(buildTarget)) {
+          continue;
+        }
+        frameworkTargets.add(buildTarget);
+
         NSDictionary settings = new NSDictionary();
         settings.put("ATTRIBUTES", new String[] {"CodeSignOnCopy", "RemoveHeadersOnCopy"});
         buildFile.setSettings(Optional.of(settings));
