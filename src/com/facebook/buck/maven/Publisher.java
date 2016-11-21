@@ -28,6 +28,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.StandardSystemProperty;
@@ -302,12 +303,7 @@ public class Publisher {
         }
       }
 
-      ProcessExecutor processExecutor = new DefaultProcessExecutor(
-          new Console(
-              Verbosity.SILENT,
-              stdout,
-              stderr,
-              Ansi.withoutTty()));
+      ProcessExecutor processExecutor = createProcessExecutor(stdout, stderr);
       ProcessExecutorParams args = ProcessExecutorParams.builder()
           .addCommand(
               "gpg",
@@ -318,7 +314,11 @@ public class Publisher {
           .build();
       ProcessExecutor.Result result = processExecutor.launchAndExecute(args);
       if (result.getExitCode() != 0) {
-        throw new HumanReadableException("Unable to sign %s", file);
+        throw new HumanReadableException(
+            "Unable to sign %s.\nStandard Out:\n%Standard Err:\n",
+            file,
+            result.getStdout(),
+            result.getStderr());
       }
 
       if (!expectedOutput.exists()) {
@@ -333,5 +333,15 @@ public class Publisher {
     } catch (IOException e) {
       throw new HumanReadableException(e, "Unable to generate signauture for %s", file);
     }
+  }
+
+  @VisibleForTesting
+  protected ProcessExecutor createProcessExecutor(PrintStream stdout, PrintStream stderr) {
+    return new DefaultProcessExecutor(
+        new Console(
+            Verbosity.SILENT,
+            stdout,
+            stderr,
+            Ansi.withoutTty()));
   }
 }
