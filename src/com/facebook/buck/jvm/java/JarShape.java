@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -30,7 +31,9 @@ public enum JarShape {
     public Summary gatherDeps(BuildRule root) {
       // Our life is a lot easier if the root is a JavaLibrary :)
       if (!(root instanceof JavaLibrary)) {
-        throw new RuntimeException("Boom");
+        throw new HumanReadableException(
+            "Maven jars can only be constructed from java_library targets: %s",
+            root.getFullyQualifiedName());
       }
 
       // We only need the first order maven deps, since maven's depenedency resolution process will
@@ -65,11 +68,13 @@ public enum JarShape {
     @Override
     public Summary gatherDeps(BuildRule root) {
       ImmutableSet<JavaLibrary> classpath;
-      if (root instanceof HasClasspathEntries) {
-        classpath = ((HasClasspathEntries) root).getTransitiveClasspathDeps();
-      } else {
-        classpath = ImmutableSet.of();
+      if (!(root instanceof HasClasspathEntries)) {
+        throw new HumanReadableException(
+            "Jars can only be constructed from targets that have a classpath: %s",
+            root.getFullyQualifiedName());
       }
+
+      classpath = ((HasClasspathEntries) root).getTransitiveClasspathDeps();
 
       return new Summary(
           ImmutableSortedSet.of(root),
@@ -77,22 +82,6 @@ public enum JarShape {
           ImmutableSortedSet.of());
     }
   },
-  UBER {
-    @Override
-    public Summary gatherDeps(BuildRule root) {
-      // Our life is a lot easier if the root is a JavaLibrary :)
-      if (root instanceof HasClasspathEntries) {
-        HasClasspathEntries entries = (HasClasspathEntries) root;
-
-        return new Summary(
-            entries.getTransitiveClasspathDeps(),
-            entries.getTransitiveClasspathDeps(),
-            ImmutableSortedSet.of());
-      }
-
-      throw new RuntimeException("Not handled yet");
-    }
-  }
   ;
 
   public abstract Summary gatherDeps(BuildRule root);

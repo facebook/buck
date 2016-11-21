@@ -91,14 +91,15 @@ public class Javadoc extends AbstractBuildRule implements MavenPublishable {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
+    buildableContext.recordArtifact(output);
+
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     steps.add(new MkdirStep(getProjectFilesystem(), output.getParent()));
     steps.add(new RmStep(getProjectFilesystem(), output, /* force deletion */ true));
 
+    // Fast path: nothing to do so just create an empty zip and return.
     if (sources.isEmpty()) {
-      // Create an empty jar. This keeps things that want a jar happy without causing javadoc to
-      // choke on there not being any sources.
       steps.add(
           new ZipStep(
               getProjectFilesystem(),
@@ -108,67 +109,66 @@ public class Javadoc extends AbstractBuildRule implements MavenPublishable {
               ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
               output));
       return steps.build();
-    } else {
-      Path atFilePath = scratchDir.resolve("all-sources.txt");
-
-      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
-      // Write an @-file with all the source files in
-      steps.add(new WriteFileStep(
-          getProjectFilesystem(),
-          Joiner.on("\n").join(
-              sources.stream()
-                  .map(getResolver()::getAbsolutePath)
-                  .map(Path::toString)
-                  .iterator()),
-          atFilePath,
-          /* can execute */ false));
-
-      Path atArgs = scratchDir.resolve("options");
-      // Write an @-file with the classpath
-      StringBuilder argsBuilder = new StringBuilder("-classpath ");
-      Joiner.on(File.pathSeparator).appendTo(
-          argsBuilder,
-          getDeps().stream()
-              .filter(HasClasspathEntries.class::isInstance)
-              .flatMap(rule -> ((HasClasspathEntries) rule).getTransitiveClasspaths().stream())
-              .map(Object::toString)
-              .iterator());
-      steps.add(new WriteFileStep(
-          getProjectFilesystem(),
-          argsBuilder.toString(),
-          atArgs,
-          /* can execute */ false));
-
-      Path uncompressedOutputDir = scratchDir.resolve("docs");
-      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), uncompressedOutputDir));
-      steps.add(new ShellStep(getProjectFilesystem().resolve(scratchDir)) {
-        @Override
-        protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-          return ImmutableList.of(
-              "javadoc",
-              "-Xdoclint:none",
-              "-notimestamp",
-              "-d", uncompressedOutputDir.getFileName().toString(),
-              "@" + getProjectFilesystem().resolve(atArgs),
-              "@" + getProjectFilesystem().resolve(atFilePath));
-        }
-
-        @Override
-        public String getShortName() {
-          return "javadoc";
-        }
-      });
-      steps.add(
-          new ZipStep(
-              getProjectFilesystem(),
-              output,
-              ImmutableSet.of(),
-              /* junk paths */ false,
-              DEFAULT_COMPRESSION_LEVEL,
-              uncompressedOutputDir));
     }
 
-    buildableContext.recordArtifact(output);
+    Path sourcesListFilePath = scratchDir.resolve("all-sources.txt");
+
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
+    // Write an @-file with all the source files in
+    steps.add(new WriteFileStep(
+        getProjectFilesystem(),
+        Joiner.on("\n").join(
+            sources.stream()
+                .map(getResolver()::getAbsolutePath)
+                .map(Path::toString)
+                .iterator()),
+        sourcesListFilePath,
+          /* can execute */ false));
+
+    Path atArgs = scratchDir.resolve("options");
+    // Write an @-file with the classpath
+    StringBuilder argsBuilder = new StringBuilder("-classpath ");
+    Joiner.on(File.pathSeparator).appendTo(
+        argsBuilder,
+        getDeps().stream()
+            .filter(HasClasspathEntries.class::isInstance)
+            .flatMap(rule -> ((HasClasspathEntries) rule).getTransitiveClasspaths().stream())
+            .map(Object::toString)
+            .iterator());
+    steps.add(new WriteFileStep(
+        getProjectFilesystem(),
+        argsBuilder.toString(),
+        atArgs,
+          /* can execute */ false));
+
+    Path uncompressedOutputDir = scratchDir.resolve("docs");
+    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), uncompressedOutputDir));
+    steps.add(new ShellStep(getProjectFilesystem().resolve(scratchDir)) {
+      @Override
+      protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+        return ImmutableList.of(
+            "javadoc",
+            "-Xdoclint:none",
+            "-notimestamp",
+            "-d", uncompressedOutputDir.getFileName().toString(),
+            "@" + getProjectFilesystem().resolve(atArgs),
+            "@" + getProjectFilesystem().resolve(sourcesListFilePath));
+      }
+
+      @Override
+      public String getShortName() {
+        return "javadoc";
+      }
+    });
+    steps.add(
+        new ZipStep(
+            getProjectFilesystem(),
+            output,
+            ImmutableSet.of(),
+              /* junk paths */ false,
+            DEFAULT_COMPRESSION_LEVEL,
+            uncompressedOutputDir));
+
     return steps.build();
   }
 

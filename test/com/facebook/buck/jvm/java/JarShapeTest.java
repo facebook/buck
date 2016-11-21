@@ -63,24 +63,6 @@ public class JarShapeTest {
   }
 
   @Test
-  public void shouldIncludeEverythingInAnUberJar() throws NoSuchBuildTargetException {
-    BuildRule dep = JavaLibraryBuilder.createBuilder("//:dep")
-        .addSrc(new FakeSourcePath("SomeFile.java"))
-        .build(resolver);
-
-    BuildRule lib = JavaLibraryBuilder.createBuilder("//:lib")
-        .addSrc(new FakeSourcePath("Library.java"))
-        .addDep(dep.getBuildTarget())
-        .build(resolver);
-
-    JarShape.Summary deps = JarShape.UBER.gatherDeps(lib);
-
-    assertEquals(ImmutableSortedSet.of(dep, lib), deps.getPackagedRules());
-    assertEquals(ImmutableSet.of(dep, lib), deps.getClasspath());
-    assertTrue(deps.getMavenDeps().isEmpty());
-  }
-
-  @Test
   public void aMavenJarWithoutMavenTransitiveDepsIsAnUberJar() throws NoSuchBuildTargetException {
     BuildRule dep = JavaLibraryBuilder.createBuilder("//:dep")
         .addSrc(new FakeSourcePath("SomeFile.java"))
