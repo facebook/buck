@@ -169,6 +169,25 @@ public class WorkerToolRuleIntegrationTest {
   }
 
   @Test
+  public void testWorkerToolArgs() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildTarget target1 = workspace.newBuildTarget("//:test8");
+    BuildTarget target2 = workspace.newBuildTarget("//:test9");
+
+    workspace
+        .runBuckBuild(
+            target1.getFullyQualifiedName(),
+            target2.getFullyQualifiedName())
+        .assertSuccess();
+    workspace.verify(
+        Paths.get("test8_output.expected"),
+        BuildTargets.getGenPath(filesystem, target1, "%s"));
+    workspace.verify(
+        Paths.get("test9_output.expected"),
+        BuildTargets.getGenPath(filesystem, target2, "%s"));
+  }
+
+  @Test
   public void testWorkerCrashDoesNotHang() throws Exception {
     workspace
         .runBuckBuild("//:test10")

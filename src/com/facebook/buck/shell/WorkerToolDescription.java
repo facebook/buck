@@ -41,7 +41,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Function;
-import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -172,7 +171,7 @@ public class WorkerToolDescription implements Description<WorkerToolDescription.
 
     public ImmutableList<String> getStartupArgs() {
       if (args.isLeft()) {
-        return ImmutableList.copyOf(Splitter.on(' ').split(args.getLeft()));
+        return ImmutableList.of(args.getLeft());
       } else {
         return args.getRight();
       }
