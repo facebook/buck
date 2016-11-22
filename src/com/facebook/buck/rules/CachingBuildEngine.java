@@ -1013,6 +1013,7 @@ public class CachingBuildEngine implements BuildEngine {
 
               @Override
               public void onFailure(@Nonnull Throwable thrown) {
+                thrown = maybeAttachBuildRuleNameToException(thrown, rule);
                 handleResult(BuildResult.failure(rule, thrown));
 
                 // Reset interrupted flag once failure has been recorded.
@@ -1023,6 +1024,27 @@ public class CachingBuildEngine implements BuildEngine {
 
             }));
     return result;
+  }
+
+  private static Throwable maybeAttachBuildRuleNameToException(
+      @Nonnull Throwable thrown,
+      BuildRule rule) {
+    if ((thrown instanceof HumanReadableException) ||
+        (thrown instanceof InterruptedException)) {
+      return thrown;
+    }
+    String message = thrown.getMessage();
+    if (message != null && message.contains(rule.toString())) {
+      return thrown;
+    }
+    String betterMessage = String.format(
+        "Building %s failed. Caused by %s",
+        rule.getBuildTarget(),
+        thrown.getClass().getSimpleName());
+    if (thrown.getMessage() != null) {
+      betterMessage += ": " + thrown.getMessage();
+    }
+    return new RuntimeException(betterMessage, thrown);
   }
 
   private ListenableFuture<Void> registerTopLevelRule(BuildRule rule, BuckEventBus eventBus) {
