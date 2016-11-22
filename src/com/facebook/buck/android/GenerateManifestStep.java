@@ -26,7 +26,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -95,10 +94,9 @@ public class GenerateManifestStep implements Step {
       xmlText = xmlText.replace("\r\n", "\n");
     }
     try {
-      File outManifestFile = outManifestPath.toFile();
-      Files.write(xmlText.getBytes(Charsets.UTF_8), outManifestFile);
+      filesystem.writeContentsToPath(xmlText, outManifestPath);
     } catch (IOException e) {
-      throw new HumanReadableException("Error converting line endings of manifest file");
+      throw new HumanReadableException(e, "Error writing manifest file");
     }
 
     return StepExecutionResult.SUCCESS;
