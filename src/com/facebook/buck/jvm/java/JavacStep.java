@@ -56,8 +56,6 @@ public class JavacStep implements Step {
 
   private final ClassUsageFileWriter usedClassesFileWriter;
 
-  private final StandardJavaFileManagerFactory fileManagerFactory;
-
   private final Optional<Path> workingDirectory;
 
   private final ImmutableSortedSet<Path> javaSourceFilePaths;
@@ -79,6 +77,8 @@ public class JavacStep implements Step {
   private final Javac javac;
 
   private final ClasspathChecker classpathChecker;
+
+  private final Optional<DirectToJarOutputSettings> directToJarOutputSettings;
 
   private static final Pattern IS_WARNING =
       Pattern.compile(":\\s*warning:", Pattern.CASE_INSENSITIVE);
@@ -112,7 +112,6 @@ public class JavacStep implements Step {
   public JavacStep(
       Path outputDirectory,
       ClassUsageFileWriter usedClassesFileWriter,
-      StandardJavaFileManagerFactory fileManagerFactory,
       Optional<Path> workingDirectory,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
@@ -123,10 +122,10 @@ public class JavacStep implements Step {
       Optional<SuggestBuildRules> suggestBuildRules,
       SourcePathResolver resolver,
       ProjectFilesystem filesystem,
-      ClasspathChecker classpathChecker) {
+      ClasspathChecker classpathChecker,
+      Optional<DirectToJarOutputSettings> directToJarOutputSettings) {
     this.outputDirectory = outputDirectory;
     this.usedClassesFileWriter = usedClassesFileWriter;
-    this.fileManagerFactory = fileManagerFactory;
     this.workingDirectory = workingDirectory;
     this.javaSourceFilePaths = javaSourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
@@ -138,6 +137,7 @@ public class JavacStep implements Step {
     this.resolver = resolver;
     this.filesystem = filesystem;
     this.classpathChecker = classpathChecker;
+    this.directToJarOutputSettings = directToJarOutputSettings;
   }
 
   @Override
@@ -179,10 +179,10 @@ public class JavacStep implements Step {
           firstOrderContext.getJavaPackageFinder(),
           filesystem,
           usedClassesFileWriter,
-          fileManagerFactory,
           firstOrderContext.getEnvironment(),
           firstOrderContext.getProcessExecutor(),
-          getAbsolutePathsForJavacInputs(javac));
+          getAbsolutePathsForJavacInputs(javac),
+          directToJarOutputSettings);
 
       int declaredDepsResult = javac.buildWithClasspath(
           javacExecutionContext,

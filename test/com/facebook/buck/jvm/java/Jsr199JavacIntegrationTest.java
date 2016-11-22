@@ -123,10 +123,10 @@ public class Jsr199JavacIntegrationTest {
         executionContext.getJavaPackageFinder(),
         createProjectFilesystem(),
         NoOpClassUsageFileWriter.instance(),
-        BaseCompileToJarStepFactory.DEFAULT_FILE_MANAGER_FACTORY,
         executionContext.getEnvironment(),
         executionContext.getProcessExecutor(),
-        ImmutableList.of());
+        ImmutableList.of(),
+        Optional.empty());
 
     int exitCode = javac.buildWithClasspath(
         javacExecutionContext,
@@ -170,10 +170,10 @@ public class Jsr199JavacIntegrationTest {
         executionContext.getJavaPackageFinder(),
         createProjectFilesystem(),
         NoOpClassUsageFileWriter.instance(),
-        BaseCompileToJarStepFactory.DEFAULT_FILE_MANAGER_FACTORY,
         executionContext.getEnvironment(),
         executionContext.getProcessExecutor(),
-        ImmutableList.of());
+        ImmutableList.of(),
+        Optional.empty());
 
     int exitCode = javac.buildWithClasspath(
         javacExecutionContext,
@@ -270,10 +270,10 @@ public class Jsr199JavacIntegrationTest {
         executionContext.getJavaPackageFinder(),
         createProjectFilesystem(),
         NoOpClassUsageFileWriter.instance(),
-        BaseCompileToJarStepFactory.DEFAULT_FILE_MANAGER_FACTORY,
         executionContext.getEnvironment(),
         executionContext.getProcessExecutor(),
-        ImmutableList.of(fakeJavacJar));
+        ImmutableList.of(fakeJavacJar),
+        Optional.empty());
 
     boolean caught = false;
 

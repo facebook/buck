@@ -45,6 +45,7 @@ java_immutables_library(
   srcs = [
     'AbstractJavaOptions.java',
     'AbstractJavacExecutionContext.java',
+    'AbstractDirectToJarOutputSettings.java',
     'AbstractJavacOptions.java',
     'AbstractJavacVersion.java',
     'AnnotationProcessingEvent.java',
@@ -72,6 +73,7 @@ java_immutables_library(
     'JavaInMemoryFileManager.java',
     'JavaInMemoryFileObject.java',
     'JavaNoOpFileObject.java',
+    'JarDirectoryStepHelper.java',
     'JdkProvidedInMemoryJavac.java',
     'Jsr199Javac.java',
     'MavenPublishable.java',
@@ -83,6 +85,7 @@ java_immutables_library(
   immutable_types = [
     'JavaOptions',
     'JavacExecutionContext',
+    'DirectToJarOutputSettings',
     'JavacOptions',
     'JavacVersion',
   ],
@@ -165,7 +168,6 @@ java_immutables_library(
     'JavacToJarStepFactory.java',
     'JacocoConstants.java',
     'JarDirectoryStep.java',
-    'JarDirectoryStepHelper.java',
     'JavacDirectToJarStep.java',
     'JavacStep.java',
     'JUnitStep.java',

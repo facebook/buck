@@ -91,7 +91,6 @@ public class JavacStepTest {
     JavacStep step = new JavacStep(
         Paths.get("output"),
         NoOpClassUsageFileWriter.instance(),
-        BaseCompileToJarStepFactory.DEFAULT_FILE_MANAGER_FACTORY,
         Optional.empty(),
         ImmutableSortedSet.of(),
         Paths.get("pathToSrcsList"),
@@ -102,7 +101,8 @@ public class JavacStepTest {
         Optional.empty(),
         sourcePathResolver,
         fakeFilesystem,
-        classpathChecker);
+        classpathChecker,
+        Optional.empty());
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
 
@@ -144,7 +144,6 @@ public class JavacStepTest {
     JavacStep step = new JavacStep(
         Paths.get("output"),
         NoOpClassUsageFileWriter.instance(),
-        BaseCompileToJarStepFactory.DEFAULT_FILE_MANAGER_FACTORY,
         Optional.empty(),
         ImmutableSortedSet.of(),
         Paths.get("pathToSrcsList"),
@@ -155,7 +154,8 @@ public class JavacStepTest {
         Optional.empty(),
         sourcePathResolver,
         fakeFilesystem,
-        classpathChecker);
+        classpathChecker,
+        Optional.empty());
 
     FakeProcess fakeJavacProcess = new FakeProcess(1, "javac stdout\n", "javac stderr\n");
 
@@ -199,7 +199,6 @@ public class JavacStepTest {
     JavacStep step = new JavacStep(
         Paths.get("output"),
         NoOpClassUsageFileWriter.instance(),
-        BaseCompileToJarStepFactory.DEFAULT_FILE_MANAGER_FACTORY,
         Optional.empty(),
         ImmutableSortedSet.of(),
         Paths.get("pathToSrcsList"),
@@ -210,7 +209,8 @@ public class JavacStepTest {
         Optional.empty(),
         sourcePathResolver,
         fakeFilesystem,
-        classpathChecker);
+        classpathChecker,
+        Optional.empty());
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
 
@@ -254,7 +254,6 @@ public class JavacStepTest {
     JavacStep step = new JavacStep(
         Paths.get("output"),
         NoOpClassUsageFileWriter.instance(),
-        BaseCompileToJarStepFactory.DEFAULT_FILE_MANAGER_FACTORY,
         Optional.empty(),
         ImmutableSortedSet.of(),
         Paths.get("pathToSrcsList"),
@@ -265,7 +264,8 @@ public class JavacStepTest {
         Optional.empty(),
         sourcePathResolver,
         fakeFilesystem,
-        classpathChecker);
+        classpathChecker,
+        Optional.empty());
 
     FakeProcess fakeJavacProcess = new FakeProcess(1, "javac stdout\n", "javac stderr\n");
 

@@ -23,18 +23,13 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.zip.CustomZipOutputStream;
-import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-
-import javax.annotation.Nullable;
 
 /**
  * A composite step used to compile java libraries directly to jar files retaining the intermediate
@@ -56,9 +51,6 @@ public class JavacDirectToJarStep implements Step {
   private final Optional<Path> manifestFile;
   private final Path outputJar;
   private final ClassUsageFileWriter usedClassesFileWriter;
-
-  @Nullable
-  private JavaInMemoryFileManager inMemoryFileManager;
 
   public JavacDirectToJarStep(
       ImmutableSortedSet<Path> sourceFilePaths,
@@ -96,47 +88,7 @@ public class JavacDirectToJarStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-
-    CustomZipOutputStream jarOutputStream = null;
-
-    try {
-
-      jarOutputStream = ZipOutputStreams.newOutputStream(
-          filesystem.getPathForRelativePath(outputJar),
-          ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP);
-
-      JavacStep javacStep = createJavacStep(jarOutputStream);
-
-      StepExecutionResult javacStepResult = javacStep.execute(context);
-
-      if (!javacStepResult.isSuccess()) {
-        return javacStepResult;
-      }
-
-      // entriesToJar is the output directory which normally contains .class files that are to be
-      // added into the jarOutputStream. However, in this step they are already directly placed in
-      // jarOutputStream by the compiler. entriesToJar is still needed though because it may contain
-      // other resources that need to be copied into the jar.
-      return StepExecutionResult.of(JarDirectoryStepHelper.createJarFile(
-          filesystem,
-          outputJar,
-          jarOutputStream,
-          ImmutableSortedSet.copyOf(entriesToJar),
-          inMemoryFileManager != null
-              ? inMemoryFileManager.getEntries()
-              : ImmutableSet.of(),
-          mainClass,
-          manifestFile,
-          /* mergeManifests */ true,
-          /* blacklist */ ImmutableSet.of(),
-          new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus()),
-          context.getStdErr()));
-
-    } finally {
-      if (jarOutputStream != null) {
-        jarOutputStream.close();
-      }
-    }
+    return createJavacStep().execute(context);
   }
 
   @Override
@@ -174,11 +126,16 @@ public class JavacDirectToJarStep implements Step {
     return result;
   }
 
-  private JavacStep createJavacStep(CustomZipOutputStream jarOutputStream) {
+  private JavacStep createJavacStep() {
+    DirectToJarOutputSettings directToJarOutputSettings = DirectToJarOutputSettings.of(
+        outputJar,
+        buildTimeOptions.getClassesToRemoveFromJar(),
+        entriesToJar,
+        mainClass,
+        manifestFile);
     return new JavacStep(
         outputDirectory,
         usedClassesFileWriter,
-        createFileManagerFactory(jarOutputStream),
         workingDirectory,
         sourceFilePaths,
         pathToSrcsList,
@@ -189,17 +146,7 @@ public class JavacDirectToJarStep implements Step {
         suggestBuildRules,
         resolver,
         filesystem,
-        new ClasspathChecker());
-  }
-
-  private StandardJavaFileManagerFactory createFileManagerFactory(
-      final CustomZipOutputStream jarOutputStream) {
-    return compiler -> {
-      inMemoryFileManager = new JavaInMemoryFileManager(
-          compiler.getStandardFileManager(null, null, null),
-          jarOutputStream,
-          buildTimeOptions.getClassesToRemoveFromJar());
-      return inMemoryFileManager;
-    };
+        new ClasspathChecker(),
+        Optional.of(directToJarOutputSettings));
   }
 }

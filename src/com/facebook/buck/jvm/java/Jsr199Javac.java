@@ -23,11 +23,15 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.zip.CustomZipOutputStream;
+import com.facebook.buck.zip.ZipOutputStreams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -116,9 +120,26 @@ public abstract class Jsr199Javac implements Javac {
       Path pathToSrcsList,
       Optional<Path> workingDirectory) {
     JavaCompiler compiler = createCompiler(context);
-
-    StandardJavaFileManager fileManager = context.getFileManagerFactory().create(compiler);
+    CustomZipOutputStream jarOutputStream = null;
+    StandardJavaFileManager fileManager = null;
+    JavaInMemoryFileManager inMemoryFileManager = null;
     try {
+      fileManager = compiler.getStandardFileManager(null, null, null);
+      Supplier<ImmutableSet<String>> alreadyAddedFilesAvailableAfterCompilation =
+          Suppliers.ofInstance(ImmutableSet.of());
+      if (context.getDirectToJarOutputSettings().isPresent()) {
+        jarOutputStream = ZipOutputStreams.newOutputStream(
+            context.getProjectFilesystem().getPathForRelativePath(
+                context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath()),
+            ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP);
+        inMemoryFileManager = new JavaInMemoryFileManager(
+            fileManager,
+            jarOutputStream,
+            context.getDirectToJarOutputSettings().get().getClassesToRemoveFromJar());
+        alreadyAddedFilesAvailableAfterCompilation = inMemoryFileManager::getEntries;
+        fileManager = inMemoryFileManager;
+      }
+
       Iterable<? extends JavaFileObject> compilationUnits;
       try {
         compilationUnits = createCompilationUnits(
@@ -131,7 +152,7 @@ public abstract class Jsr199Javac implements Javac {
       }
 
       try {
-        return buildWithClasspath(
+        int result = buildWithClasspath(
             context,
             invokingRule,
             options,
@@ -141,15 +162,53 @@ public abstract class Jsr199Javac implements Javac {
             compiler,
             fileManager,
             compilationUnits);
+        if (result != 0 || !context.getDirectToJarOutputSettings().isPresent()) {
+          return result;
+        }
+
+        return JarDirectoryStepHelper.createJarFile(
+            context.getProjectFilesystem(),
+            context.getDirectToJarOutputSettings().get().getDirectToJarOutputPath(),
+            jarOutputStream,
+            context.getDirectToJarOutputSettings().get().getEntriesToJar(),
+            alreadyAddedFilesAvailableAfterCompilation.get(),
+            context.getDirectToJarOutputSettings().get().getMainClass(),
+            context.getDirectToJarOutputSettings().get().getManifestFile(),
+            /* mergeManifests */ true,
+            /* blacklist */ ImmutableSet.of(),
+            context.getEventSink(),
+            context.getStdErr());
       } finally {
         close(compilationUnits);
       }
+    } catch (IOException e) {
+      LOG.warn(e, "Unable to create jarOutputStream");
     } finally {
-      try {
-        fileManager.close();
-      } catch (IOException e) {
-        LOG.warn(e, "Unable to close java filemanager. We may be leaking memory.");
+      closeResources(fileManager, inMemoryFileManager, jarOutputStream);
+    }
+    return 1;
+  }
+
+  private void closeResources(
+      @Nullable StandardJavaFileManager fileManager,
+      @Nullable JavaInMemoryFileManager inMemoryFileManager,
+      @Nullable CustomZipOutputStream jarOutputStream) {
+    try {
+      if (jarOutputStream != null) {
+        jarOutputStream.close();
       }
+    } catch (IOException e) {
+      LOG.warn(e, "Unable to close jarOutputStream. We may be leaking memory.");
+    }
+
+    try {
+      if (inMemoryFileManager != null) {
+        inMemoryFileManager.close();
+      } else if (fileManager != null) {
+        fileManager.close();
+      }
+    } catch (IOException e) {
+      LOG.warn(e, "Unable to close fileManager. We may be leaking memory.");
     }
   }
 

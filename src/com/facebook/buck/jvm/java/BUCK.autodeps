@@ -139,12 +139,12 @@
       "//src/com/facebook/buck/test/selectors:selectors",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/immutables:immutables",
-      "//src/com/facebook/buck/zip:stream",
       "//third-party/java/guava:guava"
     ]
   },
   "support" : {
     "deps" : [
+      "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/jvm/java:javac-internals",
       "//src/com/facebook/buck/jvm/java/tracing:tracing",
       "//src/com/facebook/buck/log:api",
