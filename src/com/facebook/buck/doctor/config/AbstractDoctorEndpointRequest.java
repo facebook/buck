@@ -37,9 +37,6 @@ abstract class AbstractDoctorEndpointRequest {
   abstract Optional<String> getMachineReadableLog();
 
   @Value.Parameter
-  abstract Optional<String> getRulekeyLog();
-
-  @Value.Parameter
   abstract Optional<String> getRageUrl();
 
 }

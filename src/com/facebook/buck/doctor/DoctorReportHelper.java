@@ -123,7 +123,6 @@ public class DoctorReportHelper {
       Optional<DefectSubmitResult> rageResult)
       throws IOException {
     Optional<String> machineLog;
-    Optional<String> rulekeyLog;
     Optional<String> rageUrl;
 
     if (entry.getMachineReadableLogFile().isPresent()) {
@@ -135,22 +134,12 @@ public class DoctorReportHelper {
       machineLog = Optional.empty();
     }
 
-    if (!entry.getRuleKeyLoggerLogFile().isPresent()) {
-      LOG.warn(String.format(WARNING_FILE_TEMPLATE, entry.toString(), "rule key log"));
-      rulekeyLog = Optional.empty();
-    } else {
-      rulekeyLog = Optional.of(Files.toString(
-          entry.getRuleKeyLoggerLogFile().get().toFile(),
-          Charsets.UTF_8));
-    }
-
     rageUrl = rageResult.map(result -> result.getReportSubmitMessage().get());
 
     return DoctorEndpointRequest.of(
         entry.getBuildId(),
         entry.getRelativePath().toString(),
         machineLog,
-        rulekeyLog,
         rageUrl);
   }
 
