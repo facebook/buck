@@ -27,6 +27,7 @@ import com.facebook.buck.util.environment.Platform;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -101,11 +102,13 @@ public class CxxIncludeDirsIntegrationTest {
         containsString("test2.h"));
   }
 
+  @Ignore
   @Test
   public void cxxPythonExtensionWithIncludeDirs() throws IOException {
     workspace.runBuckBuild("//python_binary:binary_with_extension").assertSuccess();
   }
 
+  @Ignore
   @Test
   public void cxxPythonExtensionWithoutIncludeDirs() throws IOException {
     workspace.replaceFileContents("python_binary/BUCK", "include_dirs", "#");
