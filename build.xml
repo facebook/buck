@@ -316,7 +316,7 @@
     <mkdir dir="${aosp.classes.dir}" />
     <ecj srcdir="${aosp.src.dir}" destdir="${aosp.classes.dir}" gensrcdir="${aosp.gensrc.dir}">
       <ecj-params>
-        <!-- ManifestMerger.java has redundant null checks -->
+        <!-- suppress ManifestMerger2 warnings -->
         <compilerarg value="-err:-all"/>
       </ecj-params>
     </ecj>
