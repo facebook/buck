@@ -216,10 +216,10 @@ public abstract class AbstractCommand implements Command {
     return enableParserProfiling;
   }
 
-  public ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
+  public ImmutableSet<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
       BuckConfig config,
       Iterable<String> targetsAsArgs) {
-    ImmutableList.Builder<TargetNodeSpec> specs = ImmutableList.builder();
+    ImmutableSet.Builder<TargetNodeSpec> specs = ImmutableSet.builder();
     CommandLineTargetNodeSpecParser parser =
         new CommandLineTargetNodeSpecParser(
             config,

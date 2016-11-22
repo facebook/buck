@@ -284,13 +284,12 @@ public class InstallCommand extends BuildCommand {
 
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ImmutableSet.Builder<String> installHelperTargets = ImmutableSet.builder();
-    for (int index = 0; index < getArguments().size(); index++) {
 
-      // TODO(ryu2): Cache argument parsing
-        TargetNodeSpec spec = parseArgumentsAsTargetNodeSpecs(
-            params.getBuckConfig(),
-            getArguments()).get(index);
+    ImmutableSet<TargetNodeSpec> targetNodeSpecs = parseArgumentsAsTargetNodeSpecs(
+        params.getBuckConfig(),
+        getArguments());
 
+    for (TargetNodeSpec spec : targetNodeSpecs) {
         BuildTarget target =
             FluentIterable
                 .from(

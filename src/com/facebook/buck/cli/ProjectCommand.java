@@ -1060,7 +1060,7 @@ public class ProjectCommand extends BuildCommand {
     Iterable<String> patterns = Splitter.onPattern("\\s+").split(modulesToFocusOn);
     // Parse patterns with the following syntax:
     // https://buckbuild.com/concept/build_target_pattern.html
-    ImmutableList<TargetNodeSpec> specs =
+    ImmutableSet<TargetNodeSpec> specs =
         parseArgumentsAsTargetNodeSpecs(params.getBuckConfig(), patterns);
 
     // Resolve the list of targets matching the patterns.
