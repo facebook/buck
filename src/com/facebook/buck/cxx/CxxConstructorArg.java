@@ -62,6 +62,7 @@ public class CxxConstructorArg extends AbstractDescriptionArg
   public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
   public Optional<String> headerNamespace;
   public Optional<Linker.CxxRuntimeType> cxxRuntimeType;
+  public ImmutableList<String> includeDirs = ImmutableList.of();
 
   @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
   public ImmutableMap<String, Flavor> defaults = ImmutableMap.of();

@@ -1,0 +1,27 @@
+python_binary(
+  name = 'binary_with_extension',
+  base_module = '',
+  main_module = 'main',
+  platform = 'py',
+  deps = [':ext', ':main'],
+)
+
+cxx_python_extension(
+  name = 'ext',
+  base_module = '',
+  srcs = ['src/extension.c'],
+  headers = ['headers/extension.h'],
+  #include_dirs = ['headers'],
+  #linker_flags = ['-undefined', 'dynamic_lookup'],
+)
+
+python_library(
+  name = 'main',
+  base_module = '',
+  srcs = ['main.py'],
+)
+
+# required
+cxx_library(
+  name = 'platform_py',
+)

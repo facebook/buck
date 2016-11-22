@@ -1,0 +1,3 @@
+char* hello() {
+  return "hello";
+}

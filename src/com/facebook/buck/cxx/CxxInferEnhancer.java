@@ -320,7 +320,8 @@ public final class CxxInferEnhancer {
       BuildRuleParams params,
       CxxPlatform cxxPlatform,
       CxxBinaryDescription.Arg args,
-      HeaderSymlinkTree headerSymlinkTree) throws NoSuchBuildTargetException {
+      HeaderSymlinkTree headerSymlinkTree,
+      Optional<SymlinkTree> sandboxTree) throws NoSuchBuildTargetException {
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
         params,
         cxxPlatform,
@@ -334,7 +335,9 @@ public final class CxxInferEnhancer {
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
             cxxPlatform,
             FluentIterable.from(params.getDeps())
-                .filter(CxxPreprocessorDep.class::isInstance)));
+                .filter(CxxPreprocessorDep.class::isInstance)),
+        args.includeDirs,
+        sandboxTree);
   }
 
   private static ImmutableList<CxxPreprocessorInput>
@@ -344,7 +347,9 @@ public final class CxxInferEnhancer {
       SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       CxxLibraryDescription.Arg args,
-      HeaderSymlinkTree headerSymlinkTree) throws NoSuchBuildTargetException {
+      HeaderSymlinkTree headerSymlinkTree,
+      ImmutableList<String> includeDirs,
+      Optional<SymlinkTree> sandboxTree) throws NoSuchBuildTargetException {
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
         params,
         cxxPlatform,
@@ -370,7 +375,9 @@ public final class CxxInferEnhancer {
                 pathResolver,
                 Optional.of(cxxPlatform),
                 args),
-            args.frameworks));
+            args.frameworks),
+        includeDirs,
+        sandboxTree);
   }
 
   private static ImmutableSet<CxxInferCapture> requireInferCaptureBuildRules(
@@ -418,7 +425,8 @@ public final class CxxInferEnhancer {
           params,
           cxxPlatform,
           (CxxBinaryDescription.Arg) args,
-          headerSymlinkTree);
+          headerSymlinkTree,
+          sandboxTree);
     } else if (args instanceof CxxLibraryDescription.Arg) {
       preprocessorInputs = computePreprocessorInputForCxxLibraryDescriptionArg(
           params,
@@ -426,7 +434,9 @@ public final class CxxInferEnhancer {
           pathResolver,
           cxxPlatform,
           (CxxLibraryDescription.Arg) args,
-          headerSymlinkTree);
+          headerSymlinkTree,
+          args.includeDirs,
+          sandboxTree);
     } else {
       throw new IllegalStateException("Only Binary and Library args supported.");
     }

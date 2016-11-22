@@ -120,7 +120,8 @@ public class HalideLibraryDescription
       PatternMatchedCollection<ImmutableList<String>> platformCompilerFlags,
       ImmutableMap<CxxSource.Type, ImmutableList<String>> langCompilerFlags,
       ImmutableList<String> linkerFlags,
-      PatternMatchedCollection<ImmutableList<String>> platformLinkerFlags)
+      PatternMatchedCollection<ImmutableList<String>> platformLinkerFlags,
+      ImmutableList<String> includeDirs)
       throws NoSuchBuildTargetException {
 
     Optional<StripStyle> flavoredStripStyle =
@@ -169,7 +170,8 @@ public class HalideLibraryDescription
             prefixHeader,
             linkerFlags,
             platformLinkerFlags,
-            cxxRuntimeType);
+            cxxRuntimeType,
+            includeDirs);
 
     params = CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle);
     params = LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
@@ -316,7 +318,8 @@ public class HalideLibraryDescription
           args.platformCompilerFlags,
           args.langCompilerFlags,
           args.linkerFlags,
-          args.platformLinkerFlags);
+          args.platformLinkerFlags,
+          args.includeDirs);
     } else if (
         flavors.contains(CxxDescriptionEnhancer.STATIC_FLAVOR) ||
         flavors.contains(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR)) {

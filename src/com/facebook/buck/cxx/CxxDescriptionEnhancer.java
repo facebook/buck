@@ -405,7 +405,9 @@ public class CxxDescriptionEnhancer {
       ImmutableMultimap<CxxSource.Type, String> preprocessorFlags,
       ImmutableList<HeaderSymlinkTree> headerSymlinkTrees,
       ImmutableSet<FrameworkPath> frameworks,
-      Iterable<CxxPreprocessorInput> cxxPreprocessorInputFromDeps)
+      Iterable<CxxPreprocessorInput> cxxPreprocessorInputFromDeps,
+      ImmutableList<String> includeDirs,
+      Optional<SymlinkTree> symlinkTree)
       throws NoSuchBuildTargetException {
 
     // Add the private includes of any rules which this rule depends on, and which list this rule as
@@ -449,12 +451,26 @@ public class CxxDescriptionEnhancer {
           CxxSymlinkTreeHeaders.from(headerSymlinkTree, CxxPreprocessables.IncludeType.LOCAL));
     }
 
-    CxxPreprocessorInput localPreprocessorInput =
-        CxxPreprocessorInput.builder()
-            .putAllPreprocessorFlags(preprocessorFlags)
-            .addAllIncludes(allIncludes.build())
-            .addAllFrameworks(frameworks)
-            .build();
+    CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
+    builder.putAllPreprocessorFlags(preprocessorFlags);
+
+    // headers from #sandbox are put before #private-headers and #headers on purpose
+    // this is the only way to control windows behavior
+    if (symlinkTree.isPresent()) {
+      for (String includeDir : includeDirs) {
+        builder.addIncludes(
+            CxxSandboxInclude.from(
+                symlinkTree.get(),
+                includeDir,
+                CxxPreprocessables.IncludeType.LOCAL));
+      }
+    }
+
+    builder
+        .addAllIncludes(allIncludes.build())
+        .addAllFrameworks(frameworks);
+
+    CxxPreprocessorInput localPreprocessorInput = builder.build();
 
     return ImmutableList.<CxxPreprocessorInput>builder()
         .add(localPreprocessorInput)
@@ -646,7 +662,8 @@ public class CxxDescriptionEnhancer {
         args.prefixHeader,
         args.linkerFlags,
         args.platformLinkerFlags,
-        args.cxxRuntimeType);
+        args.cxxRuntimeType,
+        args.includeDirs);
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinary(
@@ -670,7 +687,8 @@ public class CxxDescriptionEnhancer {
       Optional<SourcePath> prefixHeader,
       ImmutableList<String> linkerFlags,
       PatternMatchedCollection<ImmutableList<String>> platformLinkerFlags,
-      Optional<Linker.CxxRuntimeType> cxxRuntimeType)
+      Optional<Linker.CxxRuntimeType> cxxRuntimeType,
+      ImmutableList<String> includeDirs)
       throws NoSuchBuildTargetException {
     SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
 //    TODO(beefon): should be:
@@ -717,7 +735,9 @@ public class CxxDescriptionEnhancer {
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 cxxPlatform,
                 FluentIterable.from(params.getDeps())
-                    .filter(CxxPreprocessorDep.class::isInstance)));
+                    .filter(CxxPreprocessorDep.class::isInstance)),
+            includeDirs,
+            sandboxTree);
 
     // Generate and add all the build rules to preprocess and compile the source to the
     // resolver and get the `SourcePath`s representing the generated object files.
@@ -1161,7 +1181,9 @@ public class CxxDescriptionEnhancer {
                 cxxPlatform,
                 exportedPreprocessorFlags,
                 exportedHeaders,
-                args.frameworks));
+                args.frameworks),
+            args.includeDirs,
+            sandboxTree);
 
     // Create rule to build the object files.
     return CxxSourceRuleFactory.requirePreprocessAndCompileRules(

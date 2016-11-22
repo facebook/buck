@@ -1,0 +1,11 @@
+[cxx]
+  gtest_dep=//cxx_test:fake-gtest
+  preprocess_mode=combined
+  sandbox_sources=true
+
+[python]
+  package_style=inplace
+  native_link_strategy=separate
+
+[python#py]
+  library=//python_binary:platform_py

@@ -160,7 +160,9 @@ public class CxxLuaExtensionDescription implements
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 cxxPlatform,
-                params.getDeps()));
+                params.getDeps()),
+            args.includeDirs,
+            sandboxTree);
 
     // Generate rule to build the object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> picObjects =

@@ -46,6 +46,7 @@ import org.junit.Test;
 
 import java.nio.file.Paths;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 public class CxxDescriptionEnhancerTest {
@@ -89,7 +90,9 @@ public class CxxDescriptionEnhancerTest {
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 FluentIterable.from(testParams.getDeps())
-                    .filter(CxxPreprocessorDep.class::isInstance)));
+                    .filter(CxxPreprocessorDep.class::isInstance)),
+            ImmutableList.of(),
+            Optional.empty());
 
     Set<SourcePath> roots = new HashSet<>();
     for (CxxHeaders headers : CxxPreprocessorInput.concat(combinedInput).getIncludes()) {
@@ -160,7 +163,9 @@ public class CxxDescriptionEnhancerTest {
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 FluentIterable.from(testParams.getDeps())
-                    .filter(CxxPreprocessorDep.class::isInstance)));
+                    .filter(CxxPreprocessorDep.class::isInstance)),
+            ImmutableList.of(),
+            Optional.empty());
 
     Set<SourcePath> roots = new HashSet<>();
     for (CxxHeaders headers : CxxPreprocessorInput.concat(combinedInput).getIncludes()) {
@@ -218,7 +223,9 @@ public class CxxDescriptionEnhancerTest {
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 FluentIterable.from(otherLibDepParams.getDeps())
-                    .filter(CxxPreprocessorDep.class::isInstance)));
+                    .filter(CxxPreprocessorDep.class::isInstance)),
+            ImmutableList.of(),
+            Optional.empty());
 
     Set<SourcePath> roots = new HashSet<>();
     for (CxxHeaders headers : CxxPreprocessorInput.concat(otherInput).getIncludes()) {
