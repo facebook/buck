@@ -7,6 +7,15 @@ get_param() {
   echo $(echo $PARAM_STRING | sed "s/.*--$PARAM_NAME \([^ ]*\).*/\1/")
 }
 
+is_flag_enabled() {
+  PARAM_STRING="$1"
+  FLAG_NAME="$2"
+  for PARAM_NAME in $PARAM_STRING; do
+    [[ "$PARAM_NAME" == "$FLAG_NAME" ]] && return 0
+  done
+  return 1
+}
+
 reply_success() {
   MESSAGE_ID="$1"
   printf ",{\"id\":%s, \"type\":\"result\", \"exit_code\":0}" "$MESSAGE_ID"
@@ -65,11 +74,15 @@ do
     ASSETS_DEST=$(get_param "$args_string" "assets-dest")
     SOURCEMAP_OUTPUT=$(get_param "$args_string" "sourcemap-output")
     BUNDLE_OUTPUT=$(get_param "$args_string" "bundle-output")
-    JS_MODULE_DIR=`dirname "$BUNDLE_OUTPUT"`/js
 
-    mkdir "$JS_MODULE_DIR"
     cp $THIS_DIR/app/sample.android.js "$BUNDLE_OUTPUT"
-    cp $THIS_DIR/app/helpers.js "$JS_MODULE_DIR/helpers.js"
+
+    is_flag_enabled "$args_string" "--indexed-unbundle" || {
+      JS_MODULE_DIR=`dirname "$BUNDLE_OUTPUT"`/js
+      mkdir "$JS_MODULE_DIR"
+      cp $THIS_DIR/app/helpers.js "$JS_MODULE_DIR/helpers.js"
+    }
+
     copy_resources $ASSETS_DEST
 
     # write something as the source map because the rule caches this output.

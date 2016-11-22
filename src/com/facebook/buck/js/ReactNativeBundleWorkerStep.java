@@ -34,6 +34,7 @@ public class ReactNativeBundleWorkerStep extends WorkerShellStep {
       Optional<String> additionalPackagerFlags,
       ReactNativePlatform platform,
       boolean isUnbundle,
+      boolean isIndexedUnbundle,
       Path entryFile,
       boolean isDevMode,
       Path outputFile,
@@ -51,9 +52,10 @@ public class ReactNativeBundleWorkerStep extends WorkerShellStep {
                     additionalPackagerFlags.isPresent() ? " " + additionalPackagerFlags.get() : ""),
                 ImmutableMap.of(),
                 String.format(
-                    "--command %s --entry-file %s --platform %s --dev %s --bundle-output %s " +
+                    "--command %s %s --entry-file %s --platform %s --dev %s --bundle-output %s " +
                         "--assets-dest %s --sourcemap-output %s",
                     isUnbundle ? "unbundle" : "bundle",
+                    isIndexedUnbundle ? "--indexed-unbundle" : "",
                     entryFile.toString(),
                     platform.toString(),
                     isDevMode ? "true" : "false",

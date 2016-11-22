@@ -29,16 +29,22 @@ public class ReactNativeFlavors {
 
   public static final Flavor UNBUNDLE = ImmutableFlavor.of("unbundle");
 
+  public static final Flavor INDEXED_UNBUNDLE = ImmutableFlavor.of("indexed_unbundle");
+
   public static final Flavor DEV = ImmutableFlavor.of("dev");
 
   public static final Flavor SOURCE_MAP = ImmutableFlavor.of("source_map");
 
   public static boolean validateFlavors(ImmutableSet<Flavor> flavors) {
-    return ImmutableSet.of(DEV, UNBUNDLE, SOURCE_MAP).containsAll(flavors);
+    return ImmutableSet.of(DEV, UNBUNDLE, INDEXED_UNBUNDLE, SOURCE_MAP).containsAll(flavors);
   }
 
   public static boolean useUnbundling(BuildTarget buildTarget) {
-    return buildTarget.getFlavors().contains(UNBUNDLE);
+    return buildTarget.getFlavors().contains(UNBUNDLE) || useIndexedUnbundling(buildTarget);
+  }
+
+  public static boolean useIndexedUnbundling(BuildTarget buildTarget) {
+    return buildTarget.getFlavors().contains(INDEXED_UNBUNDLE);
   }
 
   public static boolean isDevMode(BuildTarget buildTarget) {

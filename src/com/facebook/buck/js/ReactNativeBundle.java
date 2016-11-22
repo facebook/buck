@@ -64,6 +64,9 @@ public class ReactNativeBundle
   private final boolean isUnbundle;
 
   @AddToRuleKey
+  private final boolean isIndexedUnbundle;
+
+  @AddToRuleKey
   private final boolean isDevMode;
 
   @AddToRuleKey
@@ -91,6 +94,7 @@ public class ReactNativeBundle
       SourcePath entryPath,
       ImmutableSortedSet<SourcePath> srcs,
       boolean isUnbundle,
+      boolean isIndexedUnbundle,
       boolean isDevMode,
       boolean exposeSourceMap,
       String bundleName,
@@ -101,6 +105,7 @@ public class ReactNativeBundle
     this.entryPath = entryPath;
     this.srcs = srcs;
     this.isUnbundle = isUnbundle;
+    this.isIndexedUnbundle = isIndexedUnbundle;
     this.isDevMode = isDevMode;
     this.exposeSourceMap = exposeSourceMap;
     this.bundleName = bundleName;
@@ -156,6 +161,7 @@ public class ReactNativeBundle
             packagerFlags,
             platform,
             isUnbundle,
+            isIndexedUnbundle,
             getProjectFilesystem().resolve(getResolver().getAbsolutePath(entryPath)),
             isDevMode,
             getProjectFilesystem().resolve(outputFile),
