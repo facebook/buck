@@ -17,7 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.graph.DefaultDirectedAcyclicGraph;
+import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.graph.TopologicalSort;
 import com.facebook.buck.model.BuildTarget;
@@ -211,8 +211,7 @@ public class Omnibus {
         return keep;
       }
     }.start();
-    DefaultDirectedAcyclicGraph<BuildTarget> graph =
-        new DefaultDirectedAcyclicGraph<>(graphBuilder);
+    DirectedAcyclicGraph<BuildTarget> graph = new DirectedAcyclicGraph<>(graphBuilder);
 
     // Since we add all undefined root symbols into the omnibus library, we also need to include
     // any excluded root deps as deps of omnibus, as they may fulfill these undefined symbols.
@@ -715,7 +714,7 @@ public class Omnibus {
   abstract static class OmnibusSpec {
 
     // The graph containing all root and body nodes that are to be included in the omnibus link.
-    public abstract DefaultDirectedAcyclicGraph<BuildTarget> getGraph();
+    public abstract DirectedAcyclicGraph<BuildTarget> getGraph();
 
     // All native roots included in the omnibus.  These will get linked into separate shared
     // libraries which depend on the giant statically linked omnibus body.

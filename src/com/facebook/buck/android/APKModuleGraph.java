@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.graph.DefaultDirectedAcyclicGraph;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -202,7 +201,7 @@ public class APKModuleGraph {
       generateSharedModules(apkModuleGraph, targetToContainingApkModulesMap);
     }
 
-    return new DefaultDirectedAcyclicGraph<>(apkModuleGraph);
+    return new DirectedAcyclicGraph<>(apkModuleGraph);
   }
 
   /**

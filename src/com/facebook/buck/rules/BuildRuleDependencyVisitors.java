@@ -17,7 +17,6 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.graph.DefaultDirectedAcyclicGraph;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
 import com.google.common.base.Predicate;
@@ -63,7 +62,7 @@ public class BuildRuleDependencyVisitors {
           }
         };
     visitor.start();
-    return new DefaultDirectedAcyclicGraph<>(graph);
+    return new DirectedAcyclicGraph<>(graph);
   }
 
   public static ImmutableSet<BuildRule> maybeVisitAllDeps(BuildRule rule, boolean visitDeps) {

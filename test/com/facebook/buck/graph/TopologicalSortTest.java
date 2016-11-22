@@ -38,7 +38,7 @@ public class TopologicalSortTest {
   //
   // Nodes and edges are added in weird orders to avoid default insertion orders happening to be
   // sorted.
-  private DefaultTraversableGraph<String> makeGraph() {
+  private DirectedAcyclicGraph<String> makeGraph() {
     MutableDirectedGraph<String> graph = new MutableDirectedGraph<>();
     graph.addNode("C");
     graph.addNode("B");
@@ -55,12 +55,12 @@ public class TopologicalSortTest {
     graph.addEdge("A", "B");
     graph.addEdge("C", "E");
     graph.addEdge("C", "G");
-    return new DefaultTraversableGraph<>(graph);
+    return new DirectedAcyclicGraph<>(graph);
   }
 
   @Test
   public void sorts() {
-    DefaultTraversableGraph<String> graph = makeGraph();
+    DirectedAcyclicGraph<String> graph = makeGraph();
     ImmutableList<String> sorted = TopologicalSort.sort(graph);
     assertEquals(graph.getNodes(), ImmutableSet.copyOf(sorted));
     assertOrdering(sorted, "B", "A");

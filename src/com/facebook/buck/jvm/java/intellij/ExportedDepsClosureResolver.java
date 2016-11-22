@@ -23,7 +23,6 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -40,7 +39,6 @@ public class ExportedDepsClosureResolver {
   private Map<BuildTarget, ImmutableSet<BuildTarget>> index;
 
   public ExportedDepsClosureResolver(TargetGraph targetGraph) {
-    Preconditions.checkArgument(targetGraph.isAcyclic());
     this.targetGraph = targetGraph;
     index = new HashMap<>();
   }
