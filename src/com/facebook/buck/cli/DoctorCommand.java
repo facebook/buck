@@ -68,8 +68,12 @@ public class DoctorCommand extends AbstractCommand {
     }
 
     Optional<DefectSubmitResult> rageResult = generateRageReport(params, entry.get());
+    if (!rageResult.isPresent()) {
+      params.getConsole().printErrorText("Failed to generate report to send.");
+      return 1;
+    }
 
-    DoctorEndpointRequest request = helper.generateEndpointRequest(entry.get(), rageResult);
+    DoctorEndpointRequest request = helper.generateEndpointRequest(entry.get(), rageResult.get());
     DoctorEndpointResponse response = helper.uploadRequest(request);
 
     helper.presentResponse(response);

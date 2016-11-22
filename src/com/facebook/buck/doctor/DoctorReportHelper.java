@@ -120,10 +120,9 @@ public class DoctorReportHelper {
 
   public DoctorEndpointRequest generateEndpointRequest(
       BuildLogEntry entry,
-      Optional<DefectSubmitResult> rageResult)
+      DefectSubmitResult rageResult)
       throws IOException {
     Optional<String> machineLog;
-    Optional<String> rageUrl;
 
     if (entry.getMachineReadableLogFile().isPresent()) {
       machineLog = Optional.of(Files.toString(
@@ -134,13 +133,12 @@ public class DoctorReportHelper {
       machineLog = Optional.empty();
     }
 
-    rageUrl = rageResult.map(result -> result.getReportSubmitMessage().get());
-
     return DoctorEndpointRequest.of(
         entry.getBuildId(),
         entry.getRelativePath().toString(),
         machineLog,
-        rageUrl);
+        rageResult.getReportSubmitMessage(),
+        rageResult.getReportSubmitLocation());
   }
 
   public DoctorEndpointResponse uploadRequest(DoctorEndpointRequest request) {
@@ -225,7 +223,7 @@ public class DoctorReportHelper {
 
   public final void presentRageResult(Optional<DefectSubmitResult> result) {
     if (!result.isPresent()) {
-      console.getStdOut().println("Failed to generate a rage DefectSubmitResult.");
+      console.getStdOut().println("=> Failed to generate a rage DefectSubmitResult.");
       return;
     }
 
@@ -233,11 +231,13 @@ public class DoctorReportHelper {
     if (submitResult.getIsRequestSuccessful().isPresent()) {
       if (submitResult.getReportSubmitLocation().isPresent()) {
         console.getStdOut().printf(
-            "Report was uploaded to %s.",
+            "=> Report was uploaded to %s.\n\n",
             submitResult.getReportSubmitLocation().get());
       }
     } else {
-      console.getStdOut().printf("Report saved at %s\n", submitResult.getReportSubmitLocation());
+      console.getStdOut().printf(
+          "=> Report saved at %s\n",
+          submitResult.getReportSubmitLocation().get());
     }
   }
 
