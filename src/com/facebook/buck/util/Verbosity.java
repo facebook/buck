@@ -39,7 +39,7 @@ public enum Verbosity {
   /** Print the command being executed, but do not print its output. */
   COMMANDS,
 
-  /** Commands plus the output from some select commands of intereset. */
+  /** Commands plus the output from some select commands of interest. */
   COMMANDS_AND_SPECIAL_OUTPUT,
 
   /** Print the command being executed followed by its output. */
