@@ -49,10 +49,27 @@ public class AppleAssetCatalogDescription implements Description<AppleAssetCatal
     return new NoopBuildRule(params, new SourcePathResolver(resolver));
   }
 
+  public enum Optimization {
+    SPACE("space"),
+    TIME("time"),
+    ;
+
+    private final String argument;
+
+    Optimization(String argument) {
+      this.argument = argument;
+    }
+
+    public String toArgument() {
+      return argument;
+    }
+  }
+
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public SortedSet<SourcePath> dirs;
     public Optional<String> appIcon;
     public Optional<String> launchImage;
+    public Optimization optimization = Optimization.SPACE;
   }
 }

@@ -37,6 +37,7 @@ class ActoolStep extends ShellStep {
   private final Path outputPlist;
   private final Optional<String> appIcon;
   private final Optional<String> launchImage;
+  private final AppleAssetCatalogDescription.Optimization optimization;
 
   public ActoolStep(
       Path workingDirectory,
@@ -47,7 +48,8 @@ class ActoolStep extends ShellStep {
       Path output,
       Path outputPlist,
       Optional<String> appIcon,
-      Optional<String> launchImage) {
+      Optional<String> launchImage,
+      AppleAssetCatalogDescription.Optimization optimization) {
     super(workingDirectory);
     this.applePlatformName = applePlatformName;
     this.environment = environment;
@@ -57,6 +59,7 @@ class ActoolStep extends ShellStep {
     this.outputPlist = outputPlist;
     this.appIcon = appIcon;
     this.launchImage = launchImage;
+    this.optimization = optimization;
   }
 
   @Override
@@ -98,6 +101,7 @@ class ActoolStep extends ShellStep {
       commandBuilder.add("--launch-image", launchImage.get());
     }
 
+    commandBuilder.add("--optimization", optimization.toArgument());
     commandBuilder.addAll(Iterables.transform(assetCatalogDirs, Object::toString));
 
     return commandBuilder.build();
