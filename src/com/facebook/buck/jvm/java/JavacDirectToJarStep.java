@@ -129,7 +129,8 @@ public class JavacDirectToJarStep implements Step {
           manifestFile,
           /* mergeManifests */ true,
           /* blacklist */ ImmutableSet.of(),
-          context));
+          new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus()),
+          context.getStdErr()));
 
     } finally {
       if (jarOutputStream != null) {

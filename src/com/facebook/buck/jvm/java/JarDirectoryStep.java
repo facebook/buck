@@ -140,7 +140,8 @@ public class JarDirectoryStep implements Step {
           Optional.ofNullable(manifestFile),
           mergeManifests,
           blacklist,
-          context));
+          new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus()),
+          context.getStdErr()));
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
       return StepExecutionResult.ERROR;

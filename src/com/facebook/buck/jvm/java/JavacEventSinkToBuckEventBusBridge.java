@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckTracingEventBusBridge;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.MissingSymbolEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
@@ -34,6 +35,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
 
 import javax.annotation.Nonnull;
 
@@ -65,6 +67,11 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
   @Override
   public void reportMissingJavaSymbol(BuildTarget target, String symbol) {
     eventBus.post(MissingSymbolEvent.create(target, symbol, MissingSymbolEvent.SymbolType.Java));
+  }
+
+  @Override
+  public void reportEvent(Level level, String message, Object... args) {
+    eventBus.post(ConsoleEvent.create(level, message, args));
   }
 
   private BuckTracingEventBusBridge getBuckTracingEventBusBridgeForBuildTarget(

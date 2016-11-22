@@ -127,6 +127,7 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/core:packagefinder",
       "//src/com/facebook/buck/jvm/core:suggestbuildrules",
+      "//src/com/facebook/buck/jvm/java:javac-sink",
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/jvm/java/classes:classes",
       "//src/com/facebook/buck/model:build_id",

@@ -18,12 +18,9 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_ZIP;
 
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.zip.CustomZipOutputStream;
 import com.facebook.buck.zip.ZipConstants;
 import com.facebook.buck.zip.ZipOutputStreams;
@@ -37,6 +34,7 @@ import com.google.common.io.ByteStreams;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -72,7 +70,8 @@ public class JarDirectoryStepHelper {
       Optional<Path> manifestFile,
       boolean mergeManifests,
       Iterable<Pattern> blacklist,
-      ExecutionContext context) throws IOException {
+      JavacEventSink eventSink,
+      PrintStream stdErr) throws IOException {
 
     Set<String> alreadyAddedEntries = Sets.newHashSet(alreadyAddedEntriesToOutputFile);
 
@@ -113,7 +112,7 @@ public class JarDirectoryStepHelper {
             pathToOutputFile,
             outputFile,
             alreadyAddedEntries,
-            context.getBuckEventBus(),
+            eventSink,
             blacklist);
       } else if (Files.isDirectory(file)) {
         addFilesInDirectoryToJar(
@@ -122,14 +121,14 @@ public class JarDirectoryStepHelper {
             outputFile,
             alreadyAddedEntries,
             blacklist,
-            context.getBuckEventBus());
+            eventSink);
       } else {
         throw new IllegalStateException("Must be a file or directory: " + file);
       }
     }
 
     if (mainClass.isPresent() && !mainClassPresent(mainClass.get(), alreadyAddedEntries)) {
-      context.getStdErr().print(
+      stdErr.print(
           String.format(
               "ERROR: Main class %s does not exist.\n",
               mainClass.get()));
@@ -147,7 +146,8 @@ public class JarDirectoryStepHelper {
       Optional<Path> manifestFile,
       boolean mergeManifests,
       Iterable<Pattern> blacklist,
-      ExecutionContext context) throws IOException {
+      JavacEventSink eventSink,
+      PrintStream stdErr) throws IOException {
 
     Path absoluteOutputPath = filesystem.getPathForRelativePath(pathToOutputFile);
     try (CustomZipOutputStream outputFile = ZipOutputStreams.newOutputStream(
@@ -161,14 +161,16 @@ public class JarDirectoryStepHelper {
           manifestFile,
           mergeManifests,
           blacklist,
-          context);
+          eventSink,
+          stdErr);
     }
   }
 
   public static int createEmptyJarFile(
       ProjectFilesystem filesystem,
       Path pathToOutputFile,
-      ExecutionContext context) throws IOException {
+      JavacEventSink eventSink,
+      PrintStream stdErr) throws IOException {
     return JarDirectoryStepHelper.createJarFile(
         filesystem,
         pathToOutputFile,
@@ -177,7 +179,8 @@ public class JarDirectoryStepHelper {
         Optional.empty(),
         true,
         ImmutableList.of(),
-        context);
+        eventSink,
+        stdErr);
   }
 
   private static Manifest createManifest(
@@ -258,7 +261,7 @@ public class JarDirectoryStepHelper {
       Path outputFile,
       final CustomZipOutputStream jar,
       Set<String> alreadyAddedEntries,
-      BuckEventBus eventBus,
+      JavacEventSink eventSink,
       Iterable<Pattern> blacklist) throws IOException {
     try (ZipFile zip = new ZipFile(inputFile.toFile())) {
       for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements(); ) {
@@ -271,7 +274,7 @@ public class JarDirectoryStepHelper {
         }
 
         // Check if the entry belongs to the blacklist and it should be excluded from the Jar.
-        if (shouldEntryBeRemovedFromJar(eventBus, entryName, blacklist)) {
+        if (shouldEntryBeRemovedFromJar(eventSink, entryName, blacklist)) {
           continue;
         }
 
@@ -283,13 +286,12 @@ public class JarDirectoryStepHelper {
         // duplicate class files.
         if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
           // Duplicate entries. Skip.
-          eventBus.post(ConsoleEvent.create(
+          eventSink.reportEvent(
                   determineSeverity(entry),
                   "Duplicate found when adding '%s' to '%s' from '%s'",
                   entryName,
                   outputFile.toAbsolutePath(),
-                  inputFile.toAbsolutePath()
-              ));
+                  inputFile.toAbsolutePath());
           continue;
         }
 
@@ -335,7 +337,7 @@ public class JarDirectoryStepHelper {
       CustomZipOutputStream jar,
       final Set<String> alreadyAddedEntries,
       final Iterable<Pattern> blacklist,
-      final BuckEventBus eventBus) throws IOException {
+      final JavacEventSink eventSink) throws IOException {
 
     // Since filesystem traversals can be non-deterministic, sort the entries we find into
     // a tree map before writing them out.
@@ -357,7 +359,7 @@ public class JarDirectoryStepHelper {
             }
 
             // Check if the entry belongs to the blacklist and it should be excluded from the Jar.
-            if (shouldEntryBeRemovedFromJar(eventBus, relativePath, blacklist)) {
+            if (shouldEntryBeRemovedFromJar(eventSink, relativePath, blacklist)) {
               return FileVisitResult.CONTINUE;
             }
 
@@ -370,9 +372,9 @@ public class JarDirectoryStepHelper {
             // those repeatedly would be lame, so don't do that.
             if (!isDuplicateAllowed(entryName) && !alreadyAddedEntries.add(entryName)) {
               if (!entryName.endsWith("/")) {
-                eventBus.post(ConsoleEvent.create(
+                eventSink.reportEvent(
                     determineSeverity(entry),
-                    "Duplicate found when adding directory to jar: %s", relativePath));
+                    "Duplicate found when adding directory to jar: %s", relativePath);
               }
               return FileVisitResult.CONTINUE;
             }
@@ -413,7 +415,7 @@ public class JarDirectoryStepHelper {
   }
 
   private static boolean shouldEntryBeRemovedFromJar(
-      BuckEventBus eventBus,
+      JavacEventSink eventSink,
       String relativePath,
       Iterable<Pattern> blacklist) {
     String entry = relativePath;
@@ -422,7 +424,7 @@ public class JarDirectoryStepHelper {
     }
     for (Pattern pattern : blacklist) {
       if (pattern.matcher(entry).find()) {
-        eventBus.post(ConsoleEvent.create(Level.FINE, "%s is excluded from the Jar.", entry));
+        eventSink.reportEvent(Level.FINE, "%s is excluded from the Jar.", entry);
         return true;
       }
     }

@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JarDirectoryStepHelper;
+import com.facebook.buck.jvm.java.JavacEventSinkToBuckEventBusBridge;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
@@ -132,9 +133,15 @@ public class UnzipAar extends AbstractBuildRule
         }
 
         Path classesJar = unpackDirectory.resolve("classes.jar");
+        JavacEventSinkToBuckEventBusBridge eventSink = new JavacEventSinkToBuckEventBusBridge(
+            context.getBuckEventBus());
         if (!getProjectFilesystem().exists(classesJar)) {
           try {
-            JarDirectoryStepHelper.createEmptyJarFile(getProjectFilesystem(), classesJar, context);
+            JarDirectoryStepHelper.createEmptyJarFile(
+                getProjectFilesystem(),
+                classesJar,
+                eventSink,
+                context.getStdErr());
           } catch (IOException e) {
             context.logError(e, "Failed to create empty jar %s", classesJar);
             return StepExecutionResult.ERROR;
@@ -173,7 +180,8 @@ public class UnzipAar extends AbstractBuildRule
                 /* manifestFile */ Optional.empty(),
                 /* mergeManifests */ true,
                 /* blacklist */ ImmutableSet.of(),
-                context);
+                eventSink,
+                context.getStdErr());
           } catch (IOException e) {
             context.logError(e, "Failed to jar %s into %s", entriesToJar, uberClassesJar);
             return StepExecutionResult.ERROR;
