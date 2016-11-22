@@ -22,10 +22,13 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.InferHelper;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -207,4 +210,30 @@ public class CxxLibraryIntegrationTest {
   public void symlinkTreesInstantiatedCorrectlyForCompile() throws IOException {
   }
 
+  @Test
+  public void testCxxLibraryWithDefaultsInFlagBuildsSomething() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple", tmp);
+    workspace.setUp();
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//foo:library_with_header");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "build",
+            target.getFullyQualifiedName(),
+            "--config",
+            "defaults.cxx_library.type=static-pic",
+            "--config",
+            "defaults.cxx_library.platform=android-armv7");
+    result.assertSuccess();
+
+    BuildTarget implicitTarget = target.withAppendedFlavors(
+        ImmutableFlavor.of("static-pic"),
+        ImmutableFlavor.of("android-armv7")
+    );
+    workspace.getBuildLog().assertTargetBuiltLocally(implicitTarget.getFullyQualifiedName());
+  }
 }
