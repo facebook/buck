@@ -112,6 +112,7 @@
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/rules/macros:macros",
+      "//src/com/facebook/buck/rules/query:query",
       "//src/com/facebook/buck/shell:rules",
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step:step",

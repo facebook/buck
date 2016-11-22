@@ -61,6 +61,11 @@ public class AndroidLibraryBuilder
     return this;
   }
 
+  public AndroidLibraryBuilder setDepsQuery(String query) {
+    arg.depsQuery = Optional.of(query);
+    return this;
+  }
+
   public AndroidLibraryBuilder addProvidedDep(BuildTarget rule) {
     arg.providedDeps = amend(arg.providedDeps, rule);
     return this;

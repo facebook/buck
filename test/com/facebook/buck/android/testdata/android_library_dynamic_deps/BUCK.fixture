@@ -1,0 +1,47 @@
+include_defs('//BUILD_DEFS')
+
+android_library(
+  name = 'lib_a',
+  srcs = [ 'A.java', ],
+)
+
+android_library(
+  name = 'lib_b',
+  srcs = [ 'B.java', ],
+  annotation_processor_params = [
+    #annotation_placeholder
+  ]
+)
+
+android_resource(
+  name = 'res',
+  res = 'res',
+  package = 'com.example',
+)
+
+android_library(
+  name = 'top_level',
+  deps = [
+    ':lib_b',
+    ':res',
+    #placeholder
+  ],
+)
+
+android_library(
+  name = 'android_libraries',
+  deps = [ ':top_level', ],
+  deps_query = 'kind(android_library, deps($declared_deps))',
+)
+
+android_library(
+  name = 'android_resources',
+  deps = [ ':top_level', ],
+  deps_query = 'kind(android_resource, deps($declared_deps))',
+)
+
+android_library(
+  name = 'has_proc_params',
+  deps = [ ':top_level', ],
+  deps_query = 'attrfilter(annotation_processor_params, "example.foo=True", deps($declared_deps))',
+)

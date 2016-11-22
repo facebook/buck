@@ -29,6 +29,7 @@ import com.facebook.buck.model.Flavored;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
@@ -38,6 +39,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.query.DepQueryUtils;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Suppliers;
@@ -47,10 +49,12 @@ import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class AndroidLibraryDescription
     implements Description<AndroidLibraryDescription.Arg>, Flavored,
     ImplicitDepsInferringDescription<AndroidLibraryDescription.Arg> {
+  public static final BuildRuleType TYPE = BuildRuleType.of("android_library");
 
   private static final Flavor DUMMY_R_DOT_JAVA_FLAVOR =
       AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR;
@@ -133,11 +137,23 @@ public class AndroidLibraryDescription
 
       ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
 
-      ImmutableSortedSet<BuildRule> declaredDeps =
+      ImmutableSortedSet.Builder<BuildRule> declaredDepsBuilder =
           ImmutableSortedSet.<BuildRule>naturalOrder()
               .addAll(params.getDeclaredDeps().get())
-              .addAll(compiler.getDeclaredDeps(args, resolver))
-              .build();
+              .addAll(compiler.getDeclaredDeps(args, resolver));
+
+      // Resolve the dependencies query, if present and add to declared deps
+      if (args.depsQuery.isPresent()) {
+        declaredDepsBuilder.addAll(
+            DepQueryUtils.resolveDepQuery(
+                params,
+                args.depsQuery.get(),
+                resolver,
+                targetGraph)
+                .collect(Collectors.toList()));
+      }
+
+      ImmutableSortedSet<BuildRule> declaredDeps = declaredDepsBuilder.build();
 
       ImmutableSortedSet<BuildRule> extraDeps =
           ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -210,6 +226,7 @@ public class AndroidLibraryDescription
     public Optional<String> resourceUnionPackage;
     public Optional<String> finalRName;
     public Optional<JvmLanguage> language;
+    public Optional<String> depsQuery;
   }
 }
 
