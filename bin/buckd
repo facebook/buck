@@ -3,10 +3,19 @@
 # Resolve symlinks if necessary, otherwise madness will follow.
 # On a GNU system, we could use "-f" to follow all symlinks. BSD based
 # systems don't have this flag. *sigh*
-BUCK_PATH="$0"
-while [ -h "$BUCK_PATH" ]; do
-  BUCK_PATH=$(realpath "$BUCK_PATH")
-done
-BUCK_DIR=$(dirname "$BUCK_PATH")
+# http://stackoverflow.com/a/246128
+# https://gist.github.com/tvlooy/cbfbdb111a4ebad8b93e
+function abs_script_dir_path {
+    SOURCE=${BASH_SOURCE[0]}
+    while [ -h "$SOURCE" ]; do
+      DIR=$( cd -P $( dirname "$SOURCE") && pwd )
+      SOURCE=$(readlink "$SOURCE")
+      [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+    done
+    DIR=$( cd -P $( dirname "$SOURCE" ) && pwd )
+    echo $DIR
+}
+
+BUCK_DIR=$(abs_script_dir_path "$0")
 
 PYTHONPATH="$BUCK_DIR"/../third-party/nailgun exec python "$BUCK_DIR"/../programs/buckd.py "$@"
