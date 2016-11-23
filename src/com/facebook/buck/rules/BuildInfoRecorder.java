@@ -139,7 +139,7 @@ public class BuildInfoRecorder {
       builder.append(entry.getKey());
       builder.append('=');
       builder.append(entry.getValue());
-      builder.append('\n');
+      builder.append(',');
     }
     return builder.toString();
   }
