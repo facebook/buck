@@ -876,8 +876,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   @Override
   public synchronized void close() throws IOException {
+    super.close();
     stopRenderScheduler();
-    networkStatsKeeper.stopScheduler();
     render(); // Ensure final frame is rendered.
   }
 }

@@ -729,5 +729,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   @Override
   public void close() throws IOException {
+    networkStatsKeeper.stopScheduler();
   }
 }
