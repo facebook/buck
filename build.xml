@@ -136,6 +136,7 @@
     <include name="aether/aether-impl-1.0.0.v20140518.jar" />
     <include name="aether/aether-spi-1.0.2.v20150114.jar" />
     <include name="aether/aether-transport-http-1.0.2.v20150114.jar" />
+    <include name="aether/aether-transport-file-1.0.2.v20150114.jar" />
     <include name="aether/aether-util-1.0.2.v20150114.jar" />
     <include name="httpcomponents/httpclient-4.4.1.jar" />
     <include name="httpcomponents/httpcore-4.4.1.jar" />

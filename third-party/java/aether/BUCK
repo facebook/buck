@@ -72,6 +72,25 @@ prebuilt_jar(
 )
 
 prebuilt_jar(
+  name = 'aether-transport-file',
+  maven_coords = 'org.eclipse.aether:aether-transport-file:1.0.2.v20150114',
+  binary_jar = 'aether-transport-file-1.0.2.v20150114.jar',
+  source_jar = 'aether-transport-file-1.0.2.v20150114-sources.jar',
+  deps = [
+    ':aether-api',
+    ':aether-spi',
+    ':aether-util',
+  ],
+  licenses = [
+    'LICENSE',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/maven:maven',
+    '//src/com/facebook/buck/maven:util',
+  ],
+)
+
+prebuilt_jar(
   name = 'aether-spi',
   maven_coords = 'org.eclipse.aether:aether-spi:1.0.2.v20150114',
   binary_jar = 'aether-spi-1.0.2.v20150114.jar',

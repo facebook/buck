@@ -30,6 +30,7 @@
       "//third-party/java/aether:aether-connector-basic",
       "//third-party/java/aether:aether-impl",
       "//third-party/java/aether:aether-transport-http",
+      "//third-party/java/aether:aether-transport-file",
       "//third-party/java/aether:aether-util",
       "//third-party/java/jackson:jackson-databind",
       "//third-party/java/maven:maven-aether-provider",
