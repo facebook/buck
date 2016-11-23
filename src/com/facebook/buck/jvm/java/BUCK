@@ -56,6 +56,7 @@ java_immutables_library(
     'DefaultClassUsageFileReader.java',
     'DefaultClassUsageFileWriter.java',
     'DiagnosticPrettyPrinter.java',
+    'DirectToJarOutputSettingsSerializer.java',
     'ExternalJavaRuntimeLauncher.java',
     'ExternalJavac.java',
     'ForwardingStandardJavaFileManager.java',
