@@ -70,7 +70,7 @@ public class RustBinaryDescription implements
 
     ImmutableList.Builder<String> rustcArgs = ImmutableList.builder();
 
-    rustcArgs.addAll(rustBuckConfig.getRustCompilerFlags());
+    rustcArgs.addAll(rustBuckConfig.getRustBinaryFlags());
     rustcArgs.addAll(args.rustcFlags);
 
     return new RustBinary(

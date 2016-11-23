@@ -2508,7 +2508,27 @@ your <code>.buckjavaargs</code> file</a>:
   {param name: 'rustc_flags' /}
   {param example_value: '-g' /}
   {param description}
-    Default command-line flags passed to the rust compiler.
+    Default command-line flags passed to all invocations of the rust compiler.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'rust' /}
+  {param name: 'rustc_binary_flags' /}
+  {param example_value: '-C lto' /}
+  {param description}
+    Default command-line flags passed to invocations of the rust compiler in{sp}
+    <code>rust_binary</code> rules, in addition to options set in <code>rustc_flags</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'rust' /}
+  {param name: 'rustc_library_flags' /}
+  {param example_value: '--cfg=debug' /}
+  {param description}
+    Default command-line flags passed to invocations of the rust compiler in{sp}
+    <code>rust_library</code> rules, in addition to options set in <code>rustc_flags</code>.
   {/param}
 {/call}
 

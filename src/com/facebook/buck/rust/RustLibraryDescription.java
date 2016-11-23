@@ -70,7 +70,7 @@ public class RustLibraryDescription implements
 
     ImmutableList.Builder<String> rustcArgs = ImmutableList.builder();
 
-    rustcArgs.addAll(rustBuckConfig.getRustCompilerFlags());
+    rustcArgs.addAll(rustBuckConfig.getRustLibraryFlags());
     rustcArgs.addAll(args.rustcFlags);
 
     return new RustLibrary(

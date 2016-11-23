@@ -51,13 +51,42 @@ public class RustLibraryIntegrationTest {
 
     assertThat(
         workspace
-            .runBuckCommand(
-                "run",
+            .runBuckBuild(
                 "--config",
                 "rust.rustc_flags=--this-is-a-bad-option",
                 "//messenger:messenger")
             .getStderr(),
         Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
+  }
+
+  @Test
+  public void rustLibraryCompilerLibraryArgs() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace
+            .runBuckBuild(
+                "--config",
+                "rust.rustc_library_flags=--this-is-a-bad-option",
+                "//messenger:messenger")
+            .getStderr(),
+        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
+  }
+
+  @Test
+  public void rustLibraryCompilerBinaryArgs() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    workspace
+        .runBuckBuild(
+            "--config",
+            "rust.rustc_binary_flags=--this-is-a-bad-option",
+            "//messenger:messenger")
+        .assertSuccess();
   }
 
   @Test

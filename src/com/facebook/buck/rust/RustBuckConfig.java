@@ -29,9 +29,13 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+
 public class RustBuckConfig {
   private static final String SECTION = "rust";
   private static final Path DEFAULT_RUSTC_COMPILER = Paths.get("rustc");
+  private static final String RUSTC_FLAGS = "rustc_flags";
+  private static final String RUSTC_BINARY_FLAGS = "rustc_binary_flags";
+  private static final String RUSTC_LIBRARY_FLAGS = "rustc_library_flags";
 
   private final BuckConfig delegate;
 
@@ -52,8 +56,41 @@ public class RustBuckConfig {
             });
   }
 
-  ImmutableList<String> getRustCompilerFlags() {
-    return delegate.getListWithoutComments(SECTION, "rustc_flags", ' ');
+  /**
+   * Get common set of rustc flags. These are used for all rules that invoke rustc.
+   *
+   * @return List of rustc option flags.
+   */
+  private ImmutableList<String> getRustCompilerFlags() {
+    return delegate.getListWithoutComments(SECTION, RUSTC_FLAGS, ' ');
+  }
+
+  /**
+   * Get rustc flags for rust_library() rules.
+   *
+   * @return List of rustc_library_flags, as well as common rustc_flags.
+   */
+  ImmutableList<String> getRustLibraryFlags() {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    builder.addAll(getRustCompilerFlags());
+    builder.addAll(delegate.getListWithoutComments(SECTION, RUSTC_LIBRARY_FLAGS, ' '));
+
+    return builder.build();
+  }
+
+  /**
+   * Get rustc flags for rust_binary() rules.
+   *
+   * @return List of rustc_binary_flags, as well as common rustc_flags.
+   */
+  ImmutableList<String> getRustBinaryFlags() {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    builder.addAll(getRustCompilerFlags());
+    builder.addAll(delegate.getListWithoutComments(SECTION, RUSTC_BINARY_FLAGS, ' '));
+
+    return builder.build();
   }
 
   LinkerProvider getLinkerProvider(

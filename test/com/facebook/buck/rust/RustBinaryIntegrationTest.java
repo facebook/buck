@@ -99,6 +99,38 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void rustBinaryCompilerBinaryArgs() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_binary", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace
+            .runBuckCommand(
+                "run",
+                "--config",
+                "rust.rustc_binary_flags=--this-is-a-bad-option",
+                "//:xyzzy")
+            .getStderr(),
+        Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
+  }
+
+  @Test
+  public void rustBinaryCompilerLibraryArgs() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_binary", tmp);
+    workspace.setUp();
+
+    workspace
+        .runBuckCommand(
+            "run",
+            "--config",
+            "rust.rustc_library_flags=--this-is-a-bad-option",
+            "//:xyzzy")
+        .assertSuccess();
+  }
+
+  @Test
   public void rustBinaryCompilerArgs2() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "simple_binary", tmp);
