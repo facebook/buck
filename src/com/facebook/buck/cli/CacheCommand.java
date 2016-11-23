@@ -160,7 +160,7 @@ public class CacheCommand extends AbstractCommand {
         if (r.completed) {
           params.getConsole().printSuccess(
               String.format(
-                  "Successfully downloaded artifact with id %s at %s.",
+                  "Successfully downloaded artifact with id %s at %s .",
                   r.ruleKey,
                   r.artifact));
         } else {
