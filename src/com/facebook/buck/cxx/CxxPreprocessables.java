@@ -162,7 +162,7 @@ public class CxxPreprocessables {
             Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     if (useHeaderMap) {
-      return new HeaderSymlinkTreeWithHeaderMap(
+      return HeaderSymlinkTreeWithHeaderMap.create(
           paramsWithoutDeps,
           resolver,
           root,

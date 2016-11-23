@@ -90,6 +90,9 @@ java_immutables_library(
     '//test/com/facebook/buck/cxx:cxx',
   ],
   autodeps = True,
+  resources = [
+    'modulemap.st',
+  ],
   visibility = [
     'PUBLIC'
   ],

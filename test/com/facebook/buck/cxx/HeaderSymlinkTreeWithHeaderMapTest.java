@@ -101,7 +101,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
         BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root"));
 
     // Setup the symlink tree buildable.
-    symlinkTreeBuildRule = new HeaderSymlinkTreeWithHeaderMap(
+    symlinkTreeBuildRule = HeaderSymlinkTreeWithHeaderMap.create(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         new SourcePathResolver(
             new BuildRuleResolver(
@@ -153,7 +153,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
   public void testSymlinkTreeRuleKeyChangesIfLinkMapChanges() throws Exception {
     Path aFile = tmpDir.newFile();
     Files.write(aFile, "hello world".getBytes(Charsets.UTF_8));
-    AbstractBuildRule modifiedSymlinkTreeBuildRule = new HeaderSymlinkTreeWithHeaderMap(
+    AbstractBuildRule modifiedSymlinkTreeBuildRule = HeaderSymlinkTreeWithHeaderMap.create(
         new FakeBuildRuleParamsBuilder(buildTarget).build(),
         new SourcePathResolver(
             new BuildRuleResolver(
