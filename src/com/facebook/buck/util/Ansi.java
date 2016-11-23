@@ -33,8 +33,6 @@ public final class Ansi {
   private static final String BLACK = "\u001B[30m";
   private static final String GREY = "\u001B[0;37m";
 
-  private static final String WHITE = "\u001B[37m";
-
   private static final String RED = "\u001B[31m";
   private static final String YELLOW = "\u001B[33m";
   private static final String GREEN = "\u001B[32m";
@@ -46,11 +44,10 @@ public final class Ansi {
   private static final String INFORMATION_SEQUENCE = CYAN;
   private static final String SUBTLE_SEQUENCE = GREY;
 
-  private static final String BACKGROUND_RED = "\u001B[41m";
   private static final String BACKGROUND_YELLOW = "\u001B[43m";
   private static final String BACKGROUND_GREEN = "\u001B[42m";
 
-  private static final String HIGHLIGHTED_ERROR_SEQUENCE = BOLD + BACKGROUND_RED + WHITE;
+  private static final String HIGHLIGHTED_ERROR_SEQUENCE = RED;
   private static final String HIGHLIGHTED_WARNING_SEQUENCE = BOLD + BACKGROUND_YELLOW + BLACK;
   private static final String HIGHLIGHTED_SUCCESS_SEQUENCE = BOLD + BACKGROUND_GREEN + BLACK;
 

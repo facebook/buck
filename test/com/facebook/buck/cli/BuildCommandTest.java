@@ -109,9 +109,9 @@ public class BuildCommandTest {
             "BUILT_LOCALLY " +
             MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt") +
             "\n" +
-        "\u001B[1m\u001B[41m\u001B[37mFAIL\u001B[0m //fake:rule2\n" +
+        "\u001B[31mFAIL\u001B[0m //fake:rule2\n" +
         "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule3 FETCHED_FROM_CACHE\n" +
-        "\u001B[1m\u001B[41m\u001B[37mFAIL\u001B[0m //fake:rule4\n";
+        "\u001B[31mFAIL\u001B[0m //fake:rule4\n";
     String observedReport = new BuildReport(buildExecutionResult).generateForConsole(
         new Console(
             Verbosity.STANDARD_INFORMATION,
