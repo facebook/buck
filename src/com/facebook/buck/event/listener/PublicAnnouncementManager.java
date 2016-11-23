@@ -48,7 +48,9 @@ public class PublicAnnouncementManager {
 
   @VisibleForTesting
   static final String HEADER_MSG =
-      "**------------------------**\n**- Public Announcements -**\n**------------------------**";
+      "**------------------------------------**\n" +
+          "**- Public Broadcasted Announcements -**\n" +
+          "**------------------------------------**";
 
   @VisibleForTesting
   static final String ANNOUNCEMENT_TEMPLATE = "\n** %s %s";

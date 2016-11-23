@@ -159,9 +159,9 @@ public class PublicAnnouncementManagerIntegrationTest {
       assertEquals(
           "The header and the message",
           announcements.get(),
-          "**------------------------**\n" +
-              "**- Public Announcements -**\n" +
-              "**------------------------**\n" +
+          "**------------------------------------**\n" +
+              "**- Public Broadcasted Announcements -**\n" +
+              "**------------------------------------**\n" +
               "** This is the error message. This is the solution message.");
     }
   }
