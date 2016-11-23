@@ -25,6 +25,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -106,7 +107,7 @@ public class UserInput {
     return result.build();
   }
 
-  public <T> T selectOne(
+  public <T> Optional<T> selectOne(
       String prompt,
       List<T> entries,
       Function<T, String> entryFormatter) throws IOException {
@@ -132,11 +133,12 @@ public class UserInput {
           index >= 0 && index < entries.size(),
           "Index %s out of bounds.",
           index);
-      return entries.get(index);
     } catch (IllegalArgumentException e) {
-      output.printf("Illegal range %s.\n", e.getMessage());
+      output.printf("Illegal choice: %s\n", e.getMessage());
+      return Optional.empty();
     }
-    return entries.get(index);
+
+    return Optional.of(entries.get(index));
   }
 
   public <T> ImmutableSet<T> selectRange(

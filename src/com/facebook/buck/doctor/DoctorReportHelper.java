@@ -101,7 +101,7 @@ public class DoctorReportHelper {
         buildLogs,
         Ordering.natural().onResultOf(BuildLogEntry::getLastModifiedTime).reverse());
 
-    return Optional.of(input.selectOne(
+    return input.selectOne(
         "Which buck invocation would you like to report?",
         buildLogs,
         entry -> {
@@ -115,7 +115,7 @@ public class DoctorReportHelper {
               prettyPrintExitCode(entry.getExitCode()),
               humanReadableSize.getFirst(),
               humanReadableSize.getSecond().getAbbreviation());
-        }));
+        });
   }
 
   public DoctorEndpointRequest generateEndpointRequest(
