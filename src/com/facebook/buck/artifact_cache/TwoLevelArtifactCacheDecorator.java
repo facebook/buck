@@ -125,14 +125,19 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
   @Override
   public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
     CacheResult fetchResult = delegate.fetch(ruleKey, output);
-    if (!fetchResult.getType().isSuccess() ||
-        !fetchResult.getMetadata().containsKey(METADATA_KEY)) {
+    if (!fetchResult.getType().isSuccess()) {
+      LOG.verbose("Missed first-level lookup.");
+      return fetchResult;
+    } else if (!fetchResult.getMetadata().containsKey(METADATA_KEY)) {
+      LOG.verbose("Found a single-level entry.");
       return fetchResult;
     }
+    LOG.verbose("Found a first-level artifact with metadata: %s", fetchResult.getMetadata());
     CacheResult outputFileFetchResult = delegate.fetch(
         new RuleKey(fetchResult.getMetadata().get(METADATA_KEY)),
         output);
     if (!outputFileFetchResult.getType().isSuccess()) {
+      LOG.verbose("Missed second-level lookup.");
       secondLevelCacheMisses.inc();
       return outputFileFetchResult;
     }
@@ -144,6 +149,9 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache {
       secondLevelCacheHitBytes.addSample(outputFileFetchResult.artifactSizeBytes().get());
     }
 
+    LOG.verbose(
+        "Found a second-level artifact with metadata: %s",
+        outputFileFetchResult.getMetadata());
     return fetchResult;
   }
 

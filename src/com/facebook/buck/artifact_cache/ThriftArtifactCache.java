@@ -91,6 +91,8 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     cacheRequest.setType(BuckCacheRequestType.FETCH);
     cacheRequest.setFetchRequest(fetchRequest);
 
+    LOG.verbose("Will fetch key %s", thriftRuleKey);
+
     final ThriftArtifactCacheProtocol.Request request =
         ThriftArtifactCacheProtocol.createRequest(PROTOCOL, cacheRequest);
     Request.Builder builder = toOkHttpRequest(request);
@@ -114,18 +116,22 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
 
         BuckCacheResponse cacheResponse = response.getThriftData();
         if (!cacheResponse.isWasSuccessful()) {
+          LOG.warn("Request was unsuccessful: %s", cacheResponse.getErrorMessage());
           return CacheResult.error(name, cacheResponse.getErrorMessage());
         }
 
         BuckCacheFetchResponse fetchResponse = cacheResponse.getFetchResponse();
         if (!fetchResponse.isArtifactExists()) {
+          LOG.verbose("Artifact did not exist.");
           return CacheResult.miss();
         }
 
+        LOG.verbose("Got artifact.  Attempting to read payload.");
         Path tmp = createTempFileForDownload();
         ThriftArtifactCacheProtocol.Response.ReadPayloadInfo readResult;
         try (OutputStream tmpFile = projectFilesystem.newFileOutputStream(tmp)) {
           readResult = response.readPayload(tmpFile);
+          LOG.verbose("Successfully read payload: %d bytes.", readResult.getBytesRead());
         }
 
         ArtifactMetadata metadata = fetchResponse.getMetadata();
