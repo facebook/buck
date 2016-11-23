@@ -20,11 +20,9 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
-import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
@@ -35,7 +33,6 @@ import java.util.Optional;
  */
 public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent, WorkAdvanceEvent {
 
-  @JsonView(JsonViews.MachineReadableLog.class)
   private final ImmutableList<BuildTarget> buildTargets;
 
   protected ParseEvent(EventKey eventKey, Iterable<BuildTarget> buildTargets) {
