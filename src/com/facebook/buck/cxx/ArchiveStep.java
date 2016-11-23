@@ -112,7 +112,7 @@ public class ArchiveStep implements Step {
       ExecutionContext context,
       final ImmutableList<String> command)
       throws IOException, InterruptedException {
-    Map<String, String> env = new HashMap<>(System.getenv());
+    Map<String, String> env = new HashMap<>(context.getEnvironment());
     env.putAll(environment);
     ProcessExecutorParams params = ProcessExecutorParams.builder()
         .setDirectory(filesystem.getRootPath())
