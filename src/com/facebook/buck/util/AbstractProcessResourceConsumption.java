@@ -76,4 +76,29 @@ abstract class AbstractProcessResourceConsumption {
         .setIoTotal(Math.max(r1.getIoTotal(), r2.getIoTotal()))
         .build();
   }
+
+  @Nullable
+  public static ProcessResourceConsumption getTotal(
+      @Nullable ProcessResourceConsumption r1,
+      @Nullable ProcessResourceConsumption r2) {
+    if (r1 == null) {
+      return r2;
+    }
+    if (r2 == null) {
+      return r1;
+    }
+    // For some stats such as cpu_real, parent's consumption already includes child's consumption,
+    // so we just take max instead of sum to avoid double counting.
+    return ProcessResourceConsumption.builder()
+        .setMemResident(r1.getMemResident() + r2.getMemResident())
+        .setMemSize(r1.getMemSize() + r2.getMemSize())
+        .setCpuReal(Math.max(r1.getCpuReal(), r2.getCpuReal()))
+        .setCpuUser(r1.getCpuUser() + r2.getCpuUser())
+        .setCpuSys(r1.getCpuSys() + r2.getCpuSys())
+        .setCpuTotal(r1.getCpuTotal() + r2.getCpuTotal())
+        .setIoBytesRead(r1.getIoBytesRead() + r2.getIoBytesRead())
+        .setIoBytesWritten(r1.getIoBytesWritten() + r2.getIoBytesWritten())
+        .setIoTotal(r1.getIoTotal() + r2.getIoTotal())
+        .build();
+  }
 }

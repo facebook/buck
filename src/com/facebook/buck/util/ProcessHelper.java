@@ -25,6 +25,10 @@ import com.zaxxer.nuprocess.NuProcess;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 import javax.lang.model.SourceVersion;
@@ -55,6 +59,11 @@ public class ProcessHelper {
     return INSTANCE;
   }
 
+  private static final int PROCESS_TREE_REFRESH_PERIOD_MS = 1000;
+  private final Object processTreeLock = new Object();
+  private long processTreeTimestamp = 0;
+  @Nullable private ProcessTree processTree = null;
+
   /**
    * This is a helper singleton.
    */
@@ -62,28 +71,53 @@ public class ProcessHelper {
   ProcessHelper() {}
 
   /**
-   * Gets resource consumption of the process for the given pid.
+   * Gets resource consumption of the process subtree rooted at the process with the given pid.
+   */
+  @Nullable
+  public ProcessResourceConsumption getTotalResourceConsumption(long pid) {
+    final ProcessResourceConsumption[] res = new ProcessResourceConsumption[] { null };
+    ProcessTree tree = getProcessTree();
+    if (tree != null) {
+      tree.visitAllDescendants(pid, (childPid, childNode) -> {
+        ProcessResourceConsumption childRes = getProcessResourceConsumptionInternal(childNode.info);
+        res[0] = ProcessResourceConsumption.getTotal(res[0], childRes);
+      });
+    }
+    // fallback to the root process only if the above fails
+    return (res[0] != null) ? res[0] : getProcessResourceConsumption(pid);
+  }
+
+  /**
+   * Gets resource consumption of the process with the given pid.
    */
   @Nullable
   public ProcessResourceConsumption getProcessResourceConsumption(long pid) {
     try {
       OperatingSystem os = OSHI.getOperatingSystem();
       OSProcess process = os.getProcess((int) pid);
-      return ProcessResourceConsumption.builder()
-          .setMemResident(process.getResidentSetSize())
-          .setMemSize(process.getVirtualSize())
-          .setCpuReal(process.getUpTime())
-          .setCpuUser(process.getUserTime())
-          .setCpuSys(process.getKernelTime())
-          .setCpuTotal(process.getUserTime() + process.getKernelTime())
-          .setIoBytesRead(process.getBytesRead())
-          .setIoBytesWritten(process.getBytesWritten())
-          .setIoTotal(process.getBytesRead() + process.getBytesWritten())
-          .build();
+      return getProcessResourceConsumptionInternal(process);
     } catch (Exception ex) {
       // do nothing
       return null;
     }
+  }
+
+  @Nullable
+  static ProcessResourceConsumption getProcessResourceConsumptionInternal(OSProcess process) {
+    if (process == null) {
+      return null;
+    }
+    return ProcessResourceConsumption.builder()
+        .setMemResident(process.getResidentSetSize())
+        .setMemSize(process.getVirtualSize())
+        .setCpuReal(process.getUpTime())
+        .setCpuUser(process.getUserTime())
+        .setCpuSys(process.getKernelTime())
+        .setCpuTotal(process.getUserTime() + process.getKernelTime())
+        .setIoBytesRead(process.getBytesRead())
+        .setIoBytesWritten(process.getBytesWritten())
+        .setIoTotal(process.getBytesRead() + process.getBytesWritten())
+        .build();
   }
 
   /**
@@ -184,5 +218,93 @@ public class ProcessHelper {
       }
     }
     return null;
+  }
+
+  /**
+   * A simple representation of a process tree.
+   */
+  private static class ProcessTree {
+    public interface Visitor {
+      void visit(long pid, Node node);
+    }
+
+    public static class Node {
+      public final long pid;
+      @Nullable private OSProcess info;
+      private final List<Node> children = new ArrayList<>();
+
+      public Node(long pid) {
+        this.pid = pid;
+      }
+
+      private void addChild(Node child) {
+        children.add(child);
+      }
+    }
+
+    private final Map<Long, Node> nodes = new HashMap<>();
+
+    private Node getOrCreate(long pid) {
+      Node node = nodes.get(pid);
+      if (node == null) {
+        node = new Node(pid);
+        nodes.put(pid, node);
+      }
+      return node;
+    }
+
+    public Node add(OSProcess info) {
+      Node node = getOrCreate(info.getProcessID());
+      if (node.info == null) {
+        node.info = info;
+      }
+      Node parent = getOrCreate(info.getParentProcessID());
+      parent.addChild(node);
+      return node;
+    }
+
+    @Nullable
+    public Node get(long pid) {
+      return nodes.get(pid);
+    }
+
+    public void visitAllDescendants(long pid, Visitor visitor) {
+      Node root = get(pid);
+      if (root != null) {
+        visitor.visit(pid, root);
+        for (Node child : root.children) {
+          visitAllDescendants(child.pid, visitor);
+        }
+      }
+    }
+  }
+
+  private ProcessTree getProcessTree() {
+    if (!isProcessTreeFresh()) {
+      synchronized (processTreeLock) {
+        if (!isProcessTreeFresh()) {
+          ProcessTree tree = new ProcessTree();
+          try {
+            LOG.verbose("Getting process tree...");
+            OperatingSystem os = OSHI.getOperatingSystem();
+            OSProcess[] processes = os.getProcesses(100, OperatingSystem.ProcessSort.NEWEST);
+            for (OSProcess process : processes) {
+              tree.add(process);
+            }
+            processTree = tree;
+            processTreeTimestamp = System.nanoTime();
+            LOG.verbose("Process tree built.");
+          } catch (Exception e) {
+            LOG.warn(e, "Cannot get the process tree!");
+          }
+        }
+      }
+    }
+    return processTree;
+  }
+
+  private boolean isProcessTreeFresh() {
+    return (processTree != null) &&
+        (System.nanoTime() - processTreeTimestamp < PROCESS_TREE_REFRESH_PERIOD_MS * 1000000);
   }
 }

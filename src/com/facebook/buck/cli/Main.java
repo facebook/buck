@@ -1089,7 +1089,11 @@ public final class Main {
                 invocationInfo);
             ProcessTracker processTracker =
                 buckConfig.isProcessTrackerEnabled() && platform != Platform.WINDOWS ?
-                    new ProcessTracker(buildEventBus, invocationInfo, isDaemon) : null;
+                    new ProcessTracker(
+                        buildEventBus,
+                        invocationInfo,
+                        isDaemon,
+                        buckConfig.isProcessTrackerDeepEnabled()) : null;
         ) {
 
           LOG.debug(invocationInfo.toLogLine(args));

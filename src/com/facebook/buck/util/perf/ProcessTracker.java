@@ -62,6 +62,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
   private final ProcessHelper processHelper;
   private final ProcessRegistry processRegistry;
   private final boolean isDaemon;
+  private final boolean deepEnabled;
 
   private final ProcessRegistry.ProcessRegisterCallback processRegisterCallback =
       this::registerProcess;
@@ -72,13 +73,15 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
   public ProcessTracker(
       BuckEventBus buckEventBus,
       InvocationInfo invocationInfo,
-      boolean isDaemon) {
+      boolean isDaemon,
+      boolean deepEnabled) {
     this(
         buckEventBus,
         invocationInfo,
         ProcessHelper.getInstance(),
         ProcessRegistry.getInstance(),
-        isDaemon);
+        isDaemon,
+        deepEnabled);
   }
 
   @VisibleForTesting
@@ -87,13 +90,15 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
       InvocationInfo invocationInfo,
       ProcessHelper processHelper,
       ProcessRegistry processRegistry,
-      boolean isDaemon) {
+      boolean isDaemon,
+      boolean deepEnabled) {
     this.eventBus = buckEventBus;
     this.invocationInfo = invocationInfo;
     this.serviceManager = new ServiceManager(ImmutableList.of(this));
     this.processHelper = processHelper;
     this.processRegistry = processRegistry;
     this.isDaemon = isDaemon;
+    this.deepEnabled = deepEnabled;
     serviceManager.startAsync();
     this.processRegistry.subscribe(processRegisterCallback);
   }
@@ -206,7 +211,9 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
 
     @Override
     public void updateResourceConsumption() {
-      ProcessResourceConsumption res = processHelper.getProcessResourceConsumption(pid);
+      ProcessResourceConsumption res = deepEnabled ?
+          processHelper.getTotalResourceConsumption(pid) :
+          processHelper.getProcessResourceConsumption(pid);
       resourceConsumption = ProcessResourceConsumption.getPeak(resourceConsumption, res);
     }
 
@@ -244,7 +251,9 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
 
     @Override
     public void updateResourceConsumption() {
-      ProcessResourceConsumption res = processHelper.getProcessResourceConsumption(pid);
+      ProcessResourceConsumption res = deepEnabled ?
+          processHelper.getTotalResourceConsumption(pid) :
+          processHelper.getProcessResourceConsumption(pid);
       resourceConsumption = ProcessResourceConsumption.getPeak(resourceConsumption, res);
     }
 

@@ -469,6 +469,10 @@ public class BuckConfig implements ConfigPathGetter {
     return getBooleanValue(LOG_SECTION, "process_tracker_enabled", true);
   }
 
+  public boolean isProcessTrackerDeepEnabled() {
+    return getBooleanValue(LOG_SECTION, "process_tracker_deep_enabled", false);
+  }
+
   public boolean isRuleKeyLoggerEnabled() {
     return getBooleanValue(LOG_SECTION, "rule_key_logger_enabled", false);
   }

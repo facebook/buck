@@ -307,7 +307,7 @@ public class ProcessTrackerTest {
         InvocationInfo invocationInfo,
         ProcessHelper processHelper,
         ProcessRegistry processRegistry) {
-      super(eventBus, invocationInfo, processHelper, processRegistry, /* isDaemon */ false);
+      super(eventBus, invocationInfo, processHelper, processRegistry, /* isDaemon */ false, false);
     }
 
     void explicitStartUp() throws Exception {
