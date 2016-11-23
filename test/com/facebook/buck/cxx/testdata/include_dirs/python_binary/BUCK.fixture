@@ -11,8 +11,7 @@ cxx_python_extension(
   base_module = '',
   srcs = ['src/extension.c'],
   headers = ['headers/extension.h'],
-  #include_dirs = ['headers'],
-  #linker_flags = ['-undefined', 'dynamic_lookup'],
+  include_dirs = ['headers'],
 )
 
 python_library(

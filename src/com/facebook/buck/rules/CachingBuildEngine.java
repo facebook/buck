@@ -1105,12 +1105,17 @@ public class CachingBuildEngine implements BuildEngine {
 
     // Create a new combined future, which runs the original rule and all the runtime deps in
     // parallel, but which propagates an error if any one of them fails.
-    result =
-        MoreFutures.chainExceptions(
+    // It also checks that all runtime deps succeeded.
+    ListenableFuture<BuildResult> chainedResult =
+        Futures.transformAsync(
             Futures.allAsList(runtimeDepResults),
-            result);
-    results.put(rule.getBuildTarget(), result);
-    return result;
+            results ->
+                !buildContext.isKeepGoing() && firstFailure != null ?
+                    Futures.immediateFuture(BuildResult.canceled(rule, firstFailure)) :
+                    result,
+            MoreExecutors.directExecutor());
+    results.put(rule.getBuildTarget(), chainedResult);
+    return chainedResult;
   }
 
   private ListenableFuture<BuildResult> getBuildRuleResultWithRuntimeDeps(

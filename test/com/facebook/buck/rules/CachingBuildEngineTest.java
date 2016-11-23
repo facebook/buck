@@ -23,6 +23,7 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.isA;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -749,6 +750,77 @@ public class CachingBuildEngineTest {
                   Optional.empty(),
                   Optional.empty(),
                   Optional.empty())));
+    }
+
+    @Test
+    public void failedRuntimeDepsArePropagated() throws Exception {
+      final String description = "failing step";
+      Step failingStep =
+          new AbstractExecutionStep(description) {
+            @Override
+            public StepExecutionResult execute(ExecutionContext context) throws IOException {
+              return StepExecutionResult.ERROR;
+            }
+          };
+      BuildRule ruleToTest = createRule(
+          filesystem,
+          pathResolver,
+          /* deps */ ImmutableSet.of(),
+          /* buildSteps */ ImmutableList.of(failingStep),
+          /* postBuildSteps */ ImmutableList.of(),
+          /* pathToOutputFile */ null);
+
+      FakeBuildRule withRuntimeDep =
+          new FakeHasRuntimeDeps(
+              BuildTargetFactory.newInstance("//:with_runtime_dep"),
+              filesystem,
+              pathResolver,
+              ruleToTest);
+
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
+      BuildResult result =
+          cachingBuildEngine.build(buildContext, TestExecutionContext.newInstance(), withRuntimeDep)
+              .get();
+
+      assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
+      assertThat(result.getFailure(), instanceOf(StepFailedException.class));
+      assertThat(
+          ((StepFailedException) result.getFailure()).getStep().getShortName(),
+          equalTo(description));
+    }
+
+    @Test
+    public void failedRuntimeDepsAreNotPropagatedWithKeepGoing() throws Exception {
+      buildContext = this.buildContext.withKeepGoing(true);
+      final String description = "failing step";
+      Step failingStep =
+          new AbstractExecutionStep(description) {
+            @Override
+            public StepExecutionResult execute(ExecutionContext context) throws IOException {
+              return StepExecutionResult.ERROR;
+            }
+          };
+      BuildRule ruleToTest = createRule(
+          filesystem,
+          pathResolver,
+          /* deps */ ImmutableSet.of(),
+          /* buildSteps */ ImmutableList.of(failingStep),
+          /* postBuildSteps */ ImmutableList.of(),
+          /* pathToOutputFile */ null);
+
+      FakeBuildRule withRuntimeDep =
+          new FakeHasRuntimeDeps(
+              BuildTargetFactory.newInstance("//:with_runtime_dep"),
+              filesystem,
+              pathResolver,
+              ruleToTest);
+
+      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build();
+      BuildResult result =
+          cachingBuildEngine.build(buildContext, TestExecutionContext.newInstance(), withRuntimeDep)
+              .get();
+
+      assertThat(result.getStatus(), equalTo(BuildRuleStatus.SUCCESS));
     }
 
     @Test

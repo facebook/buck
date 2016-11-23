@@ -1,3 +1,3 @@
 import ext
 
-print ext.hello()
+print "hello"
