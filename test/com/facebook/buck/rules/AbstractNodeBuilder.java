@@ -83,12 +83,12 @@ public abstract class AbstractNodeBuilder<A, B extends Description<A>> {
   }
 
   public final BuildRule build(BuildRuleResolver resolver) throws NoSuchBuildTargetException {
-    return build(resolver, new FakeProjectFilesystem(), TargetGraph.EMPTY);
+    return build(resolver, filesystem, TargetGraph.EMPTY);
   }
 
   public final BuildRule build(BuildRuleResolver resolver, TargetGraph targetGraph)
       throws NoSuchBuildTargetException {
-    return build(resolver, new FakeProjectFilesystem(), targetGraph);
+    return build(resolver, filesystem, targetGraph);
   }
 
   public final BuildRule build(BuildRuleResolver resolver, ProjectFilesystem filesystem)
