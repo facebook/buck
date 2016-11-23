@@ -18,6 +18,7 @@ package com.facebook.buck.rust;
 
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -110,6 +111,16 @@ public class RustCompileStep extends ShellStep {
     return commandBuilder
         .add(crateRoot.toString())
         .build();
+  }
+
+  /*
+   * Make sure all stderr output from rustc is emitted, since its either a warning or an error.
+   * In general Rust code should have zero warnings, or all warnings as errors. Regardless,
+   * respect requests for silence.
+   */
+  @Override
+  protected boolean shouldPrintStderr(Verbosity verbosity) {
+    return !verbosity.isSilent();
   }
 
   @Override

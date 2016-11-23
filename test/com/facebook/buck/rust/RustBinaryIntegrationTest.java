@@ -64,6 +64,24 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void simpleBinaryWarnings() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_binary", tmp);
+    workspace.setUp();
+
+    assertThat(workspace.runBuckBuild("//:xyzzy").assertSuccess().getStderr(),
+        Matchers.allOf(
+            Matchers.containsString(
+                "warning: constant item is never used: `foo`, #[warn(dead_code)] on by default"),
+            Matchers.containsString(
+                "warning: constant `foo` should have an upper case name such as `FOO`,")));
+
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:xyzzy");
+    workspace.resetBuildLogFile();
+  }
+
+  @Test
   public void simpleAliasedBinary() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "simple_binary", tmp);
