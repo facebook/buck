@@ -64,4 +64,11 @@ public class NullFileHashCache implements FileHashCache {
   public void set(Path path, HashCode hashCode) {
   }
 
+  @Override
+  public FileHashCacheVerificationResult verify() throws IOException {
+    return FileHashCacheVerificationResult.builder()
+        .setCachesExamined(1)
+        .setFilesExamined(0)
+        .build();
+  }
 }

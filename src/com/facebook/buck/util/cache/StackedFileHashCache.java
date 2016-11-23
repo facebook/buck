@@ -119,4 +119,22 @@ public class StackedFileHashCache implements FileHashCache {
     }
   }
 
+  @Override
+  public FileHashCacheVerificationResult verify() throws IOException {
+    FileHashCacheVerificationResult.Builder builder = FileHashCacheVerificationResult.builder();
+    int cachesExamined = 1;
+    int filesExamined = 0;
+
+    for (FileHashCache cache : caches) {
+      FileHashCacheVerificationResult result = cache.verify();
+      cachesExamined += result.getCachesExamined();
+      filesExamined += result.getFilesExamined();
+      builder.addAllVerificationErrors(result.getVerificationErrors());
+    }
+
+    return builder
+        .setCachesExamined(cachesExamined)
+        .setFilesExamined(filesExamined)
+        .build();
+  }
 }

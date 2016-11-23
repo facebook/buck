@@ -34,7 +34,11 @@ import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nonnull;
@@ -262,4 +266,22 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     loadingCache.put(path, value);
   }
 
+  @Override
+  public FileHashCacheVerificationResult verify() throws IOException {
+    List<String> errors = new ArrayList<>();
+    ConcurrentMap<Path, HashCodeAndFileType> cacheMap = loadingCache.asMap();
+    for (Map.Entry<Path, HashCodeAndFileType> entry : cacheMap.entrySet()) {
+      Path path = entry.getKey();
+      HashCodeAndFileType cached = entry.getValue();
+      HashCodeAndFileType current = getHashCodeAndFileType(path);
+      if (!cached.equals(current)) {
+        errors.add(path.toString());
+      }
+    }
+    return FileHashCacheVerificationResult.builder()
+        .setCachesExamined(1)
+        .setFilesExamined(cacheMap.size())
+        .addAllVerificationErrors(errors)
+        .build();
+  }
 }

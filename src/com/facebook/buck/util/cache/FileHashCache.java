@@ -18,10 +18,14 @@ package com.facebook.buck.util.cache;
 
 import com.facebook.buck.hashing.FileHashLoader;
 import com.facebook.buck.io.ArchiveMemberPath;
+import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.hash.HashCode;
+
+import org.immutables.value.Value;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  * A cache which maps Paths to cached hashes of their contents,
@@ -39,4 +43,16 @@ public interface FileHashCache extends FileHashLoader {
 
   void set(Path path, HashCode hashCode) throws IOException;
 
+  default FileHashCacheVerificationResult verify() throws IOException {
+    throw new RuntimeException(
+        "FileHashCache class " + getClass().getName() + " does not support verification.");
+  }
+
+  @Value.Immutable
+  @BuckStyleImmutable
+  interface AbstractFileHashCacheVerificationResult {
+    int getCachesExamined();
+    int getFilesExamined();
+    List<String> getVerificationErrors();
+  }
 }
