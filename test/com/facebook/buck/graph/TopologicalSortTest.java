@@ -21,10 +21,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Optional;
 
 public class TopologicalSortTest {
 
@@ -38,7 +40,7 @@ public class TopologicalSortTest {
   //
   // Nodes and edges are added in weird orders to avoid default insertion orders happening to be
   // sorted.
-  private DirectedAcyclicGraph<String> makeGraph() {
+  private DirectedAcyclicGraph<String> makeComplexGraph() {
     MutableDirectedGraph<String> graph = new MutableDirectedGraph<>();
     graph.addNode("C");
     graph.addNode("B");
@@ -60,7 +62,7 @@ public class TopologicalSortTest {
 
   @Test
   public void sorts() {
-    DirectedAcyclicGraph<String> graph = makeGraph();
+    DirectedAcyclicGraph<String> graph = makeComplexGraph();
     ImmutableList<String> sorted = TopologicalSort.sort(graph);
     assertEquals(graph.getNodes(), ImmutableSet.copyOf(sorted));
     assertOrdering(sorted, "B", "A");
@@ -70,6 +72,112 @@ public class TopologicalSortTest {
     assertOrdering(sorted, "F", "D");
     assertOrdering(sorted, "G", "C");
     assertOrdering(sorted, "G", "D");
+  }
+
+  @Test
+  public void visitsChildrenInSortedOrder() {
+    //    A
+    //  /  \
+    // B    C
+    assertEquals(
+        ImmutableList.of("B", "C", "A"),
+        TopologicalSort.sort(makeOrderedGraph("A", "B", "C")));
+
+    //    B
+    //  /  \
+    // A    C
+    assertEquals(
+        ImmutableList.of("A", "C", "B"),
+        TopologicalSort.sort(makeOrderedGraph("B", "A", "C")));
+
+    //    A
+    //  /  \
+    // C    B
+    assertEquals(
+        ImmutableList.of("B", "C", "A"),
+        TopologicalSort.sort(makeOrderedGraph("A", "C", "B")));
+
+    //    B
+    //  /  \
+    // C    A
+    assertEquals(
+        ImmutableList.of("A", "C", "B"),
+        TopologicalSort.sort(makeOrderedGraph("B", "C", "A")));
+
+    //    C
+    //  /  \
+    // A    B
+    assertEquals(
+        ImmutableList.of("A", "B", "C"),
+        TopologicalSort.sort(makeOrderedGraph("C", "A", "B")));
+
+    //    C
+    //  /  \
+    // B    A
+    assertEquals(
+        ImmutableList.of("A", "B", "C"),
+        TopologicalSort.sort(makeOrderedGraph("C", "B", "A")));
+  }
+
+  @Test
+  public void visitsRootsInSortedOrder() {
+    //   A     D
+    //  / \
+    // B   C
+    assertEquals(
+        ImmutableList.of("B", "C", "A", "D"),
+        TopologicalSort.sort(makeOrderedGraph("A", "B", "C", Optional.of("D")))
+    );
+    //   D     A
+    //  / \
+    // B   C
+    assertEquals(
+        ImmutableList.of("A", "B", "C", "D"),
+        TopologicalSort.sort(makeOrderedGraph("D", "B", "C", Optional.of("A")))
+    );
+  }
+
+  private TraversableGraph<String> makeOrderedGraph(String parent, String left, String right) {
+    return makeOrderedGraph(parent, left, right, Optional.empty());
+  }
+
+  private TraversableGraph<String> makeOrderedGraph(
+      String parent, String left, String right, Optional<String> isolatedNode) {
+    Iterable<String> isolatedNodeIterable = isolatedNode.isPresent()
+        ? ImmutableList.of(isolatedNode.get()) : ImmutableList.of();
+
+    return new TraversableGraph<String>() {
+      @Override
+      public Iterable<String> getNodesWithNoIncomingEdges() {
+        return Iterables.concat(ImmutableList.of(parent), isolatedNodeIterable);
+      }
+
+      @Override
+      public Iterable<String> getNodesWithNoOutgoingEdges() {
+        return Iterables.concat(ImmutableList.of(left, right), isolatedNodeIterable);
+      }
+
+      @Override
+      public Iterable<String> getIncomingNodesFor(String sink) {
+        if (isolatedNode.isPresent() && sink.equals(isolatedNode.get())) {
+          return ImmutableList.of();
+        }
+        return sink.equals(parent) ? ImmutableList.of() : ImmutableList.of(parent);
+      }
+
+      @Override
+      public Iterable<String> getOutgoingNodesFor(String source) {
+        if (isolatedNode.isPresent() && source.equals(isolatedNode.get())) {
+          return ImmutableList.of();
+        }
+        return source.equals(parent) ? ImmutableList.of(left, right) : ImmutableList.of();
+      }
+
+      @Override
+      public Iterable<String> getNodes() {
+        return Iterables.concat(ImmutableList.of(parent, left, right), isolatedNodeIterable);
+      }
+    };
   }
 
   private <T> void assertOrdering(List<T> list, T before, T after) {
