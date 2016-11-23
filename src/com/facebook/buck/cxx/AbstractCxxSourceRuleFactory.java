@@ -626,9 +626,6 @@ abstract class AbstractCxxSourceRuleFactory {
       PreprocessorDelegateCacheValue preprocessorDelegateCacheValue,
       CxxSource source) {
 
-    PreprocessorDelegate preprocessorDelegate =
-        preprocessorDelegateCacheValue.getPreprocessorDelegate();
-
     // Detect the rule for which we are building this PCH:
     SourcePath sourcePath = Preconditions.checkNotNull(this.getPrefixHeader().orElse(null));
     BuildTarget targetToBuildFor;
@@ -646,40 +643,15 @@ abstract class AbstractCxxSourceRuleFactory {
     // As such, each prefix header may generate multiple pch files, and need unique build targets
     // to be differentiated in the build graph.
     CxxToolFlags compilerFlags = computeCompilerFlags(source.getType(), source.getFlags());
-    ImmutableList<String> allFlags = preprocessorDelegate.getCommand(
-        compilerFlags,
-        /* no pch object yet */ Optional.empty());
-    ImmutableList.Builder<String> iDirsBuilder = ImmutableList.<String>builder();
-    ImmutableList.Builder<String> iSystemDirsBuilder = ImmutableList.<String>builder();
-    ImmutableList.Builder<String> nonIncludeFlagsBuilder = ImmutableList.<String>builder();
-    CxxPrecompiledHeader.separateIncludePathArgs(
-        allFlags,
-        iDirsBuilder,
-        iSystemDirsBuilder,
-        nonIncludeFlagsBuilder);
-
-    ImmutableList.Builder<String> flagBuilder = ImmutableList.<String>builder();
-
-    // Compute two different hashes; one for non-include paths, just for PCH compatibility
-    // with respect to defines / f-flags / m-flags / other things that must agree in PCH + build.
-    // It's possible that targets -- in fact hopefully many targets -- share the same base hash
-    // so that it's possible to reuse PCHs with that base hash, even if include path flags differ
-    // in (most likely) non-incompatible ways.
-    flagBuilder.addAll(nonIncludeFlagsBuilder.build());
-    final String baseHash = preprocessorDelegate.hashCommand(flagBuilder.build()).substring(0, 10);
-
-    // The full hash is a globally-unique identifier, using the above mentioned flags followed by
-    // other include path dirs.
-    flagBuilder.addAll(iDirsBuilder.build());
-    flagBuilder.addAll(iSystemDirsBuilder.build());
-    final String fullHash = preprocessorDelegate.hashCommand(flagBuilder.build()).substring(0, 10);
 
     // Language needs to be part of the key, PCHs built under a different language are incompatible.
     // (Replace `c++` with `cxx`; avoid default scrubbing which would make it the cryptic `c__`.)
     final String langCode = source.getType().getLanguage().replaceAll("c\\+\\+", "cxx");
 
-    final String pchBaseID = "pch-" + langCode + "-" + baseHash;
-    final String pchFullID = pchBaseID + "-" + fullHash;
+    final String pchBaseID =
+        "pch-" + langCode + "-" + preprocessorDelegateCacheValue.getBaseHash(compilerFlags);
+    final String pchFullID =
+        pchBaseID + "-" + preprocessorDelegateCacheValue.getFullHash(compilerFlags);
 
     BuildTarget target = BuildTarget
         .builder(targetToBuildFor)
@@ -694,6 +666,9 @@ abstract class AbstractCxxSourceRuleFactory {
     }
 
     Path output = BuildTargets.getGenPath(getParams().getProjectFilesystem(), target, "%s.gch");
+
+    PreprocessorDelegate preprocessorDelegate =
+        preprocessorDelegateCacheValue.getPreprocessorDelegate();
 
     Compiler compiler =
         CxxSourceTypes.getCompiler(
@@ -921,19 +896,53 @@ abstract class AbstractCxxSourceRuleFactory {
 
   static class PreprocessorDelegateCacheValue {
     private final PreprocessorDelegate preprocessorDelegate;
-    private final LoadingCache<CxxToolFlags, String> commandHashCache;
+    private final LoadingCache<CxxToolFlags, HashStrings> commandHashCache;
+
+    class HashStrings {
+      public final String baseHash;
+      public final String fullHash;
+
+      public HashStrings(CxxToolFlags compilerFlags) {
+        ImmutableList<String> allFlags = preprocessorDelegate.getCommand(
+            compilerFlags,
+            /* no pch object yet */ Optional.empty());
+        ImmutableList.Builder<String> iDirsBuilder = ImmutableList.<String>builder();
+        ImmutableList.Builder<String> iSystemDirsBuilder = ImmutableList.<String>builder();
+        ImmutableList.Builder<String> nonIncludeFlagsBuilder = ImmutableList.<String>builder();
+        CxxPrecompiledHeader.separateIncludePathArgs(
+            allFlags,
+            iDirsBuilder,
+            iSystemDirsBuilder,
+            nonIncludeFlagsBuilder);
+
+        ImmutableList.Builder<String> flagBuilder = ImmutableList.<String>builder();
+
+        // Compute two different hashes; one for non-include paths, just for PCH compatibility
+        // with respect to defines, f-flags, m-flags / other things that must agree in PCH + build.
+        // It's possible that targets -- in fact hopefully many targets -- share the same base hash
+        // so that it's possible to reuse PCHs with that base hash, even if include path flags
+        // differ in (most likely) non-incompatible ways.
+        flagBuilder.addAll(nonIncludeFlagsBuilder.build());
+        this.baseHash = preprocessorDelegate.hashCommand(flagBuilder.build()).substring(0, 10);
+
+        // The full hash is a globally-unique identifier, using the above mentioned flags followed
+        // by other include path dirs.
+        flagBuilder.addAll(iDirsBuilder.build());
+        flagBuilder.addAll(iSystemDirsBuilder.build());
+        this.fullHash = preprocessorDelegate.hashCommand(flagBuilder.build()).substring(0, 10);
+      }
+    }
 
     PreprocessorDelegateCacheValue(PreprocessorDelegate preprocessorDelegate) {
       this.preprocessorDelegate = preprocessorDelegate;
       this.commandHashCache = CacheBuilder.newBuilder()
-          .build(new CacheLoader<CxxToolFlags, String>() {
+          .build(new CacheLoader<CxxToolFlags, HashStrings>() {
             @Override
-            public String load(CxxToolFlags key) {
+            public HashStrings load(CxxToolFlags key) {
               // Note: this hash call is mainly for the benefit of precompiled headers, to produce
               // the PCH's hash of build flags.  (Since there's no PCH yet, the PCH argument is
               // passed as empty here.)
-              return PreprocessorDelegateCacheValue.this.preprocessorDelegate.hashCommand(
-                  key, Optional.empty());
+              return new HashStrings(key);
             }
           });
     }
@@ -942,8 +951,12 @@ abstract class AbstractCxxSourceRuleFactory {
       return preprocessorDelegate;
     }
 
-    String getCommandHash(CxxToolFlags flags) {
-      return this.commandHashCache.getUnchecked(flags);
+    String getBaseHash(CxxToolFlags flags) {
+      return this.commandHashCache.getUnchecked(flags).baseHash;
+    }
+
+    String getFullHash(CxxToolFlags flags) {
+      return this.commandHashCache.getUnchecked(flags).fullHash;
     }
   }
 
