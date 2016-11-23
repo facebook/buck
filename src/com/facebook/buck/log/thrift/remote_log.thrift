@@ -28,6 +28,7 @@ struct MemoryStatsRemoteLogEntry {
   2: optional i64 freeMemoryBytes;
   3: optional i64 totalMemoryBytes;
   4: optional i64 timeSpentInGcMs;
+  5: optional map<string, i64> currentMemoryBytesUsageByPool;
 }
 
 struct ProcessStatsRemoteLogEntry {

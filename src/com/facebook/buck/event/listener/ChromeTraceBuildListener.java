@@ -18,12 +18,12 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
-import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ChromeTraceEvent;
+import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.CompilerPluginDurationEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -77,6 +77,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Logs events to a json file formatted to be viewed in Chrome Trace View (chrome://tracing).
@@ -661,6 +662,13 @@ public class ChromeTraceBuildListener implements BuckEventListener {
             .put("time_spent_in_gc_sec",
                 Long.toString(
                     TimeUnit.MILLISECONDS.toSeconds(memory.getTimeSpentInGcMs())))
+            .putAll(
+                memory.getCurrentMemoryBytesUsageByPool().entrySet().stream().map(
+                    e -> Maps.immutableEntry(
+                        "pool_" + e.getKey() + "_mb",
+                        Long.toString(SizeUnit.BYTES.toMegabytes(e.getValue()))))
+                .collect(Collectors.toList())
+            )
             .build(),
         memory);
   }

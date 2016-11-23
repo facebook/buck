@@ -202,7 +202,8 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(new PerfStatsTracking.MemoryPerfStatsEvent(
         /* freeMemoryBytes */ 1024 * 1024L,
         /* totalMemoryBytes */ 3 * 1024 * 1024L,
-        /* timeSpentInGcMs */ -1));
+        /* timeSpentInGcMs */ -1,
+        /* currentMemoryBytesUsageByPool */ ImmutableMap.of("flower", 42L * 1024 * 1024)));
     ArtifactCacheConnectEvent.Started artifactCacheConnectEventStarted =
         ArtifactCacheConnectEvent.started();
     eventBus.post(artifactCacheConnectEventStarted);
@@ -337,7 +338,8 @@ public class ChromeTraceBuildListenerTest {
             "used_memory_mb", "2",
             "free_memory_mb", "1",
             "total_memory_mb", "3",
-            "time_spent_in_gc_sec", "0"));
+            "time_spent_in_gc_sec", "0",
+            "pool_flower_mb", "42"));
 
     assertNextResult(
         resultListCopy,

@@ -1028,15 +1028,15 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
           case 9: // CONTEXT
             if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
               {
-                org.apache.thrift.protocol.TMap _map16 = iprot.readMapBegin();
-                struct.context = new HashMap<String,String>(2*_map16.size);
-                String _key17;
-                String _val18;
-                for (int _i19 = 0; _i19 < _map16.size; ++_i19)
+                org.apache.thrift.protocol.TMap _map26 = iprot.readMapBegin();
+                struct.context = new HashMap<String,String>(2*_map26.size);
+                String _key27;
+                String _val28;
+                for (int _i29 = 0; _i29 < _map26.size; ++_i29)
                 {
-                  _key17 = iprot.readString();
-                  _val18 = iprot.readString();
-                  struct.context.put(_key17, _val18);
+                  _key27 = iprot.readString();
+                  _val28 = iprot.readString();
+                  struct.context.put(_key27, _val28);
                 }
                 iprot.readMapEnd();
               }
@@ -1107,10 +1107,10 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
           oprot.writeFieldBegin(CONTEXT_FIELD_DESC);
           {
             oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, struct.context.size()));
-            for (Map.Entry<String, String> _iter20 : struct.context.entrySet())
+            for (Map.Entry<String, String> _iter30 : struct.context.entrySet())
             {
-              oprot.writeString(_iter20.getKey());
-              oprot.writeString(_iter20.getValue());
+              oprot.writeString(_iter30.getKey());
+              oprot.writeString(_iter30.getValue());
             }
             oprot.writeMapEnd();
           }
@@ -1190,10 +1190,10 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
       if (struct.isSetContext()) {
         {
           oprot.writeI32(struct.context.size());
-          for (Map.Entry<String, String> _iter21 : struct.context.entrySet())
+          for (Map.Entry<String, String> _iter31 : struct.context.entrySet())
           {
-            oprot.writeString(_iter21.getKey());
-            oprot.writeString(_iter21.getValue());
+            oprot.writeString(_iter31.getKey());
+            oprot.writeString(_iter31.getValue());
           }
         }
       }
@@ -1237,15 +1237,15 @@ public class ProcessStatsRemoteLogEntry implements org.apache.thrift.TBase<Proce
       }
       if (incoming.get(8)) {
         {
-          org.apache.thrift.protocol.TMap _map22 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.context = new HashMap<String,String>(2*_map22.size);
-          String _key23;
-          String _val24;
-          for (int _i25 = 0; _i25 < _map22.size; ++_i25)
+          org.apache.thrift.protocol.TMap _map32 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.context = new HashMap<String,String>(2*_map32.size);
+          String _key33;
+          String _val34;
+          for (int _i35 = 0; _i35 < _map32.size; ++_i35)
           {
-            _key23 = iprot.readString();
-            _val24 = iprot.readString();
-            struct.context.put(_key23, _val24);
+            _key33 = iprot.readString();
+            _val34 = iprot.readString();
+            struct.context.put(_key33, _val34);
           }
         }
         struct.setContextIsSet(true);

@@ -23,11 +23,15 @@ import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.Logger;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ServiceManager;
 
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.MemoryType;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -62,7 +66,19 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
       totalGcTimeMs += collectionTimeMs;
     }
 
-    eventBus.post(new MemoryPerfStatsEvent(freeMemoryBytes, totalMemoryBytes, totalGcTimeMs));
+    ImmutableMap.Builder<String, Long> currentMemoryBytesUsageByPool = ImmutableMap.builder();
+    for (MemoryPoolMXBean memoryPoolBean : ManagementFactory.getMemoryPoolMXBeans()) {
+      String name = memoryPoolBean.getName();
+      MemoryType type = memoryPoolBean.getType();
+      long currentlyUsedBytes = memoryPoolBean.getUsage().getUsed();
+      currentMemoryBytesUsageByPool.put(name + "(" + type + ")", currentlyUsedBytes);
+    }
+
+    eventBus.post(new MemoryPerfStatsEvent(
+        freeMemoryBytes,
+        totalMemoryBytes,
+        totalGcTimeMs,
+        currentMemoryBytesUsageByPool.build()));
   }
 
   @Override
@@ -112,14 +128,17 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
     private final long freeMemoryBytes;
     private final long totalMemoryBytes;
     private final long timeSpentInGcMs;
+    private final Map<String, Long> currentMemoryBytesUsageByPool;
 
     public MemoryPerfStatsEvent(
         long freeMemoryBytes,
         long totalMemoryBytes,
-        long timeSpentInGcMs) {
+        long timeSpentInGcMs,
+        Map<String, Long> currentMemoryBytesUsageByPool) {
       this.freeMemoryBytes = freeMemoryBytes;
       this.totalMemoryBytes = totalMemoryBytes;
       this.timeSpentInGcMs = timeSpentInGcMs;
+      this.currentMemoryBytesUsageByPool = currentMemoryBytesUsageByPool;
     }
 
     public long getFreeMemoryBytes() {
@@ -132,6 +151,10 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
 
     public long getTimeSpentInGcMs() {
       return timeSpentInGcMs;
+    }
+
+    public Map<String, Long> getCurrentMemoryBytesUsageByPool() {
+      return currentMemoryBytesUsageByPool;
     }
   }
 }

@@ -40,6 +40,7 @@ public class MemoryStatsRemoteLogEntry implements org.apache.thrift.TBase<Memory
   private static final org.apache.thrift.protocol.TField FREE_MEMORY_BYTES_FIELD_DESC = new org.apache.thrift.protocol.TField("freeMemoryBytes", org.apache.thrift.protocol.TType.I64, (short)2);
   private static final org.apache.thrift.protocol.TField TOTAL_MEMORY_BYTES_FIELD_DESC = new org.apache.thrift.protocol.TField("totalMemoryBytes", org.apache.thrift.protocol.TType.I64, (short)3);
   private static final org.apache.thrift.protocol.TField TIME_SPENT_IN_GC_MS_FIELD_DESC = new org.apache.thrift.protocol.TField("timeSpentInGcMs", org.apache.thrift.protocol.TType.I64, (short)4);
+  private static final org.apache.thrift.protocol.TField CURRENT_MEMORY_BYTES_USAGE_BY_POOL_FIELD_DESC = new org.apache.thrift.protocol.TField("currentMemoryBytesUsageByPool", org.apache.thrift.protocol.TType.MAP, (short)5);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -51,13 +52,15 @@ public class MemoryStatsRemoteLogEntry implements org.apache.thrift.TBase<Memory
   public long freeMemoryBytes; // optional
   public long totalMemoryBytes; // optional
   public long timeSpentInGcMs; // optional
+  public Map<String,Long> currentMemoryBytesUsageByPool; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
     TIME_FROM_START_OF_COMMAND_MS((short)1, "timeFromStartOfCommandMs"),
     FREE_MEMORY_BYTES((short)2, "freeMemoryBytes"),
     TOTAL_MEMORY_BYTES((short)3, "totalMemoryBytes"),
-    TIME_SPENT_IN_GC_MS((short)4, "timeSpentInGcMs");
+    TIME_SPENT_IN_GC_MS((short)4, "timeSpentInGcMs"),
+    CURRENT_MEMORY_BYTES_USAGE_BY_POOL((short)5, "currentMemoryBytesUsageByPool");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -80,6 +83,8 @@ public class MemoryStatsRemoteLogEntry implements org.apache.thrift.TBase<Memory
           return TOTAL_MEMORY_BYTES;
         case 4: // TIME_SPENT_IN_GC_MS
           return TIME_SPENT_IN_GC_MS;
+        case 5: // CURRENT_MEMORY_BYTES_USAGE_BY_POOL
+          return CURRENT_MEMORY_BYTES_USAGE_BY_POOL;
         default:
           return null;
       }
@@ -125,7 +130,7 @@ public class MemoryStatsRemoteLogEntry implements org.apache.thrift.TBase<Memory
   private static final int __TOTALMEMORYBYTES_ISSET_ID = 2;
   private static final int __TIMESPENTINGCMS_ISSET_ID = 3;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.TIME_FROM_START_OF_COMMAND_MS,_Fields.FREE_MEMORY_BYTES,_Fields.TOTAL_MEMORY_BYTES,_Fields.TIME_SPENT_IN_GC_MS};
+  private static final _Fields optionals[] = {_Fields.TIME_FROM_START_OF_COMMAND_MS,_Fields.FREE_MEMORY_BYTES,_Fields.TOTAL_MEMORY_BYTES,_Fields.TIME_SPENT_IN_GC_MS,_Fields.CURRENT_MEMORY_BYTES_USAGE_BY_POOL};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -137,6 +142,10 @@ public class MemoryStatsRemoteLogEntry implements org.apache.thrift.TBase<Memory
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     tmpMap.put(_Fields.TIME_SPENT_IN_GC_MS, new org.apache.thrift.meta_data.FieldMetaData("timeSpentInGcMs", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
+    tmpMap.put(_Fields.CURRENT_MEMORY_BYTES_USAGE_BY_POOL, new org.apache.thrift.meta_data.FieldMetaData("currentMemoryBytesUsageByPool", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.MapMetaData(org.apache.thrift.protocol.TType.MAP, 
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING), 
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64))));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(MemoryStatsRemoteLogEntry.class, metaDataMap);
   }
@@ -153,6 +162,10 @@ public class MemoryStatsRemoteLogEntry implements org.apache.thrift.TBase<Memory
     this.freeMemoryBytes = other.freeMemoryBytes;
     this.totalMemoryBytes = other.totalMemoryBytes;
     this.timeSpentInGcMs = other.timeSpentInGcMs;
+    if (other.isSetCurrentMemoryBytesUsageByPool()) {
+      Map<String,Long> __this__currentMemoryBytesUsageByPool = new HashMap<String,Long>(other.currentMemoryBytesUsageByPool);
+      this.currentMemoryBytesUsageByPool = __this__currentMemoryBytesUsageByPool;
+    }
   }
 
   public MemoryStatsRemoteLogEntry deepCopy() {
@@ -169,6 +182,7 @@ public class MemoryStatsRemoteLogEntry implements org.apache.thrift.TBase<Memory
     this.totalMemoryBytes = 0;
     setTimeSpentInGcMsIsSet(false);
     this.timeSpentInGcMs = 0;
+    this.currentMemoryBytesUsageByPool = null;
   }
 
   public long getTimeFromStartOfCommandMs() {
@@ -263,6 +277,41 @@ public class MemoryStatsRemoteLogEntry implements org.apache.thrift.TBase<Memory
     __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __TIMESPENTINGCMS_ISSET_ID, value);
   }
 
+  public int getCurrentMemoryBytesUsageByPoolSize() {
+    return (this.currentMemoryBytesUsageByPool == null) ? 0 : this.currentMemoryBytesUsageByPool.size();
+  }
+
+  public void putToCurrentMemoryBytesUsageByPool(String key, long val) {
+    if (this.currentMemoryBytesUsageByPool == null) {
+      this.currentMemoryBytesUsageByPool = new HashMap<String,Long>();
+    }
+    this.currentMemoryBytesUsageByPool.put(key, val);
+  }
+
+  public Map<String,Long> getCurrentMemoryBytesUsageByPool() {
+    return this.currentMemoryBytesUsageByPool;
+  }
+
+  public MemoryStatsRemoteLogEntry setCurrentMemoryBytesUsageByPool(Map<String,Long> currentMemoryBytesUsageByPool) {
+    this.currentMemoryBytesUsageByPool = currentMemoryBytesUsageByPool;
+    return this;
+  }
+
+  public void unsetCurrentMemoryBytesUsageByPool() {
+    this.currentMemoryBytesUsageByPool = null;
+  }
+
+  /** Returns true if field currentMemoryBytesUsageByPool is set (has been assigned a value) and false otherwise */
+  public boolean isSetCurrentMemoryBytesUsageByPool() {
+    return this.currentMemoryBytesUsageByPool != null;
+  }
+
+  public void setCurrentMemoryBytesUsageByPoolIsSet(boolean value) {
+    if (!value) {
+      this.currentMemoryBytesUsageByPool = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case TIME_FROM_START_OF_COMMAND_MS:
@@ -297,6 +346,14 @@ public class MemoryStatsRemoteLogEntry implements org.apache.thrift.TBase<Memory
       }
       break;
 
+    case CURRENT_MEMORY_BYTES_USAGE_BY_POOL:
+      if (value == null) {
+        unsetCurrentMemoryBytesUsageByPool();
+      } else {
+        setCurrentMemoryBytesUsageByPool((Map<String,Long>)value);
+      }
+      break;
+
     }
   }
 
@@ -313,6 +370,9 @@ public class MemoryStatsRemoteLogEntry implements org.apache.thrift.TBase<Memory
 
     case TIME_SPENT_IN_GC_MS:
       return getTimeSpentInGcMs();
+
+    case CURRENT_MEMORY_BYTES_USAGE_BY_POOL:
+      return getCurrentMemoryBytesUsageByPool();
 
     }
     throw new IllegalStateException();
@@ -333,6 +393,8 @@ public class MemoryStatsRemoteLogEntry implements org.apache.thrift.TBase<Memory
       return isSetTotalMemoryBytes();
     case TIME_SPENT_IN_GC_MS:
       return isSetTimeSpentInGcMs();
+    case CURRENT_MEMORY_BYTES_USAGE_BY_POOL:
+      return isSetCurrentMemoryBytesUsageByPool();
     }
     throw new IllegalStateException();
   }
@@ -386,6 +448,15 @@ public class MemoryStatsRemoteLogEntry implements org.apache.thrift.TBase<Memory
         return false;
     }
 
+    boolean this_present_currentMemoryBytesUsageByPool = true && this.isSetCurrentMemoryBytesUsageByPool();
+    boolean that_present_currentMemoryBytesUsageByPool = true && that.isSetCurrentMemoryBytesUsageByPool();
+    if (this_present_currentMemoryBytesUsageByPool || that_present_currentMemoryBytesUsageByPool) {
+      if (!(this_present_currentMemoryBytesUsageByPool && that_present_currentMemoryBytesUsageByPool))
+        return false;
+      if (!this.currentMemoryBytesUsageByPool.equals(that.currentMemoryBytesUsageByPool))
+        return false;
+    }
+
     return true;
   }
 
@@ -412,6 +483,11 @@ public class MemoryStatsRemoteLogEntry implements org.apache.thrift.TBase<Memory
     list.add(present_timeSpentInGcMs);
     if (present_timeSpentInGcMs)
       list.add(timeSpentInGcMs);
+
+    boolean present_currentMemoryBytesUsageByPool = true && (isSetCurrentMemoryBytesUsageByPool());
+    list.add(present_currentMemoryBytesUsageByPool);
+    if (present_currentMemoryBytesUsageByPool)
+      list.add(currentMemoryBytesUsageByPool);
 
     return list.hashCode();
   }
@@ -464,6 +540,16 @@ public class MemoryStatsRemoteLogEntry implements org.apache.thrift.TBase<Memory
         return lastComparison;
       }
     }
+    lastComparison = Boolean.valueOf(isSetCurrentMemoryBytesUsageByPool()).compareTo(other.isSetCurrentMemoryBytesUsageByPool());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetCurrentMemoryBytesUsageByPool()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.currentMemoryBytesUsageByPool, other.currentMemoryBytesUsageByPool);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -505,6 +591,16 @@ public class MemoryStatsRemoteLogEntry implements org.apache.thrift.TBase<Memory
       if (!first) sb.append(", ");
       sb.append("timeSpentInGcMs:");
       sb.append(this.timeSpentInGcMs);
+      first = false;
+    }
+    if (isSetCurrentMemoryBytesUsageByPool()) {
+      if (!first) sb.append(", ");
+      sb.append("currentMemoryBytesUsageByPool:");
+      if (this.currentMemoryBytesUsageByPool == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.currentMemoryBytesUsageByPool);
+      }
       first = false;
     }
     sb.append(")");
@@ -584,6 +680,26 @@ public class MemoryStatsRemoteLogEntry implements org.apache.thrift.TBase<Memory
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 5: // CURRENT_MEMORY_BYTES_USAGE_BY_POOL
+            if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
+              {
+                org.apache.thrift.protocol.TMap _map16 = iprot.readMapBegin();
+                struct.currentMemoryBytesUsageByPool = new HashMap<String,Long>(2*_map16.size);
+                String _key17;
+                long _val18;
+                for (int _i19 = 0; _i19 < _map16.size; ++_i19)
+                {
+                  _key17 = iprot.readString();
+                  _val18 = iprot.readI64();
+                  struct.currentMemoryBytesUsageByPool.put(_key17, _val18);
+                }
+                iprot.readMapEnd();
+              }
+              struct.setCurrentMemoryBytesUsageByPoolIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -619,6 +735,21 @@ public class MemoryStatsRemoteLogEntry implements org.apache.thrift.TBase<Memory
         oprot.writeI64(struct.timeSpentInGcMs);
         oprot.writeFieldEnd();
       }
+      if (struct.currentMemoryBytesUsageByPool != null) {
+        if (struct.isSetCurrentMemoryBytesUsageByPool()) {
+          oprot.writeFieldBegin(CURRENT_MEMORY_BYTES_USAGE_BY_POOL_FIELD_DESC);
+          {
+            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.I64, struct.currentMemoryBytesUsageByPool.size()));
+            for (Map.Entry<String, Long> _iter20 : struct.currentMemoryBytesUsageByPool.entrySet())
+            {
+              oprot.writeString(_iter20.getKey());
+              oprot.writeI64(_iter20.getValue());
+            }
+            oprot.writeMapEnd();
+          }
+          oprot.writeFieldEnd();
+        }
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -649,7 +780,10 @@ public class MemoryStatsRemoteLogEntry implements org.apache.thrift.TBase<Memory
       if (struct.isSetTimeSpentInGcMs()) {
         optionals.set(3);
       }
-      oprot.writeBitSet(optionals, 4);
+      if (struct.isSetCurrentMemoryBytesUsageByPool()) {
+        optionals.set(4);
+      }
+      oprot.writeBitSet(optionals, 5);
       if (struct.isSetTimeFromStartOfCommandMs()) {
         oprot.writeI64(struct.timeFromStartOfCommandMs);
       }
@@ -662,12 +796,22 @@ public class MemoryStatsRemoteLogEntry implements org.apache.thrift.TBase<Memory
       if (struct.isSetTimeSpentInGcMs()) {
         oprot.writeI64(struct.timeSpentInGcMs);
       }
+      if (struct.isSetCurrentMemoryBytesUsageByPool()) {
+        {
+          oprot.writeI32(struct.currentMemoryBytesUsageByPool.size());
+          for (Map.Entry<String, Long> _iter21 : struct.currentMemoryBytesUsageByPool.entrySet())
+          {
+            oprot.writeString(_iter21.getKey());
+            oprot.writeI64(_iter21.getValue());
+          }
+        }
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, MemoryStatsRemoteLogEntry struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
-      BitSet incoming = iprot.readBitSet(4);
+      BitSet incoming = iprot.readBitSet(5);
       if (incoming.get(0)) {
         struct.timeFromStartOfCommandMs = iprot.readI64();
         struct.setTimeFromStartOfCommandMsIsSet(true);
@@ -683,6 +827,21 @@ public class MemoryStatsRemoteLogEntry implements org.apache.thrift.TBase<Memory
       if (incoming.get(3)) {
         struct.timeSpentInGcMs = iprot.readI64();
         struct.setTimeSpentInGcMsIsSet(true);
+      }
+      if (incoming.get(4)) {
+        {
+          org.apache.thrift.protocol.TMap _map22 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.I64, iprot.readI32());
+          struct.currentMemoryBytesUsageByPool = new HashMap<String,Long>(2*_map22.size);
+          String _key23;
+          long _val24;
+          for (int _i25 = 0; _i25 < _map22.size; ++_i25)
+          {
+            _key23 = iprot.readString();
+            _val24 = iprot.readI64();
+            struct.currentMemoryBytesUsageByPool.put(_key23, _val24);
+          }
+        }
+        struct.setCurrentMemoryBytesUsageByPoolIsSet(true);
       }
     }
   }
