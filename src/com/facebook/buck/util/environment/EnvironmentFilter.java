@@ -33,6 +33,7 @@ public class EnvironmentFilter {
   private static final ImmutableSet<String> ENV_TO_REMOVE = ImmutableSet.of(
       "ATOM_HOME",        // Added by Nuclide editor
       "ATOM_BACKUP_EDITOR", // Added by Nuclide editor
+      "ATOM_DISABLE_SHELLING_OUT_FOR_ENVIRONMENT", // Added by Nuclide editor
       "ARCANIST",         // Phabricator / Arcanist cruft.
       "Apple_PubSub_Socket_Render", // OS X pubsub control variable.
       "BUCK_BUILD_ID",    // Build ID passed in from Python.
