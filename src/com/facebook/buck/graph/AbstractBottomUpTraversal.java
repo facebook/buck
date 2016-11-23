@@ -16,17 +16,6 @@
 
 package com.facebook.buck.graph;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-
 /**
  * Class that performs a "bottom-up" traversal of a DAG. For any given node, every node to which it
  * has an outgoing edge will be visited before the given node.
@@ -35,51 +24,22 @@ public abstract class AbstractBottomUpTraversal<T, E extends Throwable> {
 
   private final TraversableGraph<T> graph;
 
-  private final Set<T> visitedNodes;
-
-  private final Queue<T> nodesToExplore;
-
-  // AtomicInteger is used to decrement the integer value in-place.
-  private final Map<T, AtomicInteger> effectiveOutDegreesOfExplorableNodes;
-
   public AbstractBottomUpTraversal(TraversableGraph<T> graph) {
     this.graph = graph;
-    this.visitedNodes = Sets.newHashSet();
-    this.nodesToExplore = Lists.newLinkedList();
-    this.effectiveOutDegreesOfExplorableNodes = Maps.newHashMap();
   }
 
   public final void traverse() throws E {
-    Iterables.addAll(nodesToExplore, graph.getNodesWithNoOutgoingEdges());
-    while (!nodesToExplore.isEmpty()) {
-      T node = nodesToExplore.remove();
-      if (visitedNodes.contains(node)) {
-        Preconditions.checkState(false,
-            "The queue of nodes to explore should not contain a node that has already been" +
-            " visited.");
+    Iterable<T> roots  = graph.getNodesWithNoIncomingEdges();
+    GraphTraversable<T> graphTraversable = node -> graph.getOutgoingNodesFor(node).iterator();
+    try {
+      for (T node : new AcyclicDepthFirstPostOrderTraversal<>(graphTraversable).traverse(roots)) {
+        visit(node);
       }
-
-      visit(node);
-      visitedNodes.add(node);
-
-      // Only add a node to the set of nodes to be explored if all the nodes it depends on have
-      // been visited already. We achieve the same by keeping track of the out degrees of explorable
-      // nodes. After visiting a node, decrement the out degree of each of its parent node. When the
-      // out degree reaches zero, it is safe to add that node to the list of nodes to explore next.
-      for (T exploreCandidate : graph.getIncomingNodesFor(node)) {
-        if (!effectiveOutDegreesOfExplorableNodes.containsKey(exploreCandidate)) {
-          effectiveOutDegreesOfExplorableNodes.put(exploreCandidate,
-              new AtomicInteger(Iterables.size(graph.getOutgoingNodesFor(exploreCandidate))));
-        }
-        AtomicInteger outDegree = effectiveOutDegreesOfExplorableNodes.get(exploreCandidate);
-        Preconditions.checkNotNull(outDegree);
-        if (outDegree.decrementAndGet() == 0) {
-          nodesToExplore.add(exploreCandidate);
-        }
-      }
+    } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
+      throw new IllegalStateException(
+          "Cycle detected despite graph which was claimed to be a DAG", e);
     }
   }
 
   public abstract void visit(T node) throws E;
-
 }
