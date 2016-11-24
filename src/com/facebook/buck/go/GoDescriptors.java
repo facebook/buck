@@ -17,12 +17,15 @@
 package com.facebook.buck.go;
 
 import com.facebook.buck.file.WriteFile;
-import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.ImmutableFlavor;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -59,16 +62,35 @@ abstract class GoDescriptors {
   private static final Logger LOG = Logger.get(GoDescriptors.class);
 
   private static final String TEST_MAIN_GEN_PATH = "com/facebook/buck/go/testmaingen.go";
+  public static final Flavor TRANSITIVE_LINKABLES_FLAVOR =
+      ImmutableFlavor.of("transitive-linkables");
 
+  @SuppressWarnings("unchecked")
   public static ImmutableSet<GoLinkable> requireTransitiveGoLinkables(
-      BuildRuleResolver resolver,
-      Optional<GoLinkableTargetNode<?>> sourceTarget,
-      final GoPlatform platform,
-      Iterable<GoLinkableTargetNode<?>> targets) {
+      final BuildTarget sourceTarget, final BuildRuleResolver resolver, final GoPlatform platform,
+      Iterable<BuildTarget> targets, boolean includeSelf) throws NoSuchBuildTargetException {
     FluentIterable<GoLinkable> linkables = FluentIterable.from(targets)
-        .transformAndConcat(input -> input.getTransitiveLinkables(resolver, platform));
-    if (sourceTarget.isPresent()) {
-      linkables = linkables.append(sourceTarget.get().getLinkable(resolver, platform));
+        .transformAndConcat(new Function<BuildTarget, ImmutableSet<GoLinkable>>() {
+          @Override
+          public ImmutableSet<GoLinkable> apply(BuildTarget input) {
+            BuildTarget flavoredTarget = BuildTarget.builder(input)
+                .addFlavors(platform.getFlavor(), TRANSITIVE_LINKABLES_FLAVOR)
+                .build();
+            try {
+              return resolver.requireMetadata(flavoredTarget, ImmutableSet.class).get();
+            } catch (NoSuchBuildTargetException ex) {
+              throw new RuntimeException(ex);
+            }
+          }
+        });
+    if (includeSelf) {
+      Preconditions.checkArgument(sourceTarget.getFlavors().contains(TRANSITIVE_LINKABLES_FLAVOR));
+      linkables = linkables.append(
+          requireGoLinkable(
+              sourceTarget,
+              resolver,
+              platform,
+              sourceTarget.withoutFlavors(TRANSITIVE_LINKABLES_FLAVOR)));
     }
     return linkables.toSet();
   }
@@ -82,13 +104,15 @@ abstract class GoDescriptors {
       List<String> compilerFlags,
       List<String> assemblerFlags,
       GoPlatform platform,
-      Iterable<GoLinkableTargetNode<?>> deps) {
+      Iterable<BuildTarget> deps)
+      throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     Preconditions.checkState(
         params.getBuildTarget().getFlavors().contains(platform.getFlavor()));
 
     ImmutableSet<GoLinkable> linkables = requireGoLinkables(
+        params.getBuildTarget(),
         resolver,
         platform,
         deps);
@@ -166,14 +190,13 @@ abstract class GoDescriptors {
 
   static GoBinary createGoBinaryRule(
       BuildRuleParams params,
-      BuildRuleResolver resolver,
+      final BuildRuleResolver resolver,
       GoBuckConfig goBuckConfig,
       ImmutableSet<SourcePath> srcs,
       List<String> compilerFlags,
       List<String> assemblerFlags,
       List<String> linkerFlags,
-      GoPlatform platform,
-      Iterable<GoLinkableTargetNode<?>> deps) {
+      GoPlatform platform) throws NoSuchBuildTargetException {
     BuildTarget libraryTarget =
         params.getBuildTarget().withAppendedFlavors(
             ImmutableFlavor.of("compile"), platform.getFlavor());
@@ -186,7 +209,8 @@ abstract class GoDescriptors {
         compilerFlags,
         assemblerFlags,
         platform,
-        deps);
+        FluentIterable.from(params.getDeclaredDeps().get())
+            .transform(HasBuildTarget::getBuildTarget));
     resolver.addToIndex(library);
 
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
@@ -195,10 +219,12 @@ abstract class GoDescriptors {
         params.copyWithBuildTarget(target),
         pathResolver,
         requireTransitiveGoLinkables(
+            params.getBuildTarget(),
             resolver,
-            Optional.empty(),
             platform,
-            deps));
+            FluentIterable.from(params.getDeclaredDeps().get())
+                .transform(HasBuildTarget::getBuildTarget),
+            /* includeSelf */ false));
     resolver.addToIndex(symlinkTree);
 
     LOG.verbose("Symlink tree for linking of %s: %s", params.getBuildTarget(), symlinkTree);
@@ -224,7 +250,8 @@ abstract class GoDescriptors {
   static Tool getTestMainGenerator(
       GoBuckConfig goBuckConfig,
       BuildRuleParams sourceParams,
-      BuildRuleResolver resolver) {
+      BuildRuleResolver resolver)
+      throws NoSuchBuildTargetException {
 
     Optional<Tool> configTool = goBuckConfig.getGoTestMainGenerator(resolver);
     if (configTool.isPresent()) {
@@ -271,8 +298,7 @@ abstract class GoDescriptors {
                 ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of(),
-                goBuckConfig.getDefaultPlatform(),
-                ImmutableSet.of()));
+                goBuckConfig.getDefaultPlatform()));
     return binary.getExecutableCommand();
   }
 
@@ -296,15 +322,33 @@ abstract class GoDescriptors {
         .build();
   }
 
+  private static GoLinkable requireGoLinkable(
+      BuildTarget sourceRule, BuildRuleResolver resolver, GoPlatform platform, BuildTarget target)
+      throws NoSuchBuildTargetException {
+    Optional<GoLinkable> linkable = resolver.requireMetadata(
+        BuildTarget.builder(target)
+            .addFlavors(platform.getFlavor())
+            .build(), GoLinkable.class);
+    if (!linkable.isPresent()) {
+      throw new HumanReadableException(
+          "%s (needed for %s) is not an instance of go_library!",
+          target.getFullyQualifiedName(),
+          sourceRule.getFullyQualifiedName());
+    }
+    return linkable.get();
+  }
+
   private static ImmutableSet<GoLinkable> requireGoLinkables(
-      BuildRuleResolver resolver,
-      GoPlatform platform,
-      Iterable<GoLinkableTargetNode<?>> targets) {
+      final BuildTarget sourceTarget,
+      final BuildRuleResolver resolver,
+      final GoPlatform platform,
+      Iterable<BuildTarget> targets)
+      throws NoSuchBuildTargetException {
     final ImmutableSet.Builder<GoLinkable> linkables = ImmutableSet.builder();
-    new AbstractBreadthFirstTraversal<GoLinkableTargetNode<?>>(targets) {
+    new AbstractBreadthFirstThrowingTraversal<BuildTarget, NoSuchBuildTargetException>(targets) {
       @Override
-      public Iterable<GoLinkableTargetNode<?>> visit(GoLinkableTargetNode<?> target) {
-        GoLinkable linkable = target.getLinkable(resolver, platform);
+      public Iterable<BuildTarget> visit(BuildTarget target) throws NoSuchBuildTargetException {
+        GoLinkable linkable = requireGoLinkable(sourceTarget, resolver, platform, target);
         linkables.add(linkable);
         return linkable.getExportedDeps();
       }

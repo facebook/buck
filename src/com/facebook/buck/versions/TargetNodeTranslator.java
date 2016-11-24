@@ -166,7 +166,7 @@ public abstract class TargetNodeTranslator {
     }
 
     return Optional.of(
-        node.withTargetConstructorArgDepsAndSelectedVersions(
+        node.withTargetConstructorArgDepsAndSelectedVerisons(
             target.orElse(node.getBuildTarget()),
             constructorArg.orElse(node.getConstructorArg()),
             declaredDeps.orElse(node.getDeclaredDeps()),

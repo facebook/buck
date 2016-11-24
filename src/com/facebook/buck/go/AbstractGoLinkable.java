@@ -16,6 +16,7 @@
 
 package com.facebook.buck.go;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -32,7 +33,7 @@ import java.nio.file.Path;
 abstract class AbstractGoLinkable {
 
   abstract ImmutableMap<Path, SourcePath> getGoLinkInput();
-  abstract ImmutableSet<GoLinkableTargetNode<?>> getExportedDeps();
+  abstract ImmutableSet<BuildTarget> getExportedDeps();
 
   public Iterable<BuildRule> getDeps(SourcePathResolver resolver) {
     return resolver.filterBuildRuleInputs(getGoLinkInput().values());
