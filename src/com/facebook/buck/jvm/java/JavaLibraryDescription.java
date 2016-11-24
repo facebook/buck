@@ -34,20 +34,24 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Optional;
 
 public class JavaLibraryDescription implements Description<JavaLibraryDescription.Arg>, Flavored {
 
   public static final ImmutableSet<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
+      Javadoc.DOC_JAR,
       JavaLibrary.SRC_JAR,
       JavaLibrary.MAVEN_JAR);
 
@@ -81,6 +85,61 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
     // creating the action graph from the target graph.
 
     ImmutableSortedSet<Flavor> flavors = target.getFlavors();
+
+    if (flavors.contains(Javadoc.DOC_JAR)) {
+      BuildTarget unflavored = BuildTarget.of(target.getUnflavoredBuildTarget());
+
+      Optional<BuildRule> optionalBaseLibrary = resolver.getRuleOptional(unflavored);
+      BuildRule baseLibrary;
+      if (!optionalBaseLibrary.isPresent()) {
+        baseLibrary = resolver.addToIndex(
+            createBuildRule(
+                targetGraph,
+                params.copyWithBuildTarget(unflavored),
+                resolver,
+                args));
+      } else {
+        baseLibrary = optionalBaseLibrary.get();
+      }
+
+      JarShape shape = params.getBuildTarget().getFlavors().contains(JavaLibrary.MAVEN_JAR) ?
+          JarShape.MAVEN : JarShape.SINGLE;
+
+      JarShape.Summary summary = shape.gatherDeps(baseLibrary);
+      ImmutableSet<SourcePath> sources = summary.getPackagedRules().stream()
+          .filter(HasSources.class::isInstance)
+          .map(rule -> ((HasSources) rule).getSources())
+          .flatMap(Collection::stream)
+          .collect(MoreCollectors.toImmutableSet());
+
+      // In theory, the only deps we need are the ones that contribute to the sourcepaths. However,
+      // javadoc wants to have classes being documented have all their deps be available somewhere.
+      // Ideally, we'd not build everything, but then we're not able to document any classes that
+      // rely on auto-generated classes, such as those created by the Immutables library. Oh well.
+      // Might as well add them as deps. *sigh*
+      ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
+      // Sourcepath deps
+      deps.addAll(pathResolver.filterBuildRuleInputs(sources));
+      // Classpath deps
+      deps.add(baseLibrary);
+      deps.addAll(
+          summary.getClasspath().stream()
+              .filter(rule -> HasClasspathEntries.class.isAssignableFrom(rule.getClass()))
+              .flatMap(rule -> rule.getTransitiveClasspathDeps().stream())
+              .iterator());
+      BuildRuleParams emptyParams = params.copyWithDeps(
+          Suppliers.ofInstance(deps.build()),
+          Suppliers.ofInstance(ImmutableSortedSet.of()));
+
+      return new Javadoc(
+          emptyParams,
+          pathResolver,
+          args.mavenCoords,
+          args.mavenPomTemplate,
+          summary.getMavenDeps(),
+          sources);
+    }
+
     BuildRuleParams paramsWithMavenFlavor = null;
     if (flavors.contains(JavaLibrary.MAVEN_JAR)) {
       paramsWithMavenFlavor = params;
@@ -88,7 +147,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
       // Maven rules will depend upon their vanilla versions, so the latter have to be constructed
       // without the maven flavor to prevent output-path conflict
       params = params.copyWithBuildTarget(
-          params.getBuildTarget().withoutFlavors(JavaLibrary.MAVEN_JAR));
+          params.getBuildTarget().withoutFlavors(ImmutableSet.of(JavaLibrary.MAVEN_JAR)));
     }
 
     if (flavors.contains(JavaLibrary.SRC_JAR)) {
