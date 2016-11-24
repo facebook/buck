@@ -72,6 +72,7 @@ java_immutables_library(
     'Javac.java',
     'JavacErrorParser.java',
     'JavacEventSinkToBuckEventBusBridge.java',
+    'JavacExecutionContextSerializer.java',
     'Jsr199TracingBridge.java',
     'JavaInMemoryFileManager.java',
     'JavaInMemoryFileObject.java',

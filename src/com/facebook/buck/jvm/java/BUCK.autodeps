@@ -146,6 +146,7 @@
     "deps" : [
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/jvm/java:javac-internals",
+      "//src/com/facebook/buck/jvm/java:packagefinder",
       "//src/com/facebook/buck/jvm/java/tracing:tracing",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:exceptions",

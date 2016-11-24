@@ -29,6 +29,7 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/io:watchman",
       "//src/com/facebook/buck/json:json",
+      "//src/com/facebook/buck/jvm/core:packagefinder",
       "//src/com/facebook/buck/jvm/java:config",
       "//src/com/facebook/buck/jvm/java:packagefinder",
       "//src/com/facebook/buck/jvm/java:rules",

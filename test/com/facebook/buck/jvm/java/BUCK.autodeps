@@ -32,6 +32,7 @@
       "//src/com/facebook/buck/jvm/core:suggestbuildrules",
       "//src/com/facebook/buck/jvm/java:autodeps",
       "//src/com/facebook/buck/jvm/java:config",
+      "//src/com/facebook/buck/jvm/java:javac-sink",
       "//src/com/facebook/buck/jvm/java:packagefinder",
       "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/jvm/java:steps",
