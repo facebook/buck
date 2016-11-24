@@ -156,7 +156,7 @@ abstract class RustCompile extends AbstractBuildRule {
         new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()),
         new RustCompileStep(
             getProjectFilesystem().getRootPath(),
-            compiler.getEnvironment(getResolver()),
+            compiler.getEnvironment(),
             compiler.getCommandPrefix(getResolver()),
             linkerArgs.build(),
             flags,

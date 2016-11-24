@@ -669,7 +669,7 @@ public class LuaBinaryDescription implements
       }
 
       @Override
-      public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+      public ImmutableMap<String, String> getEnvironment() {
         return ImmutableMap.of();
       }
 

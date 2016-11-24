@@ -93,7 +93,7 @@ public class HaskellLinkRule extends AbstractBuildRule {
           public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
             return ImmutableMap.<String, String>builder()
                 .putAll(super.getEnvironmentVariables(context))
-                .putAll(linker.getEnvironment(getResolver()))
+                .putAll(linker.getEnvironment())
                 .build();
           }
 

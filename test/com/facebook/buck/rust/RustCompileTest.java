@@ -92,7 +92,7 @@ public class RustCompileTest {
       }
 
       @Override
-      public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+      public ImmutableMap<String, String> getEnvironment() {
         return ImmutableMap.of();
       }
 

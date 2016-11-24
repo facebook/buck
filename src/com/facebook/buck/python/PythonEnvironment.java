@@ -67,7 +67,7 @@ public class PythonEnvironment implements RuleKeyAppendable, Tool {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+  public ImmutableMap<String, String> getEnvironment() {
     return ImmutableMap.of();
   }
 

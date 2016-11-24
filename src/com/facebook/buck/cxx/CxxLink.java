@@ -119,7 +119,7 @@ public class CxxLink
             getBuildTarget().getCellPath()),
         new CxxLinkStep(
             getProjectFilesystem().getRootPath(),
-            linker.getEnvironment(getResolver()),
+            linker.getEnvironment(),
             linker.getCommandPrefix(getResolver()),
             argFilePath,
             getProjectFilesystem().getRootPath().resolve(scratchDir)),

@@ -178,7 +178,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
         new RmStep(getProjectFilesystem(), output, /* shouldForceDeletion */ true),
         new ArchiveStep(
             getProjectFilesystem(),
-            archiver.getEnvironment(getResolver()),
+            archiver.getEnvironment(),
             archiver.getCommandPrefix(getResolver()),
             archiverFlags,
             archiver.getArchiveOptions(contents == Contents.THIN),
@@ -192,7 +192,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
       builder.add(
           new RanlibStep(
               getProjectFilesystem(),
-              ranlib.getEnvironment(getResolver()),
+              ranlib.getEnvironment(),
               ranlib.getCommandPrefix(getResolver()),
               ranlibFlags,
               output));

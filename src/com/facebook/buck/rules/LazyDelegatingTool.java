@@ -50,7 +50,7 @@ public class LazyDelegatingTool implements Tool {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
-    return delegate.get().getEnvironment(resolver);
+  public ImmutableMap<String, String> getEnvironment() {
+    return delegate.get().getEnvironment();
   }
 }

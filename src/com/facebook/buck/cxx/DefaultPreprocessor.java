@@ -78,8 +78,8 @@ public class DefaultPreprocessor implements Preprocessor {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
-    return tool.getEnvironment(resolver);
+  public ImmutableMap<String, String> getEnvironment() {
+    return tool.getEnvironment();
   }
 
   @Override

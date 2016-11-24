@@ -288,7 +288,7 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
           public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
             return ImmutableMap.<String, String>builder()
                 .putAll(super.getEnvironmentVariables(context))
-                .putAll(compiler.getEnvironment(getResolver()))
+                .putAll(compiler.getEnvironment())
                 .build();
           }
 

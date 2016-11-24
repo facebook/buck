@@ -89,7 +89,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
     super(
         params,
         resolver,
-        executable.getEnvironment(resolver),
+        executable.getEnvironment(),
         env,
         args,
         resources,

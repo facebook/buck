@@ -57,7 +57,7 @@ public class StripSymbolsStep implements Step {
             .addAll(stripToolArgs)
             .add(projectFilesystem.resolve(input).toString())
             .build(),
-        strip.getEnvironment(resolver)))
+        strip.getEnvironment()))
         .execute(context);
   }
 

@@ -107,7 +107,7 @@ public class CoreDataModel extends AbstractBuildRule {
 
             @Override
             public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
-              return momc.getEnvironment(getResolver());
+              return momc.getEnvironment();
             }
 
             @Override

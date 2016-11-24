@@ -96,10 +96,10 @@ public class CommandTool implements Tool {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+  public ImmutableMap<String, String> getEnvironment() {
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     if (baseTool.isPresent()) {
-      env.putAll(baseTool.get().getEnvironment(resolver));
+      env.putAll(baseTool.get().getEnvironment());
     }
     env.putAll(Arg.stringify(environment));
     return env.build();

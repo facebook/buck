@@ -58,7 +58,7 @@ public class FakeJavac implements Javac {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+  public ImmutableMap<String, String> getEnvironment() {
     throw new UnsupportedOperationException();
   }
 

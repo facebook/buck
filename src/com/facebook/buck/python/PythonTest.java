@@ -81,7 +81,7 @@ public class PythonTest
     this.env = Suppliers.memoize(
         () -> {
           ImmutableMap.Builder<String, String> environment = ImmutableMap.builder();
-          environment.putAll(binary.getExecutableCommand().getEnvironment(getResolver()));
+          environment.putAll(binary.getExecutableCommand().getEnvironment());
           environment.putAll(env.get());
           return environment.build();
         });

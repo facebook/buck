@@ -125,7 +125,7 @@ public class AppleDsym
         new RmStep(getProjectFilesystem(), dsymOutputPath, true, true),
         new DsymStep(
             getProjectFilesystem(),
-            dsymutil.getEnvironment(getResolver()),
+            dsymutil.getEnvironment(),
             dsymutil.getCommandPrefix(getResolver()),
             unstrippedBinaryPath,
             dsymOutputPath),

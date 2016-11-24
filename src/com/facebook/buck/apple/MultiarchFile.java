@@ -120,7 +120,7 @@ public class MultiarchFile extends AbstractBuildRule implements ProvidesLinkedBi
         new DefaultShellStep(
             getProjectFilesystem().getRootPath(),
             commandBuilder.build(),
-            lipo.getEnvironment(getResolver())));
+            lipo.getEnvironment()));
   }
 
   @Override

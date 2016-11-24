@@ -123,7 +123,7 @@ public class CommandToolTest {
             .addEnv("PATH", new SourcePathArg(pathResolver, path))
             .build();
 
-    assertThat(tool.getEnvironment(pathResolver), Matchers.hasEntry(
+    assertThat(tool.getEnvironment(), Matchers.hasEntry(
             Matchers.equalTo("PATH"),
             Matchers.containsString("input")));
   }

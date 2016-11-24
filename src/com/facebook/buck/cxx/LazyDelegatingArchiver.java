@@ -80,8 +80,8 @@ public class LazyDelegatingArchiver implements Archiver {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
-    return delegate.get().getEnvironment(resolver);
+  public ImmutableMap<String, String> getEnvironment() {
+    return delegate.get().getEnvironment();
   }
 
   public Archiver getDelegate() {

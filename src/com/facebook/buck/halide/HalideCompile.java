@@ -82,7 +82,7 @@ public class HalideCompile extends AbstractBuildRule {
     commands.add(
         new HalideCompilerStep(
             projectFilesystem.getRootPath(),
-            halideCompiler.getEnvironment(getResolver()),
+            halideCompiler.getEnvironment(),
             halideCompiler.getCommandPrefix(getResolver()),
             outputDir,
             fileOutputName(getBuildTarget(), functionNameOverride),

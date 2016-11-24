@@ -321,7 +321,7 @@ public class AppleTest
       xctestOutputReader = Optional.of(new AppleTestXctestOutputReader(testReportingCallback));
 
       HashMap<String, String> environment = new HashMap<>();
-      environment.putAll(xctest.getEnvironment(getResolver()));
+      environment.putAll(xctest.getEnvironment());
       environment.putAll(options.getEnvironmentOverrides());
       if (testHostAppPath.isPresent()) {
         environment.put("XCInjectBundleInto", testHostAppPath.get().toString());

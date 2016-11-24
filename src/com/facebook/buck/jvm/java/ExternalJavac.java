@@ -107,7 +107,7 @@ public class ExternalJavac implements Javac {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+  public ImmutableMap<String, String> getEnvironment() {
     return ImmutableMap.of();
   }
 
