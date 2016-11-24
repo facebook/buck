@@ -108,6 +108,7 @@ java_library(
   srcs = [
     'DefaultJavaPackageFinder.java',
     'ResourcesRootPackageFinder.java',
+    'JavaPackageFinderSerializer.java',
   ],
   autodeps = True,
   visibility = ['PUBLIC'],

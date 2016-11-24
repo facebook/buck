@@ -32,6 +32,14 @@ public class ResourcesRootPackageFinder implements JavaPackageFinder {
     this.fallbackFinder = fallbackFinder;
   }
 
+  public Path getResourcesRoot() {
+    return resourcesRoot;
+  }
+
+  public JavaPackageFinder getFallbackFinder() {
+    return fallbackFinder;
+  }
+
   @Override
   public Path findJavaPackageFolder(Path pathRelativeToProjectRoot) {
     if (pathRelativeToProjectRoot.startsWith(resourcesRoot)) {

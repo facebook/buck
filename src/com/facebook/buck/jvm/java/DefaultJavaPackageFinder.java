@@ -45,7 +45,7 @@ public class DefaultJavaPackageFinder implements JavaPackageFinder {
 
   private final ImmutableSet<String> pathElements;
 
-  private DefaultJavaPackageFinder(
+  public DefaultJavaPackageFinder(
       ImmutableSortedSet<String> pathsFromRoot,
       ImmutableSet<String> pathElements) {
     this.pathsFromRoot = pathsFromRoot;
