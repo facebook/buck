@@ -77,7 +77,8 @@ public class GoBinaryDescription implements
         args.compilerFlags,
         args.assemblerFlags,
         args.linkerFlags,
-        platform);
+        platform,
+        args.deps);
   }
 
   @Override
@@ -105,6 +106,7 @@ public class GoBinaryDescription implements
     public List<String> compilerFlags = ImmutableList.of();
     public List<String> assemblerFlags = ImmutableList.of();
     public List<String> linkerFlags = ImmutableList.of();
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    public ImmutableSortedSet<GoLinkableTargetNode<?>> deps =
+        ImmutableSortedSet.of();
   }
 }

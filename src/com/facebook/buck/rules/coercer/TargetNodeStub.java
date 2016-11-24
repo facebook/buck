@@ -147,7 +147,7 @@ public class TargetNodeStub<T, U extends Description<T>> implements TargetNode<T
   }
 
   @Override
-  public TargetNode<T, U> withTargetConstructorArgDepsAndSelectedVerisons(
+  public TargetNode<T, U> withTargetConstructorArgDepsAndSelectedVersions(
       BuildTarget target,
       T constructorArg,
       ImmutableSet<BuildTarget> declaredDeps,

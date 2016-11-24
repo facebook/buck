@@ -19,7 +19,6 @@ package com.facebook.buck.go;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.HasTests;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
@@ -29,14 +28,11 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
-import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -47,10 +43,11 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
-public class GoLibraryDescription implements
+public class GoLibraryDescription
+    implements
     Description<GoLibraryDescription.Arg>,
     Flavored,
-    MetadataProvidingDescription<GoLibraryDescription.Arg> {
+    GoLinkableDescription<GoLibraryDescription.Arg> {
 
   private final GoBuckConfig goBuckConfig;
 
@@ -69,44 +66,41 @@ public class GoLibraryDescription implements
   }
 
   @Override
-  public <A extends Arg, U> Optional<U> createMetadata(
-      BuildTarget buildTarget,
-      final BuildRuleResolver resolver,
-      A args,
-      Class<U> metadataClass) throws NoSuchBuildTargetException {
-    Optional<GoPlatform> platform =
-        goBuckConfig.getPlatformFlavorDomain().getValue(buildTarget);
-
-    if (metadataClass.isAssignableFrom(GoLinkable.class)) {
-      Preconditions.checkState(platform.isPresent());
-      SourcePath output = new BuildTargetSourcePath(
-          resolver.requireRule(buildTarget).getBuildTarget());
-      return Optional.of(
-          metadataClass.cast(
-              GoLinkable.builder()
-                  .setGoLinkInput(
-                      ImmutableMap.of(
-                          args.packageName.map(Paths::get)
-                              .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),
-                          output))
-                  .setExportedDeps(args.exportedDeps)
-                  .build()));
-    } else if (buildTarget.getFlavors().contains(GoDescriptors.TRANSITIVE_LINKABLES_FLAVOR)) {
-      Preconditions.checkState(platform.isPresent());
-
-      return Optional.of(
-          metadataClass.cast(
-              GoDescriptors.requireTransitiveGoLinkables(
-                  buildTarget,
-                  resolver,
-                  platform.get(),
-                  Iterables.concat(
-                      args.deps,
-                      args.exportedDeps),
-                  /* includeSelf */ true)));
-    } else {
-      return Optional.empty();
+  public GoLinkable getLinkable(
+      BuildRuleResolver resolver,
+      GoLinkableTargetNode<Arg> targetNode,
+      GoPlatform platform) {
+    BuildTarget target = targetNode.getBuildTarget().withAppendedFlavors(platform.getFlavor());
+    SourcePath output;
+    try {
+      output = new BuildTargetSourcePath(resolver.requireRule(target).getBuildTarget());
+    } catch (NoSuchBuildTargetException e) {
+      throw new RuntimeException(e);
     }
+    Arg args = targetNode.getConstructorArg();
+    return GoLinkable.builder()
+        .setGoLinkInput(
+            ImmutableMap.of(
+                args.packageName.map(Paths::get)
+                    .orElse(goBuckConfig.getDefaultPackageName(targetNode.getBuildTarget())),
+                output))
+        .setExportedDeps(args.exportedDeps)
+        .build();
+  }
+
+  @Override
+  public ImmutableSet<GoLinkable> getTransitiveLinkables(
+      BuildRuleResolver resolver,
+      GoLinkableTargetNode<Arg> targetNode,
+      GoPlatform platform) {
+    Arg args = targetNode.getConstructorArg();
+    return GoDescriptors.requireTransitiveGoLinkables(
+        resolver,
+        Optional.of(targetNode),
+        platform,
+        Iterables.concat(
+            args.deps,
+            args.exportedDeps));
   }
 
   @Override
@@ -114,7 +108,7 @@ public class GoLibraryDescription implements
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) throws NoSuchBuildTargetException {
+      A args) {
     Optional<GoPlatform> platform =
         goBuckConfig.getPlatformFlavorDomain().getValue(params.getBuildTarget());
 
@@ -129,9 +123,7 @@ public class GoLibraryDescription implements
           args.compilerFlags,
           args.assemblerFlags,
           platform.get(),
-          FluentIterable.from(params.getDeclaredDeps().get())
-              .transform(HasBuildTarget::getBuildTarget)
-              .append(args.exportedDeps));
+          Iterables.concat(args.deps, args.exportedDeps));
     }
 
     return new NoopBuildRule(params, new SourcePathResolver(resolver));
@@ -143,8 +135,8 @@ public class GoLibraryDescription implements
     public List<String> compilerFlags = ImmutableList.of();
     public List<String> assemblerFlags = ImmutableList.of();
     public Optional<String> packageName;
-    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
-    public ImmutableSortedSet<BuildTarget> exportedDeps = ImmutableSortedSet.of();
+    public ImmutableSortedSet<GoLinkableTargetNode<?>> deps = ImmutableSortedSet.of();
+    public ImmutableSortedSet<GoLinkableTargetNode<?>> exportedDeps = ImmutableSortedSet.of();
 
     @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 

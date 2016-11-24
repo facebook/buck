@@ -16,26 +16,20 @@
 
 package com.facebook.buck.go;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableMap;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.Description;
 import com.google.common.collect.ImmutableSet;
 
-import org.immutables.value.Value;
+public interface GoLinkableDescription<T> extends Description<T> {
 
-import java.nio.file.Path;
+  GoLinkable getLinkable(
+      BuildRuleResolver resolver,
+      GoLinkableTargetNode<T> targetNode,
+      GoPlatform platform);
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractGoLinkable {
-
-  abstract ImmutableMap<Path, SourcePath> getGoLinkInput();
-  abstract ImmutableSet<GoLinkableTargetNode<?>> getExportedDeps();
-
-  public Iterable<BuildRule> getDeps(SourcePathResolver resolver) {
-    return resolver.filterBuildRuleInputs(getGoLinkInput().values());
-  }
+  ImmutableSet<GoLinkable> getTransitiveLinkables(
+      BuildRuleResolver resolver,
+      GoLinkableTargetNode<T> targetNode,
+      GoPlatform platform);
 
 }

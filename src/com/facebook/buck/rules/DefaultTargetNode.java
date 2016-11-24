@@ -74,6 +74,21 @@ public class DefaultTargetNode<T, U extends Description<T>> implements TargetNod
     this.selectedVersions = selectedVersions;
   }
 
+  public DefaultTargetNode(DefaultTargetNode<T, U> delegate) {
+    this.factory = delegate.factory;
+    this.rawInputsHashCode = delegate.rawInputsHashCode;
+    this.description = delegate.description;
+    this.constructorArg = delegate.constructorArg;
+    this.filesystem = delegate.filesystem;
+    this.target = delegate.target;
+    this.cellNames = delegate.cellNames;
+    this.declaredDeps = delegate.declaredDeps;
+    this.extraDeps = delegate.extraDeps;
+    this.inputs = delegate.inputs;
+    this.visibilityPatterns = delegate.visibilityPatterns;
+    this.selectedVersions = delegate.selectedVersions;
+  }
+
   @Override
   public HashCode getRawInputsHashCode() {
     return rawInputsHashCode;
@@ -219,7 +234,7 @@ public class DefaultTargetNode<T, U extends Description<T>> implements TargetNod
   }
 
   @Override
-  public TargetNode<T, U> withTargetConstructorArgDepsAndSelectedVerisons(
+  public TargetNode<T, U> withTargetConstructorArgDepsAndSelectedVersions(
       BuildTarget target,
       T constructorArg,
       ImmutableSet<BuildTarget> declaredDeps,

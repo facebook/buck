@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.DefaultTargetNode;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 
@@ -28,14 +29,17 @@ import java.util.function.Function;
 public class TargetNodeTypeCoercer extends TypeCoercer<TargetNode<?, ?>> {
 
   private final TypeCoercer<BuildTarget> buildTargetTypeCoercer;
+  private final Class<?> targetNodeType;
   private final Class<?> constructorArgType;
   private final Class<?> descriptionType;
 
   TargetNodeTypeCoercer(
       TypeCoercer<BuildTarget> buildTargetTypeCoercer,
+      Class<?> targetNodeType,
       Class<?> constructorArgType,
       Class<?> descriptionType) {
     this.buildTargetTypeCoercer = buildTargetTypeCoercer;
+    this.targetNodeType = targetNodeType;
     this.constructorArgType = constructorArgType;
     this.descriptionType = descriptionType;
   }
@@ -105,6 +109,9 @@ public class TargetNodeTypeCoercer extends TypeCoercer<TargetNode<?, ?>> {
                 Description.getBuildRuleType(targetNodeReference.getDescriptionType()),
                 Description.getBuildRuleType(targetNode.getDescription())));
       }
+      if (!targetNodeType.equals(TargetNode.class)) {
+        targetNode = wrapTargetNode(targetNode);
+      }
       return targetNode;
     }
     return mapAllInternal(function, targetClass, targetNodeReference);
@@ -127,6 +134,17 @@ public class TargetNodeTypeCoercer extends TypeCoercer<TargetNode<?, ?>> {
         buildTargetTypeCoercer.mapAll(function, targetClass, object.getBuildTarget()),
         (Class<T>) constructorArgType,
         (Class<U>) descriptionType);
+  }
+
+  @SuppressWarnings("unchecked")
+  private <T, U extends Description<T>> TargetNode<T, U> wrapTargetNode(TargetNode<T, U> node) {
+    try {
+      return (TargetNode<T, U>) targetNodeType
+          .getConstructor(DefaultTargetNode.class)
+          .newInstance(node);
+    } catch (ReflectiveOperationException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
 

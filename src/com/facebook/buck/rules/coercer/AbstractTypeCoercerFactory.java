@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.primitives.Primitives;
+import com.google.common.reflect.TypeToken;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -179,6 +180,23 @@ public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
     Class<?> rawClass = getRawClassForType(type);
     type = getBoundTypeForType(type);
 
+    if (TargetNode.class.isAssignableFrom(rawClass)) {
+      try {
+        return new TargetNodeTypeCoercer(
+            buildTargetTypeCoercer,
+            rawClass,
+            TypeToken.of(type)
+                .resolveType(
+                    TargetNode.class.getMethod("getConstructorArg").getGenericReturnType())
+                .getRawType(),
+            TypeToken.of(type)
+                .resolveType(TargetNode.class.getMethod("getDescription").getGenericReturnType())
+                .getRawType());
+      } catch (ReflectiveOperationException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
     if (type instanceof Class) {
       if (rawClass.isEnum()) {
         return new EnumTypeCoercer<>(rawClass);
@@ -252,15 +270,6 @@ public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
       } else if (rawClass.isAssignableFrom(Optional.class)) {
         return new OptionalTypeCoercer<>(
             typeCoercerForType(getSingletonTypeParameter(parameterizedType)));
-      } else if (rawClass.isAssignableFrom(TargetNode.class)) {
-        Type constructorArgType = parameterizedType.getActualTypeArguments()[0];
-        Class<?> constructorArgRawClass = getRawClassForType(constructorArgType);
-        Type descriptionType = parameterizedType.getActualTypeArguments()[1];
-        Class<?> descriptionRawClass = getRawClassForType(descriptionType);
-        return new TargetNodeTypeCoercer(
-            buildTargetTypeCoercer,
-            constructorArgRawClass,
-            descriptionRawClass);
       } else {
         throw new IllegalArgumentException("Unhandled type: " + type);
       }

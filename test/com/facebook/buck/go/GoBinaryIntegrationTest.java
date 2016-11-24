@@ -19,8 +19,8 @@ package com.facebook.buck.go;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.BuckBuildLog;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
@@ -140,7 +140,7 @@ public class GoBinaryIntegrationTest {
   @Test
   public void nonGoLibraryDepErrors() throws IOException, InterruptedException {
     thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(Matchers.containsString("is not an instance of go_library"));
+    thrown.expectMessage(Matchers.containsString("Unexpected target type"));
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "binary_with_library", tmp);

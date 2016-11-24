@@ -73,7 +73,7 @@ public interface TargetNode<T, U extends Description<T>>
 
   TargetNode<T, U> withConstructorArg(T constructorArg);
 
-  TargetNode<T, U> withTargetConstructorArgDepsAndSelectedVerisons(
+  TargetNode<T, U> withTargetConstructorArgDepsAndSelectedVersions(
       BuildTarget target,
       T constructorArg,
       ImmutableSet<BuildTarget> declaredDeps,
