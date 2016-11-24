@@ -20,6 +20,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.BuildRule;
@@ -48,6 +49,10 @@ public class JavaLibraryBuilder
         projectFilesystem,
         hashCode);
     this.projectFilesystem = projectFilesystem;
+  }
+
+  public static JavaLibraryBuilder createBuilder(String qualifiedTarget) {
+    return createBuilder(BuildTargetFactory.newInstance(qualifiedTarget));
   }
 
   public static JavaLibraryBuilder createBuilder(BuildTarget target) {
