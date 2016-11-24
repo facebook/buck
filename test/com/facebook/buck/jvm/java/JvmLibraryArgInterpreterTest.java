@@ -28,11 +28,11 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.ParamInfoException;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -243,7 +243,7 @@ public class JvmLibraryArgInterpreterTest {
           ImmutableSet.builder(),
           ImmutableSet.builder(),
           ImmutableMap.of());
-    } catch (ParamInfoException error) {
+    } catch (ConstructorArgMarshalException error) {
       throw Throwables.propagate(error);
     }
   }

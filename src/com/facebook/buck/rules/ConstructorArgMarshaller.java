@@ -86,9 +86,13 @@ public class ConstructorArgMarshaller {
       Object dto,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableSet.Builder<VisibilityPattern> visibilityPatterns,
-      Map<String, ?> instance) throws ParamInfoException {
+      Map<String, ?> instance) throws ConstructorArgMarshalException {
     for (ParamInfo info : getAllParamInfo(dto)) {
-      info.setFromParams(cellRoots, filesystem, buildTarget, dto, instance);
+      try {
+        info.setFromParams(cellRoots, filesystem, buildTarget, dto, instance);
+      } catch (ParamInfoException e) {
+        throw new ConstructorArgMarshalException(e.getMessage(), e);
+      }
       if (info.getName().equals("deps")) {
         populateDeclaredDeps(info, declaredDeps, dto);
       }
@@ -98,10 +102,14 @@ public class ConstructorArgMarshaller {
 
   public void amendTargetNodeReferences(
       Function<BuildTarget, TargetNode<?, ?>> targetNodeResolver,
-      Object dto) throws ParamInfoException {
+      Object dto) throws ConstructorArgMarshalException {
     for (ParamInfo info : getAllParamInfo(dto)) {
       if (info.hasElementTypes(TargetNode.class)) {
-        info.amendTargetNodeReferences(targetNodeResolver, dto);
+        try {
+          info.amendTargetNodeReferences(targetNodeResolver, dto);
+        } catch (ParamInfoException e) {
+          throw new ConstructorArgMarshalException(e.getMessage(), e);
+        }
       }
     }
   }
@@ -116,10 +124,14 @@ public class ConstructorArgMarshaller {
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
-      Object dto) throws ParamInfoException {
+      Object dto) throws ConstructorArgMarshalException {
     for (ParamInfo info : getAllParamInfo(dto)) {
       if (info.isOptional()) {
-        info.set(cellRoots, filesystem, buildTarget.getBasePath(), dto, null);
+        try {
+          info.set(cellRoots, filesystem, buildTarget.getBasePath(), dto, null);
+        } catch (ParamInfoException e) {
+          throw new ConstructorArgMarshalException(e.getMessage(), e);
+        }
       }
     }
   }

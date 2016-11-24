@@ -30,9 +30,9 @@ import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.BuckPyFunction;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ParamInfoException;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.VisibilityPattern;
@@ -188,7 +188,7 @@ public class DefaultParserTargetNodeFactory implements ParserTargetNodeFactory<T
       }
     } catch (NoSuchBuildTargetException e) {
       throw new HumanReadableException(e);
-    } catch (ParamInfoException e) {
+    } catch (ConstructorArgMarshalException e) {
       throw new HumanReadableException("%s: %s", target, e.getMessage());
     } catch (IOException e) {
       throw new HumanReadableException(e.getMessage(), e);

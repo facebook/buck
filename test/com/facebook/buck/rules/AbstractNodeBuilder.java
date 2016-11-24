@@ -194,7 +194,7 @@ public abstract class AbstractNodeBuilder<A, B extends Description<A>> {
               filesystem,
               target,
               arg);
-    } catch (ParamInfoException error) {
+    } catch (ConstructorArgMarshalException error) {
       throw Throwables.propagate(error);
     }
   }
