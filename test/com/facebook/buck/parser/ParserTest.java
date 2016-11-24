@@ -475,32 +475,6 @@ public class ParserTest {
   }
 
   @Test
-  public void shouldThrowAnExceptionWhenATargetNodeOfTheWrongTypeIsReferenced() throws Exception {
-    BuildTarget target = BuildTarget.builder(cellRoot, "//", "foo").build();
-
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(containsString("go_library"));
-    thrown.expectMessage(containsString("java_library"));
-    thrown.expectMessage(containsString("//:foo"));
-    thrown.expectMessage(containsString(":bar"));
-    thrown.expectMessage(containsString("deps"));
-
-    Path mainFile = cellRoot.resolve("main.js");
-    Files.write(mainFile, "".getBytes(UTF_8));
-    Path buckFile = cellRoot.resolve("BUCK");
-    Files.write(
-        buckFile,
-        "go_binary(name='foo', srcs=[], deps=[':bar']); java_library(name='bar')".getBytes(UTF_8));
-
-    parser.buildTargetGraph(
-        eventBus,
-        cell,
-        false,
-        executorService,
-        ImmutableSortedSet.of(target));
-  }
-
-  @Test
   public void testInvalidDepFromValidFile()
       throws IOException, BuildFileParseException, BuildTargetException, InterruptedException {
     // Ensure an exception with a specific message is thrown.

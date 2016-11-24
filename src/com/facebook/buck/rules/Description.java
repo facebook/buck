@@ -22,8 +22,6 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.CaseFormat;
 
-import java.lang.reflect.Modifier;
-
 /**
  * The Source of Truth about a {@link BuildRule}, providing mechanisms to expose the arguments that
  * rules derived from the Buildable take and providing a factory for those BuildRules. It is
@@ -39,15 +37,11 @@ public interface Description<T> {
    * @return The {@link BuildRuleType} being described.
    */
   static BuildRuleType getBuildRuleType(Class<? extends Description<?>> descriptionClass) {
-    if (descriptionClass.isInterface() || Modifier.isAbstract(descriptionClass.getModifiers())) {
-      return BuildRuleType.of("unknown");
-    }
     return getBuildRuleType(descriptionClass.getSimpleName());
   }
 
-  @SuppressWarnings("unchecked")
   static BuildRuleType getBuildRuleType(Description<?> description) {
-    return getBuildRuleType((Class<Description<?>>) description.getClass());
+    return getBuildRuleType(description.getClass().getSimpleName());
   }
 
   static BuildRuleType getBuildRuleType(String descriptionClassName) {

@@ -34,14 +34,12 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasDefaultFlavors;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.ParamInfoException;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetGroup;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.UnresolvedDescriptionConstraintParamInfoException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -60,7 +58,6 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.Subscribe;
-import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -78,7 +75,6 @@ import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -372,10 +368,7 @@ public class Parser {
       final MutableDirectedGraph<TargetNode<?, ?>> graph = new MutableDirectedGraph<>();
       ImmutableMap<BuildTarget, TargetNode<?, ?>> nodes = nodeBuilder.build();
       for (TargetNode<?, ?> node : nodes.values()) {
-        node = realizeTargetNodeReferences(
-            state.getCell(node.getBuildTarget()).getAllDescriptions(),
-            nodes::get,
-            node);
+        node = realizeTargetNodeReferences(nodes::get, node);
         graph.addNode(node);
         for (BuildTarget dep : node.getDeps()) {
           graph.addEdge(node, state.getTargetNode(dep));
@@ -396,24 +389,11 @@ public class Parser {
   }
 
   private <T> TargetNode<T, ?> realizeTargetNodeReferences(
-      ImmutableSet<Description<?>> knownDescriptions,
       java.util.function.Function<BuildTarget, TargetNode<?, ?>> targetNodeResolver,
       TargetNode<T, ?> targetNode) {
     T constructorArg = targetNode.getConstructorArg();
     try {
       marshaller.amendTargetNodeReferences(targetNodeResolver, constructorArg);
-    } catch (UnresolvedDescriptionConstraintParamInfoException e) {
-      throw new HumanReadableException(
-          "%s: parameter '%s': Unexpected target type: expected '%s' to be one of %s, was '%s'.",
-          targetNode.getBuildTarget(),
-          e.getParameterName(),
-          e.getReference(),
-          knownDescriptions
-              .stream()
-              .filter(x -> TypeToken.of(e.getExpected()).isSupertypeOf(x.getClass()))
-              .map(x -> "'" + Description.getBuildRuleType(x) + "'")
-              .collect(Collectors.joining(", ")),
-          Description.getBuildRuleType(e.getActual()));
     } catch (ParamInfoException e) {
       throw new HumanReadableException("%s: %s", targetNode.getBuildTarget(), e.getMessage());
     }

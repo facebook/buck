@@ -213,7 +213,7 @@ public class PerBuildState implements AutoCloseable {
     }
   }
 
-  public Cell getCell(BuildTarget target) {
+  private Cell getCell(BuildTarget target) {
     Cell cell = cells.get(target.getCellPath());
     if (cell != null) {
       return cell;
