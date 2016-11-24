@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.query.QueryTargetGraph;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSet;
 
@@ -83,28 +84,29 @@ public class TargetGraphTest {
   public void testEmptySubgraph() {
     ImmutableSet<TargetNode<?, ?>> roots = ImmutableSet.of();
     ImmutableSet<TargetNode<?, ?>> expectedNodes = ImmutableSet.of();
-    checkSubgraph(roots, expectedNodes);
+    checkSubgraph(roots, expectedNodes, roots);
   }
 
   @Test
   public void testCompleteSubgraph() {
     ImmutableSet<TargetNode<?, ?>> roots = ImmutableSet.of(nodeA, nodeB);
     ImmutableSet<TargetNode<?, ?>> expectedNodes = targetGraph.getNodes();
-    checkSubgraph(roots, expectedNodes);
+    checkSubgraph(roots, expectedNodes, roots);
   }
 
   @Test
   public void testSubgraphWithAllRoots() {
     ImmutableSet<TargetNode<?, ?>> roots = targetGraph.getNodes();
     ImmutableSet<TargetNode<?, ?>> expectedNodes = targetGraph.getNodes();
-    checkSubgraph(roots, expectedNodes);
+    ImmutableSet<TargetNode<?, ?>> expectedRoots = ImmutableSet.of(nodeA, nodeB);
+    checkSubgraph(roots, expectedNodes, expectedRoots);
   }
 
   @Test
   public void testSubgraphWithoutEdges() {
     ImmutableSet<TargetNode<?, ?>> roots = ImmutableSet.of(nodeF, nodeH, nodeI);
     ImmutableSet<TargetNode<?, ?>> expectedNodes = ImmutableSet.of(nodeF, nodeH, nodeI);
-    checkSubgraph(roots, expectedNodes);
+    checkSubgraph(roots, expectedNodes, roots);
   }
 
   @Test
@@ -112,14 +114,15 @@ public class TargetGraphTest {
     ImmutableSet<TargetNode<?, ?>> roots = ImmutableSet.of(nodeB, nodeD, nodeH);
     ImmutableSet<TargetNode<?, ?>> expectedNodes = ImmutableSet.of(
         nodeB, nodeD, nodeE, nodeF, nodeG, nodeH, nodeI);
-    checkSubgraph(roots, expectedNodes);
+    ImmutableSet<TargetNode<?, ?>> expectedRoots = ImmutableSet.of(nodeB, nodeD);
+    checkSubgraph(roots, expectedNodes, expectedRoots);
   }
 
   @Test
   public void testPartialSubgraph2() {
     ImmutableSet<TargetNode<?, ?>> roots = ImmutableSet.of(nodeD);
     ImmutableSet<TargetNode<?, ?>> expectedNodes = ImmutableSet.of(nodeD, nodeF, nodeG, nodeI);
-    checkSubgraph(roots, expectedNodes);
+    checkSubgraph(roots, expectedNodes, roots);
   }
 
   @Test
@@ -147,7 +150,8 @@ public class TargetGraphTest {
 
   private void checkSubgraph(
       ImmutableSet<TargetNode<?, ?>> roots,
-      ImmutableSet<TargetNode<?, ?>> expectedNodes) {
+      ImmutableSet<TargetNode<?, ?>> expectedNodes,
+      ImmutableSet<TargetNode<?, ?>> expectedRoots) {
     TargetGraph subgraph = targetGraph.getSubgraph(roots);
     assertEquals("Subgraph should contain the roots and their dependencies",
         expectedNodes, subgraph.getNodes());
@@ -160,6 +164,12 @@ public class TargetGraphTest {
     for (TargetNode<?, ?> node : subgraph.getNodes()) {
       assertEquals("subgraph.get should return a node containing the specified BuildTarget",
           node, subgraph.get(node.getBuildTarget()));
+    }
+
+    ImmutableSet<TargetNode<?, ?>> foundRoots = subgraph.getNodesWithNoIncomingEdges();
+    assertEquals(expectedRoots, foundRoots);
+    for (TargetNode<?, ?> root : foundRoots) {
+      assertThat(new QueryTargetGraph(subgraph).getIncomingNodesFor(root), Matchers.empty());
     }
   }
 

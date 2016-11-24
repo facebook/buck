@@ -1,9 +1,39 @@
-standard_java_library(
+IMMUTABLE_SRCS = [
+  'AbstractQueryBuildTarget.java',
+  'AbstractQueryFileTarget.java',
+  'QueryTarget.java',
+]
+
+java_library(
+  name = 'query',
+  autodeps = True,
+  srcs = glob(['**/*.java'], excludes=IMMUTABLE_SRCS + ['QueryTargetGraph.java']),
+  tests = [
+    '//test/com/facebook/buck/query:query',
+  ],
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+java_library(
+  name = 'query_targetgraph',
+  autodeps = True,
+  srcs = ['QueryTargetGraph.java'],
+  visibility = [
+      # TODO(illicitonion): Refactor BuckQueryEnvironment so this isn't necessary
+      '//src/com/facebook/buck/cli:',
+      '//test/com/facebook/buck/cli:',
+  ],
+)
+
+java_immutables_library(
+  name = 'query_immutables',
+  srcs = IMMUTABLE_SRCS,
   immutable_types = [
     'QueryBuildTarget',
     'QueryFileTarget',
   ],
-  tests = [
-    '//test/com/facebook/buck/query:query',
-  ],
+  autodeps = True,
+  visibility = ['PUBLIC'],
 )

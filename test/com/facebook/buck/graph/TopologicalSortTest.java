@@ -153,19 +153,6 @@ public class TopologicalSortTest {
       }
 
       @Override
-      public Iterable<String> getNodesWithNoOutgoingEdges() {
-        return Iterables.concat(ImmutableList.of(left, right), isolatedNodeIterable);
-      }
-
-      @Override
-      public Iterable<String> getIncomingNodesFor(String sink) {
-        if (isolatedNode.isPresent() && sink.equals(isolatedNode.get())) {
-          return ImmutableList.of();
-        }
-        return sink.equals(parent) ? ImmutableList.of() : ImmutableList.of(parent);
-      }
-
-      @Override
       public Iterable<String> getOutgoingNodesFor(String source) {
         if (isolatedNode.isPresent() && source.equals(isolatedNode.get())) {
           return ImmutableList.of();

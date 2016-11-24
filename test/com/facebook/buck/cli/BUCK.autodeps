@@ -42,6 +42,8 @@
       "//src/com/facebook/buck/parser:parser",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/query:query",
+      "//src/com/facebook/buck/query:query_immutables",
+      "//src/com/facebook/buck/query:query_targetgraph",
       "//src/com/facebook/buck/rules:action_graph_cache",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:relative_cell_name",

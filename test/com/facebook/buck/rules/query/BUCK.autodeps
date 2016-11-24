@@ -3,7 +3,7 @@
     "deps" : [
       "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/model:model",
-      "//src/com/facebook/buck/query:query",
+      "//src/com/facebook/buck/query:query_immutables",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules/query:query",
