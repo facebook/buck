@@ -14,6 +14,7 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/js:js",
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/model:simple_types",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:action_graph_cache",
       "//src/com/facebook/buck/rules:build_rule",

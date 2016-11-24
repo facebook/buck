@@ -2,13 +2,14 @@
   "keys" : {
     "deps" : [
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/util:util",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/hashing:hashing",
       "//src/com/facebook/buck/io:io",
-      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/model:simple_types",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/util/immutables:immutables",

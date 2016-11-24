@@ -19,6 +19,7 @@
       "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step:step",
+      "//src/com/facebook/buck/util:io",
       "//third-party/java/guava:guava",
       "//third-party/java/infer-annotations:infer-annotations"
     ]

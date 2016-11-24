@@ -25,14 +25,21 @@
       "//src/com/facebook/buck/log/views:views",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:util",
-      "//third-party/java/immutables:processor"
+      "//third-party/java/immutables:processor",
+      "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
-      "//third-party/java/jackson:jackson-annotations",
+      "//third-party/java/jackson:jackson-annotations"
+    ]
+  },
+  "simple_types" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//third-party/java/guava:guava",
       "//third-party/java/jsr:jsr305"
     ]
   }

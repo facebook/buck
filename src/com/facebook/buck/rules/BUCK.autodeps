@@ -3,7 +3,7 @@
     "deps" : [
       "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/model:simple_types",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules/keys:keys",
@@ -40,6 +40,7 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/core:packagefinder",
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/model:simple_types",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rule_key",
@@ -116,6 +117,7 @@
     "deps" : [
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/model:simple_types",
       "//src/com/facebook/buck/rules:build_event",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:exceptions",

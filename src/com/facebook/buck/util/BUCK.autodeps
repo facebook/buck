@@ -10,8 +10,7 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:exceptions",
       "//third-party/java/immutables:processor",
-      "//third-party/java/jna:jna-platform",
-      "//third-party/java/oshi:oshi-core"
+      "//third-party/java/jna:jna-platform"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/io:io",
@@ -21,7 +20,8 @@
       "//third-party/java/guava:guava",
       "//third-party/java/jna:jna",
       "//third-party/java/jsr:jsr305",
-      "//third-party/java/nuprocess:nuprocess"
+      "//third-party/java/nuprocess:nuprocess",
+      "//third-party/java/oshi:oshi-core"
     ]
   },
   "object_mapper" : {

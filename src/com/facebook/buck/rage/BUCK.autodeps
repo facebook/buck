@@ -18,7 +18,7 @@
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/log:log",
-      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/model:simple_types",
       "//src/com/facebook/buck/slb:slb",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:util",

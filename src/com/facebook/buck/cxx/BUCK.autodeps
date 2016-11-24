@@ -45,6 +45,7 @@
       "//src/com/facebook/buck/json:steps",
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/model:simple_types",
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/test/result/type:type",

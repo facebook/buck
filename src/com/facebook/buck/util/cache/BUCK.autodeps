@@ -2,7 +2,7 @@
   "cache" : {
     "deps" : [
       "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/model:simple_types",
       "//src/com/facebook/buck/util:exceptions",
       "//third-party/java/immutables:processor",
       "//third-party/java/jsr:jsr305"

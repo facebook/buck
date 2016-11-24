@@ -6,6 +6,7 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/model:simple_types",
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rule_key",
@@ -49,6 +50,7 @@
   },
   "testutil" : {
     "deps" : [
+      "//src/com/facebook/buck/model:simple_types",
       "//src/com/facebook/buck/util:io",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/testutil:testutil",
