@@ -52,6 +52,7 @@ java_immutables_library(
     'AnnotationProcessingParams.java',
     'BuildsAnnotationProcessor.java',
     'ClassUsageFileWriter.java',
+    'ClassUsageFileWriterSerializer.java',
     'ClassUsageTracker.java',
     'DefaultClassUsageFileReader.java',
     'DefaultClassUsageFileWriter.java',

@@ -39,6 +39,10 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
     this.relativePath = relativePath;
   }
 
+  public Path getRelativePath() {
+    return relativePath;
+  }
+
   @Override
   public StandardJavaFileManager wrapFileManager(StandardJavaFileManager inner) {
     return tracker.wrapFileManager(inner);
