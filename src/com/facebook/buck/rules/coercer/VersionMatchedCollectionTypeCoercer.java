@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
 
@@ -27,9 +28,10 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 
 public class VersionMatchedCollectionTypeCoercer<T>
-    implements TypeCoercer<VersionMatchedCollection<T>> {
+    extends TypeCoercer<VersionMatchedCollection<T>> {
 
   TypeCoercer<ImmutableMap<BuildTarget, Version>> versionsTypeCoercer;
   TypeCoercer<T> valueTypeCoercer;
@@ -99,4 +101,28 @@ public class VersionMatchedCollectionTypeCoercer<T>
     return builder.build();
   }
 
+  @Override
+  protected <U> VersionMatchedCollection<T> mapAllInternal(
+      Function<U, U> function,
+      Class<U> targetClass,
+      VersionMatchedCollection<T> object) throws CoerceFailedException {
+    boolean versionsHaveTargetNode = versionsTypeCoercer.hasElementClass(TargetNode.class);
+    boolean valuesHaveTargetNode = valueTypeCoercer.hasElementClass(TargetNode.class);
+    if (!versionsHaveTargetNode && !valuesHaveTargetNode) {
+      return object;
+    }
+    VersionMatchedCollection.Builder<T> builder = VersionMatchedCollection.builder();
+    for (Pair<ImmutableMap<BuildTarget, Version>, T> pair : object.getValuePairs()) {
+      ImmutableMap<BuildTarget, Version> versions = pair.getFirst();
+      if (versionsHaveTargetNode) {
+        versions = versionsTypeCoercer.mapAll(function, targetClass, versions);
+      }
+      T value = pair.getSecond();
+      if (valuesHaveTargetNode) {
+        value = valueTypeCoercer.mapAll(function, targetClass, value);
+      }
+      builder.add(versions, value);
+    }
+    return builder.build();
+  }
 }

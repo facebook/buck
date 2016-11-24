@@ -19,13 +19,15 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TargetNode;
 
 import java.nio.file.Path;
+import java.util.function.Function;
 
 /**
  * A type coercer to handle source entries in OCaml rules.
  */
-public class OcamlSourceTypeCoercer implements TypeCoercer<OcamlSource> {
+public class OcamlSourceTypeCoercer extends TypeCoercer<OcamlSource> {
   private final TypeCoercer<SourcePath> sourcePathTypeCoercer;
 
   OcamlSourceTypeCoercer(
@@ -70,5 +72,20 @@ public class OcamlSourceTypeCoercer implements TypeCoercer<OcamlSource> {
     }
 
     throw CoerceFailedException.simple(object, getOutputClass());
+  }
+
+  @Override
+  protected <U> OcamlSource mapAllInternal(
+      Function<U, U> function,
+      Class<U> targetClass,
+      OcamlSource object) throws CoerceFailedException {
+    if (sourcePathTypeCoercer.hasElementClass(TargetNode.class)) {
+      return object;
+    }
+    String name = object.getName();
+    SourcePath sourcePath = object.getSource();
+    return OcamlSource.ofNameAndSourcePath(
+        name,
+        sourcePathTypeCoercer.mapAll(function, targetClass, sourcePath));
   }
 }

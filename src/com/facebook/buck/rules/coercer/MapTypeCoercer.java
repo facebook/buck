@@ -18,12 +18,14 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableMap;
 
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.function.Function;
 
-public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
+public class MapTypeCoercer<K, V> extends TypeCoercer<ImmutableMap<K, V>> {
   private final TypeCoercer<K> keyTypeCoercer;
   private final TypeCoercer<V> valueTypeCoercer;
 
@@ -80,5 +82,30 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
     } else {
       throw CoerceFailedException.simple(object, getOutputClass());
     }
+  }
+
+  @Override
+  protected <U> ImmutableMap<K, V> mapAllInternal(
+      Function<U, U> function,
+      Class<U> targetClass,
+      ImmutableMap<K, V> object) throws CoerceFailedException {
+    boolean keysHaveTargetNode = keyTypeCoercer.hasElementClass(TargetNode.class);
+    boolean valuesHaveTargetNode = valueTypeCoercer.hasElementClass(TargetNode.class);
+    if (!keysHaveTargetNode && !valuesHaveTargetNode) {
+      return object;
+    }
+    ImmutableMap.Builder<K, V> builder = ImmutableMap.builder();
+    for (Map.Entry<K, V> entry : object.entrySet()) {
+      K key = entry.getKey();
+      if (keysHaveTargetNode) {
+        key = keyTypeCoercer.mapAll(function, targetClass, key);
+      }
+      V value = entry.getValue();
+      if (valuesHaveTargetNode) {
+        value = valueTypeCoercer.mapAll(function, targetClass, value);
+      }
+      builder.put(key, value);
+    }
+    return builder.build();
   }
 }

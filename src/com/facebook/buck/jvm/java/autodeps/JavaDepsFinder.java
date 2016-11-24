@@ -132,7 +132,7 @@ public class JavaDepsFinder {
             BuildTarget buildTarget = BuildTargetParser.INSTANCE.parse(
                 entry.getValue().trim(),
                 BuildTargetPatternParser.fullyQualified(),
-                cellNames);
+                cellNames::getCellPath);
             return Maps.immutableEntry(key, buildTarget);
           });
       javaPackageMapping = ImmutableSortedMap.copyOf(

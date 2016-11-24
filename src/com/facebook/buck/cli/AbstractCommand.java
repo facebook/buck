@@ -248,7 +248,7 @@ public abstract class AbstractCommand implements Command {
           BuildTargetParser.INSTANCE.parse(
               buildTargetName,
               BuildTargetPatternParser.fullyQualified(),
-              cellNames));
+              cellNames::getCellPath));
     }
 
     return buildTargets.build();

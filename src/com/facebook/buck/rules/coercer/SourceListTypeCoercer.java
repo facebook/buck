@@ -19,21 +19,23 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Function;
 
-public class SourceListTypeCoercer implements TypeCoercer<SourceList> {
-  private final TypeCoercer<ImmutableSortedSet<SourcePath>> unnamedHeadersTypeCoercer;
-  private final TypeCoercer<ImmutableSortedMap<String, SourcePath>> namedHeadersTypeCoercer;
+public class SourceListTypeCoercer extends TypeCoercer<SourceList> {
+  private final TypeCoercer<ImmutableSortedSet<SourcePath>> unnamedSourcesTypeCoercer;
+  private final TypeCoercer<ImmutableSortedMap<String, SourcePath>> namedSourcesTypeCoercer;
 
   SourceListTypeCoercer(
       TypeCoercer<String> stringTypeCoercer,
       TypeCoercer<SourcePath> sourcePathTypeCoercer) {
-    this.unnamedHeadersTypeCoercer = new SortedSetTypeCoercer<>(sourcePathTypeCoercer);
-    this.namedHeadersTypeCoercer = new SortedMapTypeCoercer<>(
+    this.unnamedSourcesTypeCoercer = new SortedSetTypeCoercer<>(sourcePathTypeCoercer);
+    this.namedSourcesTypeCoercer = new SortedMapTypeCoercer<>(
         stringTypeCoercer,
         sourcePathTypeCoercer);
   }
@@ -45,18 +47,18 @@ public class SourceListTypeCoercer implements TypeCoercer<SourceList> {
 
   @Override
   public boolean hasElementClass(Class<?>... types) {
-    return unnamedHeadersTypeCoercer.hasElementClass(types) ||
-        namedHeadersTypeCoercer.hasElementClass(types);
+    return unnamedSourcesTypeCoercer.hasElementClass(types) ||
+        namedSourcesTypeCoercer.hasElementClass(types);
   }
 
   @Override
   public void traverse(SourceList object, Traversal traversal) {
     switch (object.getType()) {
       case UNNAMED:
-        unnamedHeadersTypeCoercer.traverse(object.getUnnamedSources().get(), traversal);
+        unnamedSourcesTypeCoercer.traverse(object.getUnnamedSources().get(), traversal);
         break;
       case NAMED:
-        namedHeadersTypeCoercer.traverse(object.getNamedSources().get(), traversal);
+        namedSourcesTypeCoercer.traverse(object.getNamedSources().get(), traversal);
         break;
     }
   }
@@ -69,18 +71,46 @@ public class SourceListTypeCoercer implements TypeCoercer<SourceList> {
       Object object) throws CoerceFailedException {
     if (object instanceof List) {
       return SourceList.ofUnnamedSources(
-          unnamedHeadersTypeCoercer.coerce(
+          unnamedSourcesTypeCoercer.coerce(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,
               object));
     } else {
       return SourceList.ofNamedSources(
-          namedHeadersTypeCoercer.coerce(
+          namedSourcesTypeCoercer.coerce(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,
               object));
     }
+  }
+
+  @Override
+  public <U> SourceList mapAllInternal(
+      Function<U, U> function,
+      Class<U> targetClass,
+      SourceList object) throws CoerceFailedException {
+    switch (object.getType()) {
+      case UNNAMED:
+        if (!unnamedSourcesTypeCoercer.hasElementClass(TargetNode.class)) {
+          return object;
+        }
+        return SourceList.ofUnnamedSources(
+            unnamedSourcesTypeCoercer.mapAll(
+                function,
+                targetClass,
+                object.getUnnamedSources().get()));
+      case NAMED:
+        if (!namedSourcesTypeCoercer.hasElementClass(TargetNode.class)) {
+          return object;
+        }
+        return SourceList.ofNamedSources(
+            namedSourcesTypeCoercer.mapAll(
+                function,
+                targetClass,
+                object.getNamedSources().get()));
+    }
+    throw new RuntimeException(String.format("Unhandled type: '%s'", object.getType()));
   }
 }

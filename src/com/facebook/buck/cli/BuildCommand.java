@@ -620,7 +620,7 @@ public class BuildCommand extends AbstractCommand {
       BuildTarget explicitTarget = BuildTargetParser.INSTANCE.parse(
           justBuildTarget,
           BuildTargetPatternParser.fullyQualified(),
-          params.getCell().getCellPathResolver());
+          params.getCell().getCellPathResolver()::getCellPath);
       Iterable<BuildRule> actionGraphRules =
           Preconditions.checkNotNull(actionGraphAndResolver.getActionGraph().getNodes());
       ImmutableSet<BuildTarget> actionGraphTargets =

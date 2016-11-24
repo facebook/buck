@@ -52,7 +52,7 @@ public class BuildTargetPatternParserTest {
             filesystem.getRootPath(),
             vfs.getPath("test/com/facebook/buck/parser/")),
         buildTargetPatternParser.parse(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem)::getCellPath,
             "//test/com/facebook/buck/parser:"));
 
     assertEquals(
@@ -60,7 +60,7 @@ public class BuildTargetPatternParserTest {
             filesystem.getRootPath(),
             "//test/com/facebook/buck/parser:parser"),
         buildTargetPatternParser.parse(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem)::getCellPath,
             "//test/com/facebook/buck/parser:parser"));
 
     assertEquals(
@@ -68,7 +68,7 @@ public class BuildTargetPatternParserTest {
             filesystem.getRootPath(),
             vfs.getPath("test/com/facebook/buck/parser/")),
         buildTargetPatternParser.parse(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem)::getCellPath,
             "//test/com/facebook/buck/parser/..."));
   }
 
@@ -77,7 +77,7 @@ public class BuildTargetPatternParserTest {
     BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
         BuildTargetPatternParser.fullyQualified();
 
-    buildTargetPatternParser.parse(createCellRoots(filesystem), "//...");
+    buildTargetPatternParser.parse(createCellRoots(filesystem)::getCellPath, "//...");
   }
 
   @Test
@@ -89,17 +89,17 @@ public class BuildTargetPatternParserTest {
         new ImmediateDirectoryBuildTargetPattern(
             filesystem.getRootPath(),
             vfs.getPath("")),
-        buildTargetPatternParser.parse(createCellRoots(filesystem), "//:"));
+        buildTargetPatternParser.parse(createCellRoots(filesystem)::getCellPath, "//:"));
 
     assertEquals(
         new SingletonBuildTargetPattern(filesystem.getRootPath(), "//:parser"),
-        buildTargetPatternParser.parse(createCellRoots(filesystem), "//:parser"));
+        buildTargetPatternParser.parse(createCellRoots(filesystem)::getCellPath, "//:parser"));
 
     assertEquals(
         new SubdirectoryBuildTargetPattern(
             filesystem.getRootPath(),
             vfs.getPath("")),
-        buildTargetPatternParser.parse(createCellRoots(filesystem), "//..."));
+        buildTargetPatternParser.parse(createCellRoots(filesystem)::getCellPath, "//..."));
   }
 
   @Test
@@ -113,12 +113,12 @@ public class BuildTargetPatternParserTest {
 
     assertEquals(
         new SingletonBuildTargetPattern(filesystem.getRootPath(), "//:something"),
-        buildTargetPatternParser.parse(cellNames, "other//:something"));
+        buildTargetPatternParser.parse(cellNames::getCellPath, "other//:something"));
     assertEquals(
         new SubdirectoryBuildTargetPattern(
             filesystem.getRootPath(),
             filesystem.getRootPath().getFileSystem().getPath("sub")),
-        buildTargetPatternParser.parse(cellNames, "other//sub/..."));
+        buildTargetPatternParser.parse(cellNames::getCellPath, "other//sub/..."));
   }
 
   @Test
@@ -130,6 +130,6 @@ public class BuildTargetPatternParserTest {
     exception.expect(BuildTargetParseException.class);
     exception.expectMessage("Build target path cannot be absolute or contain . or .. " +
         "(found ///facebookorca/...)");
-    buildTargetPatternParser.parse(createCellRoots(filesystem), "///facebookorca/...");
+    buildTargetPatternParser.parse(createCellRoots(filesystem)::getCellPath, "///facebookorca/...");
   }
 }

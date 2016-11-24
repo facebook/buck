@@ -91,7 +91,7 @@ public class AuditInputCommand extends AbstractCommand {
             .map(input -> BuildTargetParser.INSTANCE.parse(
                 input,
                 BuildTargetPatternParser.fullyQualified(),
-                params.getCell().getCellPathResolver()))
+                params.getCell().getCellPathResolver()::getCellPath))
             .collect(MoreCollectors.toImmutableSet());
 
     LOG.debug("Getting input for targets: %s", targets);

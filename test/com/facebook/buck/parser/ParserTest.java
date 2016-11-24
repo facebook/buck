@@ -251,8 +251,7 @@ public class ParserTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testParseBuildFilesForTargetsWithOverlappingTargets() throws Exception {
-    // Execute buildTargetGraphForBuildTargets() with multiple targets that require parsing the same
-    // build file.
+    // Execute buildTargetGraph() with multiple targets that require parsing the same build file.
     BuildTarget fooTarget = BuildTarget.builder(cellRoot, "//java/com/facebook", "foo").build();
     BuildTarget barTarget = BuildTarget.builder(cellRoot, "//java/com/facebook", "bar").build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, barTarget);
@@ -285,7 +284,7 @@ public class ParserTest {
   @Test
   public void testMissingBuildRuleInValidFile()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    // Execute buildTargetGraphForBuildTargets() with a target in a valid file but a bad rule name.
+    // Execute buildTargetGraph() with a target in a valid file but a bad rule name.
     BuildTarget fooTarget = BuildTarget.builder(cellRoot, "//java/com/facebook", "foo").build();
     BuildTarget razTarget = BuildTarget.builder(cellRoot, "//java/com/facebook", "raz").build();
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, razTarget);
@@ -484,7 +483,7 @@ public class ParserTest {
         "Couldn't get dependency '//java/com/facebook/invalid/lib:missing_rule' of target " +
             "'//java/com/facebook/invalid:foo'");
 
-    // Execute buildTargetGraphForBuildTargets() with a target in a valid file but a bad rule name.
+    // Execute buildTargetGraph() with a target in a valid file but a bad rule name.
     tempDir.newFolder("java", "com", "facebook", "invalid");
 
     Path testInvalidBuildFile = tempDir.newFile("java/com/facebook/invalid/BUCK");

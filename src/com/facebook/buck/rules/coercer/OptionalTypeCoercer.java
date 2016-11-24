@@ -22,8 +22,9 @@ import com.google.common.base.Preconditions;
 
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Function;
 
-public class OptionalTypeCoercer<T> implements TypeCoercer<Optional<T>> {
+public class OptionalTypeCoercer<T> extends TypeCoercer<Optional<T>> {
 
   private final TypeCoercer<T> coercer;
 
@@ -63,5 +64,16 @@ public class OptionalTypeCoercer<T> implements TypeCoercer<Optional<T>> {
       return Optional.empty();
     }
     return Optional.of(coercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
+  }
+
+  @Override
+  public <U> Optional<T> mapAllInternal(
+      Function<U, U> function,
+      Class<U> targetClass,
+      Optional<T> object) throws CoerceFailedException {
+    if (!coercer.hasElementClass(targetClass) || !object.isPresent()) {
+      return object;
+    }
+    return Optional.of(coercer.mapAll(function, targetClass, object.get()));
   }
 }

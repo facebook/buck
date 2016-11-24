@@ -19,15 +19,17 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.TargetNode;
 
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.function.Function;
 
 /**
  * Coerces from a 2-element collection into a pair.
  */
-public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, SECOND>> {
+public class PairTypeCoercer<FIRST, SECOND> extends TypeCoercer<Pair<FIRST, SECOND>> {
   private TypeCoercer<FIRST> firstTypeCoercer;
   private TypeCoercer<SECOND> secondTypeCoercer;
 
@@ -87,5 +89,26 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
           getOutputClass(),
           "input object should be a 2-element collection");
     }
+  }
+
+  @Override
+  protected <U> Pair<FIRST, SECOND> mapAllInternal(
+      Function<U, U> function,
+      Class<U> targetClass,
+      Pair<FIRST, SECOND> object) throws CoerceFailedException {
+    boolean firstHasTargetNode = firstTypeCoercer.hasElementClass(TargetNode.class);
+    boolean secondHasTargetNode = secondTypeCoercer.hasElementClass(TargetNode.class);
+    if (!firstHasTargetNode && !secondHasTargetNode) {
+      return object;
+    }
+    FIRST first = object.getFirst();
+    if (firstHasTargetNode) {
+      first = firstTypeCoercer.mapAll(function, targetClass, first);
+    }
+    SECOND second = object.getSecond();
+    if (secondHasTargetNode) {
+      second = secondTypeCoercer.mapAll(function, targetClass, second);
+    }
+    return new Pair<FIRST, SECOND>(first, second);
   }
 }

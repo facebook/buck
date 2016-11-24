@@ -16,10 +16,12 @@
 
 package com.facebook.buck.rules.coercer;
 
+import java.util.function.Function;
+
 /**
  * Superclass of coercers for non-collection/map types.
  */
-public abstract class LeafTypeCoercer<T> implements TypeCoercer<T> {
+public abstract class LeafTypeCoercer<T> extends TypeCoercer<T> {
 
   @Override
   public boolean hasElementClass(Class<?>... types) {
@@ -34,5 +36,13 @@ public abstract class LeafTypeCoercer<T> implements TypeCoercer<T> {
   @Override
   public void traverse(Object object, Traversal traversal) {
     traversal.traverse(object);
+  }
+
+  @Override
+  public <U> T mapAllInternal(
+      Function<U, U> function,
+      Class<U> targetClass,
+      T object) throws CoerceFailedException {
+    return object;
   }
 }

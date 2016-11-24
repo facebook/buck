@@ -33,6 +33,7 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasDefaultFlavors;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.TargetGraph;
@@ -277,7 +278,6 @@ public class Parser {
       groups.put(group.getBuildTarget(), group);
     }
 
-    final MutableDirectedGraph<TargetNode<?, ?>> graph = new MutableDirectedGraph<>();
     final Map<BuildTarget, TargetNode<?, ?>> index = new HashMap<>();
 
     ParseEvent.Started parseStart = ParseEvent.started(toExplore);
@@ -330,13 +330,14 @@ public class Parser {
     AcyclicDepthFirstPostOrderTraversal<BuildTarget> targetNodeTraversal =
         new AcyclicDepthFirstPostOrderTraversal<>(traversable);
 
+    ImmutableMap.Builder<BuildTarget, TargetNode<?, ?>> nodeBuilder = ImmutableMap.builder();
     TargetGraph targetGraph = null;
     try {
       for (BuildTarget target : targetNodeTraversal.traverse(toExplore)) {
         TargetNode<?, ?> targetNode = state.getTargetNode(target);
 
         Preconditions.checkNotNull(targetNode, "No target node found for %s", target);
-        graph.addNode(targetNode);
+        nodeBuilder.put(target, targetNode);
         MoreMaps.putCheckEquals(index, target, targetNode);
         if (target.isFlavored()) {
           BuildTarget unflavoredTarget = BuildTarget.of(target.getUnflavoredBuildTarget());
@@ -344,9 +345,6 @@ public class Parser {
               index,
               unflavoredTarget,
               state.getTargetNode(unflavoredTarget));
-        }
-        for (BuildTarget dep : targetNode.getDeps()) {
-          graph.addEdge(targetNode, state.getTargetNode(dep));
         }
       }
 
@@ -367,6 +365,15 @@ public class Parser {
         }
       }
 
+      final MutableDirectedGraph<TargetNode<?, ?>> graph = new MutableDirectedGraph<>();
+      ImmutableMap<BuildTarget, TargetNode<?, ?>> nodes = nodeBuilder.build();
+      for (TargetNode<?, ?> node : nodes.values()) {
+        node = realizeTargetNodeReferences(nodes::get, node);
+        graph.addNode(node);
+        for (BuildTarget dep : node.getDeps()) {
+          graph.addEdge(node, state.getTargetNode(dep));
+        }
+      }
       targetGraph = new TargetGraph(
           graph,
           ImmutableMap.copyOf(index),
@@ -379,6 +386,18 @@ public class Parser {
     } finally {
       eventBus.post(ParseEvent.finished(parseStart, Optional.ofNullable(targetGraph)));
     }
+  }
+
+  private <T> TargetNode<T, ?> realizeTargetNodeReferences(
+      java.util.function.Function<BuildTarget, TargetNode<?, ?>> targetNodeResolver,
+      TargetNode<T, ?> targetNode) {
+    T constructorArg = targetNode.getConstructorArg();
+    try {
+      marshaller.amendTargetNodeReferences(targetNodeResolver, constructorArg);
+    } catch (ConstructorArgMarshalException e) {
+      throw new HumanReadableException("%s: %s", targetNode.getBuildTarget(), e.getMessage());
+    }
+    return targetNode.withConstructorArg(constructorArg);
   }
 
   /**

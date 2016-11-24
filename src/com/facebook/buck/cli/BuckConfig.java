@@ -265,7 +265,7 @@ public class BuckConfig implements ConfigPathGetter {
     return BuildTargetParser.INSTANCE.parse(
         target,
         BuildTargetPatternParser.fullyQualified(),
-        getCellPathResolver());
+        getCellPathResolver()::getCellPath);
   }
 
   public ImmutableList<BuildTarget> getBuildTargetList(String section, String key) {
@@ -411,7 +411,7 @@ public class BuckConfig implements ConfigPathGetter {
         buildTarget = BuildTargetParser.INSTANCE.parse(
             value,
             BuildTargetPatternParser.fullyQualified(),
-            getCellPathResolver());
+            getCellPathResolver()::getCellPath);
       }
       aliasToBuildTarget.put(alias, buildTarget);
     }

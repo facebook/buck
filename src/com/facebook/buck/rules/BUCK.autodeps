@@ -30,8 +30,7 @@
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:util",
-      "//third-party/java/immutables:processor",
-      "//third-party/java/stringtemplate:stringtemplate"
+      "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/android:utils",
@@ -44,7 +43,6 @@
       "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rule_key",
-      "//src/com/facebook/buck/rules/coercer:types",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:packaged_resource",
@@ -126,7 +124,8 @@
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/zip:unzip",
       "//third-party/java/immutables:processor",
-      "//third-party/java/jackson:jackson-core"
+      "//third-party/java/jackson:jackson-core",
+      "//third-party/java/stringtemplate:stringtemplate"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
@@ -137,9 +136,12 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/parser:rule_pattern",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:caching_build_engine_delegates",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rule_key",
+      "//src/com/facebook/buck/rules/coercer:type_coercer",
       "//src/com/facebook/buck/rules/keys:keys",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/test:test",
@@ -149,6 +151,7 @@
       "//src/com/facebook/buck/util/concurrent:concurrent",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//src/com/facebook/buck/util/sha1:sha1",
+      "//src/com/facebook/buck/versions:types",
       "//third-party/java/guava:guava",
       "//third-party/java/infer-annotations:infer-annotations",
       "//third-party/java/jackson:jackson-annotations",
@@ -206,7 +209,6 @@
       "//src/com/facebook/buck/python:support",
       "//src/com/facebook/buck/rules:default_cell_path_resolver",
       "//src/com/facebook/buck/rules:relative_cell_name",
-      "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rust:rust",
       "//src/com/facebook/buck/shell:rules",
       "//src/com/facebook/buck/shell:worker",
@@ -230,6 +232,7 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:interfaces",
+      "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/util:io",
       "//third-party/java/guava:guava"
     ]

@@ -68,7 +68,7 @@ public abstract class BuildTargetMacroExpander extends AbstractMacroExpander<Bui
       return BuildTargetParser.INSTANCE.parse(
           input.get(0),
           BuildTargetPatternParser.forBaseName(target.getBaseName()),
-          cellNames);
+          cellNames::getCellPath);
     } catch (BuildTargetParseException e) {
       throw new MacroException(e.getMessage(), e);
     }

@@ -85,7 +85,7 @@ public class CommandLineTargetNodeSpecParser {
   public TargetNodeSpec parse(CellPathResolver cellNames, String arg) {
     arg = Optional.ofNullable(config.getBuildTargetForAliasAsString(arg)).orElse(arg);
     arg = normalizeBuildTargetString(arg);
-    return parser.parse(cellNames, arg);
+    return parser.parse(cellNames::getCellPath, arg);
   }
 
 }

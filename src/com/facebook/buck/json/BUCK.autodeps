@@ -14,6 +14,7 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/io:watchman",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util/immutables:immutables",

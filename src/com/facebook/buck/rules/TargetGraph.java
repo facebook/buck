@@ -173,7 +173,8 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
       implements ExceptionWithHumanReadableMessage {
 
     public NoSuchNodeException(BuildTarget buildTarget) {
-      super(String.format(
+      super(
+          String.format(
               "Required target for rule '%s' was not found in the target graph.",
               buildTarget.getFullyQualifiedName()));
     }

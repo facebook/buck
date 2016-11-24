@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 
 /**
  * Used to derive information from the constructor args returned by {@link Description} instances.
@@ -97,6 +98,20 @@ public class ConstructorArgMarshaller {
       }
     }
     populateVisibilityPatterns(cellRoots, visibilityPatterns, instance, buildTarget);
+  }
+
+  public void amendTargetNodeReferences(
+      Function<BuildTarget, TargetNode<?, ?>> targetNodeResolver,
+      Object dto) throws ConstructorArgMarshalException {
+    for (ParamInfo info : getAllParamInfo(dto)) {
+      if (info.hasElementTypes(TargetNode.class)) {
+        try {
+          info.amendTargetNodeReferences(targetNodeResolver, dto);
+        } catch (ParamInfoException e) {
+          throw new ConstructorArgMarshalException(e.getMessage(), e);
+        }
+      }
+    }
   }
 
   /**
@@ -165,8 +180,7 @@ public class ConstructorArgMarshaller {
               target.getFullyQualifiedName(),
               visibility,
               VisibilityPatternParser.VISIBILITY_PUBLIC,
-              VisibilityPatternParser.VISIBILITY_GROUP
-          );
+              VisibilityPatternParser.VISIBILITY_GROUP);
         }
       }
     }

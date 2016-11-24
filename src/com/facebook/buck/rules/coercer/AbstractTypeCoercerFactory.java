@@ -27,6 +27,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.TargetNode;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
@@ -53,6 +54,7 @@ import java.util.regex.Pattern;
 public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
 
   private final TypeCoercer<Pattern> patternTypeCoercer = new PatternTypeCoercer();
+  private final TypeCoercer<BuildTarget> buildTargetTypeCoercer = new BuildTargetTypeCoercer();
 
   private final TypeCoercer<?>[] nonParameterizedTypeCoercers;
   private final ObjectMapper jacksonObjectMapper;
@@ -81,7 +83,6 @@ public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
             throw new UnsupportedOperationException();
           }
         };
-    TypeCoercer<BuildTarget> buildTargetTypeCoercer = new BuildTargetTypeCoercer();
     TypeCoercer<SourcePath> sourcePathTypeCoercer = new SourcePathTypeCoercer(
         buildTargetTypeCoercer,
         pathTypeCoercer);
@@ -134,8 +135,7 @@ public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
     };
   }
 
-  @Override
-  public TypeCoercer<?> typeCoercerForType(Type type) {
+  private Type getBoundTypeForType(Type type) {
     if (type instanceof TypeVariable) {
       type = ((TypeVariable<?>) type).getBounds()[0];
       if (Object.class.equals(type)) {
@@ -150,9 +150,36 @@ public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
       }
     }
 
-    if (type instanceof Class) {
-      Class<?> rawClass = Primitives.wrap((Class<?>) type);
+    return type;
+  }
 
+  private Class<?> getRawClassForType(Type type) {
+    type = getBoundTypeForType(type);
+    if (type instanceof Class) {
+      return Primitives.wrap((Class<?>) type);
+    }
+
+    if (type instanceof ParameterizedType) {
+      ParameterizedType parameterizedType = (ParameterizedType) type;
+
+      Type rawType = parameterizedType.getRawType();
+      if (!(rawType instanceof Class<?>)) {
+        throw new RuntimeException(
+            "expected getRawType() to return a class for type: " + parameterizedType);
+      }
+
+      return (Class<?>) rawType;
+    }
+
+    throw new IllegalArgumentException("Unhandled type: " + type);
+  }
+
+  @Override
+  public TypeCoercer<?> typeCoercerForType(Type type) {
+    Class<?> rawClass = getRawClassForType(type);
+    type = getBoundTypeForType(type);
+
+    if (type instanceof Class) {
       if (rawClass.isEnum()) {
         return new EnumTypeCoercer<>(rawClass);
       }
@@ -174,14 +201,6 @@ public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
       }
     } else if (type instanceof ParameterizedType) {
       ParameterizedType parameterizedType = (ParameterizedType) type;
-
-      Type rawType = parameterizedType.getRawType();
-      if (!(rawType instanceof Class<?>)) {
-        throw new RuntimeException(
-            "expected getRawType() to return a class for type: " + parameterizedType);
-      }
-
-      Class<?> rawClass = (Class<?>) rawType;
       if (rawClass.equals(Either.class)) {
         Preconditions.checkState(parameterizedType.getActualTypeArguments().length == 2,
             "expected type '%s' to have two parameters", parameterizedType);
@@ -233,6 +252,15 @@ public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
       } else if (rawClass.isAssignableFrom(Optional.class)) {
         return new OptionalTypeCoercer<>(
             typeCoercerForType(getSingletonTypeParameter(parameterizedType)));
+      } else if (rawClass.isAssignableFrom(TargetNode.class)) {
+        Type constructorArgType = parameterizedType.getActualTypeArguments()[0];
+        Class<?> constructorArgRawClass = getRawClassForType(constructorArgType);
+        Type descriptionType = parameterizedType.getActualTypeArguments()[1];
+        Class<?> descriptionRawClass = getRawClassForType(descriptionType);
+        return new TargetNodeTypeCoercer(
+            buildTargetTypeCoercer,
+            constructorArgRawClass,
+            descriptionRawClass);
       } else {
         throw new IllegalArgumentException("Unhandled type: " + type);
       }
@@ -242,8 +270,9 @@ public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
   }
 
   private <T extends Comparable<T>> TypeCoercer<T> typeCoercerForComparableType(Type type) {
+    Class <?> rawClass = getRawClassForType(type);
     Preconditions.checkState(
-        type instanceof Class && Comparable.class.isAssignableFrom((Class<?>) type),
+        Comparable.class.isAssignableFrom(rawClass),
         "type '%s' should be a class implementing Comparable",
         type);
 

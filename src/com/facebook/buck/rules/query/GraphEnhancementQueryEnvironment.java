@@ -101,7 +101,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
       BuildTarget buildTarget = BuildTargetParser.INSTANCE.parse(
           pattern,
           BuildTargetPatternParser.forBaseName(context.getBaseName()),
-          cellNames);
+          cellNames::getCellPath);
       return ImmutableSet.<QueryTarget>of(QueryBuildTarget.of(buildTarget));
     } catch (BuildTargetParseException e) {
       throw new QueryException(e.getMessage(), e);

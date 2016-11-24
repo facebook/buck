@@ -111,7 +111,7 @@ public class TargetNodeFactory {
                       constructorArg));
     }
 
-    return new TargetNode<>(
+    return new DefaultTargetNode<>(
         this,
         rawInputsHashCode,
         description,
