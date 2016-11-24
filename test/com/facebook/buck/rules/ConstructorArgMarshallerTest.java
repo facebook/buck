@@ -21,18 +21,15 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -70,28 +67,23 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldNotPopulateAnEmptyArg() throws NoSuchBuildTargetException {
+  public void shouldNotPopulateAnEmptyArg() throws Exception {
     class Dto {
     }
 
     Dto dto = new Dto();
-    try {
-      marshaller.populate(
-          createCellRoots(filesystem),
-          filesystem,
-          TARGET,
-          dto,
-          ImmutableSet.builder(),
-          ImmutableSet.builder(),
-          ImmutableMap.of());
-    } catch (RuntimeException | ConstructorArgMarshalException e) {
-      fail("Did not expect an exception to be thrown:\n" + Throwables.getStackTraceAsString(e));
-    }
+    marshaller.populate(
+        createCellRoots(filesystem),
+        filesystem,
+        TARGET,
+        dto,
+        ImmutableSet.builder(),
+        ImmutableSet.builder(),
+        ImmutableMap.of());
   }
 
   @Test
-  public void shouldPopulateAStringValue()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void shouldPopulateAStringValue() throws Exception {
     DtoWithString dto = new DtoWithString();
     marshaller.populate(
         createCellRoots(filesystem),
@@ -106,8 +98,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldPopulateABooleanValue()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void shouldPopulateABooleanValue() throws Exception {
     DtoWithBoolean dto = new DtoWithBoolean();
     marshaller.populate(
         createCellRoots(filesystem),
@@ -122,8 +113,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldPopulateBuildTargetValues()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void shouldPopulateBuildTargetValues() throws Exception {
     DtoWithBuildTargets dto = new DtoWithBuildTargets();
     marshaller.populate(
         createCellRoots(filesystem),
@@ -142,8 +132,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldPopulateANumericValue()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void shouldPopulateANumericValue() throws Exception {
     DtoWithLong dto = new DtoWithLong();
     marshaller.populate(
         createCellRoots(filesystem),
@@ -158,8 +147,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldPopulateAPathValue()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void shouldPopulateAPathValue() throws Exception {
     DtoWithRenamedPath dto = new DtoWithRenamedPath();
     marshaller.populate(
         createCellRoots(filesystem),
@@ -174,8 +162,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldPopulateSourcePaths()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void shouldPopulateSourcePaths() throws Exception {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:peas");
     SourcePathResolver resolver = new SourcePathResolver(
@@ -204,8 +191,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldPopulateAnImmutableSortedSet()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void shouldPopulateAnImmutableSortedSet() throws Exception {
     BuildTarget t1 = BuildTargetFactory.newInstance("//please/go:here");
     BuildTarget t2 = BuildTargetFactory.newInstance("//example/path:there");
 
@@ -224,8 +210,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldPopulateSets()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void shouldPopulateSets() throws Exception {
     DtoWithSetOfPaths dto = new DtoWithSetOfPaths();
     marshaller.populate(
         createCellRoots(filesystem),
@@ -242,8 +227,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldPopulateLists()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void shouldPopulateLists() throws Exception {
     DtoWithListOfStrings dto = new DtoWithListOfStrings();
     marshaller.populate(
         createCellRoots(filesystem),
@@ -258,8 +242,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void onlyFieldNamedDepsAreConsideredDeclaredDeps()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void onlyFieldNamedDepsAreConsideredDeclaredDeps() throws Exception {
     final String dep = "//is/a/declared:dep";
     final String notDep = "//is/not/a/declared:dep";
 
@@ -285,8 +268,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void fieldsWithIsDepEqualsFalseHintAreNotTreatedAsDeps()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void fieldsWithIsDepEqualsFalseHintAreNotTreatedAsDeps() throws Exception {
     final String dep = "//should/be:ignored";
 
     DtoWithFakeDeps dto = new DtoWithFakeDeps();
@@ -309,7 +291,7 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void optionalCollectionsWithoutAValueWillBeSetToAnEmptyOptionalCollection()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+      throws Exception {
     DtoWithOptionalSetOfStrings dto = new DtoWithOptionalSetOfStrings();
     Map<String, Object> args = Maps.newHashMap();
     // Deliberately not populating args
@@ -326,9 +308,8 @@ public class ConstructorArgMarshallerTest {
     assertEquals(Optional.empty(), dto.strings);
   }
 
-  @Test(expected = ConstructorArgMarshalException.class)
-  public void shouldBeAnErrorToAttemptToSetASingleValueToACollection()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  @Test(expected = ParamInfoException.class)
+  public void shouldBeAnErrorToAttemptToSetASingleValueToACollection() throws Exception {
 
     DtoWithString dto = new DtoWithString();
     marshaller.populate(
@@ -341,9 +322,8 @@ public class ConstructorArgMarshallerTest {
         ImmutableMap.<String, Object>of("string", ImmutableList.of("a", "b")));
   }
 
-  @Test(expected = ConstructorArgMarshalException.class)
-  public void shouldBeAnErrorToAttemptToSetACollectionToASingleValue()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  @Test(expected = ParamInfoException.class)
+  public void shouldBeAnErrorToAttemptToSetACollectionToASingleValue() throws Exception {
     DtoWithSetOfStrings dto = new DtoWithSetOfStrings();
     marshaller.populate(
         createCellRoots(filesystem),
@@ -355,9 +335,8 @@ public class ConstructorArgMarshallerTest {
         ImmutableMap.<String, Object>of("strings", "isn't going to happen"));
   }
 
-  @Test(expected = ConstructorArgMarshalException.class)
-  public void shouldBeAnErrorToSetTheWrongTypeOfValueInACollection()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  @Test(expected = ParamInfoException.class)
+  public void shouldBeAnErrorToSetTheWrongTypeOfValueInACollection() throws Exception {
     DtoWithSetOfStrings dto = new DtoWithSetOfStrings();
     marshaller.populate(
         createCellRoots(filesystem),
@@ -370,8 +349,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldNormalizePaths()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void shouldNormalizePaths() throws Exception {
     DtoWithPath dto = new DtoWithPath();
     marshaller.populate(
         createCellRoots(filesystem),
@@ -386,8 +364,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test(expected = RuntimeException.class)
-  public void lowerBoundGenericTypesCauseAnException()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void lowerBoundGenericTypesCauseAnException() throws Exception {
 
     class Dto {
       public List<? super BuildTarget> nope;
@@ -403,14 +380,9 @@ public class ConstructorArgMarshallerTest {
         ImmutableMap.<String, Object>of("nope", ImmutableList.of("//will/not:happen")));
   }
 
-  public void shouldSetBuildTargetParameters()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
-    class Dto {
-      public BuildTarget single;
-      public BuildTarget sameBuildFileTarget;
-      public List<BuildTarget> targets;
-    }
-    Dto dto = new Dto();
+  @Test
+  public void shouldSetBuildTargetParameters() throws Exception {
+    DtoWithBuildTargetList dto = new DtoWithBuildTargetList();
 
     marshaller.populate(
         createCellRoots(filesystem),
@@ -434,8 +406,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void upperBoundGenericTypesCauseValuesToBeSetToTheUpperBound()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void upperBoundGenericTypesCauseValuesToBeSetToTheUpperBound() throws Exception {
     SourcePathResolver pathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
@@ -459,8 +430,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void specifyingZeroIsNotConsideredOptional()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void specifyingZeroIsNotConsideredOptional() throws Exception {
     DtoWithOptionalInteger dto = new DtoWithOptionalInteger();
     marshaller.populate(
         createCellRoots(filesystem),
@@ -476,8 +446,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void canPopulateSimpleConstructorArgFromBuildFactoryParams()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void canPopulateSimpleConstructorArgFromBuildFactoryParams() throws Exception {
     SourcePathResolver resolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
      );
@@ -520,8 +489,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldPopulateDefaultValuesAsBeingAbsent()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void shouldPopulateDefaultValuesAsBeingAbsent() throws Exception {
     // This is not an ImmutableMap so we can test null values.
     Map<String, Object> args = Maps.newHashMap();
     args.put("defaultString", null);
@@ -543,8 +511,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldRespectSpecifiedDefaultValues()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void shouldRespectSpecifiedDefaultValues() throws Exception {
     // This is not an ImmutableMap so we can test null values.
     Map<String, Object> args = Maps.newHashMap();
     args.put("something", null);
@@ -567,8 +534,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldAllowOverridingDefaultValues()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void shouldAllowOverridingDefaultValues() throws Exception {
     // This is not an ImmutableMap so we can test null values.
     Map<String, Object> args = Maps.newHashMap();
     args.put("something", "bar");
@@ -592,8 +558,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test
-  public void shouldResolveCollectionOfSourcePaths()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void shouldResolveCollectionOfSourcePaths() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:manifest");
@@ -624,8 +589,7 @@ public class ConstructorArgMarshallerTest {
   }
 
   @Test(expected = HumanReadableException.class)
-  public void bogusVisibilityGivesFriendlyError()
-      throws ConstructorArgMarshalException, NoSuchBuildTargetException {
+  public void bogusVisibilityGivesFriendlyError() throws Exception {
     EmptyDto dto = new EmptyDto();
     marshaller.populate(
         createCellRoots(filesystem),
@@ -685,6 +649,12 @@ public class ConstructorArgMarshallerTest {
   public static class DtoWithBuildTargets {
     public BuildTarget target;
     public BuildTarget local;
+  }
+
+  public static class DtoWithBuildTargetList {
+    public BuildTarget single;
+    public BuildTarget sameBuildFileTarget;
+    public List<BuildTarget> targets;
   }
 
   public static class DtoWithSourcePaths {

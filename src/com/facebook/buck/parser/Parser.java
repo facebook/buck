@@ -33,9 +33,9 @@ import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasDefaultFlavors;
 import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
+import com.facebook.buck.rules.ParamInfoException;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetGroup;
@@ -394,7 +394,7 @@ public class Parser {
     T constructorArg = targetNode.getConstructorArg();
     try {
       marshaller.amendTargetNodeReferences(targetNodeResolver, constructorArg);
-    } catch (ConstructorArgMarshalException e) {
+    } catch (ParamInfoException e) {
       throw new HumanReadableException("%s: %s", targetNode.getBuildTarget(), e.getMessage());
     }
     return targetNode.withConstructorArg(constructorArg);

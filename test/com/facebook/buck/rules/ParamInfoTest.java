@@ -113,7 +113,7 @@ public class ParamInfoTest {
   }
 
   @Test
-  public void fieldSetForOptionalFields() throws NoSuchFieldException, ParamInfoException {
+  public void fieldSetForOptionalFields() throws Exception {
     OptionalString example = new OptionalString();
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -138,7 +138,7 @@ public class ParamInfoTest {
   }
 
   @Test
-  public void fieldSetForDefaultFields() throws NoSuchFieldException, ParamInfoException {
+  public void fieldSetForDefaultFields() throws Exception {
     DefaultString example = new DefaultString();
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();

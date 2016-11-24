@@ -187,7 +187,7 @@ public class ParamInfo implements Comparable<ParamInfo> {
       } else if (isOptional) {
         result = Optional.empty();
       } else {
-        throw new ParamInfoException(name, "field cannot be null");
+        throw new IllegalStateException("Parser did not specify value for non-optional field");
       }
     } else {
       try {

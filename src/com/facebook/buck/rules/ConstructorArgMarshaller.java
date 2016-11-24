@@ -86,13 +86,9 @@ public class ConstructorArgMarshaller {
       Object dto,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableSet.Builder<VisibilityPattern> visibilityPatterns,
-      Map<String, ?> instance) throws ConstructorArgMarshalException {
+      Map<String, ?> instance) throws ParamInfoException {
     for (ParamInfo info : getAllParamInfo(dto)) {
-      try {
-        info.setFromParams(cellRoots, filesystem, buildTarget, dto, instance);
-      } catch (ParamInfoException e) {
-        throw new ConstructorArgMarshalException(e.getMessage(), e);
-      }
+      info.setFromParams(cellRoots, filesystem, buildTarget, dto, instance);
       if (info.getName().equals("deps")) {
         populateDeclaredDeps(info, declaredDeps, dto);
       }
@@ -102,14 +98,10 @@ public class ConstructorArgMarshaller {
 
   public void amendTargetNodeReferences(
       Function<BuildTarget, TargetNode<?, ?>> targetNodeResolver,
-      Object dto) throws ConstructorArgMarshalException {
+      Object dto) throws ParamInfoException {
     for (ParamInfo info : getAllParamInfo(dto)) {
       if (info.hasElementTypes(TargetNode.class)) {
-        try {
-          info.amendTargetNodeReferences(targetNodeResolver, dto);
-        } catch (ParamInfoException e) {
-          throw new ConstructorArgMarshalException(e.getMessage(), e);
-        }
+        info.amendTargetNodeReferences(targetNodeResolver, dto);
       }
     }
   }
@@ -124,14 +116,10 @@ public class ConstructorArgMarshaller {
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
-      Object dto) throws ConstructorArgMarshalException {
+      Object dto) throws ParamInfoException {
     for (ParamInfo info : getAllParamInfo(dto)) {
       if (info.isOptional()) {
-        try {
-          info.set(cellRoots, filesystem, buildTarget.getBasePath(), dto, null);
-        } catch (ParamInfoException e) {
-          throw new ConstructorArgMarshalException(e.getMessage(), e);
-        }
+        info.set(cellRoots, filesystem, buildTarget.getBasePath(), dto, null);
       }
     }
   }
