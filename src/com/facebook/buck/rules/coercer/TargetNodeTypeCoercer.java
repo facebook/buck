@@ -23,6 +23,7 @@ import com.facebook.buck.rules.DefaultTargetNode;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetNode;
 
+import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.util.function.Function;
 
@@ -103,11 +104,22 @@ public class TargetNodeTypeCoercer extends TypeCoercer<TargetNode<?, ?>> {
           .getConstructorArgType()
           .isAssignableFrom(targetNode.getConstructorArg().getClass());
       if (!descriptionMatches || !constructorArgMatches) {
-        throw new CoerceFailedException(
-            String.format(
-                "Unexpected target type: expected '%s', was '%s'.",
-                Description.getBuildRuleType(targetNodeReference.getDescriptionType()),
-                Description.getBuildRuleType(targetNode.getDescription())));
+        Class<?> expectedType = targetNodeReference.getDescriptionType();
+        if (expectedType.isInterface() || Modifier.isAbstract(expectedType.getModifiers())) {
+          throw new UnresolvedDescriptionConstraintCoerceFailedException(
+              targetNodeReference.getBuildTarget(),
+              expectedType,
+              targetNode.getDescription());
+        } else {
+          throw new CoerceFailedException(
+              String.format(
+                  "Unexpected target type: expected '%s' to be %s, was '%s'.",
+                  targetNodeReference.getBuildTarget(),
+                  "'" +
+                      Description.getBuildRuleType(targetNodeReference.getDescriptionType()) +
+                      "'",
+                  Description.getBuildRuleType(targetNode.getDescription())));
+        }
       }
       if (!targetNodeType.equals(TargetNode.class)) {
         targetNode = wrapTargetNode(targetNode);

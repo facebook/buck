@@ -2,6 +2,7 @@ TYPE_COERCER_SRCS = [
   'CoerceFailedException.java',
   'TypeCoercer.java',
   'TypeCoercerFactory.java',
+  'UnresolvedDescriptionConstraintCoerceFailedException.java',
 ]
 
 TYPES_SRCS = [

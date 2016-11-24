@@ -214,6 +214,7 @@ java_immutables_library(
     'TestRunEvent.java',
     'TestStatusMessageEvent.java',
     'TestSummaryEvent.java',
+    'UnresolvedDescriptionConstraintParamInfoException.java',
     'UnskippedRulesTracker.java',
     'WriteStringTemplateRule.java',
   ],

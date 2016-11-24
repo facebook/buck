@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.coercer.UnresolvedDescriptionConstraintCoerceFailedException;
 import com.google.common.base.CaseFormat;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -227,6 +228,12 @@ public class ParamInfo implements Comparable<ParamInfo> {
               value));
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
+    } catch (UnresolvedDescriptionConstraintCoerceFailedException e) {
+      throw new UnresolvedDescriptionConstraintParamInfoException(
+          name,
+          e.getReference(),
+          e.getExpected(),
+          e.getActual());
     } catch (CoerceFailedException e) {
       throw new ParamInfoException(name, e.getMessage(), e);
     }
