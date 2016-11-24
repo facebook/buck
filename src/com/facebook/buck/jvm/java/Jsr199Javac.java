@@ -291,6 +291,9 @@ public abstract class Jsr199Javac implements Javac {
       LOG.debug("javac: %s", DiagnosticPrettyPrinter.format(diagnostic));
     }
 
+    List<Diagnostic<? extends JavaFileObject>> cleanDiagnostics =
+        DiagnosticCleaner.clean(diagnostics.getDiagnostics());
+
     if (isSuccess) {
       context.getUsedClassesFileWriter().writeFile(
           context.getProjectFilesystem(),
@@ -300,7 +303,7 @@ public abstract class Jsr199Javac implements Javac {
       if (context.getVerbosity().shouldPrintStandardInformation()) {
         int numErrors = 0;
         int numWarnings = 0;
-        for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
+        for (Diagnostic<? extends JavaFileObject> diagnostic : cleanDiagnostics) {
           Diagnostic.Kind kind = diagnostic.getKind();
           if (kind == Diagnostic.Kind.ERROR) {
             ++numErrors;
