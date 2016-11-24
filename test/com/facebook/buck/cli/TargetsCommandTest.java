@@ -41,12 +41,12 @@ import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.query.QueryTargetGraph;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourceWithFlags;
+import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -299,7 +299,7 @@ public class TargetsCommandTest {
         javaLibraryNode,
         javaTestNode);
 
-    QueryTargetGraph targetGraph = makeQueryTargetGraph(nodes);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
 
     ImmutableSet<Path> referencedFiles;
 
@@ -462,7 +462,7 @@ public class TargetsCommandTest {
 
     ImmutableSet<TargetNode<?, ?>> nodes = ImmutableSet.of(libraryNode);
 
-    QueryTargetGraph targetGraph = makeQueryTargetGraph(nodes);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
 
     // No target depends on the referenced file.
     SortedMap<String, TargetNode<?, ?>> matchingBuildRules =
@@ -506,7 +506,7 @@ public class TargetsCommandTest {
 
     ImmutableSet<TargetNode<?, ?>> nodes = ImmutableSet.of(libraryNode, testNode);
 
-    QueryTargetGraph targetGraph = makeQueryTargetGraph(nodes);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
 
     // No target depends on the referenced file.
     SortedMap<String, TargetNode<?, ?>> matchingBuildRules =
@@ -562,7 +562,7 @@ public class TargetsCommandTest {
         .setSrcs(ImmutableList.of(new PathSourcePath(projectFilesystem, genSrc)))
         .build();
 
-    QueryTargetGraph targetGraph = makeQueryTargetGraph(androidResourceNode, genNode);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(androidResourceNode, genNode);
 
     SortedMap<String, TargetNode<?, ?>> matchingBuildRules;
 
@@ -659,7 +659,7 @@ public class TargetsCommandTest {
         testLibraryNode,
         testLibraryTestNode);
 
-    QueryTargetGraph targetGraph = makeQueryTargetGraph(nodes);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
 
     // No target depends on the referenced file.
     SortedMap<String, TargetNode<?, ?>> matchingBuildRules =
@@ -733,13 +733,5 @@ public class TargetsCommandTest {
             "//testlib:testlib",
             "//testlib:testlib-xctest"),
         matchingBuildRules.keySet());
-  }
-
-  private static QueryTargetGraph makeQueryTargetGraph(TargetNode<?, ?>... nodes) {
-    return makeQueryTargetGraph(ImmutableSet.copyOf(nodes));
-  }
-
-  private static QueryTargetGraph makeQueryTargetGraph(Iterable<TargetNode<?, ?>> nodes) {
-    return new QueryTargetGraph(TargetGraphFactory.newInstance(nodes));
   }
 }

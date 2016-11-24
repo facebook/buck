@@ -5,31 +5,15 @@
       "//src/com/facebook/buck/rules/coercer:types",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:object_mapper",
-      "//src/com/facebook/buck/util:util"
-    ],
-    "exported_deps" : [
-      "//src/com/facebook/buck/model:model",
-      "//src/com/facebook/buck/query:query_immutables",
-      "//src/com/facebook/buck/rules:build_rule",
-      "//third-party/java/guava:guava",
-      "//third-party/java/jsr:jsr305"
-    ]
-  },
-  "query_immutables" : {
-    "deps" : [
+      "//src/com/facebook/buck/util:util",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/model:model",
-      "//src/com/facebook/buck/util/immutables:immutables"
-    ]
-  },
-  "query_targetgraph" : {
-    "deps" : [ ],
-    "exported_deps" : [
-      "//src/com/facebook/buck/graph:graph",
       "//src/com/facebook/buck/rules:build_rule",
-      "//third-party/java/guava:guava"
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jsr:jsr305"
     ]
   }
 }

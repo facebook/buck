@@ -19,7 +19,6 @@ package com.facebook.buck.rules;
 import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.graph.DirectedAcyclicGraph;
 import com.facebook.buck.graph.MutableDirectedGraph;
-import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.util.MoreMaps;
@@ -39,13 +38,12 @@ import javax.annotation.Nullable;
  * Represents the graph of {@link com.facebook.buck.rules.TargetNode}s constructed
  * by parsing the build files.
  */
-public class TargetGraph implements TraversableGraph<TargetNode<?, ?>> {
+public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?, ?>> {
   public static final TargetGraph EMPTY = new TargetGraph(
       new MutableDirectedGraph<TargetNode<?, ?>>(),
       ImmutableMap.of(),
       ImmutableSet.of());
 
-  protected final DirectedAcyclicGraph<TargetNode<?, ?>> delegate;
   private final ImmutableMap<BuildTarget, TargetNode<?, ?>> targetsToNodes;
   private final ImmutableSetMultimap<BuildTarget, TargetGroup> groupsByBuildTarget;
 
@@ -53,7 +51,7 @@ public class TargetGraph implements TraversableGraph<TargetNode<?, ?>> {
       MutableDirectedGraph<TargetNode<?, ?>> graph,
       ImmutableMap<BuildTarget, TargetNode<?, ?>> index,
       ImmutableSet<TargetGroup> groups) {
-    this.delegate = new DirectedAcyclicGraph<>(graph);
+    super(graph);
     this.targetsToNodes = index;
 
     ImmutableSetMultimap.Builder<BuildTarget, TargetGroup> builder =
@@ -68,12 +66,6 @@ public class TargetGraph implements TraversableGraph<TargetNode<?, ?>> {
     this.groupsByBuildTarget = builder.build();
 
     verifyVisibilityIntegrity();
-  }
-
-  protected TargetGraph(TargetGraph that) {
-    this.delegate = that.delegate;
-    this.targetsToNodes = that.targetsToNodes;
-    this.groupsByBuildTarget = that.groupsByBuildTarget;
   }
 
   private void verifyVisibilityIntegrity() {
@@ -174,21 +166,6 @@ public class TargetGraph implements TraversableGraph<TargetNode<?, ?>> {
 
   public ImmutableCollection<TargetGroup> getGroups() {
     return groupsByBuildTarget.values();
-  }
-
-  @Override
-  public ImmutableSet<TargetNode<?, ?>> getNodesWithNoIncomingEdges() {
-    return delegate.getNodesWithNoIncomingEdges();
-  }
-
-  @Override
-  public ImmutableSet<TargetNode<?, ?>> getOutgoingNodesFor(TargetNode<?, ?> source) {
-    return delegate.getOutgoingNodesFor(source);
-  }
-
-  @Override
-  public ImmutableSet<TargetNode<?, ?>> getNodes() {
-    return delegate.getNodes();
   }
 
   @SuppressWarnings("serial")

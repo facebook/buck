@@ -40,7 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * The graph is not required to be connected or acyclic.
  * @param <T> the type of object stored as nodes in this graph
  */
-public final class MutableDirectedGraph<T> implements ParentTraversableGraph<T> {
+public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
 
   /**
    * It is possible to have a node in the graph without any edges, which is why we must maintain a
@@ -199,6 +199,11 @@ public final class MutableDirectedGraph<T> implements ParentTraversableGraph<T> 
   @Override
   public Iterable<T> getNodesWithNoIncomingEdges() {
     return Sets.difference(nodes, incomingEdges.keySet());
+  }
+
+  @Override
+  public Iterable<T> getNodesWithNoOutgoingEdges() {
+    return Sets.difference(nodes, outgoingEdges.keySet());
   }
 
   ImmutableSet<T> createImmutableCopyOfNodes() {
