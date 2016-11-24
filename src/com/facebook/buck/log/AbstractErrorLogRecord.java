@@ -167,7 +167,7 @@ abstract class AbstractErrorLogRecord {
   public Optional<String> getInitialErrorMsg() {
     Throwable throwable = getRecord().getThrown();
     if (throwable != null) {
-      return Optional.of(getInitialCause(throwable).getLocalizedMessage());
+      return Optional.ofNullable(getInitialCause(throwable).getLocalizedMessage());
     }
     return Optional.empty();
   }
