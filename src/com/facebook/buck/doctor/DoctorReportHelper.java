@@ -25,6 +25,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rage.BuildLogEntry;
 import com.facebook.buck.rage.DefectSubmitResult;
+import com.facebook.buck.rage.RageConfig;
 import com.facebook.buck.rage.UserInput;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
@@ -208,7 +209,7 @@ public class DoctorReportHelper {
 
     if (response.getErrorMessage().isPresent() && !response.getErrorMessage().get().isEmpty()) {
       LOG.warn(response.getErrorMessage().get());
-      output.println(response.getErrorMessage().get());
+      output.println("=> " + response.getErrorMessage().get());
       return;
     }
 
@@ -230,9 +231,13 @@ public class DoctorReportHelper {
     DefectSubmitResult submitResult = result.get();
     if (submitResult.getIsRequestSuccessful().isPresent()) {
       if (submitResult.getReportSubmitLocation().isPresent()) {
-        console.getStdOut().printf(
-            "=> Report was uploaded to %s.\n\n",
-            submitResult.getReportSubmitLocation().get());
+        if (submitResult.getRequestProtocol().equals(RageConfig.RageProtocolVersion.JSON)) {
+          console.getStdOut().printf(
+              "=> Report was uploaded to %s.\n\n",
+              submitResult.getReportSubmitLocation().get());
+        } else {
+          console.getStdOut().printf("%s", submitResult.getReportSubmitLocation().get());
+        }
       }
     } else {
       console.getStdOut().printf(

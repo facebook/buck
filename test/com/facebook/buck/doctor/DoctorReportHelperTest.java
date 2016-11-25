@@ -74,7 +74,7 @@ public class DoctorReportHelperTest {
         ImmutableList.of());
 
     helper.presentResponse(response);
-    assertEquals(errorMessage + "\n", console.getTextWrittenToStdOut());
+    assertEquals("=> " + errorMessage + "\n", console.getTextWrittenToStdOut());
   }
 
   @Test
