@@ -88,4 +88,5 @@ public class VcsInfoCollector {
     Optional<String> getDiff();
     ImmutableSet<String> getDirtyFiles();
   }
+
 }
