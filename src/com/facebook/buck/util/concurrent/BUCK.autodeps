@@ -2,6 +2,7 @@
   "concurrent" : {
     "deps" : [
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/model:simple_types",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
