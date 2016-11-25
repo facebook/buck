@@ -340,6 +340,8 @@ public class ProjectBuildFileParserPoolTest {
       EasyMock.expect(mock.getAllRulesAndMetaRules(EasyMock.anyObject(Path.class)))
           .andAnswer(parseFn)
           .anyTimes();
+      mock.close();
+      EasyMock.expectLastCall().andVoid().once();
     } catch (Exception e) {
       Throwables.propagate(e);
     }
