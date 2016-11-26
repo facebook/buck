@@ -404,7 +404,10 @@ public class CachingBuildEngineTest {
       ArtifactCache artifactCache = createMock(ArtifactCache.class);
       Map<Path, String> desiredZipEntries = ImmutableMap.of(
           Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar"),
-          "Imagine this is the contents of a valid JAR file.");
+          "Imagine this is the contents of a valid JAR file.",
+          BuildInfo.getPathToMetadataDirectory(buildRule.getBuildTarget(), filesystem)
+              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
+          MAPPER.writeValueAsString(ImmutableList.of()));
       expect(
           artifactCache.fetch(
               eq(ruleKeyBuilderFactory.build(buildRule)),
@@ -425,11 +428,6 @@ public class CachingBuildEngineTest {
           .setArtifactCache(artifactCache)
           .setObjectMapper(ObjectMappers.newDefaultInstance())
           .build();
-
-      filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of()),
-          BuildInfo.getPathToMetadataDirectory(buildRule.getBuildTarget(), filesystem)
-              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
 
       // Build the rule!
       replayAll();
@@ -482,7 +480,10 @@ public class CachingBuildEngineTest {
       ArtifactCache artifactCache = createMock(ArtifactCache.class);
       Map<Path, String> desiredZipEntries = ImmutableMap.of(
           Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar"),
-          "Imagine this is the contents of a valid JAR file.");
+          "Imagine this is the contents of a valid JAR file.",
+          BuildInfo.getPathToMetadataDirectory(buildRule.getBuildTarget(), filesystem)
+              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
+          MAPPER.writeValueAsString(ImmutableList.of()));
       expect(
           artifactCache.fetch(
               eq(ruleKeyBuilderFactory.build(buildRule)),
@@ -501,11 +502,6 @@ public class CachingBuildEngineTest {
           .setArtifactCache(artifactCache)
           .setObjectMapper(ObjectMappers.newDefaultInstance())
           .build();
-
-      filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of()),
-          BuildInfo.getPathToMetadataDirectory(buildRule.getBuildTarget(), filesystem)
-              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
 
       // Build the rule!
       replayAll();

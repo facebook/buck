@@ -1286,10 +1286,13 @@ public class CachingBuildEngine implements BuildEngine {
       BuildEngineBuildContext buildContext,
       ProjectFilesystem filesystem,
       CacheResult cacheResult) {
+
+    // We only unpack artifacts from hits.
     if (!cacheResult.getType().isSuccess()) {
       LOG.debug("Cache miss for '%s' with rulekey '%s'", rule, ruleKey);
       return cacheResult;
     }
+    Preconditions.checkArgument(cacheResult.getType() == CacheResultType.HIT);
     LOG.debug("Fetched '%s' from cache with rulekey '%s'", rule, ruleKey);
 
     // It should be fine to get the path straight away, since cache already did it's job.
@@ -1310,6 +1313,16 @@ public class CachingBuildEngine implements BuildEngine {
         ImmutableSet.of(ruleKey));
     buildContext.getEventBus().post(started);
     try {
+
+      // First, clear out the pre-existing metadata directory.  We have to do this *before*
+      // unpacking the zipped artifact, as it includes files that will be stored in the metadata
+      // directory.
+      Path metadataDir =
+          BuildInfo.getPathToMetadataDirectory(
+              rule.getBuildTarget(),
+              rule.getProjectFilesystem());
+      rule.getProjectFilesystem().deleteRecursivelyIfExists(metadataDir);
+
       Unzip.extractZipFile(
           zipPath.toAbsolutePath(),
           filesystem,
@@ -1319,18 +1332,11 @@ public class CachingBuildEngine implements BuildEngine {
       // around for debugging purposes.
       Files.delete(zipPath);
 
-      if (cacheResult.getType() == CacheResultType.HIT) {
-
-        // If we have a hit, also write out the build metadata.
-        Path metadataDir =
-            BuildInfo.getPathToMetadataDirectory(
-                rule.getBuildTarget(),
-                rule.getProjectFilesystem());
-        for (Map.Entry<String, String> ent : cacheResult.getMetadata().entrySet()) {
-          Path dest = metadataDir.resolve(ent.getKey());
-          filesystem.createParentDirs(dest);
-          filesystem.writeContentsToPath(ent.getValue(), dest);
-        }
+      // Also write out the build metadata.
+      for (Map.Entry<String, String> ent : cacheResult.getMetadata().entrySet()) {
+        Path dest = metadataDir.resolve(ent.getKey());
+        filesystem.createParentDirs(dest);
+        filesystem.writeContentsToPath(ent.getValue(), dest);
       }
 
     } catch (IOException e) {
