@@ -66,7 +66,7 @@ public class PrecompiledHeaderIntegrationTest {
     workspace.runBuckBuild("//:some_library#default,static").assertSuccess();
     BuildTarget target = findPchTarget();
     String depFileContents = workspace.getFileContents(
-        "buck-out/gen/" + target.getShortNameAndFlavorPostfix() + ".gch.dep");
+        "buck-out/gen/" + target.getShortNameAndFlavorPostfix() + ".h.gch.dep");
     assertThat(depFileContents, containsString("referenced_by_prefix_header.h"));
   }
 
@@ -181,7 +181,7 @@ public class PrecompiledHeaderIntegrationTest {
         workspace.asCell().getFilesystem(),
         ProjectFilesystemMatchers.pathExists(
             workspace.getPath(
-                "buck-out/gen/" + findPchTarget().getShortNameAndFlavorPostfix() + ".gch")));
+                "buck-out/gen/" + findPchTarget().getShortNameAndFlavorPostfix() + ".h.gch")));
     assertThat(
         buildLog,
         reportedTargetSuccessType(

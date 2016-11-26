@@ -665,7 +665,11 @@ abstract class AbstractCxxSourceRuleFactory {
       return existingRule.get();
     }
 
-    Path output = BuildTargets.getGenPath(getParams().getProjectFilesystem(), target, "%s.gch");
+    // Give the PCH a filename that looks like a header file with .gch appended to it, GCC-style.
+    // GCC accepts an "-include" flag with the .h file as its arg, and auto-appends ".gch" to
+    // automagically use the precompiled header in place of the original header.  Of course in
+    // our case we'll only have the ".gch" file, which is alright; the ".h" isn't truly needed.
+    Path output = BuildTargets.getGenPath(getParams().getProjectFilesystem(), target, "%s.h.gch");
 
     PreprocessorDelegate preprocessorDelegate =
         preprocessorDelegateCacheValue.getPreprocessorDelegate();
