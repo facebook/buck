@@ -31,9 +31,9 @@ public class EnvironmentFilter {
 
   // Always exclude environment variables with these names.
   private static final ImmutableSet<String> ENV_TO_REMOVE = ImmutableSet.of(
-      "ATOM_HOME",        // Added by Nuclide editor
       "ATOM_BACKUP_EDITOR", // Added by Nuclide editor
       "ATOM_DISABLE_SHELLING_OUT_FOR_ENVIRONMENT", // Added by Nuclide editor
+      "ATOM_HOME",        // Added by Nuclide editor
       "ARCANIST",         // Phabricator / Arcanist cruft.
       "Apple_PubSub_Socket_Render", // OS X pubsub control variable.
       "BUCK_BUILD_ID",    // Build ID passed in from Python.
@@ -42,6 +42,7 @@ public class EnvironmentFilter {
       "CHGTIMEOUT",       // Mercurial
       "CLASSPATH",        // Bootstrap classpath; set in Python.
       "COLORFGBG",
+      "COLUMNS",
       "CMD_DURATION",      // Added to environment by 'fish' shell.
       "com.apple.java.jvmTask", // Added to environment by Apple JVM.
       "COMP_WORDBREAKS",  // Set by the programmable completion part of bash.
@@ -55,6 +56,7 @@ public class EnvironmentFilter {
       "HG_NODE",          // Mercurial
       "HISTSIZE",       // Bash history configuration.
       "HISTCONTROL",      // Bash history configuration.
+      "HPHP_INTERPRETER", // Added by hhvm.
       "ITERM_SESSION_ID", // Added by iTerm on OS X.
       "ITERM_ORIG_PS1",   // Added by iTerm on OS X.
       "ITERM_PREV_PS1",   // Added by iTerm on OS X.
@@ -63,6 +65,7 @@ public class EnvironmentFilter {
       "KRB5CCNAME",       // Kerberos authentication adds this.
       "KRB5RCACHETYPE",   // More Kerberos cruft.
       "LOG_SESSION_ID",   // Session ID for certain environments.
+      "LINES",
       "LS_COLORS",      // Colour configuration for ls
       "MAIL",
       "MallocNanoZone",   // Added to environment by Xcode
