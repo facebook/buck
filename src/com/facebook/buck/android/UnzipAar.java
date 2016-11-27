@@ -30,7 +30,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
-import com.facebook.buck.rules.RecordFileSha1Step;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -41,9 +40,7 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.UnzipStep;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -58,7 +55,6 @@ public class UnzipAar extends AbstractBuildRule
     implements InitializableFromDisk<UnzipAar.BuildOutput> {
 
   private static final String METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE = "R_DOT_JAVA_PACKAGE";
-  private static final String METADATA_KEY_FOR_R_DOT_TXT_SHA1 = "R_DOT_TXT_SHA1";
 
   @AddToRuleKey
   private final SourcePath aarFile;
@@ -200,12 +196,6 @@ public class UnzipAar extends AbstractBuildRule
             METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE,
             pathToRDotJavaPackageFile));
     steps.add(
-        new RecordFileSha1Step(
-            getProjectFilesystem(),
-            getTextSymbolsFile(),
-            METADATA_KEY_FOR_R_DOT_TXT_SHA1,
-            buildableContext));
-    steps.add(
         CopyStep.forFile(getProjectFilesystem(), getTextSymbolsFile(), pathToTextSymbolsFile));
 
     buildableContext.recordArtifact(unpackDirectory);
@@ -217,11 +207,9 @@ public class UnzipAar extends AbstractBuildRule
 
   @Override
   public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) throws IOException {
-    Optional<String> rDotPackage = onDiskBuildInfo.getValue(METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE);
-    Optional<Sha1HashCode> sha1 = onDiskBuildInfo.getHash(METADATA_KEY_FOR_R_DOT_TXT_SHA1);
-    Preconditions.checkState(rDotPackage.isPresent());
-    Preconditions.checkState(sha1.isPresent());
-    return new BuildOutput(rDotPackage.get(), sha1.get());
+    String rDotJavaPackageFromFile =
+        getProjectFilesystem().readFirstLine(pathToRDotJavaPackageFile).get();
+    return new BuildOutput(rDotJavaPackageFromFile);
   }
 
   @Override
@@ -229,13 +217,15 @@ public class UnzipAar extends AbstractBuildRule
     return outputInitializer;
   }
 
+  public Path getPathToRDotJavaPackageFile() {
+    return pathToRDotJavaPackageFile;
+  }
+
   static class BuildOutput {
     private final String rDotJavaPackage;
-    private final Sha1HashCode rDotTxtHash;
 
-    BuildOutput(String rDotJavaPackage, Sha1HashCode rDotTxtHash) {
+    BuildOutput(String rDotJavaPackage) {
       this.rDotJavaPackage = rDotJavaPackage;
-      this.rDotTxtHash = rDotTxtHash;
     }
   }
 
@@ -259,10 +249,6 @@ public class UnzipAar extends AbstractBuildRule
 
   Path getTextSymbolsFile() {
     return unpackDirectory.resolve("R.txt");
-  }
-
-  Sha1HashCode getTextSymbolsHash() {
-    return outputInitializer.getBuildOutput().rDotTxtHash;
   }
 
   SourcePath getAssetsDirectory() {

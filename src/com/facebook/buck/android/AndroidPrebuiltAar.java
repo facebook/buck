@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -90,8 +89,9 @@ public class AndroidPrebuiltAar
   }
 
   @Override
-  public Sha1HashCode getTextSymbolsAbiKey() {
-    return unzipAar.getTextSymbolsHash();
+  public SourcePath getPathToRDotJavaPackageFile() {
+    return new BuildTargetSourcePath(
+        unzipAar.getBuildTarget(), unzipAar.getPathToRDotJavaPackageFile());
   }
 
   @Override

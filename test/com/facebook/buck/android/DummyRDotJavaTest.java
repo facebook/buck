@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.android.AndroidResource.BuildOutput;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 
@@ -33,18 +32,12 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.MoreCollectors;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
-import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
@@ -59,19 +52,12 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public class DummyRDotJavaTest {
-
-  private static final String RESOURCE_RULE1_KEY = Strings.repeat("a", 40);
-  private static final String RESOURCE_RULE2_KEY = Strings.repeat("b", 40);
-
   @Test
   public void testBuildSteps() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
-    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver);
     BuildRule resourceRule1 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
             .setResolver(pathResolver)
@@ -79,7 +65,7 @@ public class DummyRDotJavaTest {
             .setRDotJavaPackage("com.facebook")
             .setRes(new FakeSourcePath("android_res/com/example/res1"))
             .build());
-    setAndroidResourceBuildOutput(resourceRule1, RESOURCE_RULE1_KEY);
+    setAndroidResourceBuildOutput(resourceRule1);
     BuildRule resourceRule2 = ruleResolver.addToIndex(
         AndroidResourceRuleBuilder.newBuilder()
             .setResolver(pathResolver)
@@ -87,7 +73,7 @@ public class DummyRDotJavaTest {
             .setRDotJavaPackage("com.facebook")
             .setRes(new FakeSourcePath("android_res/com/example/res2"))
             .build());
-    setAndroidResourceBuildOutput(resourceRule2, RESOURCE_RULE2_KEY);
+    setAndroidResourceBuildOutput(resourceRule2);
 
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
         new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//java/base:rule"))
@@ -166,12 +152,6 @@ public class DummyRDotJavaTest {
 
     assertEquals(ImmutableSet.of(Paths.get(rDotJavaBinFolder), Paths.get(rDotJavaOutputJar)),
         buildableContext.getRecordedArtifacts());
-
-    Sha1HashCode expectedSha1 = HasAndroidResourceDeps.hashAbi(
-        ImmutableList.of(
-            (HasAndroidResourceDeps) resourceRule1,
-            (HasAndroidResourceDeps) resourceRule2));
-    assertEquals(expectedSha1, dummyRDotJava.getAbiKeyForDeps(ruleKeyBuilderFactory));
   }
 
   @Test
@@ -202,11 +182,10 @@ public class DummyRDotJavaTest {
     return String.format("rm -r -f %s && mkdir -p %s", dirname, dirname);
   }
 
-  private void setAndroidResourceBuildOutput(BuildRule resourceRule, String sha1HashCode) {
+  private void setAndroidResourceBuildOutput(BuildRule resourceRule) {
     if (resourceRule instanceof AndroidResource) {
       ((AndroidResource) resourceRule)
-          .getBuildOutputInitializer()
-          .setBuildOutput(new BuildOutput(Sha1HashCode.of(sha1HashCode)));
+          .getBuildOutputInitializer();
     }
   }
 }

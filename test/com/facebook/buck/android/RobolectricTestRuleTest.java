@@ -36,7 +36,6 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 
 import org.hamcrest.Matchers;
@@ -62,7 +61,7 @@ public class RobolectricTestRuleTest {
     }
 
     @Override
-    public Sha1HashCode getTextSymbolsAbiKey() {
+    public SourcePath getPathToRDotJavaPackageFile() {
       return null;
     }
 

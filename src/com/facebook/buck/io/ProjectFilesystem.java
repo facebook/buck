@@ -891,8 +891,9 @@ public class ProjectFilesystem {
    */
   public Optional<String> readFirstLineFromFile(Path file) {
     try {
-      return Optional.ofNullable(
-          Files.newBufferedReader(file, Charsets.UTF_8).readLine());
+      try (BufferedReader reader = Files.newBufferedReader(file, Charsets.UTF_8)) {
+        return Optional.ofNullable(reader.readLine());
+      }
     } catch (IOException e) {
       // Because the file is not even guaranteed to exist, swallow the IOException.
       return Optional.empty();

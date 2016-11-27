@@ -18,9 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 
 import javax.annotation.Nullable;
 
@@ -39,11 +36,9 @@ public interface HasAndroidResourceDeps extends HasBuildTarget {
   SourcePath getPathToTextSymbolsFile();
 
   /**
-   * @return an ABI for the file pointed by {@link #getPathToTextSymbolsFile()}. Since the symbols
-   *     text file is essentially a list of resource id, name and type, this is simply a sha1 of
-   *     that file.
+   * @return path to a file containing the package name for R.java.
    */
-  Sha1HashCode getTextSymbolsAbiKey();
+  SourcePath getPathToRDotJavaPackageFile();
 
   /**
    * @return path to a directory containing Android resources.
@@ -57,16 +52,4 @@ public interface HasAndroidResourceDeps extends HasBuildTarget {
   @Nullable
   SourcePath getAssets();
 
-  static Sha1HashCode hashAbi(Iterable<HasAndroidResourceDeps> deps) {
-    Hasher hasher = Hashing.sha1().newHasher();
-    for (HasAndroidResourceDeps dep : deps) {
-      hasher.putUnencodedChars(dep.getPathToTextSymbolsFile().toString());
-      // Avoid collisions by marking end of path explicitly.
-      hasher.putChar('\0');
-      dep.getTextSymbolsAbiKey().update(hasher);
-      hasher.putUnencodedChars(dep.getRDotJavaPackage());
-      hasher.putChar('\0');
-    }
-    return Sha1HashCode.fromHashCode(hasher.hash());
-  }
 }

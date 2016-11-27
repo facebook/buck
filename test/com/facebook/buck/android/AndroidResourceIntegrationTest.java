@@ -59,7 +59,6 @@ public class AndroidResourceIntegrationTest {
 
   @Test
   public void testGeneratedResourceDirectory() throws IOException, InterruptedException {
-
     // Verify we correctly build the R.txt file using a generated input resource directory.
     workspace.runBuckBuild("//generated_res:res").assertSuccess();
     String output =

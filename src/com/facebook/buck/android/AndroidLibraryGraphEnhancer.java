@@ -28,7 +28,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.util.DependencyMode;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
@@ -108,18 +107,12 @@ public class AndroidLibraryGraphEnhancer {
 
     SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
 
-    ImmutableSortedSet.Builder<BuildRule> actualDeps = ImmutableSortedSet.naturalOrder();
-    for (HasAndroidResourceDeps dep : androidResourceDeps) {
-      actualDeps.add(Preconditions.checkNotNull(ruleResolver.getRule(dep.getBuildTarget())));
-    }
-
-    // Add dependencies from `SourcePaths` in `JavacOptions`.
-    actualDeps.addAll(pathResolver.filterBuildRuleInputs(
-            javacOptions.getInputs(pathResolver)));
-
     BuildRuleParams dummyRDotJavaParams = originalBuildRuleParams.copyWithChanges(
         dummyRDotJavaBuildTarget,
-        Suppliers.ofInstance(actualDeps.build()),
+        // Add dependencies from `SourcePaths` in `JavacOptions`.
+        Suppliers.ofInstance(
+            ImmutableSortedSet.copyOf(
+                pathResolver.filterBuildRuleInputs(javacOptions.getInputs(pathResolver)))),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     BuildTarget abiJarTarget =
