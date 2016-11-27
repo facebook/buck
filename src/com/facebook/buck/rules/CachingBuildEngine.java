@@ -1601,7 +1601,7 @@ public class CachingBuildEngine implements BuildEngine {
     cache
         .store(
             ArtifactInfo.builder().addRuleKeys(manifestKey.getFirst()).build(),
-            BorrowablePath.notBorrowablePath(tempFile))
+            BorrowablePath.borrowablePath(tempFile))
         .addListener(
             () -> {
                   try {

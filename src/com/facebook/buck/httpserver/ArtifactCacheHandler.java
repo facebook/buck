@@ -167,7 +167,7 @@ public class ArtifactCacheHandler extends AbstractHandler {
               .setRuleKeys(storeRequest.getRuleKeys())
               .setMetadata(storeRequest.getMetadata())
               .build(),
-          BorrowablePath.notBorrowablePath(temp));
+          BorrowablePath.borrowablePath(temp));
       return HttpServletResponse.SC_ACCEPTED;
     } finally {
       if (temp != null) {

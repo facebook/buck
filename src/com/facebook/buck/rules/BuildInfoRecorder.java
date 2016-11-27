@@ -322,7 +322,7 @@ public class BuildInfoRecorder {
     // Store the artifact, including any additional metadata.
     ListenableFuture<Void> storeFuture = artifactCache.store(
         ArtifactInfo.builder().setRuleKeys(ruleKeys).setMetadata(buildMetadata).build(),
-        BorrowablePath.notBorrowablePath(zip));
+        BorrowablePath.borrowablePath(zip));
     Futures.addCallback(
         storeFuture,
         new FutureCallback<Void>() {
