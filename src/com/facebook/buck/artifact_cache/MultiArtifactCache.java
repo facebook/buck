@@ -55,34 +55,48 @@ public class MultiArtifactCache implements ArtifactCache {
   @Override
   public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
     CacheResult cacheResult = CacheResult.miss();
+    ImmutableList.Builder<ArtifactCache> priorCaches = ImmutableList.builder();
     for (ArtifactCache artifactCache : artifactCaches) {
       cacheResult = artifactCache.fetch(ruleKey, output);
       if (cacheResult.getType().isSuccess()) {
-        // Success; terminate search for a cached artifact, and propagate artifact to caches
-        // earlier in the search order so that subsequent searches terminate earlier.
-        for (ArtifactCache priorArtifactCache : artifactCaches) {
-          if (priorArtifactCache.equals(artifactCache)) {
-            break;
-          }
-          // since cache fetch finished, it should be fine to get the path
-          BorrowablePath outputPath;
-          // allow borrowing the path if no other caches are expected to use it
-          if (priorArtifactCache.equals(artifactCaches.get(artifactCaches.size() - 1))) {
-            outputPath = BorrowablePath.borrowablePath(output.getUnchecked());
-          } else {
-            outputPath = BorrowablePath.notBorrowablePath(output.getUnchecked());
-          }
-          priorArtifactCache.store(
-              ArtifactInfo.builder()
-                  .addRuleKeys(ruleKey)
-                  .setMetadata(cacheResult.getMetadata())
-                  .build(),
-              outputPath);
-        }
-        return cacheResult;
+        break;
+      }
+      if (artifactCache.isStoreSupported()) {
+        priorCaches.add(artifactCache);
       }
     }
+    if (cacheResult.getType().isSuccess()) {
+      // Success; terminate search for a cached artifact, and propagate artifact to caches
+      // earlier in the search order so that subsequent searches terminate earlier.
+      storeToCaches(
+          priorCaches.build(),
+          ArtifactInfo.builder()
+              .addRuleKeys(ruleKey)
+              .setMetadata(cacheResult.getMetadata())
+              .build(),
+          BorrowablePath.borrowablePath(output.getUnchecked()));
+    }
     return cacheResult;
+  }
+
+  private static ListenableFuture<Void> storeToCaches(
+      ImmutableList<ArtifactCache> caches,
+      ArtifactInfo info,
+      BorrowablePath output) {
+    // TODO(cjhopman): support BorrowablePath with multiple writable caches.
+    if (caches.size() != 1) {
+      output = BorrowablePath.notBorrowablePath(output.getPath());
+    }
+    List<ListenableFuture<Void>> storeFutures =
+        Lists.newArrayListWithExpectedSize(caches.size());
+    for (ArtifactCache artifactCache : caches) {
+      storeFutures.add(artifactCache.store(info, output));
+    }
+
+    // Aggregate future to ensure all store operations have completed.
+    return Futures.transform(
+        Futures.allAsList(storeFutures),
+        Functions.<Void>constant(null));
   }
 
   /**
@@ -92,25 +106,7 @@ public class MultiArtifactCache implements ArtifactCache {
   public ListenableFuture<Void> store(
       ArtifactInfo info,
       BorrowablePath output) {
-
-    List<ListenableFuture<Void>> storeFutures =
-        Lists.newArrayListWithExpectedSize(writableArtifactCaches.size());
-
-    for (ArtifactCache artifactCache : writableArtifactCaches) {
-      // allow borrowing the path if no other caches are expected to use it
-      if (output.canBorrow() &&
-          artifactCache.equals(writableArtifactCaches.get(writableArtifactCaches.size() - 1))) {
-        output = BorrowablePath.borrowablePath(output.getPath());
-      } else {
-        output = BorrowablePath.notBorrowablePath(output.getPath());
-      }
-      storeFutures.add(artifactCache.store(info, output));
-    }
-
-    // Aggregate future to ensure all store operations have completed.
-    return Futures.transform(
-        Futures.allAsList(storeFutures),
-        Functions.<Void>constant(null));
+    return storeToCaches(writableArtifactCaches, info, output);
   }
 
   /** @return {@code true} if there is at least one ArtifactCache that supports storing. */
