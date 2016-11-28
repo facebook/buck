@@ -180,6 +180,34 @@ public class ProvisioningProfileStoreTest {
                     new NSString("xxx")))),
             ProvisioningProfileStore.MATCH_ANY_IDENTITY);
     assertFalse(actual.isPresent());
+
+    // Test without keychain access groups.
+    actual =
+        profiles.getBestProvisioningProfile(
+            "com.facebook.test",
+            Optional.of(ImmutableMap.of(
+                "aps-environment",
+                new NSString("production"),
+                "com.apple.security.application-groups",
+                new NSArray(
+                    new NSString("foo"),
+                    new NSString("bar")))),
+            ProvisioningProfileStore.MATCH_ANY_IDENTITY);
+
+    assertThat(actual.get(), is(equalTo(expected)));
+
+    actual =
+        profiles.getBestProvisioningProfile(
+            "com.facebook.test",
+            Optional.of(ImmutableMap.of(
+                "aps-environment",
+                new NSString("production"),
+                "com.apple.security.application-groups",
+                new NSArray(
+                    new NSString("foo"),
+                    new NSString("xxx")))),
+            ProvisioningProfileStore.MATCH_ANY_IDENTITY);
+    assertFalse(actual.isPresent());
   }
 
   @Test

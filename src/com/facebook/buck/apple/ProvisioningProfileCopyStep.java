@@ -132,7 +132,7 @@ class ProvisioningProfileCopyStep implements Step {
         NSDictionary entitlementsPlistDict =
             (NSDictionary) PropertyListParser.parse(entitlementsPlist.get().toFile());
         entitlements = Optional.of(ImmutableMap.copyOf(entitlementsPlistDict.getHashMap()));
-        prefix = ProvisioningProfileMetadata.prefixFromEntitlements(entitlements.get());
+        prefix = ProvisioningProfileMetadata.prefixFromEntitlements(entitlements.get()).orElse("*");
       } catch (IOException e) {
         throw new HumanReadableException("Unable to find entitlement .plist: " +
             entitlementsPlist.get());

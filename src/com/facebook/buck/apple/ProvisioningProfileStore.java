@@ -98,7 +98,7 @@ public class ProvisioningProfileStore implements RuleKeyAppendable {
       Optional<? extends Iterable<CodeSignIdentity>> identities) {
     final Optional<String> prefix;
     if (entitlements.isPresent()) {
-      prefix = Optional.of(ProvisioningProfileMetadata.prefixFromEntitlements(entitlements.get()));
+      prefix = ProvisioningProfileMetadata.prefixFromEntitlements(entitlements.get());
     } else {
       prefix = Optional.empty();
     }

@@ -99,14 +99,19 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
   }
 
   /**
-   * Takes an ImmutableMap representing an entitlements file, returns the application prefix.
+   * Takes an ImmutableMap representing an entitlements file, returns the application prefix
+   * if it can be inferred from keys in the entitlement.  Otherwise, it returns empty.
    */
-  public static String prefixFromEntitlements(ImmutableMap<String, NSObject> entitlements)
-      throws RuntimeException {
-    NSArray keychainAccessGroups = ((NSArray) entitlements.get("keychain-access-groups"));
-    Preconditions.checkNotNull(keychainAccessGroups);
-    String appID = keychainAccessGroups.objectAtIndex(0).toString();
-    return splitAppID(appID).getFirst();
+  public static Optional<String> prefixFromEntitlements(
+      ImmutableMap<String, NSObject> entitlements) {
+    try {
+      NSArray keychainAccessGroups = ((NSArray) entitlements.get("keychain-access-groups"));
+      Preconditions.checkNotNull(keychainAccessGroups);
+      String appID = keychainAccessGroups.objectAtIndex(0).toString();
+      return Optional.of(splitAppID(appID).getFirst());
+    } catch (RuntimeException e) {
+      return Optional.empty();
+    }
   }
 
   public static ProvisioningProfileMetadata fromProvisioningProfilePath(
