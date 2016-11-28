@@ -17,6 +17,7 @@
 package com.facebook.buck.rust;
 
 import com.facebook.buck.cxx.CxxPlatform;
+import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.LinkerProvider;
 import com.facebook.buck.model.BuildTarget;
@@ -97,10 +98,7 @@ public class RustBinaryDescription implements
     ToolProvider compiler = rustBuckConfig.getRustCompiler();
     deps.addAll(compiler.getParseTimeDeps());
 
-    LinkerProvider linker =
-        rustBuckConfig.getLinkerProvider(cxxPlatform, cxxPlatform.getLd().getType());
-
-    deps.addAll(linker.getParseTimeDeps());
+    deps.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
 
     return deps.build();
   }
