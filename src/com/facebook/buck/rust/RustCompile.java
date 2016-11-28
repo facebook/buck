@@ -131,6 +131,8 @@ abstract class RustCompile extends AbstractBuildRule {
     ImmutableMap.Builder<String, Path> externalCratesBuilder = ImmutableMap.builder();
     ImmutableSet.Builder<Path> externalDepsBuilder = ImmutableSet.builder();
 
+    buildableContext.recordArtifact(output);
+
     for (BuildRule buildRule : getDeps()) {
       if (buildRule instanceof RustLinkable) {
         RustLinkable linkable = (RustLinkable) buildRule;
