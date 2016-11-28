@@ -57,6 +57,18 @@ public class WorkerProcess {
   @Nullable
   private ProcessExecutor.LaunchedProcess launchedProcess;
 
+  /**
+   * Worker process is a process that stays alive and receives commands which describe jobs.
+   * Worker processes may be combined into pools so they can perform different jobs concurrently.
+   * It communicates via JSON stream and via files.
+   * Submitted job blocks the calling thread until it receives the result back.
+   * Worker process must understand the protocol that Buck will use to communicate with it.
+   * @param executor Process executor that will start worker process.
+   * @param processParams Arguments for process executor.
+   * @param filesystem File system for the worker process.
+   * @param tmpPath Temp folder.
+   * @throws IOException In case if some I/O failure happens.
+   */
   public WorkerProcess(
       ProcessExecutor executor,
       ProcessExecutorParams processParams,

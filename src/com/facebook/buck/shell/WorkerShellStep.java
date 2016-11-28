@@ -50,6 +50,17 @@ public class WorkerShellStep implements Step {
   private Optional<WorkerJobParams> bashParams;
   private Optional<WorkerJobParams> cmdExeParams;
 
+  /**
+   * Creates new shell step that uses worker process to delegate work. If platform-specific params
+   * are present they are used in favor of universal params.
+   * @param filesystem File system.
+   * @param cmdParams Universal, platform independent params, something that would work for both
+   *                  Linux/macOS and Windows platforms.
+   * @param bashParams Used in Linux/macOS environment, specifies the arguments that are passed into
+   *                     bash shell.
+   * @param cmdExeParams Used in Windows environment, specifies the arguments that are passed into
+   *                     cmd.exe (Windows shell).
+   */
   public WorkerShellStep(
       ProjectFilesystem filesystem,
       Optional<WorkerJobParams> cmdParams,
@@ -105,8 +116,8 @@ public class WorkerShellStep implements Step {
     if (paramsToUse.getPersistentWorkerKey().isPresent() &&
         context.getPersistentWorkerPools().isPresent()) {
       processPoolMap = context.getPersistentWorkerPools().get();
-      workerHash = paramsToUse.getWorkerHash().get();
       key = paramsToUse.getPersistentWorkerKey().get();
+      workerHash = paramsToUse.getWorkerHash().get();
     } else {
       processPoolMap = context.getWorkerProcessPools();
       key = Joiner.on(' ').join(getCommand(context.getPlatform()));
