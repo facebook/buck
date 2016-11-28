@@ -355,11 +355,6 @@ public class AppleTestIntegrationTest {
     result.assertSuccess();
     assertThat(
         result.getStderr(),
-        containsString(
-            "NOTESTS <100ms  0 Passed   0 Skipped   0 Failed   XCUITest runs not supported"
-        ));
-    assertThat(
-        result.getStderr(),
         containsString("1 Passed   0 Skipped   0 Failed   FooXCTest"));
   }
 

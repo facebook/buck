@@ -16,8 +16,7 @@
 
 package com.facebook.buck.testrunner;
 
-import static com.facebook.buck.testutil.OutputHelper.createBuckTestOutputLineRegex;
-import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
+import static com.facebook.buck.testutil.OutputHelper.containsBuckTestOutputLine;
 import static com.facebook.buck.util.Verbosity.BINARY_OUTPUTS;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
@@ -117,7 +116,7 @@ public class TestSelectorsIntegrationTest {
     String[] command = {"test", "--all", "--test-selectors", "#test"};
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(command);
     assertNoTestsRan(result);
-    assertTestsPassed(result);
+    result.assertSuccess("Should pass, albeit because nothing actually ran");
   }
 
   @Test
@@ -170,34 +169,29 @@ public class TestSelectorsIntegrationTest {
 
   private void assertOutputWithSelectors(ProjectWorkspace.ProcessResult result) {
     String stderr = result.getStderr();
-    assertThat(stderr, containsRegex(
-        createBuckTestOutputLineRegex(
-            "PASS", 1, 0, 0, "com.example.clown.CarTest")));
-    assertThat(stderr, containsRegex(
-        createBuckTestOutputLineRegex(
-            "PASS", 1, 0, 0, "com.example.clown.FlowerTest")));
-    assertThat(stderr, containsRegex(
-        createBuckTestOutputLineRegex(
-            "PASS", 1, 0, 0, "com.example.clown.PrimeMinisterialDecreeTest")));
-    assertThat(stderr, containsRegex(
-        createBuckTestOutputLineRegex(
-            "PASS", 1, 0, 0, "com.example.clown.ShoesTest")));
+    assertThat("CarTest contains matching test that passes",
+        stderr, containsBuckTestOutputLine(
+        "PASS", 1, 0, 0, "com.example.clown.CarTest"));
+    assertThat("FlowerTest contains matching test, but it is @Ignored",
+        stderr, containsBuckTestOutputLine(
+        "NOTESTS", 0, 1, 0, "com.example.clown.FlowerTest"));
+    assertThat("PrimeMinisterialDecreeTest contains matching test, but it has assumption violation",
+        stderr, containsBuckTestOutputLine(
+        "ASSUME", 0, 1, 0, "com.example.clown.PrimeMinisterialDecreeTest"));
+    assertThat("ShoesTest should not appear, because it has no matches",
+        stderr, not(containsString("com.example.clown.ShoesTest")));
   }
 
   private void assertOutputWithoutSelectors(ProjectWorkspace.ProcessResult result) {
     String stderr = result.getStderr();
-    assertThat(stderr, containsRegex(
-        createBuckTestOutputLineRegex(
-            "PASS", 3, 0, 0, "com.example.clown.CarTest")));
-    assertThat(stderr, containsRegex(
-        createBuckTestOutputLineRegex(
-            "PASS", 3, 0, 0, "com.example.clown.FlowerTest")));
-    assertThat(stderr, containsRegex(
-        createBuckTestOutputLineRegex(
-            "FAIL", 5, 0, 1, "com.example.clown.PrimeMinisterialDecreeTest")));
-    assertThat(stderr, containsRegex(
-        createBuckTestOutputLineRegex(
-            "PASS", 2, 0, 0, "com.example.clown.ShoesTest")));
+    assertThat(stderr, containsBuckTestOutputLine(
+        "PASS", 2, 1, 0, "com.example.clown.CarTest"));
+    assertThat(stderr, containsBuckTestOutputLine(
+        "PASS", 2, 1, 0, "com.example.clown.FlowerTest"));
+    assertThat(stderr, containsBuckTestOutputLine(
+        "FAIL", 4, 1, 1, "com.example.clown.PrimeMinisterialDecreeTest"));
+    assertThat(stderr, containsBuckTestOutputLine(
+        "PASS", 2, 0, 0, "com.example.clown.ShoesTest"));
     assertTestSummaryShown(result);
   }
 
@@ -220,6 +214,7 @@ public class TestSelectorsIntegrationTest {
         result.getStderr(),
         not(containsString("com.example.clown.PrimeMinisterialDecreeTest")));
     assertThat(result.getStderr(), not(containsString("com.example.clown.ShoesTest")));
+    assertThat(result.getStderr(), containsString("NO TESTS RAN"));
   }
 
   private void assertTestsPassed(ProjectWorkspace.ProcessResult result) {

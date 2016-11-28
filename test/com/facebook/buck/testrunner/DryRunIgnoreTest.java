@@ -17,12 +17,13 @@
 package com.facebook.buck.testrunner;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
+import static com.facebook.buck.testutil.OutputHelper.containsBuckTestOutputLine;
 
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -33,26 +34,35 @@ public class DryRunIgnoreTest {
   @Rule
   public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
-  @Test
-  public void shouldNotListIgnoredTestsInDryRun() throws IOException {
-    assertOneTest("test", "--all", "--dry-run");
-  }
+  private ProjectWorkspace workspace;
 
-  @Test
-  public void shouldNotListIgnoredTestsInActualRun() throws IOException {
-    assertOneTest("test", "--all");
-  }
-
-  private void assertOneTest(String... args) throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+  @Before
+  public void setUpWorkspace() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "dry_run", temporaryFolder);
     workspace.setUp();
+  }
+
+  @Test
+  public void shouldNotListIgnoredTestsInDryRun() throws IOException {
     ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand(args);
+        workspace.runBuckCommand("test", "--all", "--dry-run");
     result.assertSuccess();
     assertThat(
         "Of the two tests, only one shall pass, because the other one is ignored with @Ignore",
         result.getStderr(),
-        containsString("1 Passed   0 Skipped   0 Failed   com.example.DryRunTest"));
+        containsBuckTestOutputLine("DRYRUN", 1, 1, 0, "com.example.DryRunTest"));
   }
+
+  @Test
+  public void shouldNotListIgnoredTestsInActualRun() throws IOException {
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("test", "--all");
+    result.assertSuccess();
+    assertThat(
+        "Of the two tests, only one shall pass, because the other one is ignored with @Ignore",
+        result.getStderr(),
+        containsBuckTestOutputLine("PASS", 1, 1, 0, "com.example.DryRunTest"));
+  }
+
 }
