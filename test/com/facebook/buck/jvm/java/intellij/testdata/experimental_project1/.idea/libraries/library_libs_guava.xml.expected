@@ -3,5 +3,7 @@
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/libs/guava.jar!/" />
     </CLASSES>
+    <JAVADOC />
+    <SOURCES />
   </library>
 </component>

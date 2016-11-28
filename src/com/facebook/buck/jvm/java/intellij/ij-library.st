@@ -14,11 +14,15 @@
     <JAVADOC>
       <root url="%javadocUrl%" />
     </JAVADOC>
+%else%
+    <JAVADOC />
 %endif%
 %if(sourceJar)%
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/%sourceJar%!/" />
     </SOURCES>
+%else%
+    <SOURCES />
 %endif%
   </library>
 </component>
