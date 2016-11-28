@@ -53,6 +53,7 @@ public class CxxLinkableEnhancer {
 
   private static final EnumSet<Linker.LinkType> SONAME_REQUIRED_LINK_TYPES = EnumSet.of(
       Linker.LinkType.SHARED,
+      Linker.LinkType.FRAMEWORK,
       Linker.LinkType.MACH_O_BUNDLE
   );
 
@@ -172,7 +173,7 @@ public class CxxLinkableEnhancer {
 
     // If we're doing a shared build, pass the necessary flags to the linker, including setting
     // the soname.
-    if (linkType == Linker.LinkType.SHARED) {
+    if (linkType == Linker.LinkType.SHARED || linkType == Linker.LinkType.FRAMEWORK) {
       argsBuilder.addAll(cxxPlatform.getLd().resolve(ruleResolver).getSharedLibFlag());
     } else if (linkType == Linker.LinkType.MACH_O_BUNDLE) {
       argsBuilder.add(new StringArg("-bundle"));

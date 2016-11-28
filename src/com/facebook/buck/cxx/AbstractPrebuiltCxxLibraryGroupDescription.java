@@ -295,6 +295,8 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
                             .build()),
                     args.sharedLink));
             break;
+          case FRAMEWORK:
+            throw new RuntimeException("Prebuilt Cxxlibrary cannot be linked as framework");
         }
         return builder.build();
       }

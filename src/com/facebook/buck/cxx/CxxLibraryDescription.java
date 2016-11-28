@@ -91,6 +91,7 @@ public class CxxLibraryDescription implements
     SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR),
     STATIC_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR),
     STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR),
+    FRAMEWORK(CxxDescriptionEnhancer.FRAMEWORK_BINARY_FLAVOR),
     MACH_O_BUNDLE(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR),
     ;
 
@@ -289,6 +290,17 @@ public class CxxLibraryDescription implements
         params.getProjectFilesystem(),
         sharedTarget,
         sharedLibrarySoname);
+
+    if (linkType == Linker.LinkType.FRAMEWORK) {
+      sharedLibrarySoname = params.getBuildTarget().getShortName();
+      sharedLibraryPath = CxxDescriptionEnhancer.getSharedLibraryPath(
+          params.getProjectFilesystem(),
+          sharedTarget,
+          sharedLibrarySoname);
+
+      sharedLibrarySoname = String.format("%s.framework/%s", sharedLibrarySoname, sharedLibrarySoname);
+    }
+
     ImmutableList.Builder<String> extraLdFlagsBuilder = ImmutableList.builder();
     extraLdFlagsBuilder.addAll(linkerFlags);
     ImmutableList<String> extraLdFlags = extraLdFlagsBuilder.build();
@@ -640,6 +652,17 @@ public class CxxLibraryDescription implements
               args,
               Linker.LinkType.SHARED,
               linkableDepType.orElse(Linker.LinkableDepType.SHARED),
+              Optional.empty(),
+              blacklist);
+        case FRAMEWORK:
+          return createSharedLibraryBuildRule(
+              untypedParams,
+              resolver,
+              cxxBuckConfig,
+              platform.get(),
+              args,
+              Linker.LinkType.FRAMEWORK, //mayve
+              linkableDepType.orElse(Linker.LinkableDepType.FRAMEWORK),
               Optional.empty(),
               blacklist);
         case MACH_O_BUNDLE:

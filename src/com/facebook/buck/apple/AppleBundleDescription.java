@@ -55,7 +55,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
 
   public static final ImmutableSet<Flavor> SUPPORTED_LIBRARY_FLAVORS = ImmutableSet.of(
       CxxDescriptionEnhancer.STATIC_FLAVOR,
-      CxxDescriptionEnhancer.SHARED_FLAVOR);
+      CxxDescriptionEnhancer.SHARED_FLAVOR,
+      CxxDescriptionEnhancer.FRAMEWORK_BINARY_FLAVOR);
 
   public static final Flavor WATCH_OS_FLAVOR = ImmutableFlavor.of("watchos-armv7k");
   public static final Flavor WATCH_SIMULATOR_FLAVOR = ImmutableFlavor.of("watchsimulator-i386");

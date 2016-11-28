@@ -79,6 +79,7 @@ public interface NativeLinkable extends HasBuildTarget {
     ANY,
     STATIC,
     SHARED,
+    FRAMEWORK,
   }
 
 }

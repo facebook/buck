@@ -225,6 +225,7 @@ public class HaskellLibraryDescription implements
                 args,
                 depType);
         break;
+      case FRAMEWORK:
       default:
         throw new IllegalStateException();
     }
@@ -282,6 +283,7 @@ public class HaskellLibraryDescription implements
       case STATIC_PIC:
         target = target.withFlavors(Type.PACKAGE_STATIC_PIC.getFlavor());
         break;
+      case FRAMEWORK:
       default:
         throw new IllegalStateException();
     }
@@ -488,6 +490,7 @@ public class HaskellLibraryDescription implements
                     new SourcePathArg(getResolver(),
                         new BuildTargetSourcePath(rule.getBuildTarget())));
             break;
+          case FRAMEWORK:
           default:
             throw new IllegalStateException();
         }

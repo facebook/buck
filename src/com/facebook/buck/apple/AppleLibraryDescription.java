@@ -79,7 +79,8 @@ public class AppleLibraryDescription implements
       CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
       CxxDescriptionEnhancer.STATIC_FLAVOR,
       CxxDescriptionEnhancer.SHARED_FLAVOR,
-      AppleDescriptions.FRAMEWORK_FLAVOR,
+      CxxDescriptionEnhancer.FRAMEWORK_BINARY_FLAVOR,
+      CxxDescriptionEnhancer.FRAMEWORK_BUNDLE_FLAVOR,
       AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
       AppleDebugFormat.DWARF.getFlavor(),
       AppleDebugFormat.NONE.getFlavor(),
@@ -97,7 +98,8 @@ public class AppleLibraryDescription implements
     STATIC_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR),
     STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR),
     MACH_O_BUNDLE(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR),
-    FRAMEWORK(AppleDescriptions.FRAMEWORK_FLAVOR),
+    FRAMEWORK_BINARY(CxxDescriptionEnhancer.FRAMEWORK_BINARY_FLAVOR),
+    FRAMEWORK_BUNDLE(CxxDescriptionEnhancer.FRAMEWORK_BUNDLE_FLAVOR),
     ;
 
     private final Flavor flavor;
@@ -163,7 +165,7 @@ public class AppleLibraryDescription implements
       A args) throws NoSuchBuildTargetException {
     Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(
         params.getBuildTarget());
-    if (type.isPresent() && type.get().getValue().equals(Type.FRAMEWORK)) {
+    if (type.isPresent() && type.get().getValue().equals(Type.FRAMEWORK_BUNDLE)) {
       return createFrameworkBundleBuildRule(targetGraph, params, resolver, args);
     } else {
       return createLibraryBuildRule(
@@ -191,7 +193,7 @@ public class AppleLibraryDescription implements
     if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(params.getBuildTarget()).isPresent()) {
       return resolver.requireRule(
           params.getBuildTarget().withAppendedFlavors(
-              AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR));
+              AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR));
     }
     AppleDebugFormat debugFormat = AppleDebugFormat.FLAVOR_DOMAIN
         .getValue(params.getBuildTarget()).orElse(defaultDebugFormat);
@@ -404,7 +406,7 @@ public class AppleLibraryDescription implements
       A args,
       Class<U> metadataClass) throws NoSuchBuildTargetException {
     if (!metadataClass.isAssignableFrom(FrameworkDependencies.class) ||
-        !buildTarget.getFlavors().contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
+        !buildTarget.getFlavors().contains(CxxDescriptionEnhancer.FRAMEWORK_BUNDLE_FLAVOR)) {
       CxxLibraryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
       AppleDescriptions.populateCxxLibraryDescriptionArg(
           new SourcePathResolver(resolver),
@@ -423,7 +425,7 @@ public class AppleLibraryDescription implements
       Optional<FrameworkDependencies> frameworks =
           resolver.requireMetadata(
               BuildTarget.builder(dep)
-                  .addFlavors(AppleDescriptions.FRAMEWORK_FLAVOR)
+                  .addFlavors(CxxDescriptionEnhancer.FRAMEWORK_BUNDLE_FLAVOR)
                   .addFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                   .addFlavors(cxxPlatformFlavor.get())
                   .build(),
@@ -471,7 +473,8 @@ public class AppleLibraryDescription implements
   }
 
   public static boolean isSharedLibraryTarget(BuildTarget target) {
-    return target.getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR);
+    return target.getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR) ||
+        target.getFlavors().contains(CxxDescriptionEnhancer.FRAMEWORK_BINARY_FLAVOR);
   }
 
   @SuppressFieldNotInitialized

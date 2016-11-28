@@ -158,7 +158,11 @@ class SwiftLibrary
         isDynamic = true;
         break;
       case ANY:
-        isDynamic = type == Linker.LinkableDepType.SHARED;
+        isDynamic = (type == Linker.LinkableDepType.SHARED &&
+                     type == Linker.LinkableDepType.FRAMEWORK);
+        break;
+      case FRAMEWORK:
+        isDynamic = true;
         break;
       default:
         throw new IllegalStateException("unhandled linkage type: " + preferredLinkage);
