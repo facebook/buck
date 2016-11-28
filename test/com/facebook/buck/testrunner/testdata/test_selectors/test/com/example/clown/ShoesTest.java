@@ -27,10 +27,8 @@ public class ShoesTest {
     assertTrue(true);
   }
 
-  // Note: no matches for testIsComical
-
   @Test
-  public void testIsReallyComical() {
+  public void testIsComical() {
     assertTrue(true);
   }
 }

@@ -16,12 +16,12 @@
 
 package com.facebook.buck.testrunner;
 
-import static com.facebook.buck.testutil.OutputHelper.containsBuckTestOutputLine;
+import static com.facebook.buck.testutil.OutputHelper.createBuckTestOutputLineRegex;
+import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.RegexMatcher;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -35,7 +35,7 @@ import java.io.IOException;
 /**
  * Test to demonstrate how, with or without the use of --filter, a class that contains no @Test
  * methods will never result in an internal NoTestsRemainException being returned to the user as an
- * error.  See {@link JUnitRunner#combineResults} for why this is weird.
+ * error.  See {@link JUnitRunner#interpretResults(String, java.util.List)} for why this is weird.
  */
 public class TestSelectorsTestlessClassesTest {
 
@@ -58,10 +58,12 @@ public class TestSelectorsTestlessClassesTest {
     result.assertSuccess(
         "Testless classes should not cause NoTestsRemainException, " +
         "when filtering is *NOT* used!");
-    assertThat("Should not list classes without tests under junit 4.8.2",
-        result.getStderr(), not(RegexMatcher.containsRegex("com.example.ClassWithoutTestsA")));
-    assertThat("Should not list classes without tests under junit 4.11",
-        result.getStderr(), not(RegexMatcher.containsRegex("com.example.ClassWithoutTestsB")));
+    assertThat(result.getStderr(), containsRegex(
+        createBuckTestOutputLineRegex(
+            "NOTESTS", 0, 0, 0, "com.example.ClassWithoutTestsA")));
+    assertThat(result.getStderr(), containsRegex(
+        createBuckTestOutputLineRegex(
+            "NOTESTS", 0, 0, 0, "com.example.ClassWithoutTestsB")));
   }
 
   @Test
@@ -83,11 +85,8 @@ public class TestSelectorsTestlessClassesTest {
     result.assertSuccess(
         "Testless classes should not cause NoTestsRemainException, " +
         "even when filtering *IS* used, and it includes real tests!");
-    assertThat("Tests should be mentioned in the junit 4.8.2 output",
+    assertThat("Some tests should be mentioned in the output",
         result.getStderr(),
-        containsBuckTestOutputLine("PASS", 2, 0, 0, "com.example.ClassWithTestsA"));
-    assertThat("Tests should be mentioned in the junit 4.11 output",
-        result.getStderr(),
-        containsBuckTestOutputLine("PASS", 2, 0, 0, "com.example.ClassWithTestsB"));
+        containsString("com.example"));
   }
 }

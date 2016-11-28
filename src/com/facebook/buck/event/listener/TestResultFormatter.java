@@ -130,16 +130,9 @@ public class TestResultFormatter {
     boolean shouldReportLogSummaryAfterTests = false;
 
     for (TestCaseSummary testCase : results.getTestCases()) {
-      // Only mention classes with tests.
-      if (testCase.getPassedCount() == 0 &&
-          testCase.getFailureCount() == 0 &&
-          testCase.getSkippedCount() == 0) {
-        continue;
-      }
-
-      String oneLineSummary =
-          testCase.getOneLineSummary(locale, results.getDependenciesPassTheirTests(), ansi);
-      addTo.add(oneLineSummary);
+      StringBuilder oneLineSummary = new StringBuilder(
+          testCase.getOneLineSummary(locale, results.getDependenciesPassTheirTests(), ansi));
+      addTo.add(oneLineSummary.toString());
 
       // Don't print the full error if there were no failures (so only successes and assumption
       // violations)
@@ -238,52 +231,40 @@ public class TestResultFormatter {
       List<TestResults> completedResults,
       List<TestStatusMessage> testStatusMessages) {
     // Print whether each test succeeded or failed.
-    boolean isDryRun = false;
-    boolean hasAssumptionViolations = false;
-    int numTestsPassed = 0;
-    int numTestsFailed = 0;
-    int numTestsSkipped = 0;
+    boolean isAllTestsPassed = true;
+    boolean isAnyAssumptionViolated = false;
     ListMultimap<TestResults, TestCaseSummary> failingTests = ArrayListMultimap.create();
 
+    int numFailures = 0;
+    int numTestResults = 0;
     ImmutableList.Builder<Path> testLogPathsBuilder = ImmutableList.builder();
 
     for (TestResults summary : completedResults) {
       testLogPathsBuilder.addAll(summary.getTestLogPaths());
-      // Get failures up-front to include class-level initialization failures
-      if (summary.getFailureCount() > 0) {
-        numTestsFailed += summary.getFailureCount();
+      if (!summary.isSuccess()) {
+        isAllTestsPassed = false;
+        numFailures += summary.getFailureCount();
         failingTests.putAll(summary, summary.getFailures());
       }
-      // Get passes/skips by iterating through each case
       for (TestCaseSummary testCaseSummary : summary.getTestCases()) {
-        isDryRun = isDryRun || testCaseSummary.isDryRun();
-        numTestsPassed += testCaseSummary.getPassedCount();
-        numTestsSkipped += testCaseSummary.getSkippedCount();
-        hasAssumptionViolations = hasAssumptionViolations ||
-            testCaseSummary.hasAssumptionViolations();
+        numTestResults += testCaseSummary.getFailureCount() + testCaseSummary.getPassedCount();
+
+        if (testCaseSummary.hasAssumptionViolations()) {
+          // Only count skipped tests as "run" if there was a dynamic failure,
+          // otherwise, we consider skipped tests as "not run"
+          numTestResults += testCaseSummary.getSkippedCount();
+          isAnyAssumptionViolated = true;
+          break;
+        }
       }
-    }
-    // If no test runs to completion, don't fail, but warn
-    if (numTestsPassed == 0 && numTestsFailed == 0) {
-      String message;
-      if (hasAssumptionViolations) {
-        message = "NO TESTS RAN (assumption violations)";
-      } else if (numTestsSkipped > 0) {
-        message = "NO TESTS RAN (tests skipped)";
-      } else {
-        message = "NO TESTS RAN";
-      }
-      if (isDryRun) {
-        addTo.add(ansi.asHighlightedSuccessText(message));
-      } else {
-        addTo.add(ansi.asHighlightedWarningText(message));
-      }
-      return;
     }
 
-    // When all tests pass...
-    if (numTestsFailed == 0) {
-      ImmutableList<Path> testLogPaths = testLogPathsBuilder.build();
+    ImmutableList<Path> testLogPaths = testLogPathsBuilder.build();
+
+    // Print the summary of the test results.
+    if (numTestResults == 0) {
+      addTo.add(ansi.asHighlightedFailureText("TESTS PASSED (NO TESTS RAN)"));
+    } else if (isAllTestsPassed) {
       if (testLogsPath.isPresent() && verbosity != Verbosity.SILENT) {
         try {
           if (MoreFiles.concatenateFiles(testLogsPath.get(), testLogPaths)) {
@@ -293,44 +274,42 @@ public class TestResultFormatter {
           LOG.warn(e, "Could not concatenate test logs %s to %s", testLogPaths, testLogsPath.get());
         }
       }
-      if (hasAssumptionViolations) {
+      if (isAnyAssumptionViolated) {
         addTo.add(ansi.asHighlightedWarningText("TESTS PASSED (with some assumption violations)"));
       } else {
         addTo.add(ansi.asHighlightedSuccessText("TESTS PASSED"));
       }
-      return;
-    }
+    } else {
+      if (!testStatusMessages.isEmpty()) {
+        addTo.add("====TEST STATUS MESSAGES====");
+        SimpleDateFormat timestampFormat = new SimpleDateFormat(
+            "[yyyy-MM-dd HH:mm:ss.SSS]",
+            Locale.US);
+        timestampFormat.setTimeZone(timeZone);
 
-    // When something fails...
-    if (!testStatusMessages.isEmpty()) {
-      addTo.add("====TEST STATUS MESSAGES====");
-      SimpleDateFormat timestampFormat = new SimpleDateFormat(
-          "[yyyy-MM-dd HH:mm:ss.SSS]",
-          Locale.US);
-      timestampFormat.setTimeZone(timeZone);
-
-      for (TestStatusMessage testStatusMessage : testStatusMessages) {
-        addTo.add(
-            String.format(
-                locale,
-                "%s[%s] %s",
-                timestampFormat.format(new Date(testStatusMessage.getTimestampMillis())),
-                testStatusMessage.getLevel(),
-                testStatusMessage.getMessage()));
+        for (TestStatusMessage testStatusMessage : testStatusMessages) {
+          addTo.add(
+              String.format(
+                  locale,
+                  "%s[%s] %s",
+                  timestampFormat.format(new Date(testStatusMessage.getTimestampMillis())),
+                  testStatusMessage.getLevel(),
+                  testStatusMessage.getMessage()));
+        }
       }
-    }
 
-    addTo.add(
-        ansi.asHighlightedFailureText(
-            String.format(
-                locale,
-                "TESTS FAILED: %d %s",
-                numTestsFailed,
-                numTestsFailed == 1 ? "FAILURE" : "FAILURES")));
-    for (TestResults results : failingTests.keySet()) {
-      addTo.add("Failed target: " + results.getBuildTarget().getFullyQualifiedName());
-      for (TestCaseSummary summary : failingTests.get(results)) {
-        addTo.add(summary.toString());
+      addTo.add(
+          ansi.asHighlightedFailureText(
+              String.format(
+                  locale,
+                  "TESTS FAILED: %d %s",
+                  numFailures,
+                  numFailures == 1 ? "FAILURE" : "FAILURES")));
+      for (TestResults results : failingTests.keySet()) {
+        addTo.add("Failed target: " + results.getBuildTarget().getFullyQualifiedName());
+        for (TestCaseSummary summary : failingTests.get(results)) {
+          addTo.add(summary.toString());
+        }
       }
     }
   }

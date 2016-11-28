@@ -16,8 +16,8 @@
 
 package com.facebook.buck.testrunner;
 
-import static com.facebook.buck.testutil.OutputHelper.containsBuckTestOutputLine;
-import static org.hamcrest.Matchers.containsString;
+import static com.facebook.buck.testutil.OutputHelper.createBuckTestOutputLineRegex;
+import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -30,7 +30,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-
+import java.util.regex.Pattern;
 
 public class BuildThenTestIntegrationTest {
 
@@ -53,15 +53,13 @@ public class BuildThenTestIntegrationTest {
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:example");
     assertEquals("", testResult.getStdout());
-    assertThat("Should contain a line indicating what target it is testing",
+    assertThat(
+        "Test output is incorrect:\n=====\n" + testResult.getStderr() + "=====\n",
         testResult.getStderr(),
-        containsString("TESTING //:example"));
-    assertThat("Should contain results from the target.",
-        testResult.getStderr(),
-        containsBuckTestOutputLine("PASS", 1, 0, 0, "com.example.MyTest"));
-    assertThat("Should contain a line indicating that tests passed.",
-        testResult.getStderr(),
-        containsString("TESTS PASSED"));
+        containsRegex(
+            Pattern.quote("TESTING //:example\n") +
+                createBuckTestOutputLineRegex("PASS", 1, 0, 0, "com.example.MyTest\n") +
+                Pattern.quote("TESTS PASSED\n")));
     testResult.assertSuccess("Passing tests should exit with 0.");
     workspace.verify();
   }

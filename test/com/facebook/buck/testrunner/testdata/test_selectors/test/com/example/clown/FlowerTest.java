@@ -18,7 +18,6 @@ package com.example.clown;
 
 import static junit.framework.TestCase.assertTrue;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class FlowerTest {
@@ -33,7 +32,6 @@ public class FlowerTest {
     assertTrue(true);
   }
 
-  @Ignore
   @Test
   public void testIsComical() {
     assertTrue(true);

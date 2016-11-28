@@ -17,13 +17,12 @@
 package com.facebook.buck.testrunner;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 
-import static com.facebook.buck.testutil.OutputHelper.containsBuckTestOutputLine;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -34,37 +33,30 @@ public class DryRunIgnoreTestNGTest {
   @Rule
   public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
-  private ProjectWorkspace workspace;
-
-  @Before
-  public void setUpWorkspace() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "dry_run_testng", temporaryFolder);
-    workspace.setUp();
-  }
-
   @Test
   public void shouldNotListIgnoredTestsInDryRun() throws IOException {
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("test", "--all", "--dry-run");
-    result.assertSuccess();
-    assertThat(
-        "One test will be run, and one will be skipped.",
-        result.getStderr(),
-        containsBuckTestOutputLine(
-            "DRYRUN", 1, 1, 0, "com.example.DryRunTestNGTest"));
+    assertOneTest(
+        "0 Passed   0 Skipped   0 Failed   com.example.DryRunTestNGTest",
+        "test", "--all", "--dry-run");
   }
 
   @Test
   public void shouldNotListIgnoredTestsInActualRun() throws IOException {
-    ProjectWorkspace.ProcessResult result =
-        workspace.runBuckCommand("test", "--all");
-    result.assertSuccess();
-    assertThat(
-        "One test should run/pass, the other one is not enabled",
-        result.getStderr(),
-        containsBuckTestOutputLine(
-            "PASS", 1, 1, 0, "com.example.DryRunTestNGTest"));
+    assertOneTest(
+        "1 Passed   0 Skipped   0 Failed   com.example.DryRunTestNGTest",
+        "test", "--all");
   }
 
+  private void assertOneTest(String expectedOutput, String... args) throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "dry_run_testng", temporaryFolder);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(args);
+    result.assertSuccess();
+    assertThat(
+        "Of the two tests, only one shall pass, because the other one is not enabled",
+        result.getStderr(),
+        containsString(expectedOutput));
+  }
 }

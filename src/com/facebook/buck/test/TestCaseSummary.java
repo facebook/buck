@@ -37,10 +37,10 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
 
   private final String testCaseName;
   private final ImmutableList<TestResultSummary> testResults;
+  private final boolean isSuccess;
   private final boolean isDryRun;
   private final boolean hasAssumptionViolations;
   private final int skippedCount;
-  private final int passCount;
   private final int failureCount;
   private final long totalTime;
   private final boolean isCached;
@@ -52,22 +52,20 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
     this.testCaseName = testCaseName;
     this.testResults = ImmutableList.copyOf(testResults);
 
+    boolean isSuccess = true;
     boolean isDryRun = false;
     boolean hasAssumptionViolations = false;
     int skippedCount = 0;
     int failureCount = 0;
-    int passCount = 0;
     long totalTime = 0L;
     for (TestResultSummary result : testResults) {
       totalTime += result.getTime();
       switch (result.getType()) {
         case SUCCESS:
-          ++passCount;
           break;
 
         case DRY_RUN:
           isDryRun = true;
-          ++passCount;  // "pass" in the sense that it confirms the class can be loaded
           break;
 
         case DISABLED:
@@ -75,6 +73,7 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
           break;
 
         case EXCLUDED:
+          ++skippedCount;
           break;
 
         case ASSUMPTION_VIOLATION:
@@ -83,15 +82,16 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
           break;
 
         case FAILURE:
+          isSuccess = false;
           ++failureCount;
           break;
       }
     }
+    this.isSuccess = isSuccess;
     this.isDryRun = isDryRun;
     this.hasAssumptionViolations = hasAssumptionViolations;
     this.skippedCount = skippedCount;
     this.failureCount = failureCount;
-    this.passCount = passCount;
     this.totalTime = totalTime;
     this.isCached = false;
   }
@@ -100,23 +100,18 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
   private TestCaseSummary(TestCaseSummary summary, boolean isCached) {
     this.testCaseName = summary.testCaseName;
     this.testResults = summary.testResults;
+    this.isSuccess = summary.isSuccess;
     this.isDryRun = summary.isDryRun;
     this.hasAssumptionViolations = summary.hasAssumptionViolations;
     this.skippedCount = summary.skippedCount;
-    this.passCount = summary.passCount;
     this.failureCount = summary.failureCount;
     this.totalTime = summary.totalTime;
     this.isCached = isCached;
   }
 
-  @JsonIgnore
-  public boolean isDryRun() {
-    return isDryRun;
-  }
-
   @Override
   public boolean isSuccess() {
-    return failureCount == 0;
+    return isSuccess;
   }
 
   @Override
@@ -155,7 +150,7 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
         severityLevel = Ansi.SeverityLevel.WARNING;
         statusText = "ASSUME";
       } else {
-        if (passCount == 0) {
+        if (testResults.isEmpty()) {
           severityLevel = Ansi.SeverityLevel.WARNING;
           statusText = "NOTESTS";
         } else {
@@ -192,7 +187,7 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
 
   @JsonIgnore
   public int getPassedCount() {
-    return passCount;
+    return testResults.size() - failureCount - skippedCount;
   }
 
   @Override
@@ -215,22 +210,14 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
   }
 
   private String getShortStatusSummaryString() {
-    if (isDryRun) {
-      return "DRYRUN";
-    }
-    if (failureCount > 0) {
-      return "FAIL";
-    }
-    if (passCount > 0) {
-      return "PASS";
-    }
-    if (skippedCount > 0) {
+    if (isSuccess) {
       if (hasAssumptionViolations) {
         return "ASSUME";
       } else {
-        return "SKIPPED";
+        return "PASS";
       }
+    } else {
+      return "FAIL";
     }
-    return "NOTESTS";
   }
 }

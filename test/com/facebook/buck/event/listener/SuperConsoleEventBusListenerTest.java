@@ -1558,7 +1558,7 @@ public class SuperConsoleEventBusListenerTest {
             Joiner.on('\n').join(
                 "RESULTS FOR ALL TESTS",
                 "ASSUME  <100ms  0 Passed   1 Skipped   0 Failed   TestClass",
-                "NO TESTS RAN (assumption violations)",
+                "TESTS PASSED (with some assumption violations)",
                 "")),
         // We don't care about stderr, since the last frame will be flushed there.
         Optional.empty());
