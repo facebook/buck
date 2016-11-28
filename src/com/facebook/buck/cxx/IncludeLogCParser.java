@@ -98,6 +98,24 @@ class IncludeLogCParser {
   }
 
   /**
+   * is it a bogus, faux-file such as "<built-in>"?  Strip these chars, invalid on some OSes.
+   */
+  private String scrubPathString(String in) {
+    StringBuilder cleanPathBuilder = new StringBuilder();
+    for (char c : in.toCharArray()) {
+      if (// weird ASCII control codes, including NUL; filter them
+          (c < ' ') ||
+          // non-comprehensive set of invalid Windows chars
+          ("<>:|\"".indexOf(c) != -1)) {
+        c = '_';
+      }
+      cleanPathBuilder.append(c);
+    }
+
+    return cleanPathBuilder.toString();
+  }
+
+  /**
    * Recursive parse function.
    * @param parent the entry built upon seeing the inclusion, the target of which was the includer
    *        of futures includes encountered.  This is {@code null} iff this is at the top-level,
@@ -129,28 +147,19 @@ class IncludeLogCParser {
         quoteKind = (contents.charAt(0) == '<')
                     ? IncludeLogEntry.QuoteKind.ANGLE
                     : IncludeLogEntry.QuoteKind.QUOTE;
-        parameter = contents.substring(1, contents.length() - 1);
+        parameter = scrubPathString(contents.substring(1, contents.length() - 1));
         continue;
       }
 
       Matcher lineMarkerMatch = LINE_MARKER_PATTERN.matcher(line);
       if (lineMarkerMatch.matches()) {
         Set<Integer> flags = parseFlags(lineMarkerMatch.group("flags"));
-        final String path = Escaper.unescapeLineMarkerPath(lineMarkerMatch.group("path"));
-        // is it a bogus, faux-file such as "<built-in>"?  Strip these chars, invalid on some OSes.
-        StringBuilder cleanPathBuilder = new StringBuilder();
-        for (char c : path.toCharArray()) {
-          if (// weird ASCII control codes, including NUL; filter them
-              (c < ' ') ||
-              // non-comprehensive set of invalid Windows chars
-              ("<>:|\"".indexOf(c) != -1)) {
-            c = '_';
-          }
-          cleanPathBuilder.append(c);
-        }
+
+        String path = Escaper.unescapeLineMarkerPath(lineMarkerMatch.group("path"));
+        path = scrubPathString(path);
 
         // Path obj representation of the include parameter.  (Not checked for validity/existence)
-        nextFile = MorePaths.fixPath(Paths.get(cleanPathBuilder.toString()));
+        nextFile = MorePaths.fixPath(Paths.get(path));
 
         if (flags.contains(1)) {
           // flag #1 indicates we're entering a new file.

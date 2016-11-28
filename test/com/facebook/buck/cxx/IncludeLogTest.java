@@ -188,7 +188,7 @@ public class IncludeLogTest {
     assertEquals(
         ImmutableList.<IncludeLogEntry>of(
             angled("test.cpp", "fo\\o.h", "dir/with/_Quote/\\Backslash/fo\\o.h"),
-            quoted("test.cpp", "ba>r.h", "dir/with/_Quote/\\Backslash/ba_r.h")),
+            quoted("test.cpp", "ba_r.h", "dir/with/_Quote/\\Backslash/ba_r.h")),
         includeLog.getEntries());
   }
 
