@@ -86,6 +86,7 @@ java_library(
   autodeps = True,
   visibility = [
     '//src/com/facebook/buck/cli:cli',
+    '//src/com/facebook/buck/parser:config',
     '//test/...',
   ],
 )

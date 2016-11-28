@@ -30,6 +30,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.WatchmanWatcher.CursorType;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -83,6 +84,72 @@ public class ParserConfigTest {
           reader).getView(ParserConfig.class);
       assertThat(config.getGlobHandler(), Matchers.equalTo(handler));
     }
+  }
+
+  @Test
+  public void testGetWatchCells() throws IOException {
+    assertFalse(
+        "watch_cells defaults to false",
+        FakeBuckConfig.builder().build().getView(ParserConfig.class).getWatchCells());
+
+    Reader reader = new StringReader(
+        Joiner.on('\n').join(
+            "[project]",
+            "watch_cells = true"));
+    ParserConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
+        temporaryFolder,
+        reader).getView(ParserConfig.class);
+    assertTrue(config.getWatchCells());
+
+    reader = new StringReader(
+        Joiner.on('\n').join(
+            "[project]",
+            "watch_cells = false"));
+    config = BuckConfigTestUtils.createWithDefaultFilesystem(
+        temporaryFolder,
+        reader).getView(ParserConfig.class);
+    assertFalse(config.getWatchCells());
+  }
+
+  @Test
+  public void testGetWatchmanCursor() throws IOException {
+    assertEquals(
+        "watchman_cursor defaults to named",
+        CursorType.NAMED,
+        FakeBuckConfig.builder().build().getView(ParserConfig.class).getWatchmanCursor());
+
+    Reader reader = new StringReader(
+        Joiner.on('\n').join(
+            "[project]",
+            "watchman_cursor = clock_id"));
+    ParserConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
+        temporaryFolder,
+        reader).getView(ParserConfig.class);
+    assertEquals(
+        CursorType.CLOCK_ID,
+        config.getWatchmanCursor());
+
+    reader = new StringReader(
+        Joiner.on('\n').join(
+            "[project]",
+            "watchman_cursor = named"));
+    config = BuckConfigTestUtils.createWithDefaultFilesystem(
+        temporaryFolder,
+        reader).getView(ParserConfig.class);
+    assertEquals(
+        CursorType.NAMED,
+        config.getWatchmanCursor());
+
+    reader = new StringReader(
+        Joiner.on('\n').join(
+            "[project]",
+            "watchman_cursor = some_trash_value"));
+    config = BuckConfigTestUtils.createWithDefaultFilesystem(
+        temporaryFolder,
+        reader).getView(ParserConfig.class);
+
+    thrown.expect(HumanReadableException.class);
+    config.getWatchmanCursor();
   }
 
   @Test

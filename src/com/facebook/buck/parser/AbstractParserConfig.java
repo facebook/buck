@@ -20,6 +20,7 @@ import com.facebook.buck.config.ConfigView;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.python.PythonBuckConfig;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.WatchmanWatcher;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -151,6 +152,18 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public Optional<Long> getWatchmanQueryTimeoutMs() {
     return getDelegate().getLong("project", "watchman_query_timeout_ms");
+  }
+
+  @Value.Lazy
+  public boolean getWatchCells() {
+    return getDelegate().getBooleanValue("project", "watch_cells", false);
+  }
+
+  @Value.Lazy
+  public WatchmanWatcher.CursorType getWatchmanCursor() {
+    return getDelegate()
+      .getEnum("project", "watchman_cursor", WatchmanWatcher.CursorType.class)
+      .orElse(WatchmanWatcher.CursorType.NAMED);
   }
 
   @Value.Lazy

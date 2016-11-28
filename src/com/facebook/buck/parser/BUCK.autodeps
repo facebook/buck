@@ -3,6 +3,7 @@
     "deps" : [
       "//src/com/facebook/buck/python:config",
       "//src/com/facebook/buck/util:util",
+      "//src/com/facebook/buck/util:watchman",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [

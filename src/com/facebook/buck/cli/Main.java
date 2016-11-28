@@ -369,13 +369,9 @@ public final class Main {
       if (!initWebServer()) {
         LOG.warn("Can't start web server");
       }
-      Optional<WatchmanWatcher.CursorType> watchmanCursorType = cell.getBuckConfig().getEnum(
-          "project",
-          "watchman_cursor",
-          WatchmanWatcher.CursorType.class);
       ImmutableMap.Builder<Path, WatchmanCursor> cursorBuilder = ImmutableMap.builder();
-      if (watchmanCursorType.isPresent() &&
-          watchmanCursorType.get() == WatchmanWatcher.CursorType.CLOCK_ID &&
+      if (cell.getBuckConfig().getView(ParserConfig.class).getWatchmanCursor() ==
+          WatchmanWatcher.CursorType.CLOCK_ID &&
           !cell.getWatchman().getClockIds().isEmpty()) {
         for (Map.Entry<Path, String> entry : cell.getWatchman().getClockIds().entrySet()) {
           cursorBuilder.put(entry.getKey(), new WatchmanCursor(entry.getValue()));
@@ -821,7 +817,7 @@ public final class Main {
     ImmutableSet<Path> projectWatchList = ImmutableSet.<Path>builder()
       .add(canonicalRootPath)
       .addAll(
-          config.getBooleanValue("project", "watch_cells", false) ?
+          buckConfig.getView(ParserConfig.class).getWatchCells() ?
               cellPathResolver.getTransitivePathMapping().values() :
               ImmutableList.of())
       .build();
