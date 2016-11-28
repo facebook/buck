@@ -31,9 +31,9 @@ import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -146,12 +146,15 @@ abstract class RustCompile extends AbstractBuildRule {
     linkerArgs.addAll(linker.get().getCommandPrefix(getResolver()));
     linkerArgs.addAll(this.linkerArgs);
 
+    SourcePathResolver resolver = getResolver();
+
     return ImmutableList.of(
         new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),
         new SymlinkFilesIntoDirectoryStep(
             getProjectFilesystem(),
             getProjectFilesystem().getRootPath(),
-            getResolver().deprecatedAllPaths(srcs),
+            srcs.stream().map(resolver::getRelativePath)
+                .collect(MoreCollectors.toImmutableList()),
             scratchDir),
         new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()),
         new RustCompileStep(
@@ -177,11 +180,12 @@ abstract class RustCompile extends AbstractBuildRule {
 
   @VisibleForTesting
   Path getCrateRoot() {
-    ImmutableList<Path> candidates = ImmutableList.copyOf(
-        FluentIterable.from(getResolver().deprecatedAllPaths(srcs))
-            .filter(
-                path -> path.endsWith(getDefaultSource()) ||
-                    path.endsWith(String.format("%s.rs", crate))));
+    SourcePathResolver resolver = getResolver();
+    ImmutableList<Path> candidates = srcs.stream()
+        .map(resolver::getRelativePath)
+        .filter(p -> p.endsWith(getDefaultSource()) ||
+                     p.endsWith(String.format("%s.rs", crate)))
+        .collect(MoreCollectors.toImmutableList());
     if (candidates.size() != 1) {
       throw new HumanReadableException(
           "srcs of %s must contain either %s or %s.rs!",
