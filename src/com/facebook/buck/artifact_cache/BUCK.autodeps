@@ -1,6 +1,7 @@
 {
   "artifact_cache" : {
     "deps" : [
+      "//src/com/facebook/buck/log/views:views",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [

@@ -29,6 +29,7 @@
     "deps" : [
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/log/views:views",
       "//src/com/facebook/buck/util:util",
       "//third-party/java/immutables:processor"
     ],
@@ -107,16 +108,19 @@
   },
   "rule_key" : {
     "deps" : [
+      "//src/com/facebook/buck/log/views:views",
       "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [
-      "//third-party/java/guava:guava"
+      "//third-party/java/guava:guava",
+      "//third-party/java/jackson:jackson-annotations"
     ]
   },
   "rules" : {
     "deps" : [
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/log/views:views",
       "//src/com/facebook/buck/model:simple_types",
       "//src/com/facebook/buck/rules:build_event",
       "//src/com/facebook/buck/step/fs:fs",

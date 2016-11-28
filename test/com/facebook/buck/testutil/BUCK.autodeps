@@ -5,9 +5,12 @@
       "//src/com/facebook/buck/io:DefaultProjectFilesystemDelegate",
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/shell:steps",
+      "//src/com/facebook/buck/util:object_mapper",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/timing:testutil",
+      "//third-party/java/jackson:jackson-core",
+      "//third-party/java/jackson:jackson-databind",
       "//third-party/java/jimfs:jimfs"
     ],
     "exported_deps" : [

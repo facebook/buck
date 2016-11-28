@@ -69,6 +69,18 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
     this(BuildTargetFactory.newInstance(target), new FakeProjectFilesystem(), resolver, deps);
   }
 
+  public static FakeBuildRule newEmptyInstance(String name) {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(name);
+    return new FakeBuildRule(
+        buildTarget,
+        new SourcePathResolver(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY,
+                new DefaultTargetNodeToBuildRuleTransformer())
+        ),
+        ImmutableSortedSet.of());
+  }
+
   @Override
   public Path getPathToOutput() {
     return outputFile;
@@ -84,4 +96,5 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
       BuildableContext buildableContext) {
     return ImmutableList.of();
   }
+
 }

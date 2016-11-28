@@ -168,8 +168,9 @@ public class RuleKeyLoggerListener implements BuckEventListener {
   }
 
   private void flushLogLines() throws IOException {
-    List<String> linesToFlush = logLines;
+    List<String> linesToFlush;
     synchronized (lock) {
+      linesToFlush = logLines;
       logLines = Lists.newArrayList();
       logLinesCount = logLines.size();
     }

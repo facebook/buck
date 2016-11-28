@@ -24,6 +24,7 @@ import com.facebook.buck.log.Logger;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.parser.ParseEvent;
+import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsEvent;
@@ -87,6 +88,11 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   @Subscribe
   public void parseFinished(ParseEvent.Finished event) {
     writeToLog("ParseFinished", event);
+  }
+
+  @Subscribe
+  public void buildRuleEventFinished(BuildRuleEvent.Finished event) {
+    writeToLog("BuildRuleEvent.Finished", event);
   }
 
   @Subscribe

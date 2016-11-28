@@ -18,6 +18,7 @@ package com.facebook.buck.test;
 
 import com.facebook.buck.model.BuildTarget;
 
+import com.facebook.buck.test.result.type.ResultType;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Paths;
@@ -45,5 +46,15 @@ public class FakeTestResults {
         .setTestCases(testCases)
         .setTestLogPaths(testLogs)
         .build();
+  }
+
+  public static TestResults newFailedInstance(String name) {
+    String testCaseName = name;
+    TestResultSummary testResultSummary = new TestResultSummary(
+        testCaseName, null, ResultType.FAILURE, 0, null, null, null, null);
+    TestCaseSummary testCase = new TestCaseSummary(testCaseName,
+        ImmutableList.of(testResultSummary));
+    ImmutableList<TestCaseSummary> testCases = ImmutableList.of(testCase);
+    return FakeTestResults.of(testCases);
   }
 }

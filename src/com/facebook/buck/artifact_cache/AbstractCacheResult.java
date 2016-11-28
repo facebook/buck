@@ -16,8 +16,10 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
@@ -52,9 +54,11 @@ abstract class AbstractCacheResult {
           Optional.empty());
 
   @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
   @JsonProperty("type") public abstract CacheResultType getType();
 
   @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
   @JsonProperty("cacheSource") protected abstract Optional<String> cacheSource();
 
   @Value.Parameter

@@ -21,7 +21,9 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
+import com.facebook.buck.log.views.JsonViews;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.hash.HashCode;
 
 import java.util.Optional;
@@ -37,6 +39,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     this.rule = rule;
   }
 
+  @JsonView(JsonViews.MachineReadableLog.class)
   public BuildRule getBuildRule() {
     return rule;
   }
@@ -134,10 +137,12 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       this.inputsSize = inputsSize;
     }
 
+    @JsonView(JsonViews.MachineReadableLog.class)
     public BuildRuleStatus getStatus() {
       return status;
     }
 
+    @JsonView(JsonViews.MachineReadableLog.class)
     public CacheResult getCacheResult() {
       return cacheResult;
     }
@@ -147,12 +152,12 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       return successType;
     }
 
-    @JsonIgnore
+    @JsonView(JsonViews.MachineReadableLog.class)
     public BuildRuleKeys getRuleKeys() {
       return ruleKeys;
     }
 
-    @JsonIgnore
+    @JsonView(JsonViews.MachineReadableLog.class)
     public Optional<HashCode> getOutputHash() {
       return outputHash;
     }

@@ -16,50 +16,35 @@
 
 package com.facebook.buck.event;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.model.BuildId;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.BuildEvent;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleEvent;
 import com.facebook.buck.rules.BuildRuleKeys;
-import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.test.FakeTestResults;
-import com.facebook.buck.test.TestCaseSummary;
-import com.facebook.buck.test.TestResultSummary;
-import com.facebook.buck.test.TestResults;
-import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
+import com.facebook.buck.testutil.JsonMatcher;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Random;
 
@@ -164,7 +149,7 @@ public class EventSerializationTest {
 
   @Test
   public void testBuildRuleEventStarted() throws IOException {
-    BuildRule rule = generateFakeBuildRule();
+    BuildRule rule = FakeBuildRule.newEmptyInstance("//fake:rule");
     BuildRuleEvent.Started event = BuildRuleEvent.started(rule);
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = MAPPER.writeValueAsString(event);
@@ -177,7 +162,7 @@ public class EventSerializationTest {
 
   @Test
   public void testBuildRuleEventFinished() throws IOException {
-    BuildRule rule = generateFakeBuildRule();
+    BuildRule rule = FakeBuildRule.newEmptyInstance("//fake:rule");
     BuildRuleEvent.Finished event =
         BuildRuleEvent.finished(
             rule,
@@ -198,7 +183,10 @@ public class EventSerializationTest {
             "\"buildRule\":{\"type\":" +
             "\"fake_build_rule\",\"name\":\"//fake:rule\"}," +
             "\"type\":\"BuildRuleFinished\",\"ruleRunningAfterThisEvent\":false," +
-            "\"eventKey\":{\"value\":1024186770}}",
+            "\"eventKey\":{\"value\":1024186770}," +
+            "\"ruleKeys\":{\"ruleKey\":{\"hashCode\":\"aaaa\"}," +
+            "\"inputRuleKey\":{\"present\":false}}," +
+            "\"outputHash\":{\"present\":false}},",
         message);
   }
 
@@ -217,7 +205,7 @@ public class EventSerializationTest {
   public void testTestRunEventFinished() throws IOException {
     TestRunEvent.Finished event = TestRunEvent.finished(
         ImmutableSet.of("target"),
-        ImmutableList.of(generateFakeTestResults()));
+        ImmutableList.of(FakeTestResults.newFailedInstance("Test1")));
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = MAPPER.writeValueAsString(event);
     assertJsonEquals("{%s," +
@@ -247,7 +235,7 @@ public class EventSerializationTest {
   @Test
   public void testIndividualTestEventFinished() throws IOException {
     IndividualTestEvent.Finished event = IndividualTestEvent.finished(ImmutableList.of(),
-        generateFakeTestResults());
+        FakeTestResults.newFailedInstance("Test1"));
     event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = MAPPER.writeValueAsString(event);
     assertJsonEquals("{%s,\"eventKey\":{\"value\":-594614477}," +
@@ -277,51 +265,7 @@ public class EventSerializationTest {
         message);
   }
 
-  private BuildRule generateFakeBuildRule() {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//fake:rule");
-    return new FakeBuildRule(
-        buildTarget,
-        new SourcePathResolver(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        ),
-        ImmutableSortedSet.of());
-  }
-
-  private TestResults generateFakeTestResults() {
-    String testCaseName = "Test1";
-    TestResultSummary testResultSummary = new TestResultSummary(
-        testCaseName, null, ResultType.FAILURE, 0, null, null, null, null);
-    TestCaseSummary testCase = new TestCaseSummary(testCaseName,
-        ImmutableList.of(testResultSummary));
-    ImmutableList<TestCaseSummary> testCases = ImmutableList.of(testCase);
-    return FakeTestResults.of(testCases);
-  }
-
-  private void matchJsonObjects(String path, JsonNode expected, JsonNode actual) {
-    if (expected != null && actual != null && expected.isObject()) {
-      assertTrue(actual.isObject());
-      HashSet<String> expectedFields = Sets.newHashSet(expected.fieldNames());
-      HashSet<String> actualFields = Sets.newHashSet(actual.fieldNames());
-
-      for (String field : expectedFields) {
-        assertTrue(
-            String.format("Expecting field %s at path %s", field, path),
-            actualFields.contains(field));
-        matchJsonObjects(path + "/" + field, expected.get(field), actual.get(field));
-      }
-      assertEquals("Found unexpected fields",
-          Sets.newHashSet(), Sets.difference(actualFields, expectedFields));
-    }
-    assertEquals(
-        "At path " + path,
-        expected,
-        actual);
-  }
-
   private void assertJsonEquals(String expected, String actual) throws IOException {
-    JsonFactory factory = MAPPER.getFactory();
     String commonHeader = String.format(
         "\"timestamp\":%d,\"nanoTime\":%d,\"threadUserNanoTime\":%d," +
             "\"threadId\":%d,\"buildId\":\"%s\"",
@@ -330,11 +274,6 @@ public class EventSerializationTest {
         threadUserNanoTime,
         threadId,
         buildId);
-    JsonParser jsonParser = factory.createParser(String.format(expected, commonHeader));
-    JsonNode expectedObject = MAPPER.readTree(jsonParser);
-    jsonParser = factory.createParser(actual);
-    JsonNode actualObject = MAPPER.readTree(jsonParser);
-    matchJsonObjects("/", expectedObject, actualObject);
-    assertEquals(expectedObject, actualObject);
+    assertThat(actual, new JsonMatcher(String.format(expected, commonHeader)));
   }
 }

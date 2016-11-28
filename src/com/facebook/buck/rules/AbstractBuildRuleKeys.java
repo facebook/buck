@@ -16,7 +16,10 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+
+import com.fasterxml.jackson.annotation.JsonView;
 
 import org.immutables.value.Value;
 
@@ -27,8 +30,10 @@ import java.util.Optional;
 interface AbstractBuildRuleKeys {
 
   @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
   RuleKey getRuleKey();
 
+  @JsonView(JsonViews.MachineReadableLog.class)
   Optional<RuleKey> getInputRuleKey();
 
 }

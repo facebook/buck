@@ -17,12 +17,14 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.step.Step;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -39,6 +41,7 @@ public interface BuildRule extends Comparable<BuildRule>, HasBuildTarget {
   BuildTarget getBuildTarget();
 
   @JsonProperty("name")
+  @JsonView(JsonViews.MachineReadableLog.class)
   String getFullyQualifiedName();
 
   @JsonProperty("type")

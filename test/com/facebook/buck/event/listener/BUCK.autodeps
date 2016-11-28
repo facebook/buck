@@ -17,6 +17,7 @@
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/jvm/java/tracing:tracing",
       "//src/com/facebook/buck/log:log",
+      "//src/com/facebook/buck/log/views:views",
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:parser",

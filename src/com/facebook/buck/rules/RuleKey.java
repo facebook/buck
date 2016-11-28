@@ -16,6 +16,9 @@
 
 package com.facebook.buck.rules;
 
+import com.facebook.buck.log.views.JsonViews;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.base.Objects;
 import com.google.common.hash.HashCode;
 
@@ -58,6 +61,8 @@ public class RuleKey {
 
   /** @return the {@code toString()} of the hash code that underlies this RuleKey. */
   @Override
+  @JsonProperty("hashCode")
+  @JsonView(JsonViews.MachineReadableLog.class)
   public String toString() {
     return getHashCode().toString();
   }
