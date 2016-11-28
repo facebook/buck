@@ -3,6 +3,7 @@
     "deps" : [
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/model:simple_types",
+      "//src/com/facebook/buck/rage:config",
       "//src/com/facebook/buck/util/unit:unit",
       "//third-party/java/jackson:jackson-core"
     ],
