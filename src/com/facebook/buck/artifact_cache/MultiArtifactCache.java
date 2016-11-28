@@ -74,7 +74,7 @@ public class MultiArtifactCache implements ArtifactCache {
               .addRuleKeys(ruleKey)
               .setMetadata(cacheResult.getMetadata())
               .build(),
-          BorrowablePath.borrowablePath(output.getUnchecked()));
+          BorrowablePath.notBorrowablePath(output.getUnchecked()));
     }
     return cacheResult;
   }
