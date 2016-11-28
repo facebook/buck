@@ -99,6 +99,8 @@ class BuckTool(object):
         self._command_line = CommandLineArgs(sys.argv)
         self._buck_project = buck_project
         self._tmp_dir = self._platform_path(buck_project.tmp_dir)
+        self._stdout_file = os.path.join(self._tmp_dir, "stdout")
+        self._stderr_file = os.path.join(self._tmp_dir, "stderr")
 
         self._pathsep = os.pathsep
         if (sys.platform == 'cygwin'):
@@ -191,10 +193,13 @@ class BuckTool(object):
             command.append("com.facebook.buck.cli.Main")
             command.extend(sys.argv[1:])
 
-            return subprocess.call(command,
-                                   cwd=self._buck_project.root,
-                                   env=env,
-                                   executable=which("java"))
+            if True:
+                buck_exit_code = subprocess.call(command,
+                                                 cwd=self._buck_project.root,
+                                                 env=env,
+                                                 executable=which("java"))
+            return buck_exit_code
+
 
     def launch_buckd(self, buck_version_uid=None):
         with Tracing('BuckRepo.launch_buckd'):
