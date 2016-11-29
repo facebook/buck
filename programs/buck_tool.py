@@ -358,6 +358,9 @@ class BuckTool(object):
     def _get_java_classpath(self):
         raise NotImplementedError()
 
+    def _is_buck_production(self):
+        raise NotImplementedError()
+
     def _get_extra_java_args(self):
         return []
 

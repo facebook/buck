@@ -342,14 +342,18 @@ class BuckRepo(BuckTool):
 
             return buck_version.get_dirty_buck_version(self._buck_dir)
 
+    def _is_buck_production(self):
+        return False
+
     def _get_extra_java_args(self):
         return [
             "-Dbuck.git_commit={0}".format(self._get_git_revision()),
             "-Dbuck.git_commit_timestamp={0}".format(
                 self._get_git_commit_timestamp()),
             "-Dbuck.git_dirty={0}".format(
-                int(self._is_buck_repo_dirty_override == "1" or
-                    buck_version.is_dirty(self._buck_dir))),
+              int(self._is_buck_repo_dirty_override == "1" or
+                  buck_version.is_dirty(self._buck_dir))),
+            "-Dbuck.production_mode=0",
         ]
 
     def _get_bootstrap_classpath(self):
