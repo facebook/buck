@@ -36,7 +36,7 @@ public class SwiftBuckConfigTest {
         FakeBuckConfig.builder().setSections(
             ImmutableMap.of(
                 "swift",
-                ImmutableMap.of("compile_flags", "-g")))
+                ImmutableMap.of("compiler_flags", "-g")))
             .build());
     assertThat(swiftBuckConfig.getFlags(), not(equalTo(Optional.empty())));
     assertThat(swiftBuckConfig.getFlags().get(), contains("-g"));

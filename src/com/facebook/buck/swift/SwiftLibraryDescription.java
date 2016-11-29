@@ -238,6 +238,7 @@ public class SwiftLibraryDescription implements
               params.getProjectFilesystem(),
               buildTarget, "%s"),
           args.srcs,
+          args.compilerFlags,
           args.enableObjcInterop,
           args.bridgingHeader);
     }

@@ -57,7 +57,11 @@ class SwiftDescriptions {
       BuildTarget buildTarget) {
 
     output.srcs = filterSwiftSources(sourcePathResolver, args.srcs);
-    output.compilerFlags = args.compilerFlags;
+    if (args instanceof HasSwiftCompilerFlags) {
+      output.compilerFlags = ((HasSwiftCompilerFlags) args).getSwiftCompilerFlags();
+    } else {
+      output.compilerFlags = args.compilerFlags;
+    }
     output.frameworks = args.frameworks;
     output.libraries = args.libraries;
     output.deps = args.deps;
