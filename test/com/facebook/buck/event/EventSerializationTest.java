@@ -185,7 +185,9 @@ public class EventSerializationTest {
             "\"type\":\"BuildRuleFinished\",\"ruleRunningAfterThisEvent\":false," +
             "\"eventKey\":{\"value\":1024186770}," +
             "\"ruleKeys\":{\"ruleKey\":{\"hashCode\":\"aaaa\"}," +
-            "\"inputRuleKey\":{\"present\":false}}," +
+            "\"inputRuleKey\":{\"present\":false}," +
+            "\"depFileRuleKey\":{\"present\":false}," +
+            "\"manifestRuleKey\":{\"present\":false}}," +
             "\"outputHash\":{\"present\":false}},",
         message);
   }

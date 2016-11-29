@@ -996,6 +996,12 @@ public class CachingBuildEngine implements BuildEngine {
                             .setInputRuleKey(
                                 onDiskBuildInfo.getRuleKey(
                                     BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY))
+                            .setDepFileRuleKey(
+                                onDiskBuildInfo.getRuleKey(
+                                    BuildInfo.MetadataKey.DEP_FILE_RULE_KEY))
+                            .setManifestRuleKey(
+                                onDiskBuildInfo.getRuleKey(
+                                    BuildInfo.MetadataKey.MANIFEST_KEY))
                             .build(),
                         input.getStatus(),
                         input.getCacheResult(),

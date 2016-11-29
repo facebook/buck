@@ -35,5 +35,7 @@ interface AbstractBuildRuleKeys {
 
   @JsonView(JsonViews.MachineReadableLog.class)
   Optional<RuleKey> getInputRuleKey();
+  Optional<RuleKey> getDepFileRuleKey();
+  Optional<RuleKey> getManifestRuleKey();
 
 }
