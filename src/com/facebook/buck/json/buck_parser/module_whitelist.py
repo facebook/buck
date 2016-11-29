@@ -13,8 +13,9 @@ import imp
 
 
 class NoopImportWhitelistManager(object):
+    @contextlib.contextmanager
     def allow_unsafe_import(self, allow=True):
-        return
+        yield
 
 
 class ImportWhitelistManager(object):
