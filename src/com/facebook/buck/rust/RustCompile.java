@@ -37,7 +37,6 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
@@ -77,7 +76,7 @@ abstract class RustCompile extends AbstractBuildRule {
   @AddToRuleKey
   private final String crate;
 
-  private final ImmutableSortedSet<Path> nativePaths;
+  private final ImmutableSet<Path> nativePaths;
 
   private final Path scratchDir;
   private final Path output;
@@ -89,7 +88,7 @@ abstract class RustCompile extends AbstractBuildRule {
       ImmutableSet<SourcePath> srcs,
       ImmutableList<String> flags,
       ImmutableSet<String> features,
-      ImmutableSortedSet<Path> nativePaths,
+      ImmutableSet<Path> nativePaths,
       Path output,
       Supplier<Tool> compiler,
       Supplier<Tool> linker,

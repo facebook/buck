@@ -29,7 +29,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -41,6 +40,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -56,30 +56,31 @@ public class RustBinaryDescriptionTest {
   // Return all output paths of transitive dependencies, subject to predicate filter.
   private static ImmutableSet<String> getTransitiveOutputPaths(
       RustBinary binary,
-      BuildRuleResolver resolver,
       Linker.LinkableDepType linktype,
       Predicate<BuildRule> filter) {
+    Stream<Path> nativepaths = RustLinkables.getNativePaths(
+        binary.getDeps().stream(),
+        linktype,
+        CxxPlatformUtils.DEFAULT_PLATFORM);
+    ImmutableSortedSet<BuildRule> deps = binary.getDeps();
+
     return Stream.concat(
-        binary.getDeps().stream()
+        nativepaths,
+        deps.stream()
             .filter(filter)
             .map(BuildRule::getPathToOutput)
-            .filter(Objects::nonNull),
-        RustLinkables.getNativePaths(
-            binary.getDeps().stream(),
-            new SourcePathResolver(resolver),
-            linktype,
-            CxxPlatformUtils.DEFAULT_PLATFORM))
-        .map(path -> path.getFileName().toString())
-        .collect(MoreCollectors.toImmutableSet());
+            .filter(Objects::nonNull)
+    )
+    .map(Path::getFileName)
+    .map(Path::toString)
+    .collect(MoreCollectors.toImmutableSet());
   }
 
   private static ImmutableSet<String> getLinkablePaths(
       RustBinary binary,
-      BuildRuleResolver resolve,
       Linker.LinkableDepType linktype) {
     return getTransitiveOutputPaths(
         binary,
-        resolve,
         linktype,
         rule -> rule instanceof RustLinkable);
   }
@@ -108,7 +109,7 @@ public class RustBinaryDescriptionTest {
     rustBuilder.build(resolver);
     RustBinary binary = (RustBinary) binaryBuilder.build(resolver);
     assertEquals(
-        getLinkablePaths(binary, resolver, Linker.LinkableDepType.SHARED),
+        getLinkablePaths(binary, Linker.LinkableDepType.SHARED),
         ImmutableSet.of("libsimple_dep.rlib"));
   }
 
@@ -144,7 +145,7 @@ public class RustBinaryDescriptionTest {
     rustBuilder.build(resolver);
     RustBinary binary = (RustBinary) binaryBuilder.build(resolver);
     assertEquals(
-        getLinkablePaths(binary, resolver, Linker.LinkableDepType.STATIC),
+        getLinkablePaths(binary, Linker.LinkableDepType.STATIC),
         ImmutableSet.of("libsimple_dep.rlib", "libtransitive_dep.a"));
   }
 
@@ -180,7 +181,7 @@ public class RustBinaryDescriptionTest {
     rustBuilder.build(resolver);
     RustBinary binary = (RustBinary) binaryBuilder.build(resolver);
     assertEquals(
-        getLinkablePaths(binary, resolver, Linker.LinkableDepType.SHARED),
+        getLinkablePaths(binary, Linker.LinkableDepType.SHARED),
         ImmutableSet.of("libsimple_dep.rlib", "libtransitive_dep.so"));
   }
 
@@ -213,7 +214,7 @@ public class RustBinaryDescriptionTest {
     rustBuilder.build(resolver);
     RustBinary binary = (RustBinary) binaryBuilder.build(resolver);
     assertEquals(
-        getLinkablePaths(binary, resolver, Linker.LinkableDepType.SHARED),
+        getLinkablePaths(binary, Linker.LinkableDepType.SHARED),
         ImmutableSet.of("libsimple_dep.rlib", "libtransitive_dep.so"));
   }
 
@@ -241,7 +242,7 @@ public class RustBinaryDescriptionTest {
     cxxBuilder.build(resolver);
     RustBinary binary = (RustBinary) binaryBuilder.build(resolver);
     assertEquals(
-        getLinkablePaths(binary, resolver, Linker.LinkableDepType.SHARED),
+        getLinkablePaths(binary, Linker.LinkableDepType.SHARED),
         ImmutableSet.of("libsimple_dep.so"));
   }
 
@@ -269,7 +270,7 @@ public class RustBinaryDescriptionTest {
     cxxBuilder.build(resolver);
     RustBinary binary = (RustBinary) binaryBuilder.build(resolver);
     assertEquals(
-        getLinkablePaths(binary, resolver, Linker.LinkableDepType.STATIC),
+        getLinkablePaths(binary, Linker.LinkableDepType.STATIC),
         ImmutableSet.of("libsimple_dep.a"));
   }
 
@@ -295,7 +296,7 @@ public class RustBinaryDescriptionTest {
     cxxBuilder.build(resolver);
     RustBinary binary = (RustBinary) binaryBuilder.build(resolver);
     assertEquals(
-        getLinkablePaths(binary, resolver, Linker.LinkableDepType.SHARED),
+        getLinkablePaths(binary, Linker.LinkableDepType.SHARED),
         ImmutableSet.of("libsimple_dep.so"));
   }
 
@@ -331,7 +332,7 @@ public class RustBinaryDescriptionTest {
     cxxBuilder.build(resolver);
     RustBinary binary = (RustBinary) binaryBuilder.build(resolver);
     assertEquals(
-        getLinkablePaths(binary, resolver, Linker.LinkableDepType.SHARED),
+        getLinkablePaths(binary, Linker.LinkableDepType.SHARED),
         ImmutableSet.of("libsimple_dep.so"));
   }
 
@@ -367,7 +368,7 @@ public class RustBinaryDescriptionTest {
     cxxBuilder.build(resolver);
     RustBinary binary = (RustBinary) binaryBuilder.build(resolver);
     assertEquals(
-        getLinkablePaths(binary, resolver, Linker.LinkableDepType.STATIC),
+        getLinkablePaths(binary, Linker.LinkableDepType.STATIC),
         ImmutableSet.of("libsimple_dep.a", "libtransitive_dep.a"));
   }
 
@@ -403,7 +404,7 @@ public class RustBinaryDescriptionTest {
     cxxBuilder.build(resolver);
     RustBinary binary = (RustBinary) binaryBuilder.build(resolver);
     assertEquals(
-        getTransitiveOutputPaths(binary, resolver, Linker.LinkableDepType.STATIC, x -> true),
+        getTransitiveOutputPaths(binary, Linker.LinkableDepType.STATIC, x -> true),
         ImmutableSet.of("gen-thing.rs", "libsimple_dep.a"));
   }
 }

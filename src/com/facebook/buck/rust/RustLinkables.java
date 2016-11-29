@@ -24,7 +24,10 @@ import com.facebook.buck.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.HasSourcePath;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -93,24 +96,40 @@ public class RustLinkables {
     return builder.build();
   }
 
-  private static Stream<BuildRule> getNativeDeps(
+  private static Stream<Arg> getNativeDeps(
       Stream<BuildRule> deps,
-      SourcePathResolver resolver,
       Linker.LinkableDepType linkStyle,
       CxxPlatform cxxPlatform) {
     return deps
         .flatMap(rule -> getNativeLinkableInputs(rule, linkStyle, cxxPlatform).stream())
-        .flatMap(nli -> nli.getArgs().stream())
-        .flatMap(arg -> arg.getDeps(resolver).stream());
+        .flatMap(nli -> nli.getArgs().stream());
   }
 
   static Stream<Path> getNativePaths(
       Stream<BuildRule> deps,
-      SourcePathResolver resolver,
       Linker.LinkableDepType linkStyle,
       CxxPlatform cxxPlatform) {
-    return getNativeDeps(deps, resolver, linkStyle, cxxPlatform)
-              .map(BuildRule::getPathToOutput);
+    // This gets the dependency as a stream of Arg objects. These represent options
+    // to be passed to the linker, but we really just want the pathnames. We can identify
+    // those by checking for implementors of HasSourcePath. This has the effect of dropping
+    // the other options like --whole-archive which may cause linker errors if required.
+    return getNativeDeps(deps, linkStyle, cxxPlatform)
+        .filter(arg -> arg instanceof HasSourcePath)
+        .map(arg -> (HasSourcePath) arg)
+        .map(arg -> {
+              SourcePath sourcePath = arg.getPath();
+              SourcePathResolver sourcePathResolver = arg.getPathResolver();
+              return sourcePathResolver.getAbsolutePath(sourcePath);
+            });
+  }
+
+  static ImmutableSet<Path> getNativeDirs(
+      Stream<BuildRule> deps,
+      Linker.LinkableDepType linkStyle,
+      CxxPlatform cxxPlatform) {
+    return getNativePaths(deps, linkStyle, cxxPlatform)
+        .map(Path::getParent)
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   static BuildRuleParams addNativeDependencies(
@@ -119,7 +138,8 @@ public class RustLinkables {
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType linkStyle) {
     return params.appendExtraDeps(
-        () -> getNativeDeps(params.getDeps().stream(), resolver, linkStyle, cxxPlatform)
-                .collect(MoreCollectors.toImmutableList()));
+        () -> getNativeDeps(params.getDeps().stream(), linkStyle, cxxPlatform)
+            .flatMap(arg -> arg.getDeps(resolver).stream())
+            .collect(MoreCollectors.toImmutableList()));
   }
 }

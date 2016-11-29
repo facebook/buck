@@ -34,6 +34,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
@@ -117,7 +118,7 @@ public class RustCompileTest {
           srcs,
           /* flags */ ImmutableList.of(),
           /* features */ ImmutableSortedSet.of(),
-          /* nativePaths */ ImmutableSortedSet.of(),
+          /* nativePaths */ ImmutableSet.of(),
           Paths.get("somewhere"),
           () -> fakeTool(),
           () -> fakeTool(),

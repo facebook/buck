@@ -102,10 +102,10 @@ public class RustCompileStep extends ShellStep {
           String.format("dependency=%s", path));
     }
 
-    for (Path path : nativeDeps) {
+    for (Path dir : nativeDeps) {
       commandBuilder.add(
           "-L",
-          String.format("native=%s", path.getParent()));
+          String.format("native=%s", dir));
     }
 
     return commandBuilder

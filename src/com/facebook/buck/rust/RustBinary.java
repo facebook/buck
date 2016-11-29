@@ -28,11 +28,9 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 
 
 public class RustBinary extends RustCompile implements BinaryBuildRule {
@@ -59,8 +57,7 @@ public class RustBinary extends RustCompile implements BinaryBuildRule {
             .addAll(rustcFlags)
             .build(),
         features,
-        RustLinkables.getNativePaths(params.getDeps().stream(), resolver, linkStyle, cxxPlatform)
-            .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural())),
+        RustLinkables.getNativeDirs(params.getDeps().stream(), linkStyle, cxxPlatform),
         BuildTargets.getGenPath(
             params.getProjectFilesystem(),
             params.getBuildTarget(),
