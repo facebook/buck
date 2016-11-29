@@ -67,6 +67,10 @@ public class CxxWriteArgsToFileStepTest {
         ImmutableList.of(new StringArg("-dummy"), new StringArg("foo")),
         ImmutableList.of("-dummy", "bar"),
         projectFilesystem.getRootPath());
+
+    // cleanup after test
+    Files.deleteIfExists(fileListPath);
+    Files.deleteIfExists(fileListPath.getParent());
   }
 
   private void runTestForArgFilePathAndOutputPath(
