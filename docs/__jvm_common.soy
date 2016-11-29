@@ -10,3 +10,16 @@
   {/param}
 {/call}
 {/template}
+
+/***/
+{template .compiler_class_name_arg}
+{call buck.arg}
+  {param name: 'compiler_class_name' /}
+  {param default : '<global value>' /}
+  {param desc}
+  Specifies the Java compiler class name to use in tandem with javac_jar.
+  Overrides the value in <a
+  href="{ROOT}concept/buckconfig.html#tools.compiler_class_name"><code>.buckconfig</code></a>.
+  {/param}
+{/call}
+{/template}

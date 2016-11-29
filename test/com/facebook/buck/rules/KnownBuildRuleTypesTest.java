@@ -114,6 +114,7 @@ public class KnownBuildRuleTypesTest {
     arg.javaVersion = Optional.empty();
     arg.javac = Optional.empty();
     arg.javacJar = Optional.empty();
+    arg.compilerClassName = Optional.empty();
     arg.compiler = Optional.empty();
     arg.extraArguments = ImmutableList.of();
     arg.removeClasses = ImmutableSet.of();

@@ -91,4 +91,9 @@ public class JarBackedJavac extends Jsr199Javac {
   Iterable<SourcePath> getCompilerClassPath() {
     return classpath;
   }
+
+  @VisibleForTesting
+  String getCompilerClassName() {
+    return compilerClassName;
+  }
 }

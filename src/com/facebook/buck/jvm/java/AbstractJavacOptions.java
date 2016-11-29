@@ -82,6 +82,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
 
   protected abstract Optional<Either<Path, SourcePath>> getJavacPath();
   protected abstract Optional<SourcePath> getJavacJarPath();
+  protected abstract Optional<String> getCompilerClassName();
 
   @Value.Default
   protected SpoolMode getSpoolMode() {
@@ -147,7 +148,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
         return ExternalJavac.createJavac(getJavacPath().get());
       case JAR:
         return new JarBackedJavac(
-            "com.sun.tools.javac.api.JavacTool",
+            getCompilerClassName().orElse("com.sun.tools.javac.api.JavacTool"),
             ImmutableSet.of(getJavacJarPath().get()));
       case JDK:
         return new JdkProvidedInMemoryJavac();

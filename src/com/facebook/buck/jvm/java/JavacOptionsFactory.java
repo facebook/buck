@@ -79,6 +79,7 @@ public final class JavacOptionsFactory {
         builder.setJavacPath(
             jvmLibraryArg.javac.map(Either::ofLeft));
         builder.setJavacJarPath(jvmLibraryArg.javacJar);
+        builder.setCompilerClassName(jvmLibraryArg.compilerClassName);
       }
     }
 

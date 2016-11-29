@@ -38,6 +38,7 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
   public Optional<String> javaVersion;
   public Optional<Path> javac;
   public Optional<SourcePath> javacJar;
+  public Optional<String> compilerClassName;
   public Optional<Either<BuiltInJavac, SourcePath>> compiler;
   public ImmutableList<String> extraArguments = ImmutableList.of();
   public ImmutableSet<Pattern> removeClasses = ImmutableSet.of();

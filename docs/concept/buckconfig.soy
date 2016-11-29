@@ -2671,6 +2671,15 @@ your <code>.buckjavaargs</code> file</a>:
 
 {call buckconfig.entry}
   {param section: 'tools' /}
+  {param name: 'compiler_class_name' /}
+  {param description}
+    When javac_jar is set, Buck loads the referenced compiler class name from the jar.
+    When it is not set but javac_jar is set, Buck uses the default compiler class.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'tools' /}
   {param name: 'proguard' /}
   {param description}
     This option specifies the location of the JAR file to be used
