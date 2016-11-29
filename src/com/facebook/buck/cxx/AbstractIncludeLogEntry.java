@@ -118,6 +118,11 @@ abstract class AbstractIncludeLogEntry {
   @Value.Parameter
   public abstract String getParameter();
 
+  @Value.Derived
+  public Path getParameterAsPath() {
+    return Paths.get(this.getParameter());
+  }
+
   /**
    * The path that was included, after resolution w/r/t the includer.
    * Only affects quoted includes.
@@ -146,6 +151,20 @@ abstract class AbstractIncludeLogEntry {
   @Value.Derived
   public Path getNextFile() {
     return MorePaths.fixPath(getOrigNextFile());
+  }
+
+  /**
+   * Example: {@code #include "foo/bar.h"} resolved to {@code some/path/foo/bar.h}.  We'll deduce
+   * that the include path that was used to resolve this was {@code some/path}, by stripping off
+   * each of the name parts in the inclusion parameter {@code foo/bar.h}.
+   */
+  @Value.Derived
+  public Path getEffectivePath() {
+    final int stripCount = getParameterAsPath().getNameCount();
+    final int thisNameCount = getCurrentFile().getNameCount();
+    return (thisNameCount > stripCount)
+           ? getCurrentFile().subpath(0, thisNameCount - stripCount)
+           : MorePaths.EMPTY_PATH;
   }
 
   public void write(PrintWriter out) {
@@ -218,19 +237,6 @@ abstract class AbstractIncludeLogEntry {
     }
 
     return Optional.empty();
-  }
-
-  private Path getEffectivePath() {
-    // example:
-    // #include "foo/bar.h" resolved to "some/path/foo/bar.h".
-    // Strip off the "foo/bar.h" from the end of the resolved path, to get the apparent path used
-    // to resolve the inclusion.
-    Path ret = getCurrentFile();
-    int stripCount = Paths.get(this.getParameter()).getNameCount();
-    for (int i = 0; i < stripCount && ret.getNameCount() > 1; i++) {
-      ret = ret.getParent();
-    }
-    return ret;
   }
 
   public boolean tryResolveUsingPaths(ImmutableList<Path> paths, Function<Path, Boolean> validate) {

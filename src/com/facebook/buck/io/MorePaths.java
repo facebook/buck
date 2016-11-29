@@ -45,7 +45,7 @@ public class MorePaths {
   /** Utility class: do not instantiate. */
   private MorePaths() {}
 
-  private static final Path EMPTY_PATH = Paths.get("");
+  public static final Path EMPTY_PATH = Paths.get("");
 
   public static String pathWithUnixSeparators(String path) {
     return pathWithUnixSeparators(Paths.get(path));
