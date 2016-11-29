@@ -16,6 +16,9 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.log.views.JsonViews;
+import com.fasterxml.jackson.annotation.JsonView;
+
 public class ParsingEvent extends AbstractBuckEvent implements BroadcastEvent {
   private final String eventName;
 
@@ -43,6 +46,7 @@ public class ParsingEvent extends AbstractBuckEvent implements BroadcastEvent {
   }
 
   public static class SymlinkInvalidation extends ParsingEvent {
+    @JsonView(JsonViews.MachineReadableLog.class)
     String path;
 
     public SymlinkInvalidation(String path) {
@@ -56,6 +60,7 @@ public class ParsingEvent extends AbstractBuckEvent implements BroadcastEvent {
   }
 
   public static class EnvVariableChange extends ParsingEvent {
+    @JsonView(JsonViews.MachineReadableLog.class)
     private final String diff;
 
     public EnvVariableChange(String diff) {

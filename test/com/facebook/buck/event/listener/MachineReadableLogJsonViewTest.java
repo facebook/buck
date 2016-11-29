@@ -20,6 +20,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.event.ParsingEvent;
+import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.rules.BuildRule;
@@ -65,6 +67,34 @@ public class MachineReadableLogJsonViewTest {
     threadUserNanoTime = new Random().nextLong();
     threadId = 0;
     buildId = new BuildId("Test");
+  }
+
+  @Test
+  public void testWatchmanEvents() throws Exception {
+    WatchmanStatusEvent createEvent = WatchmanStatusEvent.fileCreation("filename_new");
+    WatchmanStatusEvent deleteEvent = WatchmanStatusEvent.fileDeletion("filename_del");
+    WatchmanStatusEvent overflowEvent = WatchmanStatusEvent.overflow("reason");
+
+    // Configure the events so timestamps etc are there.
+    createEvent.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    deleteEvent.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    overflowEvent.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+
+    assertJsonEquals("{%s,\"filename\":\"filename_new\"}", WRITER.writeValueAsString(createEvent));
+    assertJsonEquals("{%s,\"filename\":\"filename_del\"}", WRITER.writeValueAsString(deleteEvent));
+    assertJsonEquals("{%s,\"reason\":\"reason\"}", WRITER.writeValueAsString(overflowEvent));
+  }
+
+  @Test
+  public void testParsingEvents() throws Exception {
+    ParsingEvent symlink = ParsingEvent.symlinkInvalidation("target");
+    ParsingEvent envChange = ParsingEvent.environmentalChange("diff");
+
+    symlink.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    envChange.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+
+    assertJsonEquals("{%s,\"path\":\"target\"}", WRITER.writeValueAsString(symlink));
+    assertJsonEquals("{%s,\"diff\":\"diff\"}", WRITER.writeValueAsString(envChange));
   }
 
   @Test

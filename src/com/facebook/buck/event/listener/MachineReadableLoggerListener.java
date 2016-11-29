@@ -18,6 +18,8 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.ParsingEvent;
+import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.Logger;
@@ -98,6 +100,31 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   @Subscribe
   public void commandFinished(CommandEvent.Finished event) {
     exitCode = OptionalInt.of(event.getExitCode());
+  }
+
+  @Subscribe
+  public synchronized void watchmanFileCreation(WatchmanStatusEvent.FileCreation event) {
+    writeToLog("FileCreate", event);
+  }
+
+  @Subscribe
+  public synchronized void watchmanFileDeletion(WatchmanStatusEvent.FileDeletion event) {
+    writeToLog("FileDelete", event);
+  }
+
+  @Subscribe
+  public void watchmanOverflow(WatchmanStatusEvent.Overflow event) {
+    writeToLog("WatchmanOverflow", event);
+  }
+
+  @Subscribe
+  public synchronized void symlinkInvalidation(ParsingEvent.SymlinkInvalidation event) {
+    writeToLog("SymlinkInvalidation", event);
+  }
+
+  @Subscribe
+  public synchronized void environmentalChange(ParsingEvent.EnvVariableChange event) {
+    writeToLog("EnvChange", event);
   }
 
   private Path getLogFilePath() {

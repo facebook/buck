@@ -16,6 +16,9 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.log.views.JsonViews;
+import com.fasterxml.jackson.annotation.JsonView;
+
 public abstract class WatchmanStatusEvent extends AbstractBuckEvent implements BroadcastEvent {
   private final String eventName;
 
@@ -47,6 +50,7 @@ public abstract class WatchmanStatusEvent extends AbstractBuckEvent implements B
   }
 
   public static class Overflow extends WatchmanStatusEvent {
+    @JsonView(JsonViews.MachineReadableLog.class)
     private String reason;
 
     public Overflow(String reason) {
@@ -60,6 +64,7 @@ public abstract class WatchmanStatusEvent extends AbstractBuckEvent implements B
   }
 
   public static class FileCreation extends WatchmanStatusEvent {
+    @JsonView(JsonViews.MachineReadableLog.class)
     private String filename;
 
     public FileCreation(String filename) {
@@ -73,6 +78,7 @@ public abstract class WatchmanStatusEvent extends AbstractBuckEvent implements B
   }
 
   public static class FileDeletion extends WatchmanStatusEvent {
+    @JsonView(JsonViews.MachineReadableLog.class)
     private String filename;
 
     public FileDeletion(String filename) {
