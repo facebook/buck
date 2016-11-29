@@ -126,25 +126,36 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
     final String relativeLinkTreeRootStr =
         Escaper.escapeAsPythonString(relativeLinkTreeRoot.toString());
     final Linker ld = cxxPlatform.getLd().resolve(resolver);
-    return () -> new ST(getRunInplaceResource())
-        .add("PYTHON", pythonPlatform.getEnvironment().getPythonPath())
-        .add("MAIN_MODULE", Escaper.escapeAsPythonString(mainModule))
-        .add("MODULES_DIR", relativeLinkTreeRootStr)
-        .add(
-            "NATIVE_LIBS_ENV_VAR",
-            Escaper.escapeAsPythonString(ld.searchPathEnvVar()))
-        .add(
-            "NATIVE_LIBS_DIR",
-            components.getNativeLibraries().isEmpty() ?
-                "None" :
-                relativeLinkTreeRootStr)
-        .add(
-            "NATIVE_LIBS_PRELOAD_ENV_VAR",
-            Escaper.escapeAsPythonString(ld.preloadEnvVar()))
-        .add(
-            "NATIVE_LIBS_PRELOAD",
-            Escaper.escapeAsPythonString(Joiner.on(':').join(preloadLibraries)))
-        .render();
+    return () -> {
+        ST st = new ST(getRunInplaceResource())
+            .add("PYTHON", pythonPlatform.getEnvironment().getPythonPath())
+            .add("MAIN_MODULE", Escaper.escapeAsPythonString(mainModule))
+            .add("MODULES_DIR", relativeLinkTreeRootStr);
+
+        // Only add platform-specific values when the binary includes native libraries.
+        if (components.getNativeLibraries().isEmpty()) {
+          st.add("NATIVE_LIBS_ENV_VAR", "None");
+          st.add("NATIVE_LIBS_DIR", "None");
+        } else {
+          st.add(
+              "NATIVE_LIBS_ENV_VAR",
+              Escaper.escapeAsPythonString(ld.searchPathEnvVar()));
+          st.add("NATIVE_LIBS_DIR", relativeLinkTreeRootStr);
+        }
+
+        if (preloadLibraries.isEmpty()) {
+          st.add("NATIVE_LIBS_PRELOAD_ENV_VAR", "None");
+          st.add("NATIVE_LIBS_PRELOAD", "None");
+        } else {
+          st.add(
+              "NATIVE_LIBS_PRELOAD_ENV_VAR",
+              Escaper.escapeAsPythonString(ld.preloadEnvVar()));
+          st.add(
+              "NATIVE_LIBS_PRELOAD",
+              Escaper.escapeAsPythonString(Joiner.on(':').join(preloadLibraries)));
+        }
+        return st.render();
+      };
   }
 
   @Override
