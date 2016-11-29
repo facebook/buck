@@ -94,50 +94,30 @@ public class TargetNodeTypeCoercer extends TypeCoercer<TargetNode<?, ?>> {
       Function<U, U> function,
       Class<U> targetClass,
       Object object) throws CoerceFailedException {
+    TargetNodeStub<?, ?> targetNodeReference = (TargetNodeStub<?, ?>) object;
     if (TargetNode.class.isAssignableFrom(targetClass)) {
-      TargetNode<?, ?> originalTargetNode = (TargetNode<?, ?>) object;
-      TargetNode<?, ?> targetNode = (TargetNode<?, ?>) function.apply((U) object);
-      if (object instanceof TargetNodeStub) {
-        TargetNodeStub<?, ?> targetNodeReference = (TargetNodeStub<?, ?>) object;
-        boolean descriptionMatches = targetNodeReference
-            .getDescriptionType()
-            .isAssignableFrom(targetNode.getDescription().getClass());
-        boolean constructorArgMatches = targetNodeReference
-            .getConstructorArgType()
-            .isAssignableFrom(targetNode.getConstructorArg().getClass());
-        if (!descriptionMatches || !constructorArgMatches) {
-          Class<?> expectedType = targetNodeReference.getDescriptionType();
-          if (expectedType.isInterface() || Modifier.isAbstract(expectedType.getModifiers())) {
-            throw new UnresolvedDescriptionConstraintCoerceFailedException(
-                targetNodeReference.getBuildTarget(),
-                expectedType,
-                targetNode.getDescription());
-          } else {
-            throw new CoerceFailedException(
-                String.format(
-                    "Unexpected target type: expected '%s' to be %s, was '%s'.",
-                    targetNodeReference.getBuildTarget(),
-                    "'" +
-                        Description.getBuildRuleType(targetNodeReference.getDescriptionType()) +
-                        "'",
-                    Description.getBuildRuleType(targetNode.getDescription())));
-          }
-        }
-      } else {
-        boolean descriptionMatches = originalTargetNode
-            .getDescription()
-            .getClass()
-            .isAssignableFrom(targetNode.getDescription().getClass());
-        boolean constructorArgMatches = originalTargetNode
-            .getConstructorArg()
-            .getClass()
-            .isAssignableFrom(targetNode.getConstructorArg().getClass());
-        if (!descriptionMatches || !constructorArgMatches) {
+      TargetNode<?, ?> targetNode = (TargetNode<?, ?>) function.apply((U) targetNodeReference);
+      boolean descriptionMatches = targetNodeReference
+          .getDescriptionType()
+          .isAssignableFrom(targetNode.getDescription().getClass());
+      boolean constructorArgMatches = targetNodeReference
+          .getConstructorArgType()
+          .isAssignableFrom(targetNode.getConstructorArg().getClass());
+      if (!descriptionMatches || !constructorArgMatches) {
+        Class<?> expectedType = targetNodeReference.getDescriptionType();
+        if (expectedType.isInterface() || Modifier.isAbstract(expectedType.getModifiers())) {
+          throw new UnresolvedDescriptionConstraintCoerceFailedException(
+              targetNodeReference.getBuildTarget(),
+              expectedType,
+              targetNode.getDescription());
+        } else {
           throw new CoerceFailedException(
               String.format(
                   "Unexpected target type: expected '%s' to be %s, was '%s'.",
-                  originalTargetNode.getBuildTarget(),
-                  "'" + Description.getBuildRuleType(originalTargetNode.getDescription()) + "'",
+                  targetNodeReference.getBuildTarget(),
+                  "'" +
+                      Description.getBuildRuleType(targetNodeReference.getDescriptionType()) +
+                      "'",
                   Description.getBuildRuleType(targetNode.getDescription())));
         }
       }
@@ -146,7 +126,7 @@ public class TargetNodeTypeCoercer extends TypeCoercer<TargetNode<?, ?>> {
       }
       return targetNode;
     }
-    return mapAllInternal(function, targetClass, (TargetNode<?, ?>) object);
+    return mapAllInternal(function, targetClass, targetNodeReference);
   }
 
   @Override
