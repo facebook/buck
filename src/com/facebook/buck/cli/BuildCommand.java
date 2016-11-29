@@ -32,10 +32,13 @@ import com.facebook.buck.distributed.DistBuildTypeCoercerFactory;
 import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.listener.DistBuildLoggerListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.log.CommandThreadFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.HasBuildTarget;
@@ -73,6 +76,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.versions.VersionException;
@@ -753,6 +757,24 @@ public class BuildCommand extends AbstractCommand {
     }
     return builder.build();
   }
+
+  @Override
+  public Iterable<BuckEventListener> getEventListeners(
+      Path logDirectoryPath,
+      ProjectFilesystem filesystem) {
+    if (!useDistributedBuild) {
+      return ImmutableList.of();
+    }
+
+    return ImmutableList.<BuckEventListener>builder()
+        .add(
+            new DistBuildLoggerListener(
+                logDirectoryPath,
+                filesystem,
+                MostExecutors.newSingleThreadExecutor(
+                    new CommandThreadFactory("DistBuildLoggerListener"))))
+        .build();
+    }
 
   public static class ActionGraphCreationException extends Exception {
     public ActionGraphCreationException(String message) {

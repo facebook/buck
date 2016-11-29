@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.LogRecord;
 import com.facebook.buck.event.AbstractBuckEvent;
@@ -26,6 +27,7 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class DistBuildStatusEvent extends AbstractBuckEvent implements LeafEvent, WorkAdvanceEvent {
@@ -79,5 +81,10 @@ public class DistBuildStatusEvent extends AbstractBuckEvent implements LeafEvent
      * @return the debug info received
      */
     abstract Optional<List<LogRecord>> getLogBook();
+
+    /**
+     * @return info from each slave run, including stdout/stder
+     */
+    abstract Optional<Map<String, BuildSlaveInfo>> getSlaveInfoByRunId();
   }
 }

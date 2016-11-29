@@ -17,9 +17,13 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.config.CellConfig;
+import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigSetup;
+import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 
 public class VersionCommand implements Command {
@@ -73,5 +77,12 @@ public class VersionCommand implements Command {
   @Override
   public LogConfigSetup getLogConfig() {
     return LogConfigSetup.DEFAULT_SETUP;
+  }
+
+  @Override
+  public Iterable<BuckEventListener> getEventListeners(
+      Path logDirectoryPath,
+      ProjectFilesystem filesystem) {
+    return ImmutableList.of();
   }
 }

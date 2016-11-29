@@ -20,6 +20,7 @@ import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildId;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildJobState;
+import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.LogRecord;
 import com.facebook.buck.event.BuckEventBus;
@@ -32,6 +33,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -125,6 +127,11 @@ public class DistBuildClientExecutor {
 
   private DistBuildStatus.Builder prepareStatusFromJob(BuildJob job) {
     Optional<List<LogRecord>> logBook = Optional.empty();
+
+    Optional<Map<String, BuildSlaveInfo>> slaveInfoByRunId =
+        job.isSetSlaveInfoByRunId() ? Optional.of(
+            job.getSlaveInfoByRunId()) :
+            Optional.empty();
     Optional<String> lastLine = Optional.empty();
     if (job.isSetDebug() && job.getDebug().isSetLogBook()) {
       logBook = Optional.of(job.getDebug().getLogBook());
@@ -136,6 +143,7 @@ public class DistBuildClientExecutor {
     return DistBuildStatus.builder()
         .setStatus(job.getStatus())
         .setMessage(lastLine)
+        .setSlaveInfoByRunId(slaveInfoByRunId)
         .setLogBook(logBook);
   }
 

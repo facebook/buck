@@ -30,6 +30,18 @@ struct BuildId {
   1 : optional string id;
 }
 
+struct RunId {
+  1 : optional string id;
+}
+
+struct BuildSlaveInfo {
+  1: optional RunId runId;
+  2: optional string hostname;
+  3: optional string command;
+  4: optional list<string> stdOut;
+  5: optional list<string> stdErr;
+}
+
 enum BuildStatus {
   UNKNOWN = 0,
 
@@ -86,6 +98,7 @@ struct BuildJob {
   2: optional DebugInfo debug;
   3: optional BuildStatus status = BuildStatus.UNKNOWN;
   4: optional BuckVersion buckVersion;
+  5: optional map<string, BuildSlaveInfo> slaveInfoByRunId;
 }
 
 struct Announcement {
@@ -169,7 +182,8 @@ struct SetBuckVersionRequest {
   2: optional BuckVersion buckVersion;
 }
 
-# Used to obtain announcements for users regarding current issues with Buck and solutions.
+# Used to obtain announcements for users regarding current issues with Buck and
+# solutions.
 struct AnnouncementRequest {
   1: optional string buckVersion;
   2: optional string repository;

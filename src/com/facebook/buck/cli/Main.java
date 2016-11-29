@@ -1117,6 +1117,13 @@ public final class Main {
                   executionEnvironment,
                   buckConfig);
 
+          Iterable<BuckEventListener> commandEventListeners =
+              command.getSubcommand().isPresent() ?
+                  command
+                      .getSubcommand()
+                      .get()
+                      .getEventListeners(invocationInfo.getLogDirectoryPath(), filesystem) :
+                  ImmutableList.of();
           eventListeners = addEventListeners(
               buildEventBus,
               rootCell.getFilesystem(),
@@ -1128,7 +1135,8 @@ public final class Main {
               consoleListener,
               rootCell.getKnownBuildRuleTypes(),
               clientEnvironment,
-              counterRegistry
+              counterRegistry,
+              commandEventListeners
           );
 
           if (buckConfig.isPublicAnnouncementsEnabled()) {
@@ -1678,7 +1686,8 @@ public final class Main {
       AbstractConsoleEventBusListener consoleEventBusListener,
       KnownBuildRuleTypes knownBuildRuleTypes,
       ImmutableMap<String, String> environment,
-      CounterRegistry counterRegistry
+      CounterRegistry counterRegistry,
+      Iterable<BuckEventListener> commandSpecificEventListeners
   ) {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder()
@@ -1744,6 +1753,8 @@ public final class Main {
     eventListenersBuilder.add(new LoadBalancerEventsListener(counterRegistry));
     eventListenersBuilder.add(new CacheRateStatsListener(buckEventBus));
     eventListenersBuilder.add(new WatchmanDiagnosticEventListener(buckEventBus));
+
+    eventListenersBuilder.addAll(commandSpecificEventListeners);
 
     ImmutableList<BuckEventListener> eventListeners = eventListenersBuilder.build();
     eventListeners.forEach(buckEventBus::register);
