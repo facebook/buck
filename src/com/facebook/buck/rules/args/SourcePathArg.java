@@ -30,7 +30,7 @@ import java.util.Objects;
 /**
  * An {@link Arg} which wraps a {@link SourcePath}.
  */
-public class SourcePathArg extends Arg {
+public class SourcePathArg extends Arg implements HasSourcePath {
 
   private final SourcePathResolver pathResolver;
   private final SourcePath path;
@@ -106,4 +106,13 @@ public class SourcePathArg extends Arg {
     return from(pathResolver, ImmutableList.copyOf(paths));
   }
 
+  @Override
+  public SourcePath getPath() {
+    return path;
+  }
+
+  @Override
+  public SourcePathResolver getPathResolver() {
+    return pathResolver;
+  }
 }
