@@ -29,7 +29,6 @@ import com.facebook.buck.model.BuildFileTree;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetException;
 import com.facebook.buck.model.FilesystemBackedBuildFileTree;
-import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.OptionalCompat;
@@ -104,13 +103,15 @@ class DaemonicParserState {
    */
   static final int DEFAULT_INITIAL_CAPACITY = 16;
   static final float DEFAULT_LOAD_FACTOR = 0.75f;
-  static final int DEFAULT_TYPE_CACHE_COUNT = 4;
 
-  private class DaemonicCache<T> implements Cache<BuildTarget, T> {
+  /**
+   * Stateless view of caches on object that conforms to {@link PipelineNodeCache.Cache}.
+   */
+  private class DaemonicCacheView<T> implements PipelineNodeCache.Cache<BuildTarget, T> {
 
     private final Class<T> type;
 
-    private DaemonicCache(Class<T> type) {
+    private DaemonicCacheView(Class<T> type) {
       this.type = type;
     }
 
@@ -121,7 +122,7 @@ class DaemonicParserState {
       final Path buildFile = cell.getAbsolutePathToBuildFileUnsafe(target);
       invalidateIfBuckConfigHasChanged(cell, buildFile);
 
-      Cache<BuildTarget, T> state = getCache(cell);
+      PipelineNodeCache.Cache<BuildTarget, T> state = getCache(cell);
       if (state == null) {
         return Optional.empty();
       }
@@ -138,7 +139,7 @@ class DaemonicParserState {
       return getOrCreateCache(cell).putComputedNodeIfNotPresent(cell, target, targetNode);
     }
 
-    private @Nullable Cache<BuildTarget, T> getCache(Cell cell) {
+    private @Nullable PipelineNodeCache.Cache<BuildTarget, T> getCache(Cell cell) {
       DaemonicCellState cellState = getCellState(cell);
       if (cellState == null) {
         return null;
@@ -146,12 +147,16 @@ class DaemonicParserState {
       return cellState.getCache(type);
     }
 
-    private Cache<BuildTarget, T> getOrCreateCache(Cell cell) {
+    private PipelineNodeCache.Cache<BuildTarget, T> getOrCreateCache(Cell cell) {
       return getOrCreateCellState(cell).getOrCreateCache(type);
     }
   }
 
-  private class DaemonicRawCache implements Cache<Path, ImmutableSet<Map<String, Object>>> {
+  /**
+   * Stateless view of caches on object that conforms to {@link PipelineNodeCache.Cache}.
+   */
+  private class DaemonicRawCacheView
+      implements PipelineNodeCache.Cache<Path, ImmutableSet<Map<String, Object>>> {
 
     @Override
     public Optional<ImmutableSet<Map<String, Object>>> lookupComputedNode(
@@ -268,9 +273,9 @@ class DaemonicParserState {
   @GuardedBy("cellStateLock")
   private final ConcurrentMap<Path, DaemonicCellState> cellPathToDaemonicState;
 
-  @GuardedBy("cellStateLock")
-  private final ConcurrentMap<Class<?>, DaemonicCache<?>> typedNodeCaches;
-  private final DaemonicRawCache rawNodeCache;
+  private final LoadingCache<Class<?>, DaemonicCacheView<?>> typedNodeCaches =
+      CacheBuilder.newBuilder().build(CacheLoader.from(cls -> new DaemonicCacheView<>(cls)));
+  private final DaemonicRawCacheView rawNodeCache;
 
   private final int parsingThreads;
 
@@ -347,12 +352,7 @@ class DaemonicParserState {
             DEFAULT_LOAD_FACTOR,
             parsingThreads);
 
-    this.rawNodeCache = new DaemonicRawCache();
-    this.typedNodeCaches =
-        new ConcurrentHashMap<>(
-            DEFAULT_TYPE_CACHE_COUNT,
-            DEFAULT_LOAD_FACTOR,
-            parsingThreads);
+    this.rawNodeCache = new DaemonicRawCacheView();
 
     this.cachedStateLock = new AutoCloseableReadWriteUpdateLock();
     this.cellStateLock = new AutoCloseableReadWriteUpdateLock();
@@ -367,19 +367,22 @@ class DaemonicParserState {
     return buildFileTrees;
   }
 
+  /**
+   * Retrieve the cache view for caching a particular type.
+   *
+   * Note that the output type is not constrained to the type of the Class object to allow for types
+   * with generics.  Care should be taken to ensure that the correct class object is passed in.
+   */
   @SuppressWarnings("unchecked")
-  public <T> Cache<BuildTarget, T> getOrCreateNodeCache(Class<?> cacheType) {
-    try (AutoCloseableLock writeLock = cellStateLock.writeLock()) {
-      DaemonicCache<?> cache = typedNodeCaches.get(cacheType);
-      if (cache == null) {
-        cache = new DaemonicCache<>(cacheType);
-        typedNodeCaches.put(cacheType, cache);
-      }
-      return (Cache<BuildTarget, T>) cache;
+  public <T> PipelineNodeCache.Cache<BuildTarget, T> getOrCreateNodeCache(Class<?> cacheType) {
+    try {
+      return (PipelineNodeCache.Cache<BuildTarget, T>) typedNodeCaches.get(cacheType);
+    } catch (ExecutionException e) {
+      throw new IllegalStateException("typedNodeCaches CacheLoader should not throw.", e);
     }
   }
 
-  public Cache<Path, ImmutableSet<Map<String, Object>>> getRawNodeCache() {
+  public PipelineNodeCache.Cache<Path, ImmutableSet<Map<String, Object>>> getRawNodeCache() {
     return rawNodeCache;
   }
 
