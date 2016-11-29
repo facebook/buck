@@ -244,13 +244,14 @@ public class ActionGraphCache {
     if (event.kind() != StandardWatchEventKinds.ENTRY_MODIFY) {
       LOG.info("ActionGraphCache invalidation due to Watchman event %s.", event);
       invalidateCache();
-
       if (event.kind() == StandardWatchEventKinds.OVERFLOW) {
         broadcastEventListener.broadcast(WatchmanStatusEvent.overflow((String) event.context()));
       } else if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
-        broadcastEventListener.broadcast(WatchmanStatusEvent.fileCreation());
+        broadcastEventListener.broadcast(
+            WatchmanStatusEvent.fileCreation(event.context().toString()));
       } else if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
-        broadcastEventListener.broadcast(WatchmanStatusEvent.fileDeletion());
+        broadcastEventListener.broadcast(
+            WatchmanStatusEvent.fileDeletion(event.context().toString()));
       }
     }
   }

@@ -24,8 +24,8 @@ public class ParsingEvent extends AbstractBuckEvent implements BroadcastEvent {
     this.eventName = eventName;
   }
 
-  public static SymlinkInvalidation symlinkInvalidation() {
-    return new SymlinkInvalidation();
+  public static SymlinkInvalidation symlinkInvalidation(String path) {
+    return new SymlinkInvalidation(path);
   }
 
   public static EnvVariableChange environmentalChange(String diff) {
@@ -43,8 +43,15 @@ public class ParsingEvent extends AbstractBuckEvent implements BroadcastEvent {
   }
 
   public static class SymlinkInvalidation extends ParsingEvent {
-    public SymlinkInvalidation() {
+    String path;
+
+    public SymlinkInvalidation(String path) {
       super(EventKey.unique(), "SymlinkInvalidation");
+      this.path = path;
+    }
+
+    public String getPath() {
+      return path;
     }
   }
 

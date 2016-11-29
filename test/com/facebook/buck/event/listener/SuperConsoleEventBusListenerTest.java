@@ -2086,15 +2086,15 @@ public class SuperConsoleEventBusListenerTest {
     assertEquals(createParsingMessage(EMOJI_SNAIL, overflowMessage), listener.getParsingStatus());
 
     // file added scenario
-    eventBus.post(WatchmanStatusEvent.fileCreation());
+    eventBus.post(WatchmanStatusEvent.fileCreation("and you know you're going to fall"));
     assertEquals(createParsingMessage(EMOJI_SNAIL, "File added"), listener.getParsingStatus());
 
     // file removed scenario
-    eventBus.post(WatchmanStatusEvent.fileDeletion());
+    eventBus.post(WatchmanStatusEvent.fileDeletion("Tell 'em a hookah-smoking"));
     assertEquals(createParsingMessage(EMOJI_SNAIL, "File removed"), listener.getParsingStatus());
 
     // symlink invalidation scenario
-    eventBus.post(ParsingEvent.symlinkInvalidation());
+    eventBus.post(ParsingEvent.symlinkInvalidation("caterpillar has given you the call"));
     assertEquals(
         createParsingMessage(EMOJI_WHALE, "Symlink caused cache invalidation"),
         listener.getParsingStatus());

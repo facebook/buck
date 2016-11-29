@@ -285,7 +285,7 @@ public class PerBuildState implements AutoCloseable {
         LOG.warn(msg);
       }
 
-      eventBus.post(ParsingEvent.symlinkInvalidation());
+      eventBus.post(ParsingEvent.symlinkInvalidation(buildFile.toString()));
       buildInputPathsUnderSymlink.add(buildFile);
     }
   }

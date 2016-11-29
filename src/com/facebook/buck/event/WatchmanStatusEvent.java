@@ -38,12 +38,12 @@ public abstract class WatchmanStatusEvent extends AbstractBuckEvent implements B
     return new Overflow(reason);
   }
 
-  public static FileCreation fileCreation() {
-    return new FileCreation();
+  public static FileCreation fileCreation(String filename) {
+    return new FileCreation(filename);
   }
 
-  public static FileDeletion fileDeletion() {
-    return new FileDeletion();
+  public static FileDeletion fileDeletion(String filename) {
+    return new FileDeletion(filename);
   }
 
   public static class Overflow extends WatchmanStatusEvent {
@@ -60,14 +60,29 @@ public abstract class WatchmanStatusEvent extends AbstractBuckEvent implements B
   }
 
   public static class FileCreation extends WatchmanStatusEvent {
-    public FileCreation() {
+    private String filename;
+
+    public FileCreation(String filename) {
       super(EventKey.unique(), "WatchmanFileCreation");
+      this.filename = filename;
+    }
+
+    public String getFilename() {
+      return this.filename;
     }
   }
 
   public static class FileDeletion extends WatchmanStatusEvent {
-    public FileDeletion() {
+    private String filename;
+
+    public FileDeletion(String filename) {
       super(EventKey.unique(), "WatchmanFileDeletion");
+      this.filename = filename;
+    }
+
+    public String getFilename() {
+      return this.filename;
     }
   }
+
 }
