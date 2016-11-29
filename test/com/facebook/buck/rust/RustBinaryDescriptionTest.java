@@ -68,7 +68,7 @@ public class RustBinaryDescriptionTest {
             binary.getDeps().stream(),
             new SourcePathResolver(resolver),
             linktype,
-            CxxPlatformUtils.DEFAULT_PLATFORM).stream())
+            CxxPlatformUtils.DEFAULT_PLATFORM))
         .map(path -> path.getFileName().toString())
         .collect(MoreCollectors.toImmutableSet());
   }
