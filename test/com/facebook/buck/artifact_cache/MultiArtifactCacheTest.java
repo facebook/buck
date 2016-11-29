@@ -22,17 +22,26 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.BorrowablePath;
 import com.facebook.buck.io.LazyPath;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
+
+import javax.annotation.Nullable;
 
 public class MultiArtifactCacheTest {
 
@@ -105,6 +114,85 @@ public class MultiArtifactCacheTest {
     assertEquals("MultiArtifactCache.store() should store to all contained ArtifactCaches",
         dummyArtifactCache2.storeKey,
         dummyRuleKey);
+
+    multiArtifactCache.close();
+  }
+
+  private static class SimpleArtifactCache implements ArtifactCache {
+    private final ProjectFilesystem filesystem;
+    @Nullable
+    public AtomicReference<RuleKey> storedKey;
+
+    public SimpleArtifactCache(ProjectFilesystem filesystem) {
+      this.filesystem = filesystem;
+      this.storedKey = new AtomicReference<>(null);
+    }
+
+    @Override
+    public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
+      if (ruleKey.equals(storedKey.get())) {
+        try {
+          filesystem.touch(output.get());
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+        return CacheResult.hit("cache");
+      } else {
+        return CacheResult.miss();
+      }
+    }
+
+    @Override
+    public ListenableFuture<Void> store(
+        ArtifactInfo info, BorrowablePath output) {
+      if (output.canBorrow()) {
+        try {
+          filesystem.deleteFileAtPath(output.getPath());
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
+      storedKey.set(Iterables.getFirst(info.getRuleKeys(), null));
+      return Futures.immediateFuture(null);
+    }
+
+    @Override
+    public boolean isStoreSupported() {
+      return true;
+    }
+
+    @Override
+    public void close() {
+    }
+  }
+
+  @Test
+  public void testCacheStoreWithBorrowablePathConsumingCache()
+      throws InterruptedException, IOException, ExecutionException {
+    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRoot());
+    Path fetchFile = filesystem.resolve("fetch_file");
+
+    SimpleArtifactCache fakeDirCache = new SimpleArtifactCache(filesystem);
+    SimpleArtifactCache fakeReadOnlyCache = new SimpleArtifactCache(filesystem) {
+      @Override
+      public boolean isStoreSupported() {
+        return false;
+      }
+    };
+    MultiArtifactCache multiArtifactCache = new MultiArtifactCache(ImmutableList.of(
+        fakeDirCache,
+        fakeReadOnlyCache));
+
+    fakeReadOnlyCache.storedKey.set(dummyRuleKey);
+
+    multiArtifactCache.fetch(
+        dummyRuleKey,
+        LazyPath.ofInstance(fetchFile));
+
+    assertThat(
+        "The .get() call should not delete the path it's fetching.",
+        filesystem.exists(fetchFile),
+        Matchers.is(true));
 
     multiArtifactCache.close();
   }
