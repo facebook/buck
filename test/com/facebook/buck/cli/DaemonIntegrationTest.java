@@ -559,16 +559,28 @@ public class DaemonIntegrationTest {
         ImmutableMap.of("project", ImmutableMap.of("watchman_cursor", cursorType)));
 
     primary.runBuckdCommand("build", "//:cxxbinary").assertSuccess();
+    ProcessResult result = primary.runBuckdCommand("run", "//:cxxbinary");
+    result.assertSuccess();
 
     String fileName = "sum.cpp";
-    Files.write(secondary.getPath(fileName), "#error Failure".getBytes(Charsets.US_ASCII));
+    Files.write(secondary.getPath(fileName), "#error Failure".getBytes(Charsets.UTF_8));
 
-    ProcessResult result = primary.runBuckdCommand("build", "//:cxxbinary");
+    result = primary.runBuckdCommand("build", "//:cxxbinary");
     assertThat(
         "Failure should be due to compilation error.",
         result.getStderr(),
         containsString("#error Failure"));
     result.assertFailure();
+
+    // Make the file valid again, but change the output
+    Files.write(
+        secondary.getPath(fileName),
+        "#include \"sum.hpp\"\nint sum(int a, int b) {return a;}".getBytes(Charsets.UTF_8));
+
+    primary.runBuckdCommand("build", "//:cxxbinary").assertSuccess();
+    result = primary.runBuckdCommand("run", "//:cxxbinary");
+    result.assertFailure();
+
   }
 
   @Test
