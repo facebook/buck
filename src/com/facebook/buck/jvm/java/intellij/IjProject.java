@@ -204,6 +204,7 @@ public class IjProject {
         targetGraphAndTargets.getTargetGraph(),
         libraryFactory,
         new IjModuleFactory(
+            projectFilesystem,
             moduleFactoryResolver,
             projectConfig,
             excludeArtifacts),
@@ -216,7 +217,8 @@ public class IjProject {
     IjProjectWriter writer = new IjProjectWriter(
         new IjProjectTemplateDataPreparer(parsingJavaPackageFinder, moduleGraph, projectFilesystem),
         projectConfig,
-        projectFilesystem);
+        projectFilesystem,
+        moduleGraph);
     writer.write(runPostGenerationCleaner, removeUnusedLibraries);
     return requiredBuildTargets.build();
   }

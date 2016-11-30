@@ -45,6 +45,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -576,6 +577,7 @@ public class IjModuleFactoryTest {
 
   private IjModuleFactory createIjModuleFactory(BuckConfig buckConfig) {
     return new IjModuleFactory(
+        new FakeProjectFilesystem(),
         new IjModuleFactory.IjModuleFactoryResolver() {
           @Override
           public Optional<Path> getDummyRDotJavaPath(TargetNode<?, ?> targetNode) {

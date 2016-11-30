@@ -21,6 +21,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Resources;
 
@@ -37,6 +38,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 /**
  * Writes the serialized representations of IntelliJ project components to disk.
  */
@@ -51,7 +54,8 @@ public class IjProjectWriter {
     MODULE_TEMPLATE("ij-module.st"),
     MODULE_INDEX_TEMPLATE("ij-module-index.st"),
     MISC_TEMPLATE("ij-misc.st"),
-    LIBRARY_TEMPLATE("ij-library.st");
+    LIBRARY_TEMPLATE("ij-library.st"),
+    GENERATED_BY_IDEA_CLASS("GeneratedByIdeaClass.st");
 
     private final String fileName;
     StringTemplateFile(String fileName) {
@@ -66,14 +70,17 @@ public class IjProjectWriter {
   private IjProjectTemplateDataPreparer projectDataPreparer;
   private IjProjectConfig projectConfig;
   private ProjectFilesystem projectFilesystem;
+  private IjModuleGraph moduleGraph;
 
   public IjProjectWriter(
       IjProjectTemplateDataPreparer projectDataPreparer,
       IjProjectConfig projectConfig,
-      ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem,
+      IjModuleGraph moduleGraph) {
     this.projectDataPreparer = projectDataPreparer;
     this.projectConfig = projectConfig;
     this.projectFilesystem = projectFilesystem;
+    this.moduleGraph = moduleGraph;
   }
 
   public void write(
@@ -83,9 +90,15 @@ public class IjProjectWriter {
 
     writeProjectSettings(cleaner, projectConfig);
 
+    boolean generateClasses = !projectConfig.isAutogenerateAndroidFacetSourcesEnabled();
+
     for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
       Path generatedModuleFile = writeModule(module);
       cleaner.doNotDelete(generatedModuleFile);
+
+      if (generateClasses) {
+        writeClassesGeneratedByIdea(module, cleaner);
+      }
     }
     for (IjLibrary library : projectDataPreparer.getLibrariesToBeWritten()) {
       Path generatedLibraryFile = writeLibrary(library);
@@ -201,6 +214,88 @@ public class IjProjectWriter {
 
     writeToFile(moduleIndexContents, path);
     return path;
+  }
+
+  private void writeClassesGeneratedByIdea(
+      IjModule module,
+      IJProjectCleaner cleaner) throws IOException {
+    Optional<IjModuleAndroidFacet> androidFacet = module.getAndroidFacet();
+    if (!androidFacet.isPresent()) {
+      return;
+    }
+
+    Optional<String> packageName = getResourcePackage(module, androidFacet.get());
+    if (!packageName.isPresent()) {
+      return;
+    }
+
+    writeGeneratedByIdeaClassToFile(
+        androidFacet.get(),
+        cleaner,
+        packageName.get(),
+        "BuildConfig",
+        "  public final static boolean DEBUG = Boolean.parseBoolean(null);");
+
+    writeGeneratedByIdeaClassToFile(
+        androidFacet.get(),
+        cleaner,
+        packageName.get(),
+        "R",
+        null);
+
+    writeGeneratedByIdeaClassToFile(
+        androidFacet.get(),
+        cleaner,
+        packageName.get(),
+        "Manifest",
+        null);
+  }
+
+  private void writeGeneratedByIdeaClassToFile(
+      IjModuleAndroidFacet androidFacet,
+      IJProjectCleaner cleaner,
+      String packageName,
+      String className,
+      @Nullable String content) throws IOException {
+
+    ST contents = getST(StringTemplateFile.GENERATED_BY_IDEA_CLASS)
+        .add("package", packageName)
+        .add("className", className)
+        .add("content", content);
+
+    Path fileToWrite = androidFacet
+        .getGeneratedSourcePath()
+        .resolve(packageName.replace(".", "/"))
+        .resolve(className + ".java");
+
+    cleaner.doNotDelete(fileToWrite);
+
+    writeToFile(contents, fileToWrite);
+  }
+
+  private Optional<String> getResourcePackage(
+      IjModule module,
+      IjModuleAndroidFacet androidFacet) {
+    Optional<String> packageName = androidFacet.getPackageName();
+    if (!packageName.isPresent()) {
+      packageName = getFirstResourcePackageFromDependencies(module);
+    }
+    return packageName;
+  }
+
+  private Optional<String> getFirstResourcePackageFromDependencies(IjModule module) {
+    ImmutableMap<IjModule, IjModuleGraph.DependencyType> deps =
+        moduleGraph.getDependentModulesFor(module);
+    for (IjModule dep : deps.keySet()) {
+      Optional<IjModuleAndroidFacet> facet = dep.getAndroidFacet();
+      if (facet.isPresent()) {
+        Optional<String> packageName = facet.get().getPackageName();
+        if (packageName.isPresent()) {
+          return packageName;
+        }
+      }
+    }
+    return Optional.empty();
   }
 
   private static ST getST(StringTemplateFile file) throws IOException {

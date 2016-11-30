@@ -5,6 +5,7 @@ standard_java_library(
     'IjModuleAndroidFacet',
   ],
   resources = [
+    'GeneratedByIdeaClass.st',
     'ij-library.st',
     'ij-misc.st',
     'ij-module.st',

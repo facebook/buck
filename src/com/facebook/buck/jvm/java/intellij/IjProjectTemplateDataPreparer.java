@@ -385,7 +385,7 @@ public class IjProjectTemplateDataPreparer {
 
     addAndroidApkPaths(androidProperties, module, basePath, androidFacet);
     addAndroidAssetPaths(androidProperties, androidFacet);
-    addAndroidGenPath(androidProperties, basePath);
+    addAndroidGenPath(androidProperties, androidFacet, basePath);
     addAndroidManifestPath(androidProperties, basePath, androidFacet);
     addAndroidProguardPath(androidProperties, androidFacet);
     addAndroidResourcePaths(androidProperties, module, androidFacet);
@@ -436,12 +436,10 @@ public class IjProjectTemplateDataPreparer {
 
   private void addAndroidGenPath(
       Map<String, Object> androidProperties,
+      IjModuleAndroidFacet androidFacet,
       Path moduleBasePath) {
     Path genPath = moduleBasePath
-        .relativize(Paths.get(""))
-        .resolve(Project.getAndroidGenDir(projectFilesystem))
-        .resolve(Paths.get("").relativize(moduleBasePath))
-        .resolve("gen");
+        .relativize(androidFacet.getGeneratedSourcePath());
     androidProperties.put(
         "module_gen_path",
         "/" + MorePaths.pathWithUnixSeparators(genPath));

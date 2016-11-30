@@ -42,6 +42,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Function;
@@ -807,6 +808,7 @@ public class IjModuleGraphTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     IjProjectConfig projectConfig = IjProjectBuckConfig.create(buckConfig);
     IjModuleFactory moduleFactory = new IjModuleFactory(
+        new FakeProjectFilesystem(),
         new IjModuleFactory.IjModuleFactoryResolver() {
           @Override
           public Optional<Path> getDummyRDotJavaPath(TargetNode<?, ?> targetNode) {

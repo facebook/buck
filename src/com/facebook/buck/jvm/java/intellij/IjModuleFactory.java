@@ -21,6 +21,7 @@ import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
 import com.facebook.buck.jvm.groovy.GroovyTestDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -158,6 +159,10 @@ public class IjModuleFactory {
       return androidFacetBuilder.get();
     }
 
+    public boolean isAndroidFacetBuilderPresent() {
+      return androidFacetBuilder.isPresent();
+    }
+
     public Optional<IjModuleAndroidFacet> getAndroidFacet() {
       return androidFacetBuilder.map(IjModuleAndroidFacet.Builder::build);
     }
@@ -292,6 +297,7 @@ public class IjModuleFactory {
   private static final String SDK_TYPE_JAVA = "JavaSDK";
   private static final String SDK_TYPE_ANDROID = "Android SDK";
 
+  private final ProjectFilesystem projectFilesystem;
   private final Map<BuildRuleType, IjModuleRule<?>> moduleRuleIndex = new HashMap<>();
   private final IjModuleFactoryResolver moduleFactoryResolver;
   private final IjProjectConfig projectConfig;
@@ -302,9 +308,11 @@ public class IjModuleFactory {
    * @param moduleFactoryResolver see {@link IjModuleFactoryResolver}.
    */
   public IjModuleFactory(
+      ProjectFilesystem projectFilesystem,
       IjModuleFactoryResolver moduleFactoryResolver,
       IjProjectConfig projectConfig,
       boolean excludeShadows) {
+    this.projectFilesystem = projectFilesystem;
     this.excludeShadows = excludeShadows;
     this.projectConfig = projectConfig;
     this.autogenerateAndroidFacetSources = projectConfig.isAutogenerateAndroidFacetSourcesEnabled();
@@ -360,7 +368,10 @@ public class IjModuleFactory {
     String sdkType;
     Optional<String> sdkName;
 
-    if (context.getAndroidFacet().isPresent()) {
+    if (context.isAndroidFacetBuilderPresent()) {
+      context.getOrCreateAndroidFacetBuilder().setGeneratedSourcePath(
+          createAndroidGenPath(moduleBasePath));
+
       sdkType = projectConfig.getAndroidModuleSdkType().orElse(SDK_TYPE_ANDROID);
       sdkName = projectConfig.getAndroidModuleSdkName();
     } else {
@@ -380,6 +391,13 @@ public class IjModuleFactory {
         .setSdkType(sdkType)
         .setLanguageLevel(sourceLevel)
         .build();
+  }
+
+  private Path createAndroidGenPath(Path moduleBasePath) {
+    return Paths
+        .get(Project.getAndroidGenDir(projectFilesystem))
+        .resolve(moduleBasePath)
+        .resolve("gen");
   }
 
   private Optional<String> getSourceLevel(

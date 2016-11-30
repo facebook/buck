@@ -65,4 +65,6 @@ abstract class AbstractIjModuleAndroidFacet {
   public abstract Optional<String> getPackageName();
 
   public abstract boolean autogenerateSources();
+
+  public abstract Path getGeneratedSourcePath();
 }
