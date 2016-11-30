@@ -238,6 +238,11 @@ public class ProjectWorkspace {
       // `enableDirCache` on this object.  Only do this if a .buckconfig.local file does not already
       // exist, however (we assume the test knows what it is doing at that point).
       addBuckConfigLocalOption("cache", "mode", "");
+
+      // Limit the number of threads by default to prevent multiple integration tests running at the
+      // same time from creating a quadratic number of threads. Tests can disable this using
+      // `disableThreadLimitOverride`.
+      addBuckConfigLocalOption("build", "threads", "2");
     }
 
     isSetUp = true;
@@ -257,6 +262,11 @@ public class ProjectWorkspace {
   public void addBuckConfigLocalOption(String section, String key, String value)
       throws IOException {
     getBuckConfigLocalSection(section).put(key, value);
+    saveBuckConfigLocal();
+  }
+
+  public void removeBuckConfigLocalOption(String section, String key) throws IOException {
+    getBuckConfigLocalSection(section).remove(key);
     saveBuckConfigLocal();
   }
 
@@ -591,6 +601,10 @@ public class ProjectWorkspace {
 
   public void setupCxxSandboxing(boolean sandboxSources) throws IOException {
     addBuckConfigLocalOption("cxx", "sandbox_sources", Boolean.toString(sandboxSources));
+  }
+
+  public void disableThreadLimitOverride() throws IOException {
+    removeBuckConfigLocalOption("build", "threads");
   }
 
   public void copyFile(String source, String dest) throws IOException {

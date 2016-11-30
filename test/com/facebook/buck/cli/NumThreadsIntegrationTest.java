@@ -43,6 +43,7 @@ public class NumThreadsIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "num_threads", tmp);
     workspace.setUp();
+    workspace.disableThreadLimitOverride();
 
     ProcessResult buildResult1 = workspace.runBuckCommand(
         "build", "//:noop", "--verbose", "10");
@@ -75,6 +76,7 @@ public class NumThreadsIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "num_threads", tmp);
     workspace.setUp();
+    workspace.disableThreadLimitOverride();
 
     ProcessResult buildResult1 = workspace.runBuckCommand(
         "project",
