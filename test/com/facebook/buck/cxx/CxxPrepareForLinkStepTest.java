@@ -97,11 +97,11 @@ public class CxxPrepareForLinkStepTest {
 
   @Test
   public void cxxLinkStepPassesLinkerOptionsViaArgFile() throws IOException, InterruptedException {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     Path argFilePath = projectFilesystem.getRootPath().resolve(
-        "/tmp/cxxLinkStepPassesLinkerOptionsViaArgFile.txt");
+        "cxxLinkStepPassesLinkerOptionsViaArgFile.txt");
     Path fileListPath = projectFilesystem.getRootPath().resolve(
-        "/tmp/cxxLinkStepPassesLinkerOptionsViaFileList.txt");
+        "cxxLinkStepPassesLinkerOptionsViaFileList.txt");
     Path output = projectFilesystem.getRootPath().resolve("output");
 
     runTestForArgFilePathAndOutputPath(argFilePath, fileListPath, output,
@@ -110,11 +110,11 @@ public class CxxPrepareForLinkStepTest {
 
   @Test
   public void cxxLinkStepCreatesDirectoriesIfNeeded() throws IOException, InterruptedException {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     Path argFilePath = projectFilesystem.getRootPath().resolve(
-        "/tmp/unexisting_parent_folder/argfile.txt");
+        "unexisting_parent_folder/argfile.txt");
     Path fileListPath = projectFilesystem.getRootPath().resolve(
-        "/tmp/unexisting_parent_folder/filelist.txt");
+        "unexisting_parent_folder/filelist.txt");
     Path output = projectFilesystem.getRootPath().resolve("output");
 
     Files.deleteIfExists(argFilePath);

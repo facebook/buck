@@ -57,9 +57,9 @@ public class CxxWriteArgsToFileStepTest {
   @Test
   public void cxxWriteArgsToFileCreatesDirectoriesIfNeeded()
       throws IOException, InterruptedException {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     Path fileListPath = projectFilesystem.getRootPath().resolve(
-        "/tmp/unexisting_parent_folder/filelist.txt");
+        "unexisting_parent_folder/filelist.txt");
 
     runTestForArgFilePathAndOutputPath(
         fileListPath,
