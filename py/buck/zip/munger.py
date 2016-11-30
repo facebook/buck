@@ -13,7 +13,6 @@
 # under the License.
 
 import contextlib
-import os
 import optparse
 import shutil
 import sys
@@ -38,9 +37,9 @@ def main():
 
 
 def process_jar(infile, outfile, include_paths, exclude_paths):
-    with tempdir() as temp_dir:
-        # First extract all the files we need from the jar.
-        with contextlib.closing(zipfile.ZipFile(infile)) as input:
+    with contextlib.closing(open(infile, 'rb')) as inputFile:
+        with contextlib.closing(zipfile.ZipFile(open(outfile, 'wb'), 'w')) as output:
+            input = zipfile.ZipFile(inputFile, 'r')
             for info in input.infolist():
                 include = len(include_paths) == 0
                 for path in include_paths:
@@ -49,15 +48,8 @@ def process_jar(infile, outfile, include_paths, exclude_paths):
                 for path in exclude_paths:
                     exclude = exclude or info.filename.startswith(path)
                 if include and not exclude:
-                    input.extract(info, temp_dir)
-
-        # Now we can package the files we extracted into our specified destination.
-        with contextlib.closing(zipfile.ZipFile(outfile, 'w')) as output:
-            for root, _, files in os.walk(temp_dir):
-                for file in files:
-                    file = os.path.join(root, file)
-                    output.write(file, os.path.relpath(file, temp_dir))
-
+                    content = input.read(info)
+                    output.writestr(info, content)
 
 @contextlib.contextmanager
 def tempdir():
