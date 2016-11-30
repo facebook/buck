@@ -67,6 +67,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.martiansoftware.nailgun.NGContext;
 
 import org.hamcrest.Matchers;
@@ -140,6 +141,8 @@ public class ProjectWorkspace {
   };
 
   private boolean isSetUp = false;
+  private boolean manageLocalConfigs = false;
+  private final Map<String, Map<String, String>> localConfigs = Maps.newHashMap();
   private final Path templatePath;
   private final Path destPath;
 
@@ -228,15 +231,49 @@ public class ProjectWorkspace {
       Files.walkFileTree(destPath, copyDirVisitor);
     }
 
-    // Disable the directory cache by default.  Tests that want to enable it can call
-    // `enableDirCache` on this object.  Only do this if a .buckconfig.local file does not already
-    // exist, however (we assume the test knows what it is doing at that point).
     if (!Files.exists(getPath(".buckconfig.local"))) {
-      writeContentsToPath("[cache]\n  mode =", ".buckconfig.local");
+      manageLocalConfigs = true;
+
+      // Disable the directory cache by default.  Tests that want to enable it can call
+      // `enableDirCache` on this object.  Only do this if a .buckconfig.local file does not already
+      // exist, however (we assume the test knows what it is doing at that point).
+      addBuckConfigLocalOption("cache", "mode", "");
     }
 
     isSetUp = true;
     return this;
+  }
+
+  private Map<String, String> getBuckConfigLocalSection(String section) {
+    Map<String, String> newValue = Maps.newHashMap();
+    Map<String, String> oldValue = localConfigs.putIfAbsent(section, newValue);
+    if (oldValue != null) {
+      return oldValue;
+    } else {
+      return newValue;
+    }
+  }
+
+  public void addBuckConfigLocalOption(String section, String key, String value)
+      throws IOException {
+    getBuckConfigLocalSection(section).put(key, value);
+    saveBuckConfigLocal();
+  }
+
+  private void saveBuckConfigLocal() throws IOException {
+    Preconditions.checkArgument(
+        manageLocalConfigs,
+        "ProjectWorkspace cannot modify .buckconfig.local because " +
+            "a custom one is already present in the test data directory");
+    StringBuilder contents = new StringBuilder();
+    for (Map.Entry<String, Map<String, String>> section : localConfigs.entrySet()) {
+      contents.append("[").append(section.getKey()).append("]\n\n");
+      for (Map.Entry<String, String> option : section.getValue().entrySet()) {
+        contents.append(option.getKey()).append(" = ").append(option.getValue()).append("\n");
+      }
+      contents.append("\n");
+    }
+    writeContentsToPath(contents.toString(), ".buckconfig.local");
   }
 
   public ProcessResult runBuckBuild(String... args) throws IOException {
@@ -549,14 +586,11 @@ public class ProjectWorkspace {
   }
 
   public void enableDirCache() throws IOException {
-    writeContentsToPath("[cache]\n  mode = dir", ".buckconfig.local");
+    addBuckConfigLocalOption("cache", "mode", "dir");
   }
 
   public void setupCxxSandboxing(boolean sandboxSources) throws IOException {
-    writeContentsToPath(
-        "\n[cxx]\n  sandbox_sources = " + sandboxSources,
-        ".buckconfig.local",
-        StandardOpenOption.APPEND);
+    addBuckConfigLocalOption("cxx", "sandbox_sources", Boolean.toString(sandboxSources));
   }
 
   public void copyFile(String source, String dest) throws IOException {

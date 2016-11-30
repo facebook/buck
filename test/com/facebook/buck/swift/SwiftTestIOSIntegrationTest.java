@@ -60,9 +60,7 @@ public class SwiftTestIOSIntegrationTest {
     workspace.copyRecursively(
         TestDataHelper.getTestDataDirectory(AppleTestBuilder.class).resolve("fbxctest"),
         Paths.get("fbxctest"));
-    workspace.writeContentsToPath(
-        "[apple]\n  xctool_path = fbxctest/bin/fbxctest\n",
-        ".buckconfig.local");
+    workspace.addBuckConfigLocalOption("apple", "xctool_path", "fbxctest/bin/fbxctest");
 
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
 

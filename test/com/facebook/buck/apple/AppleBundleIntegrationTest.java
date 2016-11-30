@@ -194,9 +194,7 @@ public class AppleBundleIntegrationTest {
         "simple_application_bundle_with_codesigning",
         tmp);
     workspace.setUp();
-    workspace.writeContentsToPath(
-        "[apple]\n  dry_run_code_signing = true\n",
-        ".buckconfig.local");
+    workspace.addBuckConfigLocalOption("apple", "dry_run_code_signing", "true");
 
     BuildTarget target =
         workspace.newBuildTarget("//:DemoApp#iphoneos-arm64,no-debug");

@@ -367,9 +367,6 @@ CxxCompilationDatabaseIntegrationTest {
   @Test
   public void compilationDatabaseFetchedFromCacheAlsoFetchesSymlinkTreeOrHeaderMap()
       throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "compilation_database", tmp);
-    workspace.setUp();
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     // This test only fails if the directory cache is enabled and we don't update
@@ -443,10 +440,19 @@ CxxCompilationDatabaseIntegrationTest {
 
   @Test
   public void compilationDatabaseWithDepsFetchedFromCacheAlsoFetchesSymlinkTreeOrHeaderMapOfDeps()
-      throws IOException {
+      throws Exception {
+    // Create a new temporary path since this test uses a different testdata directory than the
+    // one used in the common setup method.
+    tmp.after();
+    tmp = new TemporaryPaths();
+    tmp.before();
+
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "compilation_database_with_deps", tmp);
     workspace.setUp();
+    workspace.writeContentsToPath(
+        "[cxx]\ngtest_dep = //:fake-gtest\nsandbox_sources=" + sandboxSources,
+        ".buckconfig");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     // This test only fails if the directory cache is enabled and we don't update

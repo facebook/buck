@@ -76,9 +76,9 @@ public class AppleLibraryIntegrationTest {
         this, "apple_library_builds_something", tmp);
     workspace.setUp();
     ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
-    workspace.writeContentsToPath(
-        "[defaults.apple_library]\n  platform = iphonesimulator-x86_64\n  type = shared\n",
-        ".buckconfig.local");
+    workspace
+        .addBuckConfigLocalOption("defaults.apple_library", "platform", "iphonesimulator-x86_64");
+    workspace.addBuckConfigLocalOption("defaults.apple_library", "type", "shared");
 
     BuildTarget target =
         BuildTargetFactory.newInstance("//Libraries/TestLibrary:TestLibrary");
