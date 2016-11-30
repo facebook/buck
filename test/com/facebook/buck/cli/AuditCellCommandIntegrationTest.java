@@ -41,10 +41,10 @@ public class AuditCellCommandIntegrationTest {
   @Test
   public void testBuckCell() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "xplat_file_watching/primary", tmp.newFolder());
+        this, "crosscell_file_watching/primary", tmp.newFolder());
     workspace.setUp();
     final ProjectWorkspace secondary = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "xplat_file_watching/secondary", tmp.newFolder());
+        this, "crosscell_file_watching/secondary", tmp.newFolder());
     secondary.setUp();
     TestDataHelper.overrideBuckconfig(
         workspace,

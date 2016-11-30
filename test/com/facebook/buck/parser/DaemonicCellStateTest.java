@@ -29,6 +29,8 @@ import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -77,6 +79,77 @@ public class DaemonicCellStateTest {
     assertEquals(
         "Previously cached node should not be updated",
         Optional.of(false),
+        cache.lookupComputedNode(cell, target));
+  }
+
+  @Test
+  public void testTrackCellAgnosticTargetConfig()
+      throws BuildTargetException, IOException, InterruptedException {
+    BuckConfig config = FakeBuckConfig.builder()
+        .setFilesystem(filesystem)
+        .setSections(
+            "[project]",
+            "track_cell_agnostic_target = false")
+        .build();
+    Cell cell = new TestCellBuilder()
+        .setFilesystem(filesystem)
+        .setBuckConfig(config)
+        .build();
+
+    DaemonicCellState state = new DaemonicCellState(cell, 1);
+    Cache<BuildTarget, Boolean> cache = state.getOrCreateCache(Boolean.class);
+    Path targetPath = cell.getRoot().resolve("path/to/BUCK");
+    BuildTarget target = BuildTargetFactory.newInstance(filesystem, "xplat//path/to:target");
+
+    cache.putComputedNodeIfNotPresent(cell, target, true);
+    assertEquals(Optional.of(true), cache.lookupComputedNode(cell, target));
+
+    state.putRawNodesIfNotPresentAndStripMetaEntries(
+        targetPath,
+        ImmutableSet.of(
+            // Forms the target "//path/to:target"
+            ImmutableMap.of(
+                "buck.base_path", "path/to",
+                "name", "target")),
+        ImmutableSet.of(),
+        ImmutableMap.of());
+    assertEquals("One raw node should be invalidated", 1, state.invalidatePath(targetPath));
+    assertEquals(
+        "Cell-named target should not have been removed",
+        Optional.of(true),
+        cache.lookupComputedNode(cell, target));
+
+    // If we change the config, then eviction does happen
+    config = FakeBuckConfig.builder()
+        .setFilesystem(filesystem)
+        .setSections(
+            "[project]",
+            "track_cell_agnostic_target = true")
+        .build();
+    cell = new TestCellBuilder()
+        .setFilesystem(filesystem)
+        .setBuckConfig(config)
+        .build();
+
+    state = new DaemonicCellState(cell, 1);
+    cache = state.getOrCreateCache(Boolean.class);
+
+    cache.putComputedNodeIfNotPresent(cell, target, true);
+    assertEquals(Optional.of(true), cache.lookupComputedNode(cell, target));
+
+    state.putRawNodesIfNotPresentAndStripMetaEntries(
+        targetPath,
+        ImmutableSet.of(
+            // Forms the target "//path/to:target"
+            ImmutableMap.of(
+                "buck.base_path", "path/to",
+                "name", "target")),
+        ImmutableSet.of(),
+        ImmutableMap.of());
+    assertEquals("Still only one invalidated node", 1, state.invalidatePath(targetPath));
+    assertEquals(
+        "Cell-named target should still be invalidated",
+        Optional.empty(),
         cache.lookupComputedNode(cell, target));
   }
 

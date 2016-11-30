@@ -537,13 +537,58 @@ public class DaemonIntegrationTest {
     whenAppBuckFileInvalidatedThenRebuildFails(WatchmanWatcher.CursorType.CLOCK_ID.toString());
   }
 
+  private void whenNativeSourceInputInvalidatedThenRebuildFails(String cursorType)
+      throws IOException, InterruptedException {
+    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "file_watching", tmp);
+    workspace.setUp();
+    TestDataHelper.overrideBuckconfig(
+        workspace,
+        ImmutableMap.of("project", ImmutableMap.of("watchman_cursor", cursorType)));
+
+    workspace.runBuckdCommand("build", "//native/main:main").assertSuccess();
+    workspace.runBuckdCommand("run", "//native/main:main").assertSuccess();
+
+    String fileName = "native/lib/lib.cpp";
+    Files.write(workspace.getPath(fileName), "#error Failure".getBytes(Charsets.UTF_8));
+
+    ProcessResult result = workspace.runBuckdCommand("build", "//native/main:main");
+    assertThat(
+        "Failure should be due to compilation error.",
+        result.getStderr(),
+        containsString("#error Failure"));
+    result.assertFailure();
+
+    // Make the file valid again, but change the output
+    Files.write(
+        workspace.getPath(fileName),
+        "#include \"lib.h\"\nint sum(int a, int b) {return a;}".getBytes(Charsets.UTF_8));
+
+    workspace.runBuckdCommand("build", "//native/main:main").assertSuccess();
+    // Rewritten function returns 1
+    workspace.runBuckdCommand("run", "//native/main:main").assertFailure();
+  }
+
+  @Test
+  public void withNamedCursorNativeSourceInputInvalidatedThenRebuildFails()
+      throws IOException, InterruptedException {
+    whenNativeSourceInputInvalidatedThenRebuildFails(WatchmanWatcher.CursorType.NAMED.toString());
+  }
+
+  @Test
+  public void withClockIdCursorNativeSourceInputInvalidatedThenRebuildFails()
+      throws IOException, InterruptedException {
+    whenNativeSourceInputInvalidatedThenRebuildFails(
+        WatchmanWatcher.CursorType.CLOCK_ID.toString());
+  }
+
   private void whenCrossCellSourceInvalidatedThenRebuildFails(String cursorType)
       throws IOException, InterruptedException {
     final ProjectWorkspace primary = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "xplat_file_watching/primary", tmp.newFolder());
+        this, "crosscell_file_watching/primary", tmp.newFolder());
     primary.setUp();
     final ProjectWorkspace secondary = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "xplat_file_watching/secondary", tmp.newFolder());
+        this, "crosscell_file_watching/secondary", tmp.newFolder());
     secondary.setUp();
     TestDataHelper.overrideBuckconfig(
         primary,
@@ -552,11 +597,16 @@ public class DaemonIntegrationTest {
                 "secondary",
                 secondary.getPath(".").normalize().toString()),
             "project", ImmutableMap.of(
+                "track_cell_agnostic_target", "true",
                 "watch_cells", "true",
                 "watchman_cursor", cursorType)));
     TestDataHelper.overrideBuckconfig(
         secondary,
-        ImmutableMap.of("project", ImmutableMap.of("watchman_cursor", cursorType)));
+        ImmutableMap.of(
+            "project", ImmutableMap.of(
+                "track_cell_agnostic_target", "true",
+                "watch_cells", "true",
+                "watchman_cursor", cursorType)));
 
     primary.runBuckdCommand("build", "//:cxxbinary").assertSuccess();
     ProcessResult result = primary.runBuckdCommand("run", "//:cxxbinary");
@@ -593,6 +643,61 @@ public class DaemonIntegrationTest {
   public void withClockIdCursorCrossCellSourceInvalidatedThenRebuildFails()
       throws IOException, InterruptedException {
     whenCrossCellSourceInvalidatedThenRebuildFails(WatchmanWatcher.CursorType.CLOCK_ID.toString());
+  }
+
+  private void whenCrossCellBuckFileInvalidatedThenRebuildFails(String cursorType)
+      throws IOException, InterruptedException {
+    final ProjectWorkspace primary = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "crosscell_file_watching/primary", tmp.newFolder());
+    primary.setUp();
+    final ProjectWorkspace secondary = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "crosscell_file_watching/secondary", tmp.newFolder());
+    secondary.setUp();
+    TestDataHelper.overrideBuckconfig(
+        primary,
+        ImmutableMap.of(
+            "repositories", ImmutableMap.of(
+                "secondary",
+                secondary.getPath(".").normalize().toString()),
+            "project", ImmutableMap.of(
+                "track_cell_agnostic_target", "true",
+                "watch_cells", "true",
+                "watchman_cursor", cursorType)));
+    TestDataHelper.overrideBuckconfig(
+        secondary,
+        ImmutableMap.of(
+            "project", ImmutableMap.of(
+                "track_cell_agnostic_target", "true",
+                "watch_cells", "true",
+                "watchman_cursor", cursorType)));
+
+    primary.runBuckdCommand("build", "//:cxxbinary").assertSuccess();
+
+    String fileName = "BUCK";
+    Files.write(secondary.getPath(fileName), "Some Invalid Python".getBytes(Charsets.UTF_8));
+
+    try {
+      primary.runBuckdCommand("build", "//:cxxbinary");
+      fail("Did not expect parsing to succeed");
+    } catch (HumanReadableException expected) {
+      assertThat(
+          "Failure should be due to syntax error.",
+          expected.getHumanReadableErrorMessage(),
+          containsString("Couldn't get dependency 'secondary//:cxxlib' of target '//:cxxbinary'"));
+    }
+  }
+
+  @Test
+  public void withNamedCursorCrossCellBuckFileInvalidatedThenRebuildFails()
+      throws IOException, InterruptedException {
+    whenCrossCellBuckFileInvalidatedThenRebuildFails(WatchmanWatcher.CursorType.NAMED.toString());
+  }
+
+  @Test
+  public void withClockIdCursorCrossCellBuckFileInvalidatedThenRebuildFails()
+      throws IOException, InterruptedException {
+    whenCrossCellBuckFileInvalidatedThenRebuildFails(
+        WatchmanWatcher.CursorType.CLOCK_ID.toString());
   }
 
   @Test
