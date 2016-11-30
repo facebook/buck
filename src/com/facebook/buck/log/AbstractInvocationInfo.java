@@ -57,6 +57,14 @@ abstract class AbstractInvocationInfo {
 
   @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract boolean getSuperConsoleEnabled();
+
+  @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract boolean getIsDaemon();
+
+  @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
   public abstract String getSubCommand();
 
   @Value.Parameter

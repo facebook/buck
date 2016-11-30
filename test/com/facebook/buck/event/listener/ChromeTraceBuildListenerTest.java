@@ -108,6 +108,8 @@ public class ChromeTraceBuildListenerTest {
         .setBuckLogDir(tmpDir.getRoot().toPath().resolve("buck-out/log"))
         .setBuildId(new BuildId("BUILD_ID"))
         .setSubCommand("no_sub_command")
+        .setIsDaemon(false)
+        .setSuperConsoleEnabled(false)
         .build();
   }
 

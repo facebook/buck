@@ -211,6 +211,8 @@ public class TracesHelperTest {
       int seconds) {
     InvocationInfo info = InvocationInfo.of(
         new BuildId(buildId),
+        false,
+        false,
         commandName,
         fs.getBuckPaths().getLogDir())
         .withTimestampMillis(TimeUnit.SECONDS.toMillis(seconds));

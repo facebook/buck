@@ -1045,6 +1045,8 @@ public final class Main {
         // to the other resources before they are closed.
         InvocationInfo invocationInfo = InvocationInfo.of(
             buildId,
+            isSuperConsoleEnabled(console),
+            isDaemon,
             command.getSubCommandNameForLogging(),
             filesystem.getBuckPaths().getLogDir());
         try (
@@ -1784,12 +1786,7 @@ public final class Main {
       Optional<WebServer> webServer,
       Locale locale,
       Path testLogPath) {
-    Verbosity verbosity = console.getVerbosity();
-
-    if (Platform.WINDOWS != Platform.detect() &&
-        console.getAnsi().isAnsiTerminal() &&
-        !verbosity.shouldPrintCommand() &&
-        verbosity.shouldPrintStandardInformation()) {
+    if (isSuperConsoleEnabled(console)) {
       SuperConsoleEventBusListener superConsole = new SuperConsoleEventBusListener(
           config,
           console,
@@ -1812,6 +1809,13 @@ public final class Main {
         locale,
         testLogPath,
         executionEnvironment);
+  }
+
+  private boolean isSuperConsoleEnabled(Console console) {
+    return Platform.WINDOWS != Platform.detect() &&
+        console.getAnsi().isAnsiTerminal() &&
+        !console.getVerbosity().shouldPrintCommand() &&
+        console.getVerbosity().shouldPrintStandardInformation();
   }
 
   private static BuildId getBuildId(Optional<NGContext> context) {

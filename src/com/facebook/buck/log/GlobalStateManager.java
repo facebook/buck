@@ -55,6 +55,8 @@ public class GlobalStateManager {
 
   // Global state required by the LogFileHandler.
   private final ConcurrentMap<String, java.io.Writer> commandIdToLogFileHandlerWriter;
+  private final ConcurrentMap<String, Boolean> commandIdToIsSuperconsoleEnabled;
+  private final ConcurrentMap<String, Boolean> commandIdToIsDaemon;
 
   public static GlobalStateManager singleton() {
     return SINGLETON;
@@ -65,9 +67,15 @@ public class GlobalStateManager {
     this.commandIdToConsoleHandlerWriter = new ConcurrentHashMap<>();
     this.commandIdToConsoleHandlerLevel = new ConcurrentHashMap<>();
     this.commandIdToLogFileHandlerWriter = new ConcurrentHashMap<>();
+    this.commandIdToIsSuperconsoleEnabled = new ConcurrentHashMap<>();
+    this.commandIdToIsDaemon = new ConcurrentHashMap<>();
 
     ReferenceCountedWriter defaultWriter = rotateDefaultLogFileWriter(
-        InvocationInfo.of(new BuildId(), "launch",
+        InvocationInfo.of(
+            new BuildId(),
+            false,
+            false,
+            "launch",
             LogConfigSetup.DEFAULT_SETUP.getLogDir())
             .getLogFilePath());
     putReferenceCountedWriter(DEFAULT_LOG_FILE_WRITER_KEY, defaultWriter);
@@ -98,6 +106,8 @@ public class GlobalStateManager {
     if (Verbosity.ALL.equals(consoleHandlerVerbosity)) {
       commandIdToConsoleHandlerLevel.put(commandId, Level.ALL);
     }
+    commandIdToIsSuperconsoleEnabled.put(commandId, info.getSuperConsoleEnabled());
+    commandIdToIsDaemon.put(commandId, info.getIsDaemon());
 
     // Setup the LogFileHandler state.
     Path logDirectory = info.getLogDirectoryPath();
@@ -129,6 +139,8 @@ public class GlobalStateManager {
             commandId,
             ConsoleHandler.utf8OutputStreamWriter(consoleHandlerOriginalStream));
         commandIdToConsoleHandlerLevel.remove(commandId);
+        commandIdToIsSuperconsoleEnabled.remove(commandId);
+        commandIdToIsDaemon.remove(commandId);
 
         // Tear down the shared state.
         // NOTE: Avoid iterator in case there's a concurrent change to this map.
@@ -235,6 +247,14 @@ public class GlobalStateManager {
 
   public ThreadIdToCommandIdMapper getThreadIdToCommandIdMapper() {
     return threadIdToCommandId::get;
+  }
+
+  public CommandIdToIsDaemonMapper getCommandIdToIsDaemonMapper() {
+    return commandIdToIsDaemon::get;
+  }
+
+  public CommandIdToIsSuperConsoleEnabledMapper getCommandIdToIsSuperConsoleEnabledMapper() {
+    return commandIdToIsSuperconsoleEnabled::get;
   }
 
   /**

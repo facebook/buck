@@ -14,19 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.log;
 
-import com.facebook.buck.log.InvocationInfo;
-import com.facebook.buck.model.BuildId;
-
-import java.nio.file.Paths;
-
-public class FakeInvocationInfoFactory {
-  private FakeInvocationInfoFactory() {
-    // Utility class.
-  }
-
-  public static InvocationInfo create() {
-    return InvocationInfo.of(new BuildId(), false, false, "test", Paths.get(""));
-  }
+public interface CommandIdToIsSuperConsoleEnabledMapper {
+  Boolean commandIdToIsSuperConsoleEnabled(String commandId);
 }

@@ -38,6 +38,13 @@ abstract class AbstractErrorLogRecord {
   private static final ThreadIdToCommandIdMapper MAPPER = GlobalStateManager
       .singleton()
       .getThreadIdToCommandIdMapper();
+  private static final CommandIdToIsDaemonMapper IS_DAEMON_MAPPER = GlobalStateManager
+      .singleton()
+      .getCommandIdToIsDaemonMapper();
+  private static final CommandIdToIsSuperConsoleEnabledMapper IS_SUPERCONSOLE_ENABLED_MAPPER =
+      GlobalStateManager
+          .singleton()
+          .getCommandIdToIsSuperConsoleEnabledMapper();
   private static final Logger LOG = Logger.get(AbstractErrorLogRecord.class);
 
   public abstract LogRecord getRecord();
@@ -134,6 +141,26 @@ abstract class AbstractErrorLogRecord {
       return Optional.of(buildUuid);
     }
     return Optional.empty();
+  }
+
+  @Value.Derived
+  public Optional<Boolean> getIsSuperConsoleEnabled() {
+    String buildUuid = MAPPER.threadIdToCommandId(getRecord().getThreadID());
+    if (buildUuid == null) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(
+        IS_SUPERCONSOLE_ENABLED_MAPPER
+            .commandIdToIsSuperConsoleEnabled(buildUuid));
+  }
+
+  @Value.Derived
+  public Optional<Boolean> getIsDaemon() {
+    String buildUuid = MAPPER.threadIdToCommandId(getRecord().getThreadID());
+    if (buildUuid == null) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(IS_DAEMON_MAPPER.commandIdToIsRunningAsDaemon(buildUuid));
   }
 
   @Value.Derived
