@@ -87,6 +87,11 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
   }
 
   @Override
+  Optional<String> getBootClasspath() {
+    return javacOptions.getBootclasspath();
+  }
+
+  @Override
   public void createCompileToJarStep(
       BuildContext context,
       ImmutableSortedSet<Path> sourceFilePaths,

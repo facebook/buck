@@ -23,12 +23,16 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.shell.BashStep;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import java.nio.file.Path;
@@ -83,9 +87,11 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
         buildableContext);
 
     steps.addAll(Lists.newCopyOnWriteArrayList(addPostprocessClassesCommands(
-        filesystem.getRootPath(),
+        filesystem,
         postprocessClassesCommands,
-        outputDirectory)));
+        outputDirectory,
+        declaredClasspathEntries,
+        getBootClasspath())));
 
     steps.add(
         new JarDirectoryStep(
@@ -99,6 +105,14 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
   }
 
   /**
+   * This can be used make the bootclasspath if available, to the postprocess classes commands.
+   * @return the bootclasspath.
+   */
+  Optional<String> getBootClasspath() {
+    return Optional.empty();
+  }
+
+  /**
    * Adds a BashStep for each postprocessClasses command that runs the command followed by the
    * outputDirectory of javac outputs.
    *
@@ -109,19 +123,46 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
    * is buck-out/bin/java/abc/lib__abc__classes/, then a contained class abc.AbcModule
    * should be at buck-out/bin/java/abc/lib__abc__classes/abc/AbcModule.class
    *
+   * @param filesystem the project filesystem.
    * @param postprocessClassesCommands the list of commands to post-process .class files.
    * @param outputDirectory the directory that will contain all the javac output.
+   * @param declaredClasspathEntries the list of classpath entries.
+   * @param bootClasspath the compilation boot classpath.
    */
   @VisibleForTesting
   static ImmutableList<Step> addPostprocessClassesCommands(
-      Path workingDirectory,
+      ProjectFilesystem filesystem,
       List<String> postprocessClassesCommands,
-      Path outputDirectory) {
+      Path outputDirectory,
+      ImmutableSortedSet<Path> declaredClasspathEntries,
+      Optional<String> bootClasspath) {
+    if (postprocessClassesCommands.isEmpty()) {
+      return ImmutableList.of();
+    }
+
     ImmutableList.Builder<Step> commands = new ImmutableList.Builder<Step>();
+    ImmutableMap.Builder<String, String> envVarBuilder = ImmutableMap.builder();
+    envVarBuilder.put(
+        "COMPILATION_CLASSPATH",
+        Joiner.on(':').join(
+            Iterables.transform(
+                declaredClasspathEntries,
+                filesystem::resolve)));
+
+    if (bootClasspath.isPresent()) {
+      envVarBuilder.put("COMPILATION_BOOTCLASSPATH", bootClasspath.get());
+    }
+    ImmutableMap<String, String> envVars = envVarBuilder.build();
+
     for (final String postprocessClassesCommand : postprocessClassesCommands) {
       BashStep bashStep = new BashStep(
-          workingDirectory,
-          postprocessClassesCommand + " " + outputDirectory);
+          filesystem.getRootPath(),
+          postprocessClassesCommand + " " + outputDirectory) {
+        @Override
+        public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+          return envVars;
+        }
+      };
       commands.add(bashStep);
     }
     return commands.build();
