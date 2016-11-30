@@ -1416,6 +1416,9 @@ public final class Main {
 
     } else {
       watchman = Watchman.NULL_WATCHMAN;
+      LOG.debug("Not using Watchman, context present: %s, glob handler: %s",
+          context.isPresent(),
+          parserConfig.getGlobHandler());
     }
     return watchman;
   }
