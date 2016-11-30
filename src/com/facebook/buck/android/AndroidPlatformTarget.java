@@ -43,7 +43,7 @@ import java.util.regex.Pattern;
  */
 public class AndroidPlatformTarget {
 
-  public static final String DEFAULT_ANDROID_PLATFORM_TARGET = "Google Inc.:Google APIs:23";
+  public static final String DEFAULT_ANDROID_PLATFORM_TARGET = "android-23";
 
   /**
    * {@link Supplier} for an {@link AndroidPlatformTarget} that always throws a
