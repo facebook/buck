@@ -1,0 +1,8 @@
+java_library(
+  name = 'proc',
+  srcs = [
+    'Proc.java',
+  ],
+  #placeholder,
+  visibility = ['PUBLIC'],
+)

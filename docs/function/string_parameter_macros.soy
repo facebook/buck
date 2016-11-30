@@ -20,13 +20,25 @@ the output paths of other rules.
 String parameter macros have the form <code>$(macro[ argument])</code>.
 For rules that support string parameter macros, you can use a backslash at
 any time to prevent expansion (e.g. <code>\$(dirname ...)</code>).
+
+The following macros are supported:
+{literal}
+<ul>
+  <li><code>$(classpath //:foo)</code> expands to the set of jars that are in the classpath of the given target</li>
+  <li><code>$(exe //:foo)</code> expands to the executable output of given target if it exists</li>
+  <li><code>$(location //:foo)</code> expands to the output file or directory of the given target</li>
+  <li><code>$(maven_coords //:foo)</code> expands to the maven coordinates associated with the given target</li>
+  <li><code>$(query_targets "deps(//:foo)")</code> executes the given query and expands to the list of targets that match. See more information below.</li>
+  <li><code>$(query_outputs "deps(//:foo)")</code> executes the given query and expands to the output files of the list of targets that match. See more information below.</li>
+</ul>
+{/literal}
 {/param}
 
 {param args}
 
 {call buck.functionArg}
   {param desc}
-  String parameter macros may take a single argument.
+  String parameter macros may take a space separated list of arguments.
   {/param}
 {/call}
 
@@ -34,7 +46,7 @@ any time to prevent expansion (e.g. <code>\$(dirname ...)</code>).
 
 {param examples}
 
-The following example uses a string parameter macros in a <code>genrule()</code>{sp}
+The following example uses a string parameter macro in a <code>genrule()</code>{sp}
 to copy the output of another rule:
 {literal}<pre class="prettyprint lang-py">
 genrule(
@@ -57,6 +69,29 @@ genrule(
   ],
 )
 </pre>{/literal}
+
+The query_* macros accepts a quoted query expression which supports the following query functions:
+{literal}
+<ul style="line-height:0.5em">
+  <li><code>attrfilter</code></li>
+  <li><code>deps</code></li>
+  <li><code>except</code></li>
+  <li><code>intersect</code></li>
+  <li><code>filter</code></li>
+  <li><code>kind</code></li>
+  <li><code>set</code></li>
+  <li><code>union</code></li>
+</ul>
+{/literal}
+
+Example queries
+{literal}
+<pre class="prettyprint lang-py">
+cmd = '$(query_targets "deps(:foo)")'
+cmd = '$(query_outputs "filter(name_regex, deps(:bar))")'
+cmd = '$(query_targets "attrfilter(annotation_processors, com.foo.Processor, deps(:app))")'
+</pre>
+{/literal}
 
 {/param}
 

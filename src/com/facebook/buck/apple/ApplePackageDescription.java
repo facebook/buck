@@ -81,7 +81,7 @@ public class ApplePackageDescription implements
         getApplePackageConfig(
             params.getBuildTarget(),
             MacroArg.toMacroArgFunction(
-                AbstractGenruleDescription.MACRO_HANDLER,
+                AbstractGenruleDescription.PARSE_TIME_MACRO_HANDLER,
                 params.getBuildTarget(),
                 params.getCellRoots(),
                 resolver));
@@ -202,7 +202,7 @@ public class ApplePackageDescription implements
       if (packageConfig.isPresent()) {
         try {
           builder.addAll(
-            AbstractGenruleDescription.MACRO_HANDLER.extractParseTimeDeps(
+            AbstractGenruleDescription.PARSE_TIME_MACRO_HANDLER.extractParseTimeDeps(
                 target,
                 cellNames,
                 packageConfig.get().getCommand()));

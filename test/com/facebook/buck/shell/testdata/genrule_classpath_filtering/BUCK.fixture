@@ -1,0 +1,93 @@
+genrule(
+  name = 'echo_all',
+  cmd = 'echo $(query_targets "classpath(:app)") > $OUT',
+  out = 'out',
+)
+
+genrule(
+  name = 'echo_with_dep_is_proc',
+  cmd = 'echo $(query_targets "attrfilter(deps, //annotations:proc, classpath(:app))") > $OUT',
+  out = 'out',
+)
+
+genrule(
+  name = 'echo_with_annotation_processor_is_proc',
+  cmd = 'echo $(query_targets "attrfilter(annotation_processors, com.example.annotations.Proc, classpath(:app))") > $OUT',
+  out = 'out',
+)
+
+genrule(
+  name = 'echo_with_kind_is_binary',
+  cmd = 'echo $(query_targets "kind(java_binary, set(//:app //:lib_a //:lib_b))") > $OUT',
+  out = 'out',
+)
+
+genrule(
+  name = 'echo_with_kind_is_library',
+  cmd = 'echo $(query_targets "kind(java_library, set(//:app //:lib_a //:lib_b))") > $OUT',
+  out = 'out',
+)
+
+genrule(
+  name = 'echo_with_deps',
+  cmd = 'echo $(query_targets "deps(:app)") > $OUT',
+  out = 'out',
+)
+
+genrule(
+  name = 'echo_with_deps_1',
+  cmd = 'echo $(query_outputs "deps(:app, 1)") > $OUT',
+  out = 'out',
+)
+
+genrule(
+  name = 'echo_with_genrule_deps',
+  cmd = 'echo $(query_targets "deps(:echo_with_annotation_processor_is_proc)") > $OUT',
+  out = 'out',
+)
+
+genrule(
+  name = 'echo_from_filtered_set',
+  cmd = 'echo $(query_outputs "filter(a, set(:app :lib_a :lib_b //annotations:proc :echo_with_deps))") > $OUT',
+  out = 'out',
+)
+
+genrule(
+  name = 'echo_deps_of_a',
+  cmd = 'echo $(query_targets "deps(//:lib_a)") > $OUT',
+  out = 'out',
+)
+
+genrule(
+  name = 'echo_with_has_debug_flag',
+  cmd = 'echo $(query_targets "attrfilter(extra_arguments, \'-g\', deps(:app))") > $OUT',
+  out = 'out',
+)
+
+java_library(
+  name = 'lib_a',
+  srcs = ['A.java'],
+  deps = [
+    ':lib_b',
+    '//annotations:proc',
+  ],
+)
+
+java_library(
+  name = 'lib_b',
+  srcs = ['B.java'],
+  annotation_processors = [
+    'com.example.annotations.Proc',
+  ],
+  annotation_processor_deps = [
+    '//annotations:proc',
+  ],
+)
+
+
+java_binary(
+  name = 'app',
+  deps = [
+    ':lib_a',
+  ],
+)

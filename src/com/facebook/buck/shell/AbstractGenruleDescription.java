@@ -38,6 +38,8 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.MavenCoordinatesMacroExpander;
+import com.facebook.buck.rules.macros.QueryMacroExpander;
+import com.facebook.buck.rules.macros.QueryOutputsMacroExpander;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -56,13 +58,15 @@ import java.util.stream.Stream;
 public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescription.Arg>
     implements Description<T>, ImplicitDepsInferringDescription<T> {
 
-  public static final MacroHandler MACRO_HANDLER = new MacroHandler(
+  public static final MacroHandler PARSE_TIME_MACRO_HANDLER = new MacroHandler(
       ImmutableMap.<String, MacroExpander>builder()
           .put("classpath", new ClasspathMacroExpander())
           .put("exe", new ExecutableMacroExpander())
           .put("worker", new WorkerMacroExpander())
           .put("location", new LocationMacroExpander())
           .put("maven_coords", new MavenCoordinatesMacroExpander())
+          .put("query_targets", new QueryMacroExpander(Optional.empty()))
+          .put("query_outputs", new QueryOutputsMacroExpander(Optional.empty()))
           .build());
 
   protected <A extends T> BuildRule createBuildRule(
@@ -83,15 +87,25 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
   }
 
   protected MacroHandler getMacroHandlerForParseTimeDeps() {
-    return MACRO_HANDLER;
+    return PARSE_TIME_MACRO_HANDLER;
   }
 
   @SuppressWarnings("unused")
   protected <A extends AbstractGenruleDescription.Arg> MacroHandler getMacroHandler(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      TargetGraph targetGraph,
       A args) {
-    return MACRO_HANDLER;
+    return new MacroHandler(
+        ImmutableMap.<String, MacroExpander>builder()
+            .put("classpath", new ClasspathMacroExpander())
+            .put("exe", new ExecutableMacroExpander())
+            .put("worker", new WorkerMacroExpander())
+            .put("location", new LocationMacroExpander())
+            .put("maven_coords", new MavenCoordinatesMacroExpander())
+            .put("query_targets", new QueryMacroExpander(Optional.of(targetGraph)))
+            .put("query_outputs", new QueryOutputsMacroExpander(Optional.of(targetGraph)))
+            .build());
   }
 
   @Override
@@ -104,7 +118,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     java.util.function.Function<String, com.facebook.buck.rules.args.Arg> macroArgFunction =
         MacroArg.toMacroArgFunction(
-            getMacroHandler(params, resolver, args),
+            getMacroHandler(params, resolver, targetGraph, args),
             params.getBuildTarget(),
             params.getCellRoots(),
             resolver)::apply;

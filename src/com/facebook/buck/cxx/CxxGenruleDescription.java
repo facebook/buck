@@ -173,6 +173,7 @@ public class CxxGenruleDescription
   protected <A extends Arg> MacroHandler getMacroHandler(
       BuildRuleParams params,
       BuildRuleResolver resolver,
+      TargetGraph targetGraph,
       A args) {
     final Optional<CxxPlatform> cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget());
     Preconditions.checkState(cxxPlatform.isPresent());
