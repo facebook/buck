@@ -40,6 +40,7 @@ struct BuildSlaveInfo {
   3: optional string command;
   4: optional list<string> stdOut;
   5: optional list<string> stdErr;
+  6: optional binary logDirZipContents;
 }
 
 enum BuildStatus {

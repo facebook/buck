@@ -33,8 +33,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 public class DistBuildLoggerListener implements BuckEventListener, Closeable {
@@ -47,6 +49,8 @@ public class DistBuildLoggerListener implements BuckEventListener, Closeable {
   private final ProjectFilesystem filesystem;
 
   private Map<RunIdStreamPair, Integer> currentLogLine = new HashMap<>();
+  private Set<String> rematerializedLogDirsByRunId = new HashSet<>();
+  private Set<String> createdLogDirsByRunId = new HashSet<>();
 
   public DistBuildLoggerListener(
       Path logDirectoryPath,
@@ -58,7 +62,7 @@ public class DistBuildLoggerListener implements BuckEventListener, Closeable {
   }
 
   @Subscribe
-  public void distributedBuildStatus(DistBuildStatusEvent event) {
+  public void distributedBuildStatus(DistBuildStatusEvent event) throws IOException {
     if (!event.getStatus().getSlaveInfoByRunId().isPresent()) {
       return;
     }
@@ -66,8 +70,28 @@ public class DistBuildLoggerListener implements BuckEventListener, Closeable {
     for (String runId : slaveInfoByRunId.keySet()) {
       BuildSlaveInfo buildSlaveInfo = slaveInfoByRunId.get(runId);
 
-      processLogForStream(runId, "out", buildSlaveInfo.stdOut);
-      processLogForStream(runId, "err", buildSlaveInfo.stdErr);
+      if (buildSlaveInfo.isSetStdOut()) {
+        processLogForStream(runId, "out", buildSlaveInfo.stdOut);
+      }
+      if (buildSlaveInfo.isSetStdErr()) {
+        processLogForStream(runId, "err", buildSlaveInfo.stdErr);
+      }
+
+      if (buildSlaveInfo.isSetLogDirZipContents() &&
+          !rematerializedLogDirsByRunId.contains(runId)) {
+        rematerializeLogDirZip(runId, buildSlaveInfo.logDirZipContents.array());
+        rematerializedLogDirsByRunId.add(runId);
+      }
+    }
+  }
+
+  private void rematerializeLogDirZip(String runId, byte[] zipContents) throws IOException {
+    if (zipContents.length == 0) {
+      LOG.warn("Skipping materialiation of log zip for runId [%s] as content length was zero");
+      return;
+    }
+    try (FileOutputStream zipFos = new FileOutputStream(getLogDirZipPath(runId).toFile())) {
+      zipFos.write(zipContents);
     }
   }
 
@@ -89,13 +113,29 @@ public class DistBuildLoggerListener implements BuckEventListener, Closeable {
     writeToLog(runId, streamType, logLinesToWrite);
   }
 
-  private Path getLogFilePath(String buildSlaveRunId, String streamType) {
-    return filesystem.resolve(logDirectoryPath)
-        .resolve(
-            String.format(
-                BuckConstant.DIST_BUILD_SLAVE_LOG_FILE_NAME_TEMPLATE,
-                buildSlaveRunId,
-                streamType));
+  private Path getLogDirForRunId(String runId) {
+    Path runIdLogDir = filesystem.resolve(logDirectoryPath).resolve(String.format(
+        BuckConstant.DIST_BUILD_SLAVE_LOG_DIR_NAME_TEMPLATE,
+        runId));
+
+    if (!createdLogDirsByRunId.contains(runId)) {
+      try {
+        filesystem.mkdirs(runIdLogDir);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+      createdLogDirsByRunId.add(runId);
+    }
+
+    return runIdLogDir;
+  }
+
+  private Path getStreamLogFilePath(String runId, String streamType) {
+    return getLogDirForRunId(runId).resolve(String.format("%s.log", streamType));
+  }
+
+  private Path getLogDirZipPath(String runId) {
+    return getLogDirForRunId(runId).resolve("buck-out-logs.zip");
   }
 
   private void writeToLog(
@@ -105,7 +145,7 @@ public class DistBuildLoggerListener implements BuckEventListener, Closeable {
     executor.submit(() -> {
       try (OutputStream outputStream = new BufferedOutputStream(
           new FileOutputStream(
-              getLogFilePath(runId, streamType).toFile(), /* append */
+              getStreamLogFilePath(runId, streamType).toFile(), /* append */
               true))) {
         for (String logLine : logLines) {
           outputStream.write((logLine.getBytes(Charsets.UTF_8)));
@@ -115,7 +155,7 @@ public class DistBuildLoggerListener implements BuckEventListener, Closeable {
       } catch (IOException e) {
         LOG.debug(
             "Failed to write to %s",
-            getLogFilePath(runId, streamType).toAbsolutePath(),
+            getStreamLogFilePath(runId, streamType).toAbsolutePath(),
             e);
       }
     });
