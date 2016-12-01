@@ -378,7 +378,7 @@ public class WorkerShellStepTest {
       }
     });
 
-    stepExecution.get(25, TimeUnit.MILLISECONDS);
+    stepExecution.get(5, TimeUnit.SECONDS);
   }
 
   @Test
