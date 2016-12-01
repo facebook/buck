@@ -25,7 +25,6 @@ import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
@@ -47,8 +46,7 @@ import javax.annotation.Nullable;
 
 public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
 
-  @VisibleForTesting
-  static final byte SEPARATOR = '\0';
+  private static final byte SEPARATOR = '\0';
 
   private static final Logger logger = Logger.get(RuleKeyBuilder.class);
 
@@ -82,21 +80,6 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
 
   private void putBytes(String string) {
     hasher.putUnencodedChars(string);
-  }
-
-  /**
-   * Feed an object to the hash being built.
-   *
-   * This method will use the object's {@link Object#toString()} method to serialize it so it might
-   * be unsuitable for some classes of objects, in particular passing objects that use the default
-   * implementation of {@link Object#toString()} might result in an unstable rule key. The string
-   * representation also might be missing some of the object's information or use ambiguous
-   * serialization which would make the rule key incomplete.
-   * @param object the object to feed to the rule key hash.
-   * @return This builder.
-   */
-  private RuleKeyBuilder<T> feed(Object object) {
-    return feed(object.toString());
   }
 
   private RuleKeyBuilder<T> feed(String key) {
@@ -147,7 +130,7 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
     // And now we need to figure out what this thing is.
     Optional<BuildRule> buildRule = resolver.getRule(sourcePath);
     if (buildRule.isPresent()) {
-      feed(sourcePath);
+      feed(sourcePath.toString());
       return setSingleValue(buildRule.get());
     } else {
       // The original version of this expected the path to be relative, however, sometimes the
@@ -280,8 +263,8 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
 
     ruleKeyLogger.addPath(addToKey, sha1);
 
-    feed(addToKey);
-    feed(sha1);
+    feed(addToKey.toString());
+    feed(sha1.toString());
     return this;
   }
 
@@ -317,8 +300,8 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
     ArchiveMemberPath addToKey = relativeArchiveMemberPath;
     ruleKeyLogger.addArchiveMemberPath(addToKey, hash);
 
-    feed(addToKey);
-    feed(hash);
+    feed(addToKey.toString());
+    feed(hash.toString());
     return this;
   }
 
@@ -361,15 +344,15 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
       feed((String) val);
     } else if (val instanceof Pattern) {
       ruleKeyLogger.addValue((Pattern) val);
-      feed(val);
+      feed(val.toString());
     } else if (val instanceof BuildRule) {                       // Buck types
       return setBuildRule((BuildRule) val);
     } else if (val instanceof BuildRuleType) {
       ruleKeyLogger.addValue((BuildRuleType) val);
-      feed(val);
+      feed(val.toString());
     } else if (val instanceof RuleKey) {
       ruleKeyLogger.addValue((RuleKey) val);
-      feed(val);
+      feed(val.toString());
     } else if (val instanceof BuildTarget || val instanceof UnflavoredBuildTarget) {
       BuildTarget buildTarget = ((HasBuildTarget) val).getBuildTarget();
       ruleKeyLogger.addValue(buildTarget);
