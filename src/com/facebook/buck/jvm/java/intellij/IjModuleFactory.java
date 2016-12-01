@@ -37,7 +37,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -434,25 +433,25 @@ public class IjModuleFactory {
    */
   private static ImmutableMultimap<Path, Path> getSourceFoldersToInputsIndex(
       ImmutableSet<Path> paths) {
-    return FluentIterable.from(paths)
-        .index(
-            input -> {
-              Path parent = input.getParent();
-              if (parent == null) {
-                return Paths.get("");
-              }
-              return parent;
-            });
+    Path defaultParent = Paths.get("");
+    return paths
+        .stream()
+        .collect(
+            ImmutableMultimap::<Path, Path>builder,
+            (builder, path) -> {
+              Path parent = path.getParent();
+              builder.put(parent == null ? defaultParent : parent, path);
+            },
+            (builder1, builder2) -> builder1.putAll(builder2.build()))
+        .build();
   }
 
   /**
    * @param paths paths to check
    * @return whether any of the paths pointed to something not in the source tree.
    */
-  private static boolean containsNonSourcePath(Iterable<SourcePath> paths) {
-    return FluentIterable.from(paths)
-        .anyMatch(
-            input -> !(input instanceof PathSourcePath));
+  private static boolean containsNonSourcePath(Collection<SourcePath> paths) {
+    return paths.stream().anyMatch(path -> !(path instanceof PathSourcePath));
   }
 
   /**
