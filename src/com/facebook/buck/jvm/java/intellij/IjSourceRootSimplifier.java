@@ -22,7 +22,6 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -163,9 +162,9 @@ public class IjSourceRootSimplifier {
               .createCopyWith(currentPath);
       }
 
-      boolean allChildrenCanBeMerged = FluentIterable.from(presentChildren)
-          .allMatch(
-              input -> canMerge(mergeDistination, input, packagePathCache));
+      boolean allChildrenCanBeMerged = presentChildren
+          .stream()
+          .allMatch(input -> canMerge(mergeDistination, input, packagePathCache));
       if (!allChildrenCanBeMerged) {
         return Optional.empty();
       }
