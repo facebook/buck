@@ -136,7 +136,6 @@ public class AndroidInstrumentationApkDescription
         args.includesVectorDrawables.orElse(false),
         javacOptions,
         EnumSet.noneOf(ExopackageMode.class),
-        apkUnderTest.getKeystore(),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFile */ Optional.empty(),
         /* xzCompressionLevel */ Optional.empty(),

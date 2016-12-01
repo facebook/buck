@@ -33,4 +33,12 @@ import com.facebook.buck.rules.BuildRule;
  * @see InputBasedRuleKeyBuilderFactory
  */
 public interface SupportsInputBasedRuleKey extends BuildRule {
+  default boolean inputBasedRuleKeyIsEnabled() {
+    return true;
+  }
+
+  static boolean isSupported(BuildRule rule) {
+    return (rule instanceof SupportsInputBasedRuleKey) &&
+        ((SupportsInputBasedRuleKey) rule).inputBasedRuleKeyIsEnabled();
+  }
 }

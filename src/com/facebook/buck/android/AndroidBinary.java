@@ -43,8 +43,7 @@ import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.coercer.ManifestEntries;
-import com.facebook.buck.rules.keys.AbiRule;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -57,7 +56,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.OptionalCompat;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
@@ -94,6 +92,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 /**
  * <pre>
  * android_binary(
@@ -107,7 +107,7 @@ import java.util.Set;
  */
 public class AndroidBinary
     extends AbstractBuildRule
-    implements AbiRule, HasClasspathEntries, HasRuntimeDeps, InstallableApk {
+    implements SupportsInputBasedRuleKey, HasClasspathEntries, HasRuntimeDeps, InstallableApk {
 
   private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, PACKAGING);
 
@@ -180,8 +180,11 @@ public class AndroidBinary
     ;
   }
 
-  @AddToRuleKey
   private final Keystore keystore;
+  @AddToRuleKey
+  private final SourcePath keystorePath;
+  @AddToRuleKey
+  private final SourcePath keystorePropertiesPath;
   @AddToRuleKey
   private final PackageType packageType;
   @AddToRuleKey
@@ -213,8 +216,10 @@ public class AndroidBinary
   private final Optional<Boolean> reorderClassesIntraDex;
   private final Optional<SourcePath> dexReorderToolFile;
   private final Optional<SourcePath> dexReorderDataDumpFile;
-  @AddToRuleKey
   protected final ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
+  @AddToRuleKey
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  private final String ruleNamesToExcludeFromDex;
   protected final AndroidGraphEnhancementResult enhancementResult;
   private final ListeningExecutorService dxExecutorService;
   @AddToRuleKey
@@ -227,6 +232,10 @@ public class AndroidBinary
   private final ManifestEntries manifestEntries;
   @AddToRuleKey
   private final JavaRuntimeLauncher javaRuntimeLauncher;
+  @AddToRuleKey
+  @Nullable
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  private final SourcePath abiPath;
 
   AndroidBinary(
       BuildRuleParams params,
@@ -265,6 +274,8 @@ public class AndroidBinary
     this.proguardJvmArgs = proguardJvmArgs;
     this.proguardAgentPath = proguardAgentPath;
     this.keystore = keystore;
+    this.keystorePath = keystore.getPathToStore();
+    this.keystorePropertiesPath = keystore.getPathToPropertiesFile();
     this.packageType = packageType;
     this.dexSplitMode = dexSplitMode;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
@@ -279,6 +290,9 @@ public class AndroidBinary
     this.macroExpander = macroExpander;
     this.preprocessJavaClassesBash = preprocessJavaClassesBash;
     this.rulesToExcludeFromDex = rulesToExcludeFromDex;
+    this.ruleNamesToExcludeFromDex =
+        Joiner.on(":").join(
+            FluentIterable.from(rulesToExcludeFromDex).transform(BuildRule::toString));
     this.enhancementResult = enhancementResult;
     this.primaryDexPath = getPrimaryDexPath(params.getBuildTarget(), getProjectFilesystem());
     this.reorderClassesIntraDex = reorderClassesIntraDex;
@@ -289,6 +303,11 @@ public class AndroidBinary
     this.packageAssetLibraries = packageAssetLibraries;
     this.compressAssetLibraries = compressAssetLibraries;
     this.manifestEntries = manifestEntries;
+    if (exopackageModes.isEmpty()) {
+      this.abiPath = null;
+    } else {
+      this.abiPath = enhancementResult.getComputeExopackageDepsAbi().get().getAbiPath();
+    }
 
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       Preconditions.checkArgument(enhancementResult.getPreDexMerge().isPresent(),
@@ -373,6 +392,11 @@ public class AndroidBinary
   @Override
   public Path getApkPath() {
     return Paths.get(getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".apk"));
+  }
+
+  @Override
+  public boolean inputBasedRuleKeyIsEnabled() {
+    return !exopackageModes.isEmpty();
   }
 
   @Override
@@ -494,8 +518,8 @@ public class AndroidBinary
         packageableCollection.getPathsToThirdPartyJars().stream()
             .map(getResolver()::deprecatedGetPath)
             .collect(MoreCollectors.toImmutableSet()),
-        getResolver().getAbsolutePath(keystore.getPathToStore()),
-        getResolver().getAbsolutePath(keystore.getPathToPropertiesFile()),
+        getResolver().getAbsolutePath(keystorePath),
+        getResolver().getAbsolutePath(keystorePropertiesPath),
         /* debugMode */ false,
         javaRuntimeLauncher);
     steps.add(apkBuilderCommand);
@@ -662,17 +686,6 @@ public class AndroidBinary
               libSubdirectory.resolve(SOLID_COMPRESSED_ASSET_LIBRARY_FILENAME),
               compressionLevel));
     }
-  }
-
-  @Override
-  public Sha1HashCode getAbiKeyForDeps(DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
-    // For non-exopackages, there is no benefit to the ABI optimization, so we want to disable it.
-    // Returning our RuleKey has this effect because we will never get an ABI match after a
-    // RuleKey miss.
-    if (exopackageModes.isEmpty()) {
-      return Sha1HashCode.of(defaultRuleKeyBuilderFactory.build(this).toString());
-    }
-    return enhancementResult.getComputeExopackageDepsAbi().get().getAndroidBinaryAbiHash();
   }
 
   /**

@@ -854,7 +854,7 @@ public class CachingBuildEngine implements BuildEngine {
 
                 // If the input-based rule key has changed, we need to push the artifact to cache
                 // using the new key.
-                if (rule instanceof SupportsInputBasedRuleKey &&
+                if (SupportsInputBasedRuleKey.isSupported(rule) &&
                     success.shouldUploadResultingArtifactInputBased()) {
                   ruleKeys.addAll(
                       OptionalCompat.asSet(onDiskBuildInfo.getRuleKey(
@@ -1724,7 +1724,7 @@ public class CachingBuildEngine implements BuildEngine {
       final OnDiskBuildInfo onDiskBuildInfo,
       BuildInfoRecorder buildInfoRecorder,
       final RuleKeyFactories ruleKeyFactory) {
-    if (!(rule instanceof SupportsInputBasedRuleKey)) {
+    if (!SupportsInputBasedRuleKey.isSupported(rule)) {
       return Optional.empty();
     }
 

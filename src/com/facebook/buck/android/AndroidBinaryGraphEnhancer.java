@@ -29,7 +29,6 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
-import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
@@ -113,7 +112,6 @@ public class AndroidBinaryGraphEnhancer {
   private final boolean includesVectorDrawables;
   private final JavacOptions javacOptions;
   private final EnumSet<ExopackageMode> exopackageModes;
-  private final Keystore keystore;
   private final BuildConfigFields buildConfigValues;
   private final Optional<SourcePath> buildConfigValuesFile;
   private final Optional<Integer> xzCompressionLevel;
@@ -142,7 +140,6 @@ public class AndroidBinaryGraphEnhancer {
       boolean includesVectorDrawables,
       JavacOptions javacOptions,
       EnumSet<ExopackageMode> exopackageModes,
-      Keystore keystore,
       BuildConfigFields buildConfigValues,
       Optional<SourcePath> buildConfigValuesFile,
       Optional<Integer> xzCompressionLevel,
@@ -180,7 +177,6 @@ public class AndroidBinaryGraphEnhancer {
     this.includesVectorDrawables = includesVectorDrawables;
     this.javacOptions = javacOptions;
     this.exopackageModes = exopackageModes;
-    this.keystore = keystore;
     this.buildConfigValues = buildConfigValues;
     this.buildConfigValuesFile = buildConfigValuesFile;
     this.dxExecutorService = dxExecutorService;
@@ -494,7 +490,7 @@ public class AndroidBinaryGraphEnhancer {
       BuildRuleParams paramsForComputeExopackageAbi = buildRuleParams.copyWithChanges(
           createBuildTargetWithFlavor(CALCULATE_ABI_FLAVOR),
           Suppliers.ofInstance(enhancedDeps.build()),
-          /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
+        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
       computeExopackageDepsAbi = Optional.of(
           new ComputeExopackageDepsAbi(
               paramsForComputeExopackageAbi,
@@ -504,8 +500,8 @@ public class AndroidBinaryGraphEnhancer {
               aaptPackageResources,
               copyNativeLibraries,
               packageStringAssets,
-              preDexMerge,
-              keystore));
+              preDexMerge
+          ));
       ruleResolver.addToIndex(computeExopackageDepsAbi.get());
       enhancedDeps.add(computeExopackageDepsAbi.get());
     }

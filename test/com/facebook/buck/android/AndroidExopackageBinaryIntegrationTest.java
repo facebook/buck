@@ -335,7 +335,7 @@ public class AndroidExopackageBinaryIntegrationTest {
     workspace.resetBuildLogFile();
     workspace.runBuckBuild(NATIVE_EXOPACKAGE_TARGET).assertSuccess();
 
-    workspace.getBuildLog().assertTargetHadMatchingDepsAbi(NATIVE_EXOPACKAGE_TARGET);
+    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey(NATIVE_EXOPACKAGE_TARGET);
   }
 
   @Test
@@ -366,7 +366,7 @@ public class AndroidExopackageBinaryIntegrationTest {
     workspace.resetBuildLogFile();
     workspace.runBuckBuild(DEX_AND_NATIVE_EXOPACKAGE_TARGET).assertSuccess();
 
-    workspace.getBuildLog().assertTargetHadMatchingDepsAbi(DEX_AND_NATIVE_EXOPACKAGE_TARGET);
+    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey(DEX_AND_NATIVE_EXOPACKAGE_TARGET);
   }
 
   @Test
@@ -436,7 +436,7 @@ public class AndroidExopackageBinaryIntegrationTest {
     workspace.runBuckBuild(DEX_EXOPACKAGE_TARGET).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
 
-    buildLog.assertTargetHadMatchingDepsAbi(DEX_EXOPACKAGE_TARGET);
+    buildLog.assertTargetHadMatchingInputRuleKey(DEX_EXOPACKAGE_TARGET);
   }
 
   @Test
@@ -450,6 +450,6 @@ public class AndroidExopackageBinaryIntegrationTest {
     workspace.runBuckBuild(DEX_AND_NATIVE_EXOPACKAGE_TARGET).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
 
-    buildLog.assertTargetHadMatchingDepsAbi(DEX_AND_NATIVE_EXOPACKAGE_TARGET);
+    buildLog.assertTargetHadMatchingInputRuleKey(DEX_AND_NATIVE_EXOPACKAGE_TARGET);
   }
 }

@@ -959,7 +959,7 @@ public class AndroidBinaryIntegrationTest {
     workspace.resetBuildLogFile();
     workspace.runBuckCommand("build", SIMPLE_TARGET).assertSuccess();
     buildLog = workspace.getBuildLog();
-    buildLog.assertTargetHadMatchingDepsAbi(SIMPLE_TARGET);
+    buildLog.assertTargetHadMatchingInputRuleKey(SIMPLE_TARGET);
   }
 
   @Test

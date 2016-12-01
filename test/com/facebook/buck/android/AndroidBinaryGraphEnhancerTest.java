@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
 import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.createStrictMock;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
@@ -138,7 +137,6 @@ public class AndroidBinaryGraphEnhancerTest {
         /* includesVectorDrawables */ false,
         ANDROID_JAVAC_OPTIONS,
         EnumSet.noneOf(ExopackageMode.class),
-        createStrictMock(Keystore.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFile */ Optional.empty(),
         /* xzCompressionLevel */ Optional.empty(),
@@ -294,7 +292,6 @@ public class AndroidBinaryGraphEnhancerTest {
         /* includesVectorDrawables */ false,
         ANDROID_JAVAC_OPTIONS,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
-        keystore,
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.empty(),
         /* xzCompressionLevel */ Optional.empty(),
@@ -438,7 +435,6 @@ public class AndroidBinaryGraphEnhancerTest {
         /* includesVectorDrawables */ false,
         ANDROID_JAVAC_OPTIONS,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
-        createNiceMock(Keystore.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.empty(),
         /* xzCompressionLevel */ Optional.empty(),
@@ -499,7 +495,6 @@ public class AndroidBinaryGraphEnhancerTest {
         /* includesVectorDrawables */ false,
         ANDROID_JAVAC_OPTIONS,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
-        createNiceMock(Keystore.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.empty(),
         /* xzCompressionLevel */ Optional.empty(),
@@ -587,7 +582,6 @@ public class AndroidBinaryGraphEnhancerTest {
         /* includesVectorDrawables */ false,
         ANDROID_JAVAC_OPTIONS,
         EnumSet.of(ExopackageMode.SECONDARY_DEX),
-        createNiceMock(Keystore.class),
         /* buildConfigValues */ BuildConfigFields.empty(),
         /* buildConfigValuesFiles */ Optional.empty(),
         /* xzCompressionLevel */ Optional.empty(),

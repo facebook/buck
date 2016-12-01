@@ -229,7 +229,6 @@ public class AndroidBinaryDescription
           args.includesVectorDrawables.orElse(false),
           javacOptions,
           exopackageModes,
-          (Keystore) keystore,
           args.buildConfigValues,
           args.buildConfigValuesFile,
           Optional.empty(),

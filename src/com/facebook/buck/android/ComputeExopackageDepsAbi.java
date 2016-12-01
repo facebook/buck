@@ -17,16 +17,13 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidBinary.ExopackageMode;
-import com.facebook.buck.android.ComputeExopackageDepsAbi.BuildOutput;
-import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildOutputInitializer;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -53,18 +50,12 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.annotation.Nullable;
-
 /**
  * A build rule that hashes all of the files that go into an exopackage APK.
  * This is used by AndroidBinaryRule to compute the ABI hash of its deps.
  */
-public class ComputeExopackageDepsAbi extends AbstractBuildRule
-    implements InitializableFromDisk<BuildOutput> {
-
+public class ComputeExopackageDepsAbi extends AbstractBuildRule {
   private static final Logger LOG = Logger.get(ComputeExopackageDepsAbi.class);
-
-  private static final String METADATA_KEY = "EXOPACKAGE_ABI_OF_DEPS";
 
   private final EnumSet<ExopackageMode> exopackageModes;
   private final AndroidPackageableCollection packageableCollection;
@@ -72,8 +63,7 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
   private final Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibraries;
   private final Optional<PackageStringAssets> packageStringAssets;
   private final Optional<PreDexMerge> preDexMerge;
-  private final Keystore keystore;
-  private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
+  private final Path abiPath;
 
   public ComputeExopackageDepsAbi(
       BuildRuleParams params,
@@ -83,17 +73,21 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
       AaptPackageResources aaptPackageResources,
       Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibraries,
       Optional<PackageStringAssets> packageStringAssets,
-      Optional<PreDexMerge> preDexMerge,
-      Keystore keystore) {
+      Optional<PreDexMerge> preDexMerge) {
     super(params, resolver);
+    Preconditions.checkArgument(!exopackageModes.isEmpty());
     this.exopackageModes = exopackageModes;
     this.packageableCollection = packageableCollection;
     this.aaptPackageResources = aaptPackageResources;
     this.copyNativeLibraries = copyNativeLibraries;
     this.packageStringAssets = packageStringAssets;
     this.preDexMerge = preDexMerge;
-    this.keystore = keystore;
-    this.buildOutputInitializer = new BuildOutputInitializer<>(params.getBuildTarget(), this);
+    this.abiPath = BuildTargets.getGenPath(
+        getProjectFilesystem(), getBuildTarget(), "%s/exopackage.abi");
+  }
+
+  public SourcePath getAbiPath() {
+    return new BuildTargetSourcePath(getBuildTarget(), abiPath);
   }
 
   @Override
@@ -104,6 +98,9 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
           @Override
           public StepExecutionResult execute(ExecutionContext context) {
             try {
+              // TODO(cjhopman): Rather than calculate this hash ourselves, we should be able to
+              // just add all these files to the AndroidBinary's rulekey and rely on the input-based
+              // rulekey calculation.
 
               // For exopackages, the only significant thing android_binary does is apkbuilder,
               // so we need to include all of the apkbuilder inputs in the ABI key.
@@ -210,13 +207,11 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
                 addToHash(hasher, "third-party jar", jar);
               }
 
-              // The last input is the keystore.
-              addToHash(hasher, "keystore", keystore.getPathToStore());
-              addToHash(hasher, "keystore properties", keystore.getPathToPropertiesFile());
-
               String abiHash = hasher.hash().toString();
               LOG.verbose("ABI hash = %s", abiHash);
-              buildableContext.addMetadata(METADATA_KEY, abiHash);
+              getProjectFilesystem().createParentDirs(abiPath);
+              getProjectFilesystem().writeContentsToPath(abiHash, abiPath);
+              buildableContext.recordArtifact(abiPath);
               return StepExecutionResult.SUCCESS;
             } catch (IOException e) {
               context.logError(e, "Error computing ABI hash.");
@@ -257,31 +252,8 @@ public class ComputeExopackageDepsAbi extends AbstractBuildRule
     LOG.verbose("file %s(%s) = %s", relativePath, role, fileSha1);
   }
 
-  @Nullable
   @Override
   public Path getPathToOutput() {
-    return null;
-  }
-
-  public Sha1HashCode getAndroidBinaryAbiHash() {
-    return buildOutputInitializer.getBuildOutput().abiHash;
-  }
-
-  static class BuildOutput {
-    private final Sha1HashCode abiHash;
-
-    BuildOutput(Sha1HashCode abiHash) {
-      this.abiHash = abiHash;
-    }
-  }
-
-  @Override
-  public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
-    return new BuildOutput(onDiskBuildInfo.getHash(METADATA_KEY).get());
-  }
-
-  @Override
-  public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
-    return buildOutputInitializer;
+    return abiPath;
   }
 }
