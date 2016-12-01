@@ -416,17 +416,17 @@ public class ProjectFilesystem {
       return file;
     }
 
+    if (exists(file)) {
+      return file;
+    }
+
     // TODO(bolinfest): Eliminate this temporary exemption for symbolic links.
     if (isSymLink(file)) {
       return file;
     }
 
-    if (!exists(file)) {
-      throw new RuntimeException(
-          String.format("Not an ordinary file: '%s'.", pathRelativeToProjectRoot));
-    }
-
-    return file;
+    throw new RuntimeException(
+        String.format("Not an ordinary file: '%s'.", pathRelativeToProjectRoot));
   }
 
   public boolean exists(Path pathRelativeToProjectRoot, LinkOption... options) {
