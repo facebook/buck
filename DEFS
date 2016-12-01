@@ -91,6 +91,8 @@ def java_test(
     name,
     deps=[],
     vm_args=[],
+    labels=[],
+    run_test_separately=False,
     **kwargs
     ):
   original_java_test(
@@ -136,6 +138,8 @@ def java_test(
       # publicly accessible.
       '-Dsun.zip.disableMemoryMapping=true',
     ] + vm_args,
+    run_test_separately=run_test_separately,
+    labels = labels + ['serialize'] if run_test_separately else [],
     **kwargs
   )
 
