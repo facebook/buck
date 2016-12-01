@@ -30,7 +30,6 @@ import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
@@ -205,30 +204,6 @@ public class ParamInfo implements Comparable<ParamInfo> {
       field.set(dto, result);
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  public void amendTargetNodeReferences(
-      Function<BuildTarget, TargetNode<?, ?>> targetNodeResolver,
-      Object dto) throws ParamInfoException {
-    Object value;
-    try {
-      value = field.get(dto);
-    } catch (ReflectiveOperationException e) {
-      throw new RuntimeException(e);
-    }
-    try {
-      field.set(
-          dto,
-          typeCoercer.<TargetNode<?, ?>>mapAll(
-              x -> targetNodeResolver.apply(x.getBuildTarget()),
-              (Class<TargetNode<?, ?>>) (Class<?>) TargetNode.class,
-              value));
-    } catch (ReflectiveOperationException e) {
-      throw new RuntimeException(e);
-    } catch (CoerceFailedException e) {
-      throw new ParamInfoException(name, e.getMessage(), e);
     }
   }
 

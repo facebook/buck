@@ -193,8 +193,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
               SourceWithFlags.of(
                   new BuildTargetSourcePath(
                       source.getCompileRule().getBuildTarget(),
-                      outputDir.resolve(name)),
-                  ImmutableList.of()));
+                      outputDir.resolve(name))));
         } else if (CxxCompilables.HEADER_EXTENSIONS.contains(extension)) {
           headersBuilder.put(
               name,

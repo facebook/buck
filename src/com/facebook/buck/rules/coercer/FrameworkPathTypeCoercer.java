@@ -30,9 +30,8 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
-import java.util.function.Function;
 
-public class FrameworkPathTypeCoercer extends TypeCoercer<FrameworkPath> {
+public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
 
   private final TypeCoercer<SourcePath> sourcePathTypeCoercer;
 
@@ -121,27 +120,5 @@ public class FrameworkPathTypeCoercer extends TypeCoercer<FrameworkPath> {
         object,
         getOutputClass(),
         "input should be either a source tree path or a source path");
-  }
-
-  @Override
-  public <U> FrameworkPath mapAllInternal(
-      Function<U, U> function,
-      Class<U> targetClass,
-      FrameworkPath object) throws CoerceFailedException {
-    switch (object.getType()) {
-      case SOURCE_TREE_PATH:
-        return object;
-      case SOURCE_PATH:
-        if (!sourcePathTypeCoercer.hasElementClass(targetClass)) {
-          return object;
-        }
-        return FrameworkPath.ofSourcePath(
-            sourcePathTypeCoercer.mapAll(
-                function,
-                targetClass,
-                object.getSourcePath().get()));
-    }
-    throw new RuntimeException(
-        String.format("Unsupported framework path type '%s'", object.getType()));
   }
 }

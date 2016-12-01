@@ -20,7 +20,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 
 import java.nio.file.Path;
-import java.util.function.Function;
 
 /**
  * Class defining an interpretation of some dynamically typed Java object as a specific class.
@@ -30,15 +29,15 @@ import java.util.function.Function;
  *
  * @param <T> resulting type
  */
-public abstract class TypeCoercer<T> {
+public interface TypeCoercer<T> {
 
-  public abstract Class<T> getOutputClass();
+  Class<T> getOutputClass();
 
   /**
    * Returns whether the leaf nodes of this type coercer outputs value that is an instance of the
    * given class or its subclasses. Does not match non-leaf nodes like Map or List.
    */
-  public abstract boolean hasElementClass(Class<?>... types);
+  boolean hasElementClass(Class<?>... types);
 
   /**
    * Traverse an object guided by this TypeCoercer.
@@ -47,30 +46,18 @@ public abstract class TypeCoercer<T> {
    * If the object is a collection or map, it will also recursively traverse all elements of the
    * map.
    */
-  public abstract void traverse(T object, Traversal traversal);
+  void traverse(T object, Traversal traversal);
 
   /**
    * @throws CoerceFailedException Input object cannot be coerced into the given type.
    */
-  public abstract T coerce(
+  T coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       Object object) throws CoerceFailedException;
 
-  @SuppressWarnings("unchecked")
-  public <U> T mapAll(Function<U, U> function, Class<U> targetClass, Object object)
-      throws CoerceFailedException {
-    if (getOutputClass().isAssignableFrom(targetClass)) {
-      return (T) function.apply((U) object);
-    }
-    return mapAllInternal(function, targetClass, (T) object);
-  }
-
-  protected abstract <U> T mapAllInternal(Function<U, U> function, Class<U> targetClass, T object)
-      throws CoerceFailedException;
-
-  public interface Traversal {
+  interface Traversal {
     void traverse(Object object);
   }
 }

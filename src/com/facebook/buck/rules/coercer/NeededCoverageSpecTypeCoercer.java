@@ -20,18 +20,16 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.python.NeededCoverageSpec;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.TargetNode;
 
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
-import java.util.function.Function;
 
 /**
  * A type coercer to handle needed coverage specification for python_test.
  */
-public class NeededCoverageSpecTypeCoercer extends TypeCoercer<NeededCoverageSpec> {
+public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverageSpec> {
   private final TypeCoercer<Float> floatTypeCoercer;
   private final TypeCoercer<BuildTarget> buildTargetTypeCoercer;
   private final TypeCoercer<String> pathNameTypeCoercer;
@@ -114,31 +112,5 @@ public class NeededCoverageSpecTypeCoercer extends TypeCoercer<NeededCoverageSpe
         object,
         getOutputClass(),
         "input should be a tuple of needed coverage ratio, a build target, and optionally a path");
-  }
-
-  @Override
-  public <U> NeededCoverageSpec mapAllInternal(
-      Function<U, U> function,
-      Class<U> targetClass,
-      NeededCoverageSpec object) throws CoerceFailedException {
-    boolean ratioHasTargetNode = floatTypeCoercer.hasElementClass(TargetNode.class);
-    boolean buildTargetHasTargetNode = buildTargetTypeCoercer.hasElementClass(TargetNode.class);
-    boolean pathNameHasTargetNode = pathNameTypeCoercer.hasElementClass(TargetNode.class);
-    if (!ratioHasTargetNode && !buildTargetHasTargetNode && !pathNameHasTargetNode) {
-      return object;
-    }
-    Float ratio = object.getNeededCoverageRatio();
-    if (ratioHasTargetNode) {
-      ratio = floatTypeCoercer.mapAll(function, targetClass, ratio);
-    }
-    BuildTarget buildTarget = object.getBuildTarget();
-    if (buildTargetHasTargetNode) {
-      buildTarget = buildTargetTypeCoercer.mapAll(function, targetClass, buildTarget);
-    }
-    Optional<String> pathName = object.getPathName();
-    if (pathNameHasTargetNode && pathName.isPresent()) {
-      pathName = Optional.of(pathNameTypeCoercer.mapAll(function, targetClass, pathName.get()));
-    }
-    return NeededCoverageSpec.of(ratio, buildTarget, pathName);
   }
 }

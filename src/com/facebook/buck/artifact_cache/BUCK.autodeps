@@ -32,7 +32,6 @@
     "deps" : [
       "//src/com/facebook/buck/artifact_cache:impl",
       "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/log:log",
       "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:util",

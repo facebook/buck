@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -34,56 +35,203 @@ import java.util.Optional;
  * responsible for processing the raw (python) inputs of a build rule, and gathering any build
  * targets and paths referenced from those inputs.
  */
-public interface TargetNode<T, U extends Description<T>>
-    extends Comparable<TargetNode<?, ?>>, HasBuildTarget {
+public class TargetNode<T, U extends Description<T>>
+    implements Comparable<TargetNode<?, ?>>, HasBuildTarget {
+
+  private final TargetNodeFactory factory;
+
+  private final HashCode rawInputsHashCode;
+  private final ProjectFilesystem filesystem;
+  private final BuildTarget buildTarget;
+  private final CellPathResolver cellNames;
+
+  private final U description;
+
+  private final T constructorArg;
+  private final ImmutableSet<Path> inputs;
+  private final ImmutableSet<BuildTarget> declaredDeps;
+  private final ImmutableSet<BuildTarget> extraDeps;
+  private final ImmutableSet<VisibilityPattern> visibilityPatterns;
+
+  private final Optional<ImmutableMap<BuildTarget, Version>> selectedVersions;
+
+  TargetNode(
+      TargetNodeFactory factory,
+      HashCode rawInputsHashCode,
+      U description,
+      T constructorArg,
+      ProjectFilesystem filesystem,
+      BuildTarget buildTarget,
+      ImmutableSet<BuildTarget> declaredDeps,
+      ImmutableSet<BuildTarget> extraDeps,
+      ImmutableSet<VisibilityPattern> visibilityPatterns,
+      ImmutableSet<Path> paths,
+      CellPathResolver cellNames,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {
+    this.factory = factory;
+    this.rawInputsHashCode = rawInputsHashCode;
+    this.description = description;
+    this.constructorArg = constructorArg;
+    this.filesystem = filesystem;
+    this.buildTarget = buildTarget;
+    this.cellNames = cellNames;
+    this.declaredDeps = declaredDeps;
+    this.extraDeps = extraDeps;
+    this.inputs = paths;
+    this.visibilityPatterns = visibilityPatterns;
+    this.selectedVersions = selectedVersions;
+  }
 
   /**
    * @return A hash of the raw input from the build file used to construct the node.
    */
-  HashCode getRawInputsHashCode();
+  public HashCode getRawInputsHashCode() {
+    return rawInputsHashCode;
+  }
 
-  U getDescription();
+  public U getDescription() {
+    return description;
+  }
 
-  BuildRuleType getType();
+  public BuildRuleType getType() {
+    return Description.getBuildRuleType(description);
+  }
 
-  T getConstructorArg();
+  public T getConstructorArg() {
+    return constructorArg;
+  }
 
-  ProjectFilesystem getFilesystem();
+  public ProjectFilesystem getFilesystem() {
+    return filesystem;
+  }
 
-  ImmutableSet<Path> getInputs();
+  @Override
+  public BuildTarget getBuildTarget() {
+    return buildTarget;
+  }
 
-  ImmutableSet<BuildTarget> getDeclaredDeps();
+  public ImmutableSet<Path> getInputs() {
+    return inputs;
+  }
 
-  ImmutableSet<BuildTarget> getExtraDeps();
+  public ImmutableSet<BuildTarget> getDeclaredDeps() {
+    return declaredDeps;
+  }
 
-  ImmutableSet<BuildTarget> getDeps();
+  public ImmutableSet<BuildTarget> getExtraDeps() {
+    return extraDeps;
+  }
 
-  boolean isVisibleTo(TargetGraph graph, TargetNode<?, ?> viewer);
+  public ImmutableSet<BuildTarget> getDeps() {
+    ImmutableSet.Builder<BuildTarget> builder = ImmutableSet.builder();
+    builder.addAll(getDeclaredDeps());
+    builder.addAll(getExtraDeps());
+    return builder.build();
+  }
 
-  void isVisibleToOrThrow(TargetGraph graphContext, TargetNode<?, ?> viewer);
+  /**
+   * TODO(andrewjcg): It'd be nice to eventually move this implementation to an
+   * `AbstractDescription` base class, so that the various types of descriptions
+   * can install their own implementations.  However, we'll probably want to move
+   * most of what is now `BuildRuleParams` to `DescriptionParams` and set them up
+   * while building the target graph.
+   */
+  public boolean isVisibleTo(TargetGraph graph, TargetNode<?, ?> viewer) {
+
+    // if i am in a restricted visibility group that the viewer isn't, the viewer can't see me.
+    // this check *must* take priority even over the sibling check, because if it didn't then that
+    // would introduce siblings as a way to "leak" visibility out of restricted groups.
+    for (TargetGroup targetGroup : graph.getGroupsContainingTarget(viewer.getBuildTarget())) {
+      if (targetGroup.restrictsOutboundVisibility() &&
+          !targetGroup.containsTarget(getBuildTarget())) {
+        return false;
+      }
+    }
+
+    if (getBuildTarget().getCellPath().equals(viewer.getBuildTarget().getCellPath()) &&
+        getBuildTarget().getBaseName().equals(viewer.getBuildTarget().getBaseName())) {
+      return true;
+    }
+
+    for (VisibilityPattern pattern : visibilityPatterns) {
+      if (pattern.checkVisibility(graph, viewer, this)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  public void isVisibleToOrThrow(TargetGraph graphContext, TargetNode<?, ?> viewer) {
+    if (!isVisibleTo(graphContext, viewer)) {
+      throw new HumanReadableException(
+          "%s depends on %s, which is not visible",
+          viewer,
+          getBuildTarget());
+    }
+  }
 
   /**
    * Type safe checked cast of the constructor arg.
    */
-  <V> Optional<TargetNode<V, ?>> castArg(Class<V> cls);
+  @SuppressWarnings("unchecked")
+  public <V> Optional<TargetNode<V, ?>> castArg(Class<V> cls) {
+    if (cls.isInstance(constructorArg)) {
+      return Optional.of((TargetNode<V, ?>) this);
+    } else {
+      return Optional.empty();
+    }
+  }
 
-  <V, W extends Description<V>> TargetNode<V, W> withDescription(W description);
+  @Override
+  public int compareTo(TargetNode<?, ?> o) {
+    return getBuildTarget().compareTo(o.getBuildTarget());
+  }
 
-  TargetNode<T, U> withFlavors(ImmutableSet<Flavor> flavors);
+  @Override
+  public final String toString() {
+    return getBuildTarget().getFullyQualifiedName();
+  }
 
-  TargetNode<T, U> withConstructorArg(T constructorArg);
+  public <V, W extends Description<V>> TargetNode<V, W> withDescription(W description) {
+    return factory.copyNodeWithDescription(this, description);
+  }
 
-  TargetNode<T, U> withTargetConstructorArgDepsAndSelectedVerisons(
+  public TargetNode<T, U> withFlavors(ImmutableSet<Flavor> flavors) {
+    return factory.copyNodeWithFlavors(this, flavors);
+  }
+
+  public TargetNode<T, U> withTargetConstructorArgDepsAndSelectedVerisons(
       BuildTarget target,
       T constructorArg,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<BuildTarget> extraDeps,
-      Optional<ImmutableMap<BuildTarget, Version>> selectedVerisons);
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVerisons) {
+    return new TargetNode<>(
+        factory,
+        getRawInputsHashCode(),
+        getDescription(),
+        constructorArg,
+        filesystem,
+        target,
+        declaredDeps,
+        extraDeps,
+        getVisibilityPatterns(),
+        getInputs(),
+        getCellNames(),
+        selectedVerisons);
+  }
 
-  CellPathResolver getCellNames();
+  public CellPathResolver getCellNames() {
+    return cellNames;
+  }
 
-  ImmutableSet<VisibilityPattern> getVisibilityPatterns();
+  public ImmutableSet<VisibilityPattern> getVisibilityPatterns() {
+    return visibilityPatterns;
+  }
 
-  Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions();
+  public Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions() {
+    return selectedVersions;
+  }
 
 }

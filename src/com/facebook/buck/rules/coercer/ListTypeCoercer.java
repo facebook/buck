@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import java.nio.file.Path;
@@ -48,10 +47,5 @@ public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, 
         builder,
         object);
     return builder.build();
-  }
-
-  @Override
-  protected ImmutableCollection.Builder<T> getBuilder() {
-    return ImmutableList.builder();
   }
 }

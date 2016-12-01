@@ -21,12 +21,12 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.ImmediateDirectoryBuildTargetPattern;
 import com.facebook.buck.model.SingletonBuildTargetPattern;
 import com.facebook.buck.model.SubdirectoryBuildTargetPattern;
+import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.function.Function;
 
 /**
  * Context for parsing build target names. Fully-qualified target names are parsed the same
@@ -59,9 +59,7 @@ public abstract class BuildTargetPatternParser<T> {
    * For case 2 and 3, parseContext is expected to be
    * {@link BuildTargetPatternParser#forVisibilityArgument()}.
    */
-  public final T parse(
-      Function<Optional<String>, Path> cellPathResolver,
-      String buildTargetPattern) {
+  public final T parse(CellPathResolver cellNames, String buildTargetPattern) {
     Preconditions.checkArgument(
         buildTargetPattern.contains(BUILD_RULE_PREFIX),
         String.format(
@@ -69,11 +67,10 @@ public abstract class BuildTargetPatternParser<T> {
             buildTargetPattern));
 
     if (buildTargetPattern.endsWith("/" + WILDCARD_BUILD_RULE_SUFFIX)) {
-      return createWildCardPattern(cellPathResolver, buildTargetPattern);
+      return createWildCardPattern(cellNames, buildTargetPattern);
     }
 
-    BuildTarget target =
-        BuildTargetParser.INSTANCE.parse(buildTargetPattern, this, cellPathResolver);
+    BuildTarget target = BuildTargetParser.INSTANCE.parse(buildTargetPattern, this, cellNames);
     if (target.getShortNameAndFlavorPostfix().isEmpty()) {
       return createForChildren(target.getCellPath(), target.getBasePath());
     } else {
@@ -82,7 +79,7 @@ public abstract class BuildTargetPatternParser<T> {
   }
 
   private T createWildCardPattern(
-      Function<Optional<String>, Path> cellPathResolver,
+      CellPathResolver cellNames,
       String buildTargetPattern) {
     if (!isWildCardAllowed()) {
       throw new BuildTargetParseException(
@@ -92,10 +89,10 @@ public abstract class BuildTargetPatternParser<T> {
     Path cellPath;
     int index = buildTargetPattern.indexOf(BUILD_RULE_PREFIX);
     if (index > 0) {
-      cellPath = cellPathResolver.apply(Optional.of(buildTargetPattern.substring(0, index)));
+      cellPath = cellNames.getCellPath(Optional.of(buildTargetPattern.substring(0, index)));
       buildTargetPattern = buildTargetPattern.substring(index);
     } else {
-      cellPath = cellPathResolver.apply(Optional.empty());
+      cellPath = cellNames.getCellPath(Optional.empty());
     }
 
     if (buildTargetPattern.contains(BUILD_RULE_SEPARATOR)) {

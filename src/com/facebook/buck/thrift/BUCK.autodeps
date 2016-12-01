@@ -22,7 +22,7 @@
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rules",
-      "//src/com/facebook/buck/rules/coercer:types",
+      "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/util:io",

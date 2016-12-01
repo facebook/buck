@@ -8,7 +8,6 @@
       "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/parser:config",
-      "//src/com/facebook/buck/rules:build_rule",
       "//third-party/java/jsr:jsr305"
     ],
     "exported_deps" : [
@@ -18,7 +17,7 @@
       "//src/com/facebook/buck/json:json",
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/model:model",
-      "//src/com/facebook/buck/rules:rules",
+      "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/util:io",
       "//third-party/java/eclipse:eclipse_jdt",
       "//third-party/java/guava:guava"

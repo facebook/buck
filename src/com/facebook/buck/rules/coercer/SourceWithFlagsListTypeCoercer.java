@@ -19,15 +19,13 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
-import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.function.Function;
 
-public class SourceWithFlagsListTypeCoercer extends TypeCoercer<SourceWithFlagsList> {
+public class SourceWithFlagsListTypeCoercer implements TypeCoercer<SourceWithFlagsList> {
   private final TypeCoercer<ImmutableSortedSet<SourceWithFlags>> unnamedSourcesTypeCoercer;
   private final TypeCoercer<ImmutableSortedMap<String, SourceWithFlags>> namedSourcesTypeCoercer;
 
@@ -86,33 +84,5 @@ public class SourceWithFlagsListTypeCoercer extends TypeCoercer<SourceWithFlagsL
               pathRelativeToProjectRoot,
               object));
     }
-  }
-
-  @Override
-  public <U> SourceWithFlagsList mapAllInternal(
-      Function<U, U> function,
-      Class<U> targetClass,
-      SourceWithFlagsList object) throws CoerceFailedException {
-    switch (object.getType()) {
-      case UNNAMED:
-        if (!unnamedSourcesTypeCoercer.hasElementClass(TargetNode.class)) {
-          return object;
-        }
-        return SourceWithFlagsList.ofUnnamedSources(
-            unnamedSourcesTypeCoercer.mapAll(
-                function,
-                targetClass,
-                object.getUnnamedSources().get()));
-      case NAMED:
-        if (!namedSourcesTypeCoercer.hasElementClass(TargetNode.class)) {
-          return object;
-        }
-        return SourceWithFlagsList.ofNamedSources(
-            namedSourcesTypeCoercer.mapAll(
-                function,
-                targetClass,
-                object.getNamedSources().get()));
-    }
-    throw new RuntimeException(String.format("Unhandled type: '%s'", object.getType()));
   }
 }

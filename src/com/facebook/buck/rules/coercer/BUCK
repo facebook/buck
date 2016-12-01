@@ -1,21 +1,19 @@
-TYPE_COERCER_SRCS = [
+TYPES_SRCS = [
   'CoerceFailedException.java',
   'TypeCoercer.java',
   'TypeCoercerFactory.java',
 ]
 
-TYPES_SRCS = [
-  'AbstractBuildConfigFields.java',
-  'AbstractFrameworkPath.java',
-  'AbstractManifestEntries.java',
-  'AbstractOcamlSource.java',
-  'AbstractSourceList.java',
-  'AbstractSourceWithFlagsList.java',
-]
-
-java_immutables_library(
+java_library(
   name = 'types',
   srcs = TYPES_SRCS,
+  autodeps = True,
+  visibility = ['PUBLIC'],
+)
+
+java_immutables_library(
+  name = 'coercer',
+  srcs = glob(['*.java'], excludes = TYPES_SRCS),
   immutable_types = [
     'BuildConfigFields',
     'FrameworkPath',
@@ -24,20 +22,6 @@ java_immutables_library(
     'SourceList',
     'SourceWithFlagsList',
   ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
-)
-
-java_library(
-  name = 'type_coercer',
-  srcs = TYPE_COERCER_SRCS,
-  autodeps = True,
-  visibility = ['PUBLIC'],
-)
-
-java_library(
-  name = 'coercer',
-  srcs = glob(['*.java'], excludes = TYPE_COERCER_SRCS + TYPES_SRCS),
   autodeps = True,
   visibility = ['PUBLIC'],
 )

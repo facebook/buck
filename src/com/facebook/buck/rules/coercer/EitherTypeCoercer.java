@@ -23,12 +23,11 @@ import com.facebook.buck.rules.CellPathResolver;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
-import java.util.function.Function;
 
 /**
  * Coerces a type to either type, trying the left type before the right.
  */
-public class EitherTypeCoercer<Left, Right> extends TypeCoercer<Either<Left, Right>> {
+public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, Right>> {
   private final TypeCoercer<Left> leftTypeCoercer;
   private final TypeCoercer<Right> rightTypeCoercer;
 
@@ -154,24 +153,5 @@ public class EitherTypeCoercer<Left, Right> extends TypeCoercer<Either<Left, Rig
     // None of our coercers matched the "type" of the object, so throw the generic
     // error message.
     throw new CoerceFailedException(String.format("cannot parse %s", object));
-  }
-
-  @Override
-  public <U> Either<Left, Right> mapAllInternal(
-      Function<U, U> function,
-      Class<U> targetClass,
-      Either<Left, Right> object) throws CoerceFailedException {
-    if (object.isLeft()) {
-      if (!leftTypeCoercer.hasElementClass(targetClass)) {
-        return object;
-      }
-      return Either.ofLeft(leftTypeCoercer.mapAll(function, targetClass, object.getLeft()));
-    } else if (object.isRight()) {
-      if (!rightTypeCoercer.hasElementClass(targetClass)) {
-        return object;
-      }
-      return Either.ofRight(rightTypeCoercer.mapAll(function, targetClass, object.getRight()));
-    }
-    throw new RuntimeException("Unexpected either type, wasn't left or right.");
   }
 }

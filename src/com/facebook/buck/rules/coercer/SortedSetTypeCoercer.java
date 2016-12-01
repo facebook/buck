@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
@@ -75,7 +74,7 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
       Path pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    SortedSet<T> builder = Sets.newTreeSet();
+    final SortedSet<T> builder = Sets.newTreeSet();
     fillSortedSet(
         cellRoots,
         filesystem,
@@ -85,8 +84,4 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
     return ImmutableSortedSet.copyOf(builder);
   }
 
-  @Override
-  protected ImmutableCollection.Builder<T> getBuilder() {
-    return ImmutableSortedSet.naturalOrder();
-  }
 }

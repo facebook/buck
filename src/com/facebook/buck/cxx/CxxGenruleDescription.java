@@ -365,7 +365,7 @@ public class CxxGenruleDescription
             BuildTargetParser.INSTANCE.parse(
                 itr.next(),
                 BuildTargetPatternParser.forBaseName(target.getBaseName()),
-                cellNames::getCellPath));
+                cellNames));
       }
 
       return new FilterAndTargets(filter, targets.build());

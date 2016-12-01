@@ -3,7 +3,6 @@
     "deps" : [
       "//src/com/facebook/buck/event/listener:listener",
       "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/log:log",
       "//src/com/facebook/buck/util:object_mapper",
       "//third-party/java/jackson:jackson-core",
       "//third-party/java/jackson:jackson-databind"

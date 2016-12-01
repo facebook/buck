@@ -19,17 +19,15 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.TargetNode;
 
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 
 public class PatternMatchedCollectionTypeCoercer<T>
-    extends TypeCoercer<PatternMatchedCollection<T>> {
+    implements TypeCoercer<PatternMatchedCollection<T>> {
 
   TypeCoercer<Pattern> patternTypeCoercer;
   TypeCoercer<T> valueTypeCoercer;
@@ -87,7 +85,7 @@ public class PatternMatchedCollectionTypeCoercer<T>
             "input object should be a list of pairs");
       }
       Iterator<?> pair = ((Collection<?>) element).iterator();
-      Pattern pattern = patternTypeCoercer.coerce(
+      Pattern platformSelector = patternTypeCoercer.coerce(
           cellRoots,
           filesystem,
           pathRelativeToProjectRoot,
@@ -97,32 +95,7 @@ public class PatternMatchedCollectionTypeCoercer<T>
           filesystem,
           pathRelativeToProjectRoot,
           pair.next());
-      builder.add(pattern, value);
-    }
-    return builder.build();
-  }
-
-  @Override
-  protected <U> PatternMatchedCollection<T> mapAllInternal(
-      Function<U, U> function,
-      Class<U> targetClass,
-      PatternMatchedCollection<T> object) throws CoerceFailedException {
-    boolean patternHasTargetNode = patternTypeCoercer.hasElementClass(TargetNode.class);
-    boolean valueHaveTargetNode = valueTypeCoercer.hasElementClass(TargetNode.class);
-    if (!patternHasTargetNode && !valueHaveTargetNode) {
-      return object;
-    }
-    PatternMatchedCollection.Builder<T> builder = PatternMatchedCollection.builder();
-    for (Pair<Pattern, T> patternAndValue : object.getPatternsAndValues()) {
-      Pattern pattern = patternAndValue.getFirst();
-      if (patternHasTargetNode) {
-        pattern = patternTypeCoercer.mapAll(function, targetClass, pattern);
-      }
-      T value = patternAndValue.getSecond();
-      if (valueHaveTargetNode) {
-        value = valueTypeCoercer.mapAll(function, targetClass, value);
-      }
-      builder.add(pattern, value);
+      builder.add(platformSelector, value);
     }
     return builder.build();
   }

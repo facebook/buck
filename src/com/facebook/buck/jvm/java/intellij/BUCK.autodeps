@@ -26,7 +26,6 @@
       "//src/com/facebook/buck/jvm/java:config",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
-      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/util:io",

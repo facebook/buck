@@ -18,15 +18,13 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableCollection;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.function.Function;
 
 public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
-    extends TypeCoercer<C> {
+    implements TypeCoercer<C> {
   private final TypeCoercer<T> elementTypeCoercer;
 
   CollectionTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
@@ -45,24 +43,6 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
       elementTypeCoercer.traverse(element, traversal);
     }
   }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public <U> C mapAllInternal(
-      Function<U, U> function,
-      Class<U> targetClass,
-      C object) throws CoerceFailedException {
-    if (!elementTypeCoercer.hasElementClass(TargetNode.class)) {
-      return object;
-    }
-    C.Builder<T> builder = getBuilder();
-    for (T element : object) {
-      builder.add(elementTypeCoercer.mapAll(function, targetClass, element));
-    }
-    return (C) builder.build();
-  }
-
-  protected abstract C.Builder<T> getBuilder();
 
   /**
    * Helper method to add coerced elements to the builder.

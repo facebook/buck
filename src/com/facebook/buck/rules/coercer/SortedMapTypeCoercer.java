@@ -18,15 +18,13 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableSortedMap;
 
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.function.Function;
 
 public class SortedMapTypeCoercer<K extends Comparable<K>, V>
-    extends TypeCoercer<ImmutableSortedMap<K, V>> {
+    implements TypeCoercer<ImmutableSortedMap<K, V>> {
   private final TypeCoercer<K> keyTypeCoercer;
   private final TypeCoercer<V> valueTypeCoercer;
 
@@ -83,30 +81,5 @@ public class SortedMapTypeCoercer<K extends Comparable<K>, V>
     } else {
       throw CoerceFailedException.simple(object, getOutputClass());
     }
-  }
-
-  @Override
-  public <U> ImmutableSortedMap<K, V> mapAllInternal(
-      Function<U, U> function,
-      Class<U> targetClass,
-      ImmutableSortedMap<K, V> object) throws CoerceFailedException {
-    boolean keysHaveTargetNode = keyTypeCoercer.hasElementClass(TargetNode.class);
-    boolean valuesHaveTargetNode = valueTypeCoercer.hasElementClass(TargetNode.class);
-    if (!keysHaveTargetNode && !valuesHaveTargetNode) {
-      return object;
-    }
-    ImmutableSortedMap.Builder<K, V> builder = ImmutableSortedMap.naturalOrder();
-    for (Map.Entry<K, V> entry : object.entrySet()) {
-      K key = entry.getKey();
-      if (keysHaveTargetNode) {
-        key = keyTypeCoercer.mapAll(function, targetClass, key);
-      }
-      V value = entry.getValue();
-      if (valuesHaveTargetNode) {
-        value = valueTypeCoercer.mapAll(function, targetClass, value);
-      }
-      builder.put(key, value);
-    }
-    return builder.build();
   }
 }

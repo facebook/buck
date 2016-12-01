@@ -53,7 +53,7 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
       return BuildTargetParser.INSTANCE.parse(
           param,
           BuildTargetPatternParser.forBaseName(baseName),
-          cellRoots::getCellPath);
+          cellRoots);
     } catch (BuildTargetParseException e) {
       throw CoerceFailedException.simple(object, getOutputClass());
     }

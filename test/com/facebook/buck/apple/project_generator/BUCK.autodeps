@@ -20,7 +20,6 @@
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:types",
       "//src/com/facebook/buck/rules/coercer:coercer",
-      "//src/com/facebook/buck/rules/coercer:types",
       "//src/com/facebook/buck/shell:rules",
       "//src/com/facebook/buck/swift:swift",
       "//src/com/facebook/buck/util:exceptions",

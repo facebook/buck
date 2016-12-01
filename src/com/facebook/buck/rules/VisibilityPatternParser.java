@@ -36,7 +36,7 @@ public class VisibilityPatternParser {
       return GroupVisibilityPattern.INSTANCE;
     } else {
       return new BuildTargetVisibilityPattern(buildTargetPatternParser.parse(
-          cellNames::getCellPath,
+          cellNames,
           buildTargetPattern));
     }
   }

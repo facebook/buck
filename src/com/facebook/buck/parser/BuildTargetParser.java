@@ -20,18 +20,17 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.FlavorParser;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.rules.CellPathResolver;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 
 public class BuildTargetParser {
 
@@ -68,7 +67,7 @@ public class BuildTargetParser {
   public BuildTarget parse(
       String buildTargetName,
       BuildTargetPatternParser<?> buildTargetPatternParser,
-      Function<Optional<String>, Path> cellPathResolver) {
+      CellPathResolver cellNames) {
 
     if (buildTargetName.endsWith(BUILD_RULE_SEPARATOR) &&
         !buildTargetPatternParser.isWildCardAllowed()) {
@@ -115,7 +114,7 @@ public class BuildTargetParser {
             // Set the cell path correctly. Because the cellNames comes from the owning cell we can
             // be sure that if this doesn't throw an exception the target cell is visible to the
             // owning cell.
-            .setCellPath(cellPathResolver.apply(givenCellName))
+            .setCellPath(cellNames.getCellPath(givenCellName))
             // We are setting the cell name so we can print it later
             .setCell(givenCellName);
 
