@@ -54,9 +54,13 @@ class SameThreadFailOnTimeout extends Statement {
     Future<Throwable> submitted = executor.submit(callable);
     try {
       Throwable result = submitted.get(timeout, TimeUnit.MILLISECONDS);
-      if (result != null) {
-        throw result;
+      if (result == null) {
+        return;
       }
+      if (result instanceof TimeoutException) {
+        throw new Exception("A timeout occurred inside of the test case", result);
+      }
+      throw result;
     } catch (TimeoutException e) {
       System.err.printf("Dumping threads for timed-out test %s:%n", testName);
       for (Map.Entry<Thread, StackTraceElement[]> t : Thread.getAllStackTraces().entrySet()) {
