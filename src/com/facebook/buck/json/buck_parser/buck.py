@@ -1381,9 +1381,9 @@ def main():
         try:
             from mercurial import ui, hg
             use_mercurial_glob = True
-        except ImportError as e:
+        except ImportError:
             d = Diagnostic(
-                message=format_traceback_and_exception(),
+                message=format_exception_info(sys.exc_info()),
                 level='warning',
                 source='mercurial',
                 exception=None
