@@ -49,12 +49,12 @@ public class UnixArchiveTest {
 
   @Test
   public void testCheckingHeader() throws IOException {
-    byte[] bytes = "!<arch>\n..........".getBytes(Charsets.US_ASCII);
+    byte[] bytes = "!<arch>\n..........".getBytes(Charsets.UTF_8);
     assertThat(
         UnixArchive.checkHeader(ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN)),
         equalTo(true));
 
-    bytes = "UNEXPECTED_CONTENTS.......".getBytes(Charsets.US_ASCII);
+    bytes = "UNEXPECTED_CONTENTS.......".getBytes(Charsets.UTF_8);
     assertThat(
         UnixArchive.checkHeader(ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN)),
         equalTo(false));

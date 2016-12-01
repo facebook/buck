@@ -27,7 +27,7 @@ public class ChunkAccumulatorTest {
 
   @Test
   public void simple() {
-    ChunkAccumulator accumulator = new ChunkAccumulator(Charsets.US_ASCII, 100);
+    ChunkAccumulator accumulator = new ChunkAccumulator(Charsets.UTF_8, 100);
     accumulator.append("hello");
     accumulator.append("world");
     assertThat(
@@ -37,7 +37,7 @@ public class ChunkAccumulatorTest {
 
   @Test
   public void overflow() {
-    ChunkAccumulator accumulator = new ChunkAccumulator(Charsets.US_ASCII, 8);
+    ChunkAccumulator accumulator = new ChunkAccumulator(Charsets.UTF_8, 8);
     accumulator.append("hello");
     accumulator.append("world");
     assertThat(
@@ -47,7 +47,7 @@ public class ChunkAccumulatorTest {
 
   @Test
   public void bigOverflow() {
-    ChunkAccumulator accumulator = new ChunkAccumulator(Charsets.US_ASCII, 10);
+    ChunkAccumulator accumulator = new ChunkAccumulator(Charsets.UTF_8, 10);
     accumulator.append("hello");
     accumulator.append("world");
     accumulator.append("big chunk");
@@ -58,7 +58,7 @@ public class ChunkAccumulatorTest {
 
   @Test
   public void chunkTooBigForAccumulator() {
-    ChunkAccumulator accumulator = new ChunkAccumulator(Charsets.US_ASCII, 10);
+    ChunkAccumulator accumulator = new ChunkAccumulator(Charsets.UTF_8, 10);
     accumulator.append("super big chunk");
     assertThat(
         accumulator.getChunks(),

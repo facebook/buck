@@ -515,7 +515,7 @@ public class DaemonIntegrationTest {
     workspace.runBuckdCommand("build", "app").assertSuccess();
 
     String fileName = "apps/myapp/BUCK";
-    Files.write(workspace.getPath(fileName), "Some Illegal Python".getBytes(Charsets.US_ASCII));
+    Files.write(workspace.getPath(fileName), "Some Illegal Python".getBytes(Charsets.UTF_8));
 
     ProcessResult result = workspace.runBuckdCommand("build", "app");
     assertThat(

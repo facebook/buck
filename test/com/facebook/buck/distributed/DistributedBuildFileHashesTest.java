@@ -99,7 +99,7 @@ public class DistributedBuildFileHashesTest {
       projectFilesystem.createParentDirs(javaSrcPath);
       writtenContents = "public class A {}";
       projectFilesystem.writeContentsToPath(writtenContents, javaSrcPath);
-      writtenHashCode = Hashing.sha1().hashString(writtenContents, Charsets.US_ASCII);
+      writtenHashCode = Hashing.sha1().hashString(writtenContents, Charsets.UTF_8);
 
       JavaLibraryBuilder.createBuilder(
           BuildTargetFactory.newInstance(projectFilesystem, "//:java_lib"), projectFilesystem)

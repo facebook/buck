@@ -71,7 +71,7 @@ public class ShellStepTest {
       @Subscribe
       public void logEvent(ConsoleEvent event) throws IOException {
         if (event.getLevel().equals(Level.WARNING)) {
-          console.getStdErr().write(event.getMessage().getBytes(Charsets.US_ASCII));
+          console.getStdErr().write(event.getMessage().getBytes(Charsets.UTF_8));
         }
       }
     });
