@@ -197,7 +197,7 @@ final class OwnersReport {
 
             console
                 .getStdErr()
-                .format("Could not parse build targets for %s", targetBaseName);
+                .format("Could not parse build targets for %s%n", targetBaseName);
             throw e;
           }
         }
