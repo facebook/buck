@@ -539,6 +539,47 @@ public class DaemonIntegrationTest {
     whenAppBuckFileInvalidatedThenRebuildFails(WatchmanWatcher.CursorType.CLOCK_ID.toString());
   }
 
+  private void whenNativeBuckTargetInvalidatedThenRebuildFails(String cursorType)
+      throws IOException, InterruptedException {
+    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "file_watching", tmp);
+    workspace.setUp();
+    TestDataHelper.overrideBuckconfig(
+        workspace,
+        ImmutableMap.of("project", ImmutableMap.of("watchman_cursor", cursorType)));
+
+    ProcessResult result = workspace.runBuckdCommand("run", "//native/main:main");
+    result.assertSuccess();
+    assertThat(
+        "Output should contain 'my_string_123_my_string'",
+        result.getStdout(),
+        containsString("my_string_123_my_string"));
+
+    workspace.replaceFileContents(
+        "native/lib/BUCK",
+        "123",
+        "456");
+
+    result = workspace.runBuckdCommand("run", "//native/main:main");
+    result.assertSuccess();
+    assertThat(
+        "Output should contain 'my_string_456_my_string'",
+        result.getStdout(),
+        containsString("my_string_456_my_string"));
+  }
+
+  @Test
+  public void withNamedCursorNativeBuckTargetInvalidatedThenRebuildFails()
+      throws IOException, InterruptedException {
+    whenNativeBuckTargetInvalidatedThenRebuildFails(WatchmanWatcher.CursorType.NAMED.toString());
+  }
+
+  @Test
+  public void withClockIdCursorNativeBuckTargetInvalidatedThenRebuildFails()
+      throws IOException, InterruptedException {
+    whenNativeBuckTargetInvalidatedThenRebuildFails(WatchmanWatcher.CursorType.CLOCK_ID.toString());
+  }
+
   private void whenNativeSourceInputInvalidatedThenRebuildFails(String cursorType)
       throws IOException, InterruptedException {
     final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
@@ -548,27 +589,24 @@ public class DaemonIntegrationTest {
         workspace,
         ImmutableMap.of("project", ImmutableMap.of("watchman_cursor", cursorType)));
 
-    workspace.runBuckdCommand("build", "//native/main:main").assertSuccess();
-    workspace.runBuckdCommand("run", "//native/main:main").assertSuccess();
-
-    String fileName = "native/lib/lib.cpp";
-    Files.write(workspace.getPath(fileName), "#error Failure".getBytes(Charsets.UTF_8));
-
-    ProcessResult result = workspace.runBuckdCommand("build", "//native/main:main");
+    ProcessResult result = workspace.runBuckdCommand("run", "//native/main:main");
+    result.assertSuccess();
     assertThat(
-        "Failure should be due to compilation error.",
-        result.getStderr(),
-        containsString("#error Failure"));
-    result.assertFailure();
+        "Output should contain 'my_string_123_my_string'",
+        result.getStdout(),
+        containsString("my_string_123_my_string"));
 
-    // Make the file valid again, but change the output
-    Files.write(
-        workspace.getPath(fileName),
-        "#include \"lib.h\"\nint sum(int a, int b) {return a;}".getBytes(Charsets.UTF_8));
+    workspace.replaceFileContents(
+        "native/lib/lib.cpp",
+        "THE_STRING",
+        "\"my_string_456_my_string\"");
 
-    workspace.runBuckdCommand("build", "//native/main:main").assertSuccess();
-    // Rewritten function returns 1
-    workspace.runBuckdCommand("run", "//native/main:main").assertFailure();
+    result = workspace.runBuckdCommand("run", "//native/main:main");
+    result.assertSuccess();
+    assertThat(
+        "Output should contain 'my_string_456_my_string'",
+        result.getStdout(),
+        containsString("my_string_456_my_string"));
   }
 
   @Test

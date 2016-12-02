@@ -1,6 +1,9 @@
 cxx_library(
   name = 'lib',
   header_namespace = '',
+  preprocessor_flags = [
+    '-D THE_STRING="my_string_123_my_string"',
+  ],
   exported_headers = [
     'lib.h',
   ],
@@ -9,4 +12,3 @@ cxx_library(
   ],
   visibility = ['PUBLIC'],
 )
-

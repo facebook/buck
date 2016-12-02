@@ -1,5 +1,7 @@
 #include "lib.h"
 
-int sum(int x, int y) {
-  return x + y;
+#include <stdio.h>
+
+void lib() {
+  (void)printf(THE_STRING);
 }
