@@ -1175,7 +1175,7 @@ public final class OpcodeInfo {
     }
 
     /**
-     * Gets the {@link @Info} for the given opcode value.
+     * Gets the {@link Info} for the given opcode value.
      *
      * @param opcode {@code Opcodes.MIN_VALUE..Opcodes.MAX_VALUE;} the
      * opcode value

@@ -34,18 +34,18 @@ public abstract class BaseCodeCursor implements CodeCursor {
         this.cursor = 0;
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public final int cursor() {
         return cursor;
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public final int baseAddressForCursor() {
         int mapped = baseAddressMap.get(cursor);
         return (mapped >= 0) ? mapped : cursor;
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public final void setBaseAddress(int targetAddress, int baseAddress) {
         baseAddressMap.put(targetAddress, baseAddress);
     }
