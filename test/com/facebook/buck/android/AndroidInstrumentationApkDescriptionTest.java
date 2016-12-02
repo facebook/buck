@@ -18,17 +18,17 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.jvm.java.Keystore;
+import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -41,42 +41,47 @@ public class AndroidInstrumentationApkDescriptionTest {
 
   @Test
   public void testNoDxRulesBecomeFirstOrderDeps() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
-
     // Build up the original APK rule.
-    BuildRule transitiveDep =
+    TargetNode<?, ?> transitiveDep =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
             .addSrc(Paths.get("Dep.java"))
-            .build(ruleResolver);
-    BuildRule dep =
+            .build();
+    TargetNode<?, ?> dep =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:target"))
             .addSrc(Paths.get("Other.java"))
             .addDep(transitiveDep.getBuildTarget())
-            .build(ruleResolver);
-    Keystore keystore =
-        ruleResolver.addToIndex(
-            new Keystore(
-                new FakeBuildRuleParamsBuilder("//:keystore").build(),
-                pathResolver,
-                new FakeSourcePath("store"),
-                new FakeSourcePath("properties")));
-    AndroidBinary androidBinary =
-        (AndroidBinary) AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:apk"))
+            .build();
+    TargetNode<?, ?> keystore =
+        KeystoreBuilder.createBuilder(BuildTargetFactory.newInstance("//:keystore"))
+            .setStore(new FakeSourcePath("store"))
+            .setProperties(new FakeSourcePath("properties"))
+            .build();
+    TargetNode<?, ?> androidBinary =
+        AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:apk"))
             .setManifest(new FakeSourcePath("manifest.xml"))
             .setKeystore(keystore.getBuildTarget())
             .setNoDx(ImmutableSet.of(transitiveDep.getBuildTarget()))
             .setOriginalDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
-            .build(ruleResolver);
-
+            .build();
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    AndroidInstrumentationApk androidInstrumentationApk =
-        (AndroidInstrumentationApk) AndroidInstrumentationApkBuilder.createBuilder(target)
+    TargetNode<?, ?> androidInstrumentationApk =
+        AndroidInstrumentationApkBuilder.createBuilder(target)
             .setManifest(new FakeSourcePath("manifest.xml"))
             .setApk(androidBinary.getBuildTarget())
-            .build(ruleResolver);
-    assertThat(androidInstrumentationApk.getDeps(), Matchers.hasItem(transitiveDep));
+            .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        transitiveDep,
+        dep,
+        keystore,
+        androidBinary,
+        androidInstrumentationApk);
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildRule transitiveDepRule = ruleResolver.requireRule(transitiveDep.getBuildTarget());
+    AndroidInstrumentationApk androidInstrumentationApkRule =
+        (AndroidInstrumentationApk) ruleResolver.requireRule(target);
+    assertThat(androidInstrumentationApkRule.getDeps(), Matchers.hasItem(transitiveDepRule));
   }
 
 }

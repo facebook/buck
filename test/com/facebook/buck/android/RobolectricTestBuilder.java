@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 
@@ -37,8 +38,25 @@ public class RobolectricTestBuilder
         target);
   }
 
+  private RobolectricTestBuilder(BuildTarget target, ProjectFilesystem filesystem) {
+    super(
+        new RobolectricTestDescription(
+            DEFAULT_JAVA_OPTIONS,
+            ANDROID_JAVAC_OPTIONS,
+            /* testRuleTimeoutMs */ Optional.empty(),
+            null),
+        target,
+        filesystem);
+  }
+
   public static RobolectricTestBuilder createBuilder(BuildTarget target) {
     return new RobolectricTestBuilder(target);
+  }
+
+  public static RobolectricTestBuilder createBuilder(
+      BuildTarget target,
+      ProjectFilesystem filesystem) {
+    return new RobolectricTestBuilder(target, filesystem);
   }
 
   public RobolectricTestBuilder addDep(BuildTarget rule) {

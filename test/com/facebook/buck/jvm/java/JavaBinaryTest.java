@@ -27,6 +27,8 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -45,28 +47,31 @@ public class JavaBinaryTest {
 
   @Test
   public void testGetExecutableCommand() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
-
     // prebuilt_jar //third_party/generator:generator
     PrebuiltJarBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third_party/generator:generator"))
         .setBinaryJar(PATH_TO_GENERATOR_JAR)
-        .build(ruleResolver);
+        .build();
 
     // prebuilt_jar //third_party/guava:guava
-    BuildRule guava = PrebuiltJarBuilder
+    TargetNode<?, ?> guavaNode = PrebuiltJarBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third_party/guava:guava"))
         .setBinaryJar(PATH_TO_GUAVA_JAR)
-        .build(ruleResolver);
+        .build();
 
     // java_library //java/com/facebook/base:base
-    BuildRule libraryRule = JavaLibraryBuilder
+    TargetNode<?, ?> libraryNode = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/facebook/base:base"))
         .addSrc(Paths.get("java/com/facebook/base/Base.java"))
-        .addDep(guava.getBuildTarget())
-        .build(ruleResolver);
+        .addDep(guavaNode.getBuildTarget())
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(guavaNode, libraryNode);
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+
+    BuildRule libraryRule = ruleResolver.requireRule(libraryNode.getBuildTarget());
 
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(
         BuildTargetFactory.newInstance("//java/com/facebook/base:Main"))
@@ -77,7 +82,7 @@ public class JavaBinaryTest {
         ruleResolver.addToIndex(
             new JavaBinary(
                 params,
-                new SourcePathResolver(ruleResolver),
+                pathResolver,
                 new ExternalJavaRuntimeLauncher("/foobar/java"),
                 "com.facebook.base.Main",
                 null,

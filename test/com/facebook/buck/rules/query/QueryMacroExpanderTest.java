@@ -28,11 +28,12 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
-import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.QueryMacroExpander;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -63,28 +64,28 @@ public class QueryMacroExpanderTest {
   @Before
   public void setUp() throws Exception {
     expander = new QueryMacroExpander(Optional.empty());
-    handler = new MacroHandler(
-        ImmutableMap.<String, MacroExpander>of("query", expander));
+    handler = new MacroHandler(ImmutableMap.of("query", expander));
     filesystem = new FakeProjectFilesystem(tmp.getRoot());
     cellNames = TestCellBuilder.createCellRoots(filesystem);
-    ruleResolver = new BuildRuleResolver(
-        TargetGraph.EMPTY,
-        new DefaultTargetNodeToBuildRuleTransformer());
-    dep = ruleResolver.addToIndex(
-        JavaLibraryBuilder.createBuilder(
-            BuildTargetFactory.newInstance(filesystem, "//exciting:dep"),
-            filesystem)
-            .addSrc(Paths.get("Dep.java"))
-            .build(ruleResolver, filesystem));
+    TargetNode<?, ?> depNode = JavaLibraryBuilder.createBuilder(
+        BuildTargetFactory.newInstance(filesystem, "//exciting:dep"),
+        filesystem)
+        .addSrc(Paths.get("Dep.java"))
+        .build();
 
-    rule = ruleResolver.addToIndex(
-        JavaLibraryBuilder.createBuilder(
-            BuildTargetFactory.newInstance(filesystem, "//exciting:target"),
-            filesystem)
-            .addSrc(Paths.get("Other.java"))
-            .addDep(dep.getBuildTarget())
-            .build(ruleResolver, filesystem));
+    TargetNode<?, ?> ruleNode = JavaLibraryBuilder.createBuilder(
+        BuildTargetFactory.newInstance(filesystem, "//exciting:target"),
+        filesystem)
+        .addSrc(Paths.get("Other.java"))
+        .addDep(depNode.getBuildTarget())
+        .build();
 
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, ruleNode);
+    ruleResolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    dep = ruleResolver.requireRule(depNode.getBuildTarget());
+    rule = ruleResolver.requireRule(ruleNode.getBuildTarget());
   }
 
   @Test

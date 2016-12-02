@@ -51,6 +51,11 @@ public class AndroidResourceBuilder
     return setRes(new PathSourcePath(new FakeProjectFilesystem(), res));
   }
 
+  public AndroidResourceBuilder setAssets(SourcePath assets) {
+    arg.assets = Optional.of(assets);
+    return this;
+  }
+
   public AndroidResourceBuilder setRDotJavaPackage(String rDotJavaPackage) {
     arg.rDotJavaPackage = Optional.of(rDotJavaPackage);
     return this;

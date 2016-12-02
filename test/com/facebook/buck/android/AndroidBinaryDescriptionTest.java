@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.Keystore;
@@ -29,7 +30,9 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -43,33 +46,35 @@ public class AndroidBinaryDescriptionTest {
 
   @Test
   public void testNoDxRulesBecomeFirstOrderDeps() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
-    BuildRule transitiveDep =
+    TargetNode<?, ?> transitiveDepNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
             .addSrc(Paths.get("Dep.java"))
-            .build(ruleResolver);
-    BuildRule dep =
+            .build();
+    TargetNode<?, ?> depNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:target"))
             .addSrc(Paths.get("Other.java"))
-            .addDep(transitiveDep.getBuildTarget())
-            .build(ruleResolver);
-    Keystore keystore =
-        ruleResolver.addToIndex(
-            new Keystore(
-                new FakeBuildRuleParamsBuilder("//:keystore").build(),
-                pathResolver,
-                new FakeSourcePath("store"),
-                new FakeSourcePath("properties")));
+            .addDep(transitiveDepNode.getBuildTarget())
+            .build();
+    TargetNode<?, ?> keystoreNode =
+        KeystoreBuilder.createBuilder(BuildTargetFactory.newInstance("//:keystore"))
+            .setStore(new FakeSourcePath("store"))
+            .setProperties(new FakeSourcePath("properties"))
+            .build();
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    AndroidBinary androidBinary =
-        (AndroidBinary) AndroidBinaryBuilder.createBuilder(target)
+    TargetNode<?, ?> androidBinaryNode =
+        AndroidBinaryBuilder.createBuilder(target)
             .setManifest(new FakeSourcePath("manifest.xml"))
-            .setKeystore(keystore.getBuildTarget())
-            .setNoDx(ImmutableSet.of(transitiveDep.getBuildTarget()))
-            .setOriginalDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
-            .build(ruleResolver);
+            .setKeystore(BuildTargetFactory.newInstance("//:keystore"))
+            .setNoDx(ImmutableSet.of(transitiveDepNode.getBuildTarget()))
+            .setOriginalDeps(ImmutableSortedSet.of(depNode.getBuildTarget()))
+            .build();
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(transitiveDepNode, depNode, keystoreNode, androidBinaryNode);
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    BuildRule transitiveDep = ruleResolver.requireRule(transitiveDepNode.getBuildTarget());
+    AndroidBinary androidBinary = (AndroidBinary) ruleResolver.requireRule(target);
     assertThat(androidBinary.getDeps(), Matchers.hasItem(transitiveDep));
   }
 

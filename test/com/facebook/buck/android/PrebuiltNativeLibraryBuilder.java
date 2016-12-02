@@ -16,8 +16,10 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 
 import java.nio.file.Path;
 import java.util.Optional;
@@ -29,11 +31,21 @@ public class PrebuiltNativeLibraryBuilder
     AbstractNodeBuilder<PrebuiltNativeLibraryDescription.Arg, PrebuiltNativeLibraryDescription> {
 
   private PrebuiltNativeLibraryBuilder(BuildTarget target) {
-    super(new PrebuiltNativeLibraryDescription(), target);
+    this(target, new FakeProjectFilesystem());
+  }
+
+  private PrebuiltNativeLibraryBuilder(BuildTarget target, ProjectFilesystem filesystem) {
+    super(new PrebuiltNativeLibraryDescription(), target, filesystem);
   }
 
   public static PrebuiltNativeLibraryBuilder newBuilder(BuildTarget buildTarget) {
     return new PrebuiltNativeLibraryBuilder(buildTarget);
+  }
+
+  public static PrebuiltNativeLibraryBuilder newBuilder(
+      BuildTarget buildTarget,
+      ProjectFilesystem filesystem) {
+    return new PrebuiltNativeLibraryBuilder(buildTarget, filesystem);
   }
 
   public PrebuiltNativeLibraryBuilder setIsAsset(@Nullable Boolean isAsset) {

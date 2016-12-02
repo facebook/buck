@@ -23,7 +23,6 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -117,11 +116,8 @@ public class JavaLibraryBuilder
     return this;
   }
 
-  public JavaLibraryBuilder setCompiler(BuildRule javac) {
-    SourcePath right =
-        new BuildTargetSourcePath(javac.getBuildTarget());
-    Either<BuiltInJavac, SourcePath> value = Either.ofRight(right);
-
+  public JavaLibraryBuilder setCompiler(SourcePath javac) {
+    Either<BuiltInJavac, SourcePath> value = Either.ofRight(javac);
     arg.compiler = Optional.of(value);
     return this;
   }

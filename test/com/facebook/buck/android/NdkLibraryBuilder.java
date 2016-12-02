@@ -21,6 +21,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -47,6 +48,10 @@ public class NdkLibraryBuilder
           .build();
 
   public NdkLibraryBuilder(BuildTarget target) {
+    this(target, new FakeProjectFilesystem());
+  }
+
+  public NdkLibraryBuilder(BuildTarget target, ProjectFilesystem filesystem) {
     super(
         new NdkLibraryDescription(Optional.empty(), NDK_PLATFORMS) {
           @Override
@@ -57,7 +62,8 @@ public class NdkLibraryBuilder
                 new PathSourcePath(filesystem, buildRulePath.resolve("Android.mk")));
           }
         },
-        target);
+        target,
+        filesystem);
   }
 
   public NdkLibraryBuilder addDep(BuildTarget target) {

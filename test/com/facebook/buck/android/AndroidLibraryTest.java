@@ -18,13 +18,14 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.testutil.TargetGraphFactory;
 
 import org.junit.Test;
 
@@ -34,21 +35,24 @@ public class AndroidLibraryTest {
 
   @Test
   public void testAndroidAnnotation() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-
     BuildTarget processorTarget = BuildTargetFactory.newInstance("//java/processor:processor");
-    BuildRule processorRule = JavaLibraryBuilder
+    TargetNode<?, ?> processorNode = JavaLibraryBuilder
         .createBuilder(processorTarget)
         .addSrc(Paths.get("java/processor/processor.java"))
-        .build(ruleResolver);
+        .build();
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//java/lib:lib");
-    AndroidLibrary library = (AndroidLibrary) AndroidLibraryBuilder
+    TargetNode<?, ?> libraryNode = AndroidLibraryBuilder
         .createBuilder(libTarget)
         .addProcessor("MyProcessor")
-        .addProcessorBuildTarget(processorRule.getBuildTarget())
-        .build(ruleResolver);
+        .addProcessorBuildTarget(processorNode.getBuildTarget())
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(processorNode, libraryNode);
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    AndroidLibrary library = (AndroidLibrary) ruleResolver.requireRule(libTarget);
 
     assertTrue(library.getGeneratedSourcePath().isPresent());
   }

@@ -29,8 +29,10 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -48,6 +50,13 @@ import javax.annotation.Nullable;
 
 public class JavaLibraryClasspathProviderTest {
 
+  private TargetNode<?, ?> aNode;
+  private TargetNode<?, ?> bNode;
+  private TargetNode<?, ?> cNode;
+  private TargetNode<?, ?> dNode;
+  private TargetNode<?, ?> eNode;
+  private TargetNode<?, ?> zNode;
+
   private BuildRule a;
   private BuildRule b;
   private BuildRule c;
@@ -58,15 +67,10 @@ public class JavaLibraryClasspathProviderTest {
   private Path basePath;
   private Function<Path, SourcePath> sourcePathFunction;
   private ProjectFilesystem filesystem;
-  private BuildRuleResolver ruleResolver;
 
   @Before
   public void setUp() throws Exception {
     filesystem = new FakeProjectFilesystem();
-    ruleResolver = new BuildRuleResolver(
-        TargetGraph.EMPTY,
-        new DefaultTargetNodeToBuildRuleTransformer());
-    resolver = new SourcePathResolver(ruleResolver);
     basePath = filesystem.getRootPath();
 
     // Create our target graph. All nodes are JavaLibrary except b
@@ -75,46 +79,54 @@ public class JavaLibraryClasspathProviderTest {
     //(non java) b    c (exports e)
     //           |    |
     //           d    e
-    d = makeRule("//foo:d",
+    dNode = makeRule("//foo:d",
         ImmutableSet.of("foo", "d.java"),
         ImmutableSet.of(),
-        ruleResolver,
         filesystem);
 
     sourcePathFunction = SourcePaths.toSourcePath(filesystem);
-    b = GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//foo:b"))
+    bNode = GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//foo:b"))
         .setSrcs(ImmutableList.of(
             sourcePathFunction.apply(Paths.get("foo", "b.java"))))
         .setCmd("echo $(classpath //foo:d")
         .setOut("b.out")
-        .build(ruleResolver);
+        .build();
 
-    e = makeRule("//foo:e",
+    eNode = makeRule("//foo:e",
         ImmutableSet.of("foo", "e.java"),
         ImmutableSet.of(),
-        ruleResolver,
         filesystem);
 
     // exported
-    c = makeRule("//foo:c",
+    cNode = makeRule("//foo:c",
         ImmutableSet.of("foo", "c.java"),
-        ImmutableSet.of(e),
-        ImmutableSet.of(e),  // exported
-        ruleResolver,
+        ImmutableSet.of(eNode),
+        ImmutableSet.of(eNode),  // exported
         filesystem);
 
-    a = makeRule("//foo:a",
+    aNode = makeRule("//foo:a",
         ImmutableSet.of("foo", "a.java"),
-        ImmutableSet.of(b, c),
-        ImmutableSet.of(c),
-        ruleResolver,
+        ImmutableSet.of(bNode, cNode),
+        ImmutableSet.of(cNode),
         filesystem);
 
-    z = makeRule("//foo:z",
+    zNode = makeRule("//foo:z",
         ImmutableSet.of("foo", "a.java"),
-        ImmutableSet.of(b, c),
-        ruleResolver,
+        ImmutableSet.of(bNode, cNode),
         filesystem);
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(aNode, bNode, cNode, dNode, eNode, zNode);
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    resolver = new SourcePathResolver(ruleResolver);
+
+    a = ruleResolver.requireRule(aNode.getBuildTarget());
+    b = ruleResolver.requireRule(bNode.getBuildTarget());
+    c = ruleResolver.requireRule(cNode.getBuildTarget());
+    d = ruleResolver.requireRule(dNode.getBuildTarget());
+    e = ruleResolver.requireRule(eNode.getBuildTarget());
+    z = ruleResolver.requireRule(zNode.getBuildTarget());
   }
 
   @Test
@@ -186,12 +198,18 @@ public class JavaLibraryClasspathProviderTest {
 
   @Test
   public void getTransitiveClasspathDeps() throws Exception {
-    JavaLibrary noOutput = makeRule(
+    TargetNode<?, ?> noOutputNode = makeRule(
         "//no:output",
         ImmutableSet.of(),
-        ImmutableSet.of(z),
-        ruleResolver,
+        ImmutableSet.of(zNode),
         filesystem);
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(aNode, bNode, cNode, dNode, eNode, zNode, noOutputNode);
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    JavaLibrary noOutput = (JavaLibrary) ruleResolver.requireRule(noOutputNode.getBuildTarget());
 
     assertEquals(
         "root does not appear if output jar not present.",
@@ -233,21 +251,19 @@ public class JavaLibraryClasspathProviderTest {
     return basePath.resolve(lib.getPathToOutput().toString());
   }
 
-  private static JavaLibrary makeRule(
+  private static TargetNode<?, ?> makeRule(
       String target,
       Iterable<String> srcs,
-      Iterable<BuildRule> deps,
-      BuildRuleResolver ruleResolver,
+      Iterable<TargetNode<?, ?>> deps,
       ProjectFilesystem filesystem) throws Exception {
-    return makeRule(target, srcs, deps, null, ruleResolver, filesystem);
+    return makeRule(target, srcs, deps, null, filesystem);
   }
 
-  private static JavaLibrary makeRule(
+  private static TargetNode<?, ?> makeRule(
       String target,
       Iterable<String> srcs,
-      Iterable<BuildRule> deps,
-      @Nullable Iterable<BuildRule> exportedDeps,
-      BuildRuleResolver ruleResolver,
+      Iterable<TargetNode<?, ?>> deps,
+      @Nullable Iterable<TargetNode<?, ?>> exportedDeps,
       final ProjectFilesystem filesystem) throws Exception {
     JavaLibraryBuilder builder;
     BuildTarget parsedTarget = BuildTargetFactory.newInstance(target);
@@ -256,15 +272,15 @@ public class JavaLibraryClasspathProviderTest {
     for (String src : srcs) {
       builder.addSrc(filesystem.getBuckPaths().getGenDir().resolve(src));
     }
-    for (BuildRule dep : deps) {
+    for (TargetNode<?, ?> dep : deps) {
       builder.addDep(dep.getBuildTarget());
     }
 
     if (exportedDeps != null) {
-      for (BuildRule dep : exportedDeps) {
+      for (TargetNode<?, ?> dep : exportedDeps) {
         builder.addExportedDep(dep.getBuildTarget());
       }
     }
-    return (JavaLibrary) ruleResolver.addToIndex(builder.build(ruleResolver));
+    return builder.build();
   }
 }

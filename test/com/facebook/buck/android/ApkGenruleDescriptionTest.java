@@ -26,10 +26,12 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.FakeBuildRule;
+import com.facebook.buck.rules.FakeTargetNodeBuilder;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.testutil.TargetGraphFactory;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -42,27 +44,40 @@ public class ApkGenruleDescriptionTest {
 
   @Test
   public void testClasspathTransitiveDepsBecomeFirstOrderDeps() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
-    InstallableApk installableApk =
-        ruleResolver.addToIndex(
-            new FakeInstallable(BuildTargetFactory.newInstance("//:installable"), pathResolver));
-    BuildRule transitiveDep =
+    SourcePathResolver emptyPathResolver =
+        new SourcePathResolver(
+            new BuildRuleResolver(
+                TargetGraph.EMPTY,
+                new DefaultTargetNodeToBuildRuleTransformer()));
+
+    BuildTarget installableApkTarget = BuildTargetFactory.newInstance("//:installable");
+    TargetNode<?, ?> installableApkNode =
+        FakeTargetNodeBuilder.build(new FakeInstallable(installableApkTarget, emptyPathResolver));
+    TargetNode<?, ?> transitiveDepNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
             .addSrc(Paths.get("Dep.java"))
-            .build(ruleResolver);
-    BuildRule dep =
+            .build();
+    TargetNode<?, ?> depNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:target"))
             .addSrc(Paths.get("Other.java"))
-            .addDep(transitiveDep.getBuildTarget())
-            .build(ruleResolver);
-    Genrule genrule =
-        (Genrule) ApkGenruleBuilder.create(BuildTargetFactory.newInstance("//:rule"))
+            .addDep(transitiveDepNode.getBuildTarget())
+            .build();
+    TargetNode<?, ?> genruleNode =
+        ApkGenruleBuilder.create(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
             .setCmd("$(classpath //exciting:target)")
-            .setApk(installableApk.getBuildTarget())
-            .build(ruleResolver);
+            .setApk(installableApkTarget)
+            .build();
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(installableApkNode, transitiveDepNode, depNode, genruleNode);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    BuildRule transitiveDep = resolver.requireRule(transitiveDepNode.getBuildTarget());
+    BuildRule dep = resolver.requireRule(depNode.getBuildTarget());
+    BuildRule genrule = resolver.requireRule(genruleNode.getBuildTarget());
+
     assertThat(genrule.getDeps(), Matchers.hasItems(dep, transitiveDep));
   }
 

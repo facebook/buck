@@ -39,6 +39,7 @@ import com.facebook.buck.rules.TargetNodeFactory;
 import com.facebook.buck.rules.VisibilityPattern;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.collect.ImmutableList;
@@ -106,22 +107,30 @@ public class GenruleDescriptionTest {
 
   @Test
   public void testClasspathTransitiveDepsBecomeFirstOrderDeps() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    BuildRule transitiveDep =
+    TargetNode<?, ?> transitiveDepNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
             .addSrc(Paths.get("Dep.java"))
-            .build(ruleResolver);
-    BuildRule dep =
+            .build();
+    TargetNode<?, ?> depNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:target"))
             .addSrc(Paths.get("Other.java"))
-            .addDep(transitiveDep.getBuildTarget())
-            .build(ruleResolver);
-    Genrule genrule =
-        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .addDep(transitiveDepNode.getBuildTarget())
+            .build();
+    TargetNode<?, ?> genruleNode =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
             .setCmd("$(classpath //exciting:target)")
-            .build(ruleResolver);
+            .build();
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(transitiveDepNode, depNode, genruleNode);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    BuildRule dep = resolver.requireRule(depNode.getBuildTarget());
+    BuildRule transitiveDep = resolver.requireRule(transitiveDepNode.getBuildTarget());
+    BuildRule genrule = resolver.requireRule(genruleNode.getBuildTarget());
+
     assertThat(genrule.getDeps(), Matchers.containsInAnyOrder(dep, transitiveDep));
   }
 

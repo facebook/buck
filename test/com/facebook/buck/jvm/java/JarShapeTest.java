@@ -26,34 +26,33 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
 public class JarShapeTest {
 
-  private BuildRuleResolver resolver;
-
-  @Before
-  public void createRuleResolver() {
-    resolver = new BuildRuleResolver(
-        TargetGraph.EMPTY,
-        new DefaultTargetNodeToBuildRuleTransformer());
-  }
-
   @Test
   public void shouldOnlyIncludeGivenJarInASingleJar() throws NoSuchBuildTargetException {
-    BuildRule dep = JavaLibraryBuilder.createBuilder("//:dep")
+    TargetNode<?, ?> depNode = JavaLibraryBuilder.createBuilder("//:dep")
         .addSrc(new FakeSourcePath("SomeFile.java"))
-        .build(resolver);
+        .build();
 
-    BuildRule lib = JavaLibraryBuilder.createBuilder("//:lib")
+    TargetNode<?, ?> libNode = JavaLibraryBuilder.createBuilder("//:lib")
         .addSrc(new FakeSourcePath("Library.java"))
-        .addDep(dep.getBuildTarget())
-        .build(resolver);
+        .addDep(depNode.getBuildTarget())
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, libNode);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    BuildRule dep = resolver.requireRule(depNode.getBuildTarget());
+    BuildRule lib = resolver.requireRule(libNode.getBuildTarget());
 
     JarShape.Summary deps = JarShape.SINGLE.gatherDeps(lib);
 
@@ -64,14 +63,21 @@ public class JarShapeTest {
 
   @Test
   public void aMavenJarWithoutMavenTransitiveDepsIsAnUberJar() throws NoSuchBuildTargetException {
-    BuildRule dep = JavaLibraryBuilder.createBuilder("//:dep")
+    TargetNode<?, ?> depNode = JavaLibraryBuilder.createBuilder("//:dep")
         .addSrc(new FakeSourcePath("SomeFile.java"))
-        .build(resolver);
+        .build();
 
-    BuildRule lib = JavaLibraryBuilder.createBuilder("//:lib")
+    TargetNode<?, ?> libNode = JavaLibraryBuilder.createBuilder("//:lib")
         .addSrc(new FakeSourcePath("Library.java"))
-        .addDep(dep.getBuildTarget())
-        .build(resolver);
+        .addDep(depNode.getBuildTarget())
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, libNode);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    BuildRule dep = resolver.requireRule(depNode.getBuildTarget());
+    BuildRule lib = resolver.requireRule(libNode.getBuildTarget());
 
     JarShape.Summary deps = JarShape.MAVEN.gatherDeps(lib);
 
@@ -82,20 +88,28 @@ public class JarShapeTest {
 
   @Test
   public void shouldBeAbleToCreateAMavenJar() throws NoSuchBuildTargetException {
-    BuildRule dep = JavaLibraryBuilder.createBuilder("//:dep")
+    TargetNode<?, ?> depNode = JavaLibraryBuilder.createBuilder("//:dep")
         .addSrc(new FakeSourcePath("SomeFile.java"))
-        .build(resolver);
+        .build();
 
-    BuildRule mavenDep = JavaLibraryBuilder.createBuilder("//:maven-dep")
+    TargetNode<?, ?> mavenDepNode = JavaLibraryBuilder.createBuilder("//:maven-dep")
         .addSrc(new FakeSourcePath("SomeFile.java"))
         .setMavenCoords("com.example:somelib:1.0")
-        .build(resolver);
+        .build();
 
-    BuildRule lib = JavaLibraryBuilder.createBuilder("//:lib")
+    TargetNode<?, ?> libNode = JavaLibraryBuilder.createBuilder("//:lib")
         .addSrc(new FakeSourcePath("Library.java"))
-        .addDep(dep.getBuildTarget())
-        .addDep(mavenDep.getBuildTarget())
-        .build(resolver);
+        .addDep(depNode.getBuildTarget())
+        .addDep(mavenDepNode.getBuildTarget())
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, mavenDepNode, libNode);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    BuildRule dep = resolver.requireRule(depNode.getBuildTarget());
+    BuildRule mavenDep = resolver.requireRule(mavenDepNode.getBuildTarget());
+    BuildRule lib = resolver.requireRule(libNode.getBuildTarget());
 
     JarShape.Summary deps = JarShape.MAVEN.gatherDeps(lib);
 
@@ -107,22 +121,31 @@ public class JarShapeTest {
   @Test
   public void shouldCorrectlyExcludeMavenDepsWhichAreDepsOfSelf()
       throws NoSuchBuildTargetException {
-    BuildRule deepMavenDep = JavaLibraryBuilder.createBuilder("//:deep-maven")
+    TargetNode<?, ?> deepMavenDepNode = JavaLibraryBuilder.createBuilder("//:deep-maven")
         .addSrc(new FakeSourcePath("SomeFile.java"))
         .setMavenCoords("com.example:cheese:2.0")
-        .build(resolver);
+        .build();
 
-    BuildRule mavenDep = JavaLibraryBuilder.createBuilder("//:maven-dep")
+    TargetNode<?, ?> mavenDepNode = JavaLibraryBuilder.createBuilder("//:maven-dep")
         .addSrc(new FakeSourcePath("SomeFile.java"))
         .setMavenCoords("com.example:somelib:1.0")
-        .addDep(deepMavenDep.getBuildTarget())
-        .build(resolver);
+        .addDep(deepMavenDepNode.getBuildTarget())
+        .build();
 
-    BuildRule lib = JavaLibraryBuilder.createBuilder("//:lib")
+    TargetNode<?, ?> libNode = JavaLibraryBuilder.createBuilder("//:lib")
         .addSrc(new FakeSourcePath("Library.java"))
-        .addDep(deepMavenDep.getBuildTarget())
-        .addDep(mavenDep.getBuildTarget())
-        .build(resolver);
+        .addDep(deepMavenDepNode.getBuildTarget())
+        .addDep(mavenDepNode.getBuildTarget())
+        .build();
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(deepMavenDepNode, mavenDepNode, libNode);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    BuildRule deepMavenDep = resolver.requireRule(deepMavenDepNode.getBuildTarget());
+    BuildRule mavenDep = resolver.requireRule(mavenDepNode.getBuildTarget());
+    BuildRule lib = resolver.requireRule(libNode.getBuildTarget());
 
     JarShape.Summary deps = JarShape.MAVEN.gatherDeps(lib);
 

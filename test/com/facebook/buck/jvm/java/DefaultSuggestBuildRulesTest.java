@@ -27,6 +27,8 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -45,22 +47,29 @@ public class DefaultSuggestBuildRulesTest {
   @Rule
   public TemporaryFolder tmp = new TemporaryFolder();
 
-  private BuildRuleResolver ruleResolver;
   private ProjectFilesystem projectFilesystem;
 
   @Before
   public void before() {
-    ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
   }
 
   @Test
   public void suggestTheTopologicallyNearestDependency() throws NoSuchBuildTargetException {
     // TODO(grumpyjames): stop duplicating source/symbol names if possible
-    BuildRule libraryTwo = javaLibrary("//:libtwo", "com/facebook/Foo.java");
-    BuildRule parent = javaLibrary("//:parent", "com/facebook/Foo.java", libraryTwo);
-    BuildRule grandparent = javaLibrary("//:grandparent", "com/parent/OldManRiver.java", parent);
+    TargetNode<?, ?> libraryTwoNode = javaLibrary("//:libtwo", "com/facebook/Foo.java");
+    TargetNode<?, ?> parentNode = javaLibrary("//:parent", "com/facebook/Foo.java", libraryTwoNode);
+    TargetNode<?, ?> grandparentNode =
+        javaLibrary("//:grandparent", "com/parent/OldManRiver.java", parentNode);
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(libraryTwoNode, parentNode, grandparentNode);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    BuildRule libraryTwo = resolver.requireRule(libraryTwoNode.getBuildTarget());
+    BuildRule parent = resolver.requireRule(parentNode.getBuildTarget());
+    BuildRule grandparent = resolver.requireRule(grandparentNode.getBuildTarget());
 
     ImmutableMap<Path, String> jarPathToSymbols = ImmutableMap.of(
         projectFilesystem.resolve(parent.getPathToOutput()), "com.facebook.Foo",
@@ -86,9 +95,19 @@ public class DefaultSuggestBuildRulesTest {
   @Test
   public void suggestTopologicallyDistantDependency() throws NoSuchBuildTargetException {
     // TODO(grumpyjames): stop duplicating source/symbol names if possible
-    BuildRule libraryTwo = javaLibrary("//:libtwo", "com/facebook/Bar.java");
-    BuildRule parent = javaLibrary("//:parent", "com/facebook/Foo.java", libraryTwo);
-    BuildRule grandparent = javaLibrary("//:grandparent", "com/parent/OldManRiver.java", parent);
+    TargetNode<?, ?> libraryTwoNode = javaLibrary("//:libtwo", "com/facebook/Bar.java");
+    TargetNode<?, ?> parentNode = javaLibrary("//:parent", "com/facebook/Foo.java", libraryTwoNode);
+    TargetNode<?, ?> grandparentNode =
+        javaLibrary("//:grandparent", "com/parent/OldManRiver.java", parentNode);
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(libraryTwoNode, parentNode, grandparentNode);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    BuildRule libraryTwo = resolver.requireRule(libraryTwoNode.getBuildTarget());
+    BuildRule parent = resolver.requireRule(parentNode.getBuildTarget());
+    BuildRule grandparent = resolver.requireRule(grandparentNode.getBuildTarget());
 
     ImmutableMap<Path, String> jarPathToSymbols = ImmutableMap.of(
         projectFilesystem.resolve(parent.getPathToOutput()), "com.facebook.Foo",
@@ -147,18 +166,18 @@ public class DefaultSuggestBuildRulesTest {
     };
   }
 
-  private BuildRule javaLibrary(
+  private TargetNode<?, ?> javaLibrary(
       String name,
       String pathToClass,
-      BuildRule... deps) throws NoSuchBuildTargetException {
+      TargetNode<?, ?>... deps) throws NoSuchBuildTargetException {
     BuildTarget target = BuildTargetFactory.newInstance(name);
 
     JavaLibraryBuilder builder = JavaLibraryBuilder
-        .createBuilder(target)
+        .createBuilder(target, projectFilesystem)
         .addSrc(Paths.get("java/src/" + pathToClass));
-    for (BuildRule dep : deps) {
+    for (TargetNode<?, ?> dep : deps) {
       builder = builder.addDep(dep.getBuildTarget());
     }
-    return builder.build(ruleResolver, projectFilesystem);
+    return builder.build();
   }
 }

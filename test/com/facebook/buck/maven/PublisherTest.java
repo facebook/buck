@@ -26,7 +26,9 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSet;
 
 import org.eclipse.aether.deployment.DeploymentException;
@@ -48,7 +50,6 @@ public class PublisherTest {
   public ExpectedException expectedException = ExpectedException.none();
 
   private Publisher publisher;
-  private BuildRuleResolver ruleResolver;
 
   @Before
   public void setUp() {
@@ -59,10 +60,6 @@ public class PublisherTest {
         /* username */ Optional.empty(),
         /* password */ Optional.empty(),
         /* dryRun */ true);
-
-    ruleResolver = new BuildRuleResolver(
-        TargetGraph.EMPTY,
-        new DefaultTargetNodeToBuildRuleTransformer());
   }
 
   @Test
@@ -78,22 +75,29 @@ public class PublisherTest {
         .withFlavors(JavaLibrary.MAVEN_JAR);
     BuildTarget targetC = BuildTargetFactory.newInstance("//:c");
 
-    JavaLibraryBuilder.createBuilder(targetC)
+    TargetNode<?, ?> depNode = JavaLibraryBuilder.createBuilder(targetC)
         .addSrc(Paths.get("c.java"))
-        .build(ruleResolver);
-    MavenPublishable publishableA = (MavenPublishable) JavaLibraryBuilder
+        .build();
+    TargetNode<?, ?> publishableANode = JavaLibraryBuilder
         .createBuilder(publishableTargetA)
         .addSrc(Paths.get("a.java"))
         .setMavenCoords(MVN_COORDS_A)
         .addDep(targetC)
-        .build(ruleResolver);
-    MavenPublishable publishableB = (MavenPublishable) JavaLibraryBuilder
+        .build();
+    TargetNode<?, ?> publishableBNode = JavaLibraryBuilder
         .createBuilder(publishableTargetB)
         .addSrc(Paths.get("b.java"))
         .setMavenCoords(MVN_COORDS_B)
         .addDep(targetC)
-        .build(ruleResolver);
+        .build();
 
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(depNode, publishableANode, publishableBNode);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    MavenPublishable publishableA = (MavenPublishable) resolver.requireRule(publishableTargetA);
+    MavenPublishable publishableB = (MavenPublishable) resolver.requireRule(publishableTargetB);
 
     expectedException.expect(DeploymentException.class);
     expectedException.expectMessage(
@@ -128,26 +132,36 @@ public class PublisherTest {
     BuildTarget targetC = BuildTargetFactory.newInstance("//:c");
     BuildTarget targetD = BuildTargetFactory.newInstance("//:d");
 
-    JavaLibraryBuilder.createBuilder(targetD)
+    TargetNode<?, ?> transitiveDepNode = JavaLibraryBuilder.createBuilder(targetD)
         .addSrc(Paths.get("d.java"))
-        .build(ruleResolver);
-    JavaLibraryBuilder.createBuilder(targetC)
+        .build();
+    TargetNode<?, ?> depNode = JavaLibraryBuilder.createBuilder(targetC)
         .addSrc(Paths.get("c.java"))
         .addDep(targetD)
-        .build(ruleResolver);
-    MavenPublishable publishableA = (MavenPublishable) JavaLibraryBuilder
+        .build();
+    TargetNode<?, ?> publishableANode = JavaLibraryBuilder
         .createBuilder(publishableTargetA)
         .addSrc(Paths.get("a.java"))
         .setMavenCoords(MVN_COORDS_A)
         .addDep(targetC)
-        .build(ruleResolver);
-    MavenPublishable publishableB = (MavenPublishable) JavaLibraryBuilder
+        .build();
+    TargetNode<?, ?> publishableBNode = JavaLibraryBuilder
         .createBuilder(publishableTargetB)
         .addSrc(Paths.get("b.java"))
         .setMavenCoords(MVN_COORDS_B)
         .addDep(targetD)
-        .build(ruleResolver);
+        .build();
 
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        transitiveDepNode,
+        depNode,
+        publishableANode,
+        publishableBNode);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    MavenPublishable publishableA = (MavenPublishable) resolver.requireRule(publishableTargetA);
+    MavenPublishable publishableB = (MavenPublishable) resolver.requireRule(publishableTargetB);
 
     expectedException.expect(DeploymentException.class);
     expectedException.expectMessage(
@@ -182,30 +196,41 @@ public class PublisherTest {
     BuildTarget targetD = BuildTargetFactory.newInstance("//:d");
     BuildTarget targetE = BuildTargetFactory.newInstance("//:e");
 
-    JavaLibraryBuilder.createBuilder(targetE)
+    TargetNode<?, ?> transitiveDepNode = JavaLibraryBuilder.createBuilder(targetE)
         .addSrc(Paths.get("e.java"))
-        .build(ruleResolver);
-    JavaLibraryBuilder.createBuilder(targetC)
+        .build();
+    TargetNode<?, ?> dep1Node = JavaLibraryBuilder.createBuilder(targetC)
         .addSrc(Paths.get("c.java"))
         .addDep(targetE)
-        .build(ruleResolver);
-    JavaLibraryBuilder.createBuilder(targetD)
+        .build();
+    TargetNode<?, ?> dep2Node = JavaLibraryBuilder.createBuilder(targetD)
         .addSrc(Paths.get("d.java"))
         .addDep(targetE)
-        .build(ruleResolver);
-    MavenPublishable publishableA = (MavenPublishable) JavaLibraryBuilder
+        .build();
+    TargetNode<?, ?> publishableANode = JavaLibraryBuilder
         .createBuilder(publishableTargetA)
         .addSrc(Paths.get("a.java"))
         .setMavenCoords(MVN_COORDS_A)
         .addDep(targetC)
-        .build(ruleResolver);
-    MavenPublishable publishableB = (MavenPublishable) JavaLibraryBuilder
+        .build();
+    TargetNode<?, ?> publishableBNode = JavaLibraryBuilder
         .createBuilder(publishableTargetB)
         .addSrc(Paths.get("b.java"))
         .setMavenCoords(MVN_COORDS_B)
         .addDep(targetD)
-        .build(ruleResolver);
+        .build();
 
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        transitiveDepNode,
+        dep1Node,
+        dep2Node,
+        publishableANode,
+        publishableBNode);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    MavenPublishable publishableA = (MavenPublishable) resolver.requireRule(publishableTargetA);
+    MavenPublishable publishableB = (MavenPublishable) resolver.requireRule(publishableTargetB);
 
     expectedException.expect(DeploymentException.class);
     expectedException.expectMessage(

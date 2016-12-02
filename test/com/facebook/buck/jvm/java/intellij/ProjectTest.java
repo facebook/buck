@@ -23,10 +23,9 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.AndroidBinary;
 import com.facebook.buck.android.AndroidBinaryBuilder;
 import com.facebook.buck.android.AndroidLibraryBuilder;
-import com.facebook.buck.android.AndroidResourceRuleBuilder;
+import com.facebook.buck.android.AndroidResourceBuilder;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.android.NdkLibraryBuilder;
 import com.facebook.buck.cli.FakeBuckConfig;
@@ -55,9 +54,11 @@ import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.ProjectConfigBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.ObjectMappers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -99,121 +100,150 @@ public class ProjectTest {
    */
   public Pair<ProjectWithModules, BuildRuleResolver> createActionGraphForTesting(
       @Nullable JavaPackageFinder javaPackageFinder) throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    ImmutableSet.Builder<TargetNode<?, ?>> nodes = ImmutableSet.builder();
 
     // prebuilt_jar //third_party/guava:guava
-    guava = PrebuiltJarBuilder
+    TargetNode<?, ?> guavaNode = PrebuiltJarBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third_party/guava:guava"))
         .setBinaryJar(PATH_TO_GUAVA_JAR)
-        .build(ruleResolver);
+        .build();
+    nodes.add(guavaNode);
 
     // android_resouce android_res/base:res
-    BuildRule androidResRule = ruleResolver.addToIndex(
-        AndroidResourceRuleBuilder.newBuilder()
-            .setResolver(new SourcePathResolver(ruleResolver))
-            .setBuildTarget(BuildTargetFactory.newInstance("//android_res/base:res"))
+    TargetNode<?, ?> androidResNode =
+        AndroidResourceBuilder
+            .createBuilder(BuildTargetFactory.newInstance("//android_res/base:res"))
             .setRes(new FakeSourcePath("android_res/base/res"))
             .setRDotJavaPackage("com.facebook")
-            .build());
+            .build();
+    nodes.add(androidResNode);
 
     // project_config android_res/base:res
-    ProjectConfig projectConfigForResource = (ProjectConfig) ProjectConfigBuilder
+    TargetNode<?, ?> projectConfigForResourceNode = ProjectConfigBuilder
         .createBuilder(
             BuildTargetFactory.newInstance("//android_res/base:project_config"))
-        .setSrcRule(androidResRule.getBuildTarget())
+        .setSrcRule(androidResNode.getBuildTarget())
         .setSrcRoots(ImmutableList.of("res"))
-        .build(ruleResolver);
+        .build();
+    nodes.add(projectConfigForResourceNode);
 
     // java_library //java/src/com/facebook/grandchild:grandchild
     BuildTarget grandchildTarget =
         BuildTargetFactory.newInstance("//java/src/com/facebook/grandchild:grandchild");
-    BuildRule grandchild = JavaLibraryBuilder
+    TargetNode<?, ?> grandchildNode = JavaLibraryBuilder
         .createBuilder(grandchildTarget)
         .addSrc(Paths.get("Grandchild.java"))
-        .build(ruleResolver);
+        .build();
+    nodes.add(grandchildNode);
 
     // java_library //java/src/com/facebook/child:child
-    BuildRule childRule = JavaLibraryBuilder
+    TargetNode<?, ?> childNode = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/src/com/facebook/child:child"))
         .addSrc(Paths.get("Child.java"))
-        .addDep(grandchild.getBuildTarget())
-        .build(ruleResolver);
+        .addDep(grandchildNode.getBuildTarget())
+        .build();
+    nodes.add(childNode);
 
     // java_library //java/src/com/facebook/exportlib:exportlib
-    BuildRule exportLib = JavaLibraryBuilder
+    TargetNode<?, ?> exportLibNode = JavaLibraryBuilder
         .createBuilder(
             BuildTargetFactory.newInstance("//java/src/com/facebook/exportlib:exportlib"))
         .addSrc(Paths.get("ExportLib.java"))
-        .addDep(guava.getBuildTarget())
-        .addExportedDep(guava.getBuildTarget())
-        .build(ruleResolver);
+        .addDep(guavaNode.getBuildTarget())
+        .addExportedDep(guavaNode.getBuildTarget())
+        .build();
+    nodes.add(exportLibNode);
 
     // android_library //java/src/com/facebook/base:base
-    BuildRule baseRule = AndroidLibraryBuilder
+    TargetNode<?, ?> baseNode = AndroidLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/src/com/facebook/base:base"))
         .addSrc(Paths.get("Base.java"))
-        .addDep(exportLib.getBuildTarget())
-        .addDep(childRule.getBuildTarget())
-        .addDep(androidResRule.getBuildTarget())
-        .build(ruleResolver);
+        .addDep(exportLibNode.getBuildTarget())
+        .addDep(childNode.getBuildTarget())
+        .addDep(androidResNode.getBuildTarget())
+        .build();
+    nodes.add(baseNode);
 
     // project_config //java/src/com/facebook/base:project_config
-    ProjectConfig projectConfigForLibrary = (ProjectConfig) ProjectConfigBuilder
+    TargetNode<?, ?> projectConfigForLibraryNode = ProjectConfigBuilder
         .createBuilder(
             BuildTargetFactory.newInstance(
                 "//java/src/com/facebook/base:project_config"))
-        .setSrcRule(baseRule.getBuildTarget())
+        .setSrcRule(baseNode.getBuildTarget())
         .setSrcRoots(ImmutableList.of("src", "src-gen"))
-        .build(ruleResolver);
+        .build();
+    nodes.add(projectConfigForLibraryNode);
 
-    ProjectConfig projectConfigForExportLibrary = (ProjectConfig) ProjectConfigBuilder
+    TargetNode<?, ?> projectConfigForExportLibraryNode = ProjectConfigBuilder
         .createBuilder(
             BuildTargetFactory.newInstance("//java/src/com/facebook/exportlib:project_config"))
-        .setSrcRule(exportLib.getBuildTarget())
-        .setSrcRoots(ImmutableList.of("src")).build(ruleResolver);
+        .setSrcRule(exportLibNode.getBuildTarget())
+        .setSrcRoots(ImmutableList.of("src"))
+        .build();
+    nodes.add(projectConfigForExportLibraryNode);
 
     // keystore //keystore:debug
     BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
-    BuildRule keystore = KeystoreBuilder.createBuilder(keystoreTarget)
+    TargetNode<?, ?> keystoreNode = KeystoreBuilder.createBuilder(keystoreTarget)
         .setStore(new FakeSourcePath("keystore/debug.keystore"))
         .setProperties(new FakeSourcePath("keystore/debug.keystore.properties"))
-        .build(ruleResolver);
+        .build();
+    nodes.add(keystoreNode);
 
     // android_binary //foo:app
     ImmutableSortedSet<BuildTarget> androidBinaryRuleDepsTarget =
-        ImmutableSortedSet.of(baseRule.getBuildTarget());
-    AndroidBinary androidBinaryRule = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
+        ImmutableSortedSet.of(baseNode.getBuildTarget());
+    TargetNode<?, ?> androidBinaryNode = AndroidBinaryBuilder.createBuilder(
         BuildTargetFactory.newInstance("//foo:app"))
             .setOriginalDeps(androidBinaryRuleDepsTarget)
             .setManifest(new FakeSourcePath("foo/AndroidManifest.xml"))
-            .setKeystore(keystore.getBuildTarget())
+            .setKeystore(keystoreNode.getBuildTarget())
             .setBuildTargetsToExcludeFromDex(
                 ImmutableSet.of(
                     BuildTargetFactory.newInstance("//third_party/guava:guava")))
-            .build(ruleResolver);
+            .build();
+    nodes.add(androidBinaryNode);
 
     // project_config //foo:project_config
-    ProjectConfig projectConfigUsingNoDx = (ProjectConfig) ProjectConfigBuilder
+    TargetNode<?, ?> projectConfigUsingNoDxNode = ProjectConfigBuilder
         .createBuilder(BuildTargetFactory.newInstance("//foo:project_config"))
-        .setSrcRule(androidBinaryRule.getBuildTarget())
-        .build(ruleResolver);
+        .setSrcRule(androidBinaryNode.getBuildTarget())
+        .build();
+    nodes.add(projectConfigUsingNoDxNode);
 
     // android_binary //bar:app
     ImmutableSortedSet<BuildTarget> barAppBuildRuleDepsTarget =
-        ImmutableSortedSet.of(baseRule.getBuildTarget());
-    AndroidBinary barAppBuildRule = (AndroidBinary) AndroidBinaryBuilder.createBuilder(
+        ImmutableSortedSet.of(baseNode.getBuildTarget());
+    TargetNode<?, ?> barAppBuildNode = AndroidBinaryBuilder.createBuilder(
         BuildTargetFactory.newInstance("//bar:app"))
             .setOriginalDeps(barAppBuildRuleDepsTarget)
             .setManifest(new FakeSourcePath("foo/AndroidManifest.xml"))
-            .setKeystore(keystore.getBuildTarget())
-            .build(ruleResolver);
+            .setKeystore(keystoreNode.getBuildTarget())
+            .build();
+    nodes.add(barAppBuildNode);
 
     // project_config //bar:project_config
-    ProjectConfig projectConfig = (ProjectConfig) ProjectConfigBuilder
+    TargetNode<?, ?> projectConfigNode = ProjectConfigBuilder
         .createBuilder(BuildTargetFactory.newInstance("//bar:project_config"))
-        .setSrcRule(barAppBuildRule.getBuildTarget())
-        .build(ruleResolver);
+        .setSrcRule(barAppBuildNode.getBuildTarget())
+        .build();
+    nodes.add(projectConfigNode);
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes.build());
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    guava = ruleResolver.requireRule(guavaNode.getBuildTarget());
+    ProjectConfig projectConfigForExportLibrary = (ProjectConfig) ruleResolver.requireRule(
+        projectConfigForExportLibraryNode.getBuildTarget());
+    ProjectConfig projectConfigForLibrary = (ProjectConfig) ruleResolver.requireRule(
+        projectConfigForLibraryNode.getBuildTarget());
+    ProjectConfig projectConfigForResource = (ProjectConfig) ruleResolver.requireRule(
+        projectConfigForResourceNode.getBuildTarget());
+    ProjectConfig projectConfigUsingNoDx = (ProjectConfig) ruleResolver.requireRule(
+        projectConfigUsingNoDxNode.getBuildTarget());
+    ProjectConfig projectConfig = (ProjectConfig) ruleResolver.requireRule(
+        projectConfigNode.getBuildTarget());
 
     return new Pair<>(getModulesForActionGraph(
         ruleResolver,
@@ -418,9 +448,6 @@ public class ProjectTest {
 
   @Test
   public void testPrebuiltJarIncludesDeps() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-
     // Build up a the graph that corresponds to:
     //
     // android_library(
@@ -452,34 +479,46 @@ public class ProjectTest {
     // project_config(
     //   src_target = ':example',
     // )
-    BuildRule cglib = PrebuiltJarBuilder
+    TargetNode<?, ?> cglibNode = PrebuiltJarBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third_party/java/easymock:cglib"))
         .setBinaryJar(Paths.get("third_party/java/easymock/cglib.jar"))
-        .build(ruleResolver);
+        .build();
 
-    BuildRule objenesis = PrebuiltJarBuilder
+    TargetNode<?, ?> objenesisNode = PrebuiltJarBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third_party/java/easymock:objenesis"))
         .setBinaryJar(Paths.get("third_party/java/easymock/objenesis.jar"))
-        .build(ruleResolver);
+        .build();
 
-    BuildRule easymock = PrebuiltJarBuilder
+    TargetNode<?, ?> easymockNode = PrebuiltJarBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third_party/java/easymock:easymock"))
         .setBinaryJar(Paths.get("third_party/java/easymock/easymock.jar"))
-        .addDep(cglib.getBuildTarget())
-        .addDep(objenesis.getBuildTarget())
-        .build(ruleResolver);
+        .addDep(cglibNode.getBuildTarget())
+        .addDep(objenesisNode.getBuildTarget())
+        .build();
 
     BuildTarget easyMockExampleTarget = BuildTargetFactory.newInstance(
         "//third_party/java/easymock:example");
-    BuildRule mockRule = AndroidLibraryBuilder.createBuilder(easyMockExampleTarget)
-        .addDep(easymock.getBuildTarget())
-        .build(ruleResolver);
+    TargetNode<?, ?> mockNode = AndroidLibraryBuilder.createBuilder(easyMockExampleTarget)
+        .addDep(easymockNode.getBuildTarget())
+        .build();
 
-    ProjectConfig projectConfig = (ProjectConfig) ProjectConfigBuilder
+    TargetNode<?, ?> projectConfigNode = ProjectConfigBuilder
         .createBuilder(
             BuildTargetFactory.newInstance("//third_party/java/easymock:project_config"))
-        .setSrcRule(mockRule.getBuildTarget())
-        .build(ruleResolver);
+        .setSrcRule(mockNode.getBuildTarget())
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        cglibNode,
+        objenesisNode,
+        easymockNode,
+        mockNode,
+        projectConfigNode);
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    ProjectConfig projectConfig =
+        (ProjectConfig) ruleResolver.requireRule(projectConfigNode.getBuildTarget());
 
     ProjectWithModules projectWithModules = getModulesForActionGraph(
         ruleResolver,
@@ -496,47 +535,55 @@ public class ProjectTest {
         Matchers.containsInAnyOrder(
             SerializableDependentModule.newSourceFolder(),
             SerializableDependentModule.newLibrary(
-                easymock.getBuildTarget(),
+                easymockNode.getBuildTarget(),
                 "buck_out_gen_third_party_java_easymock___easymock___easymock_jar"),
             SerializableDependentModule.newLibrary(
-                cglib.getBuildTarget(),
+                cglibNode.getBuildTarget(),
                 "buck_out_gen_third_party_java_easymock___cglib___cglib_jar"),
             SerializableDependentModule.newLibrary(
-                objenesis.getBuildTarget(),
+                objenesisNode.getBuildTarget(),
                 "buck_out_gen_third_party_java_easymock___objenesis___objenesis_jar"),
             SerializableDependentModule.newInheritedJdk()));
   }
 
   @Test
   public void testIfModuleIsBothTestAndCompileDepThenTreatAsCompileDep() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-
     // Create a java_library() and a java_test() that both depend on Guava.
     // When they are part of the same project_config() rule, then the resulting module should
     // include Guava as scope="COMPILE" in IntelliJ.
-    BuildRule guava = PrebuiltJarBuilder
+    TargetNode<?, ?> guavaNode = PrebuiltJarBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third_party/java/guava:guava"))
         .setBinaryJar(Paths.get("third_party/java/guava.jar"))
-        .build(ruleResolver);
+        .build();
 
-    BuildRule baseBuildRule = JavaLibraryBuilder
+    TargetNode<?, ?> baseNode = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:base"))
-        .addDep(guava.getBuildTarget())
-        .build(ruleResolver);
+        .addDep(guavaNode.getBuildTarget())
+        .build();
 
-    BuildRule testBuildRule = JavaTestBuilder
+    TargetNode<?, ?> testNode = JavaTestBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/example/base:tests"))
-        .addDep(guava.getBuildTarget())
-        .build(ruleResolver);
+        .addDep(guavaNode.getBuildTarget())
+        .build();
 
-    ProjectConfig projectConfig = (ProjectConfig) ProjectConfigBuilder
+    TargetNode<?, ?> projectConfigNode = ProjectConfigBuilder
         .createBuilder(
             BuildTargetFactory.newInstance("//java/com/example/base:project_config"))
-        .setSrcRule(baseBuildRule.getBuildTarget())
-        .setTestRule(testBuildRule.getBuildTarget())
+        .setSrcRule(baseNode.getBuildTarget())
+        .setTestRule(testNode.getBuildTarget())
         .setTestRoots(ImmutableList.of("tests"))
-        .build(ruleResolver);
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        guavaNode,
+        baseNode,
+        testNode,
+        projectConfigNode);
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    ProjectConfig projectConfig =
+        (ProjectConfig) ruleResolver.requireRule(projectConfigNode.getBuildTarget());
 
     ProjectWithModules projectWithModules = getModulesForActionGraph(
         ruleResolver,
@@ -551,7 +598,7 @@ public class ProjectTest {
         ImmutableList.of(
             SerializableDependentModule.newSourceFolder(),
             SerializableDependentModule.newLibrary(
-                guava.getBuildTarget(),
+                guavaNode.getBuildTarget(),
                 "buck_out_gen_third_party_java_guava___guava___guava_jar"),
             SerializableDependentModule.newStandardJdk(
                 Optional.empty(),
@@ -574,34 +621,42 @@ public class ProjectTest {
    */
   @Test
   public void testThatJarsAreListedBeforeModules() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-
-    BuildRule supportV4 = JavaLibraryBuilder
+    TargetNode<?, ?> supportV4Node = JavaLibraryBuilder
         .createBuilder(BuildTargetFactory.newInstance("//java/com/android/support/v4:v4"))
-        .build(ruleResolver);
+        .build();
 
-    BuildRule httpCore = PrebuiltJarBuilder
+    TargetNode<?, ?> httpCoreNode = PrebuiltJarBuilder
         .createBuilder(BuildTargetFactory.newInstance("//third_party/java/httpcore:httpcore"))
         .setBinaryJar(Paths.get("httpcore-4.0.1.jar"))
-        .build(ruleResolver);
+        .build();
 
     // The support-v4 library is loaded as a java_library() rather than a prebuilt_jar() because it
     // contains our local changes to the library.
     BuildTarget robolectricTarget =
         BuildTargetFactory.newInstance("//third_party/java/robolectric:robolectric");
-    BuildRule robolectricRule = JavaLibraryBuilder
+    TargetNode<?, ?> robolectricNode = JavaLibraryBuilder
         .createBuilder(robolectricTarget)
-        .addDep(supportV4.getBuildTarget())
-        .addDep(httpCore.getBuildTarget())
-        .build(ruleResolver);
+        .addDep(supportV4Node.getBuildTarget())
+        .addDep(httpCoreNode.getBuildTarget())
+        .build();
 
-    ProjectConfig projectConfig = (ProjectConfig) ProjectConfigBuilder
+    TargetNode<?, ?> projectConfigNode = ProjectConfigBuilder
         .createBuilder(
             BuildTargetFactory.newInstance("//third_party/java/robolectric:project_config"))
-        .setSrcRule(robolectricRule.getBuildTarget())
+        .setSrcRule(robolectricNode.getBuildTarget())
         .setSrcRoots(ImmutableList.of("src/main/java"))
-        .build(ruleResolver);
+        .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        supportV4Node,
+        httpCoreNode,
+        robolectricNode,
+        projectConfigNode);
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+
+    ProjectConfig projectConfig =
+        (ProjectConfig) ruleResolver.requireRule(projectConfigNode.getBuildTarget());
 
     ProjectWithModules projectWithModules = getModulesForActionGraph(
         ruleResolver,
@@ -620,10 +675,10 @@ public class ProjectTest {
         ImmutableList.of(
             SerializableDependentModule.newSourceFolder(),
             SerializableDependentModule.newLibrary(
-                httpCore.getBuildTarget(),
+                httpCoreNode.getBuildTarget(),
                 "buck_out_gen_third_party_java_httpcore___httpcore___httpcore_4_0_1_jar"),
             SerializableDependentModule.newModule(
-                supportV4.getBuildTarget(), "module_java_com_android_support_v4"),
+                supportV4Node.getBuildTarget(), "module_java_com_android_support_v4"),
             SerializableDependentModule.newStandardJdk(
                 Optional.empty(),
                 Optional.empty())),
