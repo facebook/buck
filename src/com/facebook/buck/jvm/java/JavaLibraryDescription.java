@@ -141,6 +141,16 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
           sources);
     }
 
+    if (flavors.contains(CalculateAbi.FLAVOR)) {
+      BuildTarget libraryTarget = target.withoutFlavors(CalculateAbi.FLAVOR);
+      resolver.requireRule(libraryTarget);
+      return CalculateAbi.of(
+          params.getBuildTarget(),
+          pathResolver,
+          params,
+          new BuildTargetSourcePath(libraryTarget));
+    }
+
     BuildRuleParams paramsWithMavenFlavor = null;
     if (flavors.contains(JavaLibrary.MAVEN_JAR)) {
       paramsWithMavenFlavor = params;
@@ -177,8 +187,7 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
         params,
         resolver,
         pathResolver,
-        args
-    );
+        args);
 
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
@@ -194,38 +203,30 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
                 pathResolver.filterBuildRuleInputs(
                     javacOptions.getInputs(pathResolver))));
     DefaultJavaLibrary defaultJavaLibrary =
-        resolver.addToIndex(
-            new DefaultJavaLibrary(
-                javaLibraryParams,
-                pathResolver,
-                args.srcs,
-                validateResources(
-                    pathResolver,
-                    params.getProjectFilesystem(),
-                    args.resources),
-                javacOptions.getGeneratedSourceFolderName(),
-                args.proguardConfig.map(
-                    SourcePaths.toSourcePath(params.getProjectFilesystem())::apply),
-                args.postprocessClassesCommands,
-                exportedDeps,
-                resolver.getAllRules(args.providedDeps),
-                abiJarTarget,
-                JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()),
-                javacOptions.trackClassUsage(),
-                /* additionalClasspathEntries */ ImmutableSet.of(),
-                new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
-                args.resourcesRoot,
-                args.manifestFile,
-                args.mavenCoords,
-                args.tests,
-                javacOptions.getClassesToRemoveFromJar()));
-
-    resolver.addToIndex(
-        CalculateAbi.of(
-            abiJarTarget,
+        new DefaultJavaLibrary(
+            javaLibraryParams,
             pathResolver,
-            params,
-            new BuildTargetSourcePath(defaultJavaLibrary.getBuildTarget())));
+            args.srcs,
+            validateResources(
+                pathResolver,
+                params.getProjectFilesystem(),
+                args.resources),
+            javacOptions.getGeneratedSourceFolderName(),
+            args.proguardConfig.map(
+                SourcePaths.toSourcePath(params.getProjectFilesystem())::apply),
+            args.postprocessClassesCommands,
+            exportedDeps,
+            resolver.getAllRules(args.providedDeps),
+            abiJarTarget,
+            JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()),
+            javacOptions.trackClassUsage(),
+            /* additionalClasspathEntries */ ImmutableSet.of(),
+            new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
+            args.resourcesRoot,
+            args.manifestFile,
+            args.mavenCoords,
+            args.tests,
+            javacOptions.getClassesToRemoveFromJar());
 
   if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
       return defaultJavaLibrary;

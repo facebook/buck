@@ -79,6 +79,16 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
       A args) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
+    if (params.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
+      BuildTarget testTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
+      resolver.requireRule(testTarget);
+      return CalculateAbi.of(
+          testTarget,
+          pathResolver,
+          params,
+          new BuildTargetSourcePath(testTarget));
+    }
+
     BuildTarget abiJarTarget =
         BuildTarget.builder(params.getBuildTarget())
             .addFlavors(CalculateAbi.FLAVOR)
@@ -125,37 +135,26 @@ public class KotlinTestDescription implements Description<KotlinTestDescription.
                 /* classesToRemoveFromJar */ ImmutableSet.of()
             ));
 
-    JavaTest test =
-        resolver.addToIndex(
-            new JavaTest(
-                params.copyWithDeps(
-                    Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
-                    Suppliers.ofInstance(ImmutableSortedSet.of())),
-                pathResolver,
-                testsLibrary,
-                /* additionalClasspathEntries */ ImmutableSet.of(),
-                args.labels,
-                args.contacts,
-                args.testType.orElse(TestType.JUNIT),
-                javaOptions.getJavaRuntimeLauncher(),
-                args.vmArgs,
-                /* nativeLibsEnvironment */ ImmutableMap.of(),
-                args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
-                args.testCaseTimeoutMs,
-                args.env,
-                args.getRunTestSeparately(),
-                args.getForkMode(),
-                args.stdOutLogLevel,
-                args.stdErrLogLevel));
-
-    resolver.addToIndex(
-        CalculateAbi.of(
-            abiJarTarget,
-            pathResolver,
-            params,
-            new BuildTargetSourcePath(test.getBuildTarget())));
-
-    return test;
+    return new JavaTest(
+        params.copyWithDeps(
+            Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
+            Suppliers.ofInstance(ImmutableSortedSet.of())),
+        pathResolver,
+        testsLibrary,
+        /* additionalClasspathEntries */ ImmutableSet.of(),
+        args.labels,
+        args.contacts,
+        args.testType.orElse(TestType.JUNIT),
+        javaOptions.getJavaRuntimeLauncher(),
+        args.vmArgs,
+        /* nativeLibsEnvironment */ ImmutableMap.of(),
+        args.testRuleTimeoutMs.map(Optional::of).orElse(defaultTestRuleTimeoutMs),
+        args.testCaseTimeoutMs,
+        args.env,
+        args.getRunTestSeparately(),
+        args.getForkMode(),
+        args.stdOutLogLevel,
+        args.stdErrLogLevel);
   }
 
   @SuppressFieldNotInitialized

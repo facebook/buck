@@ -167,7 +167,7 @@ public class ThriftJavaEnhancerTest {
         createFakeBuildRule("//:dep", pathResolver));
 
     // Run the enhancer to create the language specific build rule.
-    DefaultJavaLibrary library = ENHANCER
+    DefaultJavaLibrary library = (DefaultJavaLibrary) ENHANCER
         .createBuildRule(TargetGraph.EMPTY, flavoredParams, resolver, arg, sources, deps);
 
     // Verify that the first thrift source created a source zip rule with correct deps.
@@ -224,7 +224,7 @@ public class ThriftJavaEnhancerTest {
             new FakeExportDependenciesRule("//:exporting_rule", pathResolver, exportedRule));
 
     // Run the enhancer to create the language specific build rule.
-    DefaultJavaLibrary library = ENHANCER
+    DefaultJavaLibrary library = (DefaultJavaLibrary) ENHANCER
         .createBuildRule(
             TargetGraph.EMPTY,
             flavoredParams,

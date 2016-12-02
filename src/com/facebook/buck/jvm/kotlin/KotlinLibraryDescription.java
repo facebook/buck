@@ -64,6 +64,16 @@ public class KotlinLibraryDescription implements Description<KotlinLibraryDescri
       A args) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
+    if (params.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
+      BuildTarget libraryTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
+      resolver.requireRule(libraryTarget);
+      return CalculateAbi.of(
+          params.getBuildTarget(),
+          pathResolver,
+          params,
+          new BuildTargetSourcePath(libraryTarget));
+    }
+
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
     ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
@@ -74,42 +84,31 @@ public class KotlinLibraryDescription implements Description<KotlinLibraryDescri
                     params.getDeclaredDeps().get(),
                     exportedDeps,
                     resolver.getAllRules(args.providedDeps))));
-    DefaultJavaLibrary defaultJavaLibrary =
-        resolver.addToIndex(
-            new DefaultJavaLibrary(
-                javaLibraryParams,
-                pathResolver,
-                args.srcs,
-                validateResources(
-                    pathResolver,
-                    params.getProjectFilesystem(),
-                    args.resources),
-                Optional.empty(),
-                Optional.empty(),
-                ImmutableList.of(),
-                exportedDeps,
-                resolver.getAllRules(args.providedDeps),
-                abiJarTarget,
-                JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()),
-                /* trackClassUsage */ false,
-                /* additionalClasspathEntries */ ImmutableSet.of(),
-                new KotlincToJarStepFactory(
-                    kotlinBuckConfig.getKotlinCompiler().get(),
-                    args.extraKotlincArguments),
-                Optional.empty(),
-                /* manifest file */ Optional.empty(),
-                Optional.empty(),
-                ImmutableSortedSet.of(),
-                /* classesToRemoveFromJar */ ImmutableSet.of()));
-
-    resolver.addToIndex(
-        CalculateAbi.of(
-            abiJarTarget,
+    return new DefaultJavaLibrary(
+        javaLibraryParams,
+        pathResolver,
+        args.srcs,
+        validateResources(
             pathResolver,
-            params,
-            new BuildTargetSourcePath(defaultJavaLibrary.getBuildTarget())));
-
-    return defaultJavaLibrary;
+            params.getProjectFilesystem(),
+            args.resources),
+        Optional.empty(),
+        Optional.empty(),
+        ImmutableList.of(),
+        exportedDeps,
+        resolver.getAllRules(args.providedDeps),
+        abiJarTarget,
+        JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()),
+        /* trackClassUsage */ false,
+        /* additionalClasspathEntries */ ImmutableSet.of(),
+        new KotlincToJarStepFactory(
+            kotlinBuckConfig.getKotlinCompiler().get(),
+            args.extraKotlincArguments),
+        Optional.empty(),
+        /* manifest file */ Optional.empty(),
+        Optional.empty(),
+        ImmutableSortedSet.of(),
+        /* classesToRemoveFromJar */ ImmutableSet.of());
   }
 
 

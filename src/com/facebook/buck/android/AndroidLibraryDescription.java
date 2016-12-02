@@ -113,6 +113,18 @@ public class AndroidLibraryDescription
 
     boolean hasDummyRDotJavaFlavor =
         params.getBuildTarget().getFlavors().contains(DUMMY_R_DOT_JAVA_FLAVOR);
+    if (params.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
+      if (hasDummyRDotJavaFlavor) {
+        return graphEnhancer.getBuildableForAndroidResourcesAbi(resolver, pathResolver);
+      }
+      BuildTarget libraryTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
+      resolver.requireRule(libraryTarget);
+      return CalculateAbi.of(
+          params.getBuildTarget(),
+          pathResolver,
+          params,
+          new BuildTargetSourcePath(libraryTarget));
+    }
     Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
         resolver,
         /* createBuildableIfEmpty */ hasDummyRDotJavaFlavor);
@@ -173,39 +185,28 @@ public class AndroidLibraryDescription
           params.copyWithDeps(
               Suppliers.ofInstance(declaredDeps),
               Suppliers.ofInstance(extraDeps));
-      AndroidLibrary library =
-          resolver.addToIndex(
-              new AndroidLibrary(
-                  androidLibraryParams,
-                  pathResolver,
-                  args.srcs,
-                  ResourceValidator.validateResources(
-                      pathResolver,
-                      params.getProjectFilesystem(), args.resources),
-                  args.proguardConfig.map(
-                      SourcePaths.toSourcePath(params.getProjectFilesystem())::apply),
-                  args.postprocessClassesCommands,
-                  exportedDeps,
-                  resolver.getAllRules(args.providedDeps),
-                  abiJarTarget,
-                  JavaLibraryRules.getAbiInputs(resolver, androidLibraryParams.getDeps()),
-                  additionalClasspathEntries,
-                  javacOptions,
-                  compiler.trackClassUsage(javacOptions),
-                  compiler.compileToJar(args, javacOptions, resolver),
-                  args.resourcesRoot,
-                  args.mavenCoords,
-                  args.manifest,
-                  args.tests));
-
-      resolver.addToIndex(
-          CalculateAbi.of(
-              abiJarTarget,
+      return new AndroidLibrary(
+          androidLibraryParams,
+          pathResolver,
+          args.srcs,
+          ResourceValidator.validateResources(
               pathResolver,
-              params,
-              new BuildTargetSourcePath(library.getBuildTarget())));
-
-      return library;
+              params.getProjectFilesystem(), args.resources),
+          args.proguardConfig.map(
+              SourcePaths.toSourcePath(params.getProjectFilesystem())::apply),
+          args.postprocessClassesCommands,
+          exportedDeps,
+          resolver.getAllRules(args.providedDeps),
+          abiJarTarget,
+          JavaLibraryRules.getAbiInputs(resolver, androidLibraryParams.getDeps()),
+          additionalClasspathEntries,
+          javacOptions,
+          compiler.trackClassUsage(javacOptions),
+          compiler.compileToJar(args, javacOptions, resolver),
+          args.resourcesRoot,
+          args.mavenCoords,
+          args.manifest,
+          args.tests);
     }
   }
 

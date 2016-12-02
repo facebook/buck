@@ -63,6 +63,17 @@ public class AndroidBuildConfigDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
+    if (params.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
+      SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+      BuildTarget configTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
+      resolver.requireRule(configTarget);
+      return CalculateAbi.of(
+          params.getBuildTarget(),
+          pathResolver,
+          params,
+          new BuildTargetSourcePath(configTarget));
+    }
+
     return createBuildRule(
         params,
         args.javaPackage,
@@ -144,24 +155,13 @@ public class AndroidBuildConfigDescription
         /* declaredDeps */ Suppliers.ofInstance(
             ImmutableSortedSet.of(androidBuildConfig)),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
-    AndroidBuildConfigJavaLibrary library =
-        ruleResolver.addToIndex(
-            new AndroidBuildConfigJavaLibrary(
-                javaLibraryParams,
-                pathResolver,
-                javacOptions,
-                abiJarTarget,
-                JavaLibraryRules.getAbiInputs(ruleResolver, javaLibraryParams.getDeps()),
-                androidBuildConfig));
-
-    ruleResolver.addToIndex(
-        CalculateAbi.of(
-            abiJarTarget,
-            pathResolver,
-            params,
-            new BuildTargetSourcePath(library.getBuildTarget())));
-
-    return library;
+    return new AndroidBuildConfigJavaLibrary(
+        javaLibraryParams,
+        pathResolver,
+        javacOptions,
+        abiJarTarget,
+        JavaLibraryRules.getAbiInputs(ruleResolver, javaLibraryParams.getDeps()),
+        androidBuildConfig);
   }
 
   @SuppressFieldNotInitialized

@@ -70,6 +70,16 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
       A args) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
+    if (rawParams.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
+      BuildTarget libraryTarget = rawParams.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
+      resolver.requireRule(libraryTarget);
+      return CalculateAbi.of(
+          rawParams.getBuildTarget(),
+          pathResolver,
+          rawParams,
+          new BuildTargetSourcePath(libraryTarget));
+    }
+
     Tool scalac = scalaBuckConfig.getScalac(resolver);
 
     final BuildRule scalaLibrary = resolver.getRule(scalaBuckConfig.getScalaLibraryTarget());
@@ -78,8 +88,7 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
             .addAll(rawParams.getDeclaredDeps().get())
             .add(scalaLibrary)
             .build(),
-        rawParams.getExtraDeps()
-    );
+        rawParams.getExtraDeps());
 
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
@@ -91,45 +100,34 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
                         params.getDeclaredDeps().get(),
                         resolver.getAllRules(args.providedDeps))),
                 scalac.getDeps(pathResolver)));
-    DefaultJavaLibrary defaultJavaLibrary =
-        resolver.addToIndex(
-            new DefaultJavaLibrary(
-                javaLibraryParams,
-                pathResolver,
-                args.srcs,
-                validateResources(
-                    pathResolver,
-                    params.getProjectFilesystem(),
-                    args.resources),
-                /* generatedSourceFolder */ Optional.empty(),
-                /* proguardConfig */ Optional.empty(),
-                /* postprocessClassesCommands */ ImmutableList.of(),
-                params.getDeclaredDeps().get(),
-                resolver.getAllRules(args.providedDeps),
-                abiJarTarget,
-                JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()),
-                /* trackClassUsage */ false,
-                /* additionalClasspathEntries */ ImmutableSet.of(),
-                new ScalacToJarStepFactory(
-                    scalac,
-                    ScalacToJarStepFactory.collectScalacArguments(
-                        scalaBuckConfig,
-                        resolver,
-                        args.extraArguments)),
-                args.resourcesRoot,
-                args.manifestFile,
-                args.mavenCoords,
-                args.tests,
-                /* classesToRemoveFromJar */ ImmutableSet.of()));
-
-    resolver.addToIndex(
-        CalculateAbi.of(
-            abiJarTarget,
+    return new DefaultJavaLibrary(
+        javaLibraryParams,
+        pathResolver,
+        args.srcs,
+        validateResources(
             pathResolver,
-            params,
-            new BuildTargetSourcePath(defaultJavaLibrary.getBuildTarget())));
-
-    return defaultJavaLibrary;
+            params.getProjectFilesystem(),
+            args.resources),
+        /* generatedSourceFolder */ Optional.empty(),
+        /* proguardConfig */ Optional.empty(),
+        /* postprocessClassesCommands */ ImmutableList.of(),
+        params.getDeclaredDeps().get(),
+        resolver.getAllRules(args.providedDeps),
+        abiJarTarget,
+        JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()),
+        /* trackClassUsage */ false,
+        /* additionalClasspathEntries */ ImmutableSet.of(),
+        new ScalacToJarStepFactory(
+            scalac,
+            ScalacToJarStepFactory.collectScalacArguments(
+                scalaBuckConfig,
+                resolver,
+                args.extraArguments)),
+        args.resourcesRoot,
+        args.manifestFile,
+        args.mavenCoords,
+        args.tests,
+        /* classesToRemoveFromJar */ ImmutableSet.of());
   }
 
   @Override
