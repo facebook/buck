@@ -35,6 +35,8 @@ import java.io.IOException;
 import okhttp3.OkHttpClient;
 
 public abstract class DistBuildFactory {
+  private static final int SLB_THREAD_PRIORITY = Thread.MAX_PRIORITY;
+
   private DistBuildFactory() {
     // Do not instantiate.
   }
@@ -49,7 +51,7 @@ public abstract class DistBuildFactory {
     ClientSideSlb slb = config.getFrontendConfig().createClientSideSlb(
         params.getClock(),
         params.getBuckEventBus(),
-        new CommandThreadFactory("StampedeNetworkThreadPool"));
+        new CommandThreadFactory("StampedeNetworkThreadPool", SLB_THREAD_PRIORITY));
     OkHttpClient client = config.createOkHttpClient();
 
     return new FrontendService(

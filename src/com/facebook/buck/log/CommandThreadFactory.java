@@ -17,8 +17,8 @@
 package com.facebook.buck.log;
 
 import com.facebook.buck.util.concurrent.MostExecutors;
-import com.google.common.annotations.VisibleForTesting;
 
+import java.util.Optional;
 import java.util.concurrent.ThreadFactory;
 
 import javax.annotation.Nullable;
@@ -31,30 +31,38 @@ public class CommandThreadFactory implements ThreadFactory {
 
   private final ThreadFactory threadFactory;
   private final CommonThreadFactoryState state;
-  @Nullable private final String commandId;
+  @Nullable
+  private final String commandId;
+  private final Optional<Integer> optionalPriority;
+
+  public CommandThreadFactory(String threadName, int threadPriority) {
+    this(new MostExecutors.NamedThreadFactory(threadName), Optional.of(threadPriority));
+  }
 
   public CommandThreadFactory(String threadName) {
-    this(new MostExecutors.NamedThreadFactory(threadName));
+    this(new MostExecutors.NamedThreadFactory(threadName), Optional.empty());
   }
 
   public CommandThreadFactory(ThreadFactory threadFactory) {
-    this(threadFactory, GlobalStateManager.singleton().getThreadToCommandRegister());
+    this(threadFactory, Optional.empty());
   }
 
-  @VisibleForTesting
-  CommandThreadFactory(
-      ThreadFactory threadFactory,
-      CommonThreadFactoryState register) {
+  public CommandThreadFactory(ThreadFactory threadFactory, Optional<Integer> optionalPriority) {
     this.threadFactory = threadFactory;
-    this.state = register;
+    this.state = GlobalStateManager.singleton().getThreadToCommandRegister();
 
     // This might be null in test environments which bypass `Main.runMainThenExit`.
     this.commandId = state.threadIdToCommandId(Thread.currentThread().getId());
+    this.optionalPriority = optionalPriority;
   }
 
   @Override
   public Thread newThread(Runnable r) {
     Thread newThread = threadFactory.newThread(r);
+    if (optionalPriority.isPresent()) {
+      newThread.setPriority(optionalPriority.get());
+    }
+
     if (commandId != null) {
       state.register(newThread.getId(), commandId);
     }

@@ -66,6 +66,8 @@ public class ArtifactCaches {
 
   private static final NetworkCacheFactory THRIFT_PROTOCOL = ThriftArtifactCache::new;
 
+  private static final int SLB_THREAD_PRIORITY = Thread.MAX_PRIORITY;
+
   private ArtifactCaches() {
   }
 
@@ -308,7 +310,7 @@ public class ArtifactCaches {
         HttpLoadBalancer clientSideSlb = config.getSlbConfig().createClientSideSlb(
             new DefaultClock(),
             buckEventBus,
-            new CommandThreadFactory("ArtifactCaches.HttpLoadBalancer"));
+            new CommandThreadFactory("ArtifactCaches.HttpLoadBalancer", SLB_THREAD_PRIORITY));
         fetchService =
             new RetryingHttpService(
                 buckEventBus,
