@@ -200,8 +200,7 @@ public class FakeAppleRuleDescriptions {
         CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
         ProvisioningProfileStore.fromProvisioningProfiles(
             ImmutableList.of()),
-        AppleDebugFormat.NONE,
-        false);
+        new FakeAppleConfig());
 
   /**
    * A fake apple_binary description with an iOS platform for use in tests.
@@ -218,8 +217,7 @@ public class FakeAppleRuleDescriptions {
         CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
         ProvisioningProfileStore.fromProvisioningProfiles(
             ImmutableList.of()),
-        AppleDebugFormat.NONE,
-        false);
+        new FakeAppleConfig());
 
   /**
    * A fake apple_bundle description with an iOS platform for use in tests.
@@ -234,8 +232,7 @@ public class FakeAppleRuleDescriptions {
           CodeSignIdentityStore.fromIdentities(ImmutableList.of(CodeSignIdentity.AD_HOC)),
           ProvisioningProfileStore.fromProvisioningProfiles(
               ImmutableList.of()),
-          AppleDebugFormat.NONE,
-          false);
+          new FakeAppleConfig());
 
   /**
    * A fake apple_test description with an iOS platform for use in tests.
@@ -251,7 +248,5 @@ public class FakeAppleRuleDescriptions {
           ProvisioningProfileStore.fromProvisioningProfiles(
               ImmutableList.of()),
           Suppliers.ofInstance(Optional.empty()),
-          AppleDebugFormat.NONE,
-          DEFAULT_TIMEOUT,
-          false);
+          DEFAULT_TIMEOUT);
 }

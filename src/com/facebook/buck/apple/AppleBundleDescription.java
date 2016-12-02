@@ -69,8 +69,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
-  private final AppleDebugFormat defaultDebugFormat;
-  private final boolean dryRunCodeSigning;
+  private final AppleConfig appleConfig;
 
   public AppleBundleDescription(
       AppleBinaryDescription appleBinaryDescription,
@@ -80,8 +79,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
-      AppleDebugFormat defaultDebugFormat,
-      boolean dryRunCodeSigning) {
+      AppleConfig appleConfig) {
     this.appleBinaryDescription = appleBinaryDescription;
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
@@ -89,8 +87,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
-    this.defaultDebugFormat = defaultDebugFormat;
-    this.dryRunCodeSigning = dryRunCodeSigning;
+    this.appleConfig = appleConfig;
   }
 
   @Override
@@ -124,7 +121,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
     AppleDebugFormat flavoredDebugFormat = AppleDebugFormat.FLAVOR_DOMAIN
-        .getValue(params.getBuildTarget()).orElse(defaultDebugFormat);
+        .getValue(params.getBuildTarget())
+        .orElse(appleConfig.getDefaultDebugInfoFormatForBinaries());
     if (!params.getBuildTarget().getFlavors().contains(flavoredDebugFormat.getFlavor())) {
       return (AppleBundle) resolver.requireRule(
           params.getBuildTarget().withAppendedFlavors(flavoredDebugFormat.getFlavor()));
@@ -151,7 +149,7 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         args.deps,
         args.tests,
         flavoredDebugFormat,
-        dryRunCodeSigning);
+        appleConfig.useDryRunCodeSigning());
   }
 
   /**

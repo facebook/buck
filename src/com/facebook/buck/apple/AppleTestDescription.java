@@ -104,9 +104,7 @@ public class AppleTestDescription implements
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
   private final Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier;
-  private final AppleDebugFormat defaultDebugFormat;
   private final Optional<Long> defaultTestRuleTimeoutMs;
-  private final boolean dryRunCodeSigning;
 
   public AppleTestDescription(
       AppleConfig appleConfig,
@@ -117,9 +115,7 @@ public class AppleTestDescription implements
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
       Supplier<Optional<Path>> xcodeDeveloperDirectorySupplier,
-      AppleDebugFormat defaultDebugFormat,
-      Optional<Long> defaultTestRuleTimeoutMs,
-      boolean dryRunCodeSigning) {
+      Optional<Long> defaultTestRuleTimeoutMs) {
     this.appleConfig = appleConfig;
     this.appleLibraryDescription = appleLibraryDescription;
     this.cxxPlatformFlavorDomain = cxxPlatformFlavorDomain;
@@ -128,9 +124,7 @@ public class AppleTestDescription implements
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
     this.xcodeDeveloperDirectorySupplier = xcodeDeveloperDirectorySupplier;
-    this.defaultDebugFormat = defaultDebugFormat;
     this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
-    this.dryRunCodeSigning = dryRunCodeSigning;
   }
 
   @Override
@@ -152,7 +146,8 @@ public class AppleTestDescription implements
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
     AppleDebugFormat debugFormat = AppleDebugFormat.FLAVOR_DOMAIN
-        .getValue(params.getBuildTarget()).orElse(defaultDebugFormat);
+        .getValue(params.getBuildTarget())
+        .orElse(appleConfig.getDefaultDebugInfoFormatForTests());
     if (params.getBuildTarget().getFlavors().contains(debugFormat.getFlavor())) {
       params = params.withoutFlavor(debugFormat.getFlavor());
     }
@@ -266,7 +261,7 @@ public class AppleTestDescription implements
         args.deps,
         args.tests,
         debugFormat,
-        dryRunCodeSigning);
+        appleConfig.useDryRunCodeSigning());
 
     Optional<SourcePath> xctool = getXctool(params, resolver, sourcePathResolver);
 

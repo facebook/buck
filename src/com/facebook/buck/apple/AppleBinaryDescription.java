@@ -94,8 +94,7 @@ public class AppleBinaryDescription
   private final FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
-  private final AppleDebugFormat defaultDebugFormat;
-  private final boolean dryRunCodeSigning;
+  private final AppleConfig appleConfig;
 
   public AppleBinaryDescription(
       CxxBinaryDescription delegate,
@@ -103,15 +102,13 @@ public class AppleBinaryDescription
       FlavorDomain<AppleCxxPlatform> platformFlavorsToAppleCxxPlatforms,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
-      AppleDebugFormat defaultDebugFormat,
-      boolean dryRunCodeSigning) {
+      AppleConfig appleConfig) {
     this.delegate = delegate;
     this.swiftDelegate = swiftDelegate;
     this.platformFlavorsToAppleCxxPlatforms = platformFlavorsToAppleCxxPlatforms;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
-    this.defaultDebugFormat = defaultDebugFormat;
-    this.dryRunCodeSigning = dryRunCodeSigning;
+    this.appleConfig = appleConfig;
   }
 
   @Override
@@ -252,7 +249,8 @@ public class AppleBinaryDescription
           params.getBuildTarget().getUnflavoredBuildTarget());
     }
     AppleDebugFormat flavoredDebugFormat = AppleDebugFormat.FLAVOR_DOMAIN
-        .getValue(params.getBuildTarget()).orElse(defaultDebugFormat);
+        .getValue(params.getBuildTarget())
+        .orElse(appleConfig.getDefaultDebugInfoFormatForBinaries());
     if (!params.getBuildTarget().getFlavors().contains(flavoredDebugFormat.getFlavor())) {
       return resolver.requireRule(
           params.getBuildTarget().withAppendedFlavors(flavoredDebugFormat.getFlavor()));
@@ -291,7 +289,7 @@ public class AppleBinaryDescription
         args.deps,
         args.tests,
         flavoredDebugFormat,
-        dryRunCodeSigning);
+        appleConfig.useDryRunCodeSigning());
   }
 
   private <A extends AppleBinaryDescription.Arg> BuildRule createBinary(

@@ -29,7 +29,14 @@ public class FakeAppleConfig extends AppleConfig {
   private ImmutableMap<AppleSdk, AppleSdkPaths> appleSdkPaths = null;
 
   public FakeAppleConfig() {
-    super(FakeBuckConfig.builder().build());
+    super(FakeBuckConfig
+        .builder()
+        .setSections(
+            "[apple]",
+            "default_debug_info_format_for_tests = NONE",
+            "default_debug_info_format_for_binaries = NONE",
+            "default_debug_info_format_for_libraries = NONE")
+        .build());
   }
 
   @Override

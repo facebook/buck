@@ -574,8 +574,7 @@ public class KnownBuildRuleTypes {
             defaultCxxPlatform,
             codeSignIdentityStore,
             provisioningProfileStore,
-            appleConfig.getDefaultDebugInfoFormatForLibraries(),
-            appleConfig.useDryRunCodeSigning());
+            appleConfig);
     builder.register(appleLibraryDescription);
     PrebuiltAppleFrameworkDescription appleFrameworkDescription =
         new PrebuiltAppleFrameworkDescription();
@@ -588,8 +587,7 @@ public class KnownBuildRuleTypes {
             platformFlavorsToAppleCxxPlatforms,
             codeSignIdentityStore,
             provisioningProfileStore,
-            appleConfig.getDefaultDebugInfoFormatForBinaries(),
-            appleConfig.useDryRunCodeSigning());
+            appleConfig);
     builder.register(appleBinaryDescription);
 
     HaskellBuckConfig haskellBuckConfig = new HaskellBuckConfig(config, executableFinder);
@@ -653,8 +651,7 @@ public class KnownBuildRuleTypes {
             defaultCxxPlatform,
             codeSignIdentityStore,
             provisioningProfileStore,
-            appleConfig.getDefaultDebugInfoFormatForBinaries(),
-            appleConfig.useDryRunCodeSigning());
+            appleConfig);
     builder.register(appleBundleDescription);
     builder.register(new AppleResourceDescription());
     builder.register(
@@ -667,9 +664,7 @@ public class KnownBuildRuleTypes {
             codeSignIdentityStore,
             provisioningProfileStore,
             appleConfig.getAppleDeveloperDirectorySupplierForTests(processExecutor),
-            appleConfig.getDefaultDebugInfoFormatForTests(),
-            defaultTestRuleTimeoutMs,
-            appleConfig.useDryRunCodeSigning()));
+            defaultTestRuleTimeoutMs));
     builder.register(new CoreDataModelDescription());
     builder.register(new CsharpLibraryDescription());
     builder.register(cxxBinaryDescription);

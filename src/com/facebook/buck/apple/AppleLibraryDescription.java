@@ -121,8 +121,7 @@ public class AppleLibraryDescription implements
   private final CxxPlatform defaultCxxPlatform;
   private final CodeSignIdentityStore codeSignIdentityStore;
   private final ProvisioningProfileStore provisioningProfileStore;
-  private final AppleDebugFormat defaultDebugFormat;
-  private final boolean dryRunCodeSigning;
+  private final AppleConfig appleConfig;
 
   public AppleLibraryDescription(
       CxxLibraryDescription delegate,
@@ -131,16 +130,14 @@ public class AppleLibraryDescription implements
       CxxPlatform defaultCxxPlatform,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
-      AppleDebugFormat defaultDebugFormat,
-      boolean dryRunCodeSigning) {
+      AppleConfig appleConfig) {
     this.delegate = delegate;
     this.swiftDelegate = swiftDelegate;
     this.appleCxxPlatformFlavorDomain = appleCxxPlatformFlavorDomain;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.codeSignIdentityStore = codeSignIdentityStore;
     this.provisioningProfileStore = provisioningProfileStore;
-    this.defaultDebugFormat = defaultDebugFormat;
-    this.dryRunCodeSigning = dryRunCodeSigning;
+    this.appleConfig = appleConfig;
   }
 
   @Override
@@ -194,7 +191,8 @@ public class AppleLibraryDescription implements
               AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR));
     }
     AppleDebugFormat debugFormat = AppleDebugFormat.FLAVOR_DOMAIN
-        .getValue(params.getBuildTarget()).orElse(defaultDebugFormat);
+        .getValue(params.getBuildTarget())
+        .orElse(appleConfig.getDefaultDebugInfoFormatForLibraries());
     if (!params.getBuildTarget().getFlavors().contains(debugFormat.getFlavor())) {
       return resolver.requireRule(
           params.getBuildTarget().withAppendedFlavors(debugFormat.getFlavor()));
@@ -217,7 +215,7 @@ public class AppleLibraryDescription implements
         args.deps,
         args.tests,
         debugFormat,
-        dryRunCodeSigning);
+        appleConfig.useDryRunCodeSigning());
   }
 
   /**
@@ -296,7 +294,8 @@ public class AppleLibraryDescription implements
         resolver,
         strippedBinaryRule,
         (ProvidesLinkedBinaryDeps) unstrippedBinaryRule,
-        AppleDebugFormat.FLAVOR_DOMAIN.getValue(params.getBuildTarget()).orElse(defaultDebugFormat),
+        AppleDebugFormat.FLAVOR_DOMAIN.getValue(params.getBuildTarget())
+            .orElse(appleConfig.getDefaultDebugInfoFormatForLibraries()),
         delegate.getCxxPlatforms(),
         delegate.getDefaultCxxPlatform(),
         appleCxxPlatformFlavorDomain);
