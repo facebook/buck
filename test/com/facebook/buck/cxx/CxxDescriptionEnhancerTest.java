@@ -20,7 +20,6 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
@@ -238,19 +237,6 @@ public class CxxDescriptionEnhancerTest {
             hasItem(new BuildTargetSourcePath(BuildTargetFactory.newInstance("//:symlink"))),
             not(hasItem(
                 new BuildTargetSourcePath(BuildTargetFactory.newInstance("//:privatesymlink"))))));
-  }
-
-  @Test
-  public void buildTargetsWithDifferentFlavorsProduceDifferentDefaultSonames() {
-    BuildTarget target1 = BuildTargetFactory.newInstance("//:rule#one");
-    BuildTarget target2 = BuildTargetFactory.newInstance("//:rule#two");
-    assertNotEquals(
-        CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(
-            target1,
-            CxxPlatformUtils.DEFAULT_PLATFORM),
-        CxxDescriptionEnhancer.getDefaultSharedLibrarySoname(
-            target2,
-            CxxPlatformUtils.DEFAULT_PLATFORM));
   }
 
   @Test

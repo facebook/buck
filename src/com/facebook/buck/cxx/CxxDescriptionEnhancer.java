@@ -570,10 +570,7 @@ public class CxxDescriptionEnhancer {
                         .map(Object::toString)
                         .filter(x -> !x.isEmpty())
                         .iterator())
-                .add(
-                    target
-                        .withoutFlavors(platform.getFlavor())
-                        .getShortNameAndFlavorPostfix())
+                .add(target.getShortName())
                 .build());
     String extension = platform.getSharedLibraryExtension();
     return String.format("lib%s.%s", libName, extension);
