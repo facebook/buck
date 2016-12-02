@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.PrebuiltJar;
@@ -25,6 +26,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -74,7 +76,7 @@ public class AndroidPrebuiltAarDescription
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(buildRuleResolver);
     UnzipAar unzipAar = createUnzipAar(params, args.aar, buildRuleResolver);
 
@@ -89,7 +91,6 @@ public class AndroidPrebuiltAarDescription
             AndroidPrebuiltAar::getPrebuiltJar));
 
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
-    SourcePath abiJar = new BuildTargetSourcePath(abiJarTarget);
     buildRuleResolver.addToIndex(
         CalculateAbi.of(
             params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR),
@@ -104,13 +105,14 @@ public class AndroidPrebuiltAarDescription
             unzipAar,
             params,
             pathResolver,
-            abiJar,
+            abiJarTarget,
             ImmutableSortedSet.copyOf(javaDeps)));
 
+    BuildRuleParams androidLibraryParams = params.copyWithDeps(
+        /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(prebuiltJar)),
+        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(unzipAar)));
     return buildRuleResolver.addToIndex(new AndroidPrebuiltAar(
-        /* androidLibraryParams */ params.copyWithDeps(
-            /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(prebuiltJar)),
-            /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of(unzipAar))),
+        androidLibraryParams,
         /* resolver */ pathResolver,
         /* proguardConfig */ new BuildTargetSourcePath(
             unzipAar.getBuildTarget(),
@@ -123,7 +125,8 @@ public class AndroidPrebuiltAarDescription
         /* javacOptions */ javacOptions,
         new JavacToJarStepFactory(javacOptions, new BootClasspathAppender()),
         /* exportedDeps */ javaDeps,
-        abiJar));
+        abiJarTarget,
+        JavaLibraryRules.getAbiInputs(buildRuleResolver, androidLibraryParams.getDeps())));
   }
 
   /**
@@ -153,7 +156,7 @@ public class AndroidPrebuiltAarDescription
       UnzipAar unzipAar,
       BuildRuleParams params,
       SourcePathResolver resolver,
-      SourcePath abiJar,
+      BuildTarget abiJar,
       ImmutableSortedSet<BuildRule> deps) {
     BuildRuleParams buildRuleParams = params.copyWithChanges(
         /* buildTarget */ BuildTargets.createFlavoredBuildTarget(

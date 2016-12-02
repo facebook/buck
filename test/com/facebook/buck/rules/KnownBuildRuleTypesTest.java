@@ -31,6 +31,7 @@ import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -132,7 +133,8 @@ public class KnownBuildRuleTypesTest {
     arg.tests = ImmutableSortedSet.of();
   }
 
-  private DefaultJavaLibrary createJavaLibrary(KnownBuildRuleTypes buildRuleTypes) {
+  private DefaultJavaLibrary createJavaLibrary(KnownBuildRuleTypes buildRuleTypes)
+      throws NoSuchBuildTargetException {
     JavaLibraryDescription description =
         (JavaLibraryDescription) buildRuleTypes.getDescription(
             Description.getBuildRuleType(JavaLibraryDescription.class));

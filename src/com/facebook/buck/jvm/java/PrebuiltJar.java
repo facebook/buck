@@ -22,6 +22,7 @@ import com.facebook.buck.android.AndroidPackageable;
 import com.facebook.buck.android.AndroidPackageableCollector;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRule;
 import com.facebook.buck.rules.AddToRuleKey;
@@ -65,7 +66,7 @@ public class PrebuiltJar extends AbstractBuildRule
 
   @AddToRuleKey
   private final SourcePath binaryJar;
-  private final SourcePath abiJar;
+  private final BuildTarget abiJar;
   private final Path copiedBinaryJar;
   @AddToRuleKey
   private final Optional<SourcePath> sourceJar;
@@ -88,7 +89,7 @@ public class PrebuiltJar extends AbstractBuildRule
       BuildRuleParams params,
       SourcePathResolver resolver,
       SourcePath binaryJar,
-      SourcePath abiJar,
+      BuildTarget abiJar,
       Optional<SourcePath> sourceJar,
       Optional<SourcePath> gwtJar,
       Optional<String> javadocUrl,
@@ -150,7 +151,7 @@ public class PrebuiltJar extends AbstractBuildRule
   }
 
   @Override
-  public Optional<SourcePath> getAbiJar() {
+  public Optional<BuildTarget> getAbiJar() {
     return Optional.of(abiJar);
   }
 

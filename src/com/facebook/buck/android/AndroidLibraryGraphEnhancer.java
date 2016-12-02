@@ -122,7 +122,7 @@ public class AndroidLibraryGraphEnhancer {
         dummyRDotJavaParams,
         pathResolver,
         androidResourceDeps,
-        new BuildTargetSourcePath(abiJarTarget),
+        abiJarTarget,
         javacOptions,
         forceFinalResourceIds,
         resourceUnionPackage,

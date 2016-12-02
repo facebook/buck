@@ -123,7 +123,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       transitiveClasspathsSupplier;
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
-  private final SourcePath abiJar;
+  private final BuildTarget abiJar;
   private final boolean trackClassUsage;
   @AddToRuleKey
   @SuppressWarnings("PMD.UnusedPrivateField")
@@ -180,7 +180,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
-      SourcePath abiJar,
+      BuildTarget abiJar,
+      ImmutableSortedSet<SourcePath> abiInputs,
       boolean trackClassUsage,
       ImmutableSet<Path> additionalClasspathEntries,
       CompileToJarStepFactory compileStepFactory,
@@ -202,7 +203,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         abiJar,
         trackClassUsage,
         new JarArchiveDependencySupplier(
-            JavaLibraryRules.getAbiInputs(params.getDeps()),
+            abiInputs,
             params.getProjectFilesystem()),
         additionalClasspathEntries,
         compileStepFactory,
@@ -223,7 +224,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableList<String> postprocessClassesCommands,
       ImmutableSortedSet<BuildRule> exportedDeps,
       ImmutableSortedSet<BuildRule> providedDeps,
-      SourcePath abiJar,
+      BuildTarget abiJar,
       boolean trackClassUsage,
       final JarArchiveDependencySupplier abiClasspath,
       ImmutableSet<Path> additionalClasspathEntries,
@@ -570,7 +571,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   }
 
   @Override
-  public Optional<SourcePath> getAbiJar() {
+  public Optional<BuildTarget> getAbiJar() {
     return outputJar.isPresent() ? Optional.of(abiJar) : Optional.empty();
   }
 

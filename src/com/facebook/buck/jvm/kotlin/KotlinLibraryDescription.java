@@ -20,6 +20,7 @@ import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
 
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -66,15 +67,17 @@ public class KotlinLibraryDescription implements Description<KotlinLibraryDescri
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
     ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps);
+    BuildRuleParams javaLibraryParams =
+        params.appendExtraDeps(
+            BuildRules.getExportedRules(
+                Iterables.concat(
+                    params.getDeclaredDeps().get(),
+                    exportedDeps,
+                    resolver.getAllRules(args.providedDeps))));
     DefaultJavaLibrary defaultJavaLibrary =
         resolver.addToIndex(
             new DefaultJavaLibrary(
-                params.appendExtraDeps(
-                    BuildRules.getExportedRules(
-                        Iterables.concat(
-                            params.getDeclaredDeps().get(),
-                            exportedDeps,
-                            resolver.getAllRules(args.providedDeps)))),
+                javaLibraryParams,
                 pathResolver,
                 args.srcs,
                 validateResources(
@@ -86,7 +89,8 @@ public class KotlinLibraryDescription implements Description<KotlinLibraryDescri
                 ImmutableList.of(),
                 exportedDeps,
                 resolver.getAllRules(args.providedDeps),
-                new BuildTargetSourcePath(abiJarTarget),
+                abiJarTarget,
+                JavaLibraryRules.getAbiInputs(resolver, javaLibraryParams.getDeps()),
                 /* trackClassUsage */ false,
                 /* additionalClasspathEntries */ ImmutableSet.of(),
                 new KotlincToJarStepFactory(

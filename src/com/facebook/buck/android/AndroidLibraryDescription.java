@@ -20,12 +20,14 @@ import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
+import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaSourceJar;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -85,7 +87,7 @@ public class AndroidLibraryDescription
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
+      A args) throws NoSuchBuildTargetException {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     if (params.getBuildTarget().getFlavors().contains(JavaLibrary.SRC_JAR)) {
       return new JavaSourceJar(params, pathResolver, args.srcs, args.mavenCoords);
@@ -167,12 +169,14 @@ public class AndroidLibraryDescription
               .addAll(compiler.getExtraDeps(args, resolver))
               .build();
 
+      BuildRuleParams androidLibraryParams =
+          params.copyWithDeps(
+              Suppliers.ofInstance(declaredDeps),
+              Suppliers.ofInstance(extraDeps));
       AndroidLibrary library =
           resolver.addToIndex(
               new AndroidLibrary(
-                  params.copyWithDeps(
-                      Suppliers.ofInstance(declaredDeps),
-                      Suppliers.ofInstance(extraDeps)),
+                  androidLibraryParams,
                   pathResolver,
                   args.srcs,
                   ResourceValidator.validateResources(
@@ -183,7 +187,8 @@ public class AndroidLibraryDescription
                   args.postprocessClassesCommands,
                   exportedDeps,
                   resolver.getAllRules(args.providedDeps),
-                  new BuildTargetSourcePath(abiJarTarget),
+                  abiJarTarget,
+                  JavaLibraryRules.getAbiInputs(resolver, androidLibraryParams.getDeps()),
                   additionalClasspathEntries,
                   javacOptions,
                   compiler.trackClassUsage(javacOptions),

@@ -17,8 +17,10 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ObjectMappers;
@@ -57,14 +59,16 @@ class DefaultClassUsageFileReader {
       }
 
       HasJavaAbi depWithJavaAbi = (HasJavaAbi) dep;
-      Optional<SourcePath> depAbiJar = depWithJavaAbi.getAbiJar();
+      Optional<BuildTarget> depAbiJar = depWithJavaAbi.getAbiJar();
       if (!depAbiJar.isPresent()) {
         continue;
       }
 
       Path jarAbsolutePath = dep.getProjectFilesystem().resolve(dep.getPathToOutput());
 
-      jarAbsolutePathToAbiJarSourcePathBuilder.put(jarAbsolutePath, depAbiJar.get());
+      jarAbsolutePathToAbiJarSourcePathBuilder.put(
+          jarAbsolutePath,
+          new BuildTargetSourcePath(depAbiJar.get()));
     }
 
     return jarAbsolutePathToAbiJarSourcePathBuilder.build();

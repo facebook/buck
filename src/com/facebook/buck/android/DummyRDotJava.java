@@ -56,7 +56,7 @@ public class DummyRDotJava extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, HasJavaAbi {
 
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
-  private final SourcePath abiJar;
+  private final BuildTarget abiJar;
   private final Path outputJar;
   @AddToRuleKey
   private final JavacOptions javacOptions;
@@ -74,7 +74,7 @@ public class DummyRDotJava extends AbstractBuildRule
       BuildRuleParams params,
       SourcePathResolver resolver,
       Set<HasAndroidResourceDeps> androidResourceDeps,
-      SourcePath abiJar,
+      BuildTarget abiJar,
       JavacOptions javacOptions,
       boolean forceFinalResourceIds,
       Optional<String> unionPackage,
@@ -95,7 +95,7 @@ public class DummyRDotJava extends AbstractBuildRule
       BuildRuleParams params,
       SourcePathResolver resolver,
       Set<HasAndroidResourceDeps> androidResourceDeps,
-      SourcePath abiJar,
+      BuildTarget abiJar,
       JavacOptions javacOptions,
       boolean forceFinalResourceIds,
       Optional<String> unionPackage,
@@ -269,7 +269,7 @@ public class DummyRDotJava extends AbstractBuildRule
   }
 
   @Override
-  public Optional<SourcePath> getAbiJar() {
+  public Optional<BuildTarget> getAbiJar() {
     return Optional.of(abiJar);
   }
 

@@ -83,7 +83,7 @@ public class DummyRDotJavaTest {
         ImmutableSet.of(
             (HasAndroidResourceDeps) resourceRule1,
             (HasAndroidResourceDeps) resourceRule2),
-        new FakeSourcePath("abi.jar"),
+        BuildTargetFactory.newInstance("//:abi"),
         ANDROID_JAVAC_OPTIONS,
         /* forceFinalResourceIds */ false,
         Optional.empty(),
@@ -165,7 +165,7 @@ public class DummyRDotJavaTest {
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
         ImmutableSet.of(),
-        new FakeSourcePath("abi.jar"),
+        BuildTargetFactory.newInstance("//:abi"),
         ANDROID_JAVAC_OPTIONS,
         /* forceFinalResourceIds */ false,
         Optional.empty(),

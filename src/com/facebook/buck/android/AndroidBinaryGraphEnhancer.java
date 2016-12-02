@@ -26,6 +26,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
@@ -263,7 +264,8 @@ public class AndroidBinaryGraphEnhancer {
           /* providedDeps */ ImmutableSortedSet.of(),
           // We just use the full output jar as the ABI jar.
           // Because no Java libraries depend on us, there is no risk of wasteful rebuilding.
-          new BuildTargetSourcePath(compileMergedNativeLibGenCode),
+          compileMergedNativeLibGenCode,
+          JavaLibraryRules.getAbiInputs(ruleResolver, paramsForCompileGenCode.getDeps()),
           /* trackClassUsage */ false,
           /* additionalClasspathEntries */ ImmutableSet.of(),
           new JavacToJarStepFactory(
@@ -445,7 +447,8 @@ public class AndroidBinaryGraphEnhancer {
         /* providedDeps */ ImmutableSortedSet.of(),
         // Because the Uber R.java has no method bodies or private methods or fields,
         // we can just use its output as the ABI.
-        new BuildTargetSourcePath(compileUberRDotJavaTarget),
+        compileUberRDotJavaTarget,
+        JavaLibraryRules.getAbiInputs(ruleResolver, paramsForCompileUberRDotJava.getDeps()),
         /* trackClassUsage */ false,
         /* additionalClasspathEntries */ ImmutableSet.of(),
         new JavacToJarStepFactory(
@@ -535,7 +538,7 @@ public class AndroidBinaryGraphEnhancer {
   private void addBuildConfigDeps(
       AndroidPackageableCollection packageableCollection,
       ImmutableSortedSet.Builder<BuildRule> enhancedDeps,
-      ImmutableList.Builder<BuildRule> compilationRulesBuilder) {
+      ImmutableList.Builder<BuildRule> compilationRulesBuilder) throws NoSuchBuildTargetException {
     BuildConfigFields buildConfigConstants = BuildConfigFields.fromFields(
         ImmutableList.of(
             BuildConfigFields.Field.of(

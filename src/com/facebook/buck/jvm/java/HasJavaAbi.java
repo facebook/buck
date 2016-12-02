@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.SourcePath;
 
@@ -26,6 +27,6 @@ public interface HasJavaAbi extends HasBuildTarget {
   /**
    * @return the {@link SourcePath} representing the ABI Jar for this rule.
    */
-  Optional<SourcePath> getAbiJar();
+  Optional<BuildTarget> getAbiJar();
 
 }

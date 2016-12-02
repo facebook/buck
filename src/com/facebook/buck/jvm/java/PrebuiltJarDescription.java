@@ -26,7 +26,6 @@ import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
@@ -71,7 +70,7 @@ public class PrebuiltJarDescription implements Description<PrebuiltJarDescriptio
         params,
         pathResolver,
         args.binaryJar,
-        new BuildTargetSourcePath(abiJarTarget),
+        abiJarTarget,
         args.sourceJar,
         args.gwtJar,
         args.javadocUrl,

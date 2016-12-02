@@ -19,6 +19,7 @@ package com.facebook.buck.thrift;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CalculateAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibraryRules;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsAmender;
@@ -28,6 +29,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -106,7 +108,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
       BuildRuleResolver resolver,
       ThriftConstructorArg args,
       ImmutableMap<String, ThriftSource> sources,
-      ImmutableSortedSet<BuildRule> deps) {
+      ImmutableSortedSet<BuildRule> deps) throws NoSuchBuildTargetException {
     final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
 
     // Pack all the generated sources into a single source zip that we'll pass to the
@@ -166,7 +168,8 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
                 /* postprocessClassesCommands */ ImmutableList.of(),
                 /* exportedDeps */ ImmutableSortedSet.of(),
                 /* providedDeps */ ImmutableSortedSet.of(),
-                /* abiJar */ new BuildTargetSourcePath(abiJarTarget),
+                /* abiJar */ abiJarTarget,
+                JavaLibraryRules.getAbiInputs(resolver, javaParams.getDeps()),
                 templateOptions.trackClassUsage(),
                 /* additionalClasspathEntries */ ImmutableSet.of(),
                 new JavacToJarStepFactory(templateOptions, JavacOptionsAmender.IDENTITY),

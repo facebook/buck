@@ -25,7 +25,6 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -36,13 +35,9 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 
 public class PrebuiltJarTest {
-
-  private static final Path PATH_TO_JUNIT_JAR = Paths.get("third-party/java/junit/junit-4.11.jar");
 
   @Rule
   public TemporaryPaths temp = new TemporaryPaths();
@@ -68,7 +63,7 @@ public class PrebuiltJarTest {
               new DefaultTargetNodeToBuildRuleTransformer())
         ),
         new FakeSourcePath("abi.jar"),
-        new PathSourcePath(filesystem, PATH_TO_JUNIT_JAR),
+        BuildTargetFactory.newInstance("//:abi"),
         Optional.of(new FakeSourcePath("lib/junit-4.11-sources.jar")),
         /* gwtJar */ Optional.empty(),
         Optional.of("http://junit-team.github.io/junit/javadoc/latest/"),

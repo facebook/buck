@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -38,7 +39,7 @@ import java.util.Optional;
 public class AndroidBuildConfigJavaLibraryTest {
 
   @Test
-  public void testAddToCollector() {
+  public void testAddToCollector() throws NoSuchBuildTargetException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
     BuildRuleResolver buildRuleResolver =
@@ -67,7 +68,7 @@ public class AndroidBuildConfigJavaLibraryTest {
   }
 
   @Test
-  public void testBuildConfigHasCorrectProperties() {
+  public void testBuildConfigHasCorrectProperties() throws NoSuchBuildTargetException {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//foo:bar").build();
     BuildConfigFields fields = BuildConfigFields.fromFieldDeclarations(
         Collections.singleton("String KEY = \"value\""));
