@@ -56,7 +56,6 @@ import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.Optional;
 
 public class PythonTestDescription implements
@@ -183,42 +182,24 @@ public class PythonTestDescription implements
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
 
     ImmutableMap<Path, SourcePath> srcs =
-        ImmutableMap.<Path, SourcePath>builder()
-            .putAll(
-                PythonUtil.toModuleMap(
-                    params.getBuildTarget(),
-                    pathResolver,
-                    "srcs",
-                    baseModule,
-                    Collections.singleton(args.srcs)))
-            .putAll(
-                PythonUtil.toModuleMap(
-                    params.getBuildTarget(),
-                    pathResolver,
-                    "platformSrcs",
-                    baseModule,
-                    args.platformSrcs
-                        .getMatchingValues(pythonPlatform.getFlavor().toString())))
-            .build();
+        PythonUtil.getModules(
+            params.getBuildTarget(),
+            pathResolver,
+            "srcs",
+            baseModule,
+            args.srcs,
+            args.platformSrcs,
+            pythonPlatform);
 
     ImmutableMap<Path, SourcePath> resources =
-        ImmutableMap.<Path, SourcePath>builder()
-            .putAll(
-                PythonUtil.toModuleMap(
-                    params.getBuildTarget(),
-                    pathResolver,
-                    "resources",
-                    baseModule,
-                    Collections.singleton(args.resources)))
-            .putAll(
-                PythonUtil.toModuleMap(
-                    params.getBuildTarget(),
-                    pathResolver,
-                    "platformResources",
-                    baseModule,
-                    args.platformResources
-                        .getMatchingValues(pythonPlatform.getFlavor().toString())))
-            .build();
+        PythonUtil.getModules(
+            params.getBuildTarget(),
+            pathResolver,
+            "resources",
+            baseModule,
+            args.resources,
+            args.platformResources,
+            pythonPlatform);
 
     // Convert the passed in module paths into test module names.
     ImmutableSet.Builder<String> testModulesBuilder = ImmutableSet.builder();

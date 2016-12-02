@@ -39,10 +39,12 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -68,6 +70,32 @@ public class PythonUtil {
               "location", new LocationMacroExpander()));
 
   private PythonUtil() {}
+
+  public static ImmutableMap<Path, SourcePath> getModules(
+      BuildTarget target,
+      SourcePathResolver resolver,
+      String parameter,
+      Path baseModule,
+      SourceList items,
+      PatternMatchedCollection<SourceList> platformItems,
+      PythonPlatform pythonPlatform) {
+    return ImmutableMap.<Path, SourcePath>builder()
+        .putAll(
+            PythonUtil.toModuleMap(
+                target,
+                resolver,
+                parameter,
+                baseModule,
+                ImmutableList.of(items)))
+        .putAll(
+            PythonUtil.toModuleMap(
+                target,
+                resolver,
+                "platform" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
+                baseModule,
+                platformItems.getMatchingValues(pythonPlatform.getFlavor().toString())))
+        .build();
+  }
 
   public static ImmutableMap<Path, SourcePath> toModuleMap(
       BuildTarget target,

@@ -24,17 +24,14 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.Optional;
 
 public class PythonLibraryDescription implements Description<Arg> {
@@ -50,44 +47,29 @@ public class PythonLibraryDescription implements Description<Arg> {
       final BuildRuleParams params,
       BuildRuleResolver resolver,
       final A args) {
-    final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    final Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
     return new PythonLibrary(
         params,
         pathResolver,
-        pythonPlatform -> ImmutableMap.<Path, SourcePath>builder()
-            .putAll(
-                PythonUtil.toModuleMap(
-                    params.getBuildTarget(),
-                    pathResolver,
-                    "srcs",
-                    baseModule,
-                    Collections.singleton(args.srcs)))
-            .putAll(
-                PythonUtil.toModuleMap(
-                    params.getBuildTarget(),
-                    pathResolver,
-                    "platformSrcs",
-                    baseModule,
-                    args.platformSrcs.getMatchingValues(pythonPlatform.getFlavor().toString())))
-            .build(),
-        pythonPlatform -> ImmutableMap.<Path, SourcePath>builder()
-            .putAll(
-                PythonUtil.toModuleMap(
-                    params.getBuildTarget(),
-                    pathResolver,
-                    "resources",
-                    baseModule,
-                    Collections.singleton(args.resources)))
-            .putAll(
-                PythonUtil.toModuleMap(
-                    params.getBuildTarget(),
-                    pathResolver,
-                    "platformResources",
-                    baseModule,
-                    args.platformResources
-                        .getMatchingValues(pythonPlatform.getFlavor().toString())))
-            .build(),
+        pythonPlatform ->
+            PythonUtil.getModules(
+                params.getBuildTarget(),
+                pathResolver,
+                "srcs",
+                baseModule,
+                args.srcs,
+                args.platformSrcs,
+                pythonPlatform),
+        pythonPlatform ->
+            PythonUtil.getModules(
+                params.getBuildTarget(),
+                pathResolver,
+                "resources",
+                baseModule,
+                args.resources,
+                args.platformResources,
+                pythonPlatform),
         args.zipSafe);
   }
 
@@ -106,7 +88,6 @@ public class PythonLibraryDescription implements Description<Arg> {
     public ImmutableSortedSet<BuildTarget> getTests() {
       return tests;
     }
-
   }
 
 }
