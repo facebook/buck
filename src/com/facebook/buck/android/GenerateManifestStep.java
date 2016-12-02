@@ -115,8 +115,8 @@ public class GenerateManifestStep implements Step {
           .addLibraryManifests(Iterables.toArray(libraryManifestFiles, File.class))
           .merge();
       if (mergingReport.getResult().isError()) {
-        String reportString = mergingReport.getReportString();
-        throw new HumanReadableException("Error generating manifest file: " + reportString);
+        mergingReport.log(logger);
+        throw new HumanReadableException("Error generating manifest file");
       }
       return mergingReport;
     } catch (ManifestMerger2.MergeFailureException e) {
