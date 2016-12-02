@@ -49,6 +49,9 @@ public class RageCommand extends AbstractCommand {
       "System in non-interactive mode.")
   private boolean gatherVcsInfo = false;
 
+  @Option(name = "--show-json", usage = "If protocol is JSON show the response to stdout or not.")
+  private boolean showJson = false;
+
   @Override
   public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
     ProjectFilesystem filesystem = params.getCell().getFilesystem();
@@ -102,7 +105,7 @@ public class RageCommand extends AbstractCommand {
     }
 
     Optional<DefectSubmitResult> defectSubmitResult = report.collectAndSubmitResult();
-    report.presentDefectSubmitResult(defectSubmitResult);
+    report.presentDefectSubmitResult(defectSubmitResult, showJson);
 
     return 0;
   }

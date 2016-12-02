@@ -145,7 +145,9 @@ public abstract class AbstractReport {
     return Optional.of(defectReporter.submitReport(defectReport));
   }
 
-  public void presentDefectSubmitResult(Optional<DefectSubmitResult> defectSubmitResult) {
+  public void presentDefectSubmitResult(
+      Optional<DefectSubmitResult> defectSubmitResult,
+      boolean showJson) {
     if (!defectSubmitResult.isPresent()) {
       output.println("No logs of interesting commands were found. Check if buck-out/log contains " +
           "commands except buck launch & buck rage.");
@@ -172,7 +174,7 @@ public abstract class AbstractReport {
        if (result.getReportSubmitLocation().isPresent()) {
          message += "=> Report was uploaded to " + result.getReportSubmitLocation().get() + "\n";
        }
-       if (result.getReportSubmitMessage().isPresent()) {
+       if (result.getReportSubmitMessage().isPresent() && showJson) {
          message += "=> Full Response was: " + result.getReportSubmitMessage().get() + "\n";
        }
        output.print(message);
