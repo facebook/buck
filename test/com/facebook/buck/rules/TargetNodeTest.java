@@ -199,7 +199,7 @@ public class TargetNodeTest {
           ImmutableSet.builder(),
           ImmutableSet.builder(),
           instance);
-    } catch (ConstructorArgMarshalException e) {
+    } catch (ParamInfoException e) {
       throw new RuntimeException(e);
     }
     return constructorArg;

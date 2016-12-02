@@ -20,16 +20,13 @@ import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.ConstructorArgMarshalException;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.Description;
@@ -56,7 +53,7 @@ import java.util.Map;
 public class GenruleDescriptionTest {
 
   @Test
-  public void testImplicitDepsAreAddedCorrectly() throws NoSuchBuildTargetException {
+  public void testImplicitDepsAreAddedCorrectly() throws Exception {
     Description<GenruleDescription.Arg> genruleDescription = new GenruleDescription();
     Map<String, Object> instance = ImmutableMap.of(
         "srcs", ImmutableList.of(":baz", "//biz:baz"),
@@ -70,18 +67,14 @@ public class GenruleDescriptionTest {
     ImmutableSet.Builder<VisibilityPattern> visibilityPatterns = ImmutableSet.builder();
     GenruleDescription.Arg constructorArg = genruleDescription.createUnpopulatedConstructorArg();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    try {
-      marshaller.populate(
-          createCellRoots(projectFilesystem),
-          projectFilesystem,
-          buildTarget,
-          constructorArg,
-          declaredDeps,
-          visibilityPatterns,
-          instance);
-    }  catch (ConstructorArgMarshalException e) {
-      fail("Expected constructorArg to be correctly populated.");
-    }
+    marshaller.populate(
+        createCellRoots(projectFilesystem),
+        projectFilesystem,
+        buildTarget,
+        constructorArg,
+        declaredDeps,
+        visibilityPatterns,
+        instance);
     TargetNode<GenruleDescription.Arg, ?> targetNode =
         new TargetNodeFactory(new DefaultTypeCoercerFactory(ObjectMappers.newDefaultInstance()))
             .create(
