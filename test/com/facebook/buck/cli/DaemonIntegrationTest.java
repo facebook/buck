@@ -19,6 +19,8 @@ package com.facebook.buck.cli;
 import static com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import static java.util.concurrent.Executors.callable;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
@@ -750,12 +752,41 @@ public class DaemonIntegrationTest {
     Path buildLogFile = workspace.getPath("buck-out/bin/build.log");
 
     assertTrue(Files.isRegularFile(buildLogFile));
+    assertThat(Files.readAllLines(buildLogFile), hasItem(containsString("BUILT_LOCALLY")));
     Files.delete(buildLogFile);
 
     ProcessResult rebuild =
         workspace.runBuckdCommand("build", "//java/com/example/activity:activity");
     rebuild.assertSuccess();
 
+    buildLogFile = workspace.getPath("buck-out/bin/build.log");
+    assertTrue(Files.isRegularFile(buildLogFile));
+    assertThat(Files.readAllLines(buildLogFile), not(hasItem(containsString("BUILT_LOCALLY"))));
+  }
+
+  @Test
+  public void whenNativeTargetBuiltTwiceCacheHits() throws IOException, InterruptedException {
+    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "crosscell_file_watching/primary", tmp);
+    workspace.setUp();
+
+    final ProjectWorkspace secondary = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "crosscell_file_watching/secondary", tmp.newFolder());
+    secondary.setUp();
+    TestDataHelper.overrideBuckconfig(
+        workspace,
+        ImmutableMap.of(
+            "repositories", ImmutableMap.of(
+                "secondary",
+                secondary.getPath(".").normalize().toString())));
+
+    workspace.runBuckdCommand("build", "//:cxxbinary").assertSuccess();
+
+    Path buildLogFile = workspace.getPath("buck-out/bin/build.log");
+    assertTrue(Files.isRegularFile(buildLogFile));
+    Files.delete(buildLogFile);
+
+    workspace.runBuckdCommand("build", "//:cxxbinary").assertSuccess();
     buildLogFile = workspace.getPath("buck-out/bin/build.log");
     assertTrue(Files.isRegularFile(buildLogFile));
   }
