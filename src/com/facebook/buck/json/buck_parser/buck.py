@@ -197,7 +197,55 @@ class LazyBuildEnvPartial(object):
         """Invokes the bound function injecting 'build_env' into **kwargs."""
         updated_kwargs = kwargs.copy()
         updated_kwargs.update({'build_env': self.build_env})
-        return self.func(*args, **updated_kwargs)
+        try:
+            return self.func(*args, **updated_kwargs)
+        except TypeError:
+            missing_args, extra_args = get_mismatched_args(self.func, args, updated_kwargs)
+            if missing_args:
+                name = '[missing]'
+                if 'name' in updated_kwargs:
+                    name = updated_kwargs['name']
+                elif len(args) > 0:
+                    # Optimistically hope that name is the first arg. It generally is...
+                    name = args[0]
+                raise IncorrectArgumentsException(
+                    self.func.func_name, name, missing_args, extra_args)
+            raise
+
+
+def get_mismatched_args(func, actual_args, actual_kwargs):
+    argspec = inspect.getargspec(func)
+
+    required_args = set()
+    all_acceptable_args = []
+    for i, arg in enumerate(argspec.args):
+        if i < (len(argspec.args) - len(argspec.defaults)):
+            required_args.add(arg)
+        all_acceptable_args.append(arg)
+
+    extra_kwargs = set(actual_kwargs.keys()) - set(all_acceptable_args)
+
+    for k in set(actual_kwargs.keys()) - extra_kwargs:
+        all_acceptable_args.remove(k)
+
+    not_supplied_args = all_acceptable_args[len(actual_args):]
+
+    missing_args = [arg for arg in not_supplied_args if arg in required_args]
+    return missing_args, sorted(list(extra_kwargs))
+
+
+class IncorrectArgumentsException(Exception):
+    def __init__(self, func_name, name_arg, missing_args, extra_args):
+        self.missing_args = missing_args
+        self.extra_args = extra_args
+
+        message = 'Incorrect arguments to %s with name %s:' % (func_name, name_arg)
+        if missing_args:
+            message += ' Missing required args: %s' % (', '.join(missing_args),)
+        if extra_args:
+            message += ' Extra unknown kwargs: %s' % (', '.join(extra_args),)
+
+        super(IncorrectArgumentsException, self).__init__(message)
 
 
 def provide_for_build(func):

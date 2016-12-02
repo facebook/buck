@@ -617,6 +617,8 @@ public class ProjectBuildFileParser implements AutoCloseable {
                 syntaxError.getOffset(),
                 syntaxError.getText(),
                 Strings.padStart("^", syntaxError.getOffset().intValue(), ' ')));
+      } else if (exceptionData.getType().equals("IncorrectArgumentsException")) {
+        return new IOException(message);
       } else {
         String formattedStackTrace = formatStackTrace(
             buckPyDir,

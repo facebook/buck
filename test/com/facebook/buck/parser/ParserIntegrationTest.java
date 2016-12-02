@@ -188,6 +188,35 @@ public class ParserIntegrationTest {
   }
 
   @Test
+  public void testMissingName() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "missing_name",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("targets", "//...");
+    result.assertFailure("missing attribute should error");
+    assertThat(result.getStderr(), containsString("genrule"));
+    assertThat(result.getStderr(), containsString("name"));
+  }
+
+  @Test
+  public void testMissingRequiredAttribute() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "missing_attr",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("targets", "//:gr");
+    result.assertFailure("missing name should error");
+    assertThat(result.getStderr(), containsString("genrule"));
+    assertThat(result.getStderr(), containsString("gr"));
+    assertThat(result.getStderr(), containsString("out"));
+  }
+
+  @Test
   public void testUsingAutodeps() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,

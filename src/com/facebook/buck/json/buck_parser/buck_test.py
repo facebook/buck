@@ -2,6 +2,7 @@ from .buck import (
     BuildFileContext,
     LazyBuildEnvPartial,
     flatten_dicts,
+    get_mismatched_args,
     subdir_glob,
 )
 from .glob_mercurial import _load_manifest_trie, glob_mercurial_manifest
@@ -687,6 +688,27 @@ class TestMemoized(unittest.TestCase):
         different_foo = decorated(81, bar='spam')
         self.assertEqual(initial, cached)
         self.assertNotEqual(initial, different_foo)
+
+    def test_missing_foo(self):
+        def fn(foo, bar=1, baz=None):
+            pass
+        missing, extra = get_mismatched_args(fn, [], {})
+        self.assertEqual(missing, ['foo'])
+        self.assertEqual(extra, [])
+
+    def test_extra_kwargs(self):
+        def fn(foo, bar=1, baz=None):
+            pass
+        missing, extra = get_mismatched_args(fn, [], {'parrot': 'dead', 'trout': 'slapped'})
+        self.assertEqual(missing, ['foo'])
+        self.assertEqual(extra, ['parrot', 'trout'])
+
+    def test_foo_as_kwarg(self):
+        def fn(foo, bar=1, baz=None):
+            pass
+        missing, extra = get_mismatched_args(fn, [], {'foo': 'value'})
+        self.assertEqual(missing, [])
+        self.assertEqual(extra, [])
 
 
 if __name__ == '__main__':
