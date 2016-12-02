@@ -41,6 +41,18 @@ public class TestSelectionListTest {
   public static final TestDescription PM_DECREE_TEST =
       new TestDescription(PM_CLASS, "formAllianceWithClowns");
 
+
+  public static final TestDescription NOT_LIKELY_TO_MATCH =
+      new TestDescription("abc.xyz", "fooBarBaz");
+
+  private void assertDefaultIsIncluded(TestSelectorList testSelectorList) {
+    assertTrue(testSelectorList.isIncluded(NOT_LIKELY_TO_MATCH));
+  }
+
+  private void assertDefaultIsExcluded(TestSelectorList testSelectorList) {
+    assertFalse(testSelectorList.isIncluded(NOT_LIKELY_TO_MATCH));
+  }
+
   @Test
   public void shouldNotFilterTestsThatAreIncluded() {
     TestSelectorList selectomatic = new TestSelectorList.Builder()
@@ -48,7 +60,7 @@ public class TestSelectionListTest {
         .build();
 
     assertTrue(selectomatic.isIncluded(CAR_DOORS_TEST));
-    assertFalse(selectomatic.defaultIsInclusive);
+    assertDefaultIsExcluded(selectomatic);
   }
 
   @Test
@@ -58,7 +70,7 @@ public class TestSelectionListTest {
         .build();
 
     assertFalse(selectomatic.isIncluded(CAR_DOORS_TEST));
-    assertTrue(selectomatic.defaultIsInclusive);
+    assertDefaultIsIncluded(selectomatic);
   }
 
   @Test
@@ -71,7 +83,7 @@ public class TestSelectionListTest {
     assertTrue(selectotron.isIncluded(CAR_DOORS_TEST));
     assertTrue(selectotron.isIncluded(SHOE_LACES_TEST));
     assertFalse(selectotron.isIncluded(PM_DECREE_TEST));
-    assertFalse(selectotron.defaultIsInclusive);
+    assertDefaultIsExcluded(selectotron);
   }
 
   @Test
@@ -84,7 +96,7 @@ public class TestSelectionListTest {
     assertTrue(selectotron.isIncluded(CAR_DOORS_TEST));
     assertFalse(selectotron.isIncluded(SHOE_LACES_TEST));
     assertFalse(selectotron.isIncluded(PM_DECREE_TEST));
-    assertTrue(selectotron.defaultIsInclusive);
+    assertDefaultIsIncluded(selectotron);
   }
 
   @Test
@@ -107,7 +119,7 @@ public class TestSelectionListTest {
         .addRawSelectors("#testTalent")
         .build();
 
-    assertFalse(testSelectorList.defaultIsInclusive);
+    assertDefaultIsExcluded(testSelectorList);
 
     ImmutableList<String> expected = ImmutableList.of(
         "exclude class:ClownTest$ method:<any>",

@@ -99,6 +99,14 @@ abstract class AbstractJUnitJvmArgs {
   }
 
   /**
+   * @return If true, include explanations for tests that were filtered out.
+   */
+  @Value.Default
+  boolean isShouldExplainTestSelectorList() {
+    return false;
+  }
+
+  /**
    * @return The filesystem path to a JVM agent (i.e., a profiler).
    */
   abstract Optional<String> getPathToJavaAgent();
@@ -254,6 +262,9 @@ abstract class AbstractJUnitJvmArgs {
         selectorsArgBuilder.append(rawSelector).append("\n");
       }
       args.add("--test-selectors", selectorsArgBuilder.toString());
+      if (isShouldExplainTestSelectorList()) {
+        args.add("--explain-test-selectors");
+      }
     }
 
     // Dry-run flag.

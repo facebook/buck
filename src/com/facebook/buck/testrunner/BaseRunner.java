@@ -16,7 +16,6 @@
 
 package com.facebook.buck.testrunner;
 
-import com.facebook.buck.test.selectors.TestDescription;
 import com.facebook.buck.test.selectors.TestSelectorList;
 
 import org.w3c.dom.Document;
@@ -31,9 +30,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -49,7 +46,6 @@ import javax.xml.transform.stream.StreamResult;
  * Base class for both the JUnit and TestNG runners.
  */
 public abstract class BaseRunner {
-  protected static final String FILTER_DESCRIPTION = "TestSelectorList-filter";
   protected static final String ENCODING = "UTF-8";
 
   protected File outputDirectory;
@@ -57,7 +53,7 @@ public abstract class BaseRunner {
   protected long defaultTestTimeoutMillis;
   protected TestSelectorList testSelectorList;
   protected boolean isDryRun;
-  protected Set<TestDescription> seenDescriptions = new HashSet<>();
+  protected boolean shouldExplainTestSelectors;
 
   public abstract void run() throws Throwable;
 
@@ -187,6 +183,7 @@ public abstract class BaseRunner {
     long defaultTestTimeoutMillis = Long.MAX_VALUE;
     TestSelectorList testSelectorList = TestSelectorList.empty();
     boolean isDryRun = false;
+    boolean shouldExplainTestSelectors = false;
 
     List<String> testClassNames = new ArrayList<>();
 
@@ -200,6 +197,9 @@ public abstract class BaseRunner {
           testSelectorList = TestSelectorList.builder()
               .addRawSelectors(rawSelectors)
               .build();
+          break;
+        case "--explain-test-selectors":
+          shouldExplainTestSelectors = true;
           break;
         case "--dry-run":
           isDryRun = true;
@@ -226,6 +226,7 @@ public abstract class BaseRunner {
     this.isDryRun = isDryRun;
     this.testClassNames = testClassNames;
     this.testSelectorList = testSelectorList;
+    this.shouldExplainTestSelectors = shouldExplainTestSelectors;
   }
 
   protected void runAndExit() {

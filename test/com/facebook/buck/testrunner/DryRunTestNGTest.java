@@ -17,8 +17,8 @@
 package com.facebook.buck.testrunner;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 
+import static com.facebook.buck.testutil.OutputHelper.containsBuckTestOutputLine;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -48,7 +48,7 @@ public class DryRunTestNGTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "--all");
     result.assertTestFailure();
     assertThat(result.getStderr(),
-        containsString("1 Passed   0 Skipped   1 Failed   com.example.SimpleTest"));
+        containsBuckTestOutputLine("FAIL", 1, 0, 1, "com.example.SimpleTest"));
   }
 
   @Test
@@ -58,6 +58,6 @@ public class DryRunTestNGTest {
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "--all", "--dry-run");
     result.assertSuccess();
     assertThat(result.getStderr(),
-        containsString("0 Passed   0 Skipped   0 Failed   com.example.SimpleTest"));
+        containsBuckTestOutputLine("DRYRUN", 2, 0, 0, "com.example.SimpleTest"));
   }
 }

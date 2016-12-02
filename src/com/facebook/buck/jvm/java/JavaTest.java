@@ -238,6 +238,7 @@ public class JavaTest
         .setExtraJvmArgs(properVmArgs)
         .addAllTestClasses(reorderedTestClasses)
         .setDryRun(options.isDryRun())
+        .setShouldExplainTestSelectorList(options.shouldExplainTestSelectorList())
         .setTestSelectorList(testSelectorList)
         .build();
 

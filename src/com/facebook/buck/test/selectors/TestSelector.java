@@ -43,11 +43,14 @@ public class TestSelector {
    *according to comment in src/com/facebook/buck/test/selectors/BUCK */
   @interface Nullable{}
 
+  static final TestSelector INCLUDE_EVERYTHING = new TestSelector(true, null, null);
+  static final TestSelector EXCLUDE_EVERYTHING = new TestSelector(false, null, null);
+
   private final boolean inclusive;
   @Nullable  private final Pattern classPattern;
   @Nullable  private final Pattern methodPattern;
 
-  TestSelector(
+  private TestSelector(
       boolean inclusive,
       @Nullable Pattern classPattern,
       @Nullable Pattern methodPattern) {
@@ -80,6 +83,10 @@ public class TestSelector {
       remainder = rawSelectorString.substring(1);
     } else {
       remainder = rawSelectorString;
+    }
+    // Reuse univeral inclusion
+    if (remainder.equals("#")) {
+      return isInclusive ? INCLUDE_EVERYTHING : EXCLUDE_EVERYTHING;
     }
 
     Pattern classPattern;
@@ -141,26 +148,29 @@ public class TestSelector {
     }
   }
 
-  String getExplanation() {
+  public String getExplanation() {
+    if (isMatchAnyClass() && isMatchAnyMethod()) {
+      return isInclusive() ? "include everything else" : "exclude everything else";
+    }
     return String.format("%s class:%s method:%s",
         isInclusive() ? "include" : "exclude",
         isMatchAnyClass() ? "<any>" : classPattern,
         isMatchAnyMethod() ? "<any>" : methodPattern);
   }
 
-  boolean isInclusive() {
+  public boolean isInclusive() {
     return inclusive;
   }
 
-  boolean isMatchAnyClass() {
+  public boolean isMatchAnyClass() {
     return classPattern == null;
   }
 
-  boolean isMatchAnyMethod() {
+  public boolean isMatchAnyMethod() {
     return methodPattern == null;
   }
 
-  boolean matches(TestDescription description) {
+  public boolean matches(TestDescription description) {
     boolean isClassMatch;
     boolean isMethodMatch;
 

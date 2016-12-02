@@ -44,7 +44,7 @@ public class TestSelectorList {
    * argument keeps the "JUnitSteps" Junit java command line nice and short.
    */
   private final List<TestSelector> testSelectors;
-  final boolean defaultIsInclusive;
+  private final boolean defaultIsInclusive;
 
   private TestSelectorList(
       List<TestSelector> testSelectors,
@@ -53,14 +53,22 @@ public class TestSelectorList {
     this.defaultIsInclusive = defaultIsInclusive;
   }
 
-  public boolean isIncluded(TestDescription description) {
+  private TestSelector defaultSelector() {
+    return defaultIsInclusive
+        ? TestSelector.INCLUDE_EVERYTHING : TestSelector.EXCLUDE_EVERYTHING;
+  }
+
+  public TestSelector findSelector(TestDescription description) {
     for (TestSelector testSelector : testSelectors) {
       if (testSelector.matches(description)) {
-        return testSelector.isInclusive();
+        return testSelector;
       }
     }
+    return defaultSelector();
+  }
 
-    return defaultIsInclusive;
+  public boolean isIncluded(TestDescription description) {
+    return findSelector(description).isInclusive();
   }
 
   public List<String> getExplanation() {
@@ -68,23 +76,8 @@ public class TestSelectorList {
     for (TestSelector testSelector : testSelectors) {
       lines.add(testSelector.getExplanation());
     }
-
-    // If the last selector matches everything, derive our default behavior from that test selector
-    // and replace the last line of explanation.
-    int lastIndex = testSelectors.size() - 1;
-    TestSelector lastTestSelector = testSelectors.get(lastIndex);
-    if (lastTestSelector.isMatchAnyClass() && lastTestSelector.isMatchAnyMethod()) {
-      String lastLine = formatEverythingElseLine(lastTestSelector.isInclusive());
-      lines.set(lastIndex, lastLine);
-    } else {
-      // Otherwise describe our default behavior.
-      lines.add(formatEverythingElseLine(defaultIsInclusive));
-    }
+    lines.add(defaultSelector().getExplanation());
     return lines;
-  }
-
-  private String formatEverythingElseLine(boolean isInclusive) {
-    return String.format("%s everything else", isInclusive ? "include" : "exclude");
   }
 
   public List<String> getRawSelectors() {
@@ -183,16 +176,20 @@ public class TestSelectorList {
     }
 
     public TestSelectorList build() {
-      // Default to being inclusive only if all selectors are *exclusive*.
       boolean defaultIsInclusive = true;
+      List<TestSelector> selectorsToUse = new ArrayList<>();
       for (TestSelector testSelector : testSelectors) {
-        if (testSelector.isInclusive()) {
-          defaultIsInclusive = false;
+        // Default to being inclusive only if all selectors are *exclusive*.
+        defaultIsInclusive = defaultIsInclusive && !testSelector.isInclusive();
+        // If a selector is universal (matches every class and method), no need to look further
+        if (testSelector.isMatchAnyClass() && testSelector.isMatchAnyMethod()) {
+          defaultIsInclusive = testSelector.isInclusive();
           break;
         }
+        selectorsToUse.add(testSelector);
       }
       return new TestSelectorList(
-          testSelectors,
+          selectorsToUse,
           defaultIsInclusive);
     }
   }
