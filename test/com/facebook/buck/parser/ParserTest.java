@@ -614,44 +614,6 @@ public class ParserTest {
   }
 
   @Test
-  public void whenEnvironmentChangesThenCacheRulesAreInvalidated()
-      throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
-    BuckConfig config = FakeBuckConfig.builder()
-        .setFilesystem(filesystem)
-        .setEnvironment(ImmutableMap.of("Some Key", "Some Value", "PATH", System.getenv("PATH")))
-        .build();
-
-    Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
-
-    // Call filterAllTargetsInProject to populate the cache.
-    filterAllTargetsInProject(
-        parser,
-        cell,
-        x -> true,
-        eventBus,
-        executorService);
-
-    // Call filterAllTargetsInProject to request cached rules.
-    config = FakeBuckConfig.builder()
-        .setFilesystem(filesystem)
-        .setEnvironment(
-            ImmutableMap.of("Some Key", "Some Other Value", "PATH", System.getenv("PATH")))
-        .build();
-
-    cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
-
-    filterAllTargetsInProject(
-        parser,
-        cell,
-        x -> true,
-        eventBus,
-        executorService);
-
-    // Test that the second parseBuildFile call repopulated the cache.
-    assertEquals("Should have invalidated cache.", 2, counter.calls);
-  }
-
-  @Test
   public void whenEnvironmentNotChangedThenCacheRulesAreNotInvalidated()
       throws BuildFileParseException, BuildTargetException, IOException, InterruptedException {
     BuckConfig config = FakeBuckConfig.builder()
@@ -2503,6 +2465,179 @@ public class ParserTest {
           e.getMessage(),
           containsString("//:should_fail depends on //sub:sub, which is not visible"));
     }
+  }
+
+  @Test
+  public void whenEnvChangesThenCachedRulesAreInvalidated() throws Exception {
+    Path buckFile = cellRoot.resolve("BUCK");
+    Files.write(
+        buckFile,
+        Joiner.on("").join(
+            ImmutableList.of(
+                "import os\n",
+                "os.getenv('FOO')\n",
+                "genrule(name = 'cake', out = 'file.txt', cmd = 'touch $OUT')\n"))
+            .getBytes(UTF_8));
+
+    BuckConfig config =
+        FakeBuckConfig.builder()
+            .setEnvironment(
+                ImmutableMap.<String, String>builder()
+                    .putAll(System.getenv())
+                    .put("FOO", "value")
+                    .build())
+            .setFilesystem(filesystem)
+            .build();
+
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+
+    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+
+    // Call filterAllTargetsInProject to request cached rules.
+    config =
+        FakeBuckConfig.builder()
+            .setFilesystem(filesystem)
+            .setEnvironment(
+                ImmutableMap.<String, String>builder()
+                    .putAll(System.getenv())
+                    .put("FOO", "other value")
+                    .build())
+            .build();
+
+    cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+
+    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should have invalidated.", 2, counter.calls);
+  }
+
+  @Test
+  public void whenEnvAddedThenCachedRulesAreInvalidated() throws Exception {
+    Path buckFile = cellRoot.resolve("BUCK");
+    Files.write(
+        buckFile,
+        Joiner.on("").join(
+            ImmutableList.of(
+                "import os\n",
+                "os.getenv('FOO')\n",
+                "genrule(name = 'cake', out = 'file.txt', cmd = 'touch $OUT')\n"))
+            .getBytes(UTF_8));
+
+    BuckConfig config =
+        FakeBuckConfig.builder()
+            .setFilesystem(filesystem)
+            .build();
+
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+
+    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+
+    // Call filterAllTargetsInProject to request cached rules.
+    config =
+        FakeBuckConfig.builder()
+            .setFilesystem(filesystem)
+            .setEnvironment(
+                ImmutableMap.<String, String>builder()
+                    .putAll(System.getenv())
+                    .put("FOO", "other value")
+                    .build())
+            .build();
+
+    cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+
+    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should have invalidated.", 2, counter.calls);
+  }
+
+  @Test
+  public void whenEnvRemovedThenCachedRulesAreInvalidated() throws Exception {
+    Path buckFile = cellRoot.resolve("BUCK");
+    Files.write(
+        buckFile,
+        Joiner.on("").join(
+            ImmutableList.of(
+                "import os\n",
+                "os.getenv('FOO')\n",
+                "genrule(name = 'cake', out = 'file.txt', cmd = 'touch $OUT')\n"))
+            .getBytes(UTF_8));
+
+    BuckConfig config =
+        FakeBuckConfig.builder()
+            .setEnvironment(
+                ImmutableMap.<String, String>builder()
+                    .putAll(System.getenv())
+                    .put("FOO", "value")
+                    .build())
+            .setFilesystem(filesystem)
+            .build();
+
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+
+    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+
+    // Call filterAllTargetsInProject to request cached rules.
+    config =
+        FakeBuckConfig.builder()
+            .setFilesystem(filesystem)
+            .build();
+
+    cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+
+    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should have invalidated.", 2, counter.calls);
+  }
+
+  @Test
+  public void whenUnrelatedEnvChangesThenCachedRulesAreNotInvalidated()
+      throws Exception {
+    Path buckFile = cellRoot.resolve("BUCK");
+    Files.write(
+        buckFile,
+        Joiner.on("").join(
+            ImmutableList.of(
+                "import os\n",
+                "os.getenv('FOO')\n",
+                "genrule(name = 'cake', out = 'file.txt', cmd = 'touch $OUT')\n"))
+            .getBytes(UTF_8));
+
+    BuckConfig config =
+        FakeBuckConfig.builder()
+            .setEnvironment(
+                ImmutableMap.<String, String>builder()
+                    .putAll(System.getenv())
+                    .put("FOO", "value")
+                    .put("BAR", "something")
+                    .build())
+            .setFilesystem(filesystem)
+            .build();
+
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+
+    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+
+    // Call filterAllTargetsInProject to request cached rules.
+    config =
+        FakeBuckConfig.builder()
+            .setEnvironment(
+                ImmutableMap.<String, String>builder()
+                    .putAll(System.getenv())
+                    .put("FOO", "value")
+                    .put("BAR", "something else")
+                    .build())
+            .setFilesystem(filesystem)
+            .build();
+
+    cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+
+    parser.getAllTargetNodes(eventBus, cell, false, executorService, buckFile);
+
+    // Test that the second parseBuildFile call repopulated the cache.
+    assertEquals("Should not have invalidated.", 1, counter.calls);
   }
 
   private BuildRuleResolver buildActionGraph(BuckEventBus eventBus, TargetGraph targetGraph) {

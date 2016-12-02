@@ -120,7 +120,7 @@ class DaemonicParserState {
         throws BuildTargetException {
       invalidateIfProjectBuildFileParserStateChanged(cell);
       final Path buildFile = cell.getAbsolutePathToBuildFileUnsafe(target);
-      invalidateIfBuckConfigHasChanged(cell, buildFile);
+      invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile);
 
       PipelineNodeCache.Cache<BuildTarget, T> state = getCache(cell);
       if (state == null) {
@@ -134,7 +134,7 @@ class DaemonicParserState {
         throws BuildTargetException {
       invalidateIfProjectBuildFileParserStateChanged(cell);
       final Path buildFile = cell.getAbsolutePathToBuildFileUnsafe(target);
-      invalidateIfBuckConfigHasChanged(cell, buildFile);
+      invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile);
 
       return getOrCreateCache(cell).putComputedNodeIfNotPresent(cell, target, targetNode);
     }
@@ -165,7 +165,7 @@ class DaemonicParserState {
         throws BuildTargetException {
       Preconditions.checkState(buildFile.isAbsolute());
       invalidateIfProjectBuildFileParserStateChanged(cell);
-      invalidateIfBuckConfigHasChanged(cell, buildFile);
+      invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile);
 
       DaemonicCellState state = getCellState(cell);
       if (state == null) {
@@ -204,6 +204,7 @@ class DaemonicParserState {
       ImmutableSet.Builder<Path> dependentsOfEveryNode = ImmutableSet.builder();
       ImmutableMap<String, ImmutableMap<String, Optional<String>>> configs =
           ImmutableMap.of();
+      ImmutableMap<String, Optional<String>> env = ImmutableMap.of();
       for (Map<String, Object> rawNode : rawNodes) {
         if (rawNode.containsKey(INCLUDES_META_RULE)) {
           for (String path :
@@ -226,7 +227,11 @@ class DaemonicParserState {
           }
           configs = builder.build();
         } else if (rawNode.containsKey(ENV_META_RULE)) {
-          // Skip the env meta rule for now.
+          env =
+              ImmutableMap.copyOf(
+                  Maps.transformValues(
+                      Preconditions.checkNotNull((Map<String, String>) rawNode.get(ENV_META_RULE)),
+                      Optional::ofNullable));
         } else {
           withoutMetaIncludesBuilder.add(rawNode);
         }
@@ -252,7 +257,8 @@ class DaemonicParserState {
           buildFile,
           withoutMetaIncludes,
           dependentsOfEveryNode.build(),
-          configs);
+          configs,
+          env);
     }
   }
 
@@ -280,15 +286,6 @@ class DaemonicParserState {
   private final int parsingThreads;
 
   private final LoadingCache<Cell, BuildFileTree> buildFileTrees;
-
-  /**
-   * Environment used by build files. If the environment is changed, then build files need to be
-   * reevaluated with the new environment, so the environment used when populating the rule cache
-   * is stored between requests to parse build files and the cache is invalidated and build files
-   * reevaluated if the environment changes.
-   */
-  @GuardedBy("cachedStateLock")
-  private ImmutableMap<String, String> cachedEnvironment;
 
   /**
    * The default includes used by the previous run of the parser in each cell (the key is the
@@ -344,7 +341,6 @@ class DaemonicParserState {
             return new FilesystemBackedBuildFileTree(cell.getFilesystem(), cell.getBuildFileName());
           }
         });
-    this.cachedEnvironment = ImmutableMap.of();
     this.cachedIncludes = new ConcurrentHashMap<>();
     this.cellPathToDaemonicState =
         new ConcurrentHashMap<>(
@@ -550,7 +546,7 @@ class DaemonicParserState {
     return Iterators.any(cell.getTempFilePatterns().iterator(), patternMatches);
   }
 
-  private synchronized void invalidateIfBuckConfigHasChanged(Cell cell, Path buildFile) {
+  private synchronized void invalidateIfBuckConfigOrEnvHasChanged(Cell cell, Path buildFile) {
     try (AutoCloseableLock readLock = cellStateLock.readLock()) {
       DaemonicCellState state = cellPathToDaemonicState.get(cell.getRoot());
       if (state == null) {
@@ -558,62 +554,52 @@ class DaemonicParserState {
       }
       // Invalidates and also keeps the state cell up-to-date
       state.invalidateIfBuckConfigHasChanged(cell, buildFile);
+      Optional<MapDifference<String, String>> envDiff =
+          state.invalidateIfEnvHasChanged(cell, buildFile);
+      if (envDiff.isPresent()) {
+        MapDifference<String, String> diff = envDiff.get();
+        LOG.warn("Invalidating cache on environment change (%s)", diff);
+        Set<String> environmentChanges = new HashSet<>();
+        environmentChanges.addAll(diff.entriesOnlyOnLeft().keySet());
+        environmentChanges.addAll(diff.entriesOnlyOnRight().keySet());
+        environmentChanges.addAll(diff.entriesDiffering().keySet());
+        cacheInvalidatedByEnvironmentVariableChangeCounter.addAll(environmentChanges);
+        broadcastEventListener.broadcast(
+            ParsingEvent.environmentalChange(environmentChanges.toString()));
+      }
     }
   }
 
   private void invalidateIfProjectBuildFileParserStateChanged(Cell cell) {
-    ImmutableMap<String, String> cellEnv = cell.getBuckConfig().getFilteredEnvironment();
     Iterable<String> defaultIncludes = cell.getBuckConfig().getView(ParserConfig.class)
         .getDefaultIncludes();
 
-    boolean invalidatedByEnvironmentVariableChange = false;
     boolean invalidatedByDefaultIncludesChange = false;
     Iterable<String> expected;
-    ImmutableMap<String, String> originalCachedEnvironment;
     try (AutoCloseableLock updateLock = cachedStateLock.updateLock()) {
-      originalCachedEnvironment = cachedEnvironment;
       expected = cachedIncludes.get(cell.getRoot());
 
-      if (!cellEnv.equals(cachedEnvironment)) {
-        // Contents of System.getenv() have changed. Cowardly refuse to accept we'll parse
-        // everything the same way.
-        invalidatedByEnvironmentVariableChange = true;
-      } else if (expected == null || !Iterables.elementsEqual(defaultIncludes, expected)) {
+      if (expected == null || !Iterables.elementsEqual(defaultIncludes, expected)) {
         // Someone's changed the default includes. That's almost definitely caused all our lovingly
         // cached data to be enormously wonky.
         invalidatedByDefaultIncludesChange = true;
       }
 
-      if (!invalidatedByEnvironmentVariableChange && !invalidatedByDefaultIncludesChange) {
+      if (!invalidatedByDefaultIncludesChange) {
         return;
       }
 
       try (AutoCloseableLock writeLock = cachedStateLock.writeLock()) {
-        cachedEnvironment = cellEnv;
         cachedIncludes.put(cell.getRoot(), defaultIncludes);
       }
     }
     synchronized (this) {
-      if ((invalidatedByEnvironmentVariableChange && invalidateAllCaches()) ||
-          invalidateCellCaches(cell)) {
-        if (invalidatedByEnvironmentVariableChange) {
-          MapDifference<String, String> diff = Maps.difference(originalCachedEnvironment, cellEnv);
-          LOG.warn("Invalidating cache on environment change (%s)", diff);
-          Set<String> environmentChanges = new HashSet<>();
-          environmentChanges.addAll(diff.entriesOnlyOnLeft().keySet());
-          environmentChanges.addAll(diff.entriesOnlyOnRight().keySet());
-          environmentChanges.addAll(diff.entriesDiffering().keySet());
-          cacheInvalidatedByEnvironmentVariableChangeCounter.addAll(environmentChanges);
-          broadcastEventListener.broadcast(ParsingEvent.environmentalChange(
-              environmentChanges.toString()));
-        }
-        if (invalidatedByDefaultIncludesChange) {
-          LOG.warn(
-              "Invalidating cache on default includes change (%s != %s)",
-              expected,
-              defaultIncludes);
-          cacheInvalidatedByDefaultIncludesChangeCounter.inc();
-        }
+      if (invalidateCellCaches(cell) && invalidatedByDefaultIncludesChange) {
+        LOG.warn(
+            "Invalidating cache on default includes change (%s != %s)",
+            expected,
+            defaultIncludes);
+        cacheInvalidatedByDefaultIncludesChangeCounter.inc();
       }
     }
   }

@@ -112,6 +112,7 @@ public class DaemonicCellStateTest {
                 "buck.base_path", "path/to",
                 "name", "target")),
         ImmutableSet.of(),
+        ImmutableMap.of(),
         ImmutableMap.of());
     assertEquals("One raw node should be invalidated", 1, state.invalidatePath(targetPath));
     assertEquals(
@@ -145,6 +146,7 @@ public class DaemonicCellStateTest {
                 "buck.base_path", "path/to",
                 "name", "target")),
         ImmutableSet.of(),
+        ImmutableMap.of(),
         ImmutableMap.of());
     assertEquals("Still only one invalidated node", 1, state.invalidatePath(targetPath));
     assertEquals(
