@@ -24,7 +24,6 @@ import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -43,6 +42,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
@@ -79,8 +79,12 @@ public class IjProjectTemplateDataPreparer {
     this.projectFilesystem = projectFilesystem;
     this.sourceRootSimplifier = new IjSourceRootSimplifier(javaPackageFinder);
     this.modulesToBeWritten = createModulesToBeWritten(moduleGraph);
-    this.librariesToBeWritten =
-        FluentIterable.from(moduleGraph.getNodes()).filter(IjLibrary.class).toSet();
+    this.librariesToBeWritten = moduleGraph
+        .getNodes()
+        .stream()
+        .filter(node -> node instanceof IjLibrary)
+        .map(IjLibrary.class::cast)
+        .collect(MoreCollectors.toImmutableSet());
     this.filesystemTraversalBoundaryPaths =
         createFilesystemTraversalBoundaryPathSet(modulesToBeWritten);
     this.referencedFolderPaths = createReferencedFolderPathsSet(modulesToBeWritten);
@@ -106,10 +110,11 @@ public class IjProjectTemplateDataPreparer {
 
   public static ImmutableSet<Path> createFilesystemTraversalBoundaryPathSet(
       ImmutableSet<IjModule> modules) {
-    return FluentIterable.from(modules)
-        .transform(IjModule::getModuleBasePath)
-        .append(IjProjectWriter.IDEA_CONFIG_DIR_PREFIX)
-        .toSet();
+    return Stream
+        .concat(
+            modules.stream().map(IjModule::getModuleBasePath),
+            Stream.of(IjProjectWriter.IDEA_CONFIG_DIR_PREFIX))
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   public static ImmutableSet<Path> createPackageLookupPathSet(IjModuleGraph moduleGraph) {
@@ -134,9 +139,10 @@ public class IjProjectTemplateDataPreparer {
 
   private static ImmutableSet<IjModule> createModulesToBeWritten(IjModuleGraph graph) {
     Path rootModuleBasePath = Paths.get("");
-    boolean hasRootModule = FluentIterable.from(graph.getModuleNodes())
-        .transform(IjModule::getModuleBasePath)
-        .contains(rootModuleBasePath);
+    boolean hasRootModule = graph
+        .getModuleNodes()
+        .stream()
+        .anyMatch(module -> rootModuleBasePath.equals(module.getModuleBasePath()));
 
     ImmutableSet<IjModule> supplementalModules = ImmutableSet.of();
     if (!hasRootModule) {
@@ -147,9 +153,9 @@ public class IjProjectTemplateDataPreparer {
               .build());
     }
 
-    return FluentIterable.from(graph.getModuleNodes())
-        .append(supplementalModules)
-        .toSet();
+    return Stream
+        .concat(graph.getModuleNodes().stream(), supplementalModules.stream())
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   /**
@@ -228,9 +234,12 @@ public class IjProjectTemplateDataPreparer {
     ImmutableSet<IjFolder> simplifiedFolders = sourceRootSimplifier.simplify(
         SimplificationLimit.of(contentRootPath.getNameCount()),
         folders);
-    ImmutableSortedSet<IjSourceFolder> sourceFolders = FluentIterable.from(simplifiedFolders)
-        .transform(new IjFolderToIjSourceFolderTransform(module))
-        .toSortedSet(Ordering.natural());
+    IjFolderToIjSourceFolderTransform transformToFolder =
+        new IjFolderToIjSourceFolderTransform(module);
+    ImmutableSortedSet<IjSourceFolder> sourceFolders = simplifiedFolders
+        .stream()
+        .map(transformToFolder::apply)
+        .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
     return ContentRoot.builder()
         .setUrl(url)
         .setFolders(sourceFolders)
@@ -301,9 +310,9 @@ public class IjProjectTemplateDataPreparer {
     Path moduleLocation = module.getModuleImlFilePath();
     final Path moduleLocationBasePath =
         (moduleLocation.getParent() == null) ? Paths.get("") : moduleLocation.getParent();
-    ImmutableSet<IjFolder> sourcesAndExcludes = FluentIterable.from(module.getFolders())
-        .append(createExcludes(module))
-        .toSet();
+    ImmutableSet<IjFolder> sourcesAndExcludes = Stream
+            .concat(module.getFolders().stream(), createExcludes(module).stream())
+            .collect(MoreCollectors.toImmutableSet());
     return createContentRoot(module, moduleBasePath, sourcesAndExcludes, moduleLocationBasePath);
   }
 
@@ -344,21 +353,21 @@ public class IjProjectTemplateDataPreparer {
   }
 
   public ImmutableSortedSet<ModuleIndexEntry> getModuleIndexEntries() {
-    return FluentIterable.from(modulesToBeWritten)
-        .filter(IjModule.class)
-        .transform(
+    return modulesToBeWritten
+        .stream()
+        .map(
             module -> {
               Path moduleOutputFilePath = module.getModuleImlFilePath();
               String fileUrl = toProjectDirRelativeString(moduleOutputFilePath);
               // The root project module cannot belong to any group.
               String group = (module.getModuleBasePath().toString().isEmpty()) ? null : "modules";
-              return  ModuleIndexEntry.builder()
+              return ModuleIndexEntry.builder()
                   .setFileUrl(fileUrl)
                   .setFilePath(moduleOutputFilePath)
                   .setGroup(group)
                   .build();
             })
-        .toSortedSet(Ordering.natural());
+        .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
   }
 
 
