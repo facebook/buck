@@ -34,8 +34,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -50,18 +50,22 @@ public class ResourcePoolTest {
   @Test
   public void doesNotCreateMoreThanMaxResources() throws Exception {
     try (Fixture f = new Fixture()) {
-      Phaser phaser = new Phaser(f.getMaxResources());
+      CountDownLatch waitTillAllThreadsAreBusy = new CountDownLatch(f.getMaxResources());
+      CountDownLatch unblockAllThreads = new CountDownLatch(1);
       List<ListenableFuture<?>> futures = new ArrayList<>();
       for (int i = 0; i < f.getMaxResources() * 10; i++) {
         futures.add(
             f.getPool().scheduleOperationWithResource(
                 r -> {
-                  phaser.arrive();
-                  phaser.awaitAdvance(0);
+                  waitTillAllThreadsAreBusy.countDown();
+                  unblockAllThreads.await();
                   return r;
                 },
                 f.getExecutorService()));
       }
+      waitTillAllThreadsAreBusy.await();
+      unblockAllThreads.countDown();
+
       Futures.allAsList(futures).get();
       assertThat(f.getCreatedResources().get(), equalTo(2));
     }
