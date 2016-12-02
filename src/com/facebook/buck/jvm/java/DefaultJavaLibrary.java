@@ -202,7 +202,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         abiJar,
         trackClassUsage,
         new JarArchiveDependencySupplier(
-            Suppliers.memoize(() -> JavaLibraryRules.getAbiInputs(params.getDeps())),
+            JavaLibraryRules.getAbiInputs(params.getDeps()),
             params.getProjectFilesystem()),
         additionalClasspathEntries,
         compileStepFactory,

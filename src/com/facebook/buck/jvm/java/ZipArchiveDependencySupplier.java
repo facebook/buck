@@ -22,18 +22,17 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.keys.ArchiveDependencySupplier;
 import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
 public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
-  private final Supplier<ImmutableSortedSet<SourcePath>> zipFiles;
+  private final ImmutableSortedSet<SourcePath> zipFiles;
   private final ProjectFilesystem filesystem;
 
   public ZipArchiveDependencySupplier(
-      Supplier<ImmutableSortedSet<SourcePath>> zipFiles,
+      ImmutableSortedSet<SourcePath> zipFiles,
       ProjectFilesystem filesystem) {
     this.zipFiles = zipFiles;
     this.filesystem = filesystem;
@@ -41,13 +40,13 @@ public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
 
   @Override
   public ImmutableSortedSet<SourcePath> get() {
-    return zipFiles.get();
+    return zipFiles;
   }
 
   @Override
   public ImmutableSortedSet<SourcePath> getArchiveMembers(SourcePathResolver resolver) {
     ImmutableSortedSet.Builder<SourcePath> builder = ImmutableSortedSet.naturalOrder();
-    for (SourcePath zipSourcePath : zipFiles.get()) {
+    for (SourcePath zipSourcePath : zipFiles) {
       final Path zipRelativePath = resolver.getRelativePath(zipSourcePath);
       try {
         for (Path member : filesystem.getZipMembers(zipRelativePath)) {
