@@ -87,8 +87,9 @@ public class JavacToJarStepFactory extends BaseCompileToJarStepFactory {
   }
 
   @Override
-  Optional<String> getBootClasspath() {
-    return javacOptions.getBootclasspath();
+  Optional<String> getBootClasspath(BuildContext context) {
+    JavacOptions buildTimeOptions = amender.amend(javacOptions, context);
+    return buildTimeOptions.getBootclasspath();
   }
 
   @Override
