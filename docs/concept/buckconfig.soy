@@ -535,6 +535,22 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'build' /}
+  {param name: 'type' /}
+  {param example_value: 'RELEASE_PEX' /}
+  {param description}
+    Sets the type of the build that buck has been built with. This allows buck to distinguish 
+    different kinds of builds. When you run <code>ant</code> locally, this will be automatically
+    set to <code>LOCAL_ANT</code>. When you build buck using buck locally, e.g. <code>buck build buck</code>,
+    this will be automatically set to <code>LOCAL_PEX</code>. If you are deploying buck through
+    central deployment system, you may want to set build type to <code>RELEASE_PEX</code>:{sp}
+    <pre>buck build buck --config build.type=RELEASE_PEX</pre>
+    <p><b>Note:</b> this setting does not affect how buck builds other rules. It only affects 
+    the way how <i>buck will build buck</i>.</p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'build' /}
   {param name: 'threads' /}
   {param example_value: '4' /}
   {param description}

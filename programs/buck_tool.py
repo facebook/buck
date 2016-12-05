@@ -58,6 +58,7 @@ EXPORTED_RESOURCES = [
     Resource("path_to_pex", executable=True),
     Resource("dx"),
     Resource("android_agent_path"),
+    Resource("buck_build_type_info"),
     Resource("native_exopackage_fake_path"),
 ]
 

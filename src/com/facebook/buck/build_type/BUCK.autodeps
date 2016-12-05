@@ -1,0 +1,10 @@
+{
+  "build_type" : {
+    "deps" : [
+      "//src/com/facebook/buck/log:api"
+    ],
+    "exported_deps" : [
+      "//third-party/java/guava:guava"
+    ]
+  }
+}

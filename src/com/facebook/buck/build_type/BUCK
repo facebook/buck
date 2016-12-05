@@ -1,0 +1,11 @@
+
+java_library(
+  name = 'build_type',
+  srcs = [
+    'BuildType.java'
+  ],
+  autodeps = True,
+  visibility = [
+    'PUBLIC',
+  ],
+)

@@ -76,14 +76,14 @@ class BuckPackage(BuckTool):
         return resource_path
 
     def _is_buck_production(self):
-        return True
+        build_type = pkg_resources.resource_string(__name__, 'buck_build_type_info').strip()
+        return build_type == 'RELEASE_PEX'
 
     def _get_extra_java_args(self):
         return [
             "-Dbuck.git_commit={0}".format(self._package_info['version']),
             "-Dbuck.git_commit_timestamp={0}".format(self._package_info['timestamp']),
             "-Dbuck.git_dirty=0",
-            "-Dbuck.production_mode=1",
         ]
 
     def _get_bootstrap_classpath(self):
