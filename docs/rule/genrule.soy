@@ -55,7 +55,10 @@
 
 This genrule() uses a Python script to derive a new
 {sp}<code>AndroidManifest.xml</code> from an
-{sp}<code>AndroidManifest.xml</code> in the source tree.
+{sp}<code>AndroidManifest.xml</code> in the source tree. 
+Note you don't need to prepend execution commands with 
+{sp}<code>python</code>: Buck knows how to execute different 
+kinds of binaries using <code>$(exe)</code> command.
 
 {literal}<pre class="prettyprint lang-py">
 genrule(
@@ -63,9 +66,9 @@ genrule(
   srcs = [
     'AndroidManifest.xml',
   ],
-  bash = 'python $(exe //python/android:basic_to_full) ' \
+  bash = '$(exe //python/android:basic_to_full) ' \
       '$SRCDIR/AndroidManifest.xml > $OUT',
-  cmd_exe = 'python.exe $(exe //python/android:basic_to_full) ' \
+  cmd_exe = '$(exe //python/android:basic_to_full) ' \
       '%SRCDIR%\\AndroidManifest.xml > %OUT%',
   out = 'AndroidManifest.xml',
 )
