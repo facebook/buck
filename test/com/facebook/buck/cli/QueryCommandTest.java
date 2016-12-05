@@ -133,15 +133,4 @@ public class QueryCommandTest {
     queryCommand.formatAndRunQuery(params, env, executor);
     EasyMock.verify(env);
   }
-
-  @Test
-  public void testRunSingleQuery() throws Exception {
-    queryCommand.setArguments(ImmutableList.of("deps(//foo:bah)", "//foo:bar", "//foo:baz"));
-    // Should discard format args
-    EasyMock.expect(env.evaluateQuery("deps(//foo:bah)", executor))
-        .andReturn(ImmutableSet.of());
-    EasyMock.replay(env);
-    queryCommand.formatAndRunQuery(params, env, executor);
-    EasyMock.verify(env);
-  }
 }

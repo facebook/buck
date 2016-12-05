@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -257,6 +258,39 @@ public class QueryCommandIntegrationTest {
     assertThat(
         result.getStdout(),
         is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-one-owner"))));
+  }
+
+  @Test
+  public void testOwners() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "owner('example/1.txt') + owner('example/2.txt')");
+
+    result.assertSuccess();
+    assertThat(result.getStdout(), containsString("//example:one"));
+    assertThat(result.getStdout(), containsString("//example:two"));
+  }
+
+
+  @Test
+  public void testFormatWithoutFormatString() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "owner('example/1.txt')",
+        "+",
+        "owner('example/2.txt')");
+
+    result.assertFailure();
+    assertThat(result.getStderr(), containsString("format arguments"));
+    assertThat(result.getStderr(), containsString("%s"));
   }
 
   @Test

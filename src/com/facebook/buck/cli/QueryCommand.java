@@ -27,6 +27,7 @@ import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -146,6 +147,9 @@ public class QueryCommand extends AbstractCommand {
           queryFormat,
           formatArgs,
           shouldGenerateJsonOutput());
+    } else if (formatArgs.size() > 0) {
+      throw new HumanReadableException(
+          "Must not specify format arguments without a %s or %Ss in the query");
     } else {
       return runSingleQuery(params, env, executor, queryFormat);
     }
