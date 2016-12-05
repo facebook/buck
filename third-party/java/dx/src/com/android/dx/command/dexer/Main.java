@@ -39,6 +39,8 @@ import com.android.dx.dex.code.PositionList;
 import com.android.dx.dex.file.ClassDefItem;
 import com.android.dx.dex.file.DexFile;
 import com.android.dx.dex.file.EncodedMethod;
+import com.android.dx.dex.file.FieldIdItem;
+import com.android.dx.dex.file.Item;
 import com.android.dx.merge.CollisionPolicy;
 import com.android.dx.merge.DexMerger;
 import com.android.dx.rop.annotation.Annotation;
@@ -47,6 +49,7 @@ import com.android.dx.rop.annotation.AnnotationsList;
 import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.cst.CstNat;
 import com.android.dx.rop.cst.CstString;
+import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.type.Prototype;
 
 import java.io.BufferedReader;
@@ -335,6 +338,8 @@ public class Main {
             if (outArray == null) {
                 return 2;
             }
+
+            computeReferencedResources();
         }
 
         if (args.incremental) {
@@ -1925,6 +1930,26 @@ public class Main {
         @Override
         public byte[] call() throws IOException {
             return writeDex(dexFile);
+        }
+    }
+
+    // Facebook addition: compute the resources referenced by this dex file.
+    // Does not apply to any merging, just the input class.
+    private final Set<String> resourceNames = new HashSet<>();
+
+    public Collection<String> getReferencedResourceNames() {
+        return resourceNames;
+    }
+
+    private void computeReferencedResources() {
+        for (Item genericItem : outputDex.getFieldIds().items()) {
+            FieldIdItem item = (FieldIdItem) genericItem;
+            CstType fieldClass = item.getDefiningClass();
+            CstString fieldName = item.getRef().getNat().getName();
+            if (fieldClass.getClassType().getDescriptor().contains("/R$")) {
+                // Add the packageName of the class for better accuracy.
+                resourceNames.add(fieldClass.getPackageName() + "." + fieldName.getString());
+            }
         }
     }
 }

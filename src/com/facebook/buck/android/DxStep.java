@@ -179,12 +179,13 @@ public class DxStep extends ShellStep {
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     PrintStream stderrStream = new PrintStream(stderr);
     try {
-      com.android.dx.command.dexer.Main dexer = new com.android.dx.command.dexer.Main();
-      int returncode = dexer.run(
-          args.toArray(new String[args.size()]),
-          context.getStdOut(),
-          stderrStream
-      );
+      com.android.dx.command.dexer.DxContext dxContext =
+          new com.android.dx.command.dexer.DxContext(context.getStdOut(), stderrStream);
+      com.android.dx.command.dexer.Main.Arguments arguments =
+          new com.android.dx.command.dexer.Main.Arguments();
+      com.android.dx.command.dexer.Main dexer = new com.android.dx.command.dexer.Main(dxContext);
+      arguments.parseCommandLine(args.toArray(new String[args.size()]), dxContext);
+      int returncode = dexer.run(arguments);
       String stdErrOutput = stderr.toString();
       if (!stdErrOutput.isEmpty()) {
         context.postEvent(ConsoleEvent.warning("%s", stdErrOutput));
