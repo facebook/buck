@@ -24,7 +24,6 @@ import com.facebook.buck.config.ConfigViewCache;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.BuildTargetParseException;
 import com.facebook.buck.parser.BuildTargetParser;
 import com.facebook.buck.parser.BuildTargetPatternParser;
@@ -240,25 +239,19 @@ public class BuckConfig implements ConfigPathGetter {
 
   @Nullable
   public String getBuildTargetForAliasAsString(String possiblyFlavoredAlias) {
-    Pair<BuildTarget, Integer> buildTargetPoundIdx = getBuildTargetForAlias(possiblyFlavoredAlias);
-    BuildTarget buildTarget = buildTargetPoundIdx.getFirst();
-    int poundIdx = buildTargetPoundIdx.getSecond();
-    if (buildTarget != null) {
-      return buildTarget.getFullyQualifiedName() +
-          (poundIdx == -1 ? "" : possiblyFlavoredAlias.substring(poundIdx));
-    } else {
+    String[] parts = possiblyFlavoredAlias.split("#", 2);
+    String unflavoredAlias = parts[0];
+    BuildTarget buildTarget = getBuildTargetForAlias(unflavoredAlias);
+    if (buildTarget == null) {
       return null;
     }
+    String suffix = parts.length == 2 ? "#" + parts[1] : "";
+    return buildTarget.getFullyQualifiedName() + suffix;
   }
 
-  public Pair<BuildTarget, Integer> getBuildTargetForAlias(String possiblyFlavoredAlias) {
-    String alias = possiblyFlavoredAlias;
-    int poundIdx = possiblyFlavoredAlias.indexOf('#');
-    if (poundIdx != -1) {
-      alias = possiblyFlavoredAlias.substring(0, poundIdx);
-    }
-    BuildTarget buildTarget = aliasToBuildTargetMap.get(alias);
-    return new Pair<>(buildTarget, poundIdx);
+  @Nullable
+  public BuildTarget getBuildTargetForAlias(String unflavoredAlias) {
+    return aliasToBuildTargetMap.get(unflavoredAlias);
   }
 
   public BuildTarget getBuildTargetForFullyQualifiedTarget(String target) {

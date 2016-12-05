@@ -100,7 +100,7 @@ public class TargetPatternEvaluator {
       }
 
       // Check if this is an alias.
-      BuildTarget alias = buckConfig.getBuildTargetForAlias(pattern).getFirst();
+      BuildTarget alias = buckConfig.getBuildTargetForAlias(pattern);
       if (alias != null) {
         unresolved.put(alias.getFullyQualifiedName(), pattern);
       } else {
