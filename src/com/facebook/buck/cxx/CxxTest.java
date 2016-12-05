@@ -169,24 +169,17 @@ public abstract class CxxTest
   @Override
   public Callable<TestResults> interpretTestResults(
       final ExecutionContext executionContext,
-      boolean isUsingTestSelectors,
-      final boolean isDryRun) {
+      boolean isUsingTestSelectors) {
     return () -> {
-      ImmutableList.Builder<TestCaseSummary> summaries = ImmutableList.builder();
-      if (!isDryRun) {
-        ImmutableList<TestResultSummary> resultSummaries =
-            parseResults(
-                getPathToTestExitCode(),
-                getPathToTestOutput(),
-                getPathToTestResults());
-        TestCaseSummary summary = new TestCaseSummary(
-            getBuildTarget().getFullyQualifiedName(),
-            resultSummaries);
-        summaries.add(summary);
-      }
       return TestResults.of(
           getBuildTarget(),
-          summaries.build(),
+          ImmutableList.of(
+              new TestCaseSummary(
+                  getBuildTarget().getFullyQualifiedName(),
+                  parseResults(
+                      getPathToTestExitCode(),
+                      getPathToTestOutput(),
+                      getPathToTestResults()))),
           contacts,
           labels.stream()
               .map(Object::toString)

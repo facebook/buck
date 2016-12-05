@@ -359,8 +359,7 @@ public class AppleTest
   @Override
   public Callable<TestResults> interpretTestResults(
       final ExecutionContext executionContext,
-      boolean isUsingTestSelectors,
-      boolean isDryRun) {
+      boolean isUsingTestSelectors) {
     return () -> {
       List<TestCaseSummary> testCaseSummaries;
       if (xctoolStdoutReader.isPresent()) {

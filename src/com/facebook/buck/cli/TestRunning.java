@@ -182,8 +182,7 @@ public class TestRunning {
       final Callable<TestResults> resultsInterpreter = getCachingCallable(
           test.interpretTestResults(
               executionContext,
-              /*isUsingTestSelectors*/ !options.getTestSelectorList().isEmpty(),
-              /*isDryRun*/ options.isDryRun()));
+              /*isUsingTestSelectors*/ !options.getTestSelectorList().isEmpty()));
 
       boolean isTestRunRequired;
       isTestRunRequired = isTestRunRequiredForTest(
@@ -194,8 +193,7 @@ public class TestRunning {
           options.getTestResultCacheMode(),
           resultsInterpreter,
           !options.getTestSelectorList().isEmpty(),
-          !options.getEnvironmentOverrides().isEmpty(),
-          options.isDryRun());
+          !options.getEnvironmentOverrides().isEmpty());
 
       final Map<String, UUID> testUUIDMap = new HashMap<>();
       final AtomicReference<TestStatusMessageEvent.Started> currentTestStatusMessageEvent =
@@ -614,8 +612,7 @@ public class TestRunning {
       TestRunningOptions.TestResultCacheMode resultCacheMode,
       Callable<TestResults> testResultInterpreter,
       boolean isRunningWithTestSelectors,
-      boolean hasEnvironmentOverrides,
-      boolean isDryRun)
+      boolean hasEnvironmentOverrides)
       throws IOException, ExecutionException, InterruptedException {
     boolean isTestRunRequired;
     BuildResult result;
@@ -630,9 +627,6 @@ public class TestRunning {
       isTestRunRequired = true;
     } else if (hasEnvironmentOverrides) {
       // This is rather obtuse, ideally the environment overrides can be hashed and compared...
-      isTestRunRequired = true;
-    } else if (isDryRun) {
-      // Test result caching does not work for dry runs, as the result file used is different.
       isTestRunRequired = true;
     } else if (((result = cachingBuildEngine.getBuildRuleResult(
         test.getBuildTarget())) != null) &&

@@ -228,8 +228,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
   @Override
   public Callable<TestResults> interpretTestResults(
       final ExecutionContext context,
-      final boolean isUsingTestSelectors,
-      final boolean isDryRun) {
+      final boolean isUsingTestSelectors) {
     return () -> {
       final ImmutableList.Builder<TestCaseSummary> summaries = ImmutableList.builder();
       IDevice device;

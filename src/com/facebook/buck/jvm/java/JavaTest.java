@@ -237,7 +237,6 @@ public class JavaTest
         .setRobolectricLogPath(robolectricLogPath)
         .setExtraJvmArgs(properVmArgs)
         .addAllTestClasses(reorderedTestClasses)
-        .setDryRun(options.isDryRun())
         .setShouldExplainTestSelectorList(options.shouldExplainTestSelectorList())
         .setTestSelectorList(testSelectorList)
         .build();
@@ -410,8 +409,7 @@ public class JavaTest
   @Override
   public Callable<TestResults> interpretTestResults(
       final ExecutionContext context,
-      final boolean isUsingTestSelectors,
-      final boolean isDryRun) {
+      final boolean isUsingTestSelectors) {
     final ImmutableSet<String> contacts = getContacts();
     return () -> {
       // It is possible that this rule was not responsible for running any tests because all tests
@@ -432,9 +430,6 @@ public class JavaTest
         String testSelectorSuffix = "";
         if (isUsingTestSelectors) {
           testSelectorSuffix += ".test_selectors";
-        }
-        if (isDryRun) {
-          testSelectorSuffix += ".dry_run";
         }
         String path = String.format("%s%s.xml", testClass, testSelectorSuffix);
         Path testResultFile = getProjectFilesystem().getPathForRelativePath(

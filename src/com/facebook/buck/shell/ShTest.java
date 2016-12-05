@@ -119,11 +119,6 @@ public class ShTest
       ExecutionContext executionContext,
       TestRunningOptions options,
       TestReportingCallback testReportingCallback) {
-    if (options.isDryRun()) {
-      // Stop now if we are a dry-run: sh-tests have no concept of dry-run inside the test itself.
-      return ImmutableList.of();
-    }
-
     Step mkdirClean = new MakeCleanDirectoryStep(
         getProjectFilesystem(),
         getPathToTestOutputDirectory());
@@ -158,37 +153,24 @@ public class ShTest
   @Override
   public Callable<TestResults> interpretTestResults(
       final ExecutionContext context,
-      boolean isUsingTestSelectors,
-      boolean isDryRun) {
-
-    if (isDryRun) {
-      // Again, shortcut to returning no results, because sh-tests have no concept of a dry-run.
-      return () -> TestResults.of(
+      boolean isUsingTestSelectors) {
+    return () -> {
+      Optional<String> resultsFileContents =
+          getProjectFilesystem().readFileIfItExists(getPathToTestOutputResult());
+      ObjectMapper mapper = context.getObjectMapper();
+      TestResultSummary testResultSummary = mapper.readValue(resultsFileContents.get(),
+          TestResultSummary.class);
+      TestCaseSummary testCaseSummary = new TestCaseSummary(
+          getBuildTarget().getFullyQualifiedName(),
+          ImmutableList.of(testResultSummary));
+      return TestResults.of(
           getBuildTarget(),
-          ImmutableList.of(),
+          ImmutableList.of(testCaseSummary),
           contacts,
           labels.stream()
               .map(Object::toString)
               .collect(MoreCollectors.toImmutableSet()));
-    } else {
-      return () -> {
-        Optional<String> resultsFileContents =
-            getProjectFilesystem().readFileIfItExists(getPathToTestOutputResult());
-        ObjectMapper mapper = context.getObjectMapper();
-        TestResultSummary testResultSummary = mapper.readValue(resultsFileContents.get(),
-            TestResultSummary.class);
-        TestCaseSummary testCaseSummary = new TestCaseSummary(
-            getBuildTarget().getFullyQualifiedName(),
-            ImmutableList.of(testResultSummary));
-        return TestResults.of(
-            getBuildTarget(),
-            ImmutableList.of(testCaseSummary),
-            contacts,
-            labels.stream()
-                .map(Object::toString)
-                .collect(MoreCollectors.toImmutableSet()));
-      };
-    }
+    };
   }
 
   @Override

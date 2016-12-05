@@ -79,16 +79,6 @@ abstract class AbstractJUnitJvmArgs {
   }
 
   /**
-   * @return If true, does not actually run the tests, just prints what would have happened.
-   *
-   * Defaults to false.
-   */
-  @Value.Default
-  boolean isDryRun() {
-    return false;
-  }
-
-  /**
    * @return If true, passes inclNoLocationClassesEnabled=true to the jacoco java agent.
    *
    * Defaults to false.
@@ -265,11 +255,6 @@ abstract class AbstractJUnitJvmArgs {
       if (isShouldExplainTestSelectorList()) {
         args.add("--explain-test-selectors");
       }
-    }
-
-    // Dry-run flag.
-    if (isDryRun()) {
-      args.add("--dry-run");
     }
 
     // List all of the tests to be run.
