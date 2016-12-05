@@ -21,6 +21,9 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.base.CaseFormat;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 /**
  * The Source of Truth about a {@link BuildRule}, providing mechanisms to expose the arguments that
@@ -33,11 +36,20 @@ import com.google.common.base.CaseFormat;
  */
 public interface Description<T> {
 
+  static final LoadingCache<Class<? extends Description<?>>, BuildRuleType>
+      BUILD_RULE_TYPES_BY_CLASS = CacheBuilder.newBuilder().build(
+        new CacheLoader<Class<? extends Description<?>>, BuildRuleType>() {
+          @Override
+          public BuildRuleType load(Class<? extends Description<?>> key) throws Exception {
+            return getBuildRuleType(key.getSimpleName());
+          }
+        });
+
   /**
    * @return The {@link BuildRuleType} being described.
    */
   static BuildRuleType getBuildRuleType(Class<? extends Description<?>> descriptionClass) {
-    return getBuildRuleType(descriptionClass.getSimpleName());
+    return BUILD_RULE_TYPES_BY_CLASS.getUnchecked(descriptionClass);
   }
 
   static BuildRuleType getBuildRuleType(Description<?> description) {
