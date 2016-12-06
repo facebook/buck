@@ -271,4 +271,24 @@ public class BuiltinApplePackageIntegrationTest {
     assertTrue(output.contains("i386"));
     assertTrue(output.contains("x86_64"));
   }
+
+  @Test
+  public void testDisablingPackageCaching() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "simple_application_bundle_no_debug",
+        tmp);
+    workspace.setUp();
+
+    workspace.enableDirCache();
+    workspace
+        .runBuckBuild("-c", "apple.cache_bundles_and_packages=false", "//:DemoAppPackage")
+        .assertSuccess();
+    workspace.runBuckCommand("clean");
+    workspace
+        .runBuckBuild("-c", "apple.cache_bundles_and_packages=false", "//:DemoAppPackage")
+        .assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:DemoAppPackage");
+  }
 }

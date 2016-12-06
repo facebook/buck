@@ -289,7 +289,8 @@ public class AppleBinaryDescription
         args.deps,
         args.tests,
         flavoredDebugFormat,
-        appleConfig.useDryRunCodeSigning());
+        appleConfig.useDryRunCodeSigning(),
+        appleConfig.cacheBundlesAndPackages());
   }
 
   private <A extends AppleBinaryDescription.Arg> BuildRule createBinary(

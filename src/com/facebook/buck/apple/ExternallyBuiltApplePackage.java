@@ -39,12 +39,14 @@ import java.util.Optional;
  */
 public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppendable {
   private ApplePackageConfigAndPlatformInfo packageConfigAndPlatformInfo;
+  private boolean cacheable;
 
   public ExternallyBuiltApplePackage(
       BuildRuleParams params,
       SourcePathResolver resolver,
       ApplePackageConfigAndPlatformInfo packageConfigAndPlatformInfo,
-      SourcePath bundle) {
+      SourcePath bundle,
+      boolean cacheable) {
     super(
         params,
         resolver,
@@ -55,6 +57,7 @@ public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppen
         params.getBuildTarget().getShortName() + "." +
             packageConfigAndPlatformInfo.getConfig().getExtension());
     this.packageConfigAndPlatformInfo = packageConfigAndPlatformInfo;
+    this.cacheable = cacheable;
   }
 
   @Override
@@ -133,4 +136,8 @@ public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppen
     }
   }
 
+  @Override
+  public boolean isCacheable() {
+    return cacheable;
+  }
 }

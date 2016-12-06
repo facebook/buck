@@ -188,4 +188,9 @@ public class BuiltinApplePackage extends AbstractBuildRule {
   public Path getPathToOutput() {
     return pathToOutputFile;
   }
+
+  @Override
+  public boolean isCacheable() {
+    return bundle.isCacheable();
+  }
 }

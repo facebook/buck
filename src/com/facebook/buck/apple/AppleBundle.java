@@ -164,6 +164,8 @@ public class AppleBundle
   private final Path bundleBinaryPath;
 
   private final boolean hasBinary;
+  private final boolean cacheable;
+
 
   AppleBundle(
       BuildRuleParams params,
@@ -184,7 +186,8 @@ public class AppleBundle
       Set<BuildTarget> tests,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
-      boolean dryRunCodeSigning) {
+      boolean dryRunCodeSigning,
+      boolean cacheable) {
     super(params, resolver);
     this.extension = extension.isLeft() ?
         extension.getLeft().toFileExtension() :
@@ -216,6 +219,7 @@ public class AppleBundle
     this.xcodeBuildVersion = appleCxxPlatform.getXcodeBuildVersion();
     this.xcodeVersion = appleCxxPlatform.getXcodeVersion();
     this.dryRunCodeSigning = dryRunCodeSigning;
+    this.cacheable = cacheable;
 
     bundleBinaryPath = bundleRoot.resolve(binaryPath);
     hasBinary = binary.isPresent() && binary.get().getPathToOutput() != null;
@@ -910,5 +914,10 @@ public class AppleBundle
       }
     }
     return ImmutableSortedSet.of();
+  }
+
+  @Override
+  public boolean isCacheable() {
+    return cacheable;
   }
 }

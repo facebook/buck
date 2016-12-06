@@ -268,6 +268,11 @@ public class AppleConfig {
     return delegate.getBooleanValue("apple", "dry_run_code_signing", false);
   }
 
+  public boolean cacheBundlesAndPackages() {
+    return delegate.getBooleanValue("apple", "cache_bundles_and_packages", true);
+  }
+
+
   public Optional<Path> getAppleDeviceHelperPath() {
     return getOptionalPath("apple", "device_helper_path");
   }

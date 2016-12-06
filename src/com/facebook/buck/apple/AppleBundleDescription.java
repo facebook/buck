@@ -149,7 +149,8 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
         args.deps,
         args.tests,
         flavoredDebugFormat,
-        appleConfig.useDryRunCodeSigning());
+        appleConfig.useDryRunCodeSigning(),
+        appleConfig.cacheBundlesAndPackages());
   }
 
   /**

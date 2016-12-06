@@ -546,7 +546,8 @@ public class AppleDescriptions {
       ImmutableSortedSet<BuildTarget> deps,
       ImmutableSortedSet<BuildTarget> tests,
       AppleDebugFormat debugFormat,
-      boolean dryRunCodeSigning)
+      boolean dryRunCodeSigning,
+      boolean cacheable)
       throws NoSuchBuildTargetException {
     AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
         cxxPlatformFlavorDomain,
@@ -706,7 +707,8 @@ public class AppleDescriptions {
         tests,
         codeSignIdentityStore,
         provisioningProfileStore,
-        dryRunCodeSigning);
+        dryRunCodeSigning,
+        cacheable);
   }
 
   private static BuildRule getBinaryFromBuildRuleWithBinary(BuildRule rule) {

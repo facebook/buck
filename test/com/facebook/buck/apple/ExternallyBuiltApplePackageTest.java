@@ -79,7 +79,8 @@ public class ExternallyBuiltApplePackageTest {
         params,
         new SourcePathResolver(resolver),
         config,
-        new FakeSourcePath(bundleLocation));
+        new FakeSourcePath(bundleLocation),
+        true);
     ShellStep step = Iterables.getOnlyElement(
         Iterables.filter(
             rule.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext()),
@@ -97,7 +98,8 @@ public class ExternallyBuiltApplePackageTest {
         params,
         new SourcePathResolver(resolver),
         config,
-        new FakeSourcePath("Fake/Bundle/Location"));
+        new FakeSourcePath("Fake/Bundle/Location"),
+        true);
     assertThat(Preconditions.checkNotNull(rule.getPathToOutput()).toString(), endsWith(".api"));
   }
 
@@ -107,7 +109,8 @@ public class ExternallyBuiltApplePackageTest {
         params,
         new SourcePathResolver(resolver),
         config,
-        new FakeSourcePath("Fake/Bundle/Location"));
+        new FakeSourcePath("Fake/Bundle/Location"),
+        true);
     AbstractGenruleStep step = Iterables.getOnlyElement(
         Iterables.filter(
             rule.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext()),
@@ -124,7 +127,8 @@ public class ExternallyBuiltApplePackageTest {
             params,
             new SourcePathResolver(resolver),
             config.withPlatform(config.getPlatform().withBuildVersion(input)),
-            new FakeSourcePath("Fake/Bundle/Location"));
+            new FakeSourcePath("Fake/Bundle/Location"),
+            true);
     assertNotEquals(
         newRuleKeyBuilderFactory().build(packageWithVersion.apply("real")),
         newRuleKeyBuilderFactory().build(packageWithVersion.apply("fake")));
@@ -139,7 +143,8 @@ public class ExternallyBuiltApplePackageTest {
             config.withPlatform(
                 config.getPlatform().withAppleSdk(
                     config.getPlatform().getAppleSdk().withVersion(input))),
-            new FakeSourcePath("Fake/Bundle/Location"));
+            new FakeSourcePath("Fake/Bundle/Location"),
+            true);
     assertNotEquals(
         newRuleKeyBuilderFactory().build(packageWithSdkVersion.apply("real")),
         newRuleKeyBuilderFactory().build(packageWithSdkVersion.apply("fake")));

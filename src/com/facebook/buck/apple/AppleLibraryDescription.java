@@ -215,7 +215,8 @@ public class AppleLibraryDescription implements
         args.deps,
         args.tests,
         debugFormat,
-        appleConfig.useDryRunCodeSigning());
+        appleConfig.useDryRunCodeSigning(),
+        appleConfig.cacheBundlesAndPackages());
   }
 
   /**

@@ -261,7 +261,8 @@ public class AppleTestDescription implements
         args.deps,
         args.tests,
         debugFormat,
-        appleConfig.useDryRunCodeSigning());
+        appleConfig.useDryRunCodeSigning(),
+        appleConfig.cacheBundlesAndPackages());
 
     Optional<SourcePath> xctool = getXctool(params, resolver, sourcePathResolver);
 

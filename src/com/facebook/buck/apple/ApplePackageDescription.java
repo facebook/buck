@@ -95,7 +95,8 @@ public class ApplePackageDescription implements
               .build()),
           sourcePathResolver,
           applePackageConfigAndPlatformInfo.get(),
-          new BuildTargetSourcePath(bundle.getBuildTarget()));
+          new BuildTargetSourcePath(bundle.getBuildTarget()),
+          bundle.isCacheable());
     } else {
       return new BuiltinApplePackage(
           params,

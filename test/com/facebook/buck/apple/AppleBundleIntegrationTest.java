@@ -89,7 +89,7 @@ public class AppleBundleIntegrationTest {
         absoluteBundlePath);
   }
 
-  private void runSimpleApplicationBunldeTestWithBuildTarget(String fqtn)
+  private void runSimpleApplicationBundleTestWithBuildTarget(String fqtn)
       throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
@@ -125,16 +125,34 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void testDisablingBundleCaching() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "simple_application_bundle_no_debug",
+        tmp);
+    workspace.setUp();
+
+    final String target = "//:DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks";
+
+    workspace.enableDirCache();
+    workspace.runBuckBuild("-c", "apple.cache_bundles_and_packages=false", target).assertSuccess();
+    workspace.runBuckCommand("clean");
+    workspace.runBuckBuild("-c", "apple.cache_bundles_and_packages=false", target).assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally(target);
+  }
+
+  @Test
   public void simpleApplicationBundle() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    runSimpleApplicationBunldeTestWithBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
+    runSimpleApplicationBundleTestWithBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
   }
 
   @Test
   public void simpleApplicationBundleWithLinkerMapDoesNotAffectOutput()
       throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    runSimpleApplicationBunldeTestWithBuildTarget(
+    runSimpleApplicationBundleTestWithBuildTarget(
         "//:DemoApp#iphonesimulator-x86_64,no-debug");
   }
 
@@ -142,7 +160,7 @@ public class AppleBundleIntegrationTest {
   public void simpleApplicationBundleWithoutLinkerMapDoesNotAffectOutput()
       throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    runSimpleApplicationBunldeTestWithBuildTarget(
+    runSimpleApplicationBundleTestWithBuildTarget(
         "//:DemoApp#iphonesimulator-x86_64,no-debug,no-linkermap");
   }
 
