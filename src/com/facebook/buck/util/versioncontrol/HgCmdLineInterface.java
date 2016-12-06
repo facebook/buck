@@ -24,6 +24,8 @@ import com.facebook.buck.util.ProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -42,6 +44,8 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.StreamSupport;
+
+import javax.annotation.Nullable;
 
 public class HgCmdLineInterface implements VersionControlCmdLineInterface {
 
@@ -75,6 +79,9 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   private static final String REVISION_ID_TEMPLATE = "{revision}";
   private static final String REVISION_IDS_TEMPLATE = "{revisions}";
   private static final String PATH_TEMPLATE = "{path}";
+
+  private static final ImmutableList<String> ROOT_COMMAND =
+      ImmutableList.of(HG_CMD_TEMPLATE, "root");
 
   private static final ImmutableList<String> HG_ROOT_COMMAND =
       ImmutableList.of(HG_CMD_TEMPLATE, "root");
@@ -116,6 +123,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   private final Path projectRoot;
   private final String hgCmd;
   private final ImmutableMap<String, String> environment;
+  private final Supplier<Path> hgRoot;
 
   public HgCmdLineInterface(
       ProcessExecutorFactory processExecutorFactory,
@@ -125,8 +133,21 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     this.processExecutorFactory = processExecutorFactory;
     this.projectRoot = projectRoot;
     this.hgCmd = hgCmd;
-    this.environment = MoreMaps.merge(environment, HG_ENVIRONMENT_VARIABLES);
-  }
+    this.environment = MoreMaps.merge(
+        environment,
+        HG_ENVIRONMENT_VARIABLES);
+    this.hgRoot = Suppliers.memoize(
+        () -> {
+          try {
+            Path root = Paths.get(executeCommand(ROOT_COMMAND));
+            LOG.debug("Set hg root to %s", root);
+            return root;
+          } catch (VersionControlCommandFailedException | InterruptedException e) {
+            LOG.debug("Unable to obtain a hg root for %s", projectRoot);
+            return null;
+          }
+        });
+    }
 
   @Override
   public boolean isSupportedVersionControlSystem() {
@@ -262,6 +283,11 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     } catch (IOException e) {
       throw new VersionControlCommandFailedException("Unable to load hg manifest");
     }
+  }
+
+  @Nullable
+  public Path getHgRoot() {
+    return hgRoot.get();
   }
 
   private String executeCommand(Iterable<String> command)

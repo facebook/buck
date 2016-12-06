@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -334,6 +335,33 @@ public class HgCmdLineInterfaceIntegrationTest {
         "file1\u00000000000000000000000000000000000000000000d"
     );
     assertEquals(lines, expected);
+  }
+
+  @Test
+  public void testHgRootSubdir()
+    throws VersionControlCommandFailedException, InterruptedException, IOException {
+    // Use a subdir of the repository
+    HgCmdLineInterface hgCmdLineInterface = (HgCmdLineInterface) makeCmdLine(
+        reposPath.resolve(REPO_WITH_SUB_DIR + "/subdir"));
+    Path result = hgCmdLineInterface.getHgRoot();
+    // Use toRealPath to follow the pecularities of the OS X tempdir system, which uses a
+    // /var -> /private/var symlink.
+    assertEquals(result, reposPath.resolve(REPO_WITH_SUB_DIR).toRealPath());
+  }
+
+  @Test
+  public void testHgRootOutsideRepo()
+      throws VersionControlCommandFailedException, InterruptedException {
+    // Note: reposPath is not a hg repository, so we have to create a HgCmdLineInterface directly
+    // here.
+    HgCmdLineInterface hgCmdLineInterface = new HgCmdLineInterface(
+        new TestProcessExecutorFactory(),
+        reposPath,
+        new VersionControlBuckConfig(FakeBuckConfig.builder().build()).getHgCmd(),
+        ImmutableMap.of()
+    );
+    Path result = hgCmdLineInterface.getHgRoot();
+    assertNull(result);
   }
 
   private static void assumeHgInstalled() {
