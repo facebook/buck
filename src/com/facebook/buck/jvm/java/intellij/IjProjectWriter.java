@@ -150,9 +150,7 @@ public class IjProjectWriter {
   private void writeProjectSettings(
       IJProjectCleaner cleaner,
       IjProjectConfig projectConfig) throws IOException {
-    String sourceLevel = projectConfig.getJavaBuckConfig().getDefaultJavacOptions()
-        .getSourceLevel();
-    sourceLevel = JavaLanguageLevelHelper.convertLanguageLevelToIjFormat(sourceLevel);
+
     Optional<String> sdkName = projectConfig.getProjectJdkName();
     Optional<String> sdkType = projectConfig.getProjectJdkType();
 
@@ -166,14 +164,31 @@ public class IjProjectWriter {
 
     ST contents = getST(StringTemplateFile.MISC_TEMPLATE);
 
-    contents.add("languageLevel", sourceLevel);
-    contents.add("jdk15", getJdk15FromLanguageLevel(sourceLevel));
+    String languageLevelInIjFormat = getLanguageLevelFromConfig();
+
+    contents.add("languageLevel", languageLevelInIjFormat);
+    contents.add("jdk15", getJdk15FromLanguageLevel(languageLevelInIjFormat));
     contents.add("jdkName", sdkName.get());
     contents.add("jdkType", sdkType.get());
 
     writeToFile(contents, path);
 
     cleaner.doNotDelete(path);
+  }
+
+  private String getLanguageLevelFromConfig() {
+    Optional<String> languageLevelFromConfig = projectConfig.getProjectLanguageLevel();
+    String languageLevel;
+    if (languageLevelFromConfig.isPresent()) {
+      languageLevel = languageLevelFromConfig.get();
+    } else {
+      languageLevel = projectConfig
+          .getJavaBuckConfig()
+          .getDefaultJavacOptions()
+          .getSourceLevel();
+    }
+
+    return JavaLanguageLevelHelper.convertLanguageLevelToIjFormat(languageLevel);
   }
 
   private static boolean getJdk15FromLanguageLevel(String languageLevel) {
