@@ -18,7 +18,18 @@ java_immutables_library(
   tests = [
     '//test/com/facebook/buck/util/versioncontrol:versioncontrol',
   ],
+  resources = [
+    'rawmanifest.py',
+  ],
   autodeps = True,
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+export_file(
+  name = 'rawmanifest',
+  src = 'rawmanifest.py',
   visibility = [
     'PUBLIC',
   ],
