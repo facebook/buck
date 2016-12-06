@@ -131,7 +131,7 @@ public class WorkerProcess {
         messageID,
         this.hashCode(),
         jobArgs);
-    protocol.sendCommand(messageID, argsPath, stdoutPath, stderrPath);
+    protocol.sendCommand(messageID, WorkerProcessCommand.of(argsPath, stdoutPath, stderrPath));
     LOG.debug("Receiving response for job %d from process %d",
         messageID,
         this.hashCode());

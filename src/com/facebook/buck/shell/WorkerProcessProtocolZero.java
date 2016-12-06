@@ -150,17 +150,13 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
       }
   */
   @Override
-  public void sendCommand(
-      int messageID,
-      Path argsPath,
-      Path stdoutPath,
-      Path stderrPath) throws IOException {
+  public void sendCommand(int messageID, WorkerProcessCommand command) throws IOException {
     processStdinWriter.beginObject();
     processStdinWriter.name("id").value(messageID);
     processStdinWriter.name("type").value(TYPE_COMMAND);
-    processStdinWriter.name("args_path").value(argsPath.toString());
-    processStdinWriter.name("stdout_path").value(stdoutPath.toString());
-    processStdinWriter.name("stderr_path").value(stderrPath.toString());
+    processStdinWriter.name("args_path").value(command.getArgsPath().toString());
+    processStdinWriter.name("stdout_path").value(command.getStdOutPath().toString());
+    processStdinWriter.name("stderr_path").value(command.getStdErrPath().toString());
     processStdinWriter.endObject();
     processStdinWriter.flush();
   }

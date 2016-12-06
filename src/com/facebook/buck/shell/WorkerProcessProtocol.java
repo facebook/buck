@@ -16,14 +16,31 @@
 package com.facebook.buck.shell;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 public interface WorkerProcessProtocol {
 
+  /**
+   * When worker process starts up, main process and worker process should send handshakes.
+   */
   void sendHandshake(int handshakeID) throws IOException;
+
+  /**
+   * This method expects to receive a handshake from the other end.
+   */
   void receiveHandshake(int handshakeID) throws IOException;
-  void sendCommand(int messageID, Path argsPath, Path stdoutPath, Path stderrPath)
-      throws IOException;
+
+  /**
+   * Send the given command to the other end for invocation.
+   */
+  void sendCommand(int messageID, WorkerProcessCommand command) throws IOException;
+
+  /**
+   * This method expects to receive a response for previously sent command.
+   */
   int receiveCommandResponse(int messageID) throws IOException;
+
+  /**
+   * Close connection and properly end the stream.
+   */
   void close() throws IOException;
 }

@@ -72,6 +72,7 @@ java_library(
 java_immutables_library(
   name = 'worker_process',
   srcs = [
+    'AbstractWorkerProcessCommand.java',
     'AbstractWorkerJobResult.java',
     'WorkerProcess.java',
     'WorkerProcessPool.java',
@@ -79,6 +80,7 @@ java_immutables_library(
     'WorkerProcessProtocolZero.java',
   ],
   immutable_types = [
+    'WorkerProcessCommand',
     'WorkerJobResult',
   ],
   tests = [

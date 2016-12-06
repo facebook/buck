@@ -93,7 +93,7 @@ public class WorkerProcessProtocolZeroTest {
     Path argsPath = Paths.get("args");
     Path stdoutPath = Paths.get("stdout");
     Path stderrPath = Paths.get("stderr");
-    protocol.sendCommand(messageID, argsPath, stdoutPath, stderrPath);
+    protocol.sendCommand(messageID, WorkerProcessCommand.of(argsPath, stdoutPath, stderrPath));
     String expectedJson = String.format(
         "{\"id\":%d,\"type\":\"command\"," +
         "\"args_path\":\"%s\",\"stdout_path\":\"%s\",\"stderr_path\":\"%s\"}",
