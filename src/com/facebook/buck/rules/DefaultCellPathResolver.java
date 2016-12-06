@@ -44,19 +44,31 @@ public class DefaultCellPathResolver implements CellPathResolver {
   private final Path root;
   private final ImmutableMap<String, Path> cellPaths;
 
-  public DefaultCellPathResolver(
+  public DefaultCellPathResolver(Path root, ImmutableMap<String, Path> cellPaths) {
+    this.root = root;
+    this.cellPaths = cellPaths;
+  }
+
+  public DefaultCellPathResolver(Path root, Config config) {
+    this(root, getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION)));
+  }
+
+  public static DefaultCellPathResolver createWithConfigRepositoriesSection(
       final Path root,
       ImmutableMap<String, String> repositoriesSection) {
-    this.root = root;
-    this.cellPaths = ImmutableMap.copyOf(
+    return new DefaultCellPathResolver(
+        root,
+        getCellPathsFromConfigRepositoriesSection(root, repositoriesSection));
+  }
+
+  private static ImmutableMap<String, Path> getCellPathsFromConfigRepositoriesSection(
+      Path root,
+      ImmutableMap<String, String> repositoriesSection) {
+    return ImmutableMap.copyOf(
         Maps.transformValues(
             repositoriesSection,
             input -> root.resolve(MorePaths.expandHomeDir(root.getFileSystem().getPath(input)))
                 .normalize()));
-  }
-
-  public DefaultCellPathResolver(Path root, Config config) {
-    this(root, config.get(REPOSITORIES_SECTION));
   }
 
   /**
@@ -78,6 +90,10 @@ public class DefaultCellPathResolver implements CellPathResolver {
         RelativeCellName.of(ImmutableList.of()),
         this);
     return builder.build();
+  }
+
+  public Path getRoot() {
+    return root;
   }
 
   public ImmutableSet<Path> getKnownRoots() {

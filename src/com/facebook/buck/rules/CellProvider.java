@@ -93,9 +93,10 @@ public final class CellProvider {
       CellConfig rootCellConfigOverrides,
       KnownBuildRuleTypesFactory knownBuildRuleTypesFactory) throws IOException {
 
-    DefaultCellPathResolver rootCellCellPathResolver = new DefaultCellPathResolver(
-        rootFilesystem.getRootPath(),
-        rootConfig.getEntriesForSection(DefaultCellPathResolver.REPOSITORIES_SECTION));
+    DefaultCellPathResolver rootCellCellPathResolver =
+        DefaultCellPathResolver.createWithConfigRepositoriesSection(
+            rootFilesystem.getRootPath(),
+            rootConfig.getEntriesForSection(DefaultCellPathResolver.REPOSITORIES_SECTION));
 
     ImmutableMap<RelativeCellName, Path> transitiveCellPathMapping =
         rootCellCellPathResolver.getTransitivePathMapping();

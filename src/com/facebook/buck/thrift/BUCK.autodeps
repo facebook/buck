@@ -2,6 +2,7 @@
   "thrift" : {
     "deps" : [
       "//src/com/facebook/buck/graph:graph",
+      "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/jvm/java:steps",
       "//src/com/facebook/buck/python:support",
       "//src/com/facebook/buck/step/fs:fs",
@@ -14,7 +15,6 @@
       "//src/com/facebook/buck/cli:config",
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/io:io",
-      "//src/com/facebook/buck/jvm/java:rules",
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/parser:rule_pattern",

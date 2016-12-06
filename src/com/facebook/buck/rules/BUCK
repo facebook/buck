@@ -11,6 +11,17 @@ java_library(
   ],
 )
 
+java_library(
+  name = 'cell_path_resolver_serializer',
+  srcs = [
+    'CellPathResolverSerializer.java',
+  ],
+  autodeps = True,
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
 java_immutables_library(
   name = 'types',
   srcs = [
