@@ -19,9 +19,11 @@ package com.facebook.buck.cli;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * In actual build files, Buck requires that build targets are well-formed, which means that they
@@ -59,27 +61,31 @@ import java.util.List;
  */
 class CommandLineBuildTargetNormalizer {
 
-  private final Function<String, String> normalizer;
+  private final Function<String, Set<String>> normalizer;
 
   CommandLineBuildTargetNormalizer(final BuckConfig buckConfig) {
     this.normalizer = arg -> {
-      String aliasValue = buckConfig.getBuildTargetForAliasAsString(arg);
-      if (aliasValue != null) {
-        return aliasValue;
+      Set<String> aliasValues = buckConfig.getBuildTargetForAliasAsString(arg);
+      if (!aliasValues.isEmpty()) {
+        return aliasValues;
       } else {
-        return normalizeBuildTargetIdentifier(arg);
+        return ImmutableSet.of(normalizeBuildTargetIdentifier(arg));
       }
     };
   }
 
-  public String normalize(String argument) {
+  public Set<String> normalize(String argument) {
     return normalizer.apply(argument);
   }
 
   public List<String> normalizeAll(List<String> arguments) {
     // When transforming command-line arguments, first check to see whether it is an alias in the
     // BuckConfig. If so, return the value associated with the alias. Otherwise, try normalize().
-    return Lists.transform(arguments, normalizer);
+    ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
+    for (String argument : arguments) {
+      builder.addAll(normalizer.apply(argument));
+    }
+    return builder.build();
   }
 
   @VisibleForTesting

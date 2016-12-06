@@ -55,18 +55,20 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -109,7 +111,7 @@ public class BuckConfig implements ConfigPathGetter {
 
   private final Config config;
 
-  private final ImmutableMap<String, BuildTarget> aliasToBuildTargetMap;
+  private final ImmutableSetMultimap<String, BuildTarget> aliasToBuildTargetMap;
 
   private final ProjectFilesystem projectFilesystem;
 
@@ -237,20 +239,20 @@ public class BuckConfig implements ConfigPathGetter {
     return Optional.empty();
   }
 
-  @Nullable
-  public String getBuildTargetForAliasAsString(String possiblyFlavoredAlias) {
+  public Set<String> getBuildTargetForAliasAsString(String possiblyFlavoredAlias) {
     String[] parts = possiblyFlavoredAlias.split("#", 2);
     String unflavoredAlias = parts[0];
-    BuildTarget buildTarget = getBuildTargetForAlias(unflavoredAlias);
-    if (buildTarget == null) {
-      return null;
+    Set<BuildTarget> buildTargets = getBuildTargetsForAlias(unflavoredAlias);
+    if (buildTargets.isEmpty()) {
+      return ImmutableSet.of();
     }
     String suffix = parts.length == 2 ? "#" + parts[1] : "";
-    return buildTarget.getFullyQualifiedName() + suffix;
+    return buildTargets.stream()
+        .map(buildTarget -> buildTarget.getFullyQualifiedName() + suffix)
+        .collect(MoreCollectors.toImmutableSet());
   }
 
-  @Nullable
-  public BuildTarget getBuildTargetForAlias(String unflavoredAlias) {
+  public Set<BuildTarget> getBuildTargetsForAlias(String unflavoredAlias) {
     return aliasToBuildTargetMap.get(unflavoredAlias);
   }
 
@@ -266,17 +268,18 @@ public class BuckConfig implements ConfigPathGetter {
     if (targetsToForce.size() == 0) {
       return ImmutableList.of();
     }
-    ImmutableList<BuildTarget> targets = ImmutableList.copyOf(FluentIterable
-        .from(targetsToForce)
-        .transform(
-            input -> {
-              String expandedAlias = getBuildTargetForAliasAsString(input);
-              if (expandedAlias != null) {
-                input = expandedAlias;
-              }
-              return getBuildTargetForFullyQualifiedTarget(input);
-            }));
-    return targets;
+    ImmutableList.Builder<BuildTarget> targets = new ImmutableList.Builder<>();
+    for (String targetOrAlias : targetsToForce) {
+      Set<String> expandedAlias = getBuildTargetForAliasAsString(targetOrAlias);
+      if (expandedAlias.isEmpty()) {
+        targets.add(getBuildTargetForFullyQualifiedTarget(targetOrAlias));
+      } else {
+        for (String target : expandedAlias) {
+          targets.add(getBuildTargetForFullyQualifiedTarget(target));
+        }
+      }
+    }
+    return targets.build();
   }
 
   /**
@@ -381,34 +384,38 @@ public class BuckConfig implements ConfigPathGetter {
    * alias defined earlier in the {@code alias} section. The mapping produced by this method
    * reflects the result of resolving all aliases as values in the {@code alias} section.
    */
-  private ImmutableMap<String, BuildTarget> createAliasToBuildTargetMap(
+  private ImmutableSetMultimap<String, BuildTarget> createAliasToBuildTargetMap(
       ImmutableMap<String, String> rawAliasMap) {
     // We use a LinkedHashMap rather than an ImmutableMap.Builder because we want both (1) order to
     // be preserved, and (2) the ability to inspect the Map while building it up.
-    LinkedHashMap<String, BuildTarget> aliasToBuildTarget = Maps.newLinkedHashMap();
+    SetMultimap<String, BuildTarget> aliasToBuildTarget = LinkedHashMultimap.create();
     for (Map.Entry<String, String> aliasEntry : rawAliasMap.entrySet()) {
       String alias = aliasEntry.getKey();
       validateAliasName(alias);
 
       // Determine whether the mapping is to a build target or to an alias.
-      String value = aliasEntry.getValue();
-      BuildTarget buildTarget;
-      if (isValidAliasName(value)) {
-        buildTarget = aliasToBuildTarget.get(value);
-        if (buildTarget == null) {
-          throw new HumanReadableException("No alias for: %s.", value);
+      List<String> values = Splitter.on(' ').splitToList(aliasEntry.getValue());
+      for (String value : values) {
+        Set<BuildTarget> buildTargets;
+        if (isValidAliasName(value)) {
+          buildTargets = aliasToBuildTarget.get(value);
+          if (buildTargets.isEmpty()) {
+            throw new HumanReadableException("No alias for: %s.", value);
+          }
+        } else if (value.isEmpty()) {
+          continue;
+        } else {
+          // Here we parse the alias values with a BuildTargetParser to be strict. We could be
+          // looser and just grab everything between "//" and ":" and assume it's a valid base path.
+          buildTargets = ImmutableSet.of(BuildTargetParser.INSTANCE.parse(
+              value,
+              BuildTargetPatternParser.fullyQualified(),
+              getCellPathResolver()));
         }
-      } else {
-        // Here we parse the alias values with a BuildTargetParser to be strict. We could be looser
-        // and just grab everything between "//" and ":" and assume it's a valid base path.
-        buildTarget = BuildTargetParser.INSTANCE.parse(
-            value,
-            BuildTargetPatternParser.fullyQualified(),
-            getCellPathResolver());
+        aliasToBuildTarget.putAll(alias, buildTargets);
       }
-      aliasToBuildTarget.put(alias, buildTarget);
     }
-    return ImmutableMap.copyOf(aliasToBuildTarget);
+    return ImmutableSetMultimap.copyOf(aliasToBuildTarget);
   }
 
   /**
@@ -424,7 +431,7 @@ public class BuckConfig implements ConfigPathGetter {
     // Build up the Map with an ordinary HashMap because we need to be able to check whether the Map
     // already contains the key before inserting.
     Map<Path, String> basePathToAlias = Maps.newHashMap();
-    for (Map.Entry<String, BuildTarget> entry : aliasToBuildTargetMap.entrySet()) {
+    for (Map.Entry<String, BuildTarget> entry : aliasToBuildTargetMap.entries()) {
       String alias = entry.getKey();
       BuildTarget buildTarget = entry.getValue();
 

@@ -21,8 +21,10 @@ import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.Optional;
+import java.util.Set;
 
 public class CommandLineTargetNodeSpecParser {
 
@@ -82,10 +84,17 @@ public class CommandLineTargetNodeSpecParser {
     return cellName + "//" + target;
   }
 
-  public TargetNodeSpec parse(CellPathResolver cellNames, String arg) {
-    arg = Optional.ofNullable(config.getBuildTargetForAliasAsString(arg)).orElse(arg);
-    arg = normalizeBuildTargetString(arg);
-    return parser.parse(cellNames, arg);
+  public ImmutableSet<TargetNodeSpec> parse(CellPathResolver cellNames, String arg) {
+    Set<String> resolvedArgs = config.getBuildTargetForAliasAsString(arg);
+    if (resolvedArgs.isEmpty()) {
+      resolvedArgs = ImmutableSet.of(arg);
+    }
+    ImmutableSet.Builder<TargetNodeSpec> specs = new ImmutableSet.Builder<>();
+    for (String resolvedArg : resolvedArgs) {
+      String buildTarget = normalizeBuildTargetString(resolvedArg);
+      specs.add(parser.parse(cellNames, buildTarget));
+    }
+    return specs.build();
   }
 
 }

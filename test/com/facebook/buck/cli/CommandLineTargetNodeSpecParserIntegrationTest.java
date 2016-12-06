@@ -147,4 +147,19 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
         ImmutableSet.copyOf(Splitter.on('\n').omitEmptyStrings().split(result.getStdout())));
   }
 
+  @Test
+  public void multiAlias() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "command_line_parser", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("multialias").assertSuccess();
+    ImmutableSet<BuildTarget> targets =
+        ImmutableSet.of(
+            BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple:simple"),
+            BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple/foo:foo"));
+    for (BuildTarget target : targets) {
+      workspace.getBuildLog().assertTargetBuiltLocally(target.toString());
+    }
+    assertEquals(targets, workspace.getBuildLog().getAllTargets());
+  }
 }

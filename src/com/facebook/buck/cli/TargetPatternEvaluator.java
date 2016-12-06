@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class TargetPatternEvaluator {
   private static final Logger LOG = Logger.get(TargetPatternEvaluator.class);
@@ -100,9 +101,11 @@ public class TargetPatternEvaluator {
       }
 
       // Check if this is an alias.
-      BuildTarget alias = buckConfig.getBuildTargetForAlias(pattern);
-      if (alias != null) {
-        unresolved.put(alias.getFullyQualifiedName(), pattern);
+      Set<BuildTarget> aliasTargets = buckConfig.getBuildTargetsForAlias(pattern);
+      if (!aliasTargets.isEmpty()) {
+        for (BuildTarget alias : aliasTargets) {
+          unresolved.put(alias.getFullyQualifiedName(), pattern);
+        }
       } else {
         // Check if the pattern corresponds to a build target or a path.
         if (pattern.contains("//") ||
@@ -147,7 +150,7 @@ public class TargetPatternEvaluator {
     // The returned list of nodes maintains the spec list ordering.
     List<TargetNodeSpec> specs = new ArrayList<>();
     for (String pattern : patterns) {
-      specs.add(targetNodeSpecParser.parse(rootCell.getCellPathResolver(), pattern));
+      specs.addAll(targetNodeSpecParser.parse(rootCell.getCellPathResolver(), pattern));
     }
     ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
         parser.resolveTargetSpecs(

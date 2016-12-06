@@ -48,8 +48,9 @@ public class SuggestCommand extends AbstractCommand {
     }
 
     String targetToBreakDown = Iterables.getOnlyElement(arguments);
-    final String fullyQualifiedTarget = getCommandLineBuildTargetNormalizer(params.getBuckConfig())
-        .normalize(targetToBreakDown);
+    final String fullyQualifiedTarget = Iterables.getOnlyElement(
+        getCommandLineBuildTargetNormalizer(params.getBuckConfig())
+            .normalize(targetToBreakDown));
 
     JavaBuildGraphProcessor.Processor processor = (graph, javaDepsFinder, executorService) -> {
       BuildTarget buildTarget = params.getBuckConfig().getBuildTargetForFullyQualifiedTarget(

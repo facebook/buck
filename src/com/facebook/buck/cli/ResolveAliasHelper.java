@@ -28,6 +28,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -51,9 +52,9 @@ public class ResolveAliasHelper {
 
     List<String> resolvedAliases = Lists.newArrayList();
     for (String alias : aliases) {
-      String buildTarget;
+      Set<String> buildTargets;
       if (alias.startsWith("//")) {
-        buildTarget = validateBuildTargetForFullyQualifiedTarget(
+        String buildTarget = validateBuildTargetForFullyQualifiedTarget(
             params,
             executor,
             enableProfiling,
@@ -62,13 +63,14 @@ public class ResolveAliasHelper {
         if (buildTarget == null) {
           throw new HumanReadableException("%s is not a valid target.", alias);
         }
+        buildTargets = ImmutableSet.of(buildTarget);
       } else {
-        buildTarget = getBuildTargetForAlias(params.getBuckConfig(), alias);
-        if (buildTarget == null) {
+        buildTargets = getBuildTargetForAlias(params.getBuckConfig(), alias);
+        if (buildTargets.isEmpty()) {
           throw new HumanReadableException("%s is not an alias.", alias);
         }
       }
-      resolvedAliases.add(buildTarget);
+      resolvedAliases.addAll(buildTargets);
     }
 
     for (String resolvedAlias : resolvedAliases) {
@@ -121,9 +123,8 @@ public class ResolveAliasHelper {
     return null;
   }
 
-  /** @return the name of the build target identified by the specified alias or {@code null}. */
-  @Nullable
-  private static String getBuildTargetForAlias(BuckConfig buckConfig, String alias) {
+  /** @return the name of the build target identified by the specified alias or an empty set. */
+  private static Set<String> getBuildTargetForAlias(BuckConfig buckConfig, String alias) {
     return buckConfig.getBuildTargetForAliasAsString(alias);
   }
 

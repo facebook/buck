@@ -24,7 +24,11 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.BuildTargetSpec;
+import com.facebook.buck.parser.TargetNodeSpec;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import org.junit.Test;
 
@@ -34,7 +38,12 @@ public class CommandLineTargetNodeSpecParserTest {
 
   private static final CommandLineTargetNodeSpecParser PARSER =
       new CommandLineTargetNodeSpecParser(
-          FakeBuckConfig.builder().build(),
+          FakeBuckConfig.builder()
+              .setSections(
+                  "[alias]",
+                  "  foo = //some:thing",
+                  "  bar = //some:thing //some/other:thing"
+              ).build(),
           new BuildTargetPatternTargetNodeParser());
 
   @Test
@@ -44,20 +53,37 @@ public class CommandLineTargetNodeSpecParserTest {
         BuildFileSpec.fromRecursivePath(
             Paths.get("hello").toAbsolutePath(),
             root.getRootPath()),
-        PARSER.parse(createCellRoots(root), "//hello/...").getBuildFileSpec());
+        parseOne(createCellRoots(root), "//hello/...").getBuildFileSpec());
     assertEquals(
         BuildFileSpec.fromRecursivePath(
             Paths.get("").toAbsolutePath(),
             root.getRootPath()),
-        PARSER.parse(createCellRoots(root), "//...").getBuildFileSpec());
+        parseOne(createCellRoots(root), "//...").getBuildFileSpec());
     assertEquals(
         BuildFileSpec.fromRecursivePath(
             Paths.get("").toAbsolutePath(),
             root.getRootPath()),
-        PARSER.parse(createCellRoots(root), "...").getBuildFileSpec());
+        parseOne(createCellRoots(root), "...").getBuildFileSpec());
     assertEquals(
         BuildTargetSpec.from(BuildTargetFactory.newInstance("//hello:...")),
-        PARSER.parse(createCellRoots(root), "//hello:..."));
+        parseOne(createCellRoots(root), "//hello:..."));
+  }
+
+  @Test
+  public void aliasExpansion() {
+    assertEquals(
+        ImmutableSet.of(BuildTargetSpec.from(BuildTargetFactory.newInstance("//some:thing"))),
+        PARSER.parse(createCellRoots(null), "foo"));
+    assertEquals(
+        ImmutableSet.of(
+            BuildTargetSpec.from(BuildTargetFactory.newInstance("//some:thing")),
+            BuildTargetSpec.from(BuildTargetFactory.newInstance("//some/other:thing"))),
+        PARSER.parse(createCellRoots(null), "bar"));
+    assertEquals(
+        ImmutableSet.of(
+            BuildTargetSpec.from(BuildTargetFactory.newInstance("//some:thing#fl")),
+            BuildTargetSpec.from(BuildTargetFactory.newInstance("//some/other:thing#fl"))),
+        PARSER.parse(createCellRoots(null), "bar#fl"));
   }
 
   @Test
@@ -66,7 +92,11 @@ public class CommandLineTargetNodeSpecParserTest {
         BuildFileSpec.fromPath(
             Paths.get("hello").toAbsolutePath(),
             Paths.get("").toAbsolutePath()),
-        PARSER.parse(createCellRoots(null), "//hello:").getBuildFileSpec());
+        parseOne(createCellRoots(null), "//hello:").getBuildFileSpec());
+  }
+
+  private TargetNodeSpec parseOne(CellPathResolver cellRoots, String arg) {
+    return Iterables.getOnlyElement(PARSER.parse(cellRoots, arg));
   }
 
   @Test

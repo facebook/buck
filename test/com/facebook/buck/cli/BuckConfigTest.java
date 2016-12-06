@@ -40,6 +40,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
@@ -137,32 +138,52 @@ public class BuckConfigTest {
     Reader reader = new StringReader(Joiner.on('\n').join(
         "[alias]",
         "foo = //java/com/example:foo",
-        "bar = //java/com/example:bar"));
+        "bar = //java/com/example:bar",
+        "baz = //java/com/example:foo //java/com/example:bar",
+        "bash = "));
     BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
         temporaryFolder,
         reader);
 
-    assertEquals("//java/com/example:foo", config.getBuildTargetForAliasAsString("foo"));
-    assertEquals("//java/com/example:bar", config.getBuildTargetForAliasAsString("bar"));
-    // Flavors on alias.
-    assertEquals("//java/com/example:foo#src_jar", config.getBuildTargetForAliasAsString(
-        "foo#src_jar"));
-    assertEquals("//java/com/example:bar#fl1,fl2", config.getBuildTargetForAliasAsString(
-        "bar#fl1,fl2"));
+    assertEquals(
+        ImmutableSet.of("//java/com/example:foo"), config.getBuildTargetForAliasAsString("foo"));
+    assertEquals(
+        ImmutableSet.of("//java/com/example:bar"), config.getBuildTargetForAliasAsString("bar"));
+    assertEquals(
+        ImmutableSet.of(
+            "//java/com/example:foo",
+            "//java/com/example:bar"),
+        config.getBuildTargetForAliasAsString("baz"));
+    assertEquals(ImmutableSet.of(), config.getBuildTargetForAliasAsString("bash"));
 
-    assertNull(
+    // Flavors on alias.
+    assertEquals(
+        ImmutableSet.of("//java/com/example:foo#src_jar"),
+        config.getBuildTargetForAliasAsString("foo#src_jar"));
+    assertEquals(
+        ImmutableSet.of("//java/com/example:bar#fl1,fl2"),
+        config.getBuildTargetForAliasAsString("bar#fl1,fl2"));
+    assertEquals(
+        ImmutableSet.of(
+            "//java/com/example:foo#fl1,fl2",
+            "//java/com/example:bar#fl1,fl2"),
+        config.getBuildTargetForAliasAsString("baz#fl1,fl2"));
+    assertEquals(ImmutableSet.of(), config.getBuildTargetForAliasAsString("bash#fl1,fl2"));
+
+    assertEquals(
         "Invalid alias names, such as build targets, should be tolerated by this method.",
+        ImmutableSet.of(),
         config.getBuildTargetForAliasAsString("//java/com/example:foo"));
-    assertNull(config.getBuildTargetForAliasAsString("baz"));
-    assertNull(config.getBuildTargetForAliasAsString("baz#src_jar"));
+    assertEquals(ImmutableSet.of(), config.getBuildTargetForAliasAsString("notathing"));
+    assertEquals(ImmutableSet.of(), config.getBuildTargetForAliasAsString("notathing#src_jar"));
 
     Reader noAliasesReader = new StringReader("");
     BuckConfig noAliasesConfig = BuckConfigTestUtils.createWithDefaultFilesystem(
         temporaryFolder,
         noAliasesReader);
-    assertNull(noAliasesConfig.getBuildTargetForAliasAsString("foo"));
-    assertNull(noAliasesConfig.getBuildTargetForAliasAsString("bar"));
-    assertNull(noAliasesConfig.getBuildTargetForAliasAsString("baz"));
+    assertEquals(ImmutableSet.of(), noAliasesConfig.getBuildTargetForAliasAsString("foo"));
+    assertEquals(ImmutableSet.of(), noAliasesConfig.getBuildTargetForAliasAsString("bar"));
+    assertEquals(ImmutableSet.of(), noAliasesConfig.getBuildTargetForAliasAsString("baz"));
   }
 
   @Test
@@ -195,7 +216,7 @@ public class BuckConfigTest {
   public void testEmptyConfig() {
     BuckConfig emptyConfig = FakeBuckConfig.builder().build();
     assertEquals(ImmutableMap.<String, String>of(), emptyConfig.getEntriesForSection("alias"));
-    assertNull(emptyConfig.getBuildTargetForAliasAsString("fb4a"));
+    assertEquals(ImmutableSet.of(), emptyConfig.getBuildTargetForAliasAsString("fb4a"));
     assertEquals(ImmutableMap.<Path, String>of(), emptyConfig.getBasePathToAliasMap());
   }
 
@@ -237,12 +258,20 @@ public class BuckConfigTest {
     BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
         temporaryFolder,
         reader);
-    assertEquals("//java/com/example:foo", config.getBuildTargetForAliasAsString("foo"));
-    assertEquals("//java/com/example:bar", config.getBuildTargetForAliasAsString("bar"));
-    assertEquals("//java/com/example:foo", config.getBuildTargetForAliasAsString("foo_codename"));
-    assertEquals("//java/com/example:foo", config.getBuildTargetForAliasAsString("automation_foo"));
-    assertEquals("//java/com/example:bar", config.getBuildTargetForAliasAsString("automation_bar"));
-    assertNull(config.getBuildTargetForAliasAsString("baz"));
+    assertEquals(
+        ImmutableSet.of("//java/com/example:foo"), config.getBuildTargetForAliasAsString("foo"));
+    assertEquals(
+        ImmutableSet.of("//java/com/example:bar"), config.getBuildTargetForAliasAsString("bar"));
+    assertEquals(
+        ImmutableSet.of("//java/com/example:foo"),
+        config.getBuildTargetForAliasAsString("foo_codename"));
+    assertEquals(
+        ImmutableSet.of("//java/com/example:foo"),
+        config.getBuildTargetForAliasAsString("automation_foo"));
+    assertEquals(
+        ImmutableSet.of("//java/com/example:bar"),
+        config.getBuildTargetForAliasAsString("automation_bar"));
+    assertEquals(ImmutableSet.of(), config.getBuildTargetForAliasAsString("baz"));
   }
 
   @Test
