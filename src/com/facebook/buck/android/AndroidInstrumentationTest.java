@@ -46,6 +46,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.PackagedResource;
 import com.google.common.base.Preconditions;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -54,6 +55,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -143,14 +145,35 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
       throw new HumanReadableException("Unable to get connected device.");
     }
 
-    steps.add(getInstrumentationStep(
+    steps.add(
+        getInstrumentationStep(
             executionContext.getPathToAdbExecutable(),
             Optional.of(getProjectFilesystem().resolve(pathToTestOutput)),
             Optional.of(device.getSerialNumber()),
             Optional.empty(),
+            getFilterString(options),
             Optional.empty()));
 
     return steps.build();
+  }
+
+  @VisibleForTesting
+  static Optional<String> getFilterString(TestRunningOptions options) {
+    List<String> rawSelectors = options.getTestSelectorList().getRawSelectors();
+    if (rawSelectors.size() == 1) { // multiple selectors not supported
+      return Optional.of(stripRegexs(rawSelectors.get(0)));
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Buck adds some regex support to TestSelectors. Instrumentation
+   * tests don't support that so let's strip that and make it a plan
+   * Class#method string filter.
+   */
+  private static String stripRegexs(String selector) {
+    return selector.replaceAll("[$]", "")
+        .replaceAll("#$", "");
   }
 
   private InstrumentationStep getInstrumentationStep(
@@ -158,6 +181,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
       Optional<Path> directoryForTestResults,
       Optional<String> deviceSerial,
       Optional<Path> instrumentationApkPath,
+      Optional<String> classFilterArg,
       Optional<Path> apkUnderTestPath) {
     String packageName = AdbHelper.tryToExtractPackageNameFromManifest(apk);
     String testRunner = AdbHelper.tryToExtractInstrumentationTestRunnerFromManifest(apk);
@@ -188,6 +212,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
         .setTestRunner(testRunner)
         .setTestRunnerClasspath(TESTRUNNER_CLASSES)
         .setDdmlibJarPath(ddmlib)
+        .setTestFilter(classFilterArg)
         .setKxmlJarPath(kxml2)
         .build();
 
@@ -286,6 +311,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRule
         Optional.empty(),
         Optional.empty(),
         Optional.of(toPath(apk)),
+        Optional.empty(),
         apkUnderTestPath);
 
     return ExternalTestRunnerTestSpec.builder()

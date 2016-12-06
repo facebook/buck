@@ -42,6 +42,7 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
   abstract Optional<String> getDeviceSerial();
   abstract Optional<Path> getInstrumentationApkPath();
   abstract Optional<Path> getApkUnderTestPath();
+  abstract Optional<String> getTestFilter();
 
   /**
    * @return The filesystem path to the compiled Buck test runner classes.
@@ -76,6 +77,11 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
     args.add("--test-package-name", getTestPackage());
     args.add("--test-runner", getTestRunner());
     args.add("--adb-executable-path", getPathToAdbExecutable());
+
+    if (getTestFilter().isPresent()) {
+      args.add("--extra-instrumentation-argument",
+               "class=" + getTestFilter().get());
+    }
 
     if (getApkUnderTestPath().isPresent()) {
       args.add("--apk-under-test-path", getApkUnderTestPath().get().toFile().getAbsolutePath());
