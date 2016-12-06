@@ -39,6 +39,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.nio.file.Path;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Work out how to invoke the Rust compiler, rustc.
@@ -75,6 +77,8 @@ abstract class RustCompile extends AbstractBuildRule {
   private final Linker.LinkableDepType linkStyle;
   @AddToRuleKey
   private final String crate;
+  @AddToRuleKey
+  private final Optional<SourcePath> crateRoot;
 
   private final ImmutableSet<Path> nativePaths;
 
@@ -85,6 +89,7 @@ abstract class RustCompile extends AbstractBuildRule {
       BuildRuleParams params,
       SourcePathResolver resolver,
       String crate,
+      Optional<SourcePath> crateRoot,
       ImmutableSet<SourcePath> srcs,
       ImmutableList<String> flags,
       ImmutableSet<String> features,
@@ -103,6 +108,7 @@ abstract class RustCompile extends AbstractBuildRule {
         .build();
     this.features = features;
     this.crate = crate;
+    this.crateRoot = crateRoot;
     this.output = output;
     this.compiler = compiler;
     this.linker = linker;
@@ -177,21 +183,26 @@ abstract class RustCompile extends AbstractBuildRule {
    *
    * @return The source filename for the top-level module.
    */
-  protected abstract String getDefaultSource();
+  protected abstract ImmutableSet<String> getDefaultSources();
 
   @VisibleForTesting
   Path getCrateRoot() {
     SourcePathResolver resolver = getResolver();
+    Optional<Path> crateRoot = this.crateRoot.map(resolver::getRelativePath);
+    String crateName = String.format("%s.rs", getCrateName());
     ImmutableList<Path> candidates = srcs.stream()
         .map(resolver::getRelativePath)
-        .filter(p -> p.endsWith(getDefaultSource()) ||
-                     p.endsWith(String.format("%s.rs", crate)))
+        .filter(Objects::nonNull)
+        .filter(p -> crateRoot.map(p::equals).orElse(false) ||
+                     p.endsWith(crateName) ||
+                     getDefaultSources().contains(p.getFileName().toString()))
         .collect(MoreCollectors.toImmutableList());
+
     if (candidates.size() != 1) {
       throw new HumanReadableException(
           "srcs of %s must contain either %s or %s.rs!",
           getBuildTarget().getFullyQualifiedName(),
-          getDefaultSource(),
+          getDefaultSources(),
           crate);
     }
     // We end up creating a symlink tree to ensure that the crate only uses the files that it

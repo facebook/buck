@@ -26,9 +26,10 @@ Note: Buck is currently tested with (and therefore supports) version 1.11.0 of R
     The set of Rust source files to be compiled by this rule.
   </p>
   <p>
-    One of these files must be named <code>{lb}name{rb}.rs</code>,{sp}
-    <code>main.rs</code> (for binaries) or <code>lib.rs</code> (for libraries). This
-    file will be passed to <code>rustc</code> as the crate root.
+    One of the source files is the root module of the crate. By default this is{sp}
+    <code>lib.rs</code> for libraries, <code>main.rs</code> for executables, or{sp}
+    the crate's name with <code>.rs</code> appended. This can be overridden with the
+    <code>crate_root</code> rule parameter.
   </p>
   {/param}
 {/call}
@@ -71,6 +72,19 @@ Note: Buck is currently tested with (and therefore supports) version 1.11.0 of R
   <p>
     Set the generated crate name (for libraries) or executable name (for binaries), independent
     of the rule name. Defaults to the rule name.
+  </p>
+ {/param}
+{/call}
+{/template}
+
+/***/
+{template .crate_root}
+{call buck.arg}
+  {param name : 'crate_root' /}
+  {param desc}
+  <p>
+    Set the name of the top-level source file for the crate, which can be used to override the
+    default (see <code>srcs</code>).
   </p>
  {/param}
 {/call}

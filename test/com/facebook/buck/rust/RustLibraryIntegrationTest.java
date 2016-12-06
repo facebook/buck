@@ -119,6 +119,14 @@ public class RustLibraryIntegrationTest {
         Matchers.containsString("Unrecognized option: 'this-is-a-bad-option'."));
   }
 
+  @Test
+  public void libraryCrateRoot() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//messenger2").assertSuccess();
+  }
 
   @Test
   public void binaryWithLibrary() throws IOException, InterruptedException {

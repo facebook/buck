@@ -41,6 +41,7 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class RustCompileTest {
   @Test(expected = HumanReadableException.class)
@@ -115,6 +116,7 @@ public class RustCompileTest {
                   TargetGraph.EMPTY,
                   new DefaultTargetNodeToBuildRuleTransformer())),
           "myname",
+          /* crateRoot */ Optional.empty(),
           srcs,
           /* flags */ ImmutableList.of(),
           /* features */ ImmutableSortedSet.of(),
@@ -127,8 +129,8 @@ public class RustCompileTest {
     }
 
     @Override
-    protected String getDefaultSource() {
-      return "main.rs";
+    protected ImmutableSet<String> getDefaultSources() {
+      return ImmutableSet.of("main.rs");
     }
   }
 }

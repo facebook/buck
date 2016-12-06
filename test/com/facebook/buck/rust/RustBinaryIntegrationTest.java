@@ -100,6 +100,24 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void simpleCrateRootBinary() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple_binary", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:xyzzy_crate_root").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:xyzzy_crate_root");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result = workspace.runCommand(
+        workspace.resolve("buck-out/gen/xyzzy_crate_root/xyzzy_crate_root").toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), Matchers.containsString("Another top-level source"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
   public void binaryWithGeneratedSource() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "binary_with_generated", tmp);

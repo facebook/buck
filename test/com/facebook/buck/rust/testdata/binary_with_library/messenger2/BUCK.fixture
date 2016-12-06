@@ -1,8 +1,9 @@
 rust_library(
   name = 'messenger2',
   crate = 'messenger',
+  crate_root = 'messenger-top.rs',
   srcs = [
-    'lib.rs',
+    'messenger-top.rs',
   ],
   visibility = [
     'PUBLIC',

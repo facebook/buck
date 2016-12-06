@@ -30,15 +30,19 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+
+import java.util.Optional;
+
 
 
 public class RustBinary extends RustCompile implements BinaryBuildRule {
-
   public RustBinary(
       BuildRuleParams params,
       SourcePathResolver resolver,
       String crate,
+      Optional<SourcePath> crateRoot,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<String> features,
       ImmutableList<String> rustcFlags,
@@ -51,6 +55,7 @@ public class RustBinary extends RustCompile implements BinaryBuildRule {
         RustLinkables.addNativeDependencies(params, resolver, cxxPlatform, linkStyle),
         resolver,
         crate,
+        crateRoot,
         srcs,
         ImmutableList.<String>builder()
             .add("--crate-type", "bin")
@@ -69,8 +74,8 @@ public class RustBinary extends RustCompile implements BinaryBuildRule {
   }
 
   @Override
-  protected String getDefaultSource() {
-    return "main.rs";
+  protected ImmutableSet<String> getDefaultSources() {
+    return ImmutableSet.of("main.rs");
   }
 
   @Override

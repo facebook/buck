@@ -78,6 +78,7 @@ public class RustLibraryDescription implements
         params,
         new SourcePathResolver(resolver),
         args.crate.orElse(params.getBuildTarget().getShortName()),
+        args.crateRoot,
         ImmutableSortedSet.copyOf(args.srcs),
         ImmutableSortedSet.copyOf(args.features),
         rustcArgs.build(),
@@ -111,5 +112,6 @@ public class RustLibraryDescription implements
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public Optional<Linker.LinkableDepType> linkStyle;
     public Optional<String> crate;
+    public Optional<SourcePath> crateRoot;
   }
 }

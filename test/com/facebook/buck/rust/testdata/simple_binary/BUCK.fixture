@@ -21,6 +21,14 @@ rust_binary(
   ],
 )
 
+rust_binary(
+  name = 'xyzzy_crate_root',
+  crate_root = 'xyzzy-top.rs',
+  srcs = [
+    'xyzzy-top.rs'
+  ],
+)
+
 genrule(
   name = 'generated_linker',
   srcs = [ 'linker.sh' ],
