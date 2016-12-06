@@ -422,6 +422,8 @@ public class AppleCxxPlatforms {
         .setActool(actool)
         .setIbtool(ibtool)
         .setMomc(momc)
+        .setCopySceneKitAssets(
+            getOptionalTool("copySceneKitAssets", toolSearchPaths, executableFinder, version))
         .setXctest(xctest)
         .setDsymutil(dsymutil)
         .setLipo(lipo)

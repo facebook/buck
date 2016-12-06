@@ -196,6 +196,7 @@ public final class FileTypes {
           .put("rtf", "text.rtf")
           .put("rtfd", "wrapper.rtfd")
           .put("s", "sourcecode.asm")
+          .put("scnassets", "wrapper.scnassets")
           .put("scriptSuite", "text.plist.scriptSuite")
           .put("scriptTerminology", "text.plist.scriptTerminology")
           .put("sh", "text.script.sh")
@@ -255,7 +256,8 @@ public final class FileTypes {
   public static final ImmutableSet<String> EXPLICIT_FILE_TYPE_BROKEN_IDENTIFIERS =
     ImmutableSet.of(
         "file.xib",
-        "file.storyboard"
+        "file.storyboard",
+        "wrapper.scnassets"
     );
 
 }

@@ -307,9 +307,11 @@ public final class AppleBuildRules {
         .toSet();
   }
 
-  public static <T> ImmutableSet<CoreDataModelDescription.Arg> collectTransitiveCoreDataModels(
+  @SuppressWarnings("unchecked")
+  public static <T, U extends Description<T>> ImmutableSet<T> collectTransitiveBuildRules(
+      Class<U> descriptionClass,
       TargetGraph targetGraph,
-      Collection<TargetNode<T, ?>> targetNodes) {
+      Collection<TargetNode<?, ?>> targetNodes) {
     return targetNodes
         .stream()
         .flatMap(
@@ -317,10 +319,10 @@ public final class AppleBuildRules {
                 newRecursiveRuleDependencyTransformer(
                     targetGraph,
                     RecursiveDependenciesMode.COPYING,
-                    ImmutableSet.of(Description.getBuildRuleType(CoreDataModelDescription.class)))
-                .apply(targetNode)
-                .spliterator(), false))
-        .map(input -> (CoreDataModelDescription.Arg) input.getConstructorArg())
+                    ImmutableSet.of(Description.getBuildRuleType(descriptionClass)))
+                    .apply(targetNode)
+                    .spliterator(), false))
+        .map(input -> (T) input.getConstructorArg())
         .collect(MoreCollectors.toImmutableSet());
   }
 

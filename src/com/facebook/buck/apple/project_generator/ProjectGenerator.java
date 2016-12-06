@@ -37,6 +37,7 @@ import com.facebook.buck.apple.AppleResources;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.HasAppleBundleFields;
+import com.facebook.buck.apple.SceneKitAssetsDescription;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.clang.HeaderMap;
@@ -1430,6 +1431,7 @@ public class ProjectGenerator {
     if (appleTargetNode.isPresent()) {
       // Use Core Data models from immediate dependencies only.
       addCoreDataModelsIntoTarget(appleTargetNode.get(), targetGroup);
+      addSceneKitAssetsIntoTarget(appleTargetNode.get(), targetGroup);
     }
 
     return target;
@@ -1546,9 +1548,30 @@ public class ProjectGenerator {
       PBXGroup targetGroup) throws IOException {
     addCoreDataModelBuildPhase(
         targetGroup,
-        AppleBuildRules.collectTransitiveCoreDataModels(
+        AppleBuildRules.collectTransitiveBuildRules(
+            CoreDataModelDescription.class,
             targetGraph,
             ImmutableList.of(targetNode)));
+  }
+
+  private void addSceneKitAssetsIntoTarget(
+      TargetNode<? extends CxxLibraryDescription.Arg, ?> targetNode,
+      PBXGroup targetGroup) throws IOException {
+    ImmutableSet<SceneKitAssetsDescription.Arg> allSceneKitAssets =
+        AppleBuildRules.collectTransitiveBuildRules(
+            SceneKitAssetsDescription.class,
+            targetGraph,
+            ImmutableList.of(targetNode));
+
+    for (final SceneKitAssetsDescription.Arg sceneKitAssets : allSceneKitAssets) {
+      PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
+
+      resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
+          new SourceTreePath(
+              PBXReference.SourceTree.SOURCE_ROOT,
+              pathRelativizer.outputDirToRootRelative(sceneKitAssets.path),
+              Optional.empty()));
+    }
   }
 
   private Function<String, Path> getConfigurationNameToXcconfigPath(final BuildTarget buildTarget) {

@@ -404,7 +404,8 @@ public class AppleDescriptions {
     TargetNode<?, ?> targetNode = targetGraph.get(params.getBuildTarget());
 
     ImmutableSet<CoreDataModelDescription.Arg> coreDataModelArgs =
-        AppleBuildRules.collectTransitiveCoreDataModels(targetGraph, ImmutableList.of(targetNode));
+        AppleBuildRules.collectTransitiveBuildRules(
+            CoreDataModelDescription.class, targetGraph, ImmutableList.of(targetNode));
 
     BuildRuleParams coreDataModelParams = params.copyWithChanges(
         params.getBuildTarget().withAppendedFlavors(CoreDataModel.FLAVOR),
@@ -420,6 +421,35 @@ public class AppleDescriptions {
           appleCxxPlatform,
           moduleName,
           coreDataModelArgs.stream()
+              .map(input -> new PathSourcePath(params.getProjectFilesystem(), input.path))
+              .collect(MoreCollectors.toImmutableSet())));
+    }
+  }
+
+  public static Optional<SceneKitAssets> createBuildRulesForSceneKitAssetsDependencies(
+      TargetGraph targetGraph,
+      BuildRuleParams params,
+      SourcePathResolver sourcePathResolver,
+      AppleCxxPlatform appleCxxPlatform) {
+    TargetNode<?, ?> targetNode = targetGraph.get(params.getBuildTarget());
+
+    ImmutableSet<SceneKitAssetsDescription.Arg> sceneKitAssetsArgs =
+        AppleBuildRules.collectTransitiveBuildRules(
+            SceneKitAssetsDescription.class, targetGraph, ImmutableList.of(targetNode));
+
+    BuildRuleParams sceneKitAssetsParams = params.copyWithChanges(
+        params.getBuildTarget().withAppendedFlavors(SceneKitAssets.FLAVOR),
+        Suppliers.ofInstance(ImmutableSortedSet.of()),
+        Suppliers.ofInstance(ImmutableSortedSet.of()));
+
+    if (sceneKitAssetsArgs.isEmpty()) {
+      return Optional.empty();
+    } else {
+      return Optional.of(new SceneKitAssets(
+          sceneKitAssetsParams,
+          sourcePathResolver,
+          appleCxxPlatform,
+          sceneKitAssetsArgs.stream()
               .map(input -> new PathSourcePath(params.getProjectFilesystem(), input.path))
               .collect(MoreCollectors.toImmutableSet())));
     }
@@ -607,6 +637,13 @@ public class AppleDescriptions {
             AppleBundle.getBinaryName(params.getBuildTarget(), productName),
             appleCxxPlatform);
 
+    Optional<SceneKitAssets> sceneKitAssets =
+        createBuildRulesForSceneKitAssetsDependencies(
+            targetGraph,
+            paramsWithoutBundleSpecificFlavors,
+            sourcePathResolver,
+            appleCxxPlatform);
+
     // TODO(bhamiltoncx): Sort through the changes needed to make project generation work with
     // binary being optional.
     BuildRule flavoredBinaryRule = getFlavoredBinaryRule(
@@ -672,6 +709,7 @@ public class AppleDescriptions {
             .add(targetDebuggableBinaryRule)
             .addAll(OptionalCompat.asSet(assetCatalog))
             .addAll(OptionalCompat.asSet(coreDataModel))
+            .addAll(OptionalCompat.asSet(sceneKitAssets))
             .addAll(
                 BuildRules.toBuildRulesFor(
                     params.getBuildTarget(),
@@ -704,6 +742,7 @@ public class AppleDescriptions {
         appleCxxPlatform,
         assetCatalog,
         coreDataModel,
+        sceneKitAssets,
         tests,
         codeSignIdentityStore,
         provisioningProfileStore,

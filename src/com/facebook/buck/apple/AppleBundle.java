@@ -153,6 +153,7 @@ public class AppleBundle
 
   private final Optional<AppleAssetCatalog> assetCatalog;
   private final Optional<CoreDataModel> coreDataModel;
+  private final Optional<SceneKitAssets> sceneKitAssets;
   private final Optional<String> platformBuildVersion;
   private final Optional<String> xcodeVersion;
   private final Optional<String> xcodeBuildVersion;
@@ -183,6 +184,7 @@ public class AppleBundle
       AppleCxxPlatform appleCxxPlatform,
       Optional<AppleAssetCatalog> assetCatalog,
       Optional<CoreDataModel> coreDataModel,
+      Optional<SceneKitAssets> sceneKitAssets,
       Set<BuildTarget> tests,
       CodeSignIdentityStore codeSignIdentityStore,
       ProvisioningProfileStore provisioningProfileStore,
@@ -204,6 +206,7 @@ public class AppleBundle
     this.ibtool = appleCxxPlatform.getIbtool();
     this.assetCatalog = assetCatalog;
     this.coreDataModel = coreDataModel;
+    this.sceneKitAssets = sceneKitAssets;
     this.binaryName = getBinaryName(getBuildTarget(), this.productName);
     this.bundleRoot =
         getBundleRoot(getProjectFilesystem(), getBuildTarget(), this.binaryName, this.extension);
@@ -302,7 +305,6 @@ public class AppleBundle
         new MakeCleanDirectoryStep(getProjectFilesystem(), bundleRoot));
 
     Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
-
     if (assetCatalog.isPresent()) {
       stepsBuilder.add(new MkdirStep(getProjectFilesystem(), resourcesDestinationPath));
       Path bundleDir = assetCatalog.get().getOutputDir();
@@ -320,6 +322,16 @@ public class AppleBundle
           CopyStep.forDirectory(
               getProjectFilesystem(),
               coreDataModel.get().getOutputDir(),
+              resourcesDestinationPath,
+              CopyStep.DirectoryMode.CONTENTS_ONLY));
+    }
+
+    if (sceneKitAssets.isPresent()) {
+      stepsBuilder.add(new MkdirStep(getProjectFilesystem(), resourcesDestinationPath));
+      stepsBuilder.add(
+          CopyStep.forDirectory(
+              getProjectFilesystem(),
+              sceneKitAssets.get().getPathToOutput(),
               resourcesDestinationPath,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }

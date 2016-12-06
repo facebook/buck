@@ -12,7 +12,7 @@ core_data_model(
 apple_bundle(
   name = 'DemoApp',
   binary = ':DemoAppBinary',
-  deps = [':DemoAppCoreDataModel'],
+  deps = [':DemoAppCoreDataModel', ':DemoAppSceneKitAssets'],
   extension = 'app',
   info_plist = 'Info.plist',
 )
@@ -20,6 +20,11 @@ apple_bundle(
 core_data_model(
   name = 'DemoAppCoreDataModel2',
   path = 'Model2.xcdatamodeld',
+)
+
+scene_kit_assets(
+  name = 'DemoAppSceneKitAssets',
+  path = 'DemoApp.scnassets'
 )
 
 apple_binary(

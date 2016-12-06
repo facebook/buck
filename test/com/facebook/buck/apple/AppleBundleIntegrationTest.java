@@ -920,6 +920,7 @@ public class AppleBundleIntegrationTest {
     assertTrue(Files.exists(workspace.getPath(appPath.resolve("AppViewController.nib"))));
     assertTrue(Files.exists(workspace.getPath(appPath.resolve("Model.momd"))));
     assertTrue(Files.exists(workspace.getPath(appPath.resolve("Model2.momd"))));
+    assertTrue(Files.exists(workspace.getPath(appPath.resolve("DemoApp.scnassets"))));
   }
 
   @Test

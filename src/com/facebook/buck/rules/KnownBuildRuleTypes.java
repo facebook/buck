@@ -57,6 +57,7 @@ import com.facebook.buck.apple.CodeSignIdentityStore;
 import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.ProvisioningProfileStore;
+import com.facebook.buck.apple.SceneKitAssetsDescription;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
@@ -783,6 +784,7 @@ public class KnownBuildRuleTypes {
         defaultJavaOptionsForTests,
         defaultTestRuleTimeoutMs,
         defaultCxxPlatform));
+    builder.register(new SceneKitAssetsDescription());
     builder.register(new ShBinaryDescription());
     builder.register(new ShTestDescription(defaultTestRuleTimeoutMs));
     ThriftBuckConfig thriftBuckConfig = new ThriftBuckConfig(config);
