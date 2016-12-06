@@ -2,6 +2,7 @@ java_immutables_library(
   name = 'haskell',
   srcs = glob(['*.java']),
   immutable_types = [
+    'HaskellVersion',
     'HaskellCompileInput',
   ],
   autodeps = True,

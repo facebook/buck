@@ -37,7 +37,9 @@ public class HaskellBuckConfig implements HaskellConfig {
   private final BuckConfig delegate;
   private final ExecutableFinder finder;
 
-  public HaskellBuckConfig(BuckConfig delegate, ExecutableFinder finder) {
+  public HaskellBuckConfig(
+      BuckConfig delegate,
+      ExecutableFinder finder) {
     this.delegate = delegate;
     this.finder = finder;
   }
@@ -74,6 +76,15 @@ public class HaskellBuckConfig implements HaskellConfig {
     throw new HumanReadableException(
         "No Haskell compiler found in .buckconfig (%s.compiler) or on system",
         SECTION);
+  }
+
+  private static final Integer DEFAULT_MAJOR_VERSION = 7;
+
+  @Override
+  public HaskellVersion getHaskellVersion() {
+    Optional<Integer> majorVersion =
+        delegate.getInteger(SECTION, "compiler_major_version");
+    return HaskellVersion.of(majorVersion.orElse(DEFAULT_MAJOR_VERSION));
   }
 
   @Override

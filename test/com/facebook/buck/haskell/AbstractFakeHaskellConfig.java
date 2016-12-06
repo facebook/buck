@@ -37,6 +37,12 @@ abstract class AbstractFakeHaskellConfig implements HaskellConfig {
   }
 
   @Override
+  @Value.Default
+  public HaskellVersion getHaskellVersion() {
+    return HaskellVersion.of(7);
+  }
+
+  @Override
   public abstract ImmutableList<String> getCompilerFlags();
 
   @Override

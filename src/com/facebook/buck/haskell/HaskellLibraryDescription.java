@@ -250,6 +250,7 @@ public class HaskellLibraryDescription implements
         baseParams,
         pathResolver,
         haskellConfig.getPackager().resolve(resolver),
+        haskellConfig.getHaskellVersion(),
         getPackageInfo(target),
         depPackages,
         compileRule.getModules(),

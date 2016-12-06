@@ -27,6 +27,11 @@ public interface HaskellConfig {
   ToolProvider getCompiler();
 
   /**
+   * @return the {@link HaskellVersion} for the haskell compiler.
+   */
+  HaskellVersion getHaskellVersion();
+
+  /**
    * @return a list of flags to use for compilation.
    */
   ImmutableList<String> getCompilerFlags();

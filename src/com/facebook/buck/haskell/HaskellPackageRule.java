@@ -54,6 +54,8 @@ public class HaskellPackageRule extends AbstractBuildRule {
   @AddToRuleKey
   private final Tool ghcPkg;
 
+  private final HaskellVersion haskellVersion;
+
   @AddToRuleKey
   private final HaskellPackageInfo packageInfo;
 
@@ -73,6 +75,7 @@ public class HaskellPackageRule extends AbstractBuildRule {
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       Tool ghcPkg,
+      HaskellVersion haskellVersion,
       HaskellPackageInfo packageInfo,
       ImmutableSortedMap<String, HaskellPackage> depPackages,
       ImmutableSortedSet<String> modules,
@@ -80,6 +83,7 @@ public class HaskellPackageRule extends AbstractBuildRule {
       ImmutableSortedSet<SourcePath> interfaces) {
     super(buildRuleParams, resolver);
     this.ghcPkg = ghcPkg;
+    this.haskellVersion = haskellVersion;
     this.packageInfo = packageInfo;
     this.depPackages = depPackages;
     this.modules = modules;
@@ -92,6 +96,7 @@ public class HaskellPackageRule extends AbstractBuildRule {
       BuildRuleParams baseParams,
       final SourcePathResolver resolver,
       final Tool ghcPkg,
+      HaskellVersion haskellVersion,
       HaskellPackageInfo packageInfo,
       final ImmutableSortedMap<String, HaskellPackage> depPackages,
       ImmutableSortedSet<String> modules,
@@ -113,6 +118,7 @@ public class HaskellPackageRule extends AbstractBuildRule {
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         resolver,
         ghcPkg,
+        haskellVersion,
         packageInfo,
         depPackages,
         modules,
@@ -130,6 +136,10 @@ public class HaskellPackageRule extends AbstractBuildRule {
     entries.put("name", packageInfo.getName());
     entries.put("version", packageInfo.getVersion());
     entries.put("id", packageInfo.getIdentifier());
+
+    if (haskellVersion.getMajorVersion() >= 8) {
+      entries.put("key", packageInfo.getIdentifier());
+    }
 
     entries.put("exposed", "True");
     entries.put("exposed-modules", Joiner.on(' ').join(modules));

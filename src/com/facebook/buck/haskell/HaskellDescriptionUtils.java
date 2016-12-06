@@ -150,6 +150,7 @@ public class HaskellDescriptionUtils {
         baseParams,
         pathResolver,
         haskellConfig.getCompiler().resolve(resolver),
+        haskellConfig.getHaskellVersion(),
         compileFlags,
         ppFlags,
         cxxPlatform,

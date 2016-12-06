@@ -64,6 +64,8 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
   @AddToRuleKey
   private final Tool compiler;
 
+  private final HaskellVersion haskellVersion;
+
   @AddToRuleKey
   private final ImmutableList<String> flags;
 
@@ -109,6 +111,7 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       Tool compiler,
+      HaskellVersion haskellVersion,
       ImmutableList<String> flags,
       PreprocessorFlags ppFlags,
       CxxPlatform cxxPlatform,
@@ -122,6 +125,7 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
       Preprocessor preprocessor) {
     super(buildRuleParams, resolver);
     this.compiler = compiler;
+    this.haskellVersion = haskellVersion;
     this.flags = flags;
     this.ppFlags = ppFlags;
     this.cxxPlatform = cxxPlatform;
@@ -140,6 +144,7 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
       BuildRuleParams baseParams,
       final SourcePathResolver resolver,
       final Tool compiler,
+      HaskellVersion haskellVersion,
       ImmutableList<String> flags,
       final PreprocessorFlags ppFlags,
       CxxPlatform cxxPlatform,
@@ -169,6 +174,7 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         resolver,
         compiler,
+        haskellVersion,
         flags,
         ppFlags,
         cxxPlatform,
@@ -208,9 +214,13 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
   private Iterable<String> getPackageNameArgs() {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     if (packageInfo.isPresent()) {
-      builder.add(
-          "-package-name",
-          packageInfo.get().getName() + '-' + packageInfo.get().getVersion());
+      if (haskellVersion.getMajorVersion() >= 8) {
+        builder.add("-package-name", packageInfo.get().getName());
+      } else {
+        builder.add(
+            "-package-name",
+            packageInfo.get().getName() + '-' + packageInfo.get().getVersion());
+      }
     }
     return builder.build();
   }
