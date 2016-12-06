@@ -293,6 +293,10 @@ public class Cell {
     return knownRoots;
   }
 
+  public void ensureConcreteFilesExist() {
+    filesystem.ensureConcreteFilesExist();
+  }
+
   @SuppressWarnings("serial")
   public static class MissingBuildFileException extends BuildTargetException {
     public MissingBuildFileException(BuildTarget buildTarget, BuckConfig buckConfig) {

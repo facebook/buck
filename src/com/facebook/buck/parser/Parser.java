@@ -371,6 +371,7 @@ public class Parser {
           graph,
           ImmutableMap.copyOf(index),
           ImmutableSet.copyOf(groups.values()));
+      state.ensureConcreteFilesExist();
       return targetGraph;
     } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
       throw new HumanReadableException(e.getMessage());

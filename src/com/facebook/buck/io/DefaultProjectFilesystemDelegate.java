@@ -40,6 +40,11 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
   }
 
   @Override
+  public void ensureConcreteFilesExist() {
+    return;
+  }
+
+  @Override
   public Sha1HashCode computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException {
     final Path fileToHash = getPathForRelativePath(pathRelativeToProjectRootOrJustAbsolute);
 

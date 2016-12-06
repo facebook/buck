@@ -51,6 +51,11 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   }
 
   @Override
+  public void ensureConcreteFilesExist() {
+    return;
+  }
+
+  @Override
   public Sha1HashCode computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException {
     Path fileToHash = getPathForRelativePath(pathRelativeToProjectRootOrJustAbsolute);
     return computeSha1(fileToHash, /* retryWithRealPathIfEdenError */ true);

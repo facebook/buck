@@ -337,6 +337,12 @@ public class PerBuildState implements AutoCloseable {
         ignoreBuckAutodepsFiles);
   }
 
+  public void ensureConcreteFilesExist() {
+    for (Cell eachCell : cells.values()) {
+      eachCell.ensureConcreteFilesExist();
+    }
+  }
+
   @Override
   public void close() throws BuildFileParseException {
     stdout.close();

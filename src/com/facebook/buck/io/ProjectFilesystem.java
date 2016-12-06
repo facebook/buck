@@ -343,6 +343,14 @@ public class ProjectFilesystem {
   }
 
   /**
+   * Hook for virtual filesystems to materialise virtual files as Buck will need to be able to read
+   * them past this point.
+   */
+  public void ensureConcreteFilesExist() {
+    delegate.ensureConcreteFilesExist();
+  }
+
+  /**
    * @return the specified {@code path} resolved against {@link #getRootPath()} to an absolute path.
    */
   public Path resolve(Path path) {
