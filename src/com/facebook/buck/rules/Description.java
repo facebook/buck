@@ -52,8 +52,9 @@ public interface Description<T> {
     return BUILD_RULE_TYPES_BY_CLASS.getUnchecked(descriptionClass);
   }
 
+  @SuppressWarnings("unchecked")
   static BuildRuleType getBuildRuleType(Description<?> description) {
-    return getBuildRuleType(description.getClass().getSimpleName());
+    return getBuildRuleType((Class<? extends Description<?>>) description.getClass());
   }
 
   static BuildRuleType getBuildRuleType(String descriptionClassName) {
