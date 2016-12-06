@@ -91,7 +91,7 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
         postprocessClassesCommands,
         outputDirectory,
         declaredClasspathEntries,
-        getBootClasspath())));
+        getBootClasspath(context))));
 
     steps.add(
         new JarDirectoryStep(
@@ -108,7 +108,8 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
    * This can be used make the bootclasspath if available, to the postprocess classes commands.
    * @return the bootclasspath.
    */
-  Optional<String> getBootClasspath() {
+  @SuppressWarnings("unused")
+  Optional<String> getBootClasspath(BuildContext context) {
     return Optional.empty();
   }
 
