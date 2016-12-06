@@ -414,4 +414,26 @@ public class ProjectIntegrationTest {
 
     workspace.verify();
   }
+
+  @Test
+  public void testBuckProjectFocusPatternCell()
+      throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "project_focus_pattern_cell",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "project",
+        "--config",
+        "project.xcode_focus_disable_build_with_buck=true",
+        "--build-with-buck",
+        "--focus",
+        "bar//Dep2:",
+        "//Apps:workspace");
+    result.assertSuccess();
+
+    workspace.verify();
+  }
 }

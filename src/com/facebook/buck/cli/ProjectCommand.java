@@ -81,6 +81,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -1076,6 +1077,7 @@ public class ProjectCommand extends BuildCommand {
               SpeculativeParsing.of(false),
               parserConfig.getDefaultFlavorsMode()).stream()
           .flatMap(Collection::stream)
+          .map(target -> target.withoutCell())
           .collect(MoreCollectors.toImmutableSet());
     } catch (BuildTargetException | BuildFileParseException | HumanReadableException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
@@ -1084,6 +1086,28 @@ public class ProjectCommand extends BuildCommand {
     }
     LOG.debug("Selected targets: %s", passedInTargetsSet.toString());
 
+    // Retrieve mapping: cell name -> path.
+    ImmutableMap<String, Path> cellPaths = params.getCell().getCellPathResolver().getCellPaths();
+    ImmutableMap<Path, String> cellNames = ImmutableBiMap.copyOf(cellPaths).inverse();
+
+    // Create a set of unflavored targets that have cell names.
+    ImmutableSet.Builder<UnflavoredBuildTarget> builder = ImmutableSet.builder();
+    for (BuildTarget target : passedInTargetsSet) {
+      String cell = cellNames.get(target.getCellPath());
+      if (cell == null) {
+        builder.add(target.getUnflavoredBuildTarget());
+      } else {
+        UnflavoredBuildTarget targetWithCell = UnflavoredBuildTarget.of(
+            target.getCellPath(),
+            Optional.of(cell),
+            target.getBaseName(),
+            target.getShortName());
+        builder.add(targetWithCell);
+      }
+    }
+    ImmutableSet<UnflavoredBuildTarget> passedInUnflavoredTargetsSet = builder.build();
+    LOG.debug("Selected unflavored targets: %s", passedInUnflavoredTargetsSet.toString());
+
     // Build the set of unflavored targets in the target graph.
     ImmutableSet<UnflavoredBuildTarget> validUnflavoredTargets =
       targetGraphAndTargets.getTargetGraph().getNodes().stream()
@@ -1091,9 +1115,8 @@ public class ProjectCommand extends BuildCommand {
         .collect(MoreCollectors.toImmutableSet());
 
     // Match the targets resolved using the patterns with the valid of valid targets.
-    ImmutableSet<UnflavoredBuildTarget> result = passedInTargetsSet.stream()
-      .filter(target -> validUnflavoredTargets.contains(target.getUnflavoredBuildTarget()))
-      .map(target -> target.getUnflavoredBuildTarget())
+    ImmutableSet<UnflavoredBuildTarget> result = passedInUnflavoredTargetsSet.stream()
+      .filter(target -> validUnflavoredTargets.contains(target))
       .collect(MoreCollectors.toImmutableSet());
 
     LOG.debug("Focused targets: %s", result.toString());
