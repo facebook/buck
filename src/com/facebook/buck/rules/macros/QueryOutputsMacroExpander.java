@@ -20,7 +20,6 @@ package com.facebook.buck.rules.macros;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.query.QueryBuildTarget;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -64,7 +63,7 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander {
           Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
           return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
         })
-        .map(BuildRule::getPathToOutput)
+        .map(rule -> rule.getProjectFilesystem().resolve(rule.getPathToOutput()))
         .filter(Objects::nonNull)
         .map(Path::toString)
         .sorted()

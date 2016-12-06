@@ -216,7 +216,7 @@ public class GenruleDescriptionIntegrationTest {
   private Path getOutputFile(String targetName) {
     try {
       ProjectWorkspace.ProcessResult buildResult =
-          workspace.runBuckCommand("targets", targetName, "--show-output", "--json");
+          workspace.runBuckCommand("targets", targetName, "--show-full-output", "--json");
       buildResult.assertSuccess();
       JsonNode jsonNode = objectMapper.reader().readTree(buildResult.getStdout()).get(0);
       assert jsonNode.has("buck.outputPath");
