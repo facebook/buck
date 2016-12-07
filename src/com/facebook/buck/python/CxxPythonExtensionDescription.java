@@ -367,7 +367,7 @@ public class CxxPythonExtensionDescription implements
           CxxPlatform cxxPlatform)
           throws NoSuchBuildTargetException {
         return ruleResolver.requireRule(
-            getBuildTarget().withFlavors(
+            getBuildTarget().withAppendedFlavors(
                 pythonPlatform.getFlavor(),
                 cxxPlatform.getFlavor(),
                 CxxDescriptionEnhancer.SHARED_FLAVOR));
