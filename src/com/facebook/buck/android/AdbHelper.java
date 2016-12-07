@@ -306,6 +306,32 @@ public class AdbHelper {
     return devices.get(0);
   }
 
+  public List<String> getDeviceCPUAbis() throws InterruptedException {
+    class GetCpuAbiCallable extends AdbHelper.AdbCallable {
+      public List<String> results = Lists.newArrayList();
+      @Override
+      public boolean call(IDevice device) throws Exception {
+        String arch = device.getProperty("ro.product.cpu.abi");
+        if (arch == null) {
+          console.printBuildFailure(String.format(
+              "Failed to get property \"ro.prouct.cpu.abi\" from %s", device.getSerialNumber()));
+          return false;
+        }
+        synchronized (results) {
+          results.add(arch);
+        }
+        return true;
+      }
+      @Override
+      public String toString() {
+        return "get device cpu abi";
+      }
+    }
+    GetCpuAbiCallable callable = new GetCpuAbiCallable();
+    adbCall(callable, true);
+    return callable.results;
+  }
+
   /**
    * Execute an {@link AdbCallable} for all matching devices. This functions performs device
    * filtering based on three possible arguments:
