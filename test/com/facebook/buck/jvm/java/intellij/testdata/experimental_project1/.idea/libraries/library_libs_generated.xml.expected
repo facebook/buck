@@ -3,5 +3,7 @@
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/buck-out/gen/libs/generated_jar/generated.jar!/" />
     </CLASSES>
+    <JAVADOC />
+    <SOURCES />
   </library>
 </component>

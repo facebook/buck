@@ -3,9 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
 %modules:{module |
-      <module fileurl="%module.fileUrl%" filepath="$PROJECT_DIR$/%module.filePath%" %\\%
-        %if (module.group)% group="%module.group%" %endif% />
-}%
-   </modules>
+      <module fileurl="%module.fileUrl%" filepath="$PROJECT_DIR$/%module.filePath%"%\\%
+        %if (module.group)% group="%module.group%"%endif% />
+}%    </modules>
   </component>
 </project>

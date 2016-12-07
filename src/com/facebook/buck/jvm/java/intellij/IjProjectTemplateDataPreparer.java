@@ -31,6 +31,7 @@ import com.google.common.collect.Ordering;
 
 import org.immutables.value.Value;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -348,7 +349,12 @@ public class IjProjectTemplateDataPreparer {
         return 0;
       }
 
-      return getFilePath().compareTo(o.getFilePath());
+      return getFilePath()
+          .toString()
+          .replace(File.separatorChar, ' ')
+          .compareTo(o.getFilePath()
+              .toString()
+              .replace(File.separatorChar, ' '));
     }
   }
 
