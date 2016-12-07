@@ -439,6 +439,32 @@ public class FakeProjectFilesystemTest {
             ));
   }
 
+  @Test
+  public void testReadFileAttributes() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    filesystem.touch(Paths.get("foo"));
+    filesystem.mkdirs(Paths.get("bar"));
+    filesystem.touch(Paths.get("bar/aaaa"));
+
+    BasicFileAttributes attrs;
+
+    attrs = filesystem.readAttributes(Paths.get("foo"), BasicFileAttributes.class);
+    assertFalse(attrs.isDirectory());
+    assertTrue(attrs.isRegularFile());
+    attrs = filesystem.readAttributes(Paths.get("bar"), BasicFileAttributes.class);
+    assertTrue(attrs.isDirectory());
+    assertFalse(attrs.isRegularFile());
+    attrs = filesystem.readAttributes(Paths.get("bar/aaaa"), BasicFileAttributes.class);
+    assertFalse(attrs.isDirectory());
+    assertTrue(attrs.isRegularFile());
+  }
+
+  @Test(expected = IOException.class)
+  public void testReadFileAttributesMissingFileThrows() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    filesystem.readAttributes(Paths.get("foo"), BasicFileAttributes.class);
+  }
+
   private static class AccumulatingFileVisitor implements FileVisitor<Path> {
 
     private final List<Path> seen = Lists.newArrayList();

@@ -332,14 +332,25 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
     directories.clear();
   }
 
+  public BasicFileAttributes readBasicAttributes(
+      Path pathRelativeToProjectRoot) throws IOException {
+    if (!exists(pathRelativeToProjectRoot)) {
+      throw new NoSuchFileException(pathRelativeToProjectRoot.toString());
+    }
+    return isFile(pathRelativeToProjectRoot)
+           ? FakeFileAttributes.forFileWithSize(pathRelativeToProjectRoot, 0)
+           : FakeFileAttributes.forDirectory(pathRelativeToProjectRoot);
+  }
+
   @Override
   public <A extends BasicFileAttributes> A readAttributes(
       Path pathRelativeToProjectRoot,
       Class<A> type,
       LinkOption... options) throws IOException {
-    // Converting FileAttribute to BasicFileAttributes sub-interfaces is
-    // really annoying. Let's just not do it.
-    throw new UnsupportedOperationException();
+    if (type == BasicFileAttributes.class) {
+      return type.cast(readBasicAttributes(pathRelativeToProjectRoot));
+    }
+    throw new UnsupportedOperationException("cannot mock instance of: " + type);
   }
 
   @Override
