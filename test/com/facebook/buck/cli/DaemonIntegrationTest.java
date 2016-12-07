@@ -822,11 +822,13 @@ public class DaemonIntegrationTest {
 
     Path buildLogFile = workspace.getPath("buck-out/bin/build.log");
     assertTrue(Files.isRegularFile(buildLogFile));
+    assertThat(Files.readAllLines(buildLogFile), hasItem(containsString("BUILT_LOCALLY")));
     Files.delete(buildLogFile);
 
     workspace.runBuckdCommand("build", "//:cxxbinary").assertSuccess();
     buildLogFile = workspace.getPath("buck-out/bin/build.log");
     assertTrue(Files.isRegularFile(buildLogFile));
+    assertThat(Files.readAllLines(buildLogFile), not(hasItem(containsString("BUILT_LOCALLY"))));
   }
 
   @Test
