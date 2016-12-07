@@ -19,7 +19,6 @@ package com.facebook.buck.rust;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -69,17 +68,12 @@ public class RustCompileStep extends ShellStep {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.<String>builder()
         .addAll(compilerCommandPrefix);
 
-    ImmutableList.Builder<String> argsbuilder = ImmutableList.builder();
-
     if (linkerArgs.size() > 0) {
       commandBuilder.add("-C", String.format("linker=%s", linkerArgs.get(0)));
 
-      argsbuilder.addAll(linkerArgs.subList(1, linkerArgs.size()));
-    }
-
-    ImmutableList<String> args = argsbuilder.build();
-    if (args.size() > 0) {
-      commandBuilder.add("-C", String.format("link-args=%s", Joiner.on(' ').join(args)));
+      for (String arg: linkerArgs.subList(1, linkerArgs.size())) {
+        commandBuilder.add("-C", String.format("link-arg=%s", arg));
+      }
     }
 
     commandBuilder
