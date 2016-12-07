@@ -44,7 +44,6 @@ import com.google.common.jimfs.Jimfs;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -351,7 +350,7 @@ public class FakeProjectFilesystem extends ProjectFilesystem {
   @Override
   public long getFileSize(Path path) throws IOException {
     if (!exists(path)) {
-      throw new FileNotFoundException(path.toString());
+      throw new NoSuchFileException(path.toString());
     }
     return getFileBytes(path).length;
   }
