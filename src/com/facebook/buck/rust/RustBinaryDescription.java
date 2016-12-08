@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-import java.util.List;
 import java.util.Optional;
 
 
@@ -85,9 +84,18 @@ public class RustBinaryDescription implements
         rustcArgs.build(),
         () -> rustBuckConfig.getRustCompiler().resolve(resolver),
         () -> linker.resolve(resolver),
-        rustBuckConfig.getLinkerArgs(cxxPlatform),
+        getLinkerArgs(args.linkerFlags),
         cxxPlatform,
         args.linkStyle.orElse(Linker.LinkableDepType.STATIC));
+  }
+
+  private ImmutableList<String> getLinkerArgs(ImmutableList<String> args) {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    builder.addAll(rustBuckConfig.getLinkerArgs(cxxPlatform));
+    builder.addAll(args);
+
+    return builder.build();
   }
 
   @Override
@@ -109,7 +117,8 @@ public class RustBinaryDescription implements
   public static class Arg extends AbstractDescriptionArg {
     public ImmutableSortedSet<SourcePath> srcs;
     public ImmutableSortedSet<String> features = ImmutableSortedSet.of();
-    public List<String> rustcFlags = ImmutableList.of();
+    public ImmutableList<String> rustcFlags = ImmutableList.of();
+    public ImmutableList<String> linkerFlags = ImmutableList.of();
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public Optional<Linker.LinkableDepType> linkStyle;
     public Optional<String> crate;

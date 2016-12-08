@@ -22,6 +22,15 @@ rust_binary(
 )
 
 rust_binary(
+  name = "xyzzy_linkerflags",
+  crate = "xyzzy",
+  linker_flags = [ '--this-is-a-bad-option' ],
+  srcs = [
+    "main.rs",
+  ],
+)
+
+rust_binary(
   name = 'xyzzy_crate_root',
   crate_root = 'xyzzy-top.rs',
   srcs = [
