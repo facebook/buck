@@ -32,7 +32,9 @@ import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,6 +46,8 @@ import javax.annotation.concurrent.GuardedBy;
 
 public class RecordingFileHashLoader implements FileHashLoader {
   private static final Logger LOG = Logger.get(RecordingFileHashLoader.class);
+
+  private static final long MAX_ROOT_FILE_SIZE_BYTES = 1024 * 1024;
 
   private final FileHashLoader delegate;
   private final ProjectFilesystem projectFilesystem;
@@ -69,6 +73,7 @@ public class RecordingFileHashLoader implements FileHashLoader {
     this.seenArchives = new HashSet<>();
 
     extractBuckConfigFileHashes();
+    extractFilesAtRoot();
   }
 
   @Override
@@ -252,7 +257,7 @@ public class RecordingFileHashLoader implements FileHashLoader {
   }
 
   private synchronized void extractBuckConfigFileHashes() {
-    // We only want to materialize files during pre-loading for .buckconfig entries
+    // We want to materialize files during pre-loading for .buckconfig entries
     materializeCurrentFileDuringPreloading = true;
 
     Set<Path> paths = new HashSet<>();
@@ -267,14 +272,36 @@ public class RecordingFileHashLoader implements FileHashLoader {
     addIfPresent(paths, buckConfig.getPath("tools", "javac"));
     addIfPresent(paths, buckConfig.getPath("tools", "javac_jar"));
 
-    for (Path path : paths) {
-      try {
+    try {
+      for (Path path : paths) {
         get(path);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
       }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    } finally {
+      materializeCurrentFileDuringPreloading = false;
     }
+  }
 
-    materializeCurrentFileDuringPreloading = false;
+  private synchronized void extractFilesAtRoot() {
+    // We want to materialize files at the root of the repo during pre-loading
+    materializeCurrentFileDuringPreloading = true;
+
+    try {
+      Path[] rootFiles = Arrays.stream(projectFilesystem.listFiles(Paths.get(".")))
+          .filter(f -> f.isFile())
+          .filter(f -> !Files.isSymbolicLink(f.toPath()))
+          .filter(f -> f.getName().startsWith("."))
+          .filter(f -> f.length() < MAX_ROOT_FILE_SIZE_BYTES)
+          .map(f -> f.toPath().toAbsolutePath())
+          .toArray(Path[]::new);
+      for (Path p : rootFiles) {
+        get(p);
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    } finally {
+      materializeCurrentFileDuringPreloading = false;
+    }
   }
 }
