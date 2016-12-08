@@ -200,7 +200,7 @@ abstract class RustCompile extends AbstractBuildRule {
 
     if (candidates.size() != 1) {
       throw new HumanReadableException(
-          "srcs of %s must contain either %s or %s.rs!",
+          "srcs of %s must contain either one from %s or %s.rs!",
           getBuildTarget().getFullyQualifiedName(),
           getDefaultSources(),
           crate);

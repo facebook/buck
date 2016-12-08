@@ -228,6 +228,96 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void simpleTestFailure() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_tests", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:test_failure");
+    result.assertTestFailure();
+    assert(result.getStderr().contains("assertion failed: false"));
+  }
+
+  @Test
+  public void simpleTestSuccess() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_tests", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:test_success");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void simpleTestIgnore() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_tests", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:test_ignore");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void testManyModules() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_tests", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "test", "//:test_many_modules");
+    result.assertTestFailure();
+  }
+
+  @Test
+  public void testSuccessFailure() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_tests", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "test", "//:success_failure");
+    result.assertTestFailure();
+  }
+
+  @Test
+  public void testWithCrateRoot() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_tests", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "test", "//:with_crate_root");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void binaryWithLibrary() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:hello").assertSuccess().getStdout(),
+        Matchers.allOf(
+            Matchers.containsString("Hello, world!"),
+            Matchers.containsString("I have a message to deliver to you")));
+  }
+
+  @Test
+  public void binaryWithAliasedLibrary() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:hello_alias").assertSuccess().getStdout(),
+        Matchers.allOf(
+            Matchers.containsString("Hello, world!"),
+            Matchers.containsString("I have a message to deliver to you")));
+  }
+
+  @Test
   public void binaryWithStaticCxxDep() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "binary_with_cxx_dep", tmp);

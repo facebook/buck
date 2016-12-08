@@ -1,0 +1,49 @@
+rust_test(
+  name = "test_failure",
+  crate = "test_failure",
+  srcs = [
+    "test_failure.rs",
+  ],
+)
+
+rust_test(
+  name = "test_success",
+  crate = "test_success",
+  srcs = [
+    "test_success.rs",
+  ],
+)
+
+rust_test(
+  name = "test_ignore",
+  crate = "test_ignore",
+  srcs = [
+    "test_ignore.rs",
+  ],
+)
+
+rust_test(
+  name = "test_many_modules",
+  crate = "test_many_modules",
+  srcs = [
+    "test_many_modules.rs",
+    "test_another_module.rs",
+  ],
+)
+
+rust_test(
+  name = "success_failure",
+  crate = "test_success_failure",
+  srcs = [
+    "test_success_failure.rs",
+  ],
+)
+
+rust_test(
+  name = "with_crate_root",
+  crate = "with_crate_root",
+  crate_root = "test_crate_root.rs",
+  srcs = [
+    "test_crate_root.rs",
+  ],
+)

@@ -1,0 +1,88 @@
+{namespace rust_test}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'rust_test()' /}
+    {param prettify: true /}
+    {param description}
+      A rust_test() rule runs Rust tests.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+<p>
+  A rust_test() rule builds a Rust test native executable from the supplied set of Rust source files
+  and dependencies and runs this test.
+</p>
+<p>
+  {call rust_common.supported_language_version /}
+</p>
+{/param}
+
+{param args}
+
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The name of the rule.
+  {/param}
+{/call}
+
+{call rust_common.srcs_arg /}
+
+{call rust_common.deps_arg /}
+
+{call rust_common.features_arg /}
+
+{call rust_common.rustc_flags_arg /}
+
+{call rust_common.crate /}
+
+{call rust_common.crate_root /}
+
+{call native_common.link_style /}
+
+{/param} // close args
+
+{param examples}
+
+{call rust_common.more_examples /}
+
+{literal}<pre class="prettyprint lang-py">
+rust_test(
+  name='greet',
+  srcs=[
+    'greet.rs',
+  ],
+  deps=[
+    ':greeting',
+  ],
+)
+
+rust_library(
+  name='greeting',
+  srcs=[
+    'greeting.rs',
+  ],
+  deps=[
+    ':join',
+  ],
+)
+
+rust_library(
+  name='join',
+  srcs=[
+    'join.rs',
+  ],
+)
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+    {/param}
+  {/call}
+{/template}
