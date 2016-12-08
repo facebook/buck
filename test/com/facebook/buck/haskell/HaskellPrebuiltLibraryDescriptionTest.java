@@ -25,16 +25,18 @@ import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HeaderVisibility;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.NativeLinkableInput;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -46,62 +48,71 @@ public class HaskellPrebuiltLibraryDescriptionTest {
 
   @Test
   public void staticLibraries() throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePath lib = new FakeSourcePath("libfoo.a");
+    PathSourcePath lib = new FakeSourcePath("libfoo.a");
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    PrebuiltHaskellLibrary library =
-        (PrebuiltHaskellLibrary) new PrebuiltHaskellLibraryBuilder(target)
+    PrebuiltHaskellLibraryBuilder builder =
+        new PrebuiltHaskellLibraryBuilder(target)
             .setVersion("1.0.0")
             .setDb(new FakeSourcePath("package.conf.d"))
-            .setStaticLibs(ImmutableList.of(lib))
-            .build(resolver);
+            .setStaticLibs(ImmutableList.of(lib));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    PrebuiltHaskellLibrary library =
+        (PrebuiltHaskellLibrary) builder.build(resolver, filesystem, targetGraph);
     NativeLinkableInput input =
         library.getNativeLinkableInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.STATIC);
     assertThat(
-        FluentIterable.from(input.getArgs())
-            .transformAndConcat(Arg::getInputs)
-            .toSet(),
+        RichStream.from(input.getArgs())
+            .flatMap(a -> a.getInputs().stream())
+            .toImmutableSet(),
         Matchers.contains(lib));
   }
 
   @Test
   public void sharedLibraries() throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePath lib = new FakeSourcePath("libfoo.so");
+    PathSourcePath lib = new FakeSourcePath("libfoo.so");
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    PrebuiltHaskellLibrary library =
-        (PrebuiltHaskellLibrary) new PrebuiltHaskellLibraryBuilder(target)
+    PrebuiltHaskellLibraryBuilder builder =
+        new PrebuiltHaskellLibraryBuilder(target)
             .setVersion("1.0.0")
             .setDb(new FakeSourcePath("package.conf.d"))
-            .setSharedLibs(ImmutableMap.of("libfoo.so", lib))
-            .build(resolver);
+            .setSharedLibs(ImmutableMap.of("libfoo.so", lib));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    PrebuiltHaskellLibrary library =
+        (PrebuiltHaskellLibrary) builder.build(resolver, filesystem, targetGraph);
     NativeLinkableInput input =
         library.getNativeLinkableInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.SHARED);
     assertThat(
-        FluentIterable.from(input.getArgs())
-            .transformAndConcat(Arg::getInputs)
-            .toSet(),
+        RichStream.from(input.getArgs())
+            .flatMap(a -> a.getInputs().stream())
+            .toImmutableSet(),
         Matchers.contains(lib));
   }
 
   @Test
   public void interfaces() throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePath interfaces = new FakeSourcePath("interfaces");
+    PathSourcePath interfaces = new FakeSourcePath("interfaces");
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    PrebuiltHaskellLibrary library =
-        (PrebuiltHaskellLibrary) new PrebuiltHaskellLibraryBuilder(target)
+    PrebuiltHaskellLibraryBuilder builder =
+        new PrebuiltHaskellLibraryBuilder(target)
             .setVersion("1.0.0")
             .setDb(new FakeSourcePath("package.conf.d"))
-            .setImportDirs(ImmutableList.of(interfaces))
-            .build(resolver);
+            .setImportDirs(ImmutableList.of(interfaces));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    PrebuiltHaskellLibrary library =
+        (PrebuiltHaskellLibrary) builder.build(resolver, filesystem, targetGraph);
     HaskellCompileInput input =
         library.getCompileInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -113,15 +124,18 @@ public class HaskellPrebuiltLibraryDescriptionTest {
 
   @Test
   public void packageDb() throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    SourcePath db = new FakeSourcePath("package.conf.d");
-    PrebuiltHaskellLibrary library =
-        (PrebuiltHaskellLibrary) new PrebuiltHaskellLibraryBuilder(target)
+    PathSourcePath db = new FakeSourcePath("package.conf.d");
+    PrebuiltHaskellLibraryBuilder builder =
+        new PrebuiltHaskellLibraryBuilder(target)
             .setVersion("1.0.0")
-            .setDb(db)
-            .build(resolver);
+            .setDb(db);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    PrebuiltHaskellLibrary library =
+        (PrebuiltHaskellLibrary) builder.build(resolver, filesystem, targetGraph);
     HaskellCompileInput input =
         library.getCompileInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -133,15 +147,18 @@ public class HaskellPrebuiltLibraryDescriptionTest {
 
   @Test
   public void packageInfo() throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    PrebuiltHaskellLibrary library =
-        (PrebuiltHaskellLibrary) new PrebuiltHaskellLibraryBuilder(target)
+    PrebuiltHaskellLibraryBuilder builder =
+        new PrebuiltHaskellLibraryBuilder(target)
             .setVersion("1.0.0")
             .setDb(new FakeSourcePath("package.conf.d"))
-            .setId("id")
-            .build(resolver);
+            .setId("id");
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    PrebuiltHaskellLibrary library =
+        (PrebuiltHaskellLibrary) builder.build(resolver, filesystem, targetGraph);
     HaskellCompileInput input =
         library.getCompileInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -154,16 +171,19 @@ public class HaskellPrebuiltLibraryDescriptionTest {
 
   @Test
   public void exportedLinkerFlags() throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     String flag = "-exported-linker-flags";
-    PrebuiltHaskellLibrary library =
-        (PrebuiltHaskellLibrary) new PrebuiltHaskellLibraryBuilder(target)
+    PrebuiltHaskellLibraryBuilder builder =
+        new PrebuiltHaskellLibraryBuilder(target)
             .setVersion("1.0.0")
             .setDb(new FakeSourcePath("package.conf.d"))
-            .setExportedLinkerFlags(ImmutableList.of(flag))
-            .build(resolver);
+            .setExportedLinkerFlags(ImmutableList.of(flag));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    PrebuiltHaskellLibrary library =
+        (PrebuiltHaskellLibrary) builder.build(resolver, filesystem, targetGraph);
     NativeLinkableInput staticInput =
         library.getNativeLinkableInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -182,16 +202,19 @@ public class HaskellPrebuiltLibraryDescriptionTest {
 
   @Test
   public void exportedCompilerFlags() throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     String flag = "-exported-compiler-flags";
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    PrebuiltHaskellLibrary library =
-        (PrebuiltHaskellLibrary) new PrebuiltHaskellLibraryBuilder(target)
+    PrebuiltHaskellLibraryBuilder builder =
+        new PrebuiltHaskellLibraryBuilder(target)
             .setVersion("1.0.0")
             .setDb(new FakeSourcePath("package.conf.d"))
-            .setExportedCompilerFlags(ImmutableList.of(flag))
-            .build(resolver);
+            .setExportedCompilerFlags(ImmutableList.of(flag));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    PrebuiltHaskellLibrary library =
+        (PrebuiltHaskellLibrary) builder.build(resolver, filesystem, targetGraph);
     HaskellCompileInput staticInput =
         library.getCompileInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
@@ -210,18 +233,21 @@ public class HaskellPrebuiltLibraryDescriptionTest {
 
   @Test
   public void cxxHeaderDirs() throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePath interfaces = new FakeSourcePath("interfaces");
+    PathSourcePath interfaces = new FakeSourcePath("interfaces");
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     PathSourcePath path = new FakeSourcePath("include_dir");
-    PrebuiltHaskellLibrary library =
-        (PrebuiltHaskellLibrary) new PrebuiltHaskellLibraryBuilder(target)
+    PrebuiltHaskellLibraryBuilder builder =
+        new PrebuiltHaskellLibraryBuilder(target)
             .setVersion("1.0.0")
             .setDb(new FakeSourcePath("package.conf.d"))
             .setImportDirs(ImmutableList.of(interfaces))
-            .setCxxHeaderDirs(ImmutableSortedSet.of(path))
-            .build(resolver);
+            .setCxxHeaderDirs(ImmutableSortedSet.of(path));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    PrebuiltHaskellLibrary library =
+        (PrebuiltHaskellLibrary) builder.build(resolver, filesystem, targetGraph);
     assertThat(
         library.getCxxPreprocessorInput(
             CxxPlatformUtils.DEFAULT_PLATFORM,
