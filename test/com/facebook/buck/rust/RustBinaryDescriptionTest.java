@@ -57,9 +57,9 @@ public class RustBinaryDescriptionTest {
   private static ImmutableSet<String> getTransitiveOutputPaths(
       RustBinary binary,
       Linker.LinkableDepType linktype,
-      Predicate<BuildRule> filter) {
+      Predicate<BuildRule> filter) throws NoSuchBuildTargetException {
     Stream<Path> nativepaths = RustLinkables.getNativePaths(
-        binary.getDeps().stream(),
+        binary.getDeps(),
         linktype,
         CxxPlatformUtils.DEFAULT_PLATFORM);
     ImmutableSortedSet<BuildRule> deps = binary.getDeps();
@@ -78,7 +78,7 @@ public class RustBinaryDescriptionTest {
 
   private static ImmutableSet<String> getLinkablePaths(
       RustBinary binary,
-      Linker.LinkableDepType linktype) {
+      Linker.LinkableDepType linktype) throws NoSuchBuildTargetException {
     return getTransitiveOutputPaths(
         binary,
         linktype,

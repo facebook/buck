@@ -19,7 +19,9 @@ package com.facebook.buck.rust;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.model.BuildTargets;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BinaryBuildRule;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableProperties;
@@ -36,7 +38,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 
-
 public class RustBinary extends RustCompile implements BinaryBuildRule {
   public RustBinary(
       BuildRuleParams params,
@@ -50,7 +51,7 @@ public class RustBinary extends RustCompile implements BinaryBuildRule {
       Supplier<Tool> linker,
       ImmutableList<String> linkerArgs,
       CxxPlatform cxxPlatform,
-      Linker.LinkableDepType linkStyle) {
+      Linker.LinkableDepType linkStyle) throws NoSuchBuildTargetException {
     super(
         RustLinkables.addNativeDependencies(params, resolver, cxxPlatform, linkStyle),
         resolver,
@@ -62,15 +63,32 @@ public class RustBinary extends RustCompile implements BinaryBuildRule {
             .addAll(rustcFlags)
             .build(),
         features,
-        RustLinkables.getNativeDirs(params.getDeps().stream(), linkStyle, cxxPlatform),
+        RustLinkables.getNativeDirs(params.getDeps(), linkStyle, cxxPlatform),
         BuildTargets.getGenPath(
             params.getProjectFilesystem(),
             params.getBuildTarget(),
             "%s/" + crate),
         compiler,
         linker,
-        linkerArgs,
+        extendLinkerArgs(
+            linkerArgs,
+            params.getDeps(),
+            linkStyle,
+            cxxPlatform),
         linkStyle);
+  }
+
+  private static ImmutableList<String> extendLinkerArgs(
+      ImmutableList<String> linkerArgs,
+      Iterable<BuildRule> deps,
+      Linker.LinkableDepType linkStyle,
+      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    builder.addAll(linkerArgs);
+    RustLinkables.accumNativeArgs(deps, linkStyle, cxxPlatform, builder);
+
+    return builder.build();
   }
 
   @Override
