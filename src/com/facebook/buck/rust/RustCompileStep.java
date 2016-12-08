@@ -68,6 +68,11 @@ public class RustCompileStep extends ShellStep {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.<String>builder()
         .addAll(compilerCommandPrefix);
 
+    // Do colour stuff first so that it can be overridden.
+    if (context.getAnsi().isAnsiTerminal()) {
+      commandBuilder.add("--color=always");
+    }
+
     if (linkerArgs.size() > 0) {
       commandBuilder.add("-C", String.format("linker=%s", linkerArgs.get(0)));
 
