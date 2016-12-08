@@ -35,6 +35,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -49,7 +50,8 @@ import java.util.regex.Pattern;
 
 public class JavaBinaryDescription implements
     Description<JavaBinaryDescription.Args>,
-    ImplicitDepsInferringDescription<JavaBinaryDescription.Args> {
+    ImplicitDepsInferringDescription<JavaBinaryDescription.Args>,
+    VersionRoot<JavaBinaryDescription.Args> {
 
   private static final Flavor FAT_JAR_INNER_JAR_FLAVOR = ImmutableFlavor.of("inner-jar");
 
@@ -139,6 +141,11 @@ public class JavaBinaryDescription implements
       CellPathResolver cellRoots,
       Args constructorArg) {
     return CxxPlatforms.getParseTimeDeps(cxxPlatform);
+  }
+
+  @Override
+  public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
+    return true;
   }
 
   @SuppressFieldNotInitialized

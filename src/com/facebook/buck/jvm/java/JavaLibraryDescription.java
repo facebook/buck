@@ -36,6 +36,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -49,7 +50,10 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 
-public class JavaLibraryDescription implements Description<JavaLibraryDescription.Arg>, Flavored {
+public class JavaLibraryDescription implements
+    Description<JavaLibraryDescription.Arg>,
+    Flavored,
+    VersionPropagator<JavaLibraryDescription.Arg> {
 
   public static final ImmutableSet<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
       Javadoc.DOC_JAR,
