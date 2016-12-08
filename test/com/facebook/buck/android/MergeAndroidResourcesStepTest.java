@@ -428,6 +428,49 @@ public class MergeAndroidResourcesStepTest {
   }
 
   @Test
+  public void testGenerateRDotJavaWithPreviouslyEmptyResourceUnionPackage() throws IOException {
+    BuildTarget res1Target = BuildTargetFactory.newInstance("//:res1");
+    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
+    entriesBuilder.add(
+        new RDotTxtFile(
+            "com.res1",
+            BuildTargets.getGenPath(
+                entriesBuilder.getProjectFilesystem(),
+                res1Target,
+                "__%s_text_symbols__/R.txt").toString(),
+            ImmutableList.of("int id id1 0x7f020000")));
+    FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
+    SourcePathResolver resolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
+
+    HasAndroidResourceDeps res1 = AndroidResourceRuleBuilder.newBuilder()
+        .setResolver(resolver)
+        .setBuildTarget(res1Target)
+        .setRes(new FakeSourcePath("res1"))
+        .setRDotJavaPackage("res1")
+        .build();
+
+    MergeAndroidResourcesStep mergeStep = MergeAndroidResourcesStep.createStepForDummyRDotJava(
+        filesystem,
+        resolver,
+        ImmutableList.of(res1),
+        Paths.get("output"),
+        /* forceFinalResourceIds */ false,
+        Optional.of("resM"),
+        /* rName */ Optional.empty());
+
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
+
+    assertEquals(0, mergeStep.execute(executionContext).getExitCode());
+
+    String res1java = filesystem.readFileIfItExists(Paths.get("output/res1/R.java")).get();
+    String resMjava = filesystem.readFileIfItExists(Paths.get("output/resM/R.java")).get();
+    assertThat(res1java, StringContains.containsString("id1"));
+    assertThat(resMjava, StringContains.containsString("id1"));
+  }
+
+  @Test
   public void testGenerateRDotJavaWithRName() throws IOException {
     BuildTarget res1Target = BuildTargetFactory.newInstance("//:res1");
     RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();

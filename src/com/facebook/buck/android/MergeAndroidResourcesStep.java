@@ -45,6 +45,7 @@ import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -135,6 +136,9 @@ public class MergeAndroidResourcesStep implements Step {
   public ImmutableSortedSet<Path> getRDotJavaFiles() {
     return FluentIterable.from(androidResourceDeps)
         .transform(HasAndroidResourceDeps::getRDotJavaPackage)
+        .append(unionPackage
+            .map(Collections::singletonList)
+            .orElse(Collections.emptyList()))
         .transform(this::getPathToRDotJava)
         .toSortedSet(natural());
   }
@@ -202,16 +206,14 @@ public class MergeAndroidResourcesStep implements Step {
     // If a resource_union_package was specified, copy all resource into that package,
     // unless they are already present.
     if (unionPackage.isPresent()) {
-      Collection<RDotTxtEntry> target = rDotJavaPackageToResources.asMap().get(unionPackage.get());
-      if (target != null) {
-        // Create a temporary list to avoid concurrent modification problems.
-        for (Map.Entry<String, RDotTxtEntry> entry :
-            new ArrayList<>(rDotJavaPackageToResources.entries())) {
-          if (target.contains(entry.getValue())) {
-            continue;
-          }
-          target.add(entry.getValue());
+      String unionPackageName = unionPackage.get();
+      // Create a temporary list to avoid concurrent modification problems.
+      for (Map.Entry<String, RDotTxtEntry> entry :
+          new ArrayList<>(rDotJavaPackageToResources.entries())) {
+        if (rDotJavaPackageToResources.containsEntry(unionPackageName, entry.getValue())) {
+          continue;
         }
+        rDotJavaPackageToResources.put(unionPackageName, entry.getValue());
       }
     }
 
