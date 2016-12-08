@@ -217,6 +217,21 @@ public class ParserIntegrationTest {
   }
 
   @Test
+  public void testExtraUnknownAttribute() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "extra_attr",
+        temporaryFolder);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("targets", "//:gr");
+    result.assertFailure("extra attr should error");
+    assertThat(result.getStderr(), containsString("genrule"));
+    assertThat(result.getStderr(), containsString("gr"));
+    assertThat(result.getStderr(), containsString("blurgle"));
+  }
+
+  @Test
   public void testUsingAutodeps() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,

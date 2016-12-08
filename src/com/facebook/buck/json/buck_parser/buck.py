@@ -201,7 +201,7 @@ class LazyBuildEnvPartial(object):
             return self.func(*args, **updated_kwargs)
         except TypeError:
             missing_args, extra_args = get_mismatched_args(self.func, args, updated_kwargs)
-            if missing_args:
+            if missing_args or extra_args:
                 name = '[missing]'
                 if 'name' in updated_kwargs:
                     name = updated_kwargs['name']
@@ -234,7 +234,7 @@ def get_mismatched_args(func, actual_args, actual_kwargs):
     return missing_args, sorted(list(extra_kwargs))
 
 
-class IncorrectArgumentsException(Exception):
+class IncorrectArgumentsException(TypeError):
     def __init__(self, func_name, name_arg, missing_args, extra_args):
         self.missing_args = missing_args
         self.extra_args = extra_args
