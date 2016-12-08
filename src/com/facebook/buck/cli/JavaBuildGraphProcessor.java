@@ -157,6 +157,7 @@ final class JavaBuildGraphProcessor {
           .setJavaPackageFinder(params.getJavaPackageFinder())
           .setObjectMapper(params.getObjectMapper())
           .setPlatform(params.getPlatform())
+          .setCellPathResolver(params.getCell().getCellPathResolver())
           .build();
 
       BuildEngineBuildContext buildContext = BuildEngineBuildContext.builder()

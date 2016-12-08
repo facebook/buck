@@ -237,6 +237,7 @@ public class InstallCommand extends BuildCommand {
             .setAdbOptions(Optional.of(adbOptions(params.getBuckConfig())))
             .setTargetDeviceOptions(Optional.of(targetDeviceOptions()))
             .setExecutors(params.getExecutors())
+            .setCellPathResolver(params.getCell().getCellPathResolver())
             .build();
         exitCode = installApk(params, (InstallableApk) buildRule, executionContext);
         if (exitCode != 0) {

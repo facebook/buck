@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
@@ -40,6 +41,7 @@ abstract class AbstractJavacExecutionContext {
   public abstract ClassLoaderCache getClassLoaderCache();
   public abstract ObjectMapper getObjectMapper();
   public abstract Verbosity getVerbosity();
+  public abstract CellPathResolver getCellPathResolver();
   public abstract JavaPackageFinder getJavaPackageFinder();
   public abstract ProjectFilesystem getProjectFilesystem();
   public abstract ClassUsageFileWriter getUsedClassesFileWriter();

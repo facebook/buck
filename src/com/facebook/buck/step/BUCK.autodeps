@@ -15,6 +15,7 @@
       "//src/com/facebook/buck/jvm/core:packagefinder",
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/shell:worker_process",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:util",

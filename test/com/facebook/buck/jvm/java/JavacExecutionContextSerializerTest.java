@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -54,6 +55,9 @@ public class JavacExecutionContextSerializerTest {
     ClassLoaderCache classLoaderCache = new ClassLoaderCache();
     ObjectMapper objectMapper = new ObjectMapper();
     Verbosity verbosity = Verbosity.COMMANDS_AND_OUTPUT;
+    DefaultCellPathResolver cellPathResolver = new DefaultCellPathResolver(
+        Paths.get("/some/cell/path/resolver/path"),
+        ImmutableMap.of("key1", Paths.get("/path/1")));
     DefaultJavaPackageFinder javaPackageFinder = new DefaultJavaPackageFinder(
         ImmutableSortedSet.of("paths", "from", "root"),
         ImmutableSet.of("path", "elements"));
@@ -78,6 +82,7 @@ public class JavacExecutionContextSerializerTest {
         classLoaderCache,
         objectMapper,
         verbosity,
+        cellPathResolver,
         javaPackageFinder,
         projectFilesystem,
         classUsageFileWriter,
@@ -98,6 +103,18 @@ public class JavacExecutionContextSerializerTest {
     assertThat(output.getStdErr(), Matchers.equalTo(stdErr));
     assertThat(output.getClassLoaderCache(), Matchers.equalTo(classLoaderCache));
     assertThat(output.getObjectMapper(), Matchers.equalTo(objectMapper));
+    assertThat(output.getVerbosity(), Matchers.equalTo(verbosity));
+
+    assertThat(output.getCellPathResolver(), Matchers.instanceOf(DefaultCellPathResolver.class));
+    DefaultCellPathResolver outCellPathResolver =
+        (DefaultCellPathResolver) output.getCellPathResolver();
+    assertThat(
+        outCellPathResolver.getRoot(),
+        Matchers.equalToObject(cellPathResolver.getRoot()));
+    assertThat(
+        outCellPathResolver.getCellPaths(),
+        Matchers.equalToObject(cellPathResolver.getCellPaths()));
+
     assertThat(output.getProcessExecutor(), Matchers.equalTo(processExecutor));
 
     assertThat(output.getJavaPackageFinder(), Matchers.instanceOf(DefaultJavaPackageFinder.class));

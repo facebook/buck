@@ -266,6 +266,7 @@ public abstract class AbstractCommand implements Command {
         .setJavaPackageFinder(params.getJavaPackageFinder())
         .setObjectMapper(params.getObjectMapper())
         .setExecutors(params.getExecutors())
+        .setCellPathResolver(params.getCell().getCellPathResolver())
         .build();
   }
 

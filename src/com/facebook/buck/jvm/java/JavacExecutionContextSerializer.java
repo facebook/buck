@@ -18,6 +18,8 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
+import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.CellPathResolverSerializer;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
@@ -39,6 +41,7 @@ public class JavacExecutionContextSerializer {
   }
 
   private static final String VERBOSITY = "verbosity";
+  private static final String CELL_PATH_RESOLVER = "cell_path_resolver";
   private static final String JAVA_PACKAGE_FINDER = "java_package_finder";
   private static final String PROJECT_FILE_SYSTEM_ROOT = "project_file_system_root";
   private static final String CLASS_USAGE_FILE_WRITER = "class_usage_file_writer";
@@ -50,6 +53,9 @@ public class JavacExecutionContextSerializer {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
 
     builder.put(VERBOSITY, context.getVerbosity().toString());
+    builder.put(
+        CELL_PATH_RESOLVER,
+        CellPathResolverSerializer.serialize(context.getCellPathResolver()));
     builder.put(
         JAVA_PACKAGE_FINDER,
         JavaPackageFinderSerializer.serialize(context.getJavaPackageFinder()));
@@ -84,6 +90,10 @@ public class JavacExecutionContextSerializer {
     Preconditions.checkArgument(data.containsKey(VERBOSITY));
     Verbosity verbosity = Verbosity.valueOf((String) data.get(VERBOSITY));
 
+    Preconditions.checkArgument(data.containsKey(CELL_PATH_RESOLVER));
+    CellPathResolver cellPathResolver = CellPathResolverSerializer.deserialize(
+        (Map<String, Object>) data.get(CELL_PATH_RESOLVER));
+
     Preconditions.checkArgument(data.containsKey(JAVA_PACKAGE_FINDER));
     JavaPackageFinder javaPackageFinder = JavaPackageFinderSerializer.deserialize(
         (Map<String, Object>) data.get(JAVA_PACKAGE_FINDER));
@@ -117,6 +127,7 @@ public class JavacExecutionContextSerializer {
         classLoaderCache,
         objectMapper,
         verbosity,
+        cellPathResolver,
         javaPackageFinder,
         projectFilesystem,
         classUsageFileWriter,

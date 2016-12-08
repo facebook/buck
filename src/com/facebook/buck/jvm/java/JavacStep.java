@@ -176,6 +176,7 @@ public class JavacStep implements Step {
           firstOrderContext.getClassLoaderCache(),
           firstOrderContext.getObjectMapper(),
           verbosity,
+          firstOrderContext.getCellPathResolver(),
           firstOrderContext.getJavaPackageFinder(),
           filesystem,
           usedClassesFileWriter,

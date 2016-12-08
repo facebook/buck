@@ -23,6 +23,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.shell.WorkerProcessPool;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ClassLoaderCache;
@@ -87,6 +88,9 @@ abstract class AbstractExecutionContext implements Closeable {
 
   @Value.Parameter
   abstract Optional<ConcurrentMap<String, WorkerProcessPool>> getPersistentWorkerPools();
+
+  @Value.Parameter
+  abstract CellPathResolver getCellPathResolver();
 
   /**
    * Returns an {@link AndroidPlatformTarget} if the user specified one. If the user failed to

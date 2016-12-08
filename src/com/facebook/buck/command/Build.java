@@ -144,6 +144,7 @@ public class Build implements Closeable {
         .setPersistentWorkerPools(persistentWorkerPools)
         .setTargetDeviceOptions(targetDeviceOptions)
         .setExecutors(executors)
+        .setCellPathResolver(rootCell.getCellPathResolver())
         .build();
     this.artifactCache = artifactCache;
     this.buildEngine = buildEngine;
