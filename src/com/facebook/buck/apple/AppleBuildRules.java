@@ -72,6 +72,11 @@ public final class AppleBuildRules {
   private static final ImmutableSet<AppleBundleExtension> XCODE_TARGET_TEST_BUNDLE_EXTENSIONS =
       ImmutableSet.of(AppleBundleExtension.XCTEST);
 
+  private static final ImmutableSet<BuildRuleType> WRAPPER_RESOURCE_TYPES =
+      ImmutableSet.of(
+          Description.getBuildRuleType(CoreDataModelDescription.class),
+          Description.getBuildRuleType(SceneKitAssetsDescription.class));
+
   /**
    * Whether the build rule type is equivalent to some kind of Xcode target.
    */
@@ -304,6 +309,22 @@ public final class AppleBuildRules {
                 ImmutableSet.of(Description.getBuildRuleType(AppleAssetCatalogDescription.class))))
         .transform(
             input -> (AppleAssetCatalogDescription.Arg) input.getConstructorArg())
+        .toSet();
+  }
+
+  public static <T> ImmutableSet<AppleWrapperResourceArg>
+  collectRecursiveWrapperResources(
+      TargetGraph targetGraph,
+      Iterable<TargetNode<T, ?>> targetNodes) {
+    return FluentIterable
+        .from(targetNodes)
+        .transformAndConcat(
+            newRecursiveRuleDependencyTransformer(
+                targetGraph,
+                RecursiveDependenciesMode.COPYING,
+                WRAPPER_RESOURCE_TYPES))
+        .transform(
+            input -> (AppleWrapperResourceArg) input.getConstructorArg())
         .toSet();
   }
 

@@ -403,7 +403,7 @@ public class AppleDescriptions {
       AppleCxxPlatform appleCxxPlatform) {
     TargetNode<?, ?> targetNode = targetGraph.get(params.getBuildTarget());
 
-    ImmutableSet<CoreDataModelDescription.Arg> coreDataModelArgs =
+    ImmutableSet<AppleWrapperResourceArg> coreDataModelArgs =
         AppleBuildRules.collectTransitiveBuildRules(
             CoreDataModelDescription.class, targetGraph, ImmutableList.of(targetNode));
 
@@ -433,7 +433,7 @@ public class AppleDescriptions {
       AppleCxxPlatform appleCxxPlatform) {
     TargetNode<?, ?> targetNode = targetGraph.get(params.getBuildTarget());
 
-    ImmutableSet<SceneKitAssetsDescription.Arg> sceneKitAssetsArgs =
+    ImmutableSet<AppleWrapperResourceArg> sceneKitAssetsArgs =
         AppleBuildRules.collectTransitiveBuildRules(
             SceneKitAssetsDescription.class, targetGraph, ImmutableList.of(targetNode));
 

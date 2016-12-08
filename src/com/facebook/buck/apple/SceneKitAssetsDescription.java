@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Flavored;
-import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -26,30 +25,27 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
-
-import java.nio.file.Path;
 
 /**
  * Description for a scenekit_assets rule, which identifies a assets directory
  * for use with Apple's SceneKit.
  */
 public class SceneKitAssetsDescription implements
-    Description<SceneKitAssetsDescription.Arg>,
+    Description<AppleWrapperResourceArg>,
     Flavored {
 
   private static final String SCENEKIT_ASSETS_EXTENSION = "scnassets";
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public AppleWrapperResourceArg createUnpopulatedConstructorArg() {
+    return new AppleWrapperResourceArg();
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
+  public <A extends AppleWrapperResourceArg> BuildRule createBuildRule(
       TargetGraph targetGraph,
       BuildRuleParams params,
       BuildRuleResolver resolver,
@@ -60,11 +56,6 @@ public class SceneKitAssetsDescription implements
     return new NoopBuildRule(
         params,
         new SourcePathResolver(resolver));
-  }
-
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public Path path;
   }
 
   @Override

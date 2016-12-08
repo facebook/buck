@@ -47,6 +47,7 @@ import com.facebook.buck.apple.AppleResourceBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.apple.CoreDataModelBuilder;
 import com.facebook.buck.apple.FakeAppleRuleDescriptions;
+import com.facebook.buck.apple.SceneKitAssetsBuilder;
 import com.facebook.buck.apple.XcodePostbuildScriptBuilder;
 import com.facebook.buck.apple.XcodePrebuildScriptBuilder;
 import com.facebook.buck.apple.clang.HeaderMap;
@@ -179,8 +180,8 @@ public class ProjectGeneratorTest {
     clock = new SettableFakeClock(0, 0);
     fakeProjectFilesystem = new FakeProjectFilesystem(clock);
     projectCell = (new TestCellBuilder())
-      .setFilesystem(fakeProjectFilesystem)
-      .build();
+        .setFilesystem(fakeProjectFilesystem)
+        .build();
     projectFilesystem = projectCell.getFilesystem();
     rootPath = projectFilesystem.getRootPath();
 
@@ -1013,8 +1014,8 @@ public class ProjectGeneratorTest {
       assertThat(
           headerMap.lookup(key),
           equalTo(Paths.get("../../")
-                      .resolve(projectCell.getRoot().getFileName())
-                      .resolve(link).toString()));
+              .resolve(projectCell.getRoot().getFileName())
+              .resolve(link).toString()));
     }
   }
 
@@ -1089,32 +1090,32 @@ public class ProjectGeneratorTest {
   @Test
   public void testHalideLibraryRule() throws IOException {
     BuildTarget compilerTarget = BuildTarget.builder(rootPath, "//foo", "lib")
-      .addFlavors(HalideLibraryDescription.HALIDE_COMPILER_FLAVOR)
-      .build();
+        .addFlavors(HalideLibraryDescription.HALIDE_COMPILER_FLAVOR)
+        .build();
     TargetNode<?, ?> compiler = new HalideLibraryBuilder(compilerTarget)
-      .setSrcs(
-        ImmutableSortedSet.of(
-          SourceWithFlags.of(new FakeSourcePath("main.cpp")),
-          SourceWithFlags.of(new FakeSourcePath("filter.cpp"))))
-      .build();
+        .setSrcs(
+            ImmutableSortedSet.of(
+                SourceWithFlags.of(new FakeSourcePath("main.cpp")),
+                SourceWithFlags.of(new FakeSourcePath("filter.cpp"))))
+        .build();
 
     BuildTarget libTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?, ?> lib = new HalideLibraryBuilder(libTarget).build();
 
     ProjectGenerator projectGenerator =
-      createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(compiler, lib));
+        createProjectGeneratorForCombinedProject(
+            ImmutableSet.of(compiler, lib));
     projectGenerator.createXcodeProjects();
 
     PBXTarget target = assertTargetExistsAndReturnTarget(
-      projectGenerator.getGeneratedProject(),
-      "//foo:lib");
+        projectGenerator.getGeneratedProject(),
+        "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     assertHasConfigurations(target, "Debug", "Release", "Profile");
     assertEquals(1, target.getBuildPhases().size());
     PBXShellScriptBuildPhase scriptPhase = ProjectGeneratorTestUtils.getSingletonPhaseByType(
-      target,
-      PBXShellScriptBuildPhase.class);
+        target,
+        PBXShellScriptBuildPhase.class);
     assertEquals(0, scriptPhase.getInputPaths().size());
     assertEquals(0, scriptPhase.getOutputPaths().size());
 
@@ -1577,11 +1578,11 @@ public class ProjectGeneratorTest {
 
     assertEquals(
         "-Wno-deprecated -Wno-conversion -ffoo -fbar " +
-        "-Wno-deprecated -Wno-conversion -ffoo -fbar",
+            "-Wno-deprecated -Wno-conversion -ffoo -fbar",
         settings.get("OTHER_CFLAGS"));
     assertEquals(
         "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo -fbar " +
-        "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo -fbar",
+            "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo -fbar",
         settings.get("OTHER_CPLUSPLUSFLAGS"));
     assertEquals(
         "-lbaz -lbaz",
@@ -1633,7 +1634,7 @@ public class ProjectGeneratorTest {
         settings.get("OTHER_CFLAGS"));
     assertEquals(
         "-Wundeclared-selector -Wno-objc-designated-initializers " +
-        "-Wundeclared-selector -Wno-objc-designated-initializers",
+            "-Wundeclared-selector -Wno-objc-designated-initializers",
         settings.get("OTHER_CPLUSPLUSFLAGS"));
     assertEquals(
         "$(inherited) ",
@@ -1641,11 +1642,11 @@ public class ProjectGeneratorTest {
 
     assertEquals(
         "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone " +
-        "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone",
+            "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone",
         settings.get("OTHER_CFLAGS[sdk=*iphone*]"));
     assertEquals(
         "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone " +
-        "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone",
+            "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone",
         settings.get("OTHER_CPLUSPLUSFLAGS[sdk=*iphone*]"));
     assertEquals(
         "-lbaz-iphone -lbaz-iphone",
@@ -1755,7 +1756,7 @@ public class ProjectGeneratorTest {
         settings.get("OTHER_CFLAGS[sdk=*iphone*]"));
     assertEquals(
         "-Wundeclared-selector -Wno-objc-designated-initializers -fbar-iphone " +
-        "-Wundeclared-selector -Wno-objc-designated-initializers -fbar-iphone",
+            "-Wundeclared-selector -Wno-objc-designated-initializers -fbar-iphone",
         settings.get("OTHER_CPLUSPLUSFLAGS[sdk=*iphone*]"));
     assertEquals(
         null,
@@ -1770,11 +1771,11 @@ public class ProjectGeneratorTest {
 
     assertEquals(
         "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone " +
-        "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone",
+            "-Wno-deprecated -Wno-conversion -ffoo-iphone -fbar-iphone",
         dependentSettings.get("OTHER_CFLAGS[sdk=*iphone*]"));
     assertEquals(
         "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone " +
-        "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone",
+            "-Wundeclared-selector -Wno-objc-designated-initializers -ffoo-iphone -fbar-iphone",
         dependentSettings.get("OTHER_CPLUSPLUSFLAGS[sdk=*iphone*]"));
     assertEquals(
         null,
@@ -2596,22 +2597,16 @@ public class ProjectGeneratorTest {
     assertThat(buildSettings.get("PRODUCT_NAME"), Matchers.equalTo("FancyFramework"));
   }
 
-  @Test
-  public void testCoreDataModelRuleAddsReference() throws IOException {
-    BuildTarget modelTarget = BuildTarget.builder(rootPath, "//foo", "model").build();
-    TargetNode<?, ?> modelNode = CoreDataModelBuilder
-        .createBuilder(modelTarget)
-        .setPath(new FakeSourcePath("foo.xcdatamodel").getRelativePath())
-        .build();
-
+  private void testRuleAddsReference(BuildTarget ruleTarget, TargetNode<?, ?> ruleNode, String path)
+      throws IOException {
     BuildTarget libraryTarget = BuildTarget.builder(rootPath, "//foo", "lib").build();
     TargetNode<?, ?> libraryNode = AppleLibraryBuilder
         .createBuilder(libraryTarget)
-        .setDeps(ImmutableSortedSet.of(modelTarget))
+        .setDeps(ImmutableSortedSet.of(ruleTarget))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(
-        ImmutableSet.of(modelNode, libraryNode));
+        ImmutableSet.of(ruleNode, libraryNode));
 
     projectGenerator.createXcodeProjects();
 
@@ -2622,10 +2617,30 @@ public class ProjectGeneratorTest {
 
     assertThat(resourcesGroup.getChildren(), hasSize(1));
 
-    PBXFileReference modelReference = (PBXFileReference) Iterables.get(
+    PBXFileReference ruleReference = (PBXFileReference) Iterables.get(
         resourcesGroup.getChildren(),
         0);
-    assertEquals("foo.xcdatamodel", modelReference.getName());
+    assertEquals(path, ruleReference.getName());
+  }
+
+  @Test
+  public void testCoreDataModelRuleAddsReference() throws IOException {
+    BuildTarget modelTarget = BuildTarget.builder(rootPath, "//foo", "model").build();
+    TargetNode<?, ?> modelNode = CoreDataModelBuilder
+        .createBuilder(modelTarget)
+        .setPath(new FakeSourcePath("foo.xcdatamodel").getRelativePath())
+        .build();
+    testRuleAddsReference(modelTarget, modelNode, "foo.xcdatamodel");
+  }
+
+  @Test
+  public void testSceneKitAssetsRuleAddsReference() throws IOException {
+    BuildTarget target = BuildTarget.builder(rootPath, "//foo", "scenekitasset").build();
+    TargetNode<?, ?> node = SceneKitAssetsBuilder
+        .createBuilder(target)
+        .setPath(new FakeSourcePath("foo.scnassets").getRelativePath())
+        .build();
+    testRuleAddsReference(target, node, "foo.scnassets");
   }
 
   @Test
@@ -3174,10 +3189,10 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     ImmutableSet<PosixFilePermission> permissions =
-      ImmutableSet.of(
-          PosixFilePermission.OWNER_READ,
-          PosixFilePermission.GROUP_READ,
-          PosixFilePermission.OTHERS_READ);
+        ImmutableSet.of(
+            PosixFilePermission.OWNER_READ,
+            PosixFilePermission.GROUP_READ,
+            PosixFilePermission.OTHERS_READ);
     FileAttribute<?> expectedAttribute = PosixFilePermissions.asFileAttribute(permissions);
     // This is lame; Java's PosixFilePermissions class doesn't
     // implement equals() or hashCode() in its FileAttribute anonymous
@@ -3185,8 +3200,8 @@ public class ProjectGeneratorTest {
     // the sets, we have to pull out the attribute and check its value
     // for equality.
     FileAttribute<?> actualAttribute =
-      Iterables.getOnlyElement(
-          fakeProjectFilesystem.getFileAttributesAtPath(OUTPUT_PROJECT_FILE_PATH));
+        Iterables.getOnlyElement(
+            fakeProjectFilesystem.getFileAttributesAtPath(OUTPUT_PROJECT_FILE_PATH));
     assertEquals(
         expectedAttribute.value(),
         actualAttribute.value());
@@ -3797,11 +3812,11 @@ public class ProjectGeneratorTest {
                 "Debug",
                 ImmutableMap.of()))
         .setSrcs(
-                ImmutableSortedSet.of(
-                    SourceWithFlags.of(new FakeSourcePath("foo1.m")),
-                    SourceWithFlags.of(new FakeSourcePath("foo2.mm")),
-                    SourceWithFlags.of(new FakeSourcePath("foo3.c")),
-                    SourceWithFlags.of(new FakeSourcePath("foo4.cc"))))
+            ImmutableSortedSet.of(
+                SourceWithFlags.of(new FakeSourcePath("foo1.m")),
+                SourceWithFlags.of(new FakeSourcePath("foo2.mm")),
+                SourceWithFlags.of(new FakeSourcePath("foo3.c")),
+                SourceWithFlags.of(new FakeSourcePath("foo4.cc"))))
         .build();
 
     ProjectGenerator projectGenerator = createProjectGeneratorForCombinedProject(

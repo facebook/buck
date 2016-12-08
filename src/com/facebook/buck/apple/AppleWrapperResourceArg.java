@@ -16,24 +16,15 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.rules.AbstractDescriptionArg;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 
 import java.nio.file.Path;
 
-public class SceneKitAssetsBuilder
-    extends AbstractNodeBuilder<AppleWrapperResourceArg, SceneKitAssetsDescription> {
-
-  protected SceneKitAssetsBuilder(BuildTarget target) {
-    super(new SceneKitAssetsDescription(), target);
-  }
-
-  public static SceneKitAssetsBuilder createBuilder(BuildTarget target) {
-    return new SceneKitAssetsBuilder(target);
-  }
-
-  public SceneKitAssetsBuilder setPath(Path path) {
-    arg.path = path;
-    return this;
-  }
+/**
+ * A description for a resource defined by a single path.
+ */
+@SuppressFieldNotInitialized
+public class AppleWrapperResourceArg extends AbstractDescriptionArg {
+  public Path path;
 }

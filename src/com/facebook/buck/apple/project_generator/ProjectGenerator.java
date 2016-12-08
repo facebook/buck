@@ -33,6 +33,7 @@ import com.facebook.buck.apple.AppleHeaderVisibilities;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.AppleResourceDescription;
+import com.facebook.buck.apple.AppleWrapperResourceArg;
 import com.facebook.buck.apple.AppleResources;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.CoreDataModelDescription;
@@ -913,6 +914,7 @@ public class ProjectGenerator {
         AppleResources.collectDirectResources(targetGraph, targetNode),
         AppleBuildRules.collectRecursiveAssetCatalogs(targetGraph, ImmutableList.of(targetNode)),
         AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
+        AppleBuildRules.collectRecursiveWrapperResources(targetGraph, ImmutableList.of(targetNode)),
         Optional.of(copyFilesBuildPhases), bundleLoaderNode);
 
     LOG.debug("Generated iOS bundle target %s", target);
@@ -989,6 +991,7 @@ public class ProjectGenerator {
         AppleResources.collectDirectResources(targetGraph, targetNode),
         ImmutableSet.of(),
         AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
+        ImmutableSet.of(),
         Optional.empty(),
         Optional.empty());
     LOG.debug("Generated Apple binary target %s", target);
@@ -1036,6 +1039,7 @@ public class ProjectGenerator {
         directResources,
         ImmutableSet.of(),
         directAssetCatalogs,
+        ImmutableSet.of(),
         Optional.empty(),
         bundleLoaderNode);
     LOG.debug("Generated Cxx library target %s", target);
@@ -1054,6 +1058,7 @@ public class ProjectGenerator {
       ImmutableSet<AppleResourceDescription.Arg> directResources,
       ImmutableSet<AppleAssetCatalogDescription.Arg> recursiveAssetCatalogs,
       ImmutableSet<AppleAssetCatalogDescription.Arg> directAssetCatalogs,
+      ImmutableSet<AppleWrapperResourceArg> wrapperResources,
       Optional<Iterable<PBXBuildPhase>> copyFilesPhases,
       Optional<TargetNode<AppleBundleDescription.Arg, ?>> bundleLoaderNode)
       throws IOException {
@@ -1091,7 +1096,8 @@ public class ProjectGenerator {
           .setSourcesWithFlags(ImmutableSet.copyOf(arg.srcs))
           .setPrivateHeaders(headers)
           .setRecursiveResources(recursiveResources)
-          .setDirectResources(directResources);
+          .setDirectResources(directResources)
+          .setWrapperResources(wrapperResources);
     }
 
     if (bundle.isPresent() && isFocusedOnTarget) {
@@ -1557,13 +1563,13 @@ public class ProjectGenerator {
   private void addSceneKitAssetsIntoTarget(
       TargetNode<? extends CxxLibraryDescription.Arg, ?> targetNode,
       PBXGroup targetGroup) throws IOException {
-    ImmutableSet<SceneKitAssetsDescription.Arg> allSceneKitAssets =
+    ImmutableSet<AppleWrapperResourceArg> allSceneKitAssets =
         AppleBuildRules.collectTransitiveBuildRules(
             SceneKitAssetsDescription.class,
             targetGraph,
             ImmutableList.of(targetNode));
 
-    for (final SceneKitAssetsDescription.Arg sceneKitAssets : allSceneKitAssets) {
+    for (final AppleWrapperResourceArg sceneKitAssets : allSceneKitAssets) {
       PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
 
       resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
@@ -1790,10 +1796,10 @@ public class ProjectGenerator {
 
   private void addCoreDataModelBuildPhase(
       PBXGroup targetGroup,
-      Iterable<CoreDataModelDescription.Arg> dataModels) throws IOException {
+      Iterable<AppleWrapperResourceArg> dataModels) throws IOException {
     // TODO(Coneko): actually add a build phase
 
-    for (final CoreDataModelDescription.Arg dataModel : dataModels) {
+    for (final AppleWrapperResourceArg dataModel : dataModels) {
       // Core data models go in the resources group also.
       PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
 
@@ -1932,6 +1938,14 @@ public class ProjectGenerator {
         targetNode.getType().equals(
             Description.getBuildRuleType(HalideLibraryDescription.class))) {
       return Optional.empty();
+    } else if (
+        targetNode.getType().equals(
+            Description.getBuildRuleType(CoreDataModelDescription.class)) ||
+            targetNode.getType().equals(
+                Description.getBuildRuleType(SceneKitAssetsDescription.class))) {
+      return Optional.of(
+          CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.RESOURCES)
+      );
     } else {
       throw new RuntimeException("Unexpected type: " + targetNode.getType());
     }
