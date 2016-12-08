@@ -2,7 +2,7 @@
 
 /***/
 {template .supported_language_version}
-Note: Buck is currently tested with (and therefore supports) version 1.11.0 of Rust.
+Note: Buck is currently tested with (and therefore supports) version 1.13.0 of Rust.
 {/template}
 
 /***/
@@ -81,6 +81,7 @@ Note: Buck is currently tested with (and therefore supports) version 1.11.0 of R
 {template .crate_root}
 {call buck.arg}
   {param name : 'crate_root' /}
+  {param default : derived from crate name }
   {param desc}
   <p>
     Set the name of the top-level source file for the crate, which can be used to override the
