@@ -30,6 +30,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 
@@ -39,6 +40,7 @@ import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Unit tests for {@link ProvisioningProfileMetadata}.
@@ -75,7 +77,10 @@ public class ProvisioningProfileMetadataTest {
     Path testFile = testdataDir.resolve("sample.mobileprovision");
 
     ProvisioningProfileMetadata data =
-        ProvisioningProfileMetadata.fromProvisioningProfilePath(executor, testFile);
+        ProvisioningProfileMetadata.fromProvisioningProfilePath(
+            executor,
+            ProvisioningProfileStore.DEFAULT_READ_COMMAND,
+            testFile);
 
     assertThat(data.getExpirationDate(), is(equalTo(new NSDate("9999-03-05T01:33:40Z").getDate())));
     assertThat(data.getAppID(), is(equalTo(new Pair<>("ABCDE12345", "com.example.TestApp"))));
@@ -88,7 +93,21 @@ public class ProvisioningProfileMetadataTest {
     thrown.expect(IOException.class);
     ProvisioningProfileMetadata.fromProvisioningProfilePath(
         executor,
+        ProvisioningProfileStore.DEFAULT_READ_COMMAND,
         testdataDir.resolve("invalid.mobileprovision"));
+  }
+
+  @Test
+  public void testProvisioningProfileReadCommandOverride() throws Exception {
+    ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
+    Path testdataDir = TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles");
+
+    ProvisioningProfileMetadata data =
+        ProvisioningProfileMetadata.fromProvisioningProfilePath(
+            executor,
+            ImmutableList.of(testdataDir.resolve("fake_read_command.sh").toString()),
+            Paths.get("unused"));
+    assertThat(data.getAppID(), is(equalTo(new Pair<>("0000000000", "com.example.override"))));
   }
 
   @Test
@@ -114,7 +133,10 @@ public class ProvisioningProfileMetadataTest {
     Path testFile = testdataDir.resolve("sample.mobileprovision");
 
     ProvisioningProfileMetadata data =
-        ProvisioningProfileMetadata.fromProvisioningProfilePath(executor, testFile);
+        ProvisioningProfileMetadata.fromProvisioningProfilePath(
+            executor,
+            ProvisioningProfileStore.DEFAULT_READ_COMMAND,
+            testFile);
 
     assertTrue(data.getEntitlements().containsKey(
         "com.apple.developer.icloud-container-development-container-identifiers"));

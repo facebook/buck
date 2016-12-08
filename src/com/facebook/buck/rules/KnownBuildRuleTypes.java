@@ -566,6 +566,7 @@ public class KnownBuildRuleTypes {
     ProvisioningProfileStore provisioningProfileStore =
         ProvisioningProfileStore.fromSearchPath(
             processExecutor,
+            appleConfig.getProvisioningProfileReadCommand(),
             appleConfig.getProvisioningProfileSearchPath());
 
     AppleLibraryDescription appleLibraryDescription =

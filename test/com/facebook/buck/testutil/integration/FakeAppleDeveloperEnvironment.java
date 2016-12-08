@@ -52,7 +52,10 @@ public class FakeAppleDeveloperEnvironment {
           return false;
         }
         ProvisioningProfileStore store =
-            ProvisioningProfileStore.fromSearchPath(executor, searchPath);
+            ProvisioningProfileStore.fromSearchPath(
+                executor,
+                ProvisioningProfileStore.DEFAULT_READ_COMMAND,
+                searchPath);
         Optional<ProvisioningProfileMetadata> profile =
             store.getBestProvisioningProfile(
                 "*",

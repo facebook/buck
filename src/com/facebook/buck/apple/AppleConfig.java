@@ -24,6 +24,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -350,6 +351,14 @@ public class AppleConfig {
         "apple",
         "force_dsym_mode_in_build_with_buck",
         true);
+  }
+
+  public ImmutableList<String> getProvisioningProfileReadCommand() {
+    Optional<String> value = delegate.getValue("apple", "provisioning_profile_read_command");
+    if (!value.isPresent()) {
+      return ProvisioningProfileStore.DEFAULT_READ_COMMAND;
+    }
+    return ImmutableList.copyOf(Splitter.on(' ').splitToList(value.get()));
   }
 
   /**

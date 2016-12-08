@@ -116,14 +116,15 @@ abstract class AbstractProvisioningProfileMetadata implements RuleKeyAppendable 
 
   public static ProvisioningProfileMetadata fromProvisioningProfilePath(
       ProcessExecutor executor,
+      ImmutableList<String> readCommand,
       Path profilePath) throws IOException, InterruptedException {
     Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
 
     // Extract the XML from its signed message wrapper.
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
-            .setCommand(ImmutableList.of("/usr/bin/security", "cms", "-D", "-i",
-                    profilePath.toString()))
+            .addAllCommand(readCommand)
+            .addCommand(profilePath.toString())
             .build();
     ProcessExecutor.Result result;
     result = executor.launchAndExecute(

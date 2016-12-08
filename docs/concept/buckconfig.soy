@@ -381,6 +381,18 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'apple' /}
+  {param name: 'provisioning_profile_read_command' /}
+  {param example_value: 'path/to/command --arg1 --arg2' /}
+  {param description}
+    Specifies a command with any optional arguments that Buck will use to decode Apple's
+    provisioning profiles for iOS builds.  The full path of the provisioning profile will be
+    appended after the command and any arguments specified here.  If unspecified,
+    Buck will use <code>openssl smime -inform der -verify -noverify -in</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'apple' /}
   {param name: 'provisioning_profile_search_path' /}
   {param example_value: 'path/to/provisioning/profiles' /}
   {param description}

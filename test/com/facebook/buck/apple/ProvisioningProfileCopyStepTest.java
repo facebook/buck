@@ -112,6 +112,7 @@ public class ProvisioningProfileCopyStepTest {
         Optional.of(testdataDir.resolve("Invalid.plist")),
         ProvisioningProfileStore.fromSearchPath(
             new DefaultProcessExecutor(new TestConsole()),
+            ProvisioningProfileStore.DEFAULT_READ_COMMAND,
             testdataDir),
         outputFile,
         xcentFile,
@@ -135,6 +136,7 @@ public class ProvisioningProfileCopyStepTest {
         Optional.empty(),
         ProvisioningProfileStore.fromSearchPath(
             new DefaultProcessExecutor(new TestConsole()),
+            ProvisioningProfileStore.DEFAULT_READ_COMMAND,
             testdataDir),
         outputFile,
         xcentFile,
@@ -162,6 +164,7 @@ public class ProvisioningProfileCopyStepTest {
         Optional.empty(),
         ProvisioningProfileStore.fromSearchPath(
             new DefaultProcessExecutor(new TestConsole()),
+            ProvisioningProfileStore.DEFAULT_READ_COMMAND,
             emptyDir),
         outputFile,
         xcentFile,
@@ -185,6 +188,7 @@ public class ProvisioningProfileCopyStepTest {
         Optional.empty(),
         ProvisioningProfileStore.fromSearchPath(
             new DefaultProcessExecutor(new TestConsole()),
+            ProvisioningProfileStore.DEFAULT_READ_COMMAND,
             emptyDir),
         outputFile,
         xcentFile,
@@ -218,6 +222,7 @@ public class ProvisioningProfileCopyStepTest {
         Optional.empty(),
         ProvisioningProfileStore.fromSearchPath(
             new DefaultProcessExecutor(new TestConsole()),
+            ProvisioningProfileStore.DEFAULT_READ_COMMAND,
             testdataDir),
         outputFile,
         xcentFile,
@@ -242,6 +247,7 @@ public class ProvisioningProfileCopyStepTest {
         Optional.empty(),
         ProvisioningProfileStore.fromSearchPath(
             new DefaultProcessExecutor(new TestConsole()),
+            ProvisioningProfileStore.DEFAULT_READ_COMMAND,
             testdataDir),
         outputFile,
         xcentFile,
@@ -276,6 +282,7 @@ public class ProvisioningProfileCopyStepTest {
         Optional.of(entitlementsFile),
         ProvisioningProfileStore.fromSearchPath(
             new DefaultProcessExecutor(new TestConsole()),
+            ProvisioningProfileStore.DEFAULT_READ_COMMAND,
             testdataDir),
         outputFile,
         xcentFile,
