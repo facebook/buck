@@ -32,13 +32,21 @@ import com.facebook.buck.distributed.thrift.FileInfo;
 import com.facebook.buck.distributed.thrift.FrontendRequest;
 import com.facebook.buck.distributed.thrift.FrontendRequestType;
 import com.facebook.buck.distributed.thrift.FrontendResponse;
+import com.facebook.buck.distributed.thrift.PathInfo;
+import com.facebook.buck.distributed.thrift.SetBuckDotFilePathsRequest;
 import com.facebook.buck.distributed.thrift.SetBuckVersionRequest;
 import com.facebook.buck.distributed.thrift.StartBuildRequest;
 import com.facebook.buck.distributed.thrift.StoreBuildGraphRequest;
 import com.facebook.buck.distributed.thrift.StoreLocalChangesRequest;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.model.Pair;
+import com.facebook.buck.util.cache.FileHashCache;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.AsyncFunction;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -46,11 +54,18 @@ import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+
+import javax.annotation.Nullable;
 
 
 public class DistBuildService implements Closeable {
@@ -99,22 +114,48 @@ public class DistBuildService implements Closeable {
   public ListenableFuture<Void> uploadMissingFiles(
       final List<BuildJobStateFileHashes> fileHashes,
       ListeningExecutorService executorService) {
+    List<FileInfo> requiredFiles = new ArrayList<>();
+    for (BuildJobStateFileHashes filesystem : fileHashes) {
+      if (!filesystem.isSetEntries()) {
+        continue;
+      }
+      for (BuildJobStateFileHashEntry file : filesystem.entries) {
+        if (file.isSetRootSymLink()) {
+          LOG.info(
+              "File with path [%s] is a symlink. Skipping upload..",
+              file.path.getPath());
+          continue;
+        } else if (file.isIsDirectory()) {
+          LOG.info(
+              "Path [%s] is a directory. Skipping upload..",
+              file.path.getPath());
+          continue;
+        }
+
+        // TODO(shivanker): Eventually, we won't have file contents in BuildJobState.
+        // Then change this code to load file contents inline (only for missing files)
+        FileInfo fileInfo = new FileInfo();
+        fileInfo.setContent(file.getContents());
+        fileInfo.setContentHash(file.getHashCode());
+        requiredFiles.add(fileInfo);
+      }
+    }
+
+    return uploadMissingFilesFromList(requiredFiles, executorService);
+  }
+
+  private ListenableFuture<Void> uploadMissingFilesFromList(
+      final List<FileInfo> fileList,
+      ListeningExecutorService executorService) {
     return executorService.submit(new Callable<Void>() {
       @Override
       public Void call() throws IOException {
-        Map<String, BuildJobStateFileHashEntry> sha1ToFileEntry = new HashMap<>();
-        for (BuildJobStateFileHashes filesystem : fileHashes) {
-          if (!filesystem.isSetEntries()) {
-            continue;
-          }
-          for (BuildJobStateFileHashEntry file : filesystem.entries) {
-            // TODO(shivanker): Eventually, we won't have file contents in BuildJobState.
-            // Then change this code to load file contents inline (only for missing files)
-            sha1ToFileEntry.put(file.hashCode, file);
-          }
+        Map<String, FileInfo> sha1ToFileInfo = new HashMap<>();
+        for (FileInfo file : fileList) {
+          sha1ToFileInfo.put(file.getContentHash(), file);
         }
 
-        List<String> contentHashes = ImmutableList.copyOf(sha1ToFileEntry.keySet());
+        List<String> contentHashes = ImmutableList.copyOf(sha1ToFileInfo.keySet());
         CASContainsRequest containsReq = new CASContainsRequest();
         containsReq.setContentSha1s(contentHashes);
         FrontendRequest request = new FrontendRequest();
@@ -127,32 +168,17 @@ public class DistBuildService implements Closeable {
         List<Boolean> isPresent = response.getCasContainsResponse().exists;
         List<FileInfo> filesToBeUploaded = new LinkedList<>();
         for (int i = 0; i < isPresent.size(); ++i) {
-          BuildJobStateFileHashEntry fileHashEntry = sha1ToFileEntry.get(contentHashes.get(i));
           if (isPresent.get(i)) {
-            LOG.info(
-                "File with path [%s] has already been uploaded. Skipping..",
-                fileHashEntry.path.getPath());
-            continue;
-          } else if (fileHashEntry.isSetRootSymLink()) {
-            LOG.info(
-                "File with path [%s] is a symlink. Skipping upload..",
-                fileHashEntry.path.getPath());
-            continue;
-          } else if (fileHashEntry.isIsDirectory()) {
-            LOG.info(
-                "Path [%s] is a directory. Skipping upload..",
-                fileHashEntry.path.getPath());
             continue;
           }
-
-          LOG.info("Uploading file with path [%s]",  fileHashEntry.path.getPath());
-          FileInfo file = new FileInfo();
-          file.setContentHash(fileHashEntry.getHashCode());
-          file.setContent(fileHashEntry.getContents());
-          filesToBeUploaded.add(file);
+          filesToBeUploaded.add(sha1ToFileInfo.get(contentHashes.get(i)));
         }
 
-
+        LOG.info(
+            "%d out of %d files already exist in the cache. Uploading %d files..",
+            sha1ToFileInfo.size() - filesToBeUploaded.size(),
+            sha1ToFileInfo.size(),
+            filesToBeUploaded.size());
         request = new FrontendRequest();
         StoreLocalChangesRequest storeReq = new StoreLocalChangesRequest();
         storeReq.setFiles(filesToBeUploaded);
@@ -266,6 +292,90 @@ public class DistBuildService implements Closeable {
     request.setType(FrontendRequestType.SET_BUCK_VERSION);
     request.setSetBuckVersionRequest(setBuckVersionRequest);
     makeRequestChecked(request);
+  }
+
+  public void setBuckDotFiles(BuildId id, List<PathInfo> dotFiles) throws IOException {
+    SetBuckDotFilePathsRequest storeBuckDotFilesRequest = new SetBuckDotFilePathsRequest();
+    storeBuckDotFilesRequest.setBuildId(id);
+    storeBuckDotFilesRequest.setDotFiles(dotFiles);
+    FrontendRequest request = new FrontendRequest();
+    request.setType(FrontendRequestType.SET_DOTFILE_PATHS);
+    request.setSetBuckDotFilePathsRequest(storeBuckDotFilesRequest);
+    makeRequestChecked(request);
+  }
+
+  public ListenableFuture<Void> uploadBuckDotFiles(
+      final BuildId id,
+      final ProjectFilesystem filesystem,
+      FileHashCache fileHashCache,
+      ListeningExecutorService executorService) throws IOException {
+    ListenableFuture<Pair<List<FileInfo>, List<PathInfo>>> filesFuture =
+        executorService.submit(new Callable<Pair<List<FileInfo>, List<PathInfo>>>() {
+          @Override
+          public Pair<List<FileInfo>, List<PathInfo>> call() throws IOException {
+
+            Path[] buckDotFilesExceptConfig = Arrays.stream(filesystem.listFiles(Paths.get(".")))
+                .filter(f -> !f.isDirectory())
+                .filter(f -> !Files.isSymbolicLink(f.toPath()))
+                .filter(f -> f.getName().startsWith("."))
+                .filter(f -> f.getName().contains("buck"))
+                .filter(f -> !f.getName().startsWith(".buckconfig"))
+                .map(f -> f.toPath())
+                .toArray(Path[]::new);
+
+            List<FileInfo> fileEntriesToUpload = new LinkedList<>();
+            List<PathInfo> pathEntriesToUpload = new LinkedList<>();
+            for (Path path : buckDotFilesExceptConfig) {
+              FileInfo fileInfoObject = new FileInfo();
+              fileInfoObject.setContent(filesystem.readFileIfItExists(path).get().getBytes());
+              fileInfoObject.setContentHash(fileHashCache.get(path.toAbsolutePath()).toString());
+              fileEntriesToUpload.add(fileInfoObject);
+
+              PathInfo pathInfoObject = new PathInfo();
+              pathInfoObject.setPath(path.toString());
+              pathInfoObject.setContentHash(fileHashCache.get(path.toAbsolutePath()).toString());
+              pathEntriesToUpload.add(pathInfoObject);
+            }
+
+            return new Pair<List<FileInfo>, List<PathInfo>>(
+                fileEntriesToUpload,
+                pathEntriesToUpload);
+          }
+        });
+
+    ListenableFuture<Void> setFilesFuture = Futures.transformAsync(
+        filesFuture,
+        new AsyncFunction<Pair<List<FileInfo>, List<PathInfo>>, Void>() {
+          @Override
+          public ListenableFuture<Void> apply(
+              @Nullable Pair<List<FileInfo>, List<PathInfo>> filesAndPaths) throws IOException {
+            setBuckDotFiles(id, filesAndPaths.getSecond());
+            return Futures.immediateFuture(null);
+          }
+        },
+        executorService);
+
+    ListenableFuture<Void> uploadFilesFuture = Futures.transformAsync(
+        filesFuture,
+        new AsyncFunction<Pair<List<FileInfo>, List<PathInfo>>, Void>() {
+          @Override
+          public ListenableFuture<Void> apply(
+              @Nullable Pair<List<FileInfo>, List<PathInfo>> filesAndPaths) throws Exception {
+            uploadMissingFilesFromList(filesAndPaths.getFirst(), executorService);
+            return Futures.immediateFuture(null);
+          }
+        },
+        executorService);
+
+    return Futures.transform(
+        Futures.allAsList(ImmutableList.of(setFilesFuture, uploadFilesFuture)),
+        new Function<List<Void>, Void>() {
+          @Nullable
+          @Override
+          public Void apply(@Nullable List<Void> input) {
+            return null;
+          }
+        });
   }
 
   @Override

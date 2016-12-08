@@ -24,14 +24,19 @@ import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
 import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.distributed.thrift.LogRecord;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.base.Stopwatch;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -62,6 +67,8 @@ public class DistBuildClientExecutor {
 
   public int executeAndPrintFailuresToEventBus(
       final WeightedListeningExecutorService executorService,
+      ProjectFilesystem projectFilesystem,
+      FileHashCache fileHashCache,
       BuckEventBus eventBus)
       throws IOException, InterruptedException {
 
@@ -70,21 +77,26 @@ public class DistBuildClientExecutor {
     LOG.info("Created job. Build id = " + id.getId());
     logDebugInfo(job);
 
-    try {
-      distBuildService.uploadMissingFiles(buildJobState.fileHashes, executorService).get();
-    } catch (ExecutionException e) {
-      LOG.error("Exception uploading local changes: " + e);
-      throw new RuntimeException(e);
-    }
-    LOG.info("Uploaded local changes. Build status: " + job.getStatus().toString());
+    List<ListenableFuture<Void>> asyncJobs = new LinkedList<>();
+    LOG.info("Uploading local changes.");
+    asyncJobs.add(distBuildService.uploadMissingFiles(buildJobState.fileHashes, executorService));
+
+    LOG.info("Uploading target graph.");
+    asyncJobs.add(distBuildService.uploadTargetGraph(buildJobState, id, executorService));
+
+    LOG.info("Uploading buck dot-files.");
+    asyncJobs.add(distBuildService.uploadBuckDotFiles(
+        id,
+        projectFilesystem,
+        fileHashCache,
+        executorService));
 
     try {
-      distBuildService.uploadTargetGraph(buildJobState, id, executorService).get();
+      Futures.allAsList(asyncJobs).get();
     } catch (ExecutionException e) {
-      LOG.error("Exception uploading build graph: " + e);
+      LOG.error("Upload failed.");
       throw new RuntimeException(e);
     }
-    LOG.info("Uploaded target graph. Build status: " + job.getStatus().toString());
 
     distBuildService.setBuckVersion(id, buckVersion);
     LOG.info("Set Buck Version. Build status: " + job.getStatus().toString());

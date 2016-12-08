@@ -76,6 +76,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.environment.Platform;
@@ -445,6 +446,7 @@ public class BuildCommand extends AbstractCommand {
       final WeightedListeningExecutorService executorService)
       throws IOException, InterruptedException {
     ProjectFilesystem filesystem = params.getCell().getFilesystem();
+    FileHashCache fileHashCache = params.getFileHashCache();
 
     DistBuildTypeCoercerFactory typeCoercerFactory =
         new DistBuildTypeCoercerFactory(params.getObjectMapper());
@@ -496,6 +498,8 @@ public class BuildCommand extends AbstractCommand {
             buckVersion);
         int exitCode = build.executeAndPrintFailuresToEventBus(
             executorService,
+            filesystem,
+            fileHashCache,
             params.getBuckEventBus());
 
         // After dist-build is complete, start build locally and we'll find everything in the cache.
