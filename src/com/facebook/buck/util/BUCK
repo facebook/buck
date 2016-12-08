@@ -53,6 +53,7 @@ IO_SRCS = [
   'PkillProcessManager.java',
   'PrintStreamProcessExecutorFactory.java',
   'ProcessExecutor.java',
+  'ProcessExecutorSerializer.java',
   'ProcessExecutorFactory.java',
   'ProcessHelper.java',
   'ProcessManager.java',

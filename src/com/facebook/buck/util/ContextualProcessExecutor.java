@@ -36,6 +36,14 @@ public class ContextualProcessExecutor implements ProcessExecutor {
     this.context = context;
   }
 
+  public ImmutableMap<String, String> getContext() {
+    return context;
+  }
+
+  public ProcessExecutor getDelegate() {
+    return delegate;
+  }
+
   @Override
   public LaunchedProcess launchProcess(ProcessExecutorParams params) throws IOException {
     return delegate.launchProcess(params, context);
