@@ -62,6 +62,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -89,7 +90,8 @@ import java.util.regex.Pattern;
 
 public class LuaBinaryDescription implements
     Description<LuaBinaryDescription.Arg>,
-    ImplicitDepsInferringDescription<LuaBinaryDescription.Arg> {
+    ImplicitDepsInferringDescription<LuaBinaryDescription.Arg>,
+    VersionRoot<LuaBinaryDescription.Arg> {
 
   private static final Flavor BINARY_FLAVOR = ImmutableFlavor.of("binary");
 
@@ -814,6 +816,11 @@ public class LuaBinaryDescription implements
     }
     targets.addAll(getNativeStarterDepTargets());
     return targets.build();
+  }
+
+  @Override
+  public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
+    return true;
   }
 
   public enum StarterType {

@@ -25,13 +25,16 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
 
-public class LuaLibraryDescription implements Description<LuaLibraryDescription.Arg> {
+public class LuaLibraryDescription implements
+    Description<LuaLibraryDescription.Arg>,
+    VersionPropagator<LuaLibraryDescription.Arg> {
 
   @Override
   public Arg createUnpopulatedConstructorArg() {
