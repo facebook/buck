@@ -35,6 +35,16 @@ public interface WorkerProcessProtocol {
   void sendCommand(int messageID, WorkerProcessCommand command) throws IOException;
 
   /**
+   * This method expects to receive a command to invoke on this end.
+   */
+  WorkerProcessCommand receiveCommand(int messageID) throws IOException;
+
+  /**
+   * Sends a response for previously received command.
+   */
+  void sendCommandResponse(int messageID, String type, int exitCode) throws IOException;
+
+  /**
    * This method expects to receive a response for previously sent command.
    */
   int receiveCommandResponse(int messageID) throws IOException;

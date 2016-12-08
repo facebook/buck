@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
 
@@ -162,11 +163,124 @@ public class WorkerProcessProtocolZero implements WorkerProcessProtocol {
   }
 
   /*
+    Expects a message that looks like this:
+      ,{
+        id: <id>,
+        type: 'command',
+        args_path: <argsPath>,
+        stdout_path: <stdoutPath>,
+        stderr_path: <stderrPath>,
+      }
+  */
+  @Override
+  public WorkerProcessCommand receiveCommand(int messageID) throws IOException {
+    int id = -1;
+    String type = "";
+    String argsPath = "";
+    String stdoutPath = "";
+    String stderrPath = "";
+    try {
+      processStdoutReader.beginObject();
+      while (processStdoutReader.hasNext()) {
+        String property = processStdoutReader.nextName();
+        if (property.equals("id")) {
+          id = processStdoutReader.nextInt();
+        } else if (property.equals("type")) {
+          type = processStdoutReader.nextString();
+        } else if (property.equals("args_path")) {
+          argsPath = processStdoutReader.nextString();
+        } else if (property.equals("stdout_path")) {
+          stdoutPath = processStdoutReader.nextString();
+        } else if (property.equals("stderr_path")) {
+          stderrPath = processStdoutReader.nextString();
+        } else {
+          processStdoutReader.skipValue();
+        }
+      }
+      processStdoutReader.endObject();
+    } catch (IOException e) {
+      throw new HumanReadableException(e,
+          "Error receiving command from external process.\nStderr from external process:\n%s",
+          getStdErrorOutput());
+    }
+
+    if (id != messageID) {
+      throw new HumanReadableException(String.format("Expected command's \"id\" value to be " +
+          "\"%d\", got \"%d\" instead.", messageID, id));
+    }
+    if (!type.equals(TYPE_COMMAND)) {
+      throw new HumanReadableException(String.format("Expected command's \"type\" " +
+          "to be \"%s\", got \"%s\" instead.", TYPE_COMMAND, type));
+    }
+
+    return WorkerProcessCommand.of(
+        Paths.get(argsPath),
+        Paths.get(stdoutPath),
+        Paths.get(stderrPath));
+  }
+
+  /*
+    Sends a message that looks like this if the job was successful:
+      ,{
+        id: <messageID>,
+        type: 'result',
+        exit_code: 0
+      }
+
+    of a message that looks like this if message was correct but job failed due to various reasons:
+      ,{
+        id: <messageID>,
+        type: 'result',
+        exit_code: <exitCode>
+      }
+
+    or a message that looks like this if process received a message type it cannot
+    interpret:
+      ,{
+        id: <messageID>,
+        type: 'error',
+        exit_code: 1
+      }
+
+    or a message that looks like this if process received a valid message type but other
+    attributes of the message were in an inconsistent state:
+      ,{
+        id: <messageID>,
+        type: 'error',
+        exit_code: 2
+      }
+  */
+  @Override
+  public void sendCommandResponse(int messageID, String type, int exitCode) throws IOException {
+    if (!type.equals(TYPE_RESULT) && !type.equals(TYPE_ERROR)) {
+      throw new HumanReadableException(String.format("Expected response's \"type\" " +
+          "to be one of [\"%s\",\"%s\"], got \"%s\" instead.", TYPE_RESULT, TYPE_ERROR, type));
+    }
+    if (type.equals(TYPE_ERROR) && exitCode != 1 && exitCode != 2) {
+      throw new HumanReadableException(String.format("For response with type " +
+          "\"%s\" exit code is expected to be 1 or 2, got %d instead.", type, exitCode));
+    }
+    processStdinWriter.beginObject();
+    processStdinWriter.name("id").value(messageID);
+    processStdinWriter.name("type").value(type);
+    processStdinWriter.name("exit_code").value(exitCode);
+    processStdinWriter.endObject();
+    processStdinWriter.flush();
+  }
+
+  /*
     Expects a message that looks like this if the job was successful:
       ,{
         id: <messageID>,
         type: 'result',
         exit_code: 0
+      }
+
+    of a message that looks like this if message was correct but job failed due to various reasons:
+      ,{
+        id: <messageID>,
+        type: 'result',
+        exit_code: <exitCode>
       }
 
     or a message that looks like this if the external tool received a message type it cannot
