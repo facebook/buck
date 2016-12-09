@@ -431,11 +431,10 @@ public class KnownBuildRuleTypes {
     for (Flavor flavor: cxxFlavors) {
       if (!cxxSystemPlatformsMap.containsKey(flavor)) {
         if (possibleHostFlavors.contains(flavor)) {
-            // If a flavor is for an alternate host, it's safe to skip.
-            continue;
+          // If a flavor is for an alternate host, it's safe to skip.
+          continue;
         }
-        throw new HumanReadableException(
-            "Could not find platform for which overrides were specified: " + flavor);
+        LOG.warn("Could not find platform for which overrides were specified: " + flavor);
       }
 
       cxxOverridePlatformsMap.put(flavor, CxxPlatforms.copyPlatformWithFlavorAndConfig(
