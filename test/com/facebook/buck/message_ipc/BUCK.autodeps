@@ -3,6 +3,7 @@
     "deps" : [
       "//src/com/facebook/buck/message_ipc:message_ipc",
       "//src/com/facebook/buck/shell:worker_process",
+      "//src/com/facebook/buck/util:object_mapper",
       "//test/com/facebook/buck/shell:testutil",
       "//third-party/java/guava:guava",
       "//third-party/java/hamcrest:java-hamcrest",

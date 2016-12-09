@@ -46,6 +46,7 @@
       "//src/com/facebook/buck/query:query",
       "//src/com/facebook/buck/rules:action_graph_cache",
       "//src/com/facebook/buck/rules:build_rule",
+      "//src/com/facebook/buck/rules:interfaces",
       "//src/com/facebook/buck/rules:relative_cell_name",
       "//src/com/facebook/buck/rules:rule_key",
       "//src/com/facebook/buck/rules:rules",
