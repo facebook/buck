@@ -38,6 +38,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
@@ -47,8 +48,9 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
 
-public class HaskellPrebuiltLibraryDescription
-    implements Description<HaskellPrebuiltLibraryDescription.Arg> {
+public class HaskellPrebuiltLibraryDescription implements
+    Description<HaskellPrebuiltLibraryDescription.Arg>,
+    VersionPropagator<HaskellPrebuiltLibraryDescription.Arg> {
 
   @Override
   public Arg createUnpopulatedConstructorArg() {

@@ -44,6 +44,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -62,7 +63,8 @@ import java.util.Optional;
 public class HaskellLibraryDescription implements
     Description<HaskellLibraryDescription.Arg>,
     ImplicitDepsInferringDescription<HaskellLibraryDescription.Arg>,
-    Flavored {
+    Flavored,
+    VersionPropagator<HaskellLibraryDescription.Arg> {
 
   private static final FlavorDomain<Type> LIBRARY_TYPE =
       FlavorDomain.from("Haskell Library Type", Type.class);

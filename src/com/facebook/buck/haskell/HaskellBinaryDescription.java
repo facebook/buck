@@ -44,6 +44,7 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -57,7 +58,8 @@ import java.util.Optional;
 public class HaskellBinaryDescription implements
     Description<HaskellBinaryDescription.Arg>,
     ImplicitDepsInferringDescription<HaskellBinaryDescription.Arg>,
-    Flavored {
+    Flavored,
+    VersionRoot<HaskellBinaryDescription.Arg> {
 
   private static final FlavorDomain<Type> BINARY_TYPE =
       FlavorDomain.from("Haskell Binary Type", Type.class);
@@ -234,6 +236,11 @@ public class HaskellBinaryDescription implements
     }
 
     return false;
+  }
+
+  @Override
+  public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
+    return true;
   }
 
   protected enum Type implements FlavorConvertible {
