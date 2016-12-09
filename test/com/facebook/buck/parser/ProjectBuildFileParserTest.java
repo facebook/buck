@@ -304,6 +304,44 @@ public class ProjectBuildFileParserTest {
   }
 
   @Test
+  public void whenSubprocessReturnsSyntaxErrorWithoutOffsetThenExceptionIsFormattedWithoutColumn()
+      throws IOException, BuildFileParseException, InterruptedException {
+    // This test depends on unix utilities that don't exist on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    TestProjectBuildFileParserFactory buildFileParserFactory =
+        new TestProjectBuildFileParserFactory(cell.getRoot(), cell.getKnownBuildRuleTypes());
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage(
+        "Parse error for build file foo/BUCK:\n" +
+            "Syntax error on line 23:\n" +
+            "java_test(name=*@!&#(!@&*()");
+
+    try (ProjectBuildFileParser buildFileParser =
+             buildFileParserFactory.createNoopParserThatAlwaysReturnsErrorWithException(
+                 BuckEventBusFactory.newInstance(new FakeClock(0)),
+                 "This is an error",
+                 "parser",
+                 ImmutableMap.<String, Object>builder()
+                     .put("type", "SyntaxError")
+                     .put("value", "You messed up")
+                     .put("filename", "foo/BUCK")
+                     .put("lineno", 23)
+                     .put("text", "java_test(name=*@!&#(!@&*()\n")
+                     .put("traceback", ImmutableList.of(
+                         ImmutableMap.of(
+                             "filename", "foo/BUCK",
+                             "line_number", 23,
+                             "function_name", "<module>",
+                             "text", "java_test(name=*@!&#(!@&*()\n"
+                         )))
+                     .build())) {
+      buildFileParser.initIfNeeded();
+      buildFileParser.getAllRulesAndMetaRules(Paths.get("foo/BUCK"));
+    }
+  }
+
+  @Test
   public void whenSubprocessReturnsSyntaxErrorInDifferentFileThenExceptionContainsTwoFileNames()
       throws IOException, BuildFileParseException, InterruptedException {
     // This test depends on unix utilities that don't exist on Windows.

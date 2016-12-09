@@ -518,7 +518,7 @@ public class ProjectBuildFileParser implements AutoCloseable {
           BuildFileSyntaxError.of(
               Paths.get((String) exceptionMap.get("filename")),
               (Number) exceptionMap.get("lineno"),
-              (Number) exceptionMap.get("offset"),
+              Optional.ofNullable((Number) exceptionMap.get("offset")),
               (String) exceptionMap.get("text")));
     } else {
       return Optional.empty();
@@ -597,26 +597,26 @@ public class ProjectBuildFileParser implements AutoCloseable {
       Optional<BuildFileSyntaxError> syntaxErrorOpt = exceptionData.getSyntaxError();
       if (syntaxErrorOpt.isPresent()) {
         BuildFileSyntaxError syntaxError = syntaxErrorOpt.get();
-        String prefix;
+        String errorMsg = "";
         if (buildFile.equals(syntaxError.getFileName())) {
           // BuildFileParseException will include the filename
-          prefix = String.format(
-              "Syntax error on line %s",
-              syntaxError.getLineNumber());
+          errorMsg += String.format("Syntax error on line %s", syntaxError.getLineNumber());
         } else {
           // Parse error was in some other file included by the build file
-          prefix = String.format(
-              "Syntax error in %s\nLine %s",
-              syntaxError.getFileName(),
-              syntaxError.getLineNumber());
+          errorMsg +=
+              String.format(
+                  "Syntax error in %s\nLine %s",
+                  syntaxError.getFileName(),
+                  syntaxError.getLineNumber());
         }
-        return new IOException(
-            String.format(
-                "%s, column %s:\n%s%s",
-                prefix,
-                syntaxError.getOffset(),
-                syntaxError.getText(),
-                Strings.padStart("^", syntaxError.getOffset().intValue(), ' ')));
+        if (syntaxError.getOffset().isPresent()) {
+          errorMsg += String.format(", column %s", syntaxError.getOffset().get());
+        }
+        errorMsg += ":\n" + syntaxError.getText();
+        if (syntaxError.getOffset().isPresent()) {
+          errorMsg += Strings.padStart("^", syntaxError.getOffset().get().intValue(), ' ');
+        }
+        return new IOException(errorMsg);
       } else if (exceptionData.getType().equals("IncorrectArgumentsException")) {
         return new IOException(message);
       } else {

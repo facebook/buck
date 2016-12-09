@@ -21,12 +21,13 @@ import com.facebook.buck.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleTuple
 interface AbstractBuildFileSyntaxError {
   Path getFileName();
   Number getLineNumber();
-  Number getOffset();
+  Optional<Number> getOffset();
   String getText();
 }
