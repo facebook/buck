@@ -37,7 +37,7 @@ public class DepsBuilder {
     return builder.build();
   }
 
-  public DepsBuilder add(Tool tool) {
+  private DepsBuilder add(Tool tool) {
     builder.addAll(tool.getDeps(pathResolver));
     return this;
   }
@@ -53,6 +53,16 @@ public class DepsBuilder {
 
   public DepsBuilder add(BuildRule buildRule) {
     builder.add(buildRule);
+    return this;
+  }
+
+  public DepsBuilder add(PreprocessorDelegate delegate) {
+    add(delegate.getPreprocessor());
+    return this;
+  }
+
+  public DepsBuilder add(CompilerDelegate delegate) {
+    add(delegate.getCompiler());
     return this;
   }
 }

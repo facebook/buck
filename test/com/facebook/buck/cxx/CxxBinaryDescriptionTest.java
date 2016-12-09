@@ -207,7 +207,7 @@ public class CxxBinaryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(preprocessRule1)
             .map(HasBuildTarget::getBuildTarget)
-            ::iterator,
+            .collect(MoreCollectors.toImmutableSet()),
         Matchers.containsInAnyOrder(
             genHeaderTarget,
             headerSymlinkTreeTarget,
@@ -235,7 +235,7 @@ public class CxxBinaryDescriptionTest {
     assertThat(
         DependencyAggregationTestUtil.getDisaggregatedDeps(preprocessRule2)
             .map(HasBuildTarget::getBuildTarget)
-            ::iterator,
+            .collect(MoreCollectors.toImmutableList()),
         Matchers.containsInAnyOrder(
             genHeaderTarget,
             genSourceTarget,

@@ -295,4 +295,8 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     }
   }
 
+  public PreprocessorFlags getPreprocessorFlags() {
+    return preprocessorFlags;
+  }
+
 }
