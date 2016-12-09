@@ -111,6 +111,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         .addAllExtraArguments(extraArguments)
         .setSafeAnnotationProcessors(safeAnnotationProcessors)
         .setTrackClassUsageNotDisabled(trackClassUsage)
+        .setJavacLocation(getJavacLocation())
         .build();
   }
 
@@ -141,6 +142,15 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
   Optional<SourcePath> getJavacJarPath() {
     return delegate.getSourcePath("tools", "javac_jar");
+  }
+
+  JavacOptions.JavacLocation getJavacLocation() {
+    return delegate.getEnum(
+        "java",
+        "location",
+        JavacOptions.JavacLocation.class)
+        .orElse(
+            AbstractJavacOptions.JavacLocation.IN_PROCESS);
   }
 
   Optional<String> getCompilerClassName() {

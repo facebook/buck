@@ -52,6 +52,9 @@ import java.util.regex.Pattern;
 @BuckStyleImmutable
 abstract class AbstractJavacOptions implements RuleKeyAppendable {
 
+  public static final String COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL =
+      "com.sun.tools.javac.api.JavacTool";
+
   /**
    * The method in which the compiler output is spooled.
    */
@@ -78,6 +81,17 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     JAR,
     /** Run javac in-process, loading it from the JRE in which Buck is running. */
     JDK,
+  }
+
+  public enum JavacLocation {
+    /**
+     * Perform compilation inside main process.
+     */
+    IN_PROCESS,
+    /**
+     * Delegate compilation into separate process.
+     */
+    OUT_OF_PROCESS,
   }
 
   protected abstract Optional<Either<Path, SourcePath>> getJavacPath();
@@ -140,6 +154,11 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     }
   }
 
+  @Value.Default
+  public JavacLocation getJavacLocation() {
+    return JavacLocation.IN_PROCESS;
+  }
+
   @Value.Lazy
   public Javac getJavac() {
     final JavacSource javacSource = getJavacSource();
@@ -147,13 +166,26 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
       case EXTERNAL:
         return ExternalJavac.createJavac(getJavacPath().get());
       case JAR:
-        return new JarBackedJavac(
-            getCompilerClassName().orElse("com.sun.tools.javac.api.JavacTool"),
-            ImmutableSet.of(getJavacJarPath().get()));
+        switch (getJavacLocation()) {
+          case IN_PROCESS:
+            return new JarBackedJavac(
+                getCompilerClassName().orElse(COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL),
+                ImmutableSet.of(getJavacJarPath().get()));
+          case OUT_OF_PROCESS:
+              throw new RuntimeException("OutOfProcessJarBackedJavac is not supported yet");
+        }
+        break;
       case JDK:
-        return new JdkProvidedInMemoryJavac();
+        switch (getJavacLocation()) {
+          case IN_PROCESS:
+            return new JdkProvidedInMemoryJavac();
+          case OUT_OF_PROCESS:
+            throw new RuntimeException("OutOfProcessJdkProvidedInMemoryJavac is not supported yet");
+        }
+        break;
     }
-    throw new AssertionError("Unknown javac source: " + javacSource);
+    throw new AssertionError(
+        "Unknown javac source/javac location pair: " + javacSource + "/" + getJavacLocation());
   }
 
   public void validateOptions(Function<String, Boolean> classpathChecker) throws IOException {
