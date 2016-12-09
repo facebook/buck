@@ -45,6 +45,7 @@ import com.facebook.buck.util.TriState;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -117,6 +118,7 @@ public class CommandRunnerParamsForTesting {
                 ExecutorPool.PROJECT,
                 MoreExecutors.newDirectExecutorService()))
         .setBuildEnvironmentDescription(BUILD_ENVIRONMENT_DESCRIPTION)
+        .setVersionedTargetGraphCache(new VersionedTargetGraphCache())
         .setActionGraphCache(new ActionGraphCache(new BroadcastEventListener()))
         .setKnownBuildRuleTypesFactory(
             new KnownBuildRuleTypesFactory(new FakeProcessExecutor(), androidDirectoryResolver))

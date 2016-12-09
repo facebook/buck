@@ -129,6 +129,7 @@ import com.facebook.buck.util.shutdown.NonReentrantSystemExit;
 import com.facebook.buck.util.versioncontrol.DefaultVersionControlCmdLineInterfaceFactory;
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
+import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -331,6 +332,7 @@ public final class Main {
     private final EventBus fileEventBus;
     private final Optional<WebServer> webServer;
     private final ConcurrentMap<String, WorkerProcessPool> persistentWorkerPools;
+    private final VersionedTargetGraphCache versionedTargetGraphCache;
     private final ActionGraphCache actionGraphCache;
     private final BroadcastEventListener broadcastEventListener;
 
@@ -350,6 +352,7 @@ public final class Main {
 
       this.broadcastEventListener = new BroadcastEventListener();
       this.actionGraphCache = new ActionGraphCache(broadcastEventListener);
+      this.versionedTargetGraphCache = new VersionedTargetGraphCache();
 
       TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(objectMapper);
       this.parser = new Parser(
@@ -444,6 +447,10 @@ public final class Main {
 
     private Parser getParser() {
       return parser;
+    }
+
+    private VersionedTargetGraphCache getVersionedTargetGraphCache() {
+      return versionedTargetGraphCache;
     }
 
     private ActionGraphCache getActionGraphCache() {
@@ -1190,6 +1197,7 @@ public final class Main {
 
           // Create or get Parser and invalidate cached command parameters.
           Parser parser = null;
+          VersionedTargetGraphCache versionedTargetGraphCache = null;
           ActionGraphCache actionGraphCache = null;
 
           if (isDaemon) {
@@ -1211,6 +1219,7 @@ public final class Main {
                   buildEventBus,
                   watchmanWatcher,
                   watchmanFreshInstanceAction);
+              versionedTargetGraphCache = daemon.getVersionedTargetGraphCache();
               actionGraphCache = daemon.getActionGraphCache();
             } catch (WatchmanWatcherException | IOException e) {
               buildEventBus.post(
@@ -1218,6 +1227,10 @@ public final class Main {
                       "Watchman threw an exception while parsing file changes.\n%s",
                       e.getMessage()));
             }
+          }
+
+          if (versionedTargetGraphCache == null) {
+            versionedTargetGraphCache = new VersionedTargetGraphCache();
           }
 
           if (actionGraphCache == null) {
@@ -1290,6 +1303,7 @@ public final class Main {
                   .setFileHashCache(fileHashCache)
                   .setExecutors(executors)
                   .setBuildEnvironmentDescription(buildEnvironmentDescription)
+                  .setVersionedTargetGraphCache(versionedTargetGraphCache)
                   .setActionGraphCache(actionGraphCache)
                   .setKnownBuildRuleTypesFactory(factory)
                   .build());

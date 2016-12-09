@@ -33,6 +33,7 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
@@ -53,6 +54,8 @@ public interface AbstractCommandRunnerParams {
   InputStream getStdIn();
 
   Cell getCell();
+
+  VersionedTargetGraphCache getVersionedTargetGraphCache();
 
   ArtifactCache getArtifactCache();
 
