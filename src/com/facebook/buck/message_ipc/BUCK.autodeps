@@ -1,6 +1,8 @@
 {
   "message_ipc" : {
-    "deps" : [ ],
+    "deps" : [
+      "//third-party/java/jsr:jsr305"
+    ],
     "exported_deps" : [
       "//src/com/facebook/buck/shell:worker_process",
       "//third-party/java/guava:guava",

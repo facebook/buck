@@ -55,14 +55,15 @@ public class ConnectionTest {
                 Optional.empty())));
     MessageTransport messageTransport = new MessageTransport(workerProcess, messageSerializer);
 
-    Connection<RemoteInterface> connection = new Connection<>(messageTransport);
-    connection.setRemoteInterface(RemoteInterface.class, RemoteInterface.class.getClassLoader());
+    try (Connection<RemoteInterface> connection = new Connection<>(messageTransport)) {
+      connection.setRemoteInterface(RemoteInterface.class, RemoteInterface.class.getClassLoader());
 
-    String result = connection.getRemoteObjectProxy().doString("input");
-    assertThat(result, Matchers.equalTo("output"));
+      String result = connection.getRemoteObjectProxy().doString("input");
+      assertThat(result, Matchers.equalTo("output"));
 
-    int intResult = connection.getRemoteObjectProxy().doInt(4);
-    assertThat(intResult, Matchers.equalTo(42));
+      int intResult = connection.getRemoteObjectProxy().doInt(4);
+      assertThat(intResult, Matchers.equalTo(42));
+    }
   }
 
   @Test
@@ -78,10 +79,11 @@ public class ConnectionTest {
                 Optional.empty())));
     MessageTransport messageTransport = new MessageTransport(workerProcess, messageSerializer);
 
-    Connection<RemoteInterface> connection = new Connection<>(messageTransport);
-    connection.setRemoteInterface(RemoteInterface.class, RemoteInterface.class.getClassLoader());
+    try (Connection<RemoteInterface> connection = new Connection<>(messageTransport)) {
+      connection.setRemoteInterface(RemoteInterface.class, RemoteInterface.class.getClassLoader());
 
-    boolean result = connection.getRemoteObjectProxy().doBoolean("input", 42.1234);
-    assertThat(result, Matchers.equalTo(false));
+      boolean result = connection.getRemoteObjectProxy().doBoolean("input", 42.1234);
+      assertThat(result, Matchers.equalTo(false));
+    }
   }
 }

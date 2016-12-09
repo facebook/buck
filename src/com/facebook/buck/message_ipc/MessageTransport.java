@@ -18,10 +18,12 @@ package com.facebook.buck.message_ipc;
 
 import com.facebook.buck.shell.WorkerJobResult;
 import com.facebook.buck.shell.WorkerProcess;
+import com.google.common.base.Preconditions;
 
-public class MessageTransport {
+public class MessageTransport implements AutoCloseable {
   private final WorkerProcess workerProcess;
   private final MessageSerializer serializer;
+  private boolean isClosed = false;
 
   public MessageTransport(WorkerProcess workerProcess, MessageSerializer serializer) {
     this.workerProcess = workerProcess;
@@ -31,9 +33,24 @@ public class MessageTransport {
   public ReturnResultMessage sendMessageAndWaitForResponse(
       InvocationMessage message)
       throws Exception {
+    checkNotClose();
     String serializedMessage = serializer.serializeInvocation(message);
     WorkerJobResult result = workerProcess.submitAndWaitForJob(serializedMessage);
     ReturnResultMessage resultMessage = serializer.deserializeResult(result.getStdout().orElse(""));
     return resultMessage;
+  }
+
+  @Override
+  public void close() throws Exception {
+    checkNotClose();
+    workerProcess.close();
+    isClosed = true;
+  }
+
+  private void checkNotClose() {
+    Preconditions.checkState(
+        !isClosed,
+        "%s <%d> is already closed",
+        this.getClass().getSimpleName(), System.identityHashCode(this));
   }
 }
