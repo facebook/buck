@@ -26,8 +26,6 @@ import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.VersionStringComparator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.TreeMultimap;
 
@@ -89,12 +87,11 @@ public class AppleSdkDiscovery {
 
     ImmutableMap.Builder<AppleSdk, AppleSdkPaths> appleSdkPathsBuilder = ImmutableMap.builder();
 
-    Iterable<Path> platformPaths = extraDirs;
+    HashSet<Path> platformPaths = new HashSet<Path>(extraDirs);
     if (developerDir.isPresent()) {
       Path platformsDir = developerDir.get().resolve("Platforms");
       LOG.debug("Searching for Xcode platforms under %s", platformsDir);
-      platformPaths = Iterables.concat(
-        ImmutableSet.of(platformsDir), platformPaths);
+      platformPaths.add(platformsDir);
     }
 
     // We need to find the most recent SDK for each platform so we can

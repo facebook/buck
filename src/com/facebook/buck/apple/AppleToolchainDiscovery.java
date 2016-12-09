@@ -23,8 +23,6 @@ import com.dd.plist.PropertyListParser;
 import com.facebook.buck.log.Logger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 import org.xml.sax.SAXException;
 
@@ -38,6 +36,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Optional;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -64,12 +63,11 @@ public class AppleToolchainDiscovery {
     ImmutableMap.Builder<String, AppleToolchain> toolchainIdentifiersToToolchainsBuilder =
         ImmutableMap.builder();
 
-    Iterable<Path> toolchainPaths = extraDirs;
+    HashSet<Path> toolchainPaths = new HashSet<Path>(extraDirs);
     if (developerDir.isPresent()) {
       Path toolchainsDir = developerDir.get().resolve("Toolchains");
       LOG.debug("Searching for Xcode toolchains under %s", toolchainsDir);
-      toolchainPaths = Iterables.concat(
-        ImmutableSet.of(toolchainsDir), toolchainPaths);
+      toolchainPaths.add(toolchainsDir);
     }
 
     for (Path toolchains : toolchainPaths) {
