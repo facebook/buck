@@ -17,13 +17,8 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.model.BuildTarget;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 
 public interface StepRunner {
 
@@ -32,41 +27,8 @@ public interface StepRunner {
    *
    * Note that this method blocks until the specified command terminates.
    */
-  public void runStepForBuildTarget(
+  void runStepForBuildTarget(
       ExecutionContext context,
       Step step,
       Optional<BuildTarget> buildTarget) throws StepFailedException, InterruptedException;
-
-  public interface StepRunningCallback {
-    void stepsWillRun(Optional<BuildTarget> buildTarget);
-    void stepsDidRun(Optional<BuildTarget> buildTarget);
-  }
-
-  public static final StepRunningCallback NOOP_CALLBACK = new StepRunningCallback() {
-      @Override
-      public void stepsWillRun(Optional<BuildTarget> buildTarget) { }
-
-      @Override
-      public void stepsDidRun(Optional<BuildTarget> buildTarget) { }
-  };
-
-  /**
-   * In a new thread, executes of the list of commands and then invokes {@code interpretResults} to
-   * return a value that represents the output of the commands.
-   */
-  public <T> ListenableFuture<T> runStepsAndYieldResult(
-      ExecutionContext context,
-      List<Step> steps,
-      Callable<T> interpretResults,
-      Optional<BuildTarget> buildTarget,
-      ListeningExecutorService service,
-      StepRunningCallback callback);
-
-  /**
-   * Execute callback in a new thread, once dependencies have completed.
-   */
-  public <T> ListenableFuture<Void> addCallback(
-      ListenableFuture<List<T>> dependencies,
-      FutureCallback<List<T>> callback,
-      ListeningExecutorService service);
 }

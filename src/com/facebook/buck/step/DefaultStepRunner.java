@@ -18,17 +18,10 @@ package com.facebook.buck.step;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.concurrent.MoreFutures;
-import com.google.common.base.Preconditions;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 
 public final class DefaultStepRunner implements StepRunner {
 
@@ -64,36 +57,5 @@ public final class DefaultStepRunner implements StepRunner {
           executionResult,
           buildTarget);
     }
-  }
-
-  @Override
-  public <T> ListenableFuture<T> runStepsAndYieldResult(
-      ExecutionContext context,
-      final List<Step> steps,
-      final Callable<T> interpretResults,
-      final Optional<BuildTarget> buildTarget,
-      ListeningExecutorService listeningExecutorService,
-      final StepRunningCallback callback) {
-    Preconditions.checkState(!listeningExecutorService.isShutdown());
-    Callable<T> callable = () -> {
-      callback.stepsWillRun(buildTarget);
-      for (Step step : steps) {
-        runStepForBuildTarget(context, step, buildTarget);
-      }
-      callback.stepsDidRun(buildTarget);
-
-      return interpretResults.call();
-    };
-
-    return listeningExecutorService.submit(callable);
-  }
-
-  @Override
-  public <T> ListenableFuture<Void> addCallback(
-      ListenableFuture<List<T>> dependencies,
-      FutureCallback<List<T>> callback,
-      ListeningExecutorService listeningExecutorService) {
-    Preconditions.checkState(!listeningExecutorService.isShutdown());
-    return MoreFutures.addListenableCallback(dependencies, callback, listeningExecutorService);
   }
 }

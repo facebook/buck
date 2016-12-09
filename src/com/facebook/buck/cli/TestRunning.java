@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -54,6 +55,7 @@ import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -314,33 +316,16 @@ public class TestRunning {
       }
     }
 
-    final StepRunner.StepRunningCallback testStepRunningCallback =
-        new StepRunner.StepRunningCallback() {
-          @Override
-          public void stepsWillRun(Optional<BuildTarget> buildTarget) {
-            Preconditions.checkState(buildTarget.isPresent());
-            LOG.debug("Test steps will run for %s", buildTarget);
-            params.getBuckEventBus().post(TestRuleEvent.started(buildTarget.get()));
-          }
-
-          @Override
-          public void stepsDidRun(Optional<BuildTarget> buildTarget) {
-            Preconditions.checkState(buildTarget.isPresent());
-            LOG.debug("Test steps did run for %s", buildTarget);
-            params.getBuckEventBus().post(TestRuleEvent.finished(buildTarget.get()));
-          }
-        };
-
     for (TestRun testRun : parallelTestRuns) {
-      ListenableFuture<TestResults> testResults =
-          stepRunner.runStepsAndYieldResult(
-              executionContext,
-              testRun.getSteps(),
-              testRun.getTestResultsCallable(),
-              Optional.of(testRun.getTest().getBuildTarget()),
-              service,
-              testStepRunningCallback);
-        results.add(
+      ListenableFuture<TestResults> testResults = runStepsAndYieldResult(
+          stepRunner,
+          executionContext,
+          testRun.getSteps(),
+          testRun.getTestResultsCallable(),
+          testRun.getTest().getBuildTarget(),
+          params.getBuckEventBus(),
+          service);
+      results.add(
             transformTestResults(
                 params,
                 testResults,
@@ -357,7 +342,7 @@ public class TestRunning {
     final List<TestResults> completedResults = Lists.newArrayList();
 
     final ListeningExecutorService directExecutorService = MoreExecutors.newDirectExecutorService();
-    ListenableFuture<Void> uberFuture = stepRunner.addCallback(
+    ListenableFuture<Void> uberFuture = MoreFutures.addListenableCallback(
         parallelTestStepsFuture,
         new FutureCallback<List<TestResults>>() {
           @Override
@@ -369,13 +354,14 @@ public class TestRunning {
               separateResultsList.add(
                   transformTestResults(
                       params,
-                      stepRunner.runStepsAndYieldResult(
+                      runStepsAndYieldResult(
+                          stepRunner,
                           executionContext,
                           testRun.getSteps(),
                           testRun.getTestResultsCallable(),
-                          Optional.of(testRun.getTest().getBuildTarget()),
-                          directExecutorService,
-                          testStepRunningCallback),
+                          testRun.getTest().getBuildTarget(),
+                          params.getBuckEventBus(),
+                          directExecutorService),
                       testRun.getTest(),
                       testRun.getTestReportingCallback(),
                       testTargets,
@@ -893,5 +879,29 @@ public class TestRunning {
     }
 
     return ImmutableSet.copyOf(srcFolders);
+  }
+
+  private static ListenableFuture<TestResults> runStepsAndYieldResult(
+      StepRunner stepRunner,
+      ExecutionContext context,
+      final List<Step> steps,
+      final Callable<TestResults> interpretResults,
+      final BuildTarget buildTarget,
+      BuckEventBus eventBus,
+      ListeningExecutorService listeningExecutorService) {
+    Preconditions.checkState(!listeningExecutorService.isShutdown());
+    Callable<TestResults> callable = () -> {
+      LOG.debug("Test steps will run for %s", buildTarget);
+      eventBus.post(TestRuleEvent.started(buildTarget));
+      for (Step step : steps) {
+        stepRunner.runStepForBuildTarget(context, step, Optional.of(buildTarget));
+      }
+      LOG.debug("Test steps did run for %s", buildTarget);
+      eventBus.post(TestRuleEvent.finished(buildTarget));
+
+      return interpretResults.call();
+    };
+
+    return listeningExecutorService.submit(callable);
   }
 }
