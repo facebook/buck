@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -34,7 +33,6 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.io.CharStreams;
 
-import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -308,21 +306,6 @@ public class GenruleIntegrationTest {
     Path outputTwo = workspace.buildAndReturnOutput("//:extended-time-two");
 
     assertZipsAreEqual(outputOne, outputTwo);
-  }
-
-  @Test
-  public void genruleGeneratedSource() throws IOException {
-    assumeThat(
-        "This genrule uses the 'bash' argument, which is not supported on Windows. ",
-        Platform.detect(),
-        Matchers.not(Matchers.is(Platform.WINDOWS)));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this,
-            "genrule_with_generated_src",
-            temporaryFolder);
-    workspace.setUp();
-    workspace.runBuckCommand("build", "//:gen").assertSuccess();
   }
 
   private void assertZipsAreEqual(Path zipPathOne, Path zipPathTwo) throws IOException {
