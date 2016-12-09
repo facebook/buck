@@ -22,11 +22,11 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
-public class TestSelectorTest {
+public class PatternTestSelectorTest {
 
   @Test
   public void shouldConstructAnSelectorThatIsNotInclusive() {
-    TestSelector selector = TestSelector.buildFromSelectorString("!com.example.clown.Car");
+    TestSelector selector = PatternTestSelector.buildFromSelectorString("!com.example.clown.Car");
 
     assertFalse(selector.isInclusive());
   }
@@ -42,19 +42,19 @@ public class TestSelectorTest {
   }
 
   private void assertIsInclusive(String rawSelector) {
-    TestSelector testSelector = TestSelector.buildFromSelectorString(rawSelector);
+    TestSelector testSelector = PatternTestSelector.buildFromSelectorString(rawSelector);
     String message = String.format("'%s' is an inclusive test selector", rawSelector);
     assertTrue(message, testSelector.isInclusive());
   }
 
   @Test(expected = RuntimeException.class)
   public void shouldThrowOnEmptyInput() {
-    TestSelector.buildFromSelectorString("");
+    PatternTestSelector.buildFromSelectorString("");
   }
 
   @Test(expected = RuntimeException.class)
   public void shouldThrowOnNullInput() {
-    TestSelector.buildFromSelectorString(null);
+    PatternTestSelector.buildFromSelectorString(null);
   }
 
   @Test
@@ -71,7 +71,7 @@ public class TestSelectorTest {
 
   private void assertThrowsParseException(String rawSelector) {
     try {
-      TestSelector.buildFromSelectorString(rawSelector);
+      PatternTestSelector.buildFromSelectorString(rawSelector);
     } catch (TestSelectorParseException e) {
       return;
     }
@@ -80,13 +80,13 @@ public class TestSelectorTest {
 
   @Test(expected = TestSelectorParseException.class)
   public void shouldThrowOnUnparseableRegularExpression() {
-    TestSelector.buildFromSelectorString("Cloooo(#)ooowntown");
+    PatternTestSelector.buildFromSelectorString("Cloooo(#)ooowntown");
   }
 
   @Test
   public void shouldSelectAClassByItself() {
     TestDescription description = new TestDescription("com.example.clown.Car", null);
-    TestSelector selector = TestSelector.buildFromSelectorString("com.example.clown.Car");
+    TestSelector selector = PatternTestSelector.buildFromSelectorString("com.example.clown.Car");
     assertTrue(selector.matches(description));
   }
 
@@ -108,7 +108,7 @@ public class TestSelectorTest {
   }
 
   private void assertMatchesTestDescription(TestDescription description, String rawSelector) {
-    TestSelector testSelector = TestSelector.buildFromSelectorString(rawSelector);
+    TestSelector testSelector = PatternTestSelector.buildFromSelectorString(rawSelector);
     String message = String.format("Test selector '%s' should match class:%s method:%s",
         rawSelector,
         description.getClassName(),
@@ -122,7 +122,7 @@ public class TestSelectorTest {
     TestDescription desc2 = new TestDescription("com.example.clown.Flower", "testIsComical");
     TestDescription desc3 = new TestDescription("com.example.clown.Shoes", "testIsDeadlySerious");
 
-    TestSelector selector = TestSelector.buildFromSelectorString("#testIsComical");
+    TestSelector selector = PatternTestSelector.buildFromSelectorString("#testIsComical");
 
     assertTrue(selector.matches(desc1));
     assertTrue(selector.matches(desc2));

@@ -16,21 +16,7 @@
 
 package com.facebook.buck.test.selectors;
 
-/**
- * A way of matching a test-method in a test-class, and saying whether or not to include any matches
- * in a test run.
- */
-public interface TestSelector {
-  String getRawSelector();
-
-  String getExplanation();
-
-  boolean isInclusive();
-
-  boolean isMatchAnyClass();
-
-  boolean isMatchAnyMethod();
-
-  boolean matches(TestDescription description);
-
-}
+/** Defining @Nullable locally here because we cannot import
+ * javax.annotation.Nullable;
+ *according to comment in src/com/facebook/buck/test/selectors/BUCK */
+public @interface Nullable {}

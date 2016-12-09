@@ -118,15 +118,17 @@ public class ExternalTestRunnerIntegrationTest {
         Matchers.matchesPattern(
             Joiner.on(System.lineSeparator()).join(
                 "<\\?xml version=\"1.1\" encoding=\"UTF-8\" standalone=\"no\"\\?>",
-                "<testcase name=\"SimpleTest\">",
-                "  <test name=\"passingTest\" success=\"true\" time=\"\\d*\" type=\"SUCCESS\">",
+                "<testcase name=\"SimpleTest\" runner_capabilities=\"simple_test_selector\">",
+                "  <test name=\"passingTest\" success=\"true\" suite=\"SimpleTest\" " +
+                    "time=\"\\d*\" type=\"SUCCESS\">",
                 "    <stdout>passed!",
                 "</stdout>",
                 "  </test>",
                 "</testcase>",
                 "<\\?xml version=\"1.1\" encoding=\"UTF-8\" standalone=\"no\"\\?>",
-                "<testcase name=\"SimpleTest2\">",
-                "  <test name=\"passingTest\" success=\"true\" time=\"\\d*\" type=\"SUCCESS\">",
+                "<testcase name=\"SimpleTest2\" runner_capabilities=\"simple_test_selector\">",
+                "  <test name=\"passingTest\" success=\"true\" suite=\"SimpleTest2\" " +
+                    "time=\"\\d*\" type=\"SUCCESS\">",
                 "    <stdout>passed!",
                 "</stdout>",
                 "  </test>",

@@ -2,9 +2,18 @@
   "selectors" : {
     "deps" : [
       "//src/com/facebook/buck/test/selectors:selectors",
+      "//test/com/facebook/buck/test/selectors:testutil",
       "//third-party/java/guava:guava",
+      "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]
+  },
+  "testutil" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/event/listener:listener",
+      "//third-party/java/hamcrest:java-hamcrest"
+    ]
   }
 }
