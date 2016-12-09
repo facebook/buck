@@ -63,7 +63,7 @@ public class TimeoutTest {
     RunnerBuilder builder = new RunnerBuilder() {
       @Override
       public Runner runnerForClass(Class<?> clazz) throws Throwable {
-        return new BuckBlockJUnit4ClassRunner(clazz, /* defaultTestTimeoutMillis */ 100);
+        return new BuckBlockJUnit4ClassRunner(clazz, /* defaultTestTimeoutMillis */ 500);
       }
     };
     Runner suite = new Computer().getSuite(builder, new Class<?>[]{testClass});
@@ -93,7 +93,7 @@ public class TimeoutTest {
             "the timeout message from testsMayTimeOut().",
         ImmutableSet.of(
             "This is expected",
-            "test testsMayTimeOut timed out after 100 milliseconds"),
+            "test testsMayTimeOut timed out after 500 milliseconds"),
         messages);
   }
 
@@ -111,7 +111,7 @@ public class TimeoutTest {
     @Test
     public void testsMayTimeOut() throws InterruptedException {
       Assume.assumeTrue(isBeingUsedForTimeoutTest.get());
-      Thread.sleep(1000);
+      Thread.sleep(5000);
     }
 
     @Test
