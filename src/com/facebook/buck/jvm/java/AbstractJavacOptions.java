@@ -162,11 +162,12 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   @Value.Lazy
   public Javac getJavac() {
     final JavacSource javacSource = getJavacSource();
+    final JavacLocation javacLocation = getJavacLocation();
     switch (javacSource) {
       case EXTERNAL:
         return ExternalJavac.createJavac(getJavacPath().get());
       case JAR:
-        switch (getJavacLocation()) {
+        switch (javacLocation) {
           case IN_PROCESS:
             return new JarBackedJavac(
                 getCompilerClassName().orElse(COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL),
@@ -176,7 +177,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
         }
         break;
       case JDK:
-        switch (getJavacLocation()) {
+        switch (javacLocation) {
           case IN_PROCESS:
             return new JdkProvidedInMemoryJavac();
           case OUT_OF_PROCESS:
@@ -185,7 +186,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
         break;
     }
     throw new AssertionError(
-        "Unknown javac source/javac location pair: " + javacSource + "/" + getJavacLocation());
+        "Unknown javac source/javac location pair: " + javacSource + "/" + javacLocation);
   }
 
   public void validateOptions(Function<String, Boolean> classpathChecker) throws IOException {

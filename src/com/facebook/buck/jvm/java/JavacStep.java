@@ -167,9 +167,7 @@ public class JavacStep implements Step {
           stdout,
           stderr,
           Optional.of(verbosity))) {
-
       Javac javac = getJavac();
-
       JavacExecutionContext javacExecutionContext = JavacExecutionContext.of(
           new JavacEventSinkToBuckEventBusBridge(firstOrderContext.getBuckEventBus()),
           stderr,
@@ -184,71 +182,101 @@ public class JavacStep implements Step {
           firstOrderContext.getProcessExecutor(),
           getAbsolutePathsForJavacInputs(javac),
           directToJarOutputSettings);
-
-      int declaredDepsResult = javac.buildWithClasspath(
-          javacExecutionContext,
-          invokingRule,
-          getOptions(context, declaredClasspathEntries),
-          javacOptions.getSafeAnnotationProcessors(),
-          javaSourceFilePaths,
-          pathToSrcsList,
-          workingDirectory);
-
-      String firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
-      String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
-
-      Optional<String> returnedStderr;
-
-      if (declaredDepsResult != 0) {
-        returnedStderr = Optional.of(firstOrderStderr);
-
-        ImmutableList.Builder<String> errorMessage = ImmutableList.builder();
-        errorMessage.add(firstOrderStderr);
-
-        if (suggestBuildRules.isPresent()) {
-          ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
-          ImmutableSortedSet<String> suggestions =
-            ImmutableSortedSet.copyOf(suggestBuildRules.get().suggest(failedImports));
-
-          if (!suggestions.isEmpty()) {
-            String invoker = invokingRule.toString();
-            errorMessage.add(String.format("Rule %s has failed to build.", invoker));
-            errorMessage.add(Joiner.on(LINE_SEPARATOR).join(failedImports));
-            errorMessage.add("Try adding the following deps:");
-            errorMessage.add(Joiner.on(LINE_SEPARATOR).join(suggestions));
-            errorMessage.add("");
-            errorMessage.add("");
-          }
-          CompilerErrorEvent evt = CompilerErrorEvent.create(
-              invokingRule,
-              firstOrderStderr,
-              CompilerErrorEvent.CompilerType.Java,
-              suggestions
-          );
-          context.postEvent(evt);
-        } else {
-          ImmutableSet<String> suggestions = ImmutableSet.of();
-          CompilerErrorEvent evt = CompilerErrorEvent.create(
-              invokingRule,
-              firstOrderStderr,
-              CompilerErrorEvent.CompilerType.Java,
-              suggestions
-          );
-          context.postEvent(evt);
-        }
-
-        if (!firstOrderStdout.isEmpty()) {
-          context.postEvent(ConsoleEvent.info("%s", firstOrderStdout));
-        }
-        if (!firstOrderStderr.isEmpty()) {
-          context.postEvent(ConsoleEvent.severe("%s", Joiner.on("\n").join(errorMessage.build())));
-        }
-      } else {
-        returnedStderr = Optional.empty();
-      }
-
-      return StepExecutionResult.of(declaredDepsResult, returnedStderr);
+      return performBuild(context, stdout, stderr, javac, javacExecutionContext);
     }
+  }
+
+  private StepExecutionResult performBuild(
+      ExecutionContext context,
+      CapturingPrintStream stdout,
+      CapturingPrintStream stderr,
+      Javac javac,
+      JavacExecutionContext javacExecutionContext) throws InterruptedException {
+    int declaredDepsBuildResult = javac.buildWithClasspath(
+        javacExecutionContext,
+        invokingRule,
+        getOptions(context, declaredClasspathEntries),
+        javacOptions.getSafeAnnotationProcessors(),
+        javaSourceFilePaths,
+        pathToSrcsList,
+        workingDirectory);
+    String firstOrderStdout = stdout.getContentsAsString(Charsets.UTF_8);
+    String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
+    Optional<String> returnedStderr;
+    if (declaredDepsBuildResult != 0) {
+      returnedStderr = processBuildFailure(context, firstOrderStdout, firstOrderStderr);
+    } else {
+      returnedStderr = Optional.empty();
+    }
+    return StepExecutionResult.of(declaredDepsBuildResult, returnedStderr);
+  }
+
+  private Optional<String> processBuildFailure(
+      ExecutionContext context,
+      String firstOrderStdout,
+      String firstOrderStderr) {
+    Optional<String> returnedStderr;
+    returnedStderr = Optional.of(firstOrderStderr);
+
+    ImmutableList.Builder<String> errorMessage = ImmutableList.builder();
+    errorMessage.add(firstOrderStderr);
+
+    if (suggestBuildRules.isPresent()) {
+      processBuildFailureWithFailedImports(context, firstOrderStderr, errorMessage);
+    } else {
+      processGeneralBuildFailure(context, firstOrderStderr);
+    }
+
+    if (!firstOrderStdout.isEmpty()) {
+      context.postEvent(ConsoleEvent.info("%s", firstOrderStdout));
+    }
+    if (!firstOrderStderr.isEmpty()) {
+      context.postEvent(ConsoleEvent.severe("%s", Joiner.on("\n").join(errorMessage.build())));
+    }
+    return returnedStderr;
+  }
+
+  private void processGeneralBuildFailure(ExecutionContext context, String firstOrderStderr) {
+    ImmutableSet<String> suggestions = ImmutableSet.of();
+    CompilerErrorEvent evt = CompilerErrorEvent.create(
+        invokingRule,
+        firstOrderStderr,
+        CompilerErrorEvent.CompilerType.Java,
+        suggestions
+    );
+    context.postEvent(evt);
+  }
+
+  private void processBuildFailureWithFailedImports(
+      ExecutionContext context,
+      String firstOrderStderr, ImmutableList.Builder<String> errorMessage) {
+    ImmutableSet<String> failedImports = findFailedImports(firstOrderStderr);
+    ImmutableSortedSet<String> suggestions =
+      ImmutableSortedSet.copyOf(suggestBuildRules.get().suggest(failedImports));
+
+    if (!suggestions.isEmpty()) {
+      appendSuggestionMessage(errorMessage, failedImports, suggestions);
+    }
+    CompilerErrorEvent evt = CompilerErrorEvent.create(
+        invokingRule,
+        firstOrderStderr,
+        CompilerErrorEvent.CompilerType.Java,
+        suggestions
+    );
+    context.postEvent(evt);
+  }
+
+  private void appendSuggestionMessage(
+      ImmutableList.Builder<String> errorMessage,
+      ImmutableSet<String> failedImports,
+      ImmutableSortedSet<String> suggestions) {
+    String invoker = invokingRule.toString();
+    errorMessage.add(String.format("Rule %s has failed to build.", invoker));
+    errorMessage.add(Joiner.on(LINE_SEPARATOR).join(failedImports));
+    errorMessage.add("Try adding the following deps:");
+    errorMessage.add(Joiner.on(LINE_SEPARATOR).join(suggestions));
+    errorMessage.add("");
+    errorMessage.add("");
   }
 
   private ImmutableList<Path> getAbsolutePathsForJavacInputs(Javac javac) {
