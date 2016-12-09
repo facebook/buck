@@ -63,7 +63,7 @@ public class RunWithDefaultTimeoutIntegrationTest {
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:TestThatTakesTooLong");
     testResult.assertTestFailure("Should fail due to exceeding timeout.");
-    assertThat(testResult.getStderr(), containsString("timed out after 3000 milliseconds"));
+    assertThat(testResult.getStderr(), containsString("timed out after 500 milliseconds"));
   }
 
   @Test
@@ -74,7 +74,7 @@ public class RunWithDefaultTimeoutIntegrationTest {
 
     ProcessResult testResult = workspace.runBuckCommand("test", "//:TestThatRunsForever");
     testResult.assertTestFailure("Should fail due to exceeding timeout.");
-    assertThat(testResult.getStderr(), containsString("timed out after 3000 milliseconds"));
+    assertThat(testResult.getStderr(), containsString("timed out after 500 milliseconds"));
   }
 
   @Test
