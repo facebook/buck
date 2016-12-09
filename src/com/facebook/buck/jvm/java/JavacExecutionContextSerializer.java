@@ -21,7 +21,9 @@ import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CellPathResolverSerializer;
 import com.facebook.buck.util.ClassLoaderCache;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorSerializer;
 import com.facebook.buck.util.Verbosity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -46,6 +48,7 @@ public class JavacExecutionContextSerializer {
   private static final String PROJECT_FILE_SYSTEM_ROOT = "project_file_system_root";
   private static final String CLASS_USAGE_FILE_WRITER = "class_usage_file_writer";
   private static final String ENVIRONMENT = "env";
+  private static final String PROCESS_EXECUTOR = "process_executor";
   private static final String ABSOLUTE_PATHS_FOR_INPUTS = "absolute_paths_for_inputs";
   private static final String DIRECT_TO_JAR_SETTINGS = "direct_to_jar_settings";
 
@@ -64,6 +67,9 @@ public class JavacExecutionContextSerializer {
         CLASS_USAGE_FILE_WRITER,
         ClassUsageFileWriterSerializer.serialize(context.getUsedClassesFileWriter()));
     builder.put(ENVIRONMENT, context.getEnvironment());
+    builder.put(
+        PROCESS_EXECUTOR,
+        ProcessExecutorSerializer.serialize(context.getProcessExecutor()));
     builder.put(
         ABSOLUTE_PATHS_FOR_INPUTS,
         ImmutableList.copyOf(
@@ -85,7 +91,7 @@ public class JavacExecutionContextSerializer {
       PrintStream stdErr,
       ClassLoaderCache classLoaderCache,
       ObjectMapper objectMapper,
-      ProcessExecutor processExecutor) {
+      Console console) {
 
     Preconditions.checkArgument(data.containsKey(VERBOSITY));
     Verbosity verbosity = Verbosity.valueOf((String) data.get(VERBOSITY));
@@ -107,6 +113,11 @@ public class JavacExecutionContextSerializer {
         (Map<String, Object>) data.get(CLASS_USAGE_FILE_WRITER));
 
     Preconditions.checkArgument(data.containsKey(ENVIRONMENT));
+
+    Preconditions.checkArgument(data.containsKey(PROCESS_EXECUTOR));
+    ProcessExecutor processExecutor = ProcessExecutorSerializer.deserialize(
+        (Map<String, Object>) data.get(PROCESS_EXECUTOR),
+        console);
 
     Preconditions.checkArgument(data.containsKey(ABSOLUTE_PATHS_FOR_INPUTS));
     ImmutableList<Path> absolutePathsForInputs =

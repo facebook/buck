@@ -23,6 +23,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ClassLoaderCache;
+import com.facebook.buck.util.ContextualProcessExecutor;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
@@ -64,7 +65,11 @@ public class JavacExecutionContextSerializerTest {
     ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp);
     NoOpClassUsageFileWriter classUsageFileWriter = NoOpClassUsageFileWriter.instance();
     ImmutableMap<String, String> environment = ImmutableMap.of("k1", "v1", "k2", "v2");
-    ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
+    ImmutableMap<String, String> processExecutorContext =
+        ImmutableMap.of("pek1", "pev1", "pek2", "pev2");
+    ProcessExecutor processExecutor = new ContextualProcessExecutor(
+        new DefaultProcessExecutor(new TestConsole()),
+        processExecutorContext);
     ImmutableList<Path> pathToInputs = ImmutableList.of(
         Paths.get("/path/one"), Paths.get("/path/two"));
     DirectToJarOutputSettings directToJarOutputSettings = DirectToJarOutputSettings.of(
@@ -97,7 +102,7 @@ public class JavacExecutionContextSerializerTest {
         stdErr,
         classLoaderCache,
         objectMapper,
-        processExecutor);
+        new TestConsole());
 
     assertThat(output.getEventSink(), Matchers.equalTo(eventSink));
     assertThat(output.getStdErr(), Matchers.equalTo(stdErr));
@@ -115,7 +120,12 @@ public class JavacExecutionContextSerializerTest {
         outCellPathResolver.getCellPaths(),
         Matchers.equalToObject(cellPathResolver.getCellPaths()));
 
-    assertThat(output.getProcessExecutor(), Matchers.equalTo(processExecutor));
+    assertThat(output.getProcessExecutor(), Matchers.instanceOf(ContextualProcessExecutor.class));
+    ContextualProcessExecutor contextualProcessExecutor =
+        (ContextualProcessExecutor) output.getProcessExecutor();
+    assertThat(
+        contextualProcessExecutor.getContext(),
+        Matchers.equalToObject(processExecutorContext));
 
     assertThat(output.getJavaPackageFinder(), Matchers.instanceOf(DefaultJavaPackageFinder.class));
     DefaultJavaPackageFinder outputJavaPackageFinder =
