@@ -118,13 +118,13 @@ public class RustTest extends RustCompile implements TestRule, ExternalTestRunne
     Path workingDirectory = getProjectFilesystem().resolve(getPathToTestOutputDirectory());
     return ImmutableList.of(
         new RustTestStep(
-          getProjectFilesystem(),
-          workingDirectory,
-          getTestCommand("--logfile", testOutputFile.toString()),
-          ImmutableMap.of(), // TODO(StanislavGlebik): environment
-          workingDirectory.resolve("exitcode"),
-          Optional.empty(),
-          this.testStdoutFile
+            getProjectFilesystem(),
+            workingDirectory,
+            getTestCommand("--logfile", testOutputFile.toString()),
+            ImmutableMap.of(), // TODO(StanislavGlebik): environment
+            workingDirectory.resolve("exitcode"),
+            Optional.empty(),
+            this.testStdoutFile
         )
     );
   }
@@ -134,7 +134,8 @@ public class RustTest extends RustCompile implements TestRule, ExternalTestRunne
       ExecutionContext executionContext, boolean isUsingTestSelectors) {
     return () -> {
       ImmutableList<TestCaseSummary> summaries = ImmutableList.of();
-      summaries = ImmutableList.of(new TestCaseSummary(
+      summaries = ImmutableList.of(
+          new TestCaseSummary(
               getBuildTarget().getFullyQualifiedName(),
               parseTestResults()));
       return TestResults.of(
@@ -193,7 +194,7 @@ public class RustTest extends RustCompile implements TestRule, ExternalTestRunne
         .build();
   }
 
-  private ImmutableList<String> getTestCommand(String ... additionalArgs) {
+  private ImmutableList<String> getTestCommand(String... additionalArgs) {
     Path workingDirectory = getProjectFilesystem().resolve(getPathToTestOutputDirectory());
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add(workingDirectory.toAbsolutePath().resolve(crate).toString());
