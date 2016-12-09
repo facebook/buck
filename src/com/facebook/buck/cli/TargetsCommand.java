@@ -34,6 +34,7 @@ import com.facebook.buck.model.InMemoryBuildFileTree;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
+import com.facebook.buck.query.QueryTargetGraph;
 import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.ActionGraphAndResolver;
 import com.facebook.buck.rules.ActionGraphCache;
@@ -594,7 +595,7 @@ public class TargetsCommand extends AbstractCommand {
       directOwners = graph.getNodes();
     }
     Iterable<TargetNode<?, ?>> selectedReferrers = FluentIterable
-        .from(getDependentNodes(graph, directOwners, detectTestChanges))
+        .from(getDependentNodes(new QueryTargetGraph(graph), directOwners, detectTestChanges))
         .filter(
             targetNode -> {
               if (matchingBuildTargets.isPresent() &&
@@ -626,7 +627,7 @@ public class TargetsCommand extends AbstractCommand {
    * (a superset of {@code nodes}).
    */
   private static ImmutableSet<TargetNode<?, ?>> getDependentNodes(
-      final TargetGraph graph,
+      final QueryTargetGraph graph,
       ImmutableSet<TargetNode<?, ?>> nodes,
       boolean detectTestChanges) {
     ImmutableMultimap.Builder<TargetNode<?, ?>, TargetNode<?, ?>> extraEdgesBuilder =

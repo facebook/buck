@@ -18,64 +18,30 @@ package com.facebook.buck.graph;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Queues;
-import com.google.common.collect.Sets;
 
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-
-public class TopologicalSort {
+public class TopologicalSort<T extends Comparable<?>> {
 
   private TopologicalSort() {}
 
-  public static <T extends Comparable<?>> ImmutableList<T> sort(
-      TraversableGraph<T> graph) {
+  public static <T extends Comparable<?>> ImmutableList<T> sort(TraversableGraph<T> graph) {
+    try {
+      GraphTraversable<T> traversable = node ->
+          ImmutableSortedSet.copyOf(graph.getOutgoingNodesFor(node)).iterator();
+      Iterable<T> roots = ImmutableSortedSet.copyOf(graph.getNodesWithNoIncomingEdges());
+      ImmutableList<T> sorted = ImmutableList.copyOf(
+          new AcyclicDepthFirstPostOrderTraversal<T>(traversable).traverse(roots));
 
-    // AtomicInteger is used to decrement the integer value in-place.
-    Map<T, AtomicInteger> effectiveOutDegreesOfExplorableNodes = Maps.newHashMap();
-    Queue<T> nextLevel = Queues.newArrayDeque(graph.getNodesWithNoOutgoingEdges());
-    Set<T> visitedNodes = Sets.newHashSet();
-    ImmutableList.Builder<T> toReturn = ImmutableList.builder();
+      int nodeCount = Iterables.size(graph.getNodes());
+      Preconditions.checkState(sorted.size() == nodeCount,
+          "Expected number of topologically sorted nodes (%s) to be same as number of nodes in " +
+              "graph (%s) - maybe there was an undetected cycle", sorted.size(), nodeCount);
 
-    while (!nextLevel.isEmpty()) {
-      Queue<T> toExplore = nextLevel;
-      nextLevel = Queues.newArrayDeque();
-
-      Set<T> level = Sets.newTreeSet();
-
-      while (!toExplore.isEmpty()) {
-        T node = toExplore.remove();
-        Preconditions.checkState(
-            !visitedNodes.contains(node),
-            "The queue of nodes to explore should not contain a node that has already been" +
-                " visited.");
-
-        level.add(node);
-        visitedNodes.add(node);
-
-        // Only add a node to the set of nodes to be explored if all the nodes it depends on have
-        // been visited already. We achieve the same by keeping track of the out degrees of
-        // explorable nodes. After visiting a node, decrement the out degree of each of its parent
-        // node. When the out degree reaches zero, it is safe to add that node to the list of nodes
-        // to explore next.
-        for (T exploreCandidate : graph.getIncomingNodesFor(node)) {
-          if (!effectiveOutDegreesOfExplorableNodes.containsKey(exploreCandidate)) {
-            effectiveOutDegreesOfExplorableNodes.put(
-                exploreCandidate,
-                new AtomicInteger(Iterables.size(graph.getOutgoingNodesFor(exploreCandidate))));
-          }
-          if (effectiveOutDegreesOfExplorableNodes.get(exploreCandidate).decrementAndGet() == 0) {
-            nextLevel.add(exploreCandidate);
-          }
-        }
-      }
-      toReturn.addAll(level);
+      return sorted;
+    } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
+      throw new IllegalStateException(
+          "Cycle detected despite graph which was claimed to be a DAG", e);
     }
-
-    return toReturn.build();
   }
 }

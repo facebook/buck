@@ -33,6 +33,7 @@ import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.query.QueryTargetAccessor;
+import com.facebook.buck.query.QueryTargetGraph;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -73,7 +74,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   private final Map<Cell, BuildFileTree> buildFileTrees =  new HashMap<>();
   private final Map<BuildTarget, QueryTarget> buildTargetToQueryTarget = new HashMap<>();
 
-  private TargetGraph graph = TargetGraph.EMPTY;
+  private QueryTargetGraph graph = new QueryTargetGraph(TargetGraph.EMPTY);
 
   private BuckQueryEnvironment(
       Cell rootCell,
@@ -122,7 +123,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     );
   }
 
-  public TargetGraph getTargetGraph() {
+  public QueryTargetGraph getTargetGraph() {
     return graph;
   }
 
@@ -273,7 +274,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   private void buildGraphForBuildTargets(Set<BuildTarget> targets)
       throws QueryException, InterruptedException {
     try {
-      graph = parserState.buildTargetGraph(targets);
+      graph = new QueryTargetGraph(parserState.buildTargetGraph(targets));
     } catch (BuildFileParseException | BuildTargetException | IOException e) {
       throw new QueryException(e, "Error in building dependency graph");
     }

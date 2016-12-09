@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -17,16 +17,9 @@
 package com.facebook.buck.graph;
 
 /**
- * Minimal interface needed by {@link AbstractBottomUpTraversal} to traverse a graph.
+ * A graph where the parents of a particular node may be looked up.
  */
-public interface TraversableGraph<T> {
-
+public interface ParentTraversableGraph<T> extends TraversableGraph<T> {
   /** @return {@link Iterable} that the caller is not allowed to mutate. */
-  public Iterable<T> getNodesWithNoIncomingEdges();
-
-  /** @return {@link Iterable} that the caller is not allowed to mutate. */
-  public Iterable<T> getOutgoingNodesFor(T source);
-
-  /** @return an unmodifiable view of the nodes in this graph */
-  public Iterable<T> getNodes();
+  public Iterable<T> getIncomingNodesFor(T sink);
 }

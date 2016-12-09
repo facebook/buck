@@ -964,12 +964,12 @@ public class WorkspaceAndProjectGeneratorTest {
     assertThat(
         fooSchemeBuildAction.getBuildActionEntries().get(4),
         withNameAndBuildingFor(
-            "FooLibTest",
+            "FooBinTest",
             equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY)));
     assertThat(
         fooSchemeBuildAction.getBuildActionEntries().get(5),
         withNameAndBuildingFor(
-            "FooBinTest",
+            "FooLibTest",
             equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY)));
   }
 

@@ -23,7 +23,7 @@ import com.google.common.collect.Sets;
 
 import java.util.Objects;
 
-public class DirectedAcyclicGraph<T> implements TraversableGraph<T> {
+public class DirectedAcyclicGraph<T> implements ParentTraversableGraph<T> {
 
   private final ImmutableSet<T> nodes;
   private final ImmutableSetMultimap<T, T> outgoingEdges;
@@ -44,11 +44,6 @@ public class DirectedAcyclicGraph<T> implements TraversableGraph<T> {
   @Override
   public ImmutableSet<T> getIncomingNodesFor(T sink) {
     return incomingEdges.get(sink);
-  }
-
-  @Override
-  public ImmutableSet<T> getNodesWithNoOutgoingEdges() {
-    return ImmutableSet.copyOf(Sets.difference(nodes, outgoingEdges.keySet()));
   }
 
   @Override
