@@ -255,7 +255,9 @@ public class CxxPythonExtensionDescription implements
                 args.platformDeps.getMatchingValues(pythonPlatform.getFlavor().toString()))));
 
     // Add a dep on the python C/C++ library.
-    rules.add(ruleResolver.getRule(pythonPlatform.getCxxLibrary().get().getBuildTarget()));
+    if (pythonPlatform.getCxxLibrary().isPresent()) {
+      rules.add(ruleResolver.getRule(pythonPlatform.getCxxLibrary().get().getBuildTarget()));
+    }
 
     return rules.build();
   }
