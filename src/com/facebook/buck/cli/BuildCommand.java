@@ -33,7 +33,6 @@ import com.facebook.buck.distributed.thrift.BuckVersion;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
-import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.DistBuildLoggerListener;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.json.BuildFileParseException;
@@ -347,20 +346,20 @@ public class BuildCommand extends AbstractCommand {
   }
 
   protected int checkArguments(CommandRunnerParams params) {
-    if (getArguments().isEmpty()) {
-      params.getConsole().printBuildFailure("Must specify at least one build target.");
-
+    if (!getArguments().isEmpty()) {
+      return 0;
+    }
+    String message = "Must specify at least one build target.";
+    ImmutableSet<String> aliases = params.getBuckConfig().getAliases();
+    if (!aliases.isEmpty()) {
       // If there are aliases defined in .buckconfig, suggest that the user
       // build one of them. We show the user only the first 10 aliases.
-      ImmutableSet<String> aliases = params.getBuckConfig().getAliases();
-      if (!aliases.isEmpty()) {
-        params.getBuckEventBus().post(ConsoleEvent.severe(String.format(
-            "Try building one of the following targets:\n%s",
-            Joiner.on(' ').join(Iterators.limit(aliases.iterator(), 10)))));
-      }
-      return 1;
+      message += String.format(
+          "%nTry building one of the following targets:%n%s",
+          Joiner.on(' ').join(Iterators.limit(aliases.iterator(), 10)));
     }
-    return 0;
+    params.getConsole().printBuildFailure(message);
+    return 1;
   }
 
   protected int run(
@@ -574,19 +573,6 @@ public class BuildCommand extends AbstractCommand {
       CommandRunnerParams params,
       ListeningExecutorService executor)
       throws IOException, InterruptedException, ActionGraphCreationException {
-    if (getArguments().isEmpty()) {
-
-      // If there are aliases defined in .buckconfig, suggest that the user
-      // build one of them. We show the user only the first 10 aliases.
-      ImmutableSet<String> aliases = params.getBuckConfig().getAliases();
-      if (!aliases.isEmpty()) {
-        params.getBuckEventBus().post(ConsoleEvent.severe(String.format(
-            "Try building one of the following targets:\n%s",
-            Joiner.on(' ').join(Iterators.limit(aliases.iterator(), 10)))));
-      }
-      throw new ActionGraphCreationException("Must specify at least one build target.");
-    }
-
     // Parse the build files to create a ActionGraph.
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     try {
