@@ -73,8 +73,7 @@ import com.google.common.collect.Sets;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -193,11 +192,13 @@ public class AppleDescriptions {
       Path headerPathPrefix,
       Function<SourcePath, Path> sourcePathResolver,
       Set<SourcePath> headerPaths) {
-    Map<String, SourcePath> includeToFile = new HashMap<>(headerPaths.size());
+    Set<String> includeToFile = new HashSet<String>(headerPaths.size());
+    ImmutableSortedMap.Builder<String, SourcePath> builder = ImmutableSortedMap.naturalOrder();
     for (SourcePath headerPath : headerPaths) {
       Path fileName = sourcePathResolver.apply(headerPath).getFileName();
       String key = headerPathPrefix.resolve(fileName).toString();
-      if (includeToFile.containsKey(key)) {
+      if (includeToFile.contains(key)) {
+        ImmutableSortedMap<String, SourcePath> result = builder.build();
         throw new HumanReadableException(
             "The same include path maps to multiple files:\n" +
                 "  Include path: %s\n" +
@@ -206,11 +207,12 @@ public class AppleDescriptions {
                 "    %s",
             key,
             headerPath,
-            includeToFile.get(key));
+            result.get(key));
       }
-      includeToFile.put(key, headerPath);
+      includeToFile.add(key);
+      builder.put(key, headerPath);
     }
-    return ImmutableSortedMap.copyOf(includeToFile);
+    return builder.build();
   }
 
   public static void populateCxxConstructorArg(
