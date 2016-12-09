@@ -28,13 +28,15 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 import java.util.Optional;
 
-public class PythonLibraryDescription implements Description<Arg> {
+public class PythonLibraryDescription
+    implements Description<Arg>, VersionPropagator<Arg> {
 
   @Override
   public Arg createUnpopulatedConstructorArg() {

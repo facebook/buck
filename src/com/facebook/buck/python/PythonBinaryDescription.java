@@ -46,6 +46,7 @@ import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -62,7 +63,8 @@ import java.util.Set;
 
 public class PythonBinaryDescription implements
     Description<PythonBinaryDescription.Arg>,
-    ImplicitDepsInferringDescription<PythonBinaryDescription.Arg> {
+    ImplicitDepsInferringDescription<PythonBinaryDescription.Arg>,
+    VersionRoot<PythonBinaryDescription.Arg> {
 
   private static final Logger LOG = Logger.get(PythonBinaryDescription.class);
 
@@ -358,6 +360,11 @@ public class PythonBinaryDescription implements
     return targets.build();
   }
 
+  @Override
+  public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
+    return true;
+  }
+
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg implements HasTests {
     public Optional<SourcePath> main;
@@ -377,6 +384,8 @@ public class PythonBinaryDescription implements
     public ImmutableSortedSet<BuildTarget> getTests() {
       return tests;
     }
+
+    public Optional<String> versionUniverse;
 
   }
 

@@ -58,6 +58,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -75,7 +76,8 @@ import java.util.Optional;
 
 public class CxxPythonExtensionDescription implements
     Description<CxxPythonExtensionDescription.Arg>,
-    ImplicitDepsInferringDescription<CxxPythonExtensionDescription.Arg> {
+    ImplicitDepsInferringDescription<CxxPythonExtensionDescription.Arg>,
+    VersionPropagator<CxxPythonExtensionDescription.Arg> {
 
   private enum Type {
     EXTENSION,

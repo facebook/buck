@@ -44,6 +44,7 @@ import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Supplier;
@@ -60,7 +61,8 @@ import java.util.Optional;
 
 public class PythonTestDescription implements
     Description<PythonTestDescription.Arg>,
-    ImplicitDepsInferringDescription<PythonTestDescription.Arg> {
+    ImplicitDepsInferringDescription<PythonTestDescription.Arg>,
+    VersionRoot<PythonTestDescription.Arg> {
 
   private static final Flavor BINARY_FLAVOR = ImmutableFlavor.of("binary");
 
@@ -365,6 +367,11 @@ public class PythonTestDescription implements
     return targets.build();
   }
 
+  @Override
+  public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
+    return true;
+  }
+
   @SuppressFieldNotInitialized
   public static class Arg extends PythonLibraryDescription.Arg {
     public Optional<String> mainModule;
@@ -381,6 +388,7 @@ public class PythonTestDescription implements
 
     public ImmutableMap<String, String> env = ImmutableMap.of();
     public Optional<Long> testRuleTimeoutMs;
+    public Optional<String> versionUniverse;
   }
 
 }
