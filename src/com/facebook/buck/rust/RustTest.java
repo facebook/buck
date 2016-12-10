@@ -20,7 +20,10 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
+import com.facebook.buck.rules.BinaryBuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.Label;
@@ -28,6 +31,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.Tool;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestCaseSummary;
@@ -57,7 +61,9 @@ import java.util.regex.Pattern;
 
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class RustTest extends RustCompile implements TestRule, ExternalTestRunnerRule {
+public class RustTest
+    extends RustCompile
+    implements BinaryBuildRule, TestRule, ExternalTestRunnerRule {
   private static final Pattern TEST_STDOUT_PATTERN = Pattern.compile(
       "^---- (?<name>.+) stdout ----$");
   private static final Pattern FAILURES_LIST_PATTERN = Pattern.compile(
@@ -281,4 +287,10 @@ public class RustTest extends RustCompile implements TestRule, ExternalTestRunne
     return summariesBuilder.build();
   }
 
+  @Override
+  public Tool getExecutableCommand() {
+    return new CommandTool.Builder()
+        .addArg(new SourcePathArg(getResolver(), new BuildTargetSourcePath(getBuildTarget())))
+        .build();
+  }
 }

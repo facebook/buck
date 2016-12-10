@@ -281,6 +281,17 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void runnableTest() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_tests", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:test_success").assertSuccess().getStdout(),
+        Matchers.containsString("test test_hello_world ... ok"));
+  }
+
+  @Test
   public void testWithCrateRoot() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "binary_with_tests", tmp);
