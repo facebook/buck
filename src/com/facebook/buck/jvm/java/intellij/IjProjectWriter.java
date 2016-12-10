@@ -178,17 +178,15 @@ public class IjProjectWriter {
 
   private String getLanguageLevelFromConfig() {
     Optional<String> languageLevelFromConfig = projectConfig.getProjectLanguageLevel();
-    String languageLevel;
     if (languageLevelFromConfig.isPresent()) {
-      languageLevel = languageLevelFromConfig.get();
+      return languageLevelFromConfig.get();
     } else {
-      languageLevel = projectConfig
+      String languageLevel = projectConfig
           .getJavaBuckConfig()
           .getDefaultJavacOptions()
           .getSourceLevel();
+      return JavaLanguageLevelHelper.convertLanguageLevelToIjFormat(languageLevel);
     }
-
-    return JavaLanguageLevelHelper.convertLanguageLevelToIjFormat(languageLevel);
   }
 
   private static boolean getJdk15FromLanguageLevel(String languageLevel) {

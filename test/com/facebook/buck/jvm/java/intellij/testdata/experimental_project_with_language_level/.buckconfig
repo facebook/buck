@@ -11,4 +11,4 @@
 [intellij]
   jdk_name = Android SDK Version 23
   jdk_type = Android SDK
-  language_level = 1.8
+  language_level = JDK_1_8
