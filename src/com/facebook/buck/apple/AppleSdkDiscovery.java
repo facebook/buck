@@ -236,12 +236,38 @@ public class AppleSdkDiscovery {
         NSString platformName = (NSString) defaultProperties.objectForKey("PLATFORM_NAME");
         ApplePlatform applePlatform = ApplePlatform.of(platformName.toString());
         sdkBuilder.setName(name).setVersion(version).setApplePlatform(applePlatform);
-        sdkBuilder.addAllArchitectures(applePlatform.getArchitectures());
+        ImmutableList<String> architectures = validArchitecturesForPlatform(applePlatform, sdkDir);
+        sdkBuilder.addAllArchitectures(architectures);
         return true;
       }
     } catch (FileNotFoundException e) {
       LOG.error(e, "No SDKSettings.plist found under SDK path %s", sdkDir);
       return false;
     }
+  }
+
+  private static ImmutableList<String> validArchitecturesForPlatform(
+      ApplePlatform platform,
+      Path sdkDir) throws IOException {
+    ImmutableList<String> architectures = platform.getArchitectures();
+    try (DirectoryStream<Path> sdkFiles = Files.newDirectoryStream(sdkDir)) {
+      ImmutableList.Builder<String> architectureSubdirsBuilder = ImmutableList.builder();
+      for (Path path : sdkFiles) {
+        if (Files.isDirectory(path)) {
+          String directoryName = path.getFileName().toString();
+          // Default Apple SDKs contain fat binaries and have no architecture subdirectories,
+          // but custom SDKs might.
+          if (architectures.contains(directoryName)) {
+            architectureSubdirsBuilder.add(directoryName);
+          }
+        }
+      }
+
+      ImmutableList<String> architectureSubdirs = architectureSubdirsBuilder.build();
+      if (!architectureSubdirs.isEmpty()) {
+        architectures = architectureSubdirs;
+      }
+    }
+    return architectures;
   }
 }
