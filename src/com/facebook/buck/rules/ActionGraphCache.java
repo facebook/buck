@@ -26,7 +26,7 @@ import com.facebook.buck.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.MapDifference;
@@ -171,8 +171,8 @@ public class ActionGraphCache {
       BuildRuleResolver buildRuleResolver,
       int keySeed) {
     SourcePathResolver pathResolver = new SourcePathResolver(buildRuleResolver);
-    ContentAgnosticRuleKeyBuilderFactory factory =
-        new ContentAgnosticRuleKeyBuilderFactory(keySeed, pathResolver);
+    ContentAgnosticRuleKeyFactory factory =
+        new ContentAgnosticRuleKeyFactory(keySeed, pathResolver);
 
     HashMap<BuildRule, RuleKey> ruleKeysMap = new HashMap<>();
     for (BuildRule rule : buildRules) {

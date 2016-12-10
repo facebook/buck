@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -17,36 +17,39 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.hashing.FileHashLoader;
-import com.facebook.buck.rules.AbstractBuildRule;
+import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
-import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.hash.HashCode;
+
+import java.io.IOException;
+import java.nio.file.Path;
 
 import javax.annotation.Nonnull;
 
 /**
- * A {@link RuleKeyBuilderFactory} which adds some default settings to {@link RuleKey}s.
+ * A factory for generating {@link RuleKey}s that only take into the account the path of a file
+ * and not the contents(hash) of the file.
  */
-public class DefaultRuleKeyBuilderFactory
-    extends ReflectiveRuleKeyBuilderFactory<RuleKeyBuilder<RuleKey>, RuleKey> {
+public class ContentAgnosticRuleKeyFactory
+    extends ReflectiveRuleKeyFactory<RuleKeyBuilder<RuleKey>, RuleKey> {
 
-  protected final LoadingCache<RuleKeyAppendable, RuleKey> ruleKeyCache;
-  private final FileHashLoader hashLoader;
+  private final FileHashLoader fileHashLoader;
   private final SourcePathResolver pathResolver;
+  private final LoadingCache<RuleKeyAppendable, RuleKey> ruleKeyCache;
 
-  public DefaultRuleKeyBuilderFactory(
+  public ContentAgnosticRuleKeyFactory(
       int seed,
-      FileHashLoader hashLoader,
       SourcePathResolver pathResolver) {
     super(seed);
-    this.ruleKeyCache = CacheBuilder.newBuilder().weakKeys().build(
+    // Build the cache around the sub-rule-keys and their dep lists.
+    ruleKeyCache = CacheBuilder.newBuilder().weakKeys().build(
         new CacheLoader<RuleKeyAppendable, RuleKey>() {
           @Override
           public RuleKey load(@Nonnull RuleKeyAppendable appendable) throws Exception {
@@ -55,19 +58,32 @@ public class DefaultRuleKeyBuilderFactory
             return subKeyBuilder.build();
           }
         });
-    this.hashLoader = hashLoader;
-    this.pathResolver = pathResolver;
-  }
 
-  protected DefaultRuleKeyBuilderFactory getDefaultRuleKeyBuilderFactory() {
-    return this;
+    this.pathResolver = pathResolver;
+    this.fileHashLoader = new FileHashLoader() {
+
+      @Override
+      public HashCode get(Path path) throws IOException {
+        return HashCode.fromLong(0);
+      }
+
+      @Override
+      public long getSize(Path path) throws IOException {
+        return 0;
+      }
+
+      @Override
+      public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
+        throw new AssertionError();
+      }
+    };
   }
 
   private RuleKeyBuilder<RuleKey> newBuilder() {
-    return new RuleKeyBuilder<RuleKey>(pathResolver, hashLoader) {
+    return new RuleKeyBuilder<RuleKey>(pathResolver, fileHashLoader) {
       @Override
       protected RuleKeyBuilder<RuleKey> setBuildRule(BuildRule rule) {
-        return setSingleValue(getDefaultRuleKeyBuilderFactory().build(rule));
+        return setSingleValue(ContentAgnosticRuleKeyFactory.this.build(rule));
       }
 
       @Override
@@ -82,32 +98,12 @@ public class DefaultRuleKeyBuilderFactory
       public RuleKey build() {
         return buildRuleKey();
       }
+
     };
   }
 
   @Override
-  protected RuleKeyBuilder<RuleKey> newBuilder(BuildRule rule) {
+  protected RuleKeyBuilder<RuleKey> newBuilder(final BuildRule rule) {
     return newBuilder();
   }
-
-  protected void addDepsToRuleKey(RuleKeyObjectSink sink, BuildRule buildRule) {
-    if (buildRule instanceof AbstractBuildRule) {
-      // TODO(marcinkosiba): We really need to get rid of declared/extra deps in rules. Instead
-      // rules should explicitly take the needed sub-sets of deps as constructor args.
-      AbstractBuildRule abstractBuildRule = (AbstractBuildRule) buildRule;
-      sink
-          .setReflectively("buck.extraDeps", abstractBuildRule.deprecatedGetExtraDeps())
-          .setReflectively("buck.declaredDeps", abstractBuildRule.getDeclaredDeps());
-    } else {
-      sink.setReflectively("buck.deps", buildRule.getDeps());
-    }
-  }
-
-  @Override
-  public RuleKeyBuilder<RuleKey> newInstance(BuildRule buildRule) {
-    RuleKeyBuilder<RuleKey> builder = super.newInstance(buildRule);
-    addDepsToRuleKey(builder, buildRule);
-    return builder;
-  }
-
 }

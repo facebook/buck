@@ -25,20 +25,20 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-public class FakeInputBasedRuleKeyBuilderFactory
-    implements RuleKeyBuilderFactory<Optional<RuleKey>> {
+public class FakeInputBasedRuleKeyFactory
+    implements RuleKeyFactory<Optional<RuleKey>> {
 
   private final ImmutableMap<BuildTarget, Optional<RuleKey>> ruleKeys;
   private final FileHashCache fileHashCache;
 
-  public FakeInputBasedRuleKeyBuilderFactory(
+  public FakeInputBasedRuleKeyFactory(
       ImmutableMap<BuildTarget, Optional<RuleKey>> ruleKeys,
       FileHashCache fileHashCache) {
     this.ruleKeys = ruleKeys;
     this.fileHashCache = fileHashCache;
   }
 
-  public FakeInputBasedRuleKeyBuilderFactory(
+  public FakeInputBasedRuleKeyFactory(
       ImmutableMap<BuildTarget, Optional<RuleKey>> ruleKeys) {
     this(ruleKeys, new NullFileHashCache());
   }

@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -142,24 +142,24 @@ public class CommandToolTest {
     FileHashCache hashCache = FakeFileHashCache.createFromStrings(
         ImmutableMap.of(
             "input", Strings.repeat("a", 40)));
-    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver);
+    DefaultRuleKeyFactory ruleKeyFactory =
+        new DefaultRuleKeyFactory(0, hashCache, pathResolver);
     RuleKey ruleKey = new UncachedRuleKeyBuilder(
         pathResolver,
         hashCache,
-        ruleKeyBuilderFactory)
+        ruleKeyFactory)
         .setReflectively("key",  tool)
         .build();
 
     hashCache = FakeFileHashCache.createFromStrings(
         ImmutableMap.of(
             "input", Strings.repeat("b", 40)));
-    ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver);
+    ruleKeyFactory =
+        new DefaultRuleKeyFactory(0, hashCache, pathResolver);
     RuleKey changedRuleKey = new UncachedRuleKeyBuilder(
         pathResolver,
         hashCache,
-        ruleKeyBuilderFactory)
+        ruleKeyFactory)
         .setReflectively("key",  tool)
         .build();
 

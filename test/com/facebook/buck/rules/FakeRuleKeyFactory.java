@@ -19,7 +19,7 @@ package com.facebook.buck.rules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
-import com.facebook.buck.rules.keys.DependencyFileRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
@@ -32,20 +32,20 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-public class FakeRuleKeyBuilderFactory
-    implements RuleKeyBuilderFactory<RuleKey>, DependencyFileRuleKeyBuilderFactory {
+public class FakeRuleKeyFactory
+    implements RuleKeyFactory<RuleKey>, DependencyFileRuleKeyFactory {
 
   private final ImmutableMap<BuildTarget, RuleKey> ruleKeys;
   private final FileHashCache fileHashCache;
 
-  public FakeRuleKeyBuilderFactory(
+  public FakeRuleKeyFactory(
       ImmutableMap<BuildTarget, RuleKey> ruleKeys,
       FileHashCache fileHashCache) {
     this.ruleKeys = ruleKeys;
     this.fileHashCache = fileHashCache;
   }
 
-  public FakeRuleKeyBuilderFactory(ImmutableMap<BuildTarget, RuleKey> ruleKeys) {
+  public FakeRuleKeyFactory(ImmutableMap<BuildTarget, RuleKey> ruleKeys) {
     this(ruleKeys, new NullFileHashCache());
   }
 

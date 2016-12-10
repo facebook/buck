@@ -49,7 +49,7 @@ import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetGraphHashing;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreExceptions;
@@ -799,10 +799,10 @@ public class TargetsCommand extends AbstractCommand {
     }
 
     // We only need the action graph if we're showing the output or the keys, and the
-    // RuleKeyBuilderFactory if we're showing the keys.
+    // RuleKeyFactory if we're showing the keys.
     Optional<ActionGraph> actionGraph = Optional.empty();
     Optional<BuildRuleResolver> buildRuleResolver = Optional.empty();
-    Optional<DefaultRuleKeyBuilderFactory> ruleKeyBuilderFactory = Optional.empty();
+    Optional<DefaultRuleKeyFactory> ruleKeyFactory = Optional.empty();
     if (isShowRuleKey() || isShowOutput() || isShowFullOutput()) {
       ActionGraphAndResolver result = Preconditions.checkNotNull(
           ActionGraphCache.getFreshActionGraph(
@@ -811,8 +811,8 @@ public class TargetsCommand extends AbstractCommand {
       actionGraph = Optional.of(result.getActionGraph());
       buildRuleResolver = Optional.of(result.getResolver());
       if (isShowRuleKey()) {
-        ruleKeyBuilderFactory = Optional.of(
-            new DefaultRuleKeyBuilderFactory(
+        ruleKeyFactory = Optional.of(
+            new DefaultRuleKeyFactory(
                 params.getBuckConfig().getKeySeed(),
                 params.getFileHashCache(),
                 new SourcePathResolver(result.getResolver())));
@@ -826,7 +826,7 @@ public class TargetsCommand extends AbstractCommand {
       if (actionGraph.isPresent()) {
         BuildRule rule = buildRuleResolver.get().requireRule(targetNode.getBuildTarget());
         if (isShowRuleKey()) {
-          showOptionsBuilder.setRuleKey(ruleKeyBuilderFactory.get().build(rule).toString());
+          showOptionsBuilder.setRuleKey(ruleKeyFactory.get().build(rule).toString());
         }
         if (isShowOutput() || isShowFullOutput()) {
           Optional<Path> outputPath =

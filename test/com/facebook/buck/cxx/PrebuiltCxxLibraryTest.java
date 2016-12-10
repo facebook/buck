@@ -27,7 +27,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -72,8 +72,8 @@ public class PrebuiltCxxLibraryTest {
         Linker.LinkableDepType.STATIC);
 
     FileHashCache originalHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
-    DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(0, originalHashCache, pathResolver);
+    DefaultRuleKeyFactory factory =
+        new DefaultRuleKeyFactory(0, originalHashCache, pathResolver);
 
     RuleKey ruleKey = factory.build(lib);
     assertNotNull(ruleKey);

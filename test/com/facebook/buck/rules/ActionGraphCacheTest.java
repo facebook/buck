@@ -29,7 +29,7 @@ import com.facebook.buck.event.listener.BroadcastEventListener;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.WatchEventsForTests;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -253,8 +253,8 @@ public class ActionGraphCacheTest {
       Iterable<BuildRule> buildRules,
       BuildRuleResolver buildRuleResolver) {
     SourcePathResolver pathResolver = new SourcePathResolver(buildRuleResolver);
-    ContentAgnosticRuleKeyBuilderFactory factory =
-        new ContentAgnosticRuleKeyBuilderFactory(0, pathResolver);
+    ContentAgnosticRuleKeyFactory factory =
+        new ContentAgnosticRuleKeyFactory(0, pathResolver);
 
     HashMap<BuildRule, RuleKey> ruleKeysMap = new HashMap<>();
 

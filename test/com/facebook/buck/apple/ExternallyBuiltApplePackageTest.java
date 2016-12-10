@@ -36,7 +36,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.TestExecutionContext;
@@ -130,8 +130,8 @@ public class ExternallyBuiltApplePackageTest {
             new FakeSourcePath("Fake/Bundle/Location"),
             true);
     assertNotEquals(
-        newRuleKeyBuilderFactory().build(packageWithVersion.apply("real")),
-        newRuleKeyBuilderFactory().build(packageWithVersion.apply("fake")));
+        newRuleKeyFactory().build(packageWithVersion.apply("real")),
+        newRuleKeyFactory().build(packageWithVersion.apply("fake")));
   }
 
   @Test
@@ -146,12 +146,12 @@ public class ExternallyBuiltApplePackageTest {
             new FakeSourcePath("Fake/Bundle/Location"),
             true);
     assertNotEquals(
-        newRuleKeyBuilderFactory().build(packageWithSdkVersion.apply("real")),
-        newRuleKeyBuilderFactory().build(packageWithSdkVersion.apply("fake")));
+        newRuleKeyFactory().build(packageWithSdkVersion.apply("real")),
+        newRuleKeyFactory().build(packageWithSdkVersion.apply("fake")));
   }
 
-  private DefaultRuleKeyBuilderFactory newRuleKeyBuilderFactory() {
-    return new DefaultRuleKeyBuilderFactory(
+  private DefaultRuleKeyFactory newRuleKeyFactory() {
+    return new DefaultRuleKeyFactory(
         0,
         new FakeFileHashCache(
             ImmutableMap.of(Paths.get(bundleLocation).toAbsolutePath(), HashCode.fromInt(5))),

@@ -36,7 +36,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
@@ -174,9 +174,9 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     // Calculate their rule keys and verify they're different.
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
         ImmutableMap.of());
-    RuleKey key1 = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
+    RuleKey key1 = new DefaultRuleKeyFactory(0, hashCache, resolver).build(
         symlinkTreeBuildRule);
-    RuleKey key2 = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
+    RuleKey key2 = new DefaultRuleKeyFactory(0, hashCache, resolver).build(
         modifiedSymlinkTreeBuildRule);
     assertNotEquals(key1, key2);
   }
@@ -189,14 +189,14 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     ruleResolver.addToIndex(symlinkTreeBuildRule);
     SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
 
-    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+    DefaultRuleKeyFactory ruleKeyFactory = new DefaultRuleKeyFactory(
         0,
         FakeFileHashCache.createFromStrings(
             ImmutableMap.of()),
         resolver);
 
     // Calculate the rule key
-    RuleKey key1 = ruleKeyBuilderFactory.build(symlinkTreeBuildRule);
+    RuleKey key1 = ruleKeyFactory.build(symlinkTreeBuildRule);
 
     // Change the contents of the target of the link.
     Path existingFile =
@@ -204,7 +204,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
 
     // Re-calculate the rule key
-    RuleKey key2 = ruleKeyBuilderFactory.build(symlinkTreeBuildRule);
+    RuleKey key2 = ruleKeyFactory.build(symlinkTreeBuildRule);
 
     // Verify that the rules keys are the same.
     assertEquals(key1, key2);

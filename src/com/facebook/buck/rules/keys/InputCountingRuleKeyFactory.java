@@ -34,27 +34,27 @@ import java.nio.file.Path;
 
 import javax.annotation.Nonnull;
 
-public class InputCountingRuleKeyBuilderFactory extends
-    ReflectiveRuleKeyBuilderFactory<
-        RuleKeyBuilder<InputCountingRuleKeyBuilderFactory.Result>,
-        InputCountingRuleKeyBuilderFactory.Result> {
+public class InputCountingRuleKeyFactory extends
+    ReflectiveRuleKeyFactory<
+            RuleKeyBuilder<InputCountingRuleKeyFactory.Result>,
+            InputCountingRuleKeyFactory.Result> {
 
-  protected final LoadingCache<RuleKeyAppendable, InputCountingRuleKeyBuilderFactory.Result>
+  protected final LoadingCache<RuleKeyAppendable, InputCountingRuleKeyFactory.Result>
       resultCache;
   private final FileHashLoader hashLoader;
   private final SourcePathResolver pathResolver;
 
-  public InputCountingRuleKeyBuilderFactory(
+  public InputCountingRuleKeyFactory(
       int seed,
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver) {
     super(seed);
     this.resultCache = CacheBuilder.newBuilder().weakKeys().build(
-        new CacheLoader<RuleKeyAppendable, InputCountingRuleKeyBuilderFactory.Result>() {
+        new CacheLoader<RuleKeyAppendable, InputCountingRuleKeyFactory.Result>() {
           @Override
-          public InputCountingRuleKeyBuilderFactory.Result load(
+          public InputCountingRuleKeyFactory.Result load(
               @Nonnull RuleKeyAppendable appendable) throws Exception {
-            RuleKeyBuilder<InputCountingRuleKeyBuilderFactory.Result> subKeyBuilder = newBuilder();
+            RuleKeyBuilder<InputCountingRuleKeyFactory.Result> subKeyBuilder = newBuilder();
             appendable.appendToRuleKey(subKeyBuilder);
             return subKeyBuilder.build();
           }
@@ -63,8 +63,8 @@ public class InputCountingRuleKeyBuilderFactory extends
     this.pathResolver = pathResolver;
   }
 
-  private RuleKeyBuilder<InputCountingRuleKeyBuilderFactory.Result> newBuilder() {
-    return new RuleKeyBuilder<InputCountingRuleKeyBuilderFactory.Result>(pathResolver, hashLoader) {
+  private RuleKeyBuilder<InputCountingRuleKeyFactory.Result> newBuilder() {
+    return new RuleKeyBuilder<InputCountingRuleKeyFactory.Result>(pathResolver, hashLoader) {
 
       private int inputsCount;
       private long inputsSize;
@@ -72,17 +72,17 @@ public class InputCountingRuleKeyBuilderFactory extends
       private ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
 
       @Override
-      protected RuleKeyBuilder<InputCountingRuleKeyBuilderFactory.Result> setBuildRule(
+      protected RuleKeyBuilder<InputCountingRuleKeyFactory.Result> setBuildRule(
           BuildRule rule) {
         // Ignore build rules, if the rule is used as an input it will be a SourcePath
         return this;
       }
 
       @Override
-      public RuleKeyBuilder<InputCountingRuleKeyBuilderFactory.Result> setAppendableRuleKey(
+      public RuleKeyBuilder<InputCountingRuleKeyFactory.Result> setAppendableRuleKey(
           String key,
           RuleKeyAppendable appendable) {
-        InputCountingRuleKeyBuilderFactory.Result result = resultCache.getUnchecked(appendable);
+        InputCountingRuleKeyFactory.Result result = resultCache.getUnchecked(appendable);
         inputsCount += result.getInputsCount();
         inputsSize += result.getInputsSize();
         return this;
@@ -115,7 +115,7 @@ public class InputCountingRuleKeyBuilderFactory extends
       }
 
       @Override
-      public InputCountingRuleKeyBuilderFactory.Result build() {
+      public InputCountingRuleKeyFactory.Result build() {
         try {
           for (Path path :
               Iterables.concat(
@@ -133,7 +133,7 @@ public class InputCountingRuleKeyBuilderFactory extends
   }
 
   @Override
-  protected RuleKeyBuilder<InputCountingRuleKeyBuilderFactory.Result> newBuilder(BuildRule rule) {
+  protected RuleKeyBuilder<InputCountingRuleKeyFactory.Result> newBuilder(BuildRule rule) {
     return newBuilder();
   }
 

@@ -22,7 +22,7 @@ import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
@@ -91,7 +91,7 @@ public class DefaultRuleKeyLoggerTest {
             "hello",
             new FakeSourcePath("hello"),
             new TestAppendable());
-    fixture.getRuleKeyBuilderFactory().build(rule);
+    fixture.getRuleKeyFactory().build(rule);
     assertThat(
         fixture.getLogger().getCurrentLogElements(),
         Matchers.allOf(matchers));
@@ -105,7 +105,7 @@ public class DefaultRuleKeyLoggerTest {
             null,
             null,
             null);
-    nullFixture.getRuleKeyBuilderFactory().build(nullRule);
+    nullFixture.getRuleKeyFactory().build(nullRule);
     assertThat(
         nullFixture.getLogger().getCurrentLogElements(),
         Matchers.not(Matchers.anyOf(matchers)));
@@ -122,7 +122,7 @@ public class DefaultRuleKeyLoggerTest {
         new FakeSourcePath(FAKE_PATH.toString()),
         null);
 
-    fixture.getRuleKeyBuilderFactory().build(fakeRule);
+    fixture.getRuleKeyFactory().build(fakeRule);
 
     String expectedPath = "path(" +
         MorePaths.pathWithPlatformSeparators("foo/bar/path/1") +
@@ -145,7 +145,7 @@ public class DefaultRuleKeyLoggerTest {
         new ArchiveMemberSourcePath(new FakeSourcePath(FAKE_PATH.toString()), Paths.get("member")),
         null);
 
-    fixture.getRuleKeyBuilderFactory().build(fakeRule);
+    fixture.getRuleKeyFactory().build(fakeRule);
 
     String expectedArchiveMember = "archiveMember(" +
         MorePaths.pathWithPlatformSeparators("foo/bar/path/1") +
@@ -168,7 +168,7 @@ public class DefaultRuleKeyLoggerTest {
         null,
         new TestAppendable());
 
-    fixture.getRuleKeyBuilderFactory().build(fakeRule);
+    fixture.getRuleKeyFactory().build(fakeRule);
 
     assertThat(
         fixture.getLogger().getCurrentLogElements(),
@@ -180,7 +180,7 @@ public class DefaultRuleKeyLoggerTest {
   private class Fixture {
     private SourcePathResolver pathResolver;
     private DefaultRuleKeyLogger logger;
-    private RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory;
+    private RuleKeyFactory<RuleKey> ruleKeyFactory;
 
     public Fixture() {
       pathResolver = new SourcePathResolver(
@@ -225,7 +225,7 @@ public class DefaultRuleKeyLoggerTest {
         }
       };
       logger = new DefaultRuleKeyLogger();
-      ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver) {
+      ruleKeyFactory = new DefaultRuleKeyFactory(0, hashCache, pathResolver) {
         @Override
         protected RuleKeyBuilder<RuleKey> newBuilder(BuildRule rule) {
           return new UncachedRuleKeyBuilder(pathResolver, hashCache, this, logger);
@@ -241,8 +241,8 @@ public class DefaultRuleKeyLoggerTest {
       return logger;
     }
 
-    public RuleKeyBuilderFactory<RuleKey> getRuleKeyBuilderFactory() {
-      return ruleKeyBuilderFactory;
+    public RuleKeyFactory<RuleKey> getRuleKeyFactory() {
+      return ruleKeyFactory;
     }
   }
 }

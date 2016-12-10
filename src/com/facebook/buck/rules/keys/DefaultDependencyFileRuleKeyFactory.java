@@ -33,16 +33,16 @@ import java.nio.file.NoSuchFileException;
 import java.util.Optional;
 
 /**
- * A variant of {@link InputBasedRuleKeyBuilderFactory} which ignores inputs when calculating the
+ * A variant of {@link InputBasedRuleKeyFactory} which ignores inputs when calculating the
  * {@link RuleKey}, allowing them to specified explicitly.
  */
-public class DefaultDependencyFileRuleKeyBuilderFactory
-    extends InputBasedRuleKeyBuilderFactory
-    implements DependencyFileRuleKeyBuilderFactory {
+public class DefaultDependencyFileRuleKeyFactory
+    extends InputBasedRuleKeyFactory
+    implements DependencyFileRuleKeyFactory {
 
   private final SourcePathResolver pathResolver;
 
-  public DefaultDependencyFileRuleKeyBuilderFactory(
+  public DefaultDependencyFileRuleKeyFactory(
       int seed,
       FileHashLoader fileHashLoader,
       SourcePathResolver pathResolver) {

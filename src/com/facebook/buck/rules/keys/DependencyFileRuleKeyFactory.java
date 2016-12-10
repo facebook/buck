@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.util.Optional;
 
-public interface DependencyFileRuleKeyBuilderFactory {
+public interface DependencyFileRuleKeyFactory {
 
   /**
    * @return either a {@link RuleKey} for the given {@link BuildRule} using the given list of

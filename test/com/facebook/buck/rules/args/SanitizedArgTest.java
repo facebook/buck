@@ -25,7 +25,7 @@ import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.UncachedRuleKeyBuilder;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -46,7 +46,7 @@ public class SanitizedArgTest {
     return new UncachedRuleKeyBuilder(
         resolver,
         DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem),
-        new DefaultRuleKeyBuilderFactory(0, fileHashCache, resolver));
+        new DefaultRuleKeyFactory(0, fileHashCache, resolver));
   }
 
   @Test

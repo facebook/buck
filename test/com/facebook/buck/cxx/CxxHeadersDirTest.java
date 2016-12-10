@@ -26,7 +26,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.UncachedRuleKeyBuilder;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -44,8 +44,8 @@ public class CxxHeadersDirTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
     FileHashCache fileHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
-    DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(0, fileHashCache, pathResolver);
+    DefaultRuleKeyFactory factory =
+        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver);
     UncachedRuleKeyBuilder builder =
         new UncachedRuleKeyBuilder(pathResolver, fileHashCache, factory);
     cxxHeaders.appendToRuleKey(builder);

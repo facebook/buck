@@ -34,7 +34,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableBiMap;
@@ -84,7 +84,7 @@ public class CxxLinkTest {
 
     // Generate a rule key for the defaults.
 
-    RuleKey defaultRuleKey = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
+    RuleKey defaultRuleKey = new DefaultRuleKeyFactory(0, hashCache, pathResolver).build(
         new CxxLink(
             params,
             pathResolver,
@@ -96,7 +96,7 @@ public class CxxLinkTest {
 
     // Verify that changing the archiver causes a rulekey change.
 
-    RuleKey linkerChange = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
+    RuleKey linkerChange = new DefaultRuleKeyFactory(0, hashCache, pathResolver).build(
         new CxxLink(
             params,
             pathResolver,
@@ -109,7 +109,7 @@ public class CxxLinkTest {
 
     // Verify that changing the output path causes a rulekey change.
 
-    RuleKey outputChange = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
+    RuleKey outputChange = new DefaultRuleKeyFactory(0, hashCache, pathResolver).build(
         new CxxLink(
             params,
             pathResolver,
@@ -122,7 +122,7 @@ public class CxxLinkTest {
 
     // Verify that changing the flags causes a rulekey change.
 
-    RuleKey flagsChange = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
+    RuleKey flagsChange = new DefaultRuleKeyFactory(0, hashCache, pathResolver).build(
         new CxxLink(
             params,
             pathResolver,
@@ -147,8 +147,8 @@ public class CxxLinkTest {
     );
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(
+    DefaultRuleKeyFactory ruleKeyFactory =
+        new DefaultRuleKeyFactory(
             0,
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.of(
@@ -181,7 +181,7 @@ public class CxxLinkTest {
                 sanitizer1.sanitize(Optional.empty()),
                 "-Lsomething/foo"));
 
-    RuleKey ruleKey1 = ruleKeyBuilderFactory.build(
+    RuleKey ruleKey1 = ruleKeyFactory.build(
         new CxxLink(
             params,
             pathResolver,
@@ -199,7 +199,7 @@ public class CxxLinkTest {
                 sanitizer2.sanitize(Optional.empty()),
                 "-Ldifferent/foo"));
 
-    RuleKey ruleKey2 = ruleKeyBuilderFactory.build(
+    RuleKey ruleKey2 = ruleKeyFactory.build(
         new CxxLink(
             params,
             pathResolver,

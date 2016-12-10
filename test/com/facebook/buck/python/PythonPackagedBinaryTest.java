@@ -31,7 +31,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Charsets;
@@ -59,7 +59,7 @@ public class PythonPackagedBinaryTest {
   public final TemporaryFolder tmpDir = new TemporaryFolder();
 
   private RuleKey getRuleKeyForModuleLayout(
-      DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory,
+      DefaultRuleKeyFactory ruleKeyFactory,
       SourcePathResolver resolver,
       String main, Path mainSrc,
       String mod1, Path src1,
@@ -91,7 +91,7 @@ public class PythonPackagedBinaryTest {
         /* legacyOutputPath */ false);
 
     // Calculate and return the rule key.
-    return ruleKeyBuilderFactory.build(binary);
+    return ruleKeyFactory.build(binary);
   }
 
   @Test
@@ -122,25 +122,25 @@ public class PythonPackagedBinaryTest {
     // Calculate the rule keys for the various ways we can layout the source and modules
     // across different python libraries.
     RuleKey pair1 = getRuleKeyForModuleLayout(
-        new DefaultRuleKeyBuilderFactory(0, hashCache, resolver),
+        new DefaultRuleKeyFactory(0, hashCache, resolver),
         resolver,
         "main.py", mainRelative,
         "module/one.py", source1Relative,
         "module/two.py", source2Relative);
     RuleKey pair2 = getRuleKeyForModuleLayout(
-        new DefaultRuleKeyBuilderFactory(0, hashCache, resolver),
+        new DefaultRuleKeyFactory(0, hashCache, resolver),
         resolver,
         "main.py", mainRelative,
         "module/two.py", source2Relative,
         "module/one.py", source1Relative);
     RuleKey pair3 = getRuleKeyForModuleLayout(
-        new DefaultRuleKeyBuilderFactory(0, hashCache, resolver),
+        new DefaultRuleKeyFactory(0, hashCache, resolver),
         resolver,
         "main.py", mainRelative,
         "module/one.py", source2Relative,
         "module/two.py", source1Relative);
     RuleKey pair4 = getRuleKeyForModuleLayout(
-        new DefaultRuleKeyBuilderFactory(0, hashCache, resolver),
+        new DefaultRuleKeyFactory(0, hashCache, resolver),
         resolver,
         "main.py", mainRelative,
         "module/two.py", source1Relative,

@@ -38,7 +38,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -208,8 +208,8 @@ public class ExportFileTest {
     SourcePathResolver resolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
      );
-    DefaultRuleKeyBuilderFactory ruleKeyFactory =
-        new DefaultRuleKeyBuilderFactory(0, hashCache, resolver);
+    DefaultRuleKeyFactory ruleKeyFactory =
+        new DefaultRuleKeyFactory(0, hashCache, resolver);
 
     filesystem.writeContentsToPath("I like cheese", temp);
 
@@ -235,7 +235,7 @@ public class ExportFileTest {
     resolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
-    ruleKeyFactory = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver);
+    ruleKeyFactory = new DefaultRuleKeyFactory(0, hashCache, resolver);
     RuleKey refreshed = ruleKeyFactory.build(rule);
 
     assertNotEquals(original, refreshed);

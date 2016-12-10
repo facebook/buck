@@ -42,7 +42,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Strings;
@@ -147,7 +147,7 @@ public class CxxPreprocessAndCompileTest {
 
     // Generate a rule key for the defaults.
 
-    RuleKey defaultRuleKey = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
+    RuleKey defaultRuleKey = new DefaultRuleKeyFactory(0, hashCache, pathResolver).build(
         CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
@@ -165,7 +165,7 @@ public class CxxPreprocessAndCompileTest {
 
     // Verify that changing the compiler causes a rulekey change.
 
-    RuleKey compilerChange = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
+    RuleKey compilerChange = new DefaultRuleKeyFactory(0, hashCache, pathResolver).build(
         CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
@@ -184,7 +184,7 @@ public class CxxPreprocessAndCompileTest {
 
     // Verify that changing the operation causes a rulekey change.
 
-    RuleKey operationChange = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
+    RuleKey operationChange = new DefaultRuleKeyFactory(0, hashCache, pathResolver).build(
         CxxPreprocessAndCompile.preprocess(
             params,
             pathResolver,
@@ -214,7 +214,7 @@ public class CxxPreprocessAndCompileTest {
     // Verify that changing the platform flags causes a rulekey change.
 
     RuleKey platformFlagsChange =
-        new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
+        new DefaultRuleKeyFactory(0, hashCache, pathResolver).build(
             CxxPreprocessAndCompile.compile(
                 params,
                 pathResolver,
@@ -236,7 +236,7 @@ public class CxxPreprocessAndCompileTest {
 
     // Verify that changing the rule flags causes a rulekey change.
 
-    RuleKey ruleFlagsChange = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
+    RuleKey ruleFlagsChange = new DefaultRuleKeyFactory(0, hashCache, pathResolver).build(
         CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
@@ -258,7 +258,7 @@ public class CxxPreprocessAndCompileTest {
 
     // Verify that changing the input causes a rulekey change.
 
-    RuleKey inputChange = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
+    RuleKey inputChange = new DefaultRuleKeyFactory(0, hashCache, pathResolver).build(
         CxxPreprocessAndCompile.compile(
             params,
             pathResolver,
@@ -297,7 +297,7 @@ public class CxxPreprocessAndCompileTest {
 
     class TestData {
       public RuleKey generate(PreprocessorFlags flags) {
-        return new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
+        return new DefaultRuleKeyFactory(0, hashCache, pathResolver).build(
             CxxPreprocessAndCompile.preprocess(
                 params,
                 pathResolver,

@@ -27,7 +27,7 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
@@ -60,7 +60,7 @@ import java.util.concurrent.ExecutionException;
 public class DistBuildFileHashes {
   private final LoadingCache<ProjectFilesystem, BuildJobStateFileHashes> remoteFileHashes;
   private final LoadingCache<ProjectFilesystem, FileHashLoader> fileHashLoaders;
-  private final LoadingCache<ProjectFilesystem, DefaultRuleKeyBuilderFactory> ruleKeyFactories;
+  private final LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory> ruleKeyFactories;
 
   private final ListenableFuture<ImmutableList<BuildJobStateFileHashes>> fileHashes;
   private final ListenableFuture<ImmutableMap<BuildRule, RuleKey>>
@@ -105,16 +105,16 @@ public class DistBuildFileHashes {
         executorService);
   }
 
-  public static LoadingCache<ProjectFilesystem, DefaultRuleKeyBuilderFactory>
+  public static LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory>
   createRuleKeyFactories(
       final SourcePathResolver sourcePathResolver,
       final LoadingCache<ProjectFilesystem, ? extends FileHashLoader> fileHashLoaders,
       final int keySeed) {
     return CacheBuilder.newBuilder().build(
-        new CacheLoader<ProjectFilesystem, DefaultRuleKeyBuilderFactory>() {
+        new CacheLoader<ProjectFilesystem, DefaultRuleKeyFactory>() {
           @Override
-          public DefaultRuleKeyBuilderFactory load(ProjectFilesystem key) throws Exception {
-            return new DefaultRuleKeyBuilderFactory(
+          public DefaultRuleKeyFactory load(ProjectFilesystem key) throws Exception {
+            return new DefaultRuleKeyFactory(
                 /* seed */ keySeed,
                 fileHashLoaders.get(key),
                 sourcePathResolver
@@ -125,7 +125,7 @@ public class DistBuildFileHashes {
 
   private static ListenableFuture<ImmutableMap<BuildRule, RuleKey>> ruleKeyComputation(
       ActionGraph actionGraph,
-      final LoadingCache<ProjectFilesystem, DefaultRuleKeyBuilderFactory> ruleKeyFactories,
+      final LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory> ruleKeyFactories,
       ListeningExecutorService executorService) {
     List<ListenableFuture<Map.Entry<BuildRule, RuleKey>>> ruleKeyEntries = new ArrayList<>();
     for (final BuildRule rule : actionGraph.getNodes()) {

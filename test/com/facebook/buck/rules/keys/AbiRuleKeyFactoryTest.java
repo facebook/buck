@@ -40,7 +40,7 @@ import org.junit.Test;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class AbiRuleKeyBuilderFactoryTest {
+public class AbiRuleKeyFactoryTest {
 
   @Test
   public void ruleKeyDoesNotChangeWhenOnlyDependencyRuleKeyChanges() {
@@ -56,17 +56,17 @@ public class AbiRuleKeyBuilderFactoryTest {
 
     FakeFileHashCache hashCache = new FakeFileHashCache(
         ImmutableMap.of(depOutput, HashCode.fromInt(0)));
-    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver);
+    DefaultRuleKeyFactory ruleKeyFactory =
+        new DefaultRuleKeyFactory(0, hashCache, pathResolver);
 
     BuildRule rule = new FakeAbiRuleBuildRule("//:rule", pathResolver, dep);
 
     RuleKey inputKey1 =
-        new AbiRuleKeyBuilderFactory(0, hashCache, pathResolver, ruleKeyBuilderFactory)
+        new AbiRuleKeyFactory(0, hashCache, pathResolver, ruleKeyFactory)
             .build(rule);
 
     RuleKey inputKey2 =
-        new AbiRuleKeyBuilderFactory(0, hashCache, pathResolver, ruleKeyBuilderFactory)
+        new AbiRuleKeyFactory(0, hashCache, pathResolver, ruleKeyFactory)
             .build(rule);
 
     assertThat(
@@ -81,19 +81,19 @@ public class AbiRuleKeyBuilderFactoryTest {
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     FakeFileHashCache hashCache = new FakeFileHashCache(
         ImmutableMap.of());
-    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver);
+    DefaultRuleKeyFactory ruleKeyFactory =
+        new DefaultRuleKeyFactory(0, hashCache, pathResolver);
 
     FakeAbiRuleBuildRule rule = new FakeAbiRuleBuildRule("//:rule", pathResolver);
 
     rule.setAbiKey(Sha1HashCode.of(Strings.repeat("a", 40)));
     RuleKey inputKey1 =
-        new AbiRuleKeyBuilderFactory(0, hashCache, pathResolver, ruleKeyBuilderFactory)
+        new AbiRuleKeyFactory(0, hashCache, pathResolver, ruleKeyFactory)
             .build(rule);
 
     rule.setAbiKey(Sha1HashCode.of(Strings.repeat("b", 40)));
     RuleKey inputKey2 =
-        new AbiRuleKeyBuilderFactory(0, hashCache, pathResolver, ruleKeyBuilderFactory)
+        new AbiRuleKeyFactory(0, hashCache, pathResolver, ruleKeyFactory)
             .build(rule);
 
     assertThat(

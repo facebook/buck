@@ -51,7 +51,7 @@ import javax.annotation.Nullable;
 
 // There are tons of unused fields in this class.
 @SuppressWarnings("unused")
-public class DefaultRuleKeyBuilderFactoryTest {
+public class DefaultRuleKeyFactoryTest {
 
   @Test
   public void shouldNotAddUnannotatedFieldsToRuleKey() {
@@ -61,8 +61,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
     );
     BuildRule rule = new EmptyRule(target);
 
-    DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(0, new NullFileHashCache(), pathResolver);
+    DefaultRuleKeyFactory factory =
+        new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver);
     RuleKey expected = factory.build(rule);
 
     class UndecoratedFields extends EmptyRule {
@@ -87,8 +87,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
     );
     BuildRule rule = new EmptyRule(target);
 
-    DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(0, new NullFileHashCache(), pathResolver);
+    DefaultRuleKeyFactory factory =
+        new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver);
     RuleKeyBuilder<RuleKey> builder = factory.newInstance(rule);
 
     builder.setReflectively("field", "cake-walk");
@@ -119,8 +119,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
     );
     BuildRule rule = new EmptyRule(target);
 
-    DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(0, new NullFileHashCache(), pathResolver);
+    DefaultRuleKeyFactory factory =
+        new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver);
     RuleKeyBuilder<RuleKey> builder = factory.newInstance(rule);
 
     builder.setReflectively("field", "sausages");
@@ -157,8 +157,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     FileHashCache fileHashCache = new NullFileHashCache();
-    DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(0, fileHashCache, pathResolver);
+    DefaultRuleKeyFactory factory =
+        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver);
 
     RuleKey subKey =
         new UncachedRuleKeyBuilder(pathResolver, fileHashCache, factory)
@@ -194,8 +194,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
     BuildRule rule = new EmptyRule(target);
 
     FileHashCache fileHashCache = new NullFileHashCache();
-    DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(0, fileHashCache, pathResolver);
+    DefaultRuleKeyFactory factory =
+        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver);
 
     class AppendableRule extends EmptyRule implements RuleKeyAppendable {
       public AppendableRule(BuildTarget target) {
@@ -245,8 +245,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
     );
     BuildRule rule = new EmptyRule(target);
 
-    DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(0, new NullFileHashCache(), pathResolver);
+    DefaultRuleKeyFactory factory =
+        new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver);
     RuleKeyBuilder<RuleKey> builder = factory.newInstance(rule);
 
     builder.setReflectively("field", "cheddar");
@@ -275,8 +275,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
     );
     BuildRule rule = new EmptyRule(target);
 
-    DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(0, new NullFileHashCache(), pathResolver);
+    DefaultRuleKeyFactory factory =
+        new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver);
     RuleKeyBuilder<RuleKey> builder = factory.newInstance(rule);
 
     builder.setReflectively("alpha", "stilton");
@@ -311,8 +311,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
     );
     BuildRule rule = new EmptyRule(topLevelTarget);
 
-    DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(0, new NullFileHashCache(), pathResolver);
+    DefaultRuleKeyFactory factory =
+        new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver);
     RuleKeyBuilder<RuleKey> builder = factory.newInstance(rule);
 
     builder.setReflectively("exoticCheese", "bavarian smoked");
@@ -353,8 +353,8 @@ public class DefaultRuleKeyBuilderFactoryTest {
     );
     BuildRule rule = new EmptyRule(target);
 
-    DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(0, new NullFileHashCache(), pathResolver);
+    DefaultRuleKeyFactory factory =
+        new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver);
     RuleKeyBuilder<RuleKey> builder = factory.newInstance(rule);
 
     builder.setReflectively("key", "child");

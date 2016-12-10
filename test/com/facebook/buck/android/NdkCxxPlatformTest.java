@@ -43,7 +43,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
@@ -83,8 +83,8 @@ public class NdkCxxPlatformTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     String source = "source.cpp";
-    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(
+    DefaultRuleKeyFactory ruleKeyFactory =
+        new DefaultRuleKeyFactory(
             0,
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
@@ -137,7 +137,7 @@ public class NdkCxxPlatformTest {
         default:
           throw new IllegalStateException();
       }
-      ruleKeys.put(entry.getKey(), ruleKeyBuilderFactory.build(rule));
+      ruleKeys.put(entry.getKey(), ruleKeyFactory.build(rule));
     }
     return ruleKeys.build();
   }
@@ -149,8 +149,8 @@ public class NdkCxxPlatformTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(
+    DefaultRuleKeyFactory ruleKeyFactory =
+        new DefaultRuleKeyFactory(
             0,
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
@@ -179,7 +179,7 @@ public class NdkCxxPlatformTest {
           NativeLinkableInput.builder()
               .setArgs(SourcePathArg.from(pathResolver, new FakeSourcePath("input.o")))
               .build());
-      ruleKeys.put(entry.getKey(), ruleKeyBuilderFactory.build(rule));
+      ruleKeys.put(entry.getKey(), ruleKeyFactory.build(rule));
     }
     return ruleKeys.build();
   }

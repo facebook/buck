@@ -34,5 +34,5 @@ public interface AbiRule {
   /**
    * Returns a {@link Sha1HashCode} that represents the ABI of this rule's deps.
    */
-  Sha1HashCode getAbiKeyForDeps(DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory);
+  Sha1HashCode getAbiKeyForDeps(DefaultRuleKeyFactory defaultRuleKeyFactory);
 }

@@ -38,7 +38,7 @@ import org.junit.Test;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class ContentAgnosticRuleKeyBuilderFactoryTest {
+public class ContentAgnosticRuleKeyFactoryTest {
 
   @Test
   public void ruleKeyDoesNotChangeWhenFileContentsChange() throws Exception {
@@ -88,6 +88,6 @@ public class ContentAgnosticRuleKeyBuilderFactoryTest {
             .setSrcs(ImmutableList.of(new BuildTargetSourcePath(dep.getBuildTarget())))
             .build(resolver, fileSystem);
 
-    return new ContentAgnosticRuleKeyBuilderFactory(0, pathResolver).build(rule);
+    return new ContentAgnosticRuleKeyFactory(0, pathResolver).build(rule);
   }
 }

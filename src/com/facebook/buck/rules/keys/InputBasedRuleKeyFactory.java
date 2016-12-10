@@ -47,10 +47,10 @@ import javax.annotation.Nullable;
  *
  * @see SupportsInputBasedRuleKey
  */
-public class InputBasedRuleKeyBuilderFactory
-    extends ReflectiveRuleKeyBuilderFactory<
-        InputBasedRuleKeyBuilderFactory.Builder,
-        Optional<RuleKey>> {
+public class InputBasedRuleKeyFactory
+    extends ReflectiveRuleKeyFactory<
+            InputBasedRuleKeyFactory.Builder,
+            Optional<RuleKey>> {
 
   private final FileHashLoader fileHashLoader;
   private final SourcePathResolver pathResolver;
@@ -59,7 +59,7 @@ public class InputBasedRuleKeyBuilderFactory
   private final LoadingCache<RuleKeyAppendable, Result> cache;
   private final long inputSizeLimit;
 
-  protected InputBasedRuleKeyBuilderFactory(
+  protected InputBasedRuleKeyFactory(
       int seed,
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
@@ -86,7 +86,7 @@ public class InputBasedRuleKeyBuilderFactory
         });
   }
 
-  public InputBasedRuleKeyBuilderFactory(
+  public InputBasedRuleKeyFactory(
       int seed,
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
@@ -100,7 +100,7 @@ public class InputBasedRuleKeyBuilderFactory
         inputSizeLimit);
   }
 
-  public InputBasedRuleKeyBuilderFactory(
+  public InputBasedRuleKeyFactory(
       int seed,
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver) {

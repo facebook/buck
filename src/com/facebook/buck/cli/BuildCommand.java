@@ -63,7 +63,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.shell.WorkerProcessPool;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
@@ -538,11 +538,11 @@ public class BuildCommand extends AbstractCommand {
   private void showOutputs(
       CommandRunnerParams params,
       ActionGraphAndResolver actionGraphAndResolver) {
-    Optional<DefaultRuleKeyBuilderFactory> ruleKeyBuilderFactory =
+    Optional<DefaultRuleKeyFactory> ruleKeyFactory =
         Optional.empty();
     if (showRuleKey) {
-      ruleKeyBuilderFactory = Optional.of(
-          new DefaultRuleKeyBuilderFactory(
+      ruleKeyFactory = Optional.of(
+          new DefaultRuleKeyFactory(
               params.getBuckConfig().getKeySeed(),
               params.getFileHashCache(),
               new SourcePathResolver(actionGraphAndResolver.getResolver())));
@@ -559,7 +559,7 @@ public class BuildCommand extends AbstractCommand {
         params.getConsole().getStdOut().printf(
             "%s%s%s\n",
             rule.getFullyQualifiedName(),
-            showRuleKey ? " " + ruleKeyBuilderFactory.get().build(rule).toString() : "",
+            showRuleKey ? " " + ruleKeyFactory.get().build(rule).toString() : "",
             showOutput || showFullOutput ?
                 " " + outputPath.map(Object::toString).orElse("")
                 : "");

@@ -79,14 +79,14 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
 
   public static Suspended suspended(
       BuildRule rule,
-      RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
-    return new Suspended(rule, ruleKeyBuilderFactory);
+      RuleKeyFactory<RuleKey> ruleKeyFactory) {
+    return new Suspended(rule, ruleKeyFactory);
   }
 
   public static Resumed resumed(
       BuildRule rule,
-      RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
-    return new Resumed(rule, ruleKeyBuilderFactory);
+      RuleKeyFactory<RuleKey> ruleKeyFactory) {
+    return new Resumed(rule, ruleKeyFactory);
   }
 
   public static class Started extends BuildRuleEvent {
@@ -220,9 +220,9 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
 
     private final String ruleKey;
 
-    protected Suspended(BuildRule rule, RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
+    protected Suspended(BuildRule rule, RuleKeyFactory<RuleKey> ruleKeyFactory) {
       super(rule);
-      this.ruleKey = ruleKeyBuilderFactory.build(rule).toString();
+      this.ruleKey = ruleKeyFactory.build(rule).toString();
     }
 
     @JsonIgnore
@@ -246,9 +246,9 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
 
     private final String ruleKey;
 
-    protected Resumed(BuildRule rule, RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
+    protected Resumed(BuildRule rule, RuleKeyFactory<RuleKey> ruleKeyFactory) {
       super(rule);
-      this.ruleKey = ruleKeyBuilderFactory.build(rule).toString();
+      this.ruleKey = ruleKeyFactory.build(rule).toString();
     }
 
     @JsonIgnore
@@ -270,17 +270,17 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
   public static Scope startSuspendScope(
       BuckEventBus eventBus,
       BuildRule rule,
-      RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
+      RuleKeyFactory<RuleKey> ruleKeyFactory) {
     eventBus.post(BuildRuleEvent.started(rule));
-    return new Scope(eventBus, () -> BuildRuleEvent.suspended(rule, ruleKeyBuilderFactory));
+    return new Scope(eventBus, () -> BuildRuleEvent.suspended(rule, ruleKeyFactory));
   }
 
   public static Scope resumeSuspendScope(
       BuckEventBus eventBus,
       BuildRule rule,
-      RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
-    eventBus.post(BuildRuleEvent.resumed(rule, ruleKeyBuilderFactory));
-    return new Scope(eventBus, () -> BuildRuleEvent.suspended(rule, ruleKeyBuilderFactory));
+      RuleKeyFactory<RuleKey> ruleKeyFactory) {
+    eventBus.post(BuildRuleEvent.resumed(rule, ruleKeyFactory));
+    return new Scope(eventBus, () -> BuildRuleEvent.suspended(rule, ruleKeyFactory));
   }
 
 

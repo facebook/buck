@@ -22,22 +22,22 @@ import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.google.common.base.Preconditions;
 
-public class AbiRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactory {
+public class AbiRuleKeyFactory extends DefaultRuleKeyFactory {
 
-  private final DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory;
+  private final DefaultRuleKeyFactory defaultRuleKeyFactory;
 
-  public AbiRuleKeyBuilderFactory(
+  public AbiRuleKeyFactory(
       int seed,
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
-      DefaultRuleKeyBuilderFactory defaultRuleKeyBuilderFactory) {
+      DefaultRuleKeyFactory defaultRuleKeyFactory) {
     super(seed, hashLoader, pathResolver);
-    this.defaultRuleKeyBuilderFactory = defaultRuleKeyBuilderFactory;
+    this.defaultRuleKeyFactory = defaultRuleKeyFactory;
   }
 
   @Override
-  public DefaultRuleKeyBuilderFactory getDefaultRuleKeyBuilderFactory() {
-    return defaultRuleKeyBuilderFactory;
+  public DefaultRuleKeyFactory getDefaultRuleKeyFactory() {
+    return defaultRuleKeyFactory;
   }
 
   @Override
@@ -51,7 +51,7 @@ public class AbiRuleKeyBuilderFactory extends DefaultRuleKeyBuilderFactory {
     AbiRule abiRule = (AbiRule) buildRule;
     sink.setReflectively(
         "buck.deps",
-        abiRule.getAbiKeyForDeps(defaultRuleKeyBuilderFactory));
+        abiRule.getAbiKeyForDeps(defaultRuleKeyFactory));
   }
 
 }

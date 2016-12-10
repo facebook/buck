@@ -21,41 +21,41 @@ import com.google.common.base.Supplier;
 
 public class UncachedRuleKeyBuilder extends RuleKeyBuilder<RuleKey> {
 
-  private final RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory;
+  private final RuleKeyFactory<RuleKey> ruleKeyFactory;
   private final Supplier<UncachedRuleKeyBuilder> subKeySupplier;
 
   public UncachedRuleKeyBuilder(
       SourcePathResolver resolver,
       FileHashCache hashCache,
-      RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory,
+      RuleKeyFactory<RuleKey> ruleKeyFactory,
       RuleKeyLogger ruleKeyLogger) {
     super(resolver, hashCache, ruleKeyLogger);
-    this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
-    this.subKeySupplier = createSubKeySupplier(resolver, hashCache, ruleKeyBuilderFactory);
+    this.ruleKeyFactory = ruleKeyFactory;
+    this.subKeySupplier = createSubKeySupplier(resolver, hashCache, ruleKeyFactory);
   }
 
   public UncachedRuleKeyBuilder(
       SourcePathResolver resolver,
       FileHashCache hashCache,
-      RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
+      RuleKeyFactory<RuleKey> ruleKeyFactory) {
     super(resolver, hashCache);
-    this.ruleKeyBuilderFactory = ruleKeyBuilderFactory;
-    this.subKeySupplier = createSubKeySupplier(resolver, hashCache, ruleKeyBuilderFactory);
+    this.ruleKeyFactory = ruleKeyFactory;
+    this.subKeySupplier = createSubKeySupplier(resolver, hashCache, ruleKeyFactory);
   }
 
   private static Supplier<UncachedRuleKeyBuilder> createSubKeySupplier(
       final SourcePathResolver resolver,
       final FileHashCache hashCache,
-      final RuleKeyBuilderFactory<RuleKey> ruleKeyBuilderFactory) {
+      final RuleKeyFactory<RuleKey> ruleKeyFactory) {
     return () -> new UncachedRuleKeyBuilder(
         resolver,
         hashCache,
-        ruleKeyBuilderFactory);
+        ruleKeyFactory);
   }
 
   @Override
   protected UncachedRuleKeyBuilder setBuildRule(BuildRule rule) {
-    setSingleValue(ruleKeyBuilderFactory.build(rule));
+    setSingleValue(ruleKeyFactory.build(rule));
     return this;
   }
 

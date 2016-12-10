@@ -36,7 +36,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -164,9 +164,9 @@ public class DirectHeaderMapTest {
     // Calculate their rule keys and verify they're different.
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
         ImmutableMap.of());
-    RuleKey key1 = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
+    RuleKey key1 = new DefaultRuleKeyFactory(0, hashCache, resolver).build(
         buildRule);
-    RuleKey key2 = new DefaultRuleKeyBuilderFactory(0, hashCache, resolver).build(
+    RuleKey key2 = new DefaultRuleKeyFactory(0, hashCache, resolver).build(
         modifiedBuildRule);
     assertNotEquals(key1, key2);
   }
@@ -179,14 +179,14 @@ public class DirectHeaderMapTest {
     ruleResolver.addToIndex(buildRule);
     SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
 
-    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory = new DefaultRuleKeyBuilderFactory(
+    DefaultRuleKeyFactory defaultRuleKeyFactory = new DefaultRuleKeyFactory(
         0,
         FakeFileHashCache.createFromStrings(
             ImmutableMap.of()),
         resolver);
 
     // Calculate the rule key
-    RuleKey key1 = ruleKeyBuilderFactory.build(buildRule);
+    RuleKey key1 = defaultRuleKeyFactory.build(buildRule);
 
     // Change the contents of the target of the link.
     Path existingFile =
@@ -194,7 +194,7 @@ public class DirectHeaderMapTest {
     Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
 
     // Re-calculate the rule key
-    RuleKey key2 = ruleKeyBuilderFactory.build(buildRule);
+    RuleKey key2 = defaultRuleKeyFactory.build(buildRule);
 
     // Verify that the rules keys are the same.
     assertEquals(key1, key2);

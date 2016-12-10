@@ -21,7 +21,7 @@ import com.facebook.buck.model.BuckVersion;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
-import com.facebook.buck.rules.RuleKeyBuilderFactory;
+import com.facebook.buck.rules.RuleKeyFactory;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -30,17 +30,17 @@ import com.google.common.collect.ImmutableCollection;
 
 import java.util.concurrent.ExecutionException;
 
-public abstract class ReflectiveRuleKeyBuilderFactory<T extends RuleKeyBuilder<U>, U>
-    implements RuleKeyBuilderFactory<U> {
+public abstract class ReflectiveRuleKeyFactory<T extends RuleKeyBuilder<U>, U>
+    implements RuleKeyFactory<U> {
 
-  private static final Logger LOG = Logger.get(ReflectiveRuleKeyBuilderFactory.class);
+  private static final Logger LOG = Logger.get(ReflectiveRuleKeyFactory.class);
 
   private final int seed;
   private final LoadingCache<Class<? extends BuildRule>, ImmutableCollection<AlterRuleKey>>
       knownFields;
   private final LoadingCache<BuildRule, U> knownRules;
 
-  public ReflectiveRuleKeyBuilderFactory(int seed) {
+  public ReflectiveRuleKeyFactory(int seed) {
     this.seed = seed;
     this.knownFields = CacheBuilder.newBuilder().build(new ReflectiveAlterKeyLoader());
     this.knownRules = CacheBuilder.newBuilder().weakKeys().build(

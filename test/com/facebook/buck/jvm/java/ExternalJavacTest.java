@@ -30,7 +30,7 @@ import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.UncachedRuleKeyBuilder;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.FakeProcess;
@@ -103,16 +103,16 @@ public class ExternalJavacTest extends EasyMockSupport {
     );
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//example:target").build();
     BuildRule buildRule = new NoopBuildRule(params, pathResolver);
-    DefaultRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(0, fileHashCache, pathResolver);
+    DefaultRuleKeyFactory fakeRuleKeyFactory =
+        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver);
 
     RuleKey javacKey = new UncachedRuleKeyBuilder(
         pathResolver,
         fileHashCache,
-        fakeRuleKeyBuilderFactory)
+        fakeRuleKeyFactory)
         .setReflectively("javac", javac.toString())
         .build();
-    RuleKeyBuilder<RuleKey> builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
+    RuleKeyBuilder<RuleKey> builder = fakeRuleKeyFactory.newInstance(buildRule);
     builder.setReflectively("key.appendableSubKey", javacKey);
     RuleKey expected = builder.build();
 
@@ -123,7 +123,7 @@ public class ExternalJavacTest extends EasyMockSupport {
     final FakeProcessExecutor executor = new FakeProcessExecutor(
         ImmutableMap.of(javacExe, javacProc));
 
-    builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
+    builder = fakeRuleKeyFactory.newInstance(buildRule);
     ExternalJavac compiler = new ExternalJavac(Either.ofLeft(javac)) {
       @Override
       ProcessExecutor createProcessExecutor() {
@@ -152,16 +152,16 @@ public class ExternalJavacTest extends EasyMockSupport {
     );
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//example:target").build();
     BuildRule buildRule = new NoopBuildRule(params, pathResolver);
-    DefaultRuleKeyBuilderFactory fakeRuleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(0, fileHashCache, pathResolver);
+    DefaultRuleKeyFactory fakeRuleKeyFactory =
+        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver);
 
     RuleKey javacKey = new UncachedRuleKeyBuilder(
         pathResolver,
         fileHashCache,
-        fakeRuleKeyBuilderFactory)
+        fakeRuleKeyFactory)
         .setReflectively("javac.version", javacVersion.toString())
         .build();
-    RuleKeyBuilder<RuleKey> builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
+    RuleKeyBuilder<RuleKey> builder = fakeRuleKeyFactory.newInstance(buildRule);
     builder.setReflectively("key.appendableSubKey", javacKey);
     RuleKey expected = builder.build();
 
@@ -172,7 +172,7 @@ public class ExternalJavacTest extends EasyMockSupport {
     final FakeProcessExecutor executor = new FakeProcessExecutor(
         ImmutableMap.of(javacExe, javacProc));
 
-    builder = fakeRuleKeyBuilderFactory.newInstance(buildRule);
+    builder = fakeRuleKeyFactory.newInstance(buildRule);
     ExternalJavac compiler = new ExternalJavac(Either.ofLeft(javac)) {
       @Override
       ProcessExecutor createProcessExecutor() {

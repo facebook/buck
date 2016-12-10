@@ -30,7 +30,7 @@ import com.facebook.buck.rules.BuildRule;
  * necessarily change if the rule key of a dependency changed.  Instead, they only change if a
  * the actual inputs to the rule change.
  *
- * @see InputBasedRuleKeyBuilderFactory
+ * @see InputBasedRuleKeyFactory
  */
 public interface SupportsInputBasedRuleKey extends BuildRule {
   default boolean inputBasedRuleKeyIsEnabled() {

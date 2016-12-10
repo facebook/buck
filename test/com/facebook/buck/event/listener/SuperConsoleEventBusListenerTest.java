@@ -62,7 +62,7 @@ import com.facebook.buck.rules.BuildRuleStatus;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeRuleKeyBuilderFactory;
+import com.facebook.buck.rules.FakeRuleKeyFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -1903,7 +1903,7 @@ public class SuperConsoleEventBusListenerTest {
     String stepDescription = "working hard";
     UUID stepUuid = UUID.randomUUID();
 
-    FakeRuleKeyBuilderFactory ruleKeyBuilderFactory = new FakeRuleKeyBuilderFactory(
+    FakeRuleKeyFactory ruleKeyFactory = new FakeRuleKeyFactory(
         ImmutableMap.of(
             fakeTarget, new RuleKey("aaaa")));
 
@@ -1965,7 +1965,7 @@ public class SuperConsoleEventBusListenerTest {
     // Suspend the rule.
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildRuleEvent.suspended(fakeRule, ruleKeyBuilderFactory),
+            BuildRuleEvent.suspended(fakeRule, ruleKeyFactory),
             100L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1983,7 +1983,7 @@ public class SuperConsoleEventBusListenerTest {
     // Resume the rule.
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            BuildRuleEvent.resumed(fakeRule, ruleKeyBuilderFactory),
+            BuildRuleEvent.resumed(fakeRule, ruleKeyFactory),
             300L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));

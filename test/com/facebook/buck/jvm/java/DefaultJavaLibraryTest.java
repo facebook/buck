@@ -54,8 +54,8 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
-import com.facebook.buck.rules.keys.InputBasedRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -716,8 +716,8 @@ public class DefaultJavaLibraryTest {
             .addSrc(new BuildTargetSourcePath(genSrc.getBuildTarget()))
             .build(resolver, filesystem);
     FileHashCache originalHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
-    InputBasedRuleKeyBuilderFactory factory =
-        new InputBasedRuleKeyBuilderFactory(
+    InputBasedRuleKeyFactory factory =
+        new InputBasedRuleKeyFactory(
             0,
             originalHashCache,
             pathResolver);
@@ -739,7 +739,7 @@ public class DefaultJavaLibraryTest {
             .build(resolver, filesystem);
     FileHashCache unaffectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     factory =
-        new InputBasedRuleKeyBuilderFactory(
+        new InputBasedRuleKeyFactory(
             0,
             unaffectedHashCache,
             pathResolver);
@@ -761,7 +761,7 @@ public class DefaultJavaLibraryTest {
             .build(resolver, filesystem);
     FileHashCache affectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     factory =
-        new InputBasedRuleKeyBuilderFactory(
+        new InputBasedRuleKeyFactory(
             0,
             affectedHashCache,
             pathResolver);
@@ -801,8 +801,8 @@ public class DefaultJavaLibraryTest {
         "Source.class",
         "ABI JAR contents");
     FileHashCache originalHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
-    InputBasedRuleKeyBuilderFactory factory =
-        new InputBasedRuleKeyBuilderFactory(
+    InputBasedRuleKeyFactory factory =
+        new InputBasedRuleKeyFactory(
             0,
             originalHashCache,
             pathResolver);
@@ -826,7 +826,7 @@ public class DefaultJavaLibraryTest {
     filesystem.writeContentsToPath("different JAR contents", dep.getPathToOutput());
     FileHashCache unaffectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     factory =
-        new InputBasedRuleKeyBuilderFactory(
+        new InputBasedRuleKeyFactory(
             0,
             unaffectedHashCache,
             pathResolver);
@@ -848,7 +848,7 @@ public class DefaultJavaLibraryTest {
         "changed ABI JAR contents");
     FileHashCache affectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     factory =
-        new InputBasedRuleKeyBuilderFactory(
+        new InputBasedRuleKeyFactory(
             0,
             affectedHashCache,
             pathResolver);
@@ -896,8 +896,8 @@ public class DefaultJavaLibraryTest {
         "ABI JAR contents");
 
     FileHashCache originalHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
-    InputBasedRuleKeyBuilderFactory factory =
-        new InputBasedRuleKeyBuilderFactory(
+    InputBasedRuleKeyFactory factory =
+        new InputBasedRuleKeyFactory(
             0,
             originalHashCache,
             pathResolver);
@@ -922,7 +922,7 @@ public class DefaultJavaLibraryTest {
     filesystem.writeContentsToPath("different JAR contents", exportedDep.getPathToOutput());
     FileHashCache unaffectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     factory =
-        new InputBasedRuleKeyBuilderFactory(
+        new InputBasedRuleKeyFactory(
             0,
             unaffectedHashCache,
             pathResolver);
@@ -944,7 +944,7 @@ public class DefaultJavaLibraryTest {
         "changed ABI JAR contents");
     FileHashCache affectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     factory =
-        new InputBasedRuleKeyBuilderFactory(
+        new InputBasedRuleKeyFactory(
             0,
             affectedHashCache,
             pathResolver);
@@ -997,8 +997,8 @@ public class DefaultJavaLibraryTest {
         "Source1.class",
         "ABI JAR contents");
     FileHashCache originalHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
-    InputBasedRuleKeyBuilderFactory factory =
-        new InputBasedRuleKeyBuilderFactory(
+    InputBasedRuleKeyFactory factory =
+        new InputBasedRuleKeyFactory(
             0,
             originalHashCache,
             pathResolver);
@@ -1023,7 +1023,7 @@ public class DefaultJavaLibraryTest {
     filesystem.writeContentsToPath("different JAR contents", exportedDep.getPathToOutput());
     FileHashCache unaffectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     factory =
-        new InputBasedRuleKeyBuilderFactory(
+        new InputBasedRuleKeyFactory(
             0,
             unaffectedHashCache,
             pathResolver);
@@ -1045,7 +1045,7 @@ public class DefaultJavaLibraryTest {
         "changed ABI JAR contents");
     FileHashCache affectedHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     factory =
-        new InputBasedRuleKeyBuilderFactory(
+        new InputBasedRuleKeyFactory(
             0,
             affectedHashCache,
             pathResolver);
@@ -1151,19 +1151,19 @@ public class DefaultJavaLibraryTest {
         "becgkaifhjd.txt", "bkhajdifcge.txt", "cabfghjekid.txt", "chkdbafijge.txt")) {
       fileHashes.put(filename, Hashing.sha1().hashString(filename, Charsets.UTF_8).toString());
     }
-    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory1 =
-        new DefaultRuleKeyBuilderFactory(
+    DefaultRuleKeyFactory ruleKeyFactory =
+        new DefaultRuleKeyFactory(
             0,
             FakeFileHashCache.createFromStrings(fileHashes.build()),
             pathResolver1);
-    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory2 =
-        new DefaultRuleKeyBuilderFactory(
+    DefaultRuleKeyFactory ruleKeyFactory2 =
+        new DefaultRuleKeyFactory(
             0,
             FakeFileHashCache.createFromStrings(fileHashes.build()),
             pathResolver2);
 
-    RuleKey key1 = ruleKeyBuilderFactory1.build(rule1);
-    RuleKey key2 = ruleKeyBuilderFactory2.build(rule2);
+    RuleKey key1 = ruleKeyFactory.build(rule1);
+    RuleKey key2 = ruleKeyFactory2.build(rule2);
     assertEquals(key1, key2);
   }
 

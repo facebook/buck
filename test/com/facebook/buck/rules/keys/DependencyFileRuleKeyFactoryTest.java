@@ -49,7 +49,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class DependencyFileRuleKeyBuilderFactoryTest {
+public class DependencyFileRuleKeyFactoryTest {
 
   @Test
   public void ruleKeyDoesNotChangeIfInputContentsChanges() throws Exception {
@@ -73,7 +73,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             HashCode.fromInt(0)));
 
     RuleKey inputKey1 =
-        new DefaultDependencyFileRuleKeyBuilderFactory(
+        new DefaultDependencyFileRuleKeyFactory(
             0,
             hashCache,
             pathResolver)
@@ -86,7 +86,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             HashCode.fromInt(1)));
 
     RuleKey inputKey2 =
-        new DefaultDependencyFileRuleKeyBuilderFactory(
+        new DefaultDependencyFileRuleKeyFactory(
             0,
             hashCache,
             pathResolver)
@@ -117,7 +117,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             HashCode.fromInt(0)));
 
     RuleKey inputKey1 =
-        new DefaultDependencyFileRuleKeyBuilderFactory(
+        new DefaultDependencyFileRuleKeyFactory(
             0,
             hashCache,
             pathResolver)
@@ -130,7 +130,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             HashCode.fromInt(1)));
 
     RuleKey inputKey2 =
-        new DefaultDependencyFileRuleKeyBuilderFactory(
+        new DefaultDependencyFileRuleKeyFactory(
             0,
             hashCache,
             pathResolver)
@@ -168,7 +168,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             HashCode.fromInt(0)));
 
     RuleKey manifestKey1 =
-        new DefaultDependencyFileRuleKeyBuilderFactory(
+        new DefaultDependencyFileRuleKeyFactory(
             0,
             hashCache,
             pathResolver)
@@ -183,7 +183,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             HashCode.fromInt(1)));
 
     RuleKey manifestKey2 =
-        new DefaultDependencyFileRuleKeyBuilderFactory(
+        new DefaultDependencyFileRuleKeyFactory(
             0,
             hashCache,
             pathResolver)
@@ -217,7 +217,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             HashCode.fromInt(0)));
 
     RuleKey manifestKey1 =
-        new DefaultDependencyFileRuleKeyBuilderFactory(
+        new DefaultDependencyFileRuleKeyFactory(
             0,
             hashCache,
             pathResolver)
@@ -232,7 +232,7 @@ public class DependencyFileRuleKeyBuilderFactoryTest {
             HashCode.fromInt(1)));
 
     RuleKey manifestKey2 =
-        new DefaultDependencyFileRuleKeyBuilderFactory(
+        new DefaultDependencyFileRuleKeyFactory(
             0,
             hashCache,
             pathResolver)
