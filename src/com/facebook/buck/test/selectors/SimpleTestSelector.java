@@ -39,7 +39,7 @@ public class SimpleTestSelector implements TestSelector {
 
   @Override
   public String getExplanation() {
-    return String.format("%s class:%s method:%s",
+    return String.format("class:%s method:%s",
         isMatchAnyClass() ? "<any>" : className,
         isMatchAnyMethod() ? "<any>" : methodName);
   }
