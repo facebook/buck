@@ -230,7 +230,7 @@ public class ResourcePool<R extends AutoCloseable> implements AutoCloseable {
   }
 
   @Nullable
-  public ListenableFuture<Void> getShutdownFullyCompleteFuture() {
+  public synchronized ListenableFuture<Void> getShutdownFullyCompleteFuture() {
     Preconditions.checkState(
         closing.get(),
         "This method should not be called before the .close() method is called.");
