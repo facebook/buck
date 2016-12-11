@@ -151,7 +151,7 @@ public class AccumulateClassNamesStep implements Step {
             HashCode existing = classNames.putIfAbsent(key, value);
             if (existing != null && !existing.equals(value)) {
               throw new IllegalArgumentException(String.format(
-                  "Multiple entries with same key but differing values: %1$s=%s and %1$s=%s",
+                  "Multiple entries with same key but differing values: %1$s=%2$s and %1$s=%3$s",
                   key, value, existing));
             }
           }
@@ -181,7 +181,7 @@ public class AccumulateClassNamesStep implements Step {
       HashCode existing = classNames.putIfAbsent(key, value);
       if (existing != null && !existing.equals(value)) {
         throw new IllegalArgumentException(String.format(
-            "Multiple entries with same key but differing values: %1$s=%s and %1$s=%s",
+            "Multiple entries with same key but differing values: %1$s=%2$s and %1$s=%3$s",
             key, value, existing));
       }
     }
