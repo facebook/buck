@@ -84,7 +84,7 @@ public abstract class MachOAbstractCommand extends AbstractCommand {
     Preconditions.checkNotNull(output, OUTPUT_OPTION + " must be set");
     Preconditions.checkNotNull(oldCompDir, OLD_COMPDIR_OPTION + " must be set");
     Preconditions.checkNotNull(updatedCompDir, NEW_COMPDIR_OPTION + " must be set");
-    Preconditions.checkNotNull(
+    Preconditions.checkState(
         !binary.equals(output),
         BINARY_OPTION + " must be different from " + OUTPUT_OPTION);
     Preconditions.checkArgument(
