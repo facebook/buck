@@ -40,12 +40,16 @@ import javax.net.ssl.HttpsURLConnection;
 /**
  * Download a file over HTTP.
  */
-public class HttpDownloader implements Downloader {
-  public static final int PROGRESS_REPORT_EVERY_N_BYTES = 1000;
+public class HttpDownloader implements Downloader, AuthAwareDownloader {
+  private static final int PROGRESS_REPORT_EVERY_N_BYTES = 1000;
 
   private static final Logger LOG = Logger.get(HttpDownloader.class);
 
   private final Optional<Proxy> proxy;
+
+  public HttpDownloader() {
+    this(Optional.empty());
+  }
 
   public HttpDownloader(Optional<Proxy> proxy) {
     this.proxy = proxy;
@@ -56,6 +60,7 @@ public class HttpDownloader implements Downloader {
     return fetch(eventBus, uri, Optional.empty(), output);
   }
 
+  @Override
   public boolean fetch(
       BuckEventBus eventBus,
       URI uri,

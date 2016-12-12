@@ -57,7 +57,7 @@ public class StackedDownloader implements Downloader {
 
     DownloadConfig downloadConfig = new DownloadConfig(config);
     Optional<Proxy> proxy = downloadConfig.getProxy();
-
+    HttpDownloader httpDownloader = new HttpDownloader(proxy);
 
     for (Map.Entry<String, String> kv : downloadConfig.getAllMavenRepos().entrySet()) {
       String repo = kv.getValue();
@@ -65,7 +65,7 @@ public class StackedDownloader implements Downloader {
       if (repo.startsWith("http:") || repo.startsWith("https://")) {
         String repoName = kv.getKey();
         Optional<PasswordAuthentication> credentials = downloadConfig.getRepoCredentials(repoName);
-        downloaders.add(new RemoteMavenDownloader(proxy, repo, credentials));
+        downloaders.add(new RemoteMavenDownloader(httpDownloader, repo, credentials));
       } else if (repo.startsWith("file:")) {
         try {
           URL url = new URL(repo);
@@ -121,7 +121,7 @@ public class StackedDownloader implements Downloader {
       LOG.warn("Please configure maven repos by adding them to a 'maven_repositories' " +
               "section in your buckconfig");
     }
-    downloaders.add(new HttpDownloader(proxy));
+    downloaders.add(httpDownloader);
 
     return new StackedDownloader(downloaders.build());
   }

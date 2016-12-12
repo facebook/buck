@@ -1,6 +1,7 @@
 java_library(
   name = 'downloader',
   srcs = [
+    'AuthAwareDownloader.java',
     'Downloader.java',
     'DownloadEvent.java',
     'DownloadProgressEvent.java',

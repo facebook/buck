@@ -50,7 +50,7 @@ public class HttpDownloaderTest {
   private BuckEventBus eventBus = BuckEventBusFactory.newInstance();
 
   private HttpDownloader getDownloader(final HttpURLConnection connection) {
-    return new HttpDownloader(Optional.empty()) {
+    return new HttpDownloader() {
       @Override
       protected HttpURLConnection createConnection(URI uri) throws IOException {
         return connection;
@@ -114,7 +114,7 @@ public class HttpDownloaderTest {
 
   @Test
   public void shouldReturnFalseIfUrlIsNotHttp() throws URISyntaxException, IOException {
-    Downloader downloader = new HttpDownloader(Optional.empty());
+    Downloader downloader = new HttpDownloader();
 
     boolean result = downloader.fetch(eventBus, new URI("mvn:foo/bar/baz"), neverUsed);
 

@@ -20,23 +20,22 @@ import com.facebook.buck.event.BuckEventBus;
 
 import java.io.IOException;
 import java.net.PasswordAuthentication;
-import java.net.Proxy;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Optional;
 
 public class RemoteMavenDownloader implements Downloader {
 
-  private final HttpDownloader downloader;
+  private final AuthAwareDownloader downloader;
   private final Optional<String> mavenRepo;
   private final Optional<PasswordAuthentication> passwordAuthentication;
 
   public RemoteMavenDownloader(
-      Optional<Proxy> proxy,
+      AuthAwareDownloader downloader,
       String mavenRepo,
       Optional<PasswordAuthentication> passwordAuthentication) {
     this.mavenRepo = Optional.of(mavenRepo);
-    this.downloader = new HttpDownloader(proxy);
+    this.downloader = downloader;
     this.passwordAuthentication = passwordAuthentication;
   }
 

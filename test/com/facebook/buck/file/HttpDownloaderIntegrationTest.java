@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.util.Optional;
 
 public class HttpDownloaderIntegrationTest {
 
@@ -61,7 +60,7 @@ public class HttpDownloaderIntegrationTest {
 
   @Before
   public void createDownloader() throws IOException {
-    downloader = new HttpDownloader(Optional.empty());
+    downloader = new HttpDownloader();
     outputDir = tmp.newFolder().toPath();
   }
 
