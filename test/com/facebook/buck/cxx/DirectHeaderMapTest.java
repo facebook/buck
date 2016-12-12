@@ -129,9 +129,11 @@ public class DirectHeaderMapTest {
                 headerMapPath,
                 ImmutableMap.of(
                     Paths.get("file"),
-                    file1.toAbsolutePath(),
+                    filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
+                        .relativize(file1),
                     Paths.get("directory/then/file"),
-                    file2.toAbsolutePath())));
+                    filesystem.resolve(filesystem.getBuckPaths().getBuckOut())
+                        .relativize(file2))));
     ImmutableList<Step> actualBuildSteps =
         buildRule.getBuildSteps(
             buildContext,

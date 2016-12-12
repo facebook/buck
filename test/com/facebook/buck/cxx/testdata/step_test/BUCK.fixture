@@ -15,6 +15,18 @@ cxx_binary(
   ],
 )
 
+cxx_library(
+  name = 'binary_with_unused_header_nosymlinks',
+  srcs = [
+    'source.cpp',
+  ],
+  headers = [
+    'unused_header.h',
+  ],
+  xcode_public_headers_symlinks = False,
+  xcode_private_headers_symlinks = False,
+)
+
 genrule(
   name = 'genheader',
   out = 'genheader.h',
@@ -61,6 +73,19 @@ cxx_binary(
   ],
 )
 
+cxx_library(
+  name = 'binary_with_used_full_header_nosymlinks',
+  header_namespace = 'prefix',
+  headers = [
+    'source_full_header.h',
+  ],
+  srcs = [
+    'source_full_header.cpp',
+  ],
+  xcode_public_headers_symlinks = False,
+  xcode_private_headers_symlinks = False,
+)
+
 cxx_binary(
   name = 'binary_with_used_relative_header',
   headers = [
@@ -69,6 +94,18 @@ cxx_binary(
   srcs = [
     'source_relative_header.cpp',
   ],
+)
+
+cxx_library(
+  name = 'binary_with_used_relative_header_nosymlinks',
+  headers = [
+    'source_relative_header.h',
+  ],
+  srcs = [
+    'source_relative_header.cpp',
+  ],
+  xcode_public_headers_symlinks = False,
+  xcode_private_headers_symlinks = False,
 )
 
 genrule(
@@ -127,4 +164,16 @@ cxx_binary(
   srcs = [
     'source_relative_parent_header/source.cpp',
   ],
+)
+
+cxx_library(
+  name = 'binary_with_used_relative_parent_header_nosymlinks',
+  headers = [
+    'source_relative_parent_header.h',
+  ],
+  srcs = [
+    'source_relative_parent_header/source.cpp',
+  ],
+  xcode_public_headers_symlinks = False,
+  xcode_private_headers_symlinks = False,
 )

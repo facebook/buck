@@ -311,11 +311,13 @@ public class CxxPreprocessAndCompileIntegrationTest {
         Matchers.not(equalTo(firstRunEntry.getRuleKey())));
   }
 
-  @Test
-  public void depfileBasedRuleKeyRebuildsAfterChangeToUsedHeader() throws Exception {
+  private void depfileBasedRuleKeyRebuildsAfterChangeToUsedHeader(
+      boolean disableHeaderSymlinks) throws Exception {
     CxxPlatform cxxPlatform = CxxPlatformUtils.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
-    BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_used_full_header");
+    String targetName =
+        "//:binary_with_used_full_header" + (disableHeaderSymlinks ? "_nosymlinks" : "");
+    BuildTarget target = BuildTargetFactory.newInstance(targetName);
     String usedHeaderName = "source_full_header.h";
     String sourceName = "source_full_header.cpp";
     BuildTarget preprocessTarget =
@@ -354,11 +356,22 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
-  public void depfileBasedRuleKeyRebuildsAfterChangeToUsedHeaderUsingFileRelativeInclusion()
-      throws Exception {
+  public void depfileBasedRuleKeyRebuildsAfterChangeToUsedHeader() throws Exception {
+    depfileBasedRuleKeyRebuildsAfterChangeToUsedHeader(false);
+  }
+
+  @Test
+  public void depfileBasedRuleKeyRebuildsAfterChangeToUsedHeaderNoSymlinks() throws Exception {
+    depfileBasedRuleKeyRebuildsAfterChangeToUsedHeader(true);
+  }
+
+  private void depfileBasedRuleKeyRebuildsAfterChangeToUsedHeaderUsingFileRelativeInclusion(
+      boolean disableHeaderSymlinks) throws Exception {
     CxxPlatform cxxPlatform = CxxPlatformUtils.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
-    BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_used_relative_header");
+    String targetName =
+        "//:binary_with_used_relative_header" + (disableHeaderSymlinks ? "_nosymlinks" : "");
+    BuildTarget target = BuildTargetFactory.newInstance(targetName);
     String usedHeaderName = "source_relative_header.h";
     String sourceName = "source_relative_header.cpp";
     BuildTarget preprocessTarget =
@@ -397,12 +410,25 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
-  public void depfileBasedRuleKeyRebuildsAfterChangeToUsedParentHeaderUsingFileRelativeInclusion()
+  public void depfileBasedRuleKeyRebuildsAfterChangeToUsedHeaderUsingFileRelativeInclusion()
       throws Exception {
+    depfileBasedRuleKeyRebuildsAfterChangeToUsedHeaderUsingFileRelativeInclusion(false);
+  }
+
+  @Test
+  public void
+      depfileBasedRuleKeyRebuildsAfterChangeToUsedHeaderUsingFileRelativeInclusionNosymlinks()
+      throws Exception {
+    depfileBasedRuleKeyRebuildsAfterChangeToUsedHeaderUsingFileRelativeInclusion(true);
+  }
+
+  private void depfileBasedRuleKeyRebuildsAfterChangeToUsedParentHeaderUsingFileRelativeInclusion(
+      boolean disableHeaderSymlinks) throws Exception {
     CxxPlatform cxxPlatform = CxxPlatformUtils.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
-    BuildTarget target =
-        BuildTargetFactory.newInstance("//:binary_with_used_relative_parent_header");
+    String targetName =
+        "//:binary_with_used_relative_parent_header" + (disableHeaderSymlinks ? "_nosymlinks" : "");
+    BuildTarget target = BuildTargetFactory.newInstance(targetName);
     String usedHeaderName = "source_relative_parent_header.h";
     String sourceName = "source_relative_parent_header/source.cpp";
     BuildTarget preprocessTarget =
@@ -441,10 +467,25 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
-  public void depfileBasedRuleKeyAvoidsRecompilingAfterChangeToUnusedHeader() throws Exception {
+  public void depfileBasedRuleKeyRebuildsAfterChangeToUsedParentHeaderUsingFileRelativeInclusion()
+      throws Exception {
+    depfileBasedRuleKeyRebuildsAfterChangeToUsedParentHeaderUsingFileRelativeInclusion(false);
+  }
+
+  @Test
+  public void
+      depfileBasedRuleKeyRebuildsAfterChangeToUsedParentHeaderUsingFileRelativeInclusionNoSymlinks()
+      throws Exception {
+    depfileBasedRuleKeyRebuildsAfterChangeToUsedParentHeaderUsingFileRelativeInclusion(true);
+  }
+
+  private void depfileBasedRuleKeyAvoidsRecompilingAfterChangeToUnusedHeader(
+      boolean disableHeaderSymlinks) throws Exception {
     CxxPlatform cxxPlatform = CxxPlatformUtils.build(
         new CxxBuckConfig(FakeBuckConfig.builder().build()));
-    BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_unused_header");
+    String targetName =
+        "//:binary_with_unused_header" + (disableHeaderSymlinks ? "_nosymlinks" : "");
+    BuildTarget target = BuildTargetFactory.newInstance(targetName);
     String unusedHeaderName = "unused_header.h";
     String sourceName = "source.cpp";
     BuildTarget preprocessTarget =
@@ -481,6 +522,17 @@ public class CxxPreprocessAndCompileIntegrationTest {
     assertThat(
         secondRunEntry.getRuleKey(),
         Matchers.not(equalTo(firstRunEntry.getRuleKey())));
+  }
+
+  @Test
+  public void depfileBasedRuleKeyAvoidsRecompilingAfterChangeToUnusedHeader() throws Exception {
+    depfileBasedRuleKeyAvoidsRecompilingAfterChangeToUnusedHeader(false);
+  }
+
+  @Test
+  public void depfileBasedRuleKeyAvoidsRecompilingAfterChangeToUnusedHeaderNoSymlinks()
+      throws Exception {
+    depfileBasedRuleKeyAvoidsRecompilingAfterChangeToUnusedHeader(true);
   }
 
   @Test
