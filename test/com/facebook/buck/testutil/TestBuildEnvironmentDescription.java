@@ -16,8 +16,9 @@
 
 package com.facebook.buck.testutil;
 
-import com.facebook.buck.util.TriState;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
+
+import java.util.Optional;
 
 public class TestBuildEnvironmentDescription {
 
@@ -28,7 +29,7 @@ public class TestBuildEnvironmentDescription {
           .setOs("test_os")
           .setAvailableCores(1)
           .setSystemMemory(1024L)
-          .setBuckDirty(TriState.FALSE)
+          .setBuckDirty(Optional.of(false))
           .setBuckCommit("test_commit")
           .setJavaVersion("test_java_version")
           .setJsonProtocolVersion(1)

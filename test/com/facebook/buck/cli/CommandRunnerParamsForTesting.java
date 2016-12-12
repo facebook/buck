@@ -41,7 +41,6 @@ import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.TriState;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.Platform;
@@ -63,7 +62,7 @@ public class CommandRunnerParamsForTesting {
           .setOs("test")
           .setAvailableCores(1)
           .setSystemMemory(1024L)
-          .setBuckDirty(TriState.FALSE)
+          .setBuckDirty(Optional.of(false))
           .setBuckCommit("test")
           .setJavaVersion("test")
           .setJsonProtocolVersion(1)

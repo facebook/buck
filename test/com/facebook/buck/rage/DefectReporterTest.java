@@ -26,7 +26,6 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.TriState;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,6 +37,7 @@ import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -50,7 +50,7 @@ public class DefectReporterTest {
           .setOs("test_os")
           .setAvailableCores(1)
           .setSystemMemory(1024L)
-          .setBuckDirty(TriState.FALSE)
+          .setBuckDirty(Optional.of(false))
           .setBuckCommit("test_commit")
           .setJavaVersion("test_java_version")
           .setJsonProtocolVersion(1)

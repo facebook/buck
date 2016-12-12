@@ -16,13 +16,14 @@
 
 package com.facebook.buck.util.environment;
 
-import com.facebook.buck.util.TriState;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.StandardSystemProperty;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
+
+import java.util.Optional;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -34,7 +35,7 @@ abstract class AbstractBuildEnvironmentDescription {
   public abstract String getOs();
   public abstract int getAvailableCores();
   public abstract long getSystemMemory();
-  public abstract TriState getBuckDirty();
+  public abstract Optional<Boolean> getBuckDirty();
   public abstract String getBuckCommit();
   public abstract String getJavaVersion();
   public abstract ImmutableList<String> getCacheModes();
@@ -48,14 +49,14 @@ abstract class AbstractBuildEnvironmentDescription {
       ExecutionEnvironment executionEnvironment,
       ImmutableList<String> cacheModes,
       ImmutableMap<String, String> extraData) {
-    TriState buckDirty;
+    Optional<Boolean> buckDirty;
     String dirty = executionEnvironment.getProperty("buck.git_dirty", "unknown");
     if (dirty.equals("1")) {
-      buckDirty = TriState.TRUE;
+      buckDirty = Optional.of(true);
     } else if (dirty.equals("0")) {
-      buckDirty = TriState.FALSE;
+      buckDirty = Optional.of(false);
     } else {
-      buckDirty = TriState.UNSPECIFIED;
+      buckDirty = Optional.empty();
     }
 
     return BuildEnvironmentDescription.builder()

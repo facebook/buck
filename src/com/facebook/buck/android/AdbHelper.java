@@ -45,7 +45,6 @@ import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.InterruptionFailedException;
-import com.facebook.buck.util.TriState;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -156,13 +155,13 @@ public class AdbHelper {
     }
 
     List<IDevice> devices = Lists.newArrayList();
-    TriState emulatorsOnly = TriState.UNSPECIFIED;
+    Optional<Boolean> emulatorsOnly = Optional.empty();
     if (deviceOptions.isEmulatorsOnlyModeEnabled() && options.isMultiInstallModeEnabled()) {
-      emulatorsOnly = TriState.UNSPECIFIED;
+      emulatorsOnly = Optional.empty();
     } else if (deviceOptions.isEmulatorsOnlyModeEnabled()) {
-      emulatorsOnly = TriState.TRUE;
+      emulatorsOnly = Optional.of(true);
     } else if (deviceOptions.isRealDevicesOnlyModeEnabled()) {
-      emulatorsOnly = TriState.FALSE;
+      emulatorsOnly = Optional.of(false);
     }
 
     int onlineDevices = 0;
@@ -180,10 +179,10 @@ public class AdbHelper {
         }
 
         boolean deviceTypeMatches;
-        if (emulatorsOnly.isSet()) {
+        if (emulatorsOnly.isPresent()) {
           // Only devices of specific type are accepted:
           // either real devices only or emulators only.
-          deviceTypeMatches = (emulatorsOnly.asBoolean() == isEmulator(device));
+          deviceTypeMatches = (emulatorsOnly.get() == isEmulator(device));
         } else {
           // All online devices match.
           deviceTypeMatches = true;

@@ -18,13 +18,13 @@ package com.facebook.buck.step;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.util.TriState;
 import com.google.common.base.Supplier;
 
 import org.easymock.EasyMockSupport;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -34,13 +34,13 @@ public class ConditionalStepTest extends EasyMockSupport {
   public void testExecuteConditionalStepWhenTrue() throws IOException, InterruptedException {
     // Create a Supplier<Boolean> that returns a value once an external condition has been
     // satisfied.
-    final AtomicReference<TriState> condition = new AtomicReference<>(
-        TriState.UNSPECIFIED);
+    final AtomicReference<Optional<Boolean>> condition = new AtomicReference<>(
+        Optional.empty());
     Supplier<Boolean> conditional = () -> {
-      if (!condition.get().isSet()) {
+      if (!condition.get().isPresent()) {
         throw new IllegalStateException("condition must be satisfied before this is queried.");
       } else {
-        return condition.get().asBoolean();
+        return condition.get().get();
       }
     };
 
@@ -56,7 +56,7 @@ public class ConditionalStepTest extends EasyMockSupport {
 
     // Create and execute the ConditionalStep.
     ConditionalStep conditionalStep = new ConditionalStep(conditional, stepToRunWhenSupplierIsTrue);
-    condition.set(TriState.TRUE);
+    condition.set(Optional.of(true));
     ExecutionContext context = TestExecutionContext.newInstance();
     int exitCode = conditionalStep.execute(context).getExitCode();
     assertEquals("stepToRunWhenSupplierIsTrue should have been run once.", 1, numCalls.get());
@@ -71,13 +71,13 @@ public class ConditionalStepTest extends EasyMockSupport {
   public void testExecuteConditionalStepWhenFalse() throws IOException, InterruptedException {
     // Create a Supplier<Boolean> that returns a value once an external condition has been
     // satisfied.
-    final AtomicReference<TriState> condition = new AtomicReference<>(
-        TriState.UNSPECIFIED);
+    final AtomicReference<Optional<Boolean>> condition = new AtomicReference<>(
+        Optional.empty());
     Supplier<Boolean> conditional = () -> {
-      if (!condition.get().isSet()) {
+      if (!condition.get().isPresent()) {
         throw new IllegalStateException("condition must be satisfied before this is queried.");
       } else {
-        return condition.get().asBoolean();
+        return condition.get().get();
       }
     };
 
@@ -94,7 +94,7 @@ public class ConditionalStepTest extends EasyMockSupport {
 
     // Create and execute the ConditionalStep.
     ConditionalStep conditionalStep = new ConditionalStep(conditional, stepToRunWhenSupplierIsTrue);
-    condition.set(TriState.FALSE);
+    condition.set(Optional.of(false));
     ExecutionContext context = TestExecutionContext.newInstance();
     int exitCode = conditionalStep.execute(context).getExitCode();
     assertEquals("stepToRunWhenSupplierIsTrue should not have been run.", 0, numCalls.get());
