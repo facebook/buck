@@ -17,3 +17,14 @@ rust_binary(
     "//messenger2:messenger2",
   ],
 )
+
+rust_binary(
+  name = "hyphen",
+  srcs = [ "hyphen.rs" ],
+  deps = [ ":hyphenated-name" ],
+)
+
+rust_library(
+  name = "hyphenated-name",
+  srcs = [ "hyphenated_name.rs" ],
+)

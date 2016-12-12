@@ -316,6 +316,17 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void binaryWithHyphenatedLibrary() throws IOException, InterruptedException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:hyphen").assertSuccess().getStdout(),
+        Matchers.containsString("Hyphenated: Audrey fforbes-Hamilton"));
+  }
+
+  @Test
   public void binaryWithAliasedLibrary() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "binary_with_library", tmp);

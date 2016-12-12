@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rust;
 
+import static com.facebook.buck.rust.RustLinkables.ruleToCrateName;
+
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.Linker;
@@ -77,7 +79,7 @@ public class RustLibraryDescription implements
     return new RustLibrary(
         params,
         new SourcePathResolver(resolver),
-        args.crate.orElse(params.getBuildTarget().getShortName()),
+        args.crate.orElse(ruleToCrateName(params.getBuildTarget().getShortName())),
         args.crateRoot,
         ImmutableSortedSet.copyOf(args.srcs),
         ImmutableSortedSet.copyOf(args.features),

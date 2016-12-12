@@ -42,6 +42,10 @@ public class RustLinkables {
   private RustLinkables() {
   }
 
+  public static String ruleToCrateName(String rulename) {
+    return rulename.replace('-', '_');
+  }
+
   static ImmutableSortedSet<Path> getDependencyPaths(BuildRule rule) {
     final ImmutableSortedSet.Builder<Path> builder = ImmutableSortedSet.naturalOrder();
 
