@@ -19,7 +19,8 @@ package com.facebook.buck.rules;
 public interface RuleKeyFactory<RULE_KEY> {
 
   /**
-   * Creates a new {@link RuleKey} for the given {@link BuildRule}.
+   * Creates a new {@code RULE_KEY} for the given {@link BuildRule}. In most cases {@code RULE_KEY}
+   * is going to be {@link RuleKey}, but it can be anything really.
    *
    * @param buildRule The build rule to create the key for.
    * @return A rule key.

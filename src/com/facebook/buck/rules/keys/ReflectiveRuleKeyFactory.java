@@ -30,23 +30,25 @@ import com.google.common.collect.ImmutableCollection;
 
 import java.util.concurrent.ExecutionException;
 
-public abstract class ReflectiveRuleKeyFactory<T extends RuleKeyBuilder<U>, U>
-    implements RuleKeyFactory<U> {
+public abstract class ReflectiveRuleKeyFactory<
+    RULE_KEY_BUILDER extends RuleKeyBuilder<RULE_KEY>,
+    RULE_KEY>
+    implements RuleKeyFactory<RULE_KEY> {
 
   private static final Logger LOG = Logger.get(ReflectiveRuleKeyFactory.class);
 
   private final int seed;
   private final LoadingCache<Class<? extends BuildRule>, ImmutableCollection<AlterRuleKey>>
       knownFields;
-  private final LoadingCache<BuildRule, U> knownRules;
+  private final LoadingCache<BuildRule, RULE_KEY> knownRules;
 
   public ReflectiveRuleKeyFactory(int seed) {
     this.seed = seed;
     this.knownFields = CacheBuilder.newBuilder().build(new ReflectiveAlterKeyLoader());
     this.knownRules = CacheBuilder.newBuilder().weakKeys().build(
-        new CacheLoader<BuildRule, U>() {
+        new CacheLoader<BuildRule, RULE_KEY>() {
           @Override
-          public U load(BuildRule key) throws Exception {
+          public RULE_KEY load(BuildRule key) throws Exception {
             return newInstance(key).build();
           }
         });
@@ -55,10 +57,10 @@ public abstract class ReflectiveRuleKeyFactory<T extends RuleKeyBuilder<U>, U>
   /**
    * @return sub-classes should override this to provide specialized {@link RuleKeyBuilder}s.
    */
-  protected abstract T newBuilder(BuildRule rule);
+  protected abstract RULE_KEY_BUILDER newBuilder(BuildRule rule);
 
-  protected T newInstance(BuildRule buildRule) {
-    T builder = newBuilder(buildRule);
+  protected RULE_KEY_BUILDER newInstance(BuildRule buildRule) {
+    RULE_KEY_BUILDER builder = newBuilder(buildRule);
     builder.setReflectively("buck.seed", seed);
     builder.setReflectively("name", buildRule.getBuildTarget().getFullyQualifiedName());
     // Keyed as "buck.type" rather than "type" in case a build rule has its own "type" argument.
@@ -93,7 +95,7 @@ public abstract class ReflectiveRuleKeyFactory<T extends RuleKeyBuilder<U>, U>
   }
 
   @Override
-  public final U build(BuildRule buildRule) {
+  public final RULE_KEY build(BuildRule buildRule) {
     try {
       return knownRules.getUnchecked(buildRule);
     } catch (RuntimeException e) {
