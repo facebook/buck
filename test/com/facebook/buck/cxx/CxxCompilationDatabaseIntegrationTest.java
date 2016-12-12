@@ -56,8 +56,7 @@ import java.util.List;
 import java.util.Map;
 
 @RunWith(Parameterized.class)
-public class
-CxxCompilationDatabaseIntegrationTest {
+public class CxxCompilationDatabaseIntegrationTest {
 
   @Parameterized.Parameters(name = "sandbox_sources={0}")
   public static Collection<Object[]> data() {
@@ -152,6 +151,10 @@ CxxCompilationDatabaseIntegrationTest {
             .add("-x")
             .add("c++")
             .add("-c")
+            .add("-MD")
+            .add("-MF")
+            .add(rootPath.resolve("dep.tmp").toString())
+            .add(Paths.get(path).toString())
             .add("-o")
             .add(
                 BuildTargets
@@ -162,7 +165,6 @@ CxxCompilationDatabaseIntegrationTest {
                             ImmutableFlavor.of("compile-" + sanitize("foo.cpp.o"))),
                         "%s/foo.cpp.o")
                     .toString())
-            .add(rootPath.resolve(Paths.get(path)).toString())
             .build());
   }
 
@@ -220,6 +222,10 @@ CxxCompilationDatabaseIntegrationTest {
             .add("-x")
             .add("c++")
             .add("-c")
+            .add("-MD")
+            .add("-MF")
+            .add(rootPath.resolve("dep.tmp").toString())
+            .add(Paths.get(path).toString())
             .add("-o")
             .add(
                 BuildTargets
@@ -230,7 +236,6 @@ CxxCompilationDatabaseIntegrationTest {
                             ImmutableFlavor.of("compile-pic-" + sanitize("bar.cpp.o"))),
                         "%s/bar.cpp.o")
                     .toString())
-            .add(rootPath.resolve(Paths.get(path)).toString())
             .build());
   }
 
@@ -283,6 +288,10 @@ CxxCompilationDatabaseIntegrationTest {
             .add("-x")
             .add("c++")
             .add("-c")
+            .add("-MD")
+            .add("-MF")
+            .add(rootPath.resolve("dep.tmp").toString())
+            .add(Paths.get(path).toString())
             .add("-o")
             .add(
                 BuildTargets
@@ -293,7 +302,6 @@ CxxCompilationDatabaseIntegrationTest {
                             ImmutableFlavor.of("compile-pic-" + sanitize("test.cpp.o"))),
                         "%s/test.cpp.o")
                     .toString())
-            .add(rootPath.resolve(Paths.get(path)).toString())
             .build());
   }
 
@@ -350,6 +358,10 @@ CxxCompilationDatabaseIntegrationTest {
             .add("-x")
             .add("c++")
             .add("-c")
+            .add("-MD")
+            .add("-MF")
+            .add(rootPath.resolve("dep.tmp").toString())
+            .add(Paths.get(path).toString())
             .add("-o")
             .add(
                 BuildTargets
@@ -360,7 +372,6 @@ CxxCompilationDatabaseIntegrationTest {
                             ImmutableFlavor.of("compile-pic-" + sanitize("test.cpp.o"))),
                         "%s/test.cpp.o")
                     .toString())
-            .add(rootPath.resolve(Paths.get(path)).toString())
             .build());
   }
 

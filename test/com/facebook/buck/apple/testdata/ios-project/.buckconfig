@@ -6,7 +6,6 @@
 
 [cxx]
   sandbox_sources = false
-  combined_preprocess_and_compile = true
   cflags = -std=gnu11 -Wno-deprecated -Wno-conversion
   cxxflags = -std=c++11 -Wno-deprecated -Wno-conversion
   debug_path_sanitizer_limit = 400

@@ -1,6 +1,5 @@
 [cxx]
   gtest_dep=//cxx_test:fake-gtest
-  preprocess_mode=combined
   sandbox_sources=true
 
 [python]

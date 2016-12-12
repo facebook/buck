@@ -319,49 +319,17 @@ public class CxxLibraryDescriptionTest {
             .map(HasBuildTarget::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()));
 
-    // Verify that the preprocess rule for our user-provided source has correct deps setup
-    // for the various header rules.
-    BuildRule preprocessRule1 = resolver.getRule(
-        cxxSourceRuleFactory.createPreprocessBuildTarget("test/bar.cpp", CxxSource.Type.CXX));
-    assertThat(
-        DependencyAggregationTestUtil.getDisaggregatedDeps(preprocessRule1)
-            .map(HasBuildTarget::getBuildTarget)
-            ::iterator,
-        containsInAnyOrder(
-            genHeaderTarget,
-            headerSymlinkTreeTarget,
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-                target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PRIVATE),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-                target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PUBLIC)));
-
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
     BuildRule compileRule1 = resolver.getRule(
         cxxSourceRuleFactory.createCompileBuildTarget("test/bar.cpp"));
     assertNotNull(compileRule1);
-    assertEquals(
-        ImmutableSet.of(
-            preprocessRule1.getBuildTarget()),
-        compileRule1.getDeps().stream()
-            .map(HasBuildTarget::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()));
-
-    // Verify that the preprocess rule for our genrule-generated source has correct deps setup
-    // for the various header rules and the generating genrule.
-    BuildRule preprocessRule2 = resolver.getRule(
-        cxxSourceRuleFactory.createPreprocessBuildTarget(genSourceName, CxxSource.Type.CXX));
     assertThat(
-        DependencyAggregationTestUtil.getDisaggregatedDeps(preprocessRule2)
+        DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule1)
             .map(HasBuildTarget::getBuildTarget)
             ::iterator,
         containsInAnyOrder(
             genHeaderTarget,
-            genSourceTarget,
             headerSymlinkTreeTarget,
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
@@ -377,12 +345,22 @@ public class CxxLibraryDescriptionTest {
     BuildRule compileRule2 =
         resolver.getRule(cxxSourceRuleFactory.createCompileBuildTarget(genSourceName));
     assertNotNull(compileRule2);
-    assertEquals(
-        ImmutableSet.of(
-            preprocessRule2.getBuildTarget()),
-        compileRule2.getDeps().stream()
+    assertThat(
+        DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule2)
             .map(HasBuildTarget::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()));
+            ::iterator,
+        containsInAnyOrder(
+            genHeaderTarget,
+            genSourceTarget,
+            headerSymlinkTreeTarget,
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                HeaderVisibility.PRIVATE),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                HeaderVisibility.PUBLIC)));
   }
 
   @Test
@@ -614,48 +592,15 @@ public class CxxLibraryDescriptionTest {
 
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
-    BuildRule staticPreprocessRule1 = resolver.getRule(
-        cxxSourceRuleFactoryPDC.createPreprocessBuildTarget("test/bar.cpp", CxxSource.Type.CXX));
-    assertNotNull(staticPreprocessRule1);
-    assertThat(
-        DependencyAggregationTestUtil.getDisaggregatedDeps(staticPreprocessRule1)
-            .map(HasBuildTarget::getBuildTarget)
-            ::iterator,
-        containsInAnyOrder(
-            genHeaderTarget,
-            headerSymlinkTreeTarget,
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-                target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PRIVATE),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-                target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PUBLIC)));
-
-    // Verify that the compile rule for our user-provided source has correct deps setup
-    // for the various header rules.
     BuildRule staticCompileRule1 = resolver.getRule(
         cxxSourceRuleFactoryPDC.createCompileBuildTarget("test/bar.cpp"));
     assertNotNull(staticCompileRule1);
-    assertEquals(
-        ImmutableSet.of(staticPreprocessRule1.getBuildTarget()),
-        staticCompileRule1.getDeps().stream()
-            .map(HasBuildTarget::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()));
-
-    // Verify that the compile rule for our genrule-generated source has correct deps setup
-    // for the various header rules and the generating genrule.
-    BuildRule staticPreprocessRule2 = resolver.getRule(
-        cxxSourceRuleFactoryPDC.createPreprocessBuildTarget(genSourceName, CxxSource.Type.CXX));
-    assertNotNull(staticPreprocessRule2);
     assertThat(
-        DependencyAggregationTestUtil.getDisaggregatedDeps(staticPreprocessRule2)
+        DependencyAggregationTestUtil.getDisaggregatedDeps(staticCompileRule1)
             .map(HasBuildTarget::getBuildTarget)
             ::iterator,
         containsInAnyOrder(
             genHeaderTarget,
-            genSourceTarget,
             headerSymlinkTreeTarget,
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
@@ -671,11 +616,22 @@ public class CxxLibraryDescriptionTest {
     BuildRule staticCompileRule2 =
         resolver.getRule(cxxSourceRuleFactoryPDC.createCompileBuildTarget(genSourceName));
     assertNotNull(staticCompileRule2);
-    assertEquals(
-        ImmutableSet.of(staticPreprocessRule2.getBuildTarget()),
-        staticCompileRule2.getDeps().stream()
+    assertThat(
+        DependencyAggregationTestUtil.getDisaggregatedDeps(staticCompileRule2)
             .map(HasBuildTarget::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()));
+            ::iterator,
+        containsInAnyOrder(
+            genHeaderTarget,
+            genSourceTarget,
+            headerSymlinkTreeTarget,
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                HeaderVisibility.PRIVATE),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                HeaderVisibility.PUBLIC)));
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
     CxxSourceRuleFactory cxxSourceRuleFactoryPIC = CxxSourceRuleFactoryHelper.of(
@@ -702,48 +658,15 @@ public class CxxLibraryDescriptionTest {
 
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
-    BuildRule sharedPreprocessRule1 = resolver.getRule(
-        cxxSourceRuleFactoryPIC.createPreprocessBuildTarget("test/bar.cpp", CxxSource.Type.CXX));
-    assertNotNull(sharedPreprocessRule1);
-    assertThat(
-        DependencyAggregationTestUtil.getDisaggregatedDeps(sharedPreprocessRule1)
-            .map(HasBuildTarget::getBuildTarget)
-            ::iterator,
-        containsInAnyOrder(
-            genHeaderTarget,
-            headerSymlinkTreeTarget,
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-                target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PRIVATE),
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-                target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PUBLIC)));
-
-    // Verify that the compile rule for our user-provided source has correct deps setup
-    // for the various header rules.
     BuildRule sharedCompileRule1 = resolver.getRule(
         cxxSourceRuleFactoryPIC.createCompileBuildTarget("test/bar.cpp"));
     assertNotNull(sharedCompileRule1);
-    assertEquals(
-        ImmutableSet.of(sharedPreprocessRule1.getBuildTarget()),
-        sharedCompileRule1.getDeps().stream()
-            .map(HasBuildTarget::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()));
-
-    // Verify that the compile rule for our genrule-generated source has correct deps setup
-    // for the various header rules and the generating genrule.
-    BuildRule sharedPreprocessRule2 = resolver.getRule(
-        cxxSourceRuleFactoryPIC.createPreprocessBuildTarget(genSourceName, CxxSource.Type.CXX));
-    assertNotNull(sharedPreprocessRule2);
     assertThat(
-        DependencyAggregationTestUtil.getDisaggregatedDeps(sharedPreprocessRule2)
+        DependencyAggregationTestUtil.getDisaggregatedDeps(sharedCompileRule1)
             .map(HasBuildTarget::getBuildTarget)
             ::iterator,
         containsInAnyOrder(
             genHeaderTarget,
-            genSourceTarget,
             headerSymlinkTreeTarget,
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
@@ -759,11 +682,22 @@ public class CxxLibraryDescriptionTest {
     BuildRule sharedCompileRule2 = resolver.getRule(
         cxxSourceRuleFactoryPIC.createCompileBuildTarget(genSourceName));
     assertNotNull(sharedCompileRule2);
-    assertEquals(
-        ImmutableSet.of(sharedPreprocessRule2.getBuildTarget()),
-        sharedCompileRule2.getDeps().stream()
+    assertThat(
+        DependencyAggregationTestUtil.getDisaggregatedDeps(sharedCompileRule2)
             .map(HasBuildTarget::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()));
+            ::iterator,
+        containsInAnyOrder(
+            genHeaderTarget,
+            genSourceTarget,
+            headerSymlinkTreeTarget,
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                HeaderVisibility.PRIVATE),
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                HeaderVisibility.PUBLIC)));
   }
 
   @Test

@@ -133,13 +133,7 @@ public class ObjectPathsAbsolutifierIntegrationTest {
             "%s")
         .resolve("main.c.o");
 
-    Path relativeSanitizedSourceFilePath = BuildTargets
-        .getGenPath(
-            filesystem,
-            target.withFlavors(
-                platformFlavor,
-                ImmutableFlavor.of("preprocess-" + sanitize("main.c.i"))),
-            "%s");
+    Path relativeSourceFilePath = Paths.get("Apps/TestApp/main.c");
 
     Path sanitizedBinaryPath = workspace.getPath(
         BuildTargets
@@ -205,7 +199,12 @@ public class ObjectPathsAbsolutifierIntegrationTest {
     // check that absolute path to source file is correct
     assertThat(
         unsanitizedOutput,
-        containsString("SO " + newCompDirValue + "/" + relativeSanitizedSourceFilePath.toString()));
+        containsString(
+            "SO " + newCompDirValue + "/" + relativeSourceFilePath.getParent().toString()));
+    assertThat(
+        unsanitizedOutput,
+        containsString(
+            "SOL " + newCompDirValue + "/" + relativeSourceFilePath.toString()));
   }
 
   private boolean checkCodeSigning(Path absoluteBundlePath)

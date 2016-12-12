@@ -1584,8 +1584,6 @@ public class CxxBinaryIntegrationTest {
     String sourceName = "simple_with_header.cpp";
     String headerName = "simple_with_header.h";
     String headerFull = "foo/" + headerName;
-    BuildTarget preprocessTarget =
-        cxxSourceRuleFactory.createPreprocessBuildTarget(sourceName, CxxSource.Type.CXX);
     BuildTarget compileTarget =
         cxxSourceRuleFactory.createCompileBuildTarget(sourceName);
     BuildTarget headerSymlinkTreeTarget =
@@ -1604,14 +1602,12 @@ public class CxxBinaryIntegrationTest {
         ImmutableSet.of(
             aggregatedDepsTarget,
             headerSymlinkTreeTarget,
-            preprocessTarget,
             compileTarget,
             binaryTarget,
             target),
         buildLog.getAllTargets());
     buildLog.assertTargetBuiltLocally(aggregatedDepsTarget.toString());
     buildLog.assertTargetBuiltLocally(headerSymlinkTreeTarget.toString());
-    buildLog.assertTargetBuiltLocally(preprocessTarget.toString());
     buildLog.assertTargetBuiltLocally(compileTarget.toString());
     buildLog.assertTargetBuiltLocally(binaryTarget.toString());
     buildLog.assertTargetBuiltLocally(target.toString());
@@ -1629,13 +1625,11 @@ public class CxxBinaryIntegrationTest {
     assertEquals(
         ImmutableSet.of(
             aggregatedDepsTarget,
-            preprocessTarget,
             compileTarget,
             binaryTarget,
             target),
         buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(aggregatedDepsTarget.toString());
-    buildLog.assertTargetBuiltLocally(preprocessTarget.toString());
     buildLog.assertTargetBuiltLocally(compileTarget.toString());
     assertThat(
         buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
@@ -1675,8 +1669,6 @@ public class CxxBinaryIntegrationTest {
         target,
         Optional.<LinkerMapMode>empty());
     String sourceName = "foo.cpp";
-    BuildTarget preprocessTarget =
-        cxxSourceRuleFactory.createPreprocessBuildTarget(sourceName, CxxSource.Type.CXX);
     BuildTarget compileTarget = cxxSourceRuleFactory.createCompileBuildTarget(sourceName);
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
@@ -1698,8 +1690,6 @@ public class CxxBinaryIntegrationTest {
     String depSourceFull = "foo/" + depSourceName;
     String depHeaderName = "bar.h";
     String depHeaderFull = "foo/" + depHeaderName;
-    BuildTarget depPreprocessTarget =
-        depCxxSourceRuleFactory.createPreprocessBuildTarget(depSourceName, CxxSource.Type.CXX);
     BuildTarget depCompileTarget =
         depCxxSourceRuleFactory.createCompileBuildTarget(depSourceName);
     BuildTarget depHeaderSymlinkTreeTarget =
@@ -1729,13 +1719,11 @@ public class CxxBinaryIntegrationTest {
         depAggregatedDepsTarget,
         depHeaderSymlinkTreeTarget,
         depHeaderExportedSymlinkTreeTarget,
-        depPreprocessTarget,
         depCompileTarget,
         depArchiveTarget,
         depTarget,
         aggregatedDepsTarget,
         headerSymlinkTreeTarget,
-        preprocessTarget,
         compileTarget,
         binaryTarget,
         target);
@@ -1752,12 +1740,10 @@ public class CxxBinaryIntegrationTest {
         buildLog.getAllTargets(),
         containsInAnyOrder(builder.build().toArray(new BuildTarget[]{})));
     buildLog.assertTargetBuiltLocally(depHeaderSymlinkTreeTarget.toString());
-    buildLog.assertTargetBuiltLocally(depPreprocessTarget.toString());
     buildLog.assertTargetBuiltLocally(depCompileTarget.toString());
     buildLog.assertTargetBuiltLocally(depArchiveTarget.toString());
     buildLog.assertTargetBuiltLocally(depTarget.toString());
     buildLog.assertTargetBuiltLocally(headerSymlinkTreeTarget.toString());
-    buildLog.assertTargetBuiltLocally(preprocessTarget.toString());
     buildLog.assertTargetBuiltLocally(compileTarget.toString());
     buildLog.assertTargetBuiltLocally(binaryTarget.toString());
     buildLog.assertTargetBuiltLocally(target.toString());
@@ -1776,12 +1762,10 @@ public class CxxBinaryIntegrationTest {
     builder = ImmutableList.builder();
     builder.add(
         depAggregatedDepsTarget,
-        depPreprocessTarget,
         depCompileTarget,
         depArchiveTarget,
         depTarget,
         aggregatedDepsTarget,
-        preprocessTarget,
         compileTarget,
         binaryTarget,
         target);
@@ -1794,12 +1778,10 @@ public class CxxBinaryIntegrationTest {
         buildLog.getAllTargets(),
         containsInAnyOrder(builder.build().toArray(new BuildTarget[]{})));
     buildLog.assertTargetHadMatchingRuleKey(depAggregatedDepsTarget.toString());
-    buildLog.assertTargetBuiltLocally(depPreprocessTarget.toString());
     buildLog.assertTargetBuiltLocally(depCompileTarget.toString());
     buildLog.assertTargetHadMatchingInputRuleKey(depArchiveTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(depTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(aggregatedDepsTarget.toString());
-    buildLog.assertTargetBuiltLocally(preprocessTarget.toString());
     buildLog.assertTargetBuiltLocally(compileTarget.toString());
     assertThat(
         buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
@@ -1820,7 +1802,6 @@ public class CxxBinaryIntegrationTest {
     builder = ImmutableList.builder();
     builder.add(
         depAggregatedDepsTarget,
-        depPreprocessTarget,
         depCompileTarget,
         depArchiveTarget,
         depTarget,
@@ -1835,7 +1816,6 @@ public class CxxBinaryIntegrationTest {
         buildLog.getAllTargets(),
         containsInAnyOrder(builder.build().toArray(new BuildTarget[]{})));
     buildLog.assertTargetHadMatchingRuleKey(depAggregatedDepsTarget.toString());
-    buildLog.assertTargetBuiltLocally(depPreprocessTarget.toString());
     buildLog.assertTargetBuiltLocally(depCompileTarget.toString());
     buildLog.assertTargetBuiltLocally(depArchiveTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(depTarget.toString());

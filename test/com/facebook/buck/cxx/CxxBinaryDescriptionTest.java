@@ -200,45 +200,17 @@ public class CxxBinaryDescriptionTest {
             .map(HasBuildTarget::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()));
 
-    // Verify that the preproces rule for our user-provided source has correct deps setup
-    // for the various header rules.
-    BuildRule preprocessRule1 = resolver.getRule(
-        cxxSourceRuleFactory.createPreprocessBuildTarget("test/bar.cpp", CxxSource.Type.CXX));
-    assertThat(
-        DependencyAggregationTestUtil.getDisaggregatedDeps(preprocessRule1)
-            .map(HasBuildTarget::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()),
-        Matchers.containsInAnyOrder(
-            genHeaderTarget,
-            headerSymlinkTreeTarget,
-            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
-                target,
-                cxxPlatform.getFlavor(),
-                HeaderVisibility.PRIVATE)));
-
     // Verify that the compile rule for our user-provided source has correct deps setup
     // for the various header rules.
     BuildRule compileRule1 = resolver.getRule(
         cxxSourceRuleFactory.createCompileBuildTarget("test/bar.cpp"));
     assertNotNull(compileRule1);
-    assertEquals(
-        ImmutableSet.of(
-            preprocessRule1.getBuildTarget()),
-        compileRule1.getDeps().stream()
-            .map(HasBuildTarget::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()));
-
-    // Verify that the preproces rule for our user-provided source has correct deps setup
-    // for the various header rules.
-    BuildRule preprocessRule2 = resolver.getRule(
-        cxxSourceRuleFactory.createPreprocessBuildTarget(genSourceName, CxxSource.Type.CXX));
     assertThat(
-        DependencyAggregationTestUtil.getDisaggregatedDeps(preprocessRule2)
+        DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule1)
             .map(HasBuildTarget::getBuildTarget)
-            .collect(MoreCollectors.toImmutableList()),
+            .collect(MoreCollectors.toImmutableSet()),
         Matchers.containsInAnyOrder(
             genHeaderTarget,
-            genSourceTarget,
             headerSymlinkTreeTarget,
             CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
                 target,
@@ -250,12 +222,18 @@ public class CxxBinaryDescriptionTest {
     BuildRule compileRule2 =
         resolver.getRule(cxxSourceRuleFactory.createCompileBuildTarget(genSourceName));
     assertNotNull(compileRule2);
-    assertEquals(
-        ImmutableSet.of(
-            preprocessRule2.getBuildTarget()),
-        compileRule2.getDeps().stream()
+    assertThat(
+        DependencyAggregationTestUtil.getDisaggregatedDeps(compileRule2)
             .map(HasBuildTarget::getBuildTarget)
-            .collect(MoreCollectors.toImmutableSet()));
+            .collect(MoreCollectors.toImmutableList()),
+        Matchers.containsInAnyOrder(
+            genHeaderTarget,
+            genSourceTarget,
+            headerSymlinkTreeTarget,
+            CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
+                target,
+                cxxPlatform.getFlavor(),
+                HeaderVisibility.PRIVATE)));
   }
 
   @Test

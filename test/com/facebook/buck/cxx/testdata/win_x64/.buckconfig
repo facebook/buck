@@ -5,7 +5,6 @@
   includes = //BUILD_DEFS
 
 [cxx]
-  preprocess_mode=combined
   sandbox_sources=true
 
 [cxx#windows-x86_64]
