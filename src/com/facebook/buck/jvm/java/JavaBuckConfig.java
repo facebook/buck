@@ -128,6 +128,8 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
       }
     }
 
+    boolean errorProneJavac = delegate.getBooleanValue("java", "error_prone_javac", false);
+
     return builder
         .setJavacPath(
             getJavacPath().map(Either::ofLeft))
@@ -136,6 +138,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         .putAllSourceToBootclasspath(bootclasspaths.build())
         .addAllExtraArguments(extraArguments)
         .setSafeAnnotationProcessors(safeAnnotationProcessors)
+        .setErrorProneJavac(errorProneJavac)
         .build();
   }
 

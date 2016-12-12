@@ -2,6 +2,7 @@
   "plugin" : {
     "deps" : [
       "//src/com/facebook/buck/log:api",
+      "//third-party/java/errorprone:error_prone",
       "//third-party/java/guava:guava"
     ],
     "exported_deps" : [

@@ -108,6 +108,7 @@
     <include name="eclipse/org.eclipse.osgi_3.11.0.v20160427-2120.jar"/>
     <include name="eden/eden.jar" />
     <include name="eden/java-thrift-dependencies.jar" />
+    <include name="errorprone/error_prone_ant-2.0.18.jar" />
     <include name="guice/guice-3.0.jar" />
     <include name="guice/guice-assistedinject-3.0.jar" />
     <include name="guice/guice-multibindings-3.0.jar" />

@@ -83,6 +83,8 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   }
 
   public enum JavacSource {
+    /** Error Prone */
+    ERROR_PRONE,
     /** Shell out to the javac in the JDK */
     EXTERNAL,
     /** Run javac in-process, loading it from a jar specified in .buckconfig. */
@@ -124,6 +126,9 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   protected boolean isProductionBuild() {
     return false;
   }
+
+  @Value.Default
+  protected boolean isErrorProneJavac() { return false; }
 
   @Value.Default
   protected boolean isVerbose() {
@@ -169,6 +174,9 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   }
 
   public JavacSource getJavacSource() {
+    if (isErrorProneJavac()) {
+      return JavacSource.ERROR_PRONE;
+    }
     if (getJavacPath().isPresent()) {
       return JavacSource.EXTERNAL;
     } else if (getJavacJarPath().isPresent()) {
@@ -193,6 +201,8 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     final JavacSource javacSource = getJavacSource();
     final JavacLocation javacLocation = getJavacLocation();
     switch (javacSource) {
+      case ERROR_PRONE:
+        return new ErrorProneJavac();
       case EXTERNAL:
         return ExternalJavac.createJavac(getJavacPath().get());
       case JAR:
@@ -320,7 +330,8 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
         .setReflectively("annotationProcessingParams", getAnnotationProcessingParams())
         .setReflectively("spoolMode", getSpoolMode())
         .setReflectively("trackClassUsage", trackClassUsage())
-        .setReflectively("abiGenerationMode", getAbiGenerationMode());
+        .setReflectively("abiGenerationMode", getAbiGenerationMode())
+        .setReflectively("errorProneJavac", isErrorProneJavac());
   }
 
   public ImmutableSortedSet<SourcePath> getInputs(SourcePathRuleFinder ruleFinder) {

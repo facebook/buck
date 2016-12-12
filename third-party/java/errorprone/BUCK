@@ -1,7 +1,17 @@
 prebuilt_jar(
   name = 'error-prone-annotations',
-  binary_jar = 'error-prone-annotations-2.0.15.jar',
-  source_jar = 'error-prone-annotations-2.0.15-sources.jar',
+  binary_jar = 'error-prone-annotations-2.0.18.jar',
+  source_jar = 'error-prone-annotations-2.0.18-sources.jar',
+  licenses = [
+    'COPYING',
+  ],
+  visibility = ['PUBLIC'],
+)
+
+prebuilt_jar(
+  name = 'error_prone',
+  binary_jar = 'error_prone_ant-2.0.18.jar',
+  source_jar = 'error_prone_ant-2.0.18-sources.jar',
   licenses = [
     'COPYING',
   ],

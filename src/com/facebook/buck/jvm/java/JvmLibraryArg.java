@@ -50,6 +50,7 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
   public Optional<Boolean> annotationProcessorOnly;
   public ImmutableList<BuildTarget> plugins = ImmutableList.of();
   public Optional<Boolean> generateAbiFromSource;
+  public Optional<Boolean> errorProneJavac;
 
   public AnnotationProcessingParams buildAnnotationProcessingParams(
       BuildTarget owner,

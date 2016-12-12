@@ -2,7 +2,8 @@
   "tracing" : {
     "deps" : [
       "//src/com/facebook/buck/jvm/java/plugin:plugin",
-      "//src/com/facebook/buck/log:api"
+      "//src/com/facebook/buck/log:api",
+      "//third-party/java/errorprone:error_prone"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/event:interfaces",

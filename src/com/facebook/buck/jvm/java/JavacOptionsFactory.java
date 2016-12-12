@@ -89,6 +89,10 @@ public final class JavacOptionsFactory {
       }
     }
 
+    if (jvmLibraryArg.errorProneJavac.isPresent()) {
+      builder.setErrorProneJavac(true);
+    }
+
     AnnotationProcessingParams annotationParams =
         jvmLibraryArg.buildAnnotationProcessingParams(
             params.getBuildTarget(),
