@@ -22,40 +22,36 @@ public interface ExecutionEnvironment {
   /**
    * @return The current hostname or 'unknown'
    */
-  public String getHostname();
+  String getHostname();
 
   /**
    * @return The current username or 'unknown'
    */
-  public String getUsername();
+  String getUsername();
 
   /**
    * @return The number of cores on this machine.
    */
-  public int getAvailableCores();
+  int getAvailableCores();
 
   /**
    * @return The amount of system memory on this machine in bytes.
    */
-  public long getTotalMemory();
+  long getTotalMemory();
 
   /**
    * @return The current operating system.
    */
-  public Platform getPlatform();
+  Platform getPlatform();
 
   /**
    * @return The SSID of the current wifi network if it can be determined.
    */
-  public Optional<String> getWifiSsid() throws InterruptedException;
+  Optional<String> getWifiSsid() throws InterruptedException;
 
   /**
    * Gets the environment variable indicated by the specified key.
    */
-  public String getenv(String key, String defaultValue);
+  String getenv(String key, String defaultValue);
 
-  /**
-   * Gets the java property indicated by the specified key.
-   */
-  public String getProperty(String key, String defaultValue);
 }

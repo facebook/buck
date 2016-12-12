@@ -138,8 +138,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
-
-
 import com.google.common.reflect.ClassPath;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -959,7 +957,6 @@ public final class Main {
         ImmutableList<BuckEventListener> eventListeners = ImmutableList.of();
         ExecutionEnvironment executionEnvironment = new DefaultExecutionEnvironment(
             clientEnvironment,
-            // TODO(bhamiltoncx): Thread through properties from client environment.
             System.getProperties());
 
         FileHashCache cellHashCache;
@@ -1151,7 +1148,6 @@ public final class Main {
           if (buckConfig.isPublicAnnouncementsEnabled()) {
             PublicAnnouncementManager announcementManager = new PublicAnnouncementManager(
                 clock,
-                executionEnvironment,
                 buildEventBus,
                 consoleListener,
                 buckConfig.getRepository().orElse("unknown"),

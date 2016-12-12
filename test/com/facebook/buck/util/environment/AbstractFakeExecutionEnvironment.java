@@ -49,16 +49,10 @@ abstract class AbstractFakeExecutionEnvironment implements ExecutionEnvironment 
   public abstract Optional<String> getWifiSsid();
 
   public abstract Map<String, String> getEnvironment();
-  public abstract Map<String, String> getProperties();
 
   @Override
   public String getenv(String key, String defaultValue) {
     return getWithDefault(getEnvironment(), key, defaultValue);
-  }
-
-  @Override
-  public String getProperty(String key, String defaultValue) {
-    return getWithDefault(getProperties(), key, defaultValue);
   }
 
   private static String getWithDefault(

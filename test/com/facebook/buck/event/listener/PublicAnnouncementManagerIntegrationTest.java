@@ -146,7 +146,6 @@ public class PublicAnnouncementManagerIntegrationTest {
 
       PublicAnnouncementManager manager = new PublicAnnouncementManager(
           clock,
-          executionEnvironment,
           eventBus,
           listener,
           REPOSITORY,

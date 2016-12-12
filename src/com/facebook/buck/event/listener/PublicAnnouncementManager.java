@@ -30,7 +30,6 @@ import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.ThriftOverHttpServiceConfig;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.network.RemoteLogBuckConfig;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -56,7 +55,6 @@ public class PublicAnnouncementManager {
   static final String ANNOUNCEMENT_TEMPLATE = "\n** %s %s";
 
   private Clock clock;
-  private ExecutionEnvironment executionEnvironment;
   private BuckEventBus eventBus;
   private AbstractConsoleEventBusListener consoleEventBusListener;
   private String repository;
@@ -65,14 +63,12 @@ public class PublicAnnouncementManager {
 
   public PublicAnnouncementManager(
       Clock clock,
-      ExecutionEnvironment executionEnvironment,
       BuckEventBus eventBus,
       AbstractConsoleEventBusListener consoleEventBusListener,
       final String repository,
       RemoteLogBuckConfig logConfig,
       ListeningExecutorService service) {
     this.clock = clock;
-    this.executionEnvironment = executionEnvironment;
     this.consoleEventBusListener = consoleEventBusListener;
     this.eventBus = eventBus;
     this.repository = repository;
@@ -139,6 +135,6 @@ public class PublicAnnouncementManager {
   }
 
   private String getBuckVersion() {
-    return executionEnvironment.getProperty("buck.git_commit", "unknown");
+    return System.getProperty("buck.git_commit", "unknown");
   }
 }

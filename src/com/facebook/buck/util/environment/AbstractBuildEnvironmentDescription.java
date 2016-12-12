@@ -50,7 +50,7 @@ abstract class AbstractBuildEnvironmentDescription {
       ImmutableList<String> cacheModes,
       ImmutableMap<String, String> extraData) {
     Optional<Boolean> buckDirty;
-    String dirty = executionEnvironment.getProperty("buck.git_dirty", "unknown");
+    String dirty = System.getProperty("buck.git_dirty", "unknown");
     if (dirty.equals("1")) {
       buckDirty = Optional.of(true);
     } else if (dirty.equals("0")) {
@@ -68,7 +68,7 @@ abstract class AbstractBuildEnvironmentDescription {
         .setAvailableCores(executionEnvironment.getAvailableCores())
         .setSystemMemory(executionEnvironment.getTotalMemory())
         .setBuckDirty(buckDirty)
-        .setBuckCommit(executionEnvironment.getProperty("buck.git_commit", "unknown"))
+        .setBuckCommit(System.getProperty("buck.git_commit", "unknown"))
         .setJavaVersion(StandardSystemProperty.JAVA_VM_VERSION.value())
         .setCacheModes(cacheModes)
         .setExtraData(extraData)
