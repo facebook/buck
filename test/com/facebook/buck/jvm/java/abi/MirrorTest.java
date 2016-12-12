@@ -51,7 +51,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
@@ -73,48 +72,42 @@ public class MirrorTest {
   public TemporaryFolder temp = new TemporaryFolder();
 
   private ProjectFilesystem filesystem;
-  private Path stubJar;
 
   @Before
-  public void createStubJar() throws IOException {
+  public void createTempFilesystem() throws IOException {
     File out = temp.newFolder();
     filesystem = new ProjectFilesystem(out.toPath());
-    stubJar = Paths.get("stub.jar");
   }
 
   @Test
   public void emptyClass() throws IOException {
-    Path jar = compileToJar(
+    JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
         "package com.example.buck; public class A {}");
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
     // Verify that the stub jar works by compiling some code that depends on A.
     compileToJar(
-        ImmutableSortedSet.of(stubJar),
+        ImmutableSortedSet.of(paths.stubJar),
         "B.java",
         "package com.example.buck; public class B extends A {}");
   }
 
   @Test
   public void emptyClassWithAnnotation() throws IOException {
-    Path jar = compileToJar(
+    JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
         "package com.example.buck; @Deprecated public class A {}");
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
     // Examine the jar to see if the "A" class is deprecated.
-    ClassNode classNode = readClass(stubJar, "com/example/buck/A.class").getClassNode();
+    ClassNode classNode = readClass(paths.stubJar, "com/example/buck/A.class").getClassNode();
     assertNotEquals(0, classNode.access & Opcodes.ACC_DEPRECATED);
   }
 
   @Test
   public void classWithTwoMethods() throws IOException {
-    Path jar = compileToJar(
+    JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
         Joiner.on("\n").join(ImmutableList.of(
@@ -124,10 +117,8 @@ public class MirrorTest {
             "  public void eatCake() {}",
             "}")));
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
     // Verify that both methods are present and given in alphabetical order.
-    ClassNode classNode = readClass(stubJar, "com/example/buck/A.class").getClassNode();
+    ClassNode classNode = readClass(paths.stubJar, "com/example/buck/A.class").getClassNode();
     List<MethodNode> methods = classNode.methods;
     // Index 0 is the <init> method. Skip that.
     assertEquals("eatCake", methods.get(1).name);
@@ -136,7 +127,7 @@ public class MirrorTest {
 
   @Test
   public void genericClassSignaturesShouldBePreserved() throws IOException {
-    Path jar = compileToJar(
+    JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
         Joiner.on("\n").join(
@@ -152,13 +143,11 @@ public class MirrorTest {
     // Optionally, compilers (and the OpenJDK, Oracle and Eclipse compilers all do this) can also
     // include a "signature", which is the signature of the method before type erasure. See
     // http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.3 for more.
-    AbiClass original = readClass(jar, "com/example/buck/A.class");
+    AbiClass original = readClass(paths.fullJar, "com/example/buck/A.class");
     String classSig = original.getClassNode().signature;
     MethodNode originalGet = original.findMethod("get");
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
-    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/A.class");
     assertEquals(classSig, stubbed.getClassNode().signature);
 
     MethodNode stubbedGet = stubbed.findMethod("get");
@@ -167,7 +156,7 @@ public class MirrorTest {
 
   @Test
   public void shouldIgnorePrivateMethods() throws IOException {
-    Path jar = compileToJar(
+    JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
         Joiner.on("\n").join(
@@ -181,9 +170,7 @@ public class MirrorTest {
                 "}"
             )));
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
-    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/A.class");
     for (MethodNode method : stubbed.getClassNode().methods) {
       assertFalse(method.name.contains("private"));
     }
@@ -191,7 +178,7 @@ public class MirrorTest {
 
   @Test
   public void shouldPreserveAField() throws IOException {
-    Path jar = compileToJar(
+    JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
         Joiner.on("\n").join(
@@ -202,9 +189,7 @@ public class MirrorTest {
                 "}"
             )));
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
-    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/A.class");
     FieldNode field = stubbed.findField("protectedField");
     assertEquals("protectedField", field.name);
     assertTrue((field.access & Opcodes.ACC_PROTECTED) > 0);
@@ -212,7 +197,7 @@ public class MirrorTest {
 
   @Test
   public void shouldIgnorePrivateFields() throws IOException {
-    Path jar = compileToJar(
+    JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
         Joiner.on("\n").join(
@@ -223,15 +208,13 @@ public class MirrorTest {
                 "}"
             )));
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
-    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/A.class");
     assertEquals(0, stubbed.getClassNode().fields.size());
   }
 
   @Test
   public void shouldPreserveGenericTypesOnFields() throws IOException {
-    Path jar = compileToJar(
+    JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
         Joiner.on("\n").join(
@@ -241,10 +224,8 @@ public class MirrorTest {
                 "  public T theField;",
                 "}")));
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
-    AbiClass original = readClass(jar, "com/example/buck/A.class");
-    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    AbiClass original = readClass(paths.fullJar, "com/example/buck/A.class");
+    AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/A.class");
 
     FieldNode originalField = original.findField("theField");
     FieldNode stubbedField = stubbed.findField("theField");
@@ -254,7 +235,7 @@ public class MirrorTest {
 
   @Test
   public void shouldPreserveGenericTypesOnMethods() throws IOException {
-    Path jar = compileToJar(
+    JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
         Joiner.on("\n").join(
@@ -265,10 +246,8 @@ public class MirrorTest {
                 "  public <X extends Comparable<T>> X compareWith(T other) { return null; }",
                 "}")));
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
-    AbiClass original = readClass(jar, "com/example/buck/A.class");
-    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    AbiClass original = readClass(paths.fullJar, "com/example/buck/A.class");
+    AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/A.class");
 
     MethodNode originalGet = original.findMethod("get");
     MethodNode stubbedGet = stubbed.findMethod("get");
@@ -285,8 +264,8 @@ public class MirrorTest {
 
   @Test
   public void preservesAnnotationsOnMethods() throws IOException {
-    Path annotations = buildAnnotationJar();
-    Path jar = compileToJar(
+    Path annotations = createAnnotationFullAndStubJars().fullJar;
+    JarPaths paths = createFullAndStubJars(
         ImmutableSortedSet.of(annotations),
         "A.java",
         Joiner.on("\n").join(
@@ -297,9 +276,7 @@ public class MirrorTest {
                 "  public void cheese(String key) {}",
                 "}")));
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
-    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/A.class");
     MethodNode method = stubbed.findMethod("cheese");
 
     List<AnnotationNode> seen = method.visibleAnnotations;
@@ -309,8 +286,8 @@ public class MirrorTest {
 
   @Test
   public void preservesAnnotationsOnFields() throws IOException {
-    Path annotations = buildAnnotationJar();
-    Path jar = compileToJar(
+    Path annotations = createAnnotationFullAndStubJars().fullJar;
+    JarPaths paths = createFullAndStubJars(
         ImmutableSortedSet.of(annotations),
         "A.java",
         Joiner.on("\n").join(
@@ -321,9 +298,7 @@ public class MirrorTest {
                 "  public String name;",
                 "}")));
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
-    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/A.class");
     FieldNode field = stubbed.findField("name");
 
     List<AnnotationNode> seen = field.visibleAnnotations;
@@ -333,8 +308,8 @@ public class MirrorTest {
 
   @Test
   public void preservesAnnotationsOnParameters() throws IOException {
-    Path annotations = buildAnnotationJar();
-    Path jar = compileToJar(
+    Path annotations = createAnnotationFullAndStubJars().fullJar;
+    JarPaths paths = createFullAndStubJars(
         ImmutableSortedSet.of(annotations),
         "A.java",
         Joiner.on("\n").join(
@@ -344,9 +319,7 @@ public class MirrorTest {
                 "  public void peynir(@Foo String very, int tasty) {}",
                 "}")));
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
-    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/A.class");
     MethodNode method = stubbed.findMethod("peynir");
 
     List<AnnotationNode>[] parameterAnnotations = method.visibleParameterAnnotations;
@@ -355,8 +328,8 @@ public class MirrorTest {
 
   @Test
   public void preservesAnnotationsWithPrimitiveValues() throws IOException {
-    Path annotations = buildAnnotationJar();
-    Path jar = compileToJar(
+    Path annotations = createAnnotationFullAndStubJars().fullJar;
+    JarPaths paths = createFullAndStubJars(
         ImmutableSortedSet.of(annotations),
         "A.java",
         Joiner.on("\n").join(
@@ -364,10 +337,8 @@ public class MirrorTest {
             "@Foo(primitiveValue=1)",
             "public @interface A {}"));
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
     // Examine the jar to see if the "A" class is deprecated.
-    ClassNode classNode = readClass(stubJar, "com/example/buck/A.class").getClassNode();
+    ClassNode classNode = readClass(paths.stubJar, "com/example/buck/A.class").getClassNode();
     List<AnnotationNode> classAnnotations = classNode.visibleAnnotations;
     assertEquals(1, classAnnotations.size());
 
@@ -380,8 +351,8 @@ public class MirrorTest {
 
   @Test
   public void preservesAnnotationsWithStringArrayValues() throws IOException {
-    Path annotations = buildAnnotationJar();
-    Path jar = compileToJar(
+    Path annotations = createAnnotationFullAndStubJars().fullJar;
+    JarPaths paths = createFullAndStubJars(
         ImmutableSortedSet.of(annotations),
         "A.java",
         Joiner.on("\n").join(
@@ -389,10 +360,8 @@ public class MirrorTest {
             "@Foo(stringArrayValue={\"1\", \"2\"})",
             "public @interface A {}"));
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
     // Examine the jar to see if the "A" class is deprecated.
-    ClassNode classNode = readClass(stubJar, "com/example/buck/A.class").getClassNode();
+    ClassNode classNode = readClass(paths.stubJar, "com/example/buck/A.class").getClassNode();
     List<AnnotationNode> classAnnotations = classNode.visibleAnnotations;
     assertEquals(1, classAnnotations.size());
 
@@ -405,7 +374,7 @@ public class MirrorTest {
 
   @Test
   public void preservesAnnotationsWithEnumValues() throws IOException {
-    Path jar = compileToJar(
+    JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
         Joiner.on("\n").join(
@@ -414,10 +383,8 @@ public class MirrorTest {
             "@Retention(RetentionPolicy.RUNTIME)",
             "public @interface A {}"));
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
     // Examine the jar to see if the "A" class is deprecated.
-    ClassNode classNode = readClass(stubJar, "com/example/buck/A.class").getClassNode();
+    ClassNode classNode = readClass(paths.stubJar, "com/example/buck/A.class").getClassNode();
     List<AnnotationNode> classAnnotations = classNode.visibleAnnotations;
     assertEquals(1, classAnnotations.size());
 
@@ -435,7 +402,7 @@ public class MirrorTest {
 
   @Test
   public void preservesAnnotationsWithEnumArrayValues() throws IOException {
-    Path jar = compileToJar(
+    JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
         Joiner.on("\n").join(
@@ -444,10 +411,8 @@ public class MirrorTest {
             "@Target({ElementType.CONSTRUCTOR, ElementType.FIELD})",
             "public @interface A {}"));
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
     // Examine the jar to see if the "A" class is deprecated.
-    ClassNode classNode = readClass(stubJar, "com/example/buck/A.class").getClassNode();
+    ClassNode classNode = readClass(paths.stubJar, "com/example/buck/A.class").getClassNode();
     List<AnnotationNode> classAnnotations = classNode.visibleAnnotations;
     assertEquals(1, classAnnotations.size());
 
@@ -466,8 +431,8 @@ public class MirrorTest {
 
   @Test
   public void preservesAnnotationsWithAnnotationValues() throws IOException {
-    Path annotations = buildAnnotationJar();
-    Path jar = compileToJar(
+    Path annotations = createAnnotationFullAndStubJars().fullJar;
+    JarPaths paths = createFullAndStubJars(
         ImmutableSortedSet.of(annotations),
         "A.java",
         Joiner.on("\n").join(
@@ -476,10 +441,8 @@ public class MirrorTest {
             "@Foo(annotationValue=@Retention(RetentionPolicy.RUNTIME))",
             "public @interface A {}"));
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
     // Examine the jar to see if the "A" class is deprecated.
-    ClassNode classNode = readClass(stubJar, "com/example/buck/A.class").getClassNode();
+    ClassNode classNode = readClass(paths.stubJar, "com/example/buck/A.class").getClassNode();
     List<AnnotationNode> classAnnotations = classNode.visibleAnnotations;
     assertEquals(1, classAnnotations.size());
 
@@ -503,8 +466,8 @@ public class MirrorTest {
 
   @Test
   public void preservesAnnotationsWithAnnotationArrayValues() throws IOException {
-    Path annotations = buildAnnotationJar();
-    Path jar = compileToJar(
+    Path annotations = createAnnotationFullAndStubJars().fullJar;
+    JarPaths paths = createFullAndStubJars(
         ImmutableSortedSet.of(annotations),
         "A.java",
         Joiner.on("\n").join(
@@ -513,10 +476,8 @@ public class MirrorTest {
             "@Foo(annotationArrayValue=@Retention(RetentionPolicy.RUNTIME))",
             "public @interface A {}"));
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
     // Examine the jar to see if the "A" class is deprecated.
-    ClassNode classNode = readClass(stubJar, "com/example/buck/A.class").getClassNode();
+    ClassNode classNode = readClass(paths.stubJar, "com/example/buck/A.class").getClassNode();
     List<AnnotationNode> classAnnotations = classNode.visibleAnnotations;
     assertEquals(1, classAnnotations.size());
 
@@ -544,11 +505,9 @@ public class MirrorTest {
 
   @Test
   public void preservesAnnotationPrimitiveDefaultValues() throws IOException {
-    Path jar = buildAnnotationJar();
+    JarPaths paths = createAnnotationFullAndStubJars();
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
-    AbiClass stubbed = readClass(stubJar, "com/example/buck/Foo.class");
+    AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/Foo.class");
 
     MethodNode method = stubbed.findMethod("primitiveValue");
     assertEquals(0, method.annotationDefault);
@@ -556,11 +515,9 @@ public class MirrorTest {
 
   @Test
   public void preservesAnnotationArrayDefaultValues() throws IOException {
-    Path jar = buildAnnotationJar();
+    JarPaths paths = createAnnotationFullAndStubJars();
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
-    AbiClass stubbed = readClass(stubJar, "com/example/buck/Foo.class");
+    AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/Foo.class");
 
     MethodNode method = stubbed.findMethod("stringArrayValue");
     assertEquals(Lists.newArrayList("Hello"), method.annotationDefault);
@@ -568,11 +525,9 @@ public class MirrorTest {
 
   @Test
   public void preservesAnnotationAnnotationDefaultValues() throws IOException {
-    Path jar = buildAnnotationJar();
+    JarPaths paths = createAnnotationFullAndStubJars();
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
-    AbiClass stubbed = readClass(stubJar, "com/example/buck/Foo.class");
+    AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/Foo.class");
 
     MethodNode method = stubbed.findMethod("annotationValue");
     AnnotationNode annotation = (AnnotationNode) method.annotationDefault;
@@ -588,11 +543,9 @@ public class MirrorTest {
 
   @Test
   public void preservesAnnotationEnumDefaultValues() throws IOException {
-    Path jar = buildAnnotationJar();
+    JarPaths paths = createAnnotationFullAndStubJars();
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
-    AbiClass stubbed = readClass(stubJar, "com/example/buck/Foo.class");
+    AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/Foo.class");
 
     MethodNode method = stubbed.findMethod("enumValue");
     String[] enumValue = (String[]) method.annotationDefault;
@@ -612,7 +565,7 @@ public class MirrorTest {
 
   @Test
   public void stubsInnerClasses() throws IOException {
-    Path jar = compileToJar(
+    JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
         Joiner.on("\n").join(
@@ -626,10 +579,8 @@ public class MirrorTest {
                 "}"
             )));
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-
-    AbiClass original = readClass(jar, "com/example/buck/A$B.class");
-    AbiClass stubbed = readClass(stubJar, "com/example/buck/A$B.class");
+    AbiClass original = readClass(paths.fullJar, "com/example/buck/A$B.class");
+    AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/A$B.class");
 
     MethodNode originalFoo = original.findMethod("foo");
     MethodNode stubbedFoo = stubbed.findMethod("foo");
@@ -642,7 +593,7 @@ public class MirrorTest {
 
   @Test
   public void abiSafeChangesResultInTheSameOutputJar() throws IOException {
-    Path jar = compileToJar(
+    JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
         Joiner.on("\n").join(
@@ -655,11 +606,9 @@ public class MirrorTest {
                 "  public int other;",
                 "}"
             )));
+    Sha1HashCode originalHash = filesystem.computeSha1(paths.stubJar);
 
-    new StubJar(jar).writeTo(filesystem, stubJar);
-    Sha1HashCode originalHash = filesystem.computeSha1(stubJar);
-
-    Path jar2 = compileToJar(
+    paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
         Joiner.on("\n").join(
@@ -672,16 +621,14 @@ public class MirrorTest {
                 "  public int other = 32;",
                 "}"
             )));
-    filesystem.deleteFileAtPath(stubJar);
-    new StubJar(jar2).writeTo(filesystem, stubJar);
-    Sha1HashCode secondHash = filesystem.computeSha1(stubJar);
+    Sha1HashCode secondHash = filesystem.computeSha1(paths.stubJar);
 
     assertEquals(originalHash, secondHash);
   }
 
   @Test
   public void shouldIncludeStaticFields() throws IOException {
-    Path jar = compileToJar(
+    JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
         Joiner.on("\n").join(
@@ -692,9 +639,7 @@ public class MirrorTest {
                 "  public final static int count = 42;",
                 "  protected static void method() {}",
                 "}")));
-
-    new StubJar(jar).writeTo(filesystem, stubJar);
-    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/A.class");
 
     stubbed.findMethod("method");  // Presence is enough
     stubbed.findField("foo");  // Presence is enough
@@ -704,7 +649,7 @@ public class MirrorTest {
 
   @Test
   public void innerClassesInStubsCanBeCompiledAgainst() throws IOException {
-    Path original = compileToJar(
+    JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "Outer.java",
         Joiner.on("\n").join(
@@ -716,10 +661,8 @@ public class MirrorTest {
                 "  }",
                 "}")));
 
-    new StubJar(original).writeTo(filesystem, stubJar);
-
     compileToJar(
-        ImmutableSortedSet.of(stubJar),
+        ImmutableSortedSet.of(paths.stubJar),
         "A.java",
         Joiner.on("\n").join(
             ImmutableList.of(
@@ -732,7 +675,7 @@ public class MirrorTest {
 
   @Test
   public void shouldPreserveSynchronizedKeywordOnMethods() throws IOException {
-    Path original = compileToJar(
+    JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
         Joiner.on("\n").join(
@@ -742,16 +685,14 @@ public class MirrorTest {
                 "  public synchronized void doMagic() {}",
                 "}")));
 
-    new StubJar(original).writeTo(filesystem, stubJar);
-
-    AbiClass stub = readClass(stubJar, "com/example/buck/A.class");
+    AbiClass stub = readClass(paths.stubJar, "com/example/buck/A.class");
     MethodNode magic = stub.findMethod("doMagic");
     assertTrue((magic.access & Opcodes.ACC_SYNCHRONIZED) > 0);
   }
 
   @Test
   public void shouldKeepMultipleFieldsWithSameDescValue() throws IOException {
-    Path original = compileToJar(
+    JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
         Joiner.on("\n").join(
@@ -763,9 +704,7 @@ public class MirrorTest {
                 "  public static final A QUITE_MILD = new A();",
                 "}")));
 
-    new StubJar(original).writeTo(filesystem, stubJar);
-
-    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/A.class");
     stubbed.findField("SEVERE");
     stubbed.findField("NOT_SEVERE");
     stubbed.findField("QUITE_MILD");
@@ -773,7 +712,7 @@ public class MirrorTest {
 
   @Test
   public void stubJarIsEquallyAtHomeWalkingADirectoryOfClassFiles() throws IOException {
-    Path jar = compileToJar(
+    JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
         Joiner.on("\n").join(
@@ -785,12 +724,10 @@ public class MirrorTest {
                 "}")));
 
     Path classDir = temp.newFolder().toPath();
-    Unzip.extractZipFile(jar, classDir, Unzip.ExistingFileMode.OVERWRITE);
-
-    new StubJar(classDir).writeTo(filesystem, stubJar);
+    Unzip.extractZipFile(paths.fullJar, classDir, Unzip.ExistingFileMode.OVERWRITE);
 
     // Verify that both methods are present and given in alphabetical order.
-    AbiClass classNode = readClass(stubJar, "com/example/buck/A.class");
+    AbiClass classNode = readClass(paths.stubJar, "com/example/buck/A.class");
     List<MethodNode> methods = classNode.getClassNode().methods;
     // Index 0 is the <init> method. Skip that.
     assertEquals("eatCake", methods.get(1).name);
@@ -799,7 +736,7 @@ public class MirrorTest {
 
   @Test
   public void shouldIncludeBridgeMethods() throws IOException {
-    Path original = compileToJar(
+    JarPaths paths = createFullAndStubJars(
         EMPTY_CLASSPATH,
         "A.java",
         Joiner.on('\n').join(ImmutableList.of(
@@ -810,9 +747,7 @@ public class MirrorTest {
                 "  }",
                 "}")));
 
-    new StubJar(original).writeTo(filesystem, stubJar);
-
-    AbiClass stubbed = readClass(stubJar, "com/example/buck/A.class");
+    AbiClass stubbed = readClass(paths.stubJar, "com/example/buck/A.class");
     int count = 0;
     for (MethodNode method : stubbed.getClassNode().methods) {
       if ("compareTo".equals(method.name)) {
@@ -821,6 +756,22 @@ public class MirrorTest {
     }
     // One for the generics method, one for the bridge method from Comparable
     assertEquals(2, count);
+  }
+
+  private JarPaths createFullAndStubJars(
+      ImmutableSortedSet<Path> classPath,
+      String fileName,
+      String source) throws IOException {
+    Path fullJar = compileToJar(
+        classPath,
+        fileName,
+        source);
+
+    Path stubJar = fullJar.getParent().resolve("stub.jar");
+
+    new StubJar(fullJar).writeTo(filesystem, stubJar);
+
+    return new JarPaths(fullJar, stubJar);
   }
 
   private Path compileToJar(
@@ -885,8 +836,8 @@ public class MirrorTest {
     return AbiClass.extract(filesystem.getPathForRelativePath(pathToJar), className);
   }
 
-  private Path buildAnnotationJar() throws IOException {
-    return compileToJar(
+  private JarPaths createAnnotationFullAndStubJars() throws IOException {
+    return createFullAndStubJars(
         EMPTY_CLASSPATH,
         "Foo.java",
         Joiner.on("\n").join(ImmutableList.of(
@@ -915,5 +866,15 @@ public class MirrorTest {
     assertEquals(expected.name, seen.name);
     assertEquals(expected.desc, seen.desc);
     assertEquals(expected.signature, seen.signature);
+  }
+
+  private static class JarPaths {
+    public final Path fullJar;
+    public final Path stubJar;
+
+    public JarPaths(Path fullJar, Path stubJar) {
+      this.fullJar = fullJar;
+      this.stubJar = stubJar;
+    }
   }
 }
