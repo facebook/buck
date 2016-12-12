@@ -15,6 +15,15 @@ rust_test(
 )
 
 rust_test(
+  name = "test_success_linkerflags",
+  crate = "test_success",
+  srcs = [
+    "test_success.rs",
+  ],
+  linker_flags = [ '--this-is-a-bad-option' ],
+)
+
+rust_test(
   name = "test_ignore",
   crate = "test_ignore",
   srcs = [

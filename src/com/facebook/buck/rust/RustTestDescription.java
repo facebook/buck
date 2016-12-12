@@ -87,9 +87,18 @@ public class RustTestDescription implements
         rustcArgs.build(),
         () -> rustBuckConfig.getRustCompiler().resolve(resolver),
         () -> linker.resolve(resolver),
-        rustBuckConfig.getLinkerArgs(cxxPlatform),
+        getLinkerArgs(args.linkerFlags),
         cxxPlatform,
         args.linkStyle.orElse(Linker.LinkableDepType.STATIC));
+  }
+
+  private ImmutableList<String> getLinkerArgs(ImmutableList<String> args) {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    builder.addAll(rustBuckConfig.getLinkerArgs(cxxPlatform));
+    builder.addAll(args);
+
+    return builder.build();
   }
 
   @Override
@@ -112,6 +121,7 @@ public class RustTestDescription implements
     public ImmutableSortedSet<SourcePath> srcs;
     public ImmutableSortedSet<String> features = ImmutableSortedSet.of();
     public List<String> rustcFlags = ImmutableList.of();
+    public ImmutableList<String> linkerFlags = ImmutableList.of();
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public Optional<Linker.LinkableDepType> linkStyle;
     public Optional<String> crate;
