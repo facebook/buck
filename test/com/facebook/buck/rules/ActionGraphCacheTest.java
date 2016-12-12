@@ -230,16 +230,6 @@ public class ActionGraphCacheTest {
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 4);
   }
 
-  @Test
-  public void returnsFrozenResolver() throws InterruptedException {
-    ActionGraphCache cache = new ActionGraphCache(broadcastEventListener);
-
-    ActionGraphAndResolver resultRun1 =
-        cache.getActionGraph(eventBus, CHECK_GRAPHS, targetGraph, 0);
-
-    assertTrue(resultRun1.getResolver().isFrozen());
-  }
-
   private TargetNode<?, ?> createTargetNode(String name, TargetNode<?, ?>... deps) {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:" + name);
     JavaLibraryBuilder targetNodeBuilder = JavaLibraryBuilder.createBuilder(buildTarget);
