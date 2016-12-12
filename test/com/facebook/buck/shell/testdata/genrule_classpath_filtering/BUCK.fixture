@@ -70,12 +70,16 @@ java_library(
   deps = [
     ':lib_b',
     '//annotations:proc',
+    #add_import_to_lib_a ':lib_c',
   ],
 )
 
 java_library(
   name = 'lib_b',
   srcs = ['B.java'],
+  deps = [
+    #add_import_to_lib_b ':lib_c',
+  ],
   annotation_processors = [
     'com.example.annotations.Proc',
   ],
@@ -84,6 +88,12 @@ java_library(
   ],
 )
 
+java_library(
+  name = 'lib_c',
+  deps = [
+    '//annotations:proc',
+  ],
+)
 
 java_binary(
   name = 'app',

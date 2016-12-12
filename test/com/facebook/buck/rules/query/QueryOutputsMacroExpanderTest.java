@@ -15,6 +15,7 @@
  */
 
 
+
 package com.facebook.buck.rules.query;
 
 import static org.junit.Assert.assertEquals;
@@ -31,7 +32,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.macros.MacroHandler;
-import com.facebook.buck.rules.macros.QueryTargetsMacroExpander;
+import com.facebook.buck.rules.macros.QueryOutputsMacroExpander;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -42,6 +43,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.File;
 import java.nio.file.Paths;
 import java.util.Optional;
 
@@ -49,11 +51,11 @@ import java.util.Optional;
  * Tests for the query macro. See {@link com.facebook.buck.shell.GenruleDescriptionIntegrationTest}
  * for some less contrived integration tests.
  */
-public class QueryTargetsMacroExpanderTest {
+public class QueryOutputsMacroExpanderTest {
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
 
-  private QueryTargetsMacroExpander expander;
+  private QueryOutputsMacroExpander expander;
   private ProjectFilesystem filesystem;
   private BuildRuleResolver ruleResolver;
   private CellPathResolver cellNames;
@@ -63,7 +65,7 @@ public class QueryTargetsMacroExpanderTest {
 
   @Before
   public void setUp() throws Exception {
-    expander = new QueryTargetsMacroExpander(Optional.empty());
+    expander = new QueryOutputsMacroExpander(Optional.empty());
     handler = new MacroHandler(ImmutableMap.of("query", expander));
     filesystem = new FakeProjectFilesystem(tmp.getRoot());
     cellNames = TestCellBuilder.createCellRoots(filesystem);
@@ -93,7 +95,10 @@ public class QueryTargetsMacroExpanderTest {
     assertExpandsTo(
         "$(query 'classpath(//exciting:target)')",
         rule,
-        "//exciting:dep //exciting:target");
+        String.format(
+            "%s %s",
+            absolutify("exciting/lib__dep__output/dep.jar"),
+            absolutify("exciting/lib__target__output/target.jar")));
   }
 
   @Test
@@ -101,20 +106,23 @@ public class QueryTargetsMacroExpanderTest {
     assertExpandsTo(
         "$(query 'set(//exciting:target //exciting:dep)')",
         rule,
-        "//exciting:dep //exciting:target");
+        String.format(
+            "%s %s",
+            absolutify("exciting/lib__dep__output/dep.jar"),
+            absolutify("exciting/lib__target__output/target.jar")));
   }
 
   @Test
   public void extractBuildTimeDeps() throws Exception {
     assertEquals(
-        ImmutableList.of(),
+        ImmutableList.of(dep),
         expander.extractBuildTimeDeps(
             dep.getBuildTarget(),
             cellNames,
             ruleResolver,
             ImmutableList.of("'set(//exciting:dep)'")));
     assertEquals(
-        ImmutableList.of(),
+        ImmutableList.of(dep, rule),
         expander.extractBuildTimeDeps(
             dep.getBuildTarget(),
             cellNames,
@@ -135,5 +143,10 @@ public class QueryTargetsMacroExpanderTest {
         input);
 
     assertEquals(expected, results);
+  }
+
+  private String absolutify(String relativePath) {
+    relativePath = relativePath.replace("/", File.separator);
+    return filesystem.resolve(Paths.get("buck-out", "gen", relativePath)).toString();
   }
 }

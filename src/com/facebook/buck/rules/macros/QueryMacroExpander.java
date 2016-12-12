@@ -18,22 +18,18 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroException;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryTarget;
-import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -116,25 +112,6 @@ public abstract class QueryMacroExpander implements MacroExpander {
     }
   }
 
-  @Override
-  public ImmutableList<BuildRule> extractBuildTimeDeps(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      final BuildRuleResolver resolver,
-      ImmutableList<String> input)
-      throws MacroException {
-    if (input.isEmpty()) {
-      throw new MacroException("One quoted query expression is expected with optional flags");
-    }
-    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.get(0));
-    return ImmutableList.copyOf(resolveQuery(target, cellNames, resolver, queryExpression)
-        .map(queryTarget -> {
-          Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-          return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
-        })
-        .sorted()
-        .collect(Collectors.toList()));
-  }
 
   @Override
   public ImmutableList<BuildTarget> extractParseTimeDeps(
@@ -143,32 +120,6 @@ public abstract class QueryMacroExpander implements MacroExpander {
       ImmutableList<String> input) throws MacroException {
     return ImmutableList.copyOf(extractTargets(target, cellNames, Optional.empty(), input)
         .collect(Collectors.toList()));
-  }
-
-  @Override
-  public Object extractRuleKeyAppendables(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      final BuildRuleResolver resolver,
-      ImmutableList<String> input)
-      throws MacroException {
-    if (input.isEmpty()) {
-      throw new MacroException("One quoted query expression is expected");
-    }
-    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.get(0));
-    return ImmutableSortedSet.copyOf(resolveQuery(target, cellNames, resolver, queryExpression)
-        .map(queryTarget -> {
-          Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-          try {
-            return resolver.requireRule(((QueryBuildTarget) queryTarget).getBuildTarget());
-          } catch (NoSuchBuildTargetException e) {
-            throw new RuntimeException(
-                new MacroException("Error extracting rule key appendables", e));
-          }
-        })
-        .filter(rule -> rule.getPathToOutput() != null)
-        .map(rule -> SourcePaths.getToBuildTargetSourcePath().apply(rule))
-        .collect(Collectors.toSet()));
   }
 
 }

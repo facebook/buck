@@ -21,13 +21,16 @@ package com.facebook.buck.rules.macros;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -66,5 +69,34 @@ public class QueryTargetsMacroExpander extends QueryMacroExpander {
         })
         .sorted()
         .collect(Collectors.joining(" "));
+  }
+
+  @Override
+  public Object extractRuleKeyAppendables(
+      BuildTarget target,
+      CellPathResolver cellNames,
+      final BuildRuleResolver resolver,
+      ImmutableList<String> input)
+      throws MacroException {
+    if (input.isEmpty()) {
+      throw new MacroException("One quoted query expression is expected");
+    }
+    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.get(0));
+    // Return the set of targets which matched the query
+    return resolveQuery(target, cellNames, resolver, queryExpression)
+        .map(QueryTarget::toString)
+        .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+  }
+
+  @Override
+  public ImmutableList<BuildRule> extractBuildTimeDeps(
+      BuildTarget target,
+      CellPathResolver cellNames,
+      BuildRuleResolver resolver,
+      ImmutableList<String> input) throws MacroException {
+    // The query_targets macro is only used for inspecting the build graph or creating
+    // log files, or buck invocations, so it should not depend on actual builds of the referenced
+    // rules
+    return ImmutableList.of();
   }
 }

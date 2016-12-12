@@ -143,11 +143,14 @@ public class GenruleDescriptionIntegrationTest {
     workspace.runBuckCommand("build", "//:echo_deps_of_a").assertSuccess();
     workspace.getBuildLog().assertNotTargetBuiltLocally("//:echo_deps_of_a");
 
-    // Now, edit lib_a, which is the only explictly mentioned target and assert the query is run
-    workspace.replaceFileContents("A.java", "// method", "public static void foo() {}");
+    // Now, add a dep to lib_a, which is the only explictly mentioned target and
+    // assert the query is run
+    workspace.replaceFileContents("BUCK", "#add_import_to_lib_a", "");
     workspace.runBuckCommand("build", "//:echo_deps_of_a").assertSuccess();
 
-    workspace.getBuildLog().assertTargetBuiltLocally("//:lib_a");
+    // Query targets should NOT build dependencies
+    workspace.getBuildLog().assertTargetIsAbsent("//:lib_a");
+    // But should still be invalidated by their changes
     workspace.getBuildLog().assertTargetBuiltLocally("//:echo_deps_of_a");
   }
 
@@ -163,10 +166,12 @@ public class GenruleDescriptionIntegrationTest {
 
     // Now, edit lib_b, which is NOT mentioned in the genrule, but IS a transitive dependency,
     // and assert the query is re-run
-    workspace.replaceFileContents("B.java", "// method", "public static void foo() {}");
+    workspace.replaceFileContents("BUCK", "#add_import_to_lib_b", "");
     workspace.runBuckCommand("build", "//:echo_deps_of_a").assertSuccess();
 
-    workspace.getBuildLog().assertTargetBuiltLocally("//:lib_b");
+    // Query targets should NOT build dependencies
+    workspace.getBuildLog().assertTargetIsAbsent("//:lib_b");
+    // But should still be invalidated by their changes
     workspace.getBuildLog().assertTargetBuiltLocally("//:echo_deps_of_a");
   }
 

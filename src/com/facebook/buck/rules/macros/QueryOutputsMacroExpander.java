@@ -19,13 +19,18 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.MacroException;
+import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 import java.util.Objects;
@@ -68,5 +73,54 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander {
         .map(Path::toString)
         .sorted()
         .collect(Collectors.joining(" "));
+  }
+
+  @Override
+  public Object extractRuleKeyAppendables(
+      BuildTarget target,
+      CellPathResolver cellNames,
+      final BuildRuleResolver resolver,
+      ImmutableList<String> input)
+      throws MacroException {
+    if (input.isEmpty()) {
+      throw new MacroException("One quoted query expression is expected");
+    }
+    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.get(0));
+
+    // Return a list of SourcePaths to the outputs of our query results. This enables input-based
+    // rule key hits.
+    return resolveQuery(target, cellNames, resolver, queryExpression)
+        .map(queryTarget -> {
+          Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
+          try {
+            return resolver.requireRule(((QueryBuildTarget) queryTarget).getBuildTarget());
+          } catch (NoSuchBuildTargetException e) {
+            throw new RuntimeException(
+                new MacroException("Error extracting rule key appendables", e));
+          }
+        })
+        .filter(rule -> rule.getPathToOutput() != null)
+        .map(rule -> SourcePaths.getToBuildTargetSourcePath().apply(rule))
+        .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+  }
+
+  @Override
+  public ImmutableList<BuildRule> extractBuildTimeDeps(
+      BuildTarget target,
+      CellPathResolver cellNames,
+      final BuildRuleResolver resolver,
+      ImmutableList<String> input)
+      throws MacroException {
+    if (input.isEmpty()) {
+      throw new MacroException("One quoted query expression is expected with optional flags");
+    }
+    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.get(0));
+    return ImmutableList.copyOf(resolveQuery(target, cellNames, resolver, queryExpression)
+        .map(queryTarget -> {
+          Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
+          return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
+        })
+        .sorted()
+        .collect(Collectors.toList()));
   }
 }
