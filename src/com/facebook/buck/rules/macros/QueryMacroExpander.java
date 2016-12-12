@@ -44,16 +44,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Used to expand the macro {@literal $(query_targets "some(query(:expression))")} to the
- * set of targets matching the query.
- * Example queries
- * <pre>
- *   '$(query_targets "deps(:foo)")'
- *   '$(query_targets "filter(bar, classpath(:bar))")'
- *   '$(query_targets "attrfilter(annotation_processors, com.foo.Processor, deps(:app))")'
- * </pre>
+ * Abstract base class for the query_targets and query_outputs macros
  */
-public class QueryMacroExpander implements MacroExpander {
+public abstract class QueryMacroExpander implements MacroExpander {
 
   private ListeningExecutorService executorService;
   private Optional<TargetGraph> targetGraph;
@@ -63,25 +56,6 @@ public class QueryMacroExpander implements MacroExpander {
     this.executorService = MoreExecutors.newDirectExecutorService();
   }
 
-  @Override
-  public String expand(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      ImmutableList<String> input) throws MacroException {
-    if (input.isEmpty()) {
-      throw new MacroException("One quoted query expression is expected");
-    }
-    String queryExpression = CharMatcher.anyOf("\"'").trimFrom(input.get(0));
-    return resolveQuery(target, cellNames, resolver, queryExpression)
-        .map(queryTarget -> {
-          Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-          return resolver.getRule(((QueryBuildTarget) queryTarget).getBuildTarget());
-        })
-        .map(rule -> rule.getBuildTarget().toString())
-        .sorted()
-        .collect(Collectors.joining(" "));
-  }
 
   private Stream<BuildTarget> extractTargets(
       BuildTarget target,

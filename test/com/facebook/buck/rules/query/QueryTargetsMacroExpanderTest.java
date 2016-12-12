@@ -31,7 +31,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.macros.MacroHandler;
-import com.facebook.buck.rules.macros.QueryMacroExpander;
+import com.facebook.buck.rules.macros.QueryTargetsMacroExpander;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -49,11 +49,11 @@ import java.util.Optional;
  * Tests for the query macro. See {@link com.facebook.buck.shell.GenruleDescriptionIntegrationTest}
  * for some less contrived integration tests.
  */
-public class QueryMacroExpanderTest {
+public class QueryTargetsMacroExpanderTest {
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
 
-  private QueryMacroExpander expander;
+  private QueryTargetsMacroExpander expander;
   private ProjectFilesystem filesystem;
   private BuildRuleResolver ruleResolver;
   private CellPathResolver cellNames;
@@ -63,7 +63,7 @@ public class QueryMacroExpanderTest {
 
   @Before
   public void setUp() throws Exception {
-    expander = new QueryMacroExpander(Optional.empty());
+    expander = new QueryTargetsMacroExpander(Optional.empty());
     handler = new MacroHandler(ImmutableMap.of("query", expander));
     filesystem = new FakeProjectFilesystem(tmp.getRoot());
     cellNames = TestCellBuilder.createCellRoots(filesystem);

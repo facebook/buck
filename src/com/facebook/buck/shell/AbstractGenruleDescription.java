@@ -38,8 +38,8 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.MavenCoordinatesMacroExpander;
-import com.facebook.buck.rules.macros.QueryMacroExpander;
 import com.facebook.buck.rules.macros.QueryOutputsMacroExpander;
+import com.facebook.buck.rules.macros.QueryTargetsMacroExpander;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
@@ -65,7 +65,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
           .put("worker", new WorkerMacroExpander())
           .put("location", new LocationMacroExpander())
           .put("maven_coords", new MavenCoordinatesMacroExpander())
-          .put("query_targets", new QueryMacroExpander(Optional.empty()))
+          .put("query_targets", new QueryTargetsMacroExpander(Optional.empty()))
           .put("query_outputs", new QueryOutputsMacroExpander(Optional.empty()))
           .build());
 
@@ -103,7 +103,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
             .put("worker", new WorkerMacroExpander())
             .put("location", new LocationMacroExpander())
             .put("maven_coords", new MavenCoordinatesMacroExpander())
-            .put("query_targets", new QueryMacroExpander(Optional.of(targetGraph)))
+            .put("query_targets", new QueryTargetsMacroExpander(Optional.of(targetGraph)))
             .put("query_outputs", new QueryOutputsMacroExpander(Optional.of(targetGraph)))
             .build());
   }
