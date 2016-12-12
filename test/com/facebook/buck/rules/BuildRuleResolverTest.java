@@ -17,6 +17,7 @@
 package com.facebook.buck.rules;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -24,6 +25,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.jvm.java.JavaBinary;
+import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -147,4 +149,41 @@ public class BuildRuleResolverTest {
     resolver.getRuleWithType(BuildTargetFactory.newInstance("//foo:bar"), JavaBinary.class);
   }
 
+  private BuildRuleResolver createFrozenResolver(BuildTarget target) throws Exception {
+    TargetNode<?, ?> library = JavaLibraryBuilder.createBuilder(target).build();
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(library);
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    resolver.requireRule(target);
+    resolver.freeze();
+    return resolver;
+  }
+
+  @Test
+  public void frozenResolverCanGetRules() throws Exception {
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRuleResolver resolver = createFrozenResolver(target);
+    assertThat(resolver.getRule(target), is(instanceOf(JavaLibrary.class)));
+    assertThat(resolver.requireRule(target), is(instanceOf(JavaLibrary.class)));
+    assertThat(resolver.getRuleOptional(target).get(), is(instanceOf(JavaLibrary.class)));
+  }
+
+  @Test
+  public void frozenResolverCannotRequireNewRules() throws Exception {
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRuleResolver resolver = createFrozenResolver(target);
+    expectedException.expect(IllegalStateException.class);
+    resolver.requireRule(BuildTargetFactory.newInstance("//baz:qux"));
+  }
+
+  @Test
+  public void frozenResolverCannotAddNewRules() throws Exception {
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRuleResolver resolver = createFrozenResolver(target);
+    BuildRule newRule = new FakeBuildRule(
+        BuildTargetFactory.newInstance("//baz:qux"),
+        new SourcePathResolver(resolver));
+    expectedException.expect(IllegalStateException.class);
+    resolver.addToIndex(newRule);
+  }
 }

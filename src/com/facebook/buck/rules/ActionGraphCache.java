@@ -160,6 +160,8 @@ public class ActionGraphCache {
         };
     bottomUpTraversal.traverse();
 
+    resolver.freeze();
+
     return ActionGraphAndResolver.builder()
         .setActionGraph(new ActionGraph(resolver.getBuildRules()))
         .setResolver(resolver)

@@ -33,6 +33,7 @@ import com.google.common.collect.Iterables;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
@@ -54,6 +55,7 @@ public class BuildRuleResolver {
 
   private final ConcurrentHashMap<BuildTarget, BuildRule> buildRuleIndex;
   private final LoadingCache<Pair<BuildTarget, Class<?>>, Optional<?>> metadataCache;
+  private final AtomicBoolean frozen = new AtomicBoolean(false);
 
   public BuildRuleResolver(
       TargetGraph targetGraph,
@@ -132,6 +134,7 @@ public class BuildRuleResolver {
     if (rule != null) {
       return rule;
     }
+    Preconditions.checkState(!frozen.get(), "New rules cannot be required from a frozen resolver");
     TargetNode<?, ?> node = targetGraph.get(target);
     rule = buildRuleGenerator.transform(targetGraph, this, node);
     BuildRule oldRule = buildRuleIndex.put(target, rule);
@@ -206,6 +209,7 @@ public class BuildRuleResolver {
    */
   @VisibleForTesting
   public <T extends BuildRule> T addToIndex(T buildRule) {
+    Preconditions.checkState(!frozen.get(), "Rules cannot be added to a frozen resolver");
     BuildRule oldValue = buildRuleIndex.put(buildRule.getBuildTarget(), buildRule);
     // Yuck! This is here to make it possible for a rule to depend on a flavor of itself but it
     // would be much much better if we just got rid of the BuildRuleResolver entirely.
@@ -224,6 +228,15 @@ public class BuildRuleResolver {
       addToIndex(buildRule);
     }
     return buildRules;
+  }
+
+  public void freeze() {
+    frozen.set(true);
+  }
+
+  @VisibleForTesting
+  boolean isFrozen() {
+    return frozen.get();
   }
 
   @Nullable
