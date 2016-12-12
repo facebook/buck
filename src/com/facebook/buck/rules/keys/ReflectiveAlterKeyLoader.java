@@ -29,38 +29,37 @@ import java.util.Comparator;
 class ReflectiveAlterKeyLoader
     extends CacheLoader<Class<? extends BuildRule>, ImmutableCollection<AlterRuleKey>> {
 
-  private static final Comparator<Field> FIELD_COMPARATOR = (o1, o2) -> {
-    String o1Name = o1.getDeclaringClass() + "." + o1.getName();
-    String o2Name = o2.getDeclaringClass() + "." + o2.getName();
-    return o1Name.compareTo(o2Name);
+  private static final Comparator<ValueExtractor> COMPARATOR = (o1, o2) -> {
+    String name1 = o1.getFullyQualifiedName();
+    String name2 = o2.getFullyQualifiedName();
+    return name1.compareTo(name2);
   };
 
   @Override
   public ImmutableCollection<AlterRuleKey> load(Class<? extends BuildRule> key)
       throws Exception {
     ImmutableList.Builder<AlterRuleKey> builder = ImmutableList.builder();
-
     for (Class<?> current = key; !Object.class.equals(current); current = current.getSuperclass()) {
-      ImmutableSortedMap.Builder<Field, AlterRuleKey> fields = ImmutableSortedMap.orderedBy(
-          FIELD_COMPARATOR);
+      ImmutableSortedMap.Builder<ValueExtractor, AlterRuleKey> sortedExtractors =
+          ImmutableSortedMap.orderedBy(COMPARATOR);
       for (final Field field : current.getDeclaredFields()) {
         field.setAccessible(true);
         final AddToRuleKey annotation = field.getAnnotation(AddToRuleKey.class);
-        if (annotation == null) {
-          continue;
+        if (annotation != null) {
+          ValueExtractor valueExtractor = new FieldValueExtractor(field);
+          sortedExtractors.put(valueExtractor, createAlterRuleKey(valueExtractor, annotation));
         }
-
-        AlterRuleKey ark;
-        if (annotation.stringify()) {
-          ark = new StringifyAlterRuleKey(field);
-        } else {
-          ark = new DefaultAlterRuleKey(field);
-        }
-
-        fields.put(field, ark);
       }
-      builder.addAll(fields.build().values());
+      builder.addAll(sortedExtractors.build().values());
     }
     return builder.build();
+  }
+
+  private AlterRuleKey createAlterRuleKey(ValueExtractor valueExtractor, AddToRuleKey annotation) {
+    if (annotation.stringify()) {
+      return new StringifyAlterRuleKey(valueExtractor);
+    } else {
+      return new DefaultAlterRuleKey(valueExtractor);
+    }
   }
 }

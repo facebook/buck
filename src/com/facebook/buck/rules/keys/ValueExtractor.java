@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,18 +16,13 @@
 
 package com.facebook.buck.rules.keys;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import javax.annotation.Nullable;
 
-class DefaultAlterRuleKey implements AlterRuleKey {
-  private final ValueExtractor valueExtractor;
-
-  public DefaultAlterRuleKey(ValueExtractor valueExtractor) {
-    this.valueExtractor = valueExtractor;
-  }
-
-  @Override
-  public void amendKey(RuleKeyObjectSink builder, BuildRule rule) {
-    builder.setReflectively(valueExtractor.getName(), valueExtractor.getValue(rule));
-  }
+/**
+ * Extracts a value, e.g. by reflection. Used by {@link AlterRuleKey} implementations.
+ */
+public interface ValueExtractor {
+  String getFullyQualifiedName();
+  String getName();
+  @Nullable Object getValue(Object obj);
 }

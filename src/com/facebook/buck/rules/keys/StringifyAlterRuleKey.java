@@ -26,18 +26,19 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
-class StringifyAlterRuleKey extends AbstractAlterRuleKey {
+class StringifyAlterRuleKey implements AlterRuleKey {
 
   private static final Logger LOG = Logger.get(StringifyAlterRuleKey.class);
 
-  public StringifyAlterRuleKey(Field field) {
-    super(field);
+  private final ValueExtractor valueExtractor;
+
+  public StringifyAlterRuleKey(ValueExtractor valueExtractor) {
+    this.valueExtractor = valueExtractor;
   }
 
   @VisibleForTesting
@@ -69,17 +70,16 @@ class StringifyAlterRuleKey extends AbstractAlterRuleKey {
 
   @Override
   public void amendKey(RuleKeyObjectSink sink, BuildRule rule) {
-    Object val = getValue(field, rule);
-    sink.setReflectively(
-        field.getName(),
-        val == null ? null : String.valueOf(val));
+    Object val = valueExtractor.getValue(rule);
+    String stringVal = (val == null) ? null : String.valueOf(val);
+    sink.setReflectively(valueExtractor.getName(), stringVal);
 
     if (val != null) {
       Iterable<Path> absolutePaths = findAbsolutePaths(val);
       if (!Iterables.isEmpty(absolutePaths)) {
         LOG.warn(
-            "Field %s contains absolute paths %s and it is included in a rule key.",
-            field.getName(),
+            "Value %s contains absolute paths %s and it is included in a rule key.",
+            valueExtractor.getFullyQualifiedName(),
             ImmutableSet.copyOf(absolutePaths));
       }
     }

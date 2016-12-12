@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2016-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -16,26 +16,35 @@
 
 package com.facebook.buck.rules.keys;
 
-import com.facebook.buck.rules.BuildRule;
-
 import java.lang.reflect.Field;
 
 import javax.annotation.Nullable;
 
-abstract class AbstractAlterRuleKey implements AlterRuleKey {
-  protected final Field field;
+/**
+ * Extracts a value of a given field, that is assumed to be accessible.
+ */
+public class FieldValueExtractor implements ValueExtractor {
+  private final Field field;
 
-  /**
-   * @param field {@link java.lang.reflect.Field} that is assumed to be accessible.
-   */
-  public AbstractAlterRuleKey(Field field) {
+  public FieldValueExtractor(Field field) {
     this.field = field;
   }
 
+  @Override
+  public String getFullyQualifiedName() {
+    return field.getDeclaringClass() + "." + field.getName();
+  }
+
+  @Override
+  public String getName() {
+    return field.getName();
+  }
+
+  @Override
   @Nullable
-  protected Object getValue(Field field, BuildRule from) {
+  public Object getValue(Object obj) {
     try {
-      return field.get(from);
+      return field.get(obj);
     } catch (IllegalAccessException e) {
       throw new RuntimeException(e);
     }
