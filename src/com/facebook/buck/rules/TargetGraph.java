@@ -85,7 +85,7 @@ public class TargetGraph implements TraversableGraph<TargetNode<?, ?>> {
   }
 
   @Nullable
-  public TargetNode<?, ?> getInternal(BuildTarget target) {
+  private TargetNode<?, ?> getInternal(BuildTarget target) {
     TargetNode<?, ?> node = targetsToNodes.get(target);
     if (node == null) {
       node = targetsToNodes.get(BuildTarget.of(target.getUnflavoredBuildTarget()));
