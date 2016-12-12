@@ -93,19 +93,7 @@ public class JavaLibraryDescription implements
 
     if (flavors.contains(Javadoc.DOC_JAR)) {
       BuildTarget unflavored = BuildTarget.of(target.getUnflavoredBuildTarget());
-
-      Optional<BuildRule> optionalBaseLibrary = resolver.getRuleOptional(unflavored);
-      BuildRule baseLibrary;
-      if (!optionalBaseLibrary.isPresent()) {
-        baseLibrary = resolver.addToIndex(
-            createBuildRule(
-                targetGraph,
-                params.copyWithBuildTarget(unflavored),
-                resolver,
-                args));
-      } else {
-        baseLibrary = optionalBaseLibrary.get();
-      }
+      BuildRule baseLibrary = resolver.requireRule(unflavored);
 
       JarShape shape = params.getBuildTarget().getFlavors().contains(JavaLibrary.MAVEN_JAR) ?
           JarShape.MAVEN : JarShape.SINGLE;
