@@ -128,7 +128,7 @@ class BuckTool(object):
         return env
 
     def launch_buck(self, build_id):
-        with Tracing('BuckRepo.launch_buck'):
+        with Tracing('BuckTool.launch_buck'):
             if self._command_line.command == "clean" and not self._command_line.is_help():
                 self.kill_buckd()
 
@@ -196,15 +196,16 @@ class BuckTool(object):
             command.extend(sys.argv[1:])
 
             if True:
-                buck_exit_code = subprocess.call(command,
-                                                 cwd=self._buck_project.root,
-                                                 env=env,
-                                                 executable=which("java"))
+                with Tracing('buck', args={'command': command}):
+                    buck_exit_code = subprocess.call(command,
+                                                     cwd=self._buck_project.root,
+                                                     env=env,
+                                                     executable=which("java"))
             return buck_exit_code
 
 
     def launch_buckd(self, buck_version_uid=None):
-        with Tracing('BuckRepo.launch_buckd'):
+        with Tracing('BuckTool.launch_buckd'):
             self._setup_watchman_watch()
             if buck_version_uid is None:
                 buck_version_uid = self._get_buck_version_uid()
@@ -298,7 +299,7 @@ class BuckTool(object):
             return returncode
 
     def kill_buckd(self):
-        with Tracing('BuckRepo.kill_buckd'):
+        with Tracing('BuckTool.kill_buckd'):
             buckd_socket_path = self._buck_project.get_buckd_socket_path()
             if os.path.exists(buckd_socket_path):
                 print("Shutting down nailgun server...", file=sys.stderr)
@@ -316,7 +317,7 @@ class BuckTool(object):
             self._buck_project.clean_up_buckd()
 
     def _setup_watchman_watch(self):
-        with Tracing('BuckRepo._setup_watchman_watch'):
+        with Tracing('BuckTool._setup_watchman_watch'):
             if not which('watchman'):
                 message = textwrap.dedent("""\
                     Watchman not found, please install when using buckd.
@@ -330,7 +331,7 @@ class BuckTool(object):
             print("Using watchman.", file=sys.stderr)
 
     def _is_buckd_running(self):
-        with Tracing('BuckRepo._is_buckd_running'):
+        with Tracing('BuckTool._is_buckd_running'):
             buckd_socket_path = self._buck_project.get_buckd_socket_path()
 
             if not os.path.exists(buckd_socket_path):
@@ -367,48 +368,49 @@ class BuckTool(object):
         return []
 
     def _get_java_args(self, version_uid, extra_default_options=[]):
-        java_args = [
-            "-Xmx{0}m".format(JAVA_MAX_HEAP_SIZE_MB),
-            "-Djava.awt.headless=true",
-            "-Djava.util.logging.config.class=com.facebook.buck.cli.bootstrapper.LogConfig",
-            "-Dbuck.test_util_no_tests_dir=true",
-            "-Dbuck.version_uid={0}".format(version_uid),
-            "-Dbuck.buckd_dir={0}".format(self._buck_project.buckd_dir),
-            "-Dorg.eclipse.jetty.util.log.class=org.eclipse.jetty.util.log.JavaUtilLog",
-        ]
-        for resource in EXPORTED_RESOURCES:
-            if self._has_resource(resource):
-                java_args.append(
-                    "-Dbuck.{0}={1}".format(
-                    resource.name, self._get_resource(resource)))
+        with Tracing('BuckTool._get_java_args'):
+            java_args = [
+                "-Xmx{0}m".format(JAVA_MAX_HEAP_SIZE_MB),
+                "-Djava.awt.headless=true",
+                "-Djava.util.logging.config.class=com.facebook.buck.cli.bootstrapper.LogConfig",
+                "-Dbuck.test_util_no_tests_dir=true",
+                "-Dbuck.version_uid={0}".format(version_uid),
+                "-Dbuck.buckd_dir={0}".format(self._buck_project.buckd_dir),
+                "-Dorg.eclipse.jetty.util.log.class=org.eclipse.jetty.util.log.JavaUtilLog",
+            ]
+            for resource in EXPORTED_RESOURCES:
+                if self._has_resource(resource):
+                    java_args.append(
+                        "-Dbuck.{0}={1}".format(
+                            resource.name, self._get_resource(resource)))
 
-        if sys.platform == "darwin":
-            java_args.append("-Dbuck.enable_objc=true")
-            java_args.append("-Djava.library.path=" + os.path.dirname(
-                self._get_resource(
-                    Resource("libjcocoa.dylib"))))
+            if sys.platform == "darwin":
+                java_args.append("-Dbuck.enable_objc=true")
+                java_args.append("-Djava.library.path=" + os.path.dirname(
+                    self._get_resource(
+                        Resource("libjcocoa.dylib"))))
 
-        if os.environ.get("BUCK_DEBUG_MODE"):
-            java_args.append("-agentlib:jdwp=transport=dt_socket,"
-                             "server=y,suspend=y,address=8888")
+            if os.environ.get("BUCK_DEBUG_MODE"):
+                java_args.append("-agentlib:jdwp=transport=dt_socket,"
+                                 "server=y,suspend=y,address=8888")
 
-        if os.environ.get("BUCK_DEBUG_SOY"):
-            java_args.append("-Dbuck.soy.debug=true")
+            if os.environ.get("BUCK_DEBUG_SOY"):
+                java_args.append("-Dbuck.soy.debug=true")
 
-        java_args.extend(extra_default_options)
+            java_args.extend(extra_default_options)
 
-        if self._buck_project.buck_javaargs:
-            java_args.extend(shlex.split(self._buck_project.buck_javaargs))
+            if self._buck_project.buck_javaargs:
+                java_args.extend(shlex.split(self._buck_project.buck_javaargs))
 
-        if self._buck_project.buck_javaargs_local:
-            java_args.extend(shlex.split(self._buck_project.buck_javaargs_local))
+            if self._buck_project.buck_javaargs_local:
+                java_args.extend(shlex.split(self._buck_project.buck_javaargs_local))
 
-        java_args.extend(self._get_extra_java_args())
+            java_args.extend(self._get_extra_java_args())
 
-        extra_java_args = os.environ.get("BUCK_EXTRA_JAVA_ARGS")
-        if extra_java_args:
-            java_args.extend(shlex.split(extra_java_args))
-        return java_args
+            extra_java_args = os.environ.get("BUCK_EXTRA_JAVA_ARGS")
+            if extra_java_args:
+                java_args.extend(shlex.split(extra_java_args))
+            return java_args
 
     def _platform_path(self, path):
         if sys.platform != 'cygwin':
