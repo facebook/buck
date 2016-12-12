@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rust;
 
+import static com.facebook.buck.rust.RustLinkables.extendLinkerArgs;
+
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.model.BuildTargets;
@@ -103,7 +105,11 @@ public class RustTest
             "%s").resolve(crate),
         compiler,
         linker,
-        linkerArgs,
+        extendLinkerArgs(
+            linkerArgs,
+            params.getDeps(),
+            linkStyle,
+            cxxPlatform),
         linkStyle);
 
     this.crate = crate;

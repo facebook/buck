@@ -131,4 +131,17 @@ public class RustLinkables {
           }
         });
   }
+
+  public static ImmutableList<String> extendLinkerArgs(
+      ImmutableList<String> linkerArgs,
+      Iterable<BuildRule> deps,
+      Linker.LinkableDepType linkStyle,
+      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    builder.addAll(linkerArgs);
+    RustLinkables.accumNativeArgs(deps, linkStyle, cxxPlatform, builder);
+
+    return builder.build();
+  }
 }
