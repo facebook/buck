@@ -64,9 +64,9 @@ Note: Buck is currently tested with (and therefore supports) version 1.13.0 of R
 {/template}
 
 /***/
-{template .rustc_flags_arg}
+{template .linker_flags_arg}
 {call buck.arg}
-  {param name : 'linker_args' /}
+  {param name : 'linker_flags' /}
   {param default : '[]' /}
   {param desc}
   The set of additional flags to pass to the linker.
@@ -92,7 +92,7 @@ Note: Buck is currently tested with (and therefore supports) version 1.13.0 of R
 {template .crate_root}
 {call buck.arg}
   {param name : 'crate_root' /}
-  {param default : derived from crate name }
+  {param default : 'derived from crate name' /}
   {param desc}
   <p>
     Set the name of the top-level source file for the crate, which can be used to override the
