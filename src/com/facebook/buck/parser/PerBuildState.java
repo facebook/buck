@@ -274,9 +274,10 @@ public class PerBuildState implements AutoCloseable {
       // depending on the config setting.
       String msg =
           String.format(
-              "Disabling caching for target %s, because one or more input files are under a " +
-                  "symbolic link (%s). This will severely impact performance! To resolve this, " +
-                  "use separate rules and declare dependencies instead of using symbolic links.",
+              "Disabling parser cache for target %s, because one or more input files are under a " +
+                  "symbolic link (%s). This will severely impact the time spent in parsing! To " +
+                  "resolve this, use separate rules and declare dependencies instead of using " +
+                  "symbolic links.",
               node.getBuildTarget(),
               newSymlinksEncountered);
       if (allowSymlinks == ParserConfig.AllowSymlinks.WARN) {
