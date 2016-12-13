@@ -236,6 +236,18 @@ public class JavaTestIntegrationTest {
   }
 
   @Test
+  public void testWithJniWithWhitelist() throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "test_with_jni",
+        temp);
+    workspace.setUp();
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:jtest-skip-dep");
+    result.assertSuccess();
+  }
+
+  @Test
   public void testForkMode() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
