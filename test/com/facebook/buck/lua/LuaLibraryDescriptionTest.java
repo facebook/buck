@@ -18,12 +18,15 @@ package com.facebook.buck.lua;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -34,12 +37,14 @@ public class LuaLibraryDescriptionTest {
 
   @Test
   public void unnamedSource() throws Exception {
+    LuaLibraryBuilder builder =
+        new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
+            .setSrcs(ImmutableSortedSet.of(new FakeSourcePath("some/foo.lua")));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    LuaLibrary library =
-        (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
-            .setSrcs(ImmutableSortedSet.of(new FakeSourcePath("some/foo.lua")))
-            .build(resolver);
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    LuaLibrary library = (LuaLibrary) builder.build(resolver, filesystem, targetGraph);
     assertThat(
         library.getLuaPackageComponents().getModules(),
         Matchers.equalTo(
@@ -50,13 +55,14 @@ public class LuaLibraryDescriptionTest {
 
   @Test
   public void namedSource() throws Exception {
+    LuaLibraryBuilder builder =
+        new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
+            .setSrcs(ImmutableSortedMap.of("bar.lua", new FakeSourcePath("foo.lua")));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    LuaLibrary library =
-        (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
-            .setSrcs(
-                ImmutableSortedMap.of("bar.lua", new FakeSourcePath("foo.lua")))
-            .build(resolver);
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    LuaLibrary library = (LuaLibrary) builder.build(resolver, filesystem, targetGraph);
     assertThat(
         library.getLuaPackageComponents().getModules(),
         Matchers.equalTo(
@@ -67,13 +73,15 @@ public class LuaLibraryDescriptionTest {
 
   @Test
   public void baseModuleSource() throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    LuaLibrary library =
-        (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
+    LuaLibraryBuilder builder =
+        new LuaLibraryBuilder(BuildTargetFactory.newInstance("//some:rule"))
             .setSrcs(ImmutableSortedSet.of(new FakeSourcePath("some/foo.lua")))
-            .setBaseModule("blah")
-            .build(resolver);
+            .setBaseModule("blah");
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    LuaLibrary library = (LuaLibrary) builder.build(resolver, filesystem, targetGraph);
     assertThat(
         library.getLuaPackageComponents().getModules(),
         Matchers.equalTo(

@@ -160,44 +160,56 @@ public class LuaBinaryDescriptionTest {
 
   @Test
   public void duplicateIdenticalModules() throws Exception {
+    LuaLibraryBuilder libraryABuilder =
+        new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:a"))
+            .setSrcs(ImmutableSortedMap.of("foo.lua", new FakeSourcePath("test")));
+    LuaLibraryBuilder libraryBBuilder =
+        new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:b"))
+            .setSrcs(ImmutableSortedMap.of("foo.lua", new FakeSourcePath("test")));
+    LuaBinaryBuilder binaryBuilder =
+        new LuaBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setMainModule("hello.world")
+            .setDeps(
+                ImmutableSortedSet.of(libraryABuilder.getTarget(), libraryBBuilder.getTarget()));
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            libraryABuilder.build(),
+            libraryBBuilder.build(),
+            binaryBuilder.build());
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    LuaLibrary libraryA =
-        (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:a"))
-            .setSrcs(
-                ImmutableSortedMap.of("foo.lua", new FakeSourcePath("test")))
-            .build(resolver);
-    LuaLibrary libraryB =
-        (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:b"))
-            .setSrcs(
-                ImmutableSortedMap.of("foo.lua", new FakeSourcePath("test")))
-            .build(resolver);
-    new LuaBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
-        .setMainModule("hello.world")
-        .setDeps(ImmutableSortedSet.of(libraryA.getBuildTarget(), libraryB.getBuildTarget()))
-        .build(resolver);
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    libraryABuilder.build(resolver, filesystem, targetGraph);
+    libraryBBuilder.build(resolver, filesystem, targetGraph);
+    binaryBuilder.build(resolver, filesystem, targetGraph);
   }
 
   @Test
   public void duplicateConflictingModules() throws Exception {
+    LuaLibraryBuilder libraryABuilder =
+        new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:a"))
+            .setSrcs(ImmutableSortedMap.of("foo.lua", new FakeSourcePath("foo")));
+    LuaLibraryBuilder libraryBBuilder =
+        new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:b"))
+            .setSrcs(ImmutableSortedMap.of("foo.lua", new FakeSourcePath("bar")));
+    LuaBinaryBuilder binaryBuilder =
+        new LuaBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
+            .setMainModule("hello.world")
+            .setDeps(
+                ImmutableSortedSet.of(libraryABuilder.getTarget(), libraryBBuilder.getTarget()));
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            libraryABuilder.build(),
+            libraryBBuilder.build(),
+            binaryBuilder.build());
     BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    LuaLibrary libraryA =
-        (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:a"))
-            .setSrcs(
-                ImmutableSortedMap.of("foo.lua", new FakeSourcePath("foo")))
-            .build(resolver);
-    LuaLibrary libraryB =
-        (LuaLibrary) new LuaLibraryBuilder(BuildTargetFactory.newInstance("//:b"))
-            .setSrcs(
-                ImmutableSortedMap.of("foo.lua", new FakeSourcePath("bar")))
-            .build(resolver);
+        new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
+    libraryABuilder.build(resolver, filesystem, targetGraph);
+    libraryBBuilder.build(resolver, filesystem, targetGraph);
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(Matchers.containsString("conflicting modules for foo.lua"));
-    new LuaBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
-        .setMainModule("hello.world")
-        .setDeps(ImmutableSortedSet.of(libraryA.getBuildTarget(), libraryB.getBuildTarget()))
-        .build(resolver);
+    binaryBuilder.build(resolver, filesystem, targetGraph);
   }
 
   @Test
