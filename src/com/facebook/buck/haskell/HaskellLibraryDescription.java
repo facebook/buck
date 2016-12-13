@@ -173,7 +173,7 @@ public class HaskellLibraryDescription implements
             Sets.union(Type.FLAVOR_VALUES, cxxPlatforms.getFlavors()))
             .isEmpty());
     BuildTarget target =
-        baseTarget.withFlavors(
+        baseTarget.withAppendedFlavors(
             depType == Linker.LinkableDepType.STATIC ?
                 Type.STATIC.getFlavor() :
                 Type.STATIC_PIC.getFlavor(),
@@ -274,16 +274,16 @@ public class HaskellLibraryDescription implements
             baseTarget.getFlavors(),
             Sets.union(Type.FLAVOR_VALUES, cxxPlatforms.getFlavors()))
             .isEmpty());
-    BuildTarget target = baseTarget.withFlavors(cxxPlatform.getFlavor());
+    BuildTarget target = baseTarget.withAppendedFlavors(cxxPlatform.getFlavor());
     switch (depType) {
       case SHARED:
-        target = target.withFlavors(Type.PACKAGE_SHARED.getFlavor());
+        target = target.withAppendedFlavors(Type.PACKAGE_SHARED.getFlavor());
         break;
       case STATIC:
-        target = target.withFlavors(Type.PACKAGE_STATIC.getFlavor());
+        target = target.withAppendedFlavors(Type.PACKAGE_STATIC.getFlavor());
         break;
       case STATIC_PIC:
-        target = target.withFlavors(Type.PACKAGE_STATIC_PIC.getFlavor());
+        target = target.withAppendedFlavors(Type.PACKAGE_STATIC_PIC.getFlavor());
         break;
       default:
         throw new IllegalStateException();
@@ -340,7 +340,8 @@ public class HaskellLibraryDescription implements
             baseTarget.getFlavors(),
             Sets.union(Type.FLAVOR_VALUES, cxxPlatforms.getFlavors()))
             .isEmpty());
-    BuildTarget target = baseTarget.withFlavors(Type.SHARED.getFlavor(), cxxPlatform.getFlavor());
+    BuildTarget target =
+        baseTarget.withAppendedFlavors(Type.SHARED.getFlavor(), cxxPlatform.getFlavor());
     Optional<HaskellLinkRule> linkRule =
         resolver.getRuleOptionalWithType(target, HaskellLinkRule.class);
     if (linkRule.isPresent()) {
