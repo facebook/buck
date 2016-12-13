@@ -34,6 +34,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.ToolProvider;
+import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -45,7 +46,8 @@ import java.util.Optional;
 
 public class RustLibraryDescription implements
     Description<RustLibraryDescription.Arg>,
-    ImplicitDepsInferringDescription<RustLibraryDescription.Arg> {
+    ImplicitDepsInferringDescription<RustLibraryDescription.Arg>,
+    VersionPropagator<RustLibraryDescription.Arg> {
 
   private final RustBuckConfig rustBuckConfig;
   private final CxxPlatform cxxPlatform;

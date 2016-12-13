@@ -26,13 +26,15 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
 
-public class PrebuiltRustLibraryDescription
-    implements Description<PrebuiltRustLibraryDescription.Arg> {
+public class PrebuiltRustLibraryDescription implements
+    Description<PrebuiltRustLibraryDescription.Arg>,
+    VersionPropagator<PrebuiltRustLibraryDescription.Arg> {
 
   @SuppressWarnings("unused")
   private final RustBuckConfig rustBuckConfig;

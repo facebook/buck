@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.CxxPlatforms;
 import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.LinkerProvider;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Flavor;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
@@ -35,6 +36,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.ToolProvider;
+import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -45,7 +47,8 @@ import java.util.Optional;
 
 public class RustTestDescription implements
     Description<RustTestDescription.Arg>,
-    ImplicitDepsInferringDescription<RustTestDescription.Arg> {
+    ImplicitDepsInferringDescription<RustTestDescription.Arg>,
+    VersionRoot<RustTestDescription.Arg> {
 
   private final RustBuckConfig rustBuckConfig;
   private final CxxPlatform cxxPlatform;
@@ -114,6 +117,11 @@ public class RustTestDescription implements
     deps.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
 
     return deps.build();
+  }
+
+  @Override
+  public boolean isVersionRoot(ImmutableSet<Flavor> flavors) {
+    return true;
   }
 
   @SuppressFieldNotInitialized
