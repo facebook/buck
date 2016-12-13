@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
@@ -34,6 +35,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -92,77 +94,79 @@ public class JavaLibraryDescription implements
 
     ImmutableSortedSet<Flavor> flavors = target.getFlavors();
 
-    if (flavors.contains(Javadoc.DOC_JAR)) {
-      BuildRule baseLibrary = getUnflavoredRule(
-          targetGraph,
-          params,
-          resolver,
-          args,
-          target);
+    if (flavors.contains(Javadoc.DOC_JAR) || flavors.contains(JavaLibrary.SRC_JAR)) {
+      BuildTarget unflavored = BuildTarget.of(target.getUnflavoredBuildTarget());
+      BuildRule baseLibrary = resolver.requireRule(unflavored);
 
-      JarShape shape = flavors.contains(JavaLibrary.MAVEN_JAR) ?
+      JarShape shape = params.getBuildTarget().getFlavors().contains(JavaLibrary.MAVEN_JAR) ?
           JarShape.MAVEN : JarShape.SINGLE;
 
       JarShape.Summary summary = shape.gatherDeps(baseLibrary);
-      ImmutableSet<SourcePath> sources = summary.getPackagedRules().stream()
-          .filter(HasSources.class::isInstance)
-          .map(rule -> ((HasSources) rule).getSources())
-          .flatMap(Collection::stream)
-          .collect(MoreCollectors.toImmutableSet());
+      if (flavors.contains(Javadoc.DOC_JAR)) {
+        ImmutableSet<SourcePath> sources = summary.getPackagedRules().stream()
+            .filter(HasSources.class::isInstance)
+            .map(rule -> ((HasSources) rule).getSources())
+            .flatMap(Collection::stream)
+            .collect(MoreCollectors.toImmutableSet());
 
-      // In theory, the only deps we need are the ones that contribute to the sourcepaths. However,
-      // javadoc wants to have classes being documented have all their deps be available somewhere.
-      // Ideally, we'd not build everything, but then we're not able to document any classes that
-      // rely on auto-generated classes, such as those created by the Immutables library. Oh well.
-      // Might as well add them as deps. *sigh*
-      ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
-      // Sourcepath deps
-      deps.addAll(ruleFinder.filterBuildRuleInputs(sources));
-      // Classpath deps
-      deps.add(baseLibrary);
-      deps.addAll(
-          summary.getClasspath().stream()
-              .filter(rule -> HasClasspathEntries.class.isAssignableFrom(rule.getClass()))
-              .flatMap(rule -> rule.getTransitiveClasspathDeps().stream())
-              .iterator());
-      BuildRuleParams emptyParams = params.copyWithDeps(
-          Suppliers.ofInstance(deps.build()),
-          Suppliers.ofInstance(ImmutableSortedSet.of()));
+        // In theory, the only deps we need are the ones that contribute to the sourcepaths.
+        // However, javadoc wants to have classes being documented have all their deps be available
+        // somewhere. Ideally, we'd not build everything, but then we're not able to document any
+        // classes that rely on auto-generated classes, such as those created by the Immutables
+        // library. Oh well. Might as well add them as deps. *sigh*
+        ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
+        // Sourcepath deps
+        deps.addAll(ruleFinder.filterBuildRuleInputs(sources));
+        // Classpath deps
+        deps.add(baseLibrary);
+        deps.addAll(
+            summary.getClasspath().stream()
+                .filter(rule -> HasClasspathEntries.class.isAssignableFrom(rule.getClass()))
+                .flatMap(rule -> rule.getTransitiveClasspathDeps().stream())
+                .iterator());
+        BuildRuleParams emptyParams = params.copyWithDeps(
+            Suppliers.ofInstance(deps.build()),
+            Suppliers.ofInstance(ImmutableSortedSet.of()));
 
-      return new Javadoc(
-          emptyParams,
-          pathResolver,
-          args.mavenCoords,
-          args.mavenPomTemplate,
-          summary.getMavenDeps(),
-          sources);
+        return new Javadoc(
+            emptyParams,
+            pathResolver,
+            args.mavenCoords,
+            args.mavenPomTemplate,
+            summary.getMavenDeps(),
+            sources);
+      } else if (flavors.contains(JavaLibrary.SRC_JAR)) {
+        ImmutableSortedSet<SourcePath> sources = summary.getPackagedRules().stream()
+            .filter(HasSources.class::isInstance)
+            .flatMap(dep -> ((HasSources) dep).getSources().stream())
+            .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+
+        BuildRuleParams emptyParams = params.copyWithDeps(
+            Suppliers.ofInstance(
+                ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(sources))),
+            Suppliers.ofInstance(ImmutableSortedSet.of()));
+
+        return new JavaSourceJar(
+            emptyParams,
+            pathResolver,
+            args.mavenCoords,
+            args.mavenPomTemplate,
+            summary.getMavenDeps(),
+            sources);
+      } else {
+        throw new HumanReadableException("Someone added a new type to JavaLibrary. %s", flavors);
+      }
     }
 
-    if (flavors.contains(JavaLibrary.SRC_JAR)) {
-      BuildRule baseLibrary = getUnflavoredRule(targetGraph, params, resolver, args, target);
-
-      JarShape shape = flavors.contains(JavaLibrary.MAVEN_JAR) ?
-          JarShape.MAVEN : JarShape.SINGLE;
-
-      JarShape.Summary summary = shape.gatherDeps(baseLibrary);
-      ImmutableSortedSet<SourcePath> sources = summary.getPackagedRules().stream()
-          .filter(HasSources.class::isInstance)
-          .map(rule -> ((HasSources) rule).getSources())
-          .flatMap(Collection::stream)
-          .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
-
-      BuildRuleParams emptyParams = params.copyWithDeps(
-          Suppliers.ofInstance(
-              ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(sources))),
-          Suppliers.ofInstance(ImmutableSortedSet.of()));
-
-      return new JavaSourceJar(
-          emptyParams,
+    if (flavors.contains(CalculateAbi.FLAVOR)) {
+      BuildTarget libraryTarget = target.withoutFlavors(CalculateAbi.FLAVOR);
+      resolver.requireRule(libraryTarget);
+      return CalculateAbi.of(
+          params.getBuildTarget(),
           pathResolver,
-          args.mavenCoords,
-          args.mavenPomTemplate,
-          summary.getMavenDeps(),
-          sources);
+          ruleFinder,
+          params,
+          new BuildTargetSourcePath(libraryTarget));
     }
 
     BuildRuleParams paramsWithMavenFlavor = null;
@@ -232,27 +236,6 @@ public class JavaLibraryDescription implements
           args.mavenCoords,
           args.mavenPomTemplate);
     }
-  }
-
-  private <A extends Arg> BuildRule getUnflavoredRule(
-      TargetGraph targetGraph,
-      BuildRuleParams params, BuildRuleResolver resolver, A args, BuildTarget target)
-      throws NoSuchBuildTargetException {
-    BuildTarget unflavored = BuildTarget.of(target.getUnflavoredBuildTarget());
-
-    Optional<BuildRule> optionalBaseLibrary = resolver.getRuleOptional(unflavored);
-    BuildRule baseLibrary;
-    if (!optionalBaseLibrary.isPresent()) {
-      baseLibrary = resolver.addToIndex(
-          createBuildRule(
-              targetGraph,
-              params.copyWithBuildTarget(unflavored),
-              resolver,
-              args));
-    } else {
-      baseLibrary = optionalBaseLibrary.get();
-    }
-    return baseLibrary;
   }
 
   @SuppressFieldNotInitialized
