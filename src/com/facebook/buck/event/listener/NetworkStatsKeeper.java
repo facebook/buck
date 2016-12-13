@@ -21,11 +21,11 @@ import com.facebook.buck.event.NetworkEvent.BytesReceivedEvent;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.util.concurrent.TimeSpan;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import java.time.Duration;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -33,8 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 
 public class NetworkStatsKeeper {
-  private static final TimeSpan DOWNLOAD_SPEED_CALCULATION_INTERVAL =
-      new TimeSpan(1000, TimeUnit.MILLISECONDS);
+  private static final Duration DOWNLOAD_SPEED_CALCULATION_INTERVAL = Duration.ofMillis(1000);
 
   private final AtomicLong bytesDownloaded;
   private final AtomicLong bytesDownloadedInLastInterval;
@@ -65,8 +64,8 @@ public class NetworkStatsKeeper {
   }
 
   private void scheduleDownloadSpeedCalculation() {
-    long calculationInterval = DOWNLOAD_SPEED_CALCULATION_INTERVAL.getDuration();
-    TimeUnit timeUnit = DOWNLOAD_SPEED_CALCULATION_INTERVAL.getUnit();
+    long calculationInterval = DOWNLOAD_SPEED_CALCULATION_INTERVAL.toMillis();
+    TimeUnit timeUnit = TimeUnit.MILLISECONDS;
 
     scheduler.scheduleAtFixedRate(
         this::calculateDownloadSpeedInLastInterval,

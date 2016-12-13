@@ -114,7 +114,6 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.StackedFileHashCache;
 import com.facebook.buck.util.cache.WatchedFileHashCache;
 import com.facebook.buck.util.concurrent.MostExecutors;
-import com.facebook.buck.util.concurrent.TimeSpan;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.CommandMode;
@@ -167,6 +166,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -204,13 +204,11 @@ public final class Main {
 
   private static final String BUCKD_COLOR_DEFAULT_ENV_VAR = "BUCKD_COLOR_DEFAULT";
 
-  private static final TimeSpan DAEMON_SLAYER_TIMEOUT = new TimeSpan(2, TimeUnit.HOURS);
+  private static final Duration DAEMON_SLAYER_TIMEOUT = Duration.ofHours(2);
 
-  private static final TimeSpan SUPER_CONSOLE_REFRESH_RATE =
-      new TimeSpan(100, TimeUnit.MILLISECONDS);
+  private static final Duration SUPER_CONSOLE_REFRESH_RATE = Duration.ofMillis(100);
 
-  private static final TimeSpan HANG_DETECTOR_TIMEOUT =
-      new TimeSpan(5, TimeUnit.MINUTES);
+  private static final Duration HANG_DETECTOR_TIMEOUT = Duration.ofMinutes(5);
 
   /**
    * Path to a directory of static content that should be served by the {@link WebServer}.
@@ -1811,8 +1809,8 @@ public final class Main {
           testLogPath,
           TimeZone.getDefault());
       superConsole.startRenderScheduler(
-          SUPER_CONSOLE_REFRESH_RATE.getDuration(),
-          SUPER_CONSOLE_REFRESH_RATE.getUnit());
+          SUPER_CONSOLE_REFRESH_RATE.toMillis(),
+          TimeUnit.MILLISECONDS);
       return superConsole;
     }
     return new SimpleConsoleEventBusListener(
@@ -1973,7 +1971,7 @@ public final class Main {
 
   private static final class DaemonSlayer extends AbstractScheduledService {
     private final NGContext context;
-    private final TimeSpan slayerTimeout;
+    private final Duration slayerTimeout;
     private int runCount;
     private int lastRunCount;
     private boolean executingCommand;
@@ -2043,9 +2041,9 @@ public final class Main {
     @Override
     protected Scheduler scheduler() {
       return Scheduler.newFixedRateSchedule(
-          slayerTimeout.getDuration(),
-          slayerTimeout.getDuration(),
-          slayerTimeout.getUnit());
+          slayerTimeout.toMillis(),
+          slayerTimeout.toMillis(),
+          TimeUnit.MILLISECONDS);
     }
   }
 }

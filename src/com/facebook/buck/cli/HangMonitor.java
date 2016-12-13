@@ -18,14 +18,15 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.concurrent.TimeSpan;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ServiceManager;
 
+import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -34,12 +35,12 @@ public class HangMonitor extends AbstractScheduledService {
 
   private final Consumer<String> hangReportConsumer;
   private final AtomicInteger eventsSeenSinceLastCheck;
-  private final TimeSpan hangCheckTimeout;
+  private final Duration hangCheckTimeout;
   private volatile String mostRecentReport;
 
   public HangMonitor(
       Consumer<String> hangReportConsumer,
-      TimeSpan hangCheckTimeout) {
+      Duration hangCheckTimeout) {
     this.hangReportConsumer = hangReportConsumer;
     this.eventsSeenSinceLastCheck = new AtomicInteger(0);
     this.hangCheckTimeout = hangCheckTimeout;
@@ -85,9 +86,9 @@ public class HangMonitor extends AbstractScheduledService {
   @Override
   protected Scheduler scheduler() {
     return Scheduler.newFixedRateSchedule(
-        hangCheckTimeout.getDuration(),
-        hangCheckTimeout.getDuration(),
-        hangCheckTimeout.getUnit());
+        hangCheckTimeout.toMillis(),
+        hangCheckTimeout.toMillis(),
+        TimeUnit.MILLISECONDS);
   }
 
   public static class AutoStartInstance {
@@ -96,7 +97,7 @@ public class HangMonitor extends AbstractScheduledService {
 
     public AutoStartInstance(
         Consumer<String> hangReportConsumer,
-        TimeSpan hangCheckTimeout) {
+        Duration hangCheckTimeout) {
 
       LOG.info("HangMonitorAutoStart");
       hangMonitor = new HangMonitor(hangReportConsumer, hangCheckTimeout);

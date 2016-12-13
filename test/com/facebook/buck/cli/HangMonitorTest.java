@@ -20,12 +20,12 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
-import com.facebook.buck.util.concurrent.TimeSpan;
 import com.google.common.util.concurrent.SettableFuture;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -74,9 +74,7 @@ public class HangMonitorTest {
       sleepingThreadRunning.get(1, TimeUnit.SECONDS);
 
       final SettableFuture<String> result = SettableFuture.create();
-      HangMonitor hangMonitor = new HangMonitor(
-          result::set,
-          new TimeSpan(10, TimeUnit.MILLISECONDS));
+      HangMonitor hangMonitor = new HangMonitor(result::set, Duration.ofMillis(10));
       hangMonitor.runOneIteration();
       assertThat(result.isDone(), Matchers.is(true));
       String report = result.get();
@@ -91,7 +89,7 @@ public class HangMonitorTest {
     final AtomicBoolean didGetReport = new AtomicBoolean(false);
     HangMonitor hangMonitor = new HangMonitor(
         input -> didGetReport.set(true),
-        new TimeSpan(10, TimeUnit.MILLISECONDS));
+        Duration.ofMillis(10));
     hangMonitor.onWorkAdvance(new WorkEvent());
     hangMonitor.runOneIteration();
     assertThat(didGetReport.get(), Matchers.is(false));
