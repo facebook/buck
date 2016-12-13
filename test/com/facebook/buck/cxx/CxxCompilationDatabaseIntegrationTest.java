@@ -79,6 +79,10 @@ public class CxxCompilationDatabaseIntegrationTest {
               "-Xclang",
               "." + Strings.repeat("/", 249)) :
           ImmutableList.of();
+  private static final ImmutableList<String> MORE_COMPILER_SPECIFIC_FLAGS =
+      Platform.detect() == Platform.LINUX ?
+          ImmutableList.of("-gno-record-gcc-switches") :
+          ImmutableList.of();
   private static final boolean PREPROCESSOR_SUPPORTS_HEADER_MAPS =
       Platform.detect() == Platform.MACOS;
 
@@ -150,6 +154,8 @@ public class CxxCompilationDatabaseIntegrationTest {
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
             .add("c++")
+            .add("-fdebug-prefix-map=" + rootPath + "=.")
+            .addAll(MORE_COMPILER_SPECIFIC_FLAGS)
             .add("-c")
             .add("-MD")
             .add("-MF")
@@ -221,6 +227,8 @@ public class CxxCompilationDatabaseIntegrationTest {
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
             .add("c++")
+            .add("-fdebug-prefix-map=" + rootPath + "=.")
+            .addAll(MORE_COMPILER_SPECIFIC_FLAGS)
             .add("-c")
             .add("-MD")
             .add("-MF")
@@ -287,6 +295,8 @@ public class CxxCompilationDatabaseIntegrationTest {
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
             .add("c++")
+            .add("-fdebug-prefix-map=" + rootPath + "=.")
+            .addAll(MORE_COMPILER_SPECIFIC_FLAGS)
             .add("-c")
             .add("-MD")
             .add("-MF")
@@ -357,6 +367,8 @@ public class CxxCompilationDatabaseIntegrationTest {
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
             .add("c++")
+            .add("-fdebug-prefix-map=" + rootPath + "=.")
+            .addAll(MORE_COMPILER_SPECIFIC_FLAGS)
             .add("-c")
             .add("-MD")
             .add("-MF")

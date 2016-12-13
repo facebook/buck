@@ -26,12 +26,9 @@ import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import java.io.File;
-import java.nio.file.Paths;
 import java.util.Optional;
 
 public class CxxPlatforms {
@@ -74,8 +71,8 @@ public class CxxPlatforms {
       String sharedLibraryVersionedExtensionFormat,
       String staticLibraryExtension,
       String objectFileExtension,
-      Optional<DebugPathSanitizer> compilerDebugPathSanitizer,
-      Optional<DebugPathSanitizer> assemblerDebugPathSanitizer,
+      DebugPathSanitizer compilerDebugPathSanitizer,
+      DebugPathSanitizer assemblerDebugPathSanitizer,
       ImmutableMap<String, String> flagMacros) {
     // TODO(bhamiltoncx, andrewjcg): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
@@ -107,20 +104,8 @@ public class CxxPlatforms {
         .setSharedLibraryVersionedExtensionFormat(sharedLibraryVersionedExtensionFormat)
         .setStaticLibraryExtension(staticLibraryExtension)
         .setObjectFileExtension(objectFileExtension)
-        .setCompilerDebugPathSanitizer(
-            compilerDebugPathSanitizer.orElse(
-                new MungingDebugPathSanitizer(
-                    config.getDebugPathSanitizerLimit(),
-                    File.separatorChar,
-                    Paths.get("."),
-                    ImmutableBiMap.of())))
-        .setAssemblerDebugPathSanitizer(
-            assemblerDebugPathSanitizer.orElse(
-                new MungingDebugPathSanitizer(
-                    config.getDebugPathSanitizerLimit(),
-                    File.separatorChar,
-                    Paths.get("."),
-                    ImmutableBiMap.of())))
+        .setCompilerDebugPathSanitizer(compilerDebugPathSanitizer)
+        .setAssemblerDebugPathSanitizer(assemblerDebugPathSanitizer)
         .setFlagMacros(flagMacros);
 
 
@@ -174,8 +159,8 @@ public class CxxPlatforms {
         defaultPlatform.getSharedLibraryVersionedExtensionFormat(),
         defaultPlatform.getStaticLibraryExtension(),
         defaultPlatform.getObjectFileExtension(),
-        Optional.of(defaultPlatform.getCompilerDebugPathSanitizer()),
-        Optional.of(defaultPlatform.getAssemblerDebugPathSanitizer()),
+        defaultPlatform.getCompilerDebugPathSanitizer(),
+        defaultPlatform.getAssemblerDebugPathSanitizer(),
         defaultPlatform.getFlagMacros());
   }
 

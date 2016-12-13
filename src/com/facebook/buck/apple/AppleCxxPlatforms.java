@@ -33,8 +33,10 @@ import com.facebook.buck.cxx.LinkerProvider;
 import com.facebook.buck.cxx.Linkers;
 import com.facebook.buck.cxx.MungingDebugPathSanitizer;
 import com.facebook.buck.cxx.PosixNmSymbolNameTool;
+import com.facebook.buck.cxx.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.cxx.PreprocessorProvider;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.ConstantToolProvider;
@@ -80,6 +82,7 @@ public class AppleCxxPlatforms {
   private static final Path USR_BIN = Paths.get("usr/bin");
 
   public static AppleCxxPlatform build(
+      ProjectFilesystem filesystem,
       AppleSdk targetSdk,
       String minVersion,
       String targetArchitecture,
@@ -89,6 +92,7 @@ public class AppleCxxPlatforms {
       Optional<ProcessExecutor> processExecutor,
       Optional<AppleToolchain> swiftToolChain) {
     return buildWithExecutableChecker(
+        filesystem,
         targetSdk,
         minVersion,
         targetArchitecture,
@@ -102,6 +106,7 @@ public class AppleCxxPlatforms {
 
   @VisibleForTesting
   static AppleCxxPlatform buildWithExecutableChecker(
+      ProjectFilesystem filesystem,
       AppleSdk targetSdk,
       String minVersion,
       String targetArchitecture,
@@ -288,11 +293,13 @@ public class AppleCxxPlatforms {
       sanitizerPaths.put(sdkPaths.getDeveloperPath().get(), Paths.get("APPLE_DEVELOPER_DIR"));
     }
 
-    DebugPathSanitizer compilerDebugPathSanitizer = new MungingDebugPathSanitizer(
+    DebugPathSanitizer compilerDebugPathSanitizer = new PrefixMapDebugPathSanitizer(
         config.getDebugPathSanitizerLimit(),
         File.separatorChar,
         Paths.get("."),
-        sanitizerPaths.build());
+        sanitizerPaths.build(),
+        filesystem.getRootPath().toAbsolutePath(),
+        CxxToolProvider.Type.CLANG);
     DebugPathSanitizer assemblerDebugPathSanitizer = new MungingDebugPathSanitizer(
         config.getDebugPathSanitizerLimit(),
         File.separatorChar,
@@ -390,8 +397,8 @@ public class AppleCxxPlatforms {
         "%s.dylib",
         "a",
         "o",
-        Optional.of(compilerDebugPathSanitizer),
-        Optional.of(assemblerDebugPathSanitizer),
+        compilerDebugPathSanitizer,
+        assemblerDebugPathSanitizer,
         macros);
 
     ApplePlatform applePlatform = targetSdk.getApplePlatform();

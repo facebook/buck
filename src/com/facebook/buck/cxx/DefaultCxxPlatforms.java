@@ -16,14 +16,17 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.rules.ConstantToolProvider;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -51,6 +54,7 @@ public class DefaultCxxPlatforms {
 
   public static CxxPlatform build(
       Platform platform,
+      ProjectFilesystem filesystem,
       CxxBuckConfig config) {
     String sharedLibraryExtension;
     String sharedLibraryVersionedExtensionFormat;
@@ -60,6 +64,7 @@ public class DefaultCxxPlatforms {
     Path defaultCxxFrontend;
     LinkerProvider.Type linkerType;
     Archiver archiver;
+    DebugPathSanitizer compilerSanitizer;
     switch (platform) {
       case LINUX:
         sharedLibraryExtension = "so";
@@ -70,6 +75,13 @@ public class DefaultCxxPlatforms {
         defaultCxxFrontend = DEFAULT_CXX_FRONTEND;
         linkerType = LinkerProvider.Type.GNU;
         archiver = new GnuArchiver(new HashedFileTool(DEFAULT_AR));
+        compilerSanitizer = new PrefixMapDebugPathSanitizer(
+            config.getDebugPathSanitizerLimit(),
+            File.separatorChar,
+            Paths.get("."),
+            ImmutableBiMap.of(),
+            filesystem.getRootPath().toAbsolutePath(),
+            CxxToolProvider.Type.GCC);
         break;
       case MACOS:
         sharedLibraryExtension = "dylib";
@@ -80,6 +92,13 @@ public class DefaultCxxPlatforms {
         defaultCxxFrontend = DEFAULT_OSX_CXX_FRONTEND;
         linkerType = LinkerProvider.Type.DARWIN;
         archiver = new BsdArchiver(new HashedFileTool(DEFAULT_AR));
+        compilerSanitizer = new PrefixMapDebugPathSanitizer(
+            config.getDebugPathSanitizerLimit(),
+            File.separatorChar,
+            Paths.get("."),
+            ImmutableBiMap.of(),
+            filesystem.getRootPath().toAbsolutePath(),
+            CxxToolProvider.Type.CLANG);
         break;
       case WINDOWS:
         sharedLibraryExtension = "dll";
@@ -90,6 +109,13 @@ public class DefaultCxxPlatforms {
         defaultCxxFrontend = DEFAULT_CXX_FRONTEND;
         linkerType = LinkerProvider.Type.WINDOWS;
         archiver = new WindowsArchiver(new HashedFileTool(DEFAULT_AR));
+        compilerSanitizer = new PrefixMapDebugPathSanitizer(
+            config.getDebugPathSanitizerLimit(),
+            File.separatorChar,
+            Paths.get("."),
+            ImmutableBiMap.of(),
+            filesystem.getRootPath().toAbsolutePath(),
+            CxxToolProvider.Type.GCC);
         break;
       case FREEBSD:
         sharedLibraryExtension = "so";
@@ -100,6 +126,13 @@ public class DefaultCxxPlatforms {
         defaultCxxFrontend = DEFAULT_CXX_FRONTEND;
         linkerType = LinkerProvider.Type.GNU;
         archiver = new BsdArchiver(new HashedFileTool(DEFAULT_AR));
+        compilerSanitizer = new PrefixMapDebugPathSanitizer(
+            config.getDebugPathSanitizerLimit(),
+            File.separatorChar,
+            Paths.get("."),
+            ImmutableBiMap.of(),
+            filesystem.getRootPath().toAbsolutePath(),
+            CxxToolProvider.Type.GCC);
         break;
       //$CASES-OMITTED$
       default:
@@ -157,8 +190,12 @@ public class DefaultCxxPlatforms {
         sharedLibraryVersionedExtensionFormat,
         staticLibraryExtension,
         objectFileExtension,
-        Optional.empty(),
-        Optional.empty(),
+        compilerSanitizer,
+        new MungingDebugPathSanitizer(
+            config.getDebugPathSanitizerLimit(),
+            File.separatorChar,
+            Paths.get("."),
+            ImmutableBiMap.of()),
         ImmutableMap.of());
   }
 

@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.PreprocessorProvider;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.environment.Platform;
@@ -46,9 +47,11 @@ public class OcamlBuckConfig {
 
   public OcamlBuckConfig(
       Platform platform,
+      ProjectFilesystem filesystem,
       BuckConfig delegate) {
     this.delegate = delegate;
-    this.cxxPlatform = DefaultCxxPlatforms.build(platform, new CxxBuckConfig(delegate));
+    this.cxxPlatform =
+        DefaultCxxPlatforms.build(platform, filesystem, new CxxBuckConfig(delegate));
   }
 
   public Optional<Tool> getOcamlCompiler() {

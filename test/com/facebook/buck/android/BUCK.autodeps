@@ -67,7 +67,6 @@
       "//src/com/facebook/buck/android:steps",
       "//src/com/facebook/buck/android:utils",
       "//src/com/facebook/buck/artifact_cache:artifact_cache",
-      "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/model:model",

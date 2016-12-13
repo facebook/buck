@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -59,6 +60,7 @@ public class AppleNativeIntegrationTestUtils {
     }
     AppleSdk anySdk = anySdkOptional.get();
     AppleCxxPlatform appleCxxPlatform = AppleCxxPlatforms.build(
+        new FakeProjectFilesystem(),
         anySdk,
         "fakeversion",
         "fakearch",

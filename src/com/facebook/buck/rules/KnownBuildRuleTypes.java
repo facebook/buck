@@ -251,6 +251,7 @@ public class KnownBuildRuleTypes {
   }
 
   private static ImmutableList<AppleCxxPlatform> buildAppleCxxPlatforms(
+      ProjectFilesystem filesystem,
       Supplier<Optional<Path>> appleDeveloperDirectorySupplier,
       ImmutableList<Path> extraToolchainPaths,
       ImmutableList<Path> extraPlatformPaths,
@@ -298,6 +299,7 @@ public class KnownBuildRuleTypes {
       LOG.debug("SDK %s using default version %s", sdk, targetSdkVersion);
       for (String architecture : sdk.getArchitectures()) {
         AppleCxxPlatform appleCxxPlatform = AppleCxxPlatforms.build(
+            filesystem,
             sdk,
             targetSdkVersion,
             architecture,
@@ -333,6 +335,7 @@ public class KnownBuildRuleTypes {
     SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
 
     final ImmutableList<AppleCxxPlatform> appleCxxPlatforms = buildAppleCxxPlatforms(
+        filesystem,
         appleConfig.getAppleDeveloperDirectorySupplier(processExecutor),
         appleConfig.getExtraToolchainPaths(),
         appleConfig.getExtraPlatformPaths(),
@@ -405,7 +408,8 @@ public class KnownBuildRuleTypes {
           appleCxxPlatform.getCxxPlatform());
     }
 
-    CxxPlatform defaultHostCxxPlatform = DefaultCxxPlatforms.build(platform, cxxBuckConfig);
+    CxxPlatform defaultHostCxxPlatform =
+        DefaultCxxPlatforms.build(platform, filesystem, cxxBuckConfig);
     cxxSystemPlatformsBuilder.put(defaultHostCxxPlatform.getFlavor(), defaultHostCxxPlatform);
     ImmutableMap<Flavor, CxxPlatform> cxxSystemPlatformsMap = cxxSystemPlatformsBuilder.build();
 
@@ -748,7 +752,7 @@ public class KnownBuildRuleTypes {
             pythonPlatforms));
     builder.register(new LuaLibraryDescription());
     builder.register(new NdkLibraryDescription(ndkVersion, ndkCxxPlatforms));
-    OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(platform, config);
+    OcamlBuckConfig ocamlBuckConfig = new OcamlBuckConfig(platform, filesystem, config);
     builder.register(new OcamlBinaryDescription(ocamlBuckConfig));
     builder.register(new OcamlLibraryDescription(ocamlBuckConfig));
     builder.register(new PrebuiltCxxLibraryDescription(cxxBuckConfig, cxxPlatforms));

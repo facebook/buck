@@ -65,6 +65,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.swift.SwiftPlatform;
 import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestLogSink;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.util.HumanReadableException;
@@ -156,6 +157,7 @@ public class AppleCxxPlatformsTest {
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
+            new FakeProjectFilesystem(),
             targetSdk,
             "7.0",
             "armv7",
@@ -261,6 +263,7 @@ public class AppleCxxPlatformsTest {
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
+            new FakeProjectFilesystem(),
             targetSdk,
             "2.0",
             "armv7k",
@@ -360,6 +363,7 @@ public class AppleCxxPlatformsTest {
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
+            new FakeProjectFilesystem(),
             targetSdk,
             "9.1",
             "arm64",
@@ -459,6 +463,7 @@ public class AppleCxxPlatformsTest {
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
+            new FakeProjectFilesystem(),
             targetSdk,
             "7.0",
             "cha+rs",
@@ -506,6 +511,7 @@ public class AppleCxxPlatformsTest {
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
+            new FakeProjectFilesystem(),
             targetSdk,
             "7.0",
             "armv7",
@@ -564,6 +570,7 @@ public class AppleCxxPlatformsTest {
         .build();
 
     AppleCxxPlatforms.buildWithExecutableChecker(
+        new FakeProjectFilesystem(),
         targetSdk,
         "7.0",
         "armv7",
@@ -606,6 +613,7 @@ public class AppleCxxPlatformsTest {
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
+            new FakeProjectFilesystem(),
             targetSdk,
             "7.0",
             "armv7",
@@ -659,6 +667,7 @@ public class AppleCxxPlatformsTest {
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
+            new FakeProjectFilesystem(),
             targetSdk,
             "2.0",
             "armv7k",
@@ -712,6 +721,7 @@ public class AppleCxxPlatformsTest {
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithExecutableChecker(
+            new FakeProjectFilesystem(),
             targetSdk,
             "9.1",
             "arm64",
@@ -867,6 +877,7 @@ public class AppleCxxPlatformsTest {
         .setToolchains(ImmutableList.of(toolchain))
         .build();
     return AppleCxxPlatforms.buildWithExecutableChecker(
+        new FakeProjectFilesystem(),
         targetSdk,
         "7.0",
         "armv7",
@@ -1038,6 +1049,7 @@ public class AppleCxxPlatformsTest {
         .add(Paths.get("Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-stdlib-tool"))
         .build();
     return AppleCxxPlatforms.buildWithExecutableChecker(
+        new FakeProjectFilesystem(),
         FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_SDK,
         "7.0",
         "i386",

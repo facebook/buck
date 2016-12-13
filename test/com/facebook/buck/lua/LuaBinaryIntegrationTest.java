@@ -38,6 +38,7 @@ import com.facebook.buck.rules.DefaultCellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.ParameterizedTests;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -120,6 +121,7 @@ public class LuaBinaryIntegrationTest {
     CxxPlatform cxxPlatform =
         DefaultCxxPlatforms.build(
             Platform.detect(),
+            new FakeProjectFilesystem(),
             new CxxBuckConfig(FakeBuckConfig.builder().build()));
     ProcessExecutorParams params = ProcessExecutorParams.builder()
         .setCommand(

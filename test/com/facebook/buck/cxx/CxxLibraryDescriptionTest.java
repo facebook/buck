@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.instanceOf;
@@ -251,10 +252,10 @@ public class CxxLibraryDescriptionTest {
     CxxSymlinkTreeHeaders publicHeaders = (CxxSymlinkTreeHeaders) publicInput.getIncludes().get(0);
     assertThat(
         publicHeaders.getIncludeType(),
-        Matchers.equalTo(CxxPreprocessables.IncludeType.LOCAL));
+        equalTo(CxxPreprocessables.IncludeType.LOCAL));
     assertThat(
         publicHeaders.getNameToPathMap(),
-        Matchers.equalTo(
+        equalTo(
             ImmutableMap.<Path, SourcePath>of(
                 Paths.get(headerName),
                 new FakeSourcePath(headerName),
@@ -262,7 +263,7 @@ public class CxxLibraryDescriptionTest {
                 new BuildTargetSourcePath(genHeaderTarget))));
     assertThat(
         publicHeaders.getHeaderMap(),
-        Matchers.equalTo(
+        equalTo(
             getHeaderMaps(
                 filesystem,
                 target,
@@ -286,16 +287,16 @@ public class CxxLibraryDescriptionTest {
         (CxxSymlinkTreeHeaders) privateInput.getIncludes().get(0);
     assertThat(
         privateHeaders.getIncludeType(),
-        Matchers.equalTo(CxxPreprocessables.IncludeType.LOCAL));
+        equalTo(CxxPreprocessables.IncludeType.LOCAL));
     assertThat(
         privateHeaders.getNameToPathMap(),
-        Matchers.equalTo(
+        equalTo(
             ImmutableMap.<Path, SourcePath>of(
                 Paths.get(privateHeaderName),
                 new FakeSourcePath(privateHeaderName))));
     assertThat(
         privateHeaders.getHeaderMap(),
-        Matchers.equalTo(
+        equalTo(
             getHeaderMaps(
                 filesystem,
                 target,
@@ -557,16 +558,16 @@ public class CxxLibraryDescriptionTest {
     CxxSymlinkTreeHeaders publicHeaders = (CxxSymlinkTreeHeaders) publicInput.getIncludes().get(0);
     assertThat(
         publicHeaders.getIncludeType(),
-        Matchers.equalTo(CxxPreprocessables.IncludeType.LOCAL));
+        equalTo(CxxPreprocessables.IncludeType.LOCAL));
     assertThat(
         publicHeaders.getNameToPathMap(),
-        Matchers.equalTo(
+        equalTo(
             ImmutableMap.<Path, SourcePath>of(
                 Paths.get(genHeaderName),
                 new BuildTargetSourcePath(genHeaderTarget))));
     assertThat(
         publicHeaders.getHeaderMap(),
-        Matchers.equalTo(
+        equalTo(
             getHeaderMaps(
                 filesystem,
                 target,
@@ -1194,7 +1195,7 @@ public class CxxLibraryDescriptionTest {
             .build(resolver);
     assertThat(
         rule.getNativeLinkTargetMode(CxxPlatformUtils.DEFAULT_PLATFORM),
-        Matchers.equalTo(NativeLinkTargetMode.library("libsoname.so")));
+        equalTo(NativeLinkTargetMode.library("libsoname.so")));
   }
 
   @Test
@@ -1315,7 +1316,7 @@ public class CxxLibraryDescriptionTest {
     CxxLibrary library = (CxxLibrary) libraryBuilder.build(resolver, filesystem, targetGraph);
     assertThat(
         library.getNativeLinkTargetInput(platform).getLibraries(),
-        Matchers.equalTo(libraries));
+        equalTo(libraries));
   }
 
   @Test
@@ -1370,7 +1371,7 @@ public class CxxLibraryDescriptionTest {
         ImmutableSortedSet.of(
             SourceWithFlags.of(new PathSourcePath(filesystem, Paths.get("test.cpp")))));
     Archive lib = (Archive) libBuilder.build(resolver, filesystem);
-    assertThat(lib.getContents(), Matchers.equalTo(Archive.Contents.THIN));
+    assertThat(lib.getContents(), equalTo(Archive.Contents.THIN));
   }
 
   @Test
@@ -1386,7 +1387,7 @@ public class CxxLibraryDescriptionTest {
     CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(resolver, filesystem);
     assertThat(
         rule.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
-        Matchers.equalTo(NativeLinkable.Linkage.STATIC));
+        equalTo(NativeLinkable.Linkage.STATIC));
   }
 
 }

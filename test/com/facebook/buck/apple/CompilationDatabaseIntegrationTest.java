@@ -247,13 +247,11 @@ public class CompilationDatabaseIntegrationTest {
     CxxCompilationDatabaseEntry entry = fileToEntry.get(key);
     assertNotNull("There should be an entry for " + key + ".", entry);
 
-    String clang = tmpRoot
-        .resolve(XCODE_DEVELOPER_DIR)
+    Path xcodeDeveloperDir = tmpRoot.resolve(XCODE_DEVELOPER_DIR);
+    Path platformDir = xcodeDeveloperDir.resolve("Platforms/iPhoneSimulator.platform");
+    Path sdkRoot = platformDir.resolve("Developer/SDKs/iPhoneSimulator.sdk");
+    String clang = xcodeDeveloperDir
         .resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang")
-        .toString();
-    String sdkRoot = tmpRoot
-        .resolve(XCODE_DEVELOPER_DIR)
-        .resolve("Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk")
         .toString();
     String language = "objective-c";
     String languageStandard = "-std=gnu11";
@@ -269,7 +267,7 @@ public class CompilationDatabaseIntegrationTest {
 
     ImmutableList<String> commandArgs2 = ImmutableList.of(
         "-isysroot",
-        sdkRoot,
+        sdkRoot.toString(),
         "-arch",
         "x86_64",
         "'-mios-simulator-version-min=8.0'");
@@ -305,6 +303,10 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add("." + Strings.repeat("/", 399));
     commandArgs.add("-x");
     commandArgs.add(language);
+    commandArgs.add("'-fdebug-prefix-map=" + tmpRoot + "=.'");
+    commandArgs.add("'-fdebug-prefix-map=" + xcodeDeveloperDir + "=APPLE_DEVELOPER_DIR'");
+    commandArgs.add("'-fdebug-prefix-map=" + platformDir + "=APPLE_PLATFORM_DIR'");
+    commandArgs.add("'-fdebug-prefix-map=" + sdkRoot + "=APPLE_SDKROOT'");
     commandArgs.add("-c");
     commandArgs.add("-MD");
     commandArgs.add("-MF");

@@ -712,9 +712,6 @@ public class CxxPreprocessAndCompileStep implements Step {
     return inputType.isAssembly() ? assemblerSanitizer : compilerSanitizer;
   }
 
-  // We need to do binary rewriting if doing combined preprocessing and compiling or if we're
-  // building assembly code (which doesn't respect line-marker-re-writing to fixup the
-  // DW_AT_comp_dir.
   private boolean shouldSanitizeOutputBinary() {
     return inputType.isAssembly() ||
         (operation == Operation.COMPILE_MUNGE_DEBUGINFO && compiler.shouldSanitizeOutputBinary());
