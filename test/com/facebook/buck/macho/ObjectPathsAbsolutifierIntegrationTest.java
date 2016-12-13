@@ -301,9 +301,11 @@ public class ObjectPathsAbsolutifierIntegrationTest {
     assertThat(checkCodeSigning(appPath), equalTo(true));
 
     Path unsanizitedBinaryPath = workspace.getPath(
-        filesystem.getBuckPaths().getScratchDir()
-            .resolve(sanitizedBinaryPath.getParent())
+        filesystem.getBuckPaths().getTmpDir()
+            .resolve(sanitizedBinaryPath.getParent().getFileName())
             .resolve(sanitizedBinaryPath.getFileName()));
+
+    filesystem.mkdirs(unsanizitedBinaryPath.getParent());
 
     // copy bundle
     MoreFiles.copyRecursively(sanitizedBinaryPath.getParent(), unsanizitedBinaryPath.getParent());
