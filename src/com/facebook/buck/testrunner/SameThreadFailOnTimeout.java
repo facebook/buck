@@ -65,7 +65,7 @@ class SameThreadFailOnTimeout extends Statement {
       System.err.printf("Dumping threads for timed-out test %s:%n", testName);
       for (Map.Entry<Thread, StackTraceElement[]> t : Thread.getAllStackTraces().entrySet()) {
         Thread thread = t.getKey();
-        System.err.printf("\"%s\" #%d%n", thread.getName(), thread.getId(), thread.getId());
+        System.err.printf("\"%s\" #%d%n", thread.getName(), thread.getId());
         System.err.printf("\tjava.lang.Thread.State: %s%n", thread.getState());
         for (StackTraceElement element : t.getValue()) {
           System.err.printf("\t\t at %s%n", element);

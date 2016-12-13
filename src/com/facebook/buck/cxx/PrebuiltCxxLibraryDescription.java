@@ -621,7 +621,7 @@ public class PrebuiltCxxLibraryDescription implements
 
         switch (headerVisibility) {
           case PUBLIC:
-            if (Preconditions.checkNotNull(hasHeaders(cxxPlatform))) {
+            if (hasHeaders(cxxPlatform)) {
               CxxPreprocessables.addHeaderSymlinkTree(
                   builder,
                   getBuildTarget(),

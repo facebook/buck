@@ -409,7 +409,7 @@ public final class Escaper {
       char c = 0;
       boolean valid = false;
       for (int i = 0; i < maxCodeLength && pos < escaped.length(); i++) {
-        final char digit = (char) table.indexOf(Character.toLowerCase(escaped.charAt(pos)));
+        final int digit = table.indexOf(Character.toLowerCase(escaped.charAt(pos)));
         if (digit == -1 || digit >= base) {
           break;
         }
