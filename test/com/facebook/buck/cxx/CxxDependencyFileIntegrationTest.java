@@ -46,8 +46,7 @@ public class CxxDependencyFileIntegrationTest {
   public static Collection<Object[]> data() {
     return ImmutableList.of(
         new Object[]{CxxPreprocessMode.COMBINED},
-        new Object[]{CxxPreprocessMode.SEPARATE},
-        new Object[]{CxxPreprocessMode.PIPED});
+        new Object[]{CxxPreprocessMode.SEPARATE});
   }
 
   @Parameterized.Parameter

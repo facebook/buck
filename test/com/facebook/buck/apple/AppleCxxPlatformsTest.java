@@ -37,7 +37,6 @@ import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatformUtils;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
-import com.facebook.buck.cxx.CxxPreprocessMode;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.Linker;
@@ -785,8 +784,7 @@ public class AppleCxxPlatformsTest {
                   CxxSource.of(
                       CxxSource.Type.CXX,
                       new FakeSourcePath(source),
-                      ImmutableList.of()),
-                  CxxPreprocessMode.COMBINED);
+                      ImmutableList.of()));
           break;
         case PREPROCESS:
           rule =

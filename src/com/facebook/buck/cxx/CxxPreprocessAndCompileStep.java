@@ -297,141 +297,6 @@ public class CxxPreprocessAndCompileStep implements Step {
     }
   }
 
-  private int executePiped(ExecutionContext context)
-      throws IOException, InterruptedException {
-    Preconditions.checkState(preprocessorCommand.isPresent());
-    Preconditions.checkState(compilerCommand.isPresent());
-    ByteArrayOutputStream preprocessError = new ByteArrayOutputStream();
-    ProcessExecutorParams preprocessParams = makeSubprocessBuilder(
-            context,
-            preprocessorCommand.get().getEnvironment())
-        .setCommand(
-            ImmutableList.<String>builder()
-                .addAll(preprocessorCommand.get().getCommandPrefix())
-                .addAll(makePreprocessArguments(context.getAnsi().isAnsiTerminal()))
-                .build())
-        .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
-        .build();
-
-    ByteArrayOutputStream compileError = new ByteArrayOutputStream();
-    ProcessExecutorParams compileParams = makeSubprocessBuilder(
-            context,
-            compilerCommand.get().getEnvironment())
-        .setCommand(
-            ImmutableList.<String>builder()
-                .addAll(compilerCommand.get().getCommandPrefix())
-                .addAll(
-                    makeCompileArguments(
-                        "-",
-                        inputType.getPreprocessedLanguage(),
-                        /* preprocessable */ false,
-                        context.getAnsi().isAnsiTerminal()))
-                .build())
-        .setRedirectInput(ProcessBuilder.Redirect.PIPE)
-        .build();
-
-    ProcessExecutor.LaunchedProcess preprocess = null;
-    ProcessExecutor.LaunchedProcess compile = null;
-    LineProcessorRunnable errorProcessorPreprocess = null;
-    LineProcessorRunnable errorProcessorCompile = null;
-    LineProcessorRunnable lineDirectiveMunger = null;
-
-    CxxErrorTransformerFactory errorStreamTransformerFactory =
-        createErrorTransformerFactory(context);
-
-    ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
-    try {
-      if (LOG.isDebugEnabled()) {
-        LOG.debug(
-            "Running command (pwd=%s): %s",
-            preprocessParams.getDirectory(),
-            getDescription(context));
-      }
-
-      preprocess = executor.launchProcess(preprocessParams);
-      compile = executor.launchProcess(compileParams);
-
-      errorProcessorPreprocess = errorStreamTransformerFactory.createTransformerThread(
-          context,
-          preprocess.getErrorStream(),
-          preprocessError);
-
-        errorProcessorPreprocess.start();
-
-      errorProcessorCompile = errorStreamTransformerFactory.createTransformerThread(
-          context,
-          compile.getErrorStream(),
-          compileError);
-
-      errorProcessorCompile.start();
-
-      lineDirectiveMunger = createPreprocessorOutputTransformerFactory()
-          .createTransformerThread(context, preprocess.getInputStream(), compile.getOutputStream());
-
-      lineDirectiveMunger.start();
-
-      int compileStatus = executor.waitForLaunchedProcess(compile).getExitCode();
-      int preprocessStatus = executor.waitForLaunchedProcess(preprocess).getExitCode();
-
-      safeCloseProcessor(errorProcessorPreprocess);
-      safeCloseProcessor(errorProcessorCompile);
-
-      String preprocessErr = new String(preprocessError.toByteArray());
-      if (!preprocessErr.isEmpty()) {
-        context.getBuckEventBus().post(
-            createConsoleEvent(
-                context,
-                preprocessorCommand.get().supportsColorsInDiagnostics(),
-                preprocessStatus == 0 ? Level.WARNING : Level.SEVERE,
-                preprocessErr));
-      }
-
-      String compileErr = new String(compileError.toByteArray());
-      if (!compileErr.isEmpty()) {
-        context.getBuckEventBus().post(
-            createConsoleEvent(
-                context,
-                compilerCommand.get().supportsColorsInDiagnostics(),
-                compileStatus == 0 ? Level.WARNING : Level.SEVERE,
-                compileErr));
-      }
-
-      if (preprocessStatus != 0) {
-        LOG.warn("error %d %s(preprocess) %s: %s", preprocessStatus,
-            operation.toString().toLowerCase(), input, preprocessErr);
-      }
-
-      if (compileStatus != 0) {
-        LOG.warn("error %d %s(compile) %s: %s", compileStatus,
-            operation.toString().toLowerCase(), input, compileErr);
-      }
-
-      if (preprocessStatus != 0) {
-        return preprocessStatus;
-      }
-
-      if (compileStatus != 0) {
-        return compileStatus;
-      }
-
-      return 0;
-    } finally {
-      if (preprocess != null) {
-        executor.destroyLaunchedProcess(preprocess);
-        executor.waitForLaunchedProcess(preprocess);
-      }
-
-      if (compile != null) {
-        executor.destroyLaunchedProcess(compile);
-        executor.waitForLaunchedProcess(compile);
-      }
-
-      safeCloseProcessor(errorProcessorPreprocess);
-      safeCloseProcessor(errorProcessorCompile);
-      safeCloseProcessor(lineDirectiveMunger);
-    }
-  }
-
   private int executeOther(ExecutionContext context) throws Exception {
     ProcessExecutorParams.Builder builder =
         makeSubprocessBuilder(context, ImmutableMap.of());
@@ -560,13 +425,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     try {
       LOG.debug("%s %s -> %s", operation.toString().toLowerCase(), input, output);
 
-      // We need completely different logic if we're piping from the preprocessor to the compiler.
-      int exitCode;
-      if (operation == Operation.PIPED_PREPROCESS_AND_COMPILE) {
-        exitCode = executePiped(context);
-      } else {
-        exitCode = executeOther(context);
-      }
+      int exitCode = executeOther(context);
 
       if (operation.isPreprocess() && exitCode == 0 && compiler.isDependencyFileSupported()) {
         exitCode =
@@ -672,32 +531,10 @@ public class CxxPreprocessAndCompileStep implements Step {
   }
 
   public String getDescriptionNoContext() {
-    switch (operation) {
-      case PIPED_PREPROCESS_AND_COMPILE: {
-        return Joiner.on(' ').join(
-            FluentIterable.from(preprocessorCommand.get().getCommandPrefix())
-                .append(makePreprocessArguments(/* allowColorsInDiagnostics */ false))
-                .transform(Escaper.SHELL_ESCAPER)) +
-            " | " +
-            Joiner.on(' ').join(
-                FluentIterable.from(compilerCommand.get().getCommandPrefix())
-                    .append(
-                        makeCompileArguments(
-                            "-",
-                            inputType.getPreprocessedLanguage(),
-                            /* preprocessable */ false,
-                            /* allowColorsInDiagnostics */ false))
-                    .transform(Escaper.SHELL_ESCAPER));
-
-      }
-      // $CASES-OMITTED$
-      default: {
-        return Joiner.on(' ').join(
-            FluentIterable.from(getCommandPrefix())
-                .append(getArguments(false))
-                .transform(Escaper.SHELL_ESCAPER));
-      }
-    }
+    return Joiner.on(' ').join(
+        FluentIterable.from(getCommandPrefix())
+            .append(getArguments(false))
+            .transform(Escaper.SHELL_ESCAPER));
   }
 
   @Override
@@ -730,11 +567,6 @@ public class CxxPreprocessAndCompileStep implements Step {
      * Preprocess a source file.
      */
     PREPROCESS,
-    /**
-     * Run the preprocessor and compiler separately, piping the output of the preprocessor to the
-     * compiler.
-     */
-    PIPED_PREPROCESS_AND_COMPILE,
     GENERATE_PCH,
     ;
 
@@ -745,7 +577,6 @@ public class CxxPreprocessAndCompileStep implements Step {
       switch (this) {
         case COMPILE_MUNGE_DEBUGINFO:
         case PREPROCESS:
-        case PIPED_PREPROCESS_AND_COMPILE:
         case GENERATE_PCH:
           return true;
         case COMPILE:
@@ -761,7 +592,6 @@ public class CxxPreprocessAndCompileStep implements Step {
       switch (this) {
         case COMPILE:
         case COMPILE_MUNGE_DEBUGINFO:
-        case PIPED_PREPROCESS_AND_COMPILE:
           return true;
         case PREPROCESS:
         case GENERATE_PCH:

@@ -1,2 +1,2 @@
 [cxx]
-  preprocess_mode = piped
+  preprocess_mode = combined

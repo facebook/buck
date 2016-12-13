@@ -59,10 +59,8 @@ public class CxxPreprocessAndCompileIntegrationTest {
     return ImmutableList.of(
         new Object[] {CxxPreprocessMode.COMBINED, true},
         new Object[] {CxxPreprocessMode.SEPARATE, true},
-        new Object[] {CxxPreprocessMode.PIPED, true},
         new Object[] {CxxPreprocessMode.COMBINED, false},
-        new Object[] {CxxPreprocessMode.SEPARATE, false},
-        new Object[] {CxxPreprocessMode.PIPED, false});
+        new Object[] {CxxPreprocessMode.SEPARATE, false});
   }
 
   @Parameterized.Parameter(0)

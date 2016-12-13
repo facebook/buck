@@ -155,7 +155,6 @@ public class CxxCompilationDatabaseTest {
                 Optional.empty()));
         break;
       case COMBINED:
-      case PIPED:
         compileBuildRuleParams = new FakeBuildRuleParamsBuilder(compileTarget)
             .setProjectFilesystem(filesystem)
             .build();
@@ -194,7 +193,6 @@ public class CxxCompilationDatabaseTest {
                 Optional.empty(),
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
-                strategy,
                 Optional.empty()));
         break;
       default:
@@ -270,23 +268,6 @@ public class CxxCompilationDatabaseTest {
             "test.cpp",
             "-o",
             "test.o"));
-  }
-
-  @Test
-  public void testCompilationDatabaseWithPipedPreprocessAndCompileStrategy() {
-    runCombinedTest(CxxPreprocessMode.PIPED,
-        ImmutableList.of(
-            "compiler",
-            "-isystem",
-            "foo/bar",
-            "-isystem",
-            "test",
-            "-x",
-            "c++",
-            "-c",
-            "-o",
-            "test.o",
-            "/Users/user/src/test.cpp"));
   }
 
   @Test

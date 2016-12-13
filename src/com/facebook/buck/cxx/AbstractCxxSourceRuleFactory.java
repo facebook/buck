@@ -559,8 +559,7 @@ abstract class AbstractCxxSourceRuleFactory {
   @VisibleForTesting
   public CxxPreprocessAndCompile createPreprocessAndCompileBuildRule(
       String name,
-      CxxSource source,
-      CxxPreprocessMode strategy) {
+      CxxSource source) {
 
     BuildTarget target = createCompileBuildTarget(name);
     LOG.verbose("Creating preprocess and compile %s for %s", target, source);
@@ -588,7 +587,7 @@ abstract class AbstractCxxSourceRuleFactory {
     depsBuilder.add(source);
 
     Optional<PrecompiledHeaderReference> precompiledHeaderReference = Optional.empty();
-    if (shouldUsePrecompiledHeaders(getCxxBuckConfig(), preprocessorDelegate, strategy)) {
+    if (shouldUsePrecompiledHeaders(getCxxBuckConfig(), preprocessorDelegate)) {
       CxxPrecompiledHeader precompiledHeader =
           requirePrecompiledHeaderBuildRule(preprocessorDelegateValue, source);
       depsBuilder.add(precompiledHeader);
@@ -611,7 +610,6 @@ abstract class AbstractCxxSourceRuleFactory {
         precompiledHeaderReference,
         getCxxPlatform().getCompilerDebugPathSanitizer(),
         getCxxPlatform().getAssemblerDebugPathSanitizer(),
-        strategy,
         getSandboxTree());
     getResolver().addToIndex(result);
     return result;
@@ -620,8 +618,7 @@ abstract class AbstractCxxSourceRuleFactory {
   @VisibleForTesting
   CxxPreprocessAndCompile requirePreprocessAndCompileBuildRule(
       String name,
-      CxxSource source,
-      CxxPreprocessMode strategy) {
+      CxxSource source) {
 
     BuildTarget target = createCompileBuildTarget(name);
     Optional<CxxPreprocessAndCompile> existingRule = getResolver().getRuleOptionalWithType(
@@ -634,7 +631,7 @@ abstract class AbstractCxxSourceRuleFactory {
       return existingRule.get();
     }
 
-    return createPreprocessAndCompileBuildRule(name, source, strategy);
+    return createPreprocessAndCompileBuildRule(name, source);
   }
 
   @VisibleForTesting
@@ -774,14 +771,13 @@ abstract class AbstractCxxSourceRuleFactory {
 
           switch (strategy) {
 
-            case PIPED:
             case COMBINED: {
               CxxPreprocessAndCompile rule;
 
               // If it's a preprocessable source, use a combine preprocess-and-compile build rule.
               // Otherwise, use a regular compile rule.
               if (CxxSourceTypes.isPreprocessableType(source.getType())) {
-                rule = requirePreprocessAndCompileBuildRule(name, source, strategy);
+                rule = requirePreprocessAndCompileBuildRule(name, source);
               } else {
                 rule = requireCompileBuildRule(name, source, false);
               }
@@ -838,24 +834,20 @@ abstract class AbstractCxxSourceRuleFactory {
   private static boolean shouldUsePrecompiledHeaders(
       CxxBuckConfig cxxBuckConfig,
       Optional<SourcePath> prefixHeaderSourcePath,
-      Preprocessor preprocessor,
-      CxxPreprocessMode mode) {
+      Preprocessor preprocessor) {
     return
         cxxBuckConfig.isPCHEnabled() &&
         prefixHeaderSourcePath.isPresent() &&
-        preprocessor.supportsPrecompiledHeaders() &&
-        mode == CxxPreprocessMode.COMBINED;
+        preprocessor.supportsPrecompiledHeaders();
   }
 
   private static boolean shouldUsePrecompiledHeaders(
       CxxBuckConfig cxxBuckConfig,
-      PreprocessorDelegate preprocessorDelegate,
-      CxxPreprocessMode mode) {
+      PreprocessorDelegate preprocessorDelegate) {
     return shouldUsePrecompiledHeaders(
         cxxBuckConfig,
         preprocessorDelegate.getPrefixHeader(),
-        preprocessorDelegate.getPreprocessor(),
-        mode);
+        preprocessorDelegate.getPreprocessor());
   }
 
   public static ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(

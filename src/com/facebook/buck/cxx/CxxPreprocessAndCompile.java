@@ -185,14 +185,11 @@ public class CxxPreprocessAndCompile
       Optional<PrecompiledHeaderReference> precompiledHeaderRef,
       DebugPathSanitizer compilerSanitizer,
       DebugPathSanitizer assemblerSanitizer,
-      CxxPreprocessMode strategy,
       Optional<SymlinkTree> sandboxTree) {
     return new CxxPreprocessAndCompile(
         params,
         resolver,
-        (strategy == CxxPreprocessMode.PIPED
-            ? CxxPreprocessAndCompileStep.Operation.PIPED_PREPROCESS_AND_COMPILE
-            : CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO),
+        CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO,
         Optional.of(preprocessorDelegate),
         compilerDelegate,
         output,

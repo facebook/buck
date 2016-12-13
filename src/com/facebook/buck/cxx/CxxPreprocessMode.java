@@ -25,14 +25,6 @@ public enum CxxPreprocessMode {
   SEPARATE,
 
   /**
-   * Run the preprocessor and compiler separately, but pipe the output of the former into the latter
-   * through Buck, which will rewrite #line directives.  Performs better than SEPARATE and does not
-   * produce intermediate preprocessed objects.  Rewrite #line directives to normalize
-   * debugging information.
-   */
-  PIPED,
-
-  /**
    * Run the preprocessor and compiler together.  Does not currently normalize debugging
    * information at the preprocessor level; does a search-and-replace on the debug section
    * instead.

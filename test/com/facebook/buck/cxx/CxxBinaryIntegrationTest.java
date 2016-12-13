@@ -1543,11 +1543,6 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void testSimpleCxxBinaryBuildsInPipedMode() throws IOException, InterruptedException {
-    doTestSimpleCxxBinaryBuilds("piped", false /* expectPreprocessorOutput */);
-  }
-
-  @Test
   public void testSimpleCxxBinaryBuildsInCombinedMode() throws IOException, InterruptedException {
     doTestSimpleCxxBinaryBuilds("combined", false /* expectPreprocessorOutput */);
   }

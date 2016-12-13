@@ -54,9 +54,6 @@ import com.google.common.collect.Iterables;
 
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
-import org.junit.experimental.theories.DataPoints;
-import org.junit.experimental.theories.Theories;
-import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -75,39 +72,6 @@ import java.util.Optional;
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 @RunWith(Enclosed.class)
 public class PrecompiledHeaderFeatureTest {
-
-  /**
-   * Tests that PCH is only used when compiling in in-process combined preprocessing/compiling.
-   *
-   * It makes no sense to enable PCH otherwise (and may not even be possible for clang).
-   */
-  @RunWith(Theories.class)
-  public static class OnlyUsePchInCombinedMode {
-
-    @DataPoints
-    public static final CxxPreprocessMode[] MODES = {
-        CxxPreprocessMode.COMBINED,
-        CxxPreprocessMode.SEPARATE,
-    };
-
-    @Theory
-    public void test(CxxPreprocessMode mode) {
-      CxxPreprocessAndCompile rule = preconfiguredSourceRuleFactoryBuilder()
-          .setPrefixHeader(new FakeSourcePath(("foo.pch")))
-          .build()
-          .createPreprocessAndCompileBuildRule(
-              "foo.c",
-              preconfiguredCxxSourceBuilder().build(),
-              mode);
-
-      boolean usesPch = commandLineContainsPchFlag(rule);
-      if (mode == CxxPreprocessMode.COMBINED) {
-        assertTrue("should only use PCH in combined mode", usesPch);
-      } else {
-        assertFalse("should only use PCH in combined mode", usesPch);
-      }
-    }
-  }
 
   /**
    * Tests that PCH is only used when a preprocessor is declared to use PCH.
@@ -143,8 +107,7 @@ public class PrecompiledHeaderFeatureTest {
           .build()
           .createPreprocessAndCompileBuildRule(
               "foo.c",
-              preconfiguredCxxSourceBuilder().build(),
-              CxxPreprocessMode.COMBINED);
+              preconfiguredCxxSourceBuilder().build());
       boolean usesPch = commandLineContainsPchFlag(rule);
       if (supportsPch) {
         assertTrue("should only use PCH if toolchain supports it", usesPch);
@@ -173,8 +136,7 @@ public class PrecompiledHeaderFeatureTest {
               "foo.c",
               preconfiguredCxxSourceBuilder()
                   .addFlags("-I", from.toString())
-                  .build(),
-              CxxPreprocessMode.COMBINED);
+                  .build());
           return
               FluentIterable.from(rule.getDeps()).filter(CxxPrecompiledHeader.class).first().get();
         }
@@ -203,8 +165,7 @@ public class PrecompiledHeaderFeatureTest {
               .build();
           BuildRule rule = factory.createPreprocessAndCompileBuildRule(
               "foo.c",
-              preconfiguredCxxSourceBuilder().build(),
-              CxxPreprocessMode.COMBINED);
+              preconfiguredCxxSourceBuilder().build());
           return
               FluentIterable.from(rule.getDeps()).filter(CxxPrecompiledHeader.class).first().get();
         }
@@ -235,8 +196,7 @@ public class PrecompiledHeaderFeatureTest {
               .build();
           BuildRule rule = factory.createPreprocessAndCompileBuildRule(
               "foo.c",
-              preconfiguredCxxSourceBuilder().build(),
-              CxxPreprocessMode.COMBINED);
+              preconfiguredCxxSourceBuilder().build());
           return
               FluentIterable.from(rule.getDeps()).filter(CxxPrecompiledHeader.class).first().get();
         }
@@ -297,7 +257,8 @@ public class PrecompiledHeaderFeatureTest {
               .build();
       CxxPreprocessAndCompile ruleFoo =
           factoryFoo.createPreprocessAndCompileBuildRule(
-              "foo.cpp", preconfiguredCxxSourceBuilder().build(), CxxPreprocessMode.COMBINED);
+              "foo.cpp",
+              preconfiguredCxxSourceBuilder().build());
       CxxPrecompiledHeader pch1 =
           FluentIterable.from(ruleFoo.getDeps()).filter(CxxPrecompiledHeader.class).first().get();
 
@@ -308,7 +269,8 @@ public class PrecompiledHeaderFeatureTest {
               .build();
       CxxPreprocessAndCompile ruleBar =
           factoryBar.createPreprocessAndCompileBuildRule(
-              "bar.cpp", preconfiguredCxxSourceBuilder().build(), CxxPreprocessMode.COMBINED);
+              "bar.cpp",
+              preconfiguredCxxSourceBuilder().build());
       CxxPrecompiledHeader pch2 =
           FluentIterable.from(ruleBar.getDeps()).filter(CxxPrecompiledHeader.class).first().get();
 
@@ -366,7 +328,8 @@ public class PrecompiledHeaderFeatureTest {
               .build();
       CxxPreprocessAndCompile ruleFoo =
           factoryFoo.createPreprocessAndCompileBuildRule(
-              "foo.cpp", preconfiguredCxxSourceBuilder().build(), CxxPreprocessMode.COMBINED);
+              "foo.cpp",
+              preconfiguredCxxSourceBuilder().build());
       CxxPrecompiledHeader pch1 =
           FluentIterable.from(ruleFoo.getDeps()).filter(CxxPrecompiledHeader.class).first().get();
 
@@ -383,7 +346,8 @@ public class PrecompiledHeaderFeatureTest {
               .build();
       CxxPreprocessAndCompile ruleBar =
           factoryBar.createPreprocessAndCompileBuildRule(
-              "bar.cpp", preconfiguredCxxSourceBuilder().build(), CxxPreprocessMode.COMBINED);
+              "bar.cpp",
+              preconfiguredCxxSourceBuilder().build());
       CxxPrecompiledHeader pch2 =
           FluentIterable.from(ruleBar.getDeps()).filter(CxxPrecompiledHeader.class).first().get();
 
