@@ -1055,7 +1055,6 @@ public class CxxDescriptionEnhancer {
     return CxxCompilationDatabase.createCompilationDatabase(
         params,
         pathResolver,
-        cxxBuckConfig.getPreprocessMode(),
         objects.keySet(),
         requireTransitiveCompilationDatabaseHeaderSymlinkTreeDeps(
             params,

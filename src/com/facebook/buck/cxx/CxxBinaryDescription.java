@@ -158,7 +158,6 @@ public class CxxBinaryDescription implements
       return CxxCompilationDatabase.createCompilationDatabase(
           params,
           pathResolver,
-          cxxBuckConfig.getPreprocessMode(),
           cxxLinkAndCompileRules.compileRules,
           CxxDescriptionEnhancer.requireTransitiveCompilationDatabaseHeaderSymlinkTreeDeps(
               paramsWithoutFlavor,

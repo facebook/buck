@@ -45,8 +45,7 @@ public class CxxDependencyFileIntegrationTest {
   @Parameterized.Parameters(name = "{0}")
   public static Collection<Object[]> data() {
     return ImmutableList.of(
-        new Object[]{CxxPreprocessMode.COMBINED},
-        new Object[]{CxxPreprocessMode.SEPARATE});
+        new Object[]{CxxPreprocessMode.COMBINED});
   }
 
   @Parameterized.Parameter
@@ -84,12 +83,7 @@ public class CxxDependencyFileIntegrationTest {
         target,
         cxxPlatform);
     String source = "test.cpp";
-    if (mode == CxxPreprocessMode.SEPARATE) {
-      preprocessTarget =
-          cxxSourceRuleFactory.createPreprocessBuildTarget(source, CxxSource.Type.CXX);
-    } else {
-      preprocessTarget = cxxSourceRuleFactory.createCompileBuildTarget(source);
-    }
+    preprocessTarget = cxxSourceRuleFactory.createCompileBuildTarget(source);
     workspace.getBuildLog().assertTargetBuiltLocally(preprocessTarget.toString());
   }
 

@@ -41,7 +41,6 @@ import com.google.common.io.Files;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -319,10 +318,7 @@ public class CxxPreprocessAndCompileStep implements Step {
               .addAll(getArguments(context.getAnsi().isAnsiTerminal()))
               .build());
     }
-    // If we're preprocessing, file output goes through stdout, so we can postprocess it.
-    if (operation == Operation.PREPROCESS) {
-      builder.setRedirectOutput(ProcessBuilder.Redirect.PIPE);
-    }
+
     ProcessExecutorParams params = builder.build();
 
     LOG.debug(
@@ -345,22 +341,6 @@ public class CxxPreprocessAndCompileStep implements Step {
                createErrorTransformerFactory(context)
                    .createTransformerThread(context, process.getErrorStream(), error)) {
         errorProcessor.start();
-
-        // If we're preprocessing, we pipe the output through a processor to sanitize the line
-        // markers.  So fire that up...
-        if (operation == Operation.PREPROCESS) {
-          try (OutputStream output =
-                   filesystem.newFileOutputStream(this.output);
-               LineProcessorRunnable outputProcessor =
-                   createPreprocessorOutputTransformerFactory()
-                       .createTransformerThread(context, process.getInputStream(), output)) {
-            outputProcessor.start();
-            outputProcessor.waitFor();
-          } catch (Throwable thrown) {
-            executor.destroyLaunchedProcess(process);
-            throw thrown;
-          }
-        }
         errorProcessor.waitFor();
       } catch (Throwable thrown) {
         executor.destroyLaunchedProcess(process);
@@ -397,13 +377,6 @@ public class CxxPreprocessAndCompileStep implements Step {
     } else {
       return ConsoleEvent.create(level, message);
     }
-  }
-
-  private CxxPreprocessorOutputTransformerFactory createPreprocessorOutputTransformerFactory() {
-    return new CxxPreprocessorOutputTransformerFactory(
-        filesystem.getRootPath(),
-        headerPathNormalizer,
-        getSanitizer());
   }
 
   private CxxErrorTransformerFactory createErrorTransformerFactory(ExecutionContext context) {
@@ -502,7 +475,6 @@ public class CxxPreprocessAndCompileStep implements Step {
       case COMPILE:
       case COMPILE_MUNGE_DEBUGINFO:
         return compilerCommand.get().getCommandPrefix();
-      case PREPROCESS:
       case GENERATE_PCH:
         return preprocessorCommand.get().getCommandPrefix();
       // $CASES-OMITTED$
@@ -520,8 +492,6 @@ public class CxxPreprocessAndCompileStep implements Step {
             inputType.getLanguage(),
             inputType.isPreprocessable(),
             allowColorsInDiagnostics);
-      case PREPROCESS:
-        return makePreprocessArguments(allowColorsInDiagnostics);
       case GENERATE_PCH:
         return makeGeneratePchArguments(allowColorsInDiagnostics);
       // $CASES-OMITTED$
@@ -563,10 +533,6 @@ public class CxxPreprocessAndCompileStep implements Step {
      * Run the preprocessor and compiler on source files.
      */
     COMPILE_MUNGE_DEBUGINFO,
-    /**
-     * Preprocess a source file.
-     */
-    PREPROCESS,
     GENERATE_PCH,
     ;
 
@@ -576,7 +542,6 @@ public class CxxPreprocessAndCompileStep implements Step {
     public boolean isPreprocess() {
       switch (this) {
         case COMPILE_MUNGE_DEBUGINFO:
-        case PREPROCESS:
         case GENERATE_PCH:
           return true;
         case COMPILE:
@@ -593,7 +558,6 @@ public class CxxPreprocessAndCompileStep implements Step {
         case COMPILE:
         case COMPILE_MUNGE_DEBUGINFO:
           return true;
-        case PREPROCESS:
         case GENERATE_PCH:
           return false;
       }

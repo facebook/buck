@@ -18,13 +18,6 @@ package com.facebook.buck.cxx;
 
 public enum CxxPreprocessMode {
   /**
-   * Run the preprocessor and compiler separately, treating each intermediate product as a separate
-   * Buck object.  From .c files, build .i files using the preprocessor, and from .i files, build .o
-   * files.  Rewrite #line directives to normalize debugging information.
-   */
-  SEPARATE,
-
-  /**
    * Run the preprocessor and compiler together.  Does not currently normalize debugging
    * information at the preprocessor level; does a search-and-replace on the debug section
    * instead.

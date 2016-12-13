@@ -1392,10 +1392,8 @@ public class CxxBinaryIntegrationTest {
     assertThat(Files.exists(Paths.get(outputPath.toString() + "-LinkMap.txt")), is(true));
   }
 
-  public void doTestSimpleCxxBinaryBuilds(
-      String preprocessMode,
-      boolean expectPreprocessorOutput) throws IOException, InterruptedException {
-    Assume.assumeFalse("Test should be modified for sandboxing", sandboxSources);
+  public void doTestSimpleCxxBinaryBuilds(String preprocessMode) throws Exception {
+        Assume.assumeFalse("Test should be modified for sandboxing", sandboxSources);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "simple", tmp);
     workspace.setUp();
@@ -1417,8 +1415,6 @@ public class CxxBinaryIntegrationTest {
         Optional.<LinkerMapMode>empty());
     String sourceName = "simple.cpp";
     String sourceFull = "foo/" + sourceName;
-    BuildTarget preprocessTarget =
-        cxxSourceRuleFactory.createPreprocessBuildTarget(sourceName, CxxSource.Type.CXX);
     BuildTarget compileTarget = cxxSourceRuleFactory.createCompileBuildTarget(sourceName);
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
@@ -1441,17 +1437,10 @@ public class CxxBinaryIntegrationTest {
                 compileTarget,
                 binaryTarget,
                 target)
-            .addAll(
-                expectPreprocessorOutput
-                    ? ImmutableSet.of(preprocessTarget)
-                    : ImmutableSet.of())
             .build(),
         buildLog.getAllTargets());
     buildLog.assertTargetBuiltLocally(aggregatedDepsTarget.toString());
     buildLog.assertTargetBuiltLocally(headerSymlinkTreeTarget.toString());
-    if (expectPreprocessorOutput) {
-      buildLog.assertTargetBuiltLocally(preprocessTarget.toString());
-    }
     buildLog.assertTargetBuiltLocally(compileTarget.toString());
     buildLog.assertTargetBuiltLocally(binaryTarget.toString());
     buildLog.assertTargetBuiltLocally(target.toString());
@@ -1486,16 +1475,9 @@ public class CxxBinaryIntegrationTest {
                 compileTarget,
                 binaryTarget,
                 target)
-            .addAll(
-                expectPreprocessorOutput
-                    ? ImmutableSet.of(preprocessTarget)
-                    : ImmutableSet.of())
             .build(),
         buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(aggregatedDepsTarget.toString());
-    if (expectPreprocessorOutput) {
-      buildLog.assertTargetBuiltLocally(preprocessTarget.toString());
-    }
     buildLog.assertTargetBuiltLocally(compileTarget.toString());
     assertThat(
         buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
@@ -1519,16 +1501,9 @@ public class CxxBinaryIntegrationTest {
                 compileTarget,
                 binaryTarget,
                 target)
-            .addAll(
-                expectPreprocessorOutput
-                    ? ImmutableSet.of(preprocessTarget)
-                    : ImmutableSet.of())
             .build(),
         buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(aggregatedDepsTarget.toString());
-    if (expectPreprocessorOutput) {
-      buildLog.assertTargetBuiltLocally(preprocessTarget.toString());
-    }
     assertThat(
         buildLog.getLogEntry(binaryTarget).getStatus(),
         Matchers.equalTo(BuildRuleStatus.CANCELED));
@@ -1538,13 +1513,8 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void testSimpleCxxBinaryBuildsInSeparateMode() throws IOException, InterruptedException {
-    doTestSimpleCxxBinaryBuilds("separate", true /* expectPreprocessorOutput */);
-  }
-
-  @Test
-  public void testSimpleCxxBinaryBuildsInCombinedMode() throws IOException, InterruptedException {
-    doTestSimpleCxxBinaryBuilds("combined", false /* expectPreprocessorOutput */);
+  public void testSimpleCxxBinaryBuildsInCombinedMode() throws Exception {
+    doTestSimpleCxxBinaryBuilds("combined");
   }
 
   @Test
@@ -1894,52 +1864,6 @@ public class CxxBinaryIntegrationTest {
     workspace.setUp();
     workspace.setupCxxSandboxing(sandboxSources);
     workspace.runBuckCommand("build", "//:test").assertSuccess();
-  }
-
-  @Test
-  public void resolveHeadersBehindSymlinkTreesInPreprocessedOutput()
-      throws IOException, InterruptedException {
-
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "resolved", tmp);
-    workspace.setUp();
-    workspace.setupCxxSandboxing(sandboxSources);
-
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(workspace.asCell().getBuckConfig());
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig);
-
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
-
-    workspace.writeContentsToPath("", "lib2.h");
-
-    BuildTarget target = BuildTargetFactory.newInstance("//:bin");
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
-        workspace.getDestPath(),
-        target,
-        cxxPlatform,
-        cxxBuckConfig);
-    workspace.runBuckCommand("build", target.toString()).assertSuccess();
-
-    // Verify that the preprocessed source contains no references to the symlink tree used to
-    // setup the headers.
-    BuildTarget ppTarget =
-        cxxSourceRuleFactory.createPreprocessBuildTarget("bin.cpp", CxxSource.Type.CXX);
-    Path output =
-        cxxSourceRuleFactory.getPreprocessOutputPath(
-            ppTarget,
-            CxxSource.Type.CXX,
-            "bin.cpp");
-    String contents = workspace.getFileContents(output.toString());
-    assertThat(
-        contents,
-        Matchers.not(
-            Matchers.containsString(filesystem.getBuckPaths().getScratchDir().toString())));
-    assertThat(
-        contents,
-        Matchers.not(Matchers.containsString(filesystem.getBuckPaths().getGenDir().toString())));
-    assertThat(contents, Matchers.containsString("# 1 \"bin.h"));
-    assertThat(contents, Matchers.containsString("# 1 \"lib1.h"));
-    assertThat(contents, Matchers.containsString("# 1 \"lib2.h"));
   }
 
   @Test

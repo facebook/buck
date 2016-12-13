@@ -46,7 +46,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import org.immutables.value.Value;
@@ -57,7 +56,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 
 import javax.annotation.Nonnull;
@@ -68,7 +66,6 @@ abstract class AbstractCxxSourceRuleFactory {
 
   private static final Logger LOG = Logger.get(AbstractCxxSourceRuleFactory.class);
   private static final String COMPILE_FLAVOR_PREFIX = "compile-";
-  private static final String PREPROCESS_FLAVOR_PREFIX = "preprocess-";
   private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
       ImmutableFlavor.of("preprocessor-deps");
 
@@ -186,116 +183,6 @@ abstract class AbstractCxxSourceRuleFactory {
       parts.add(part.equals("..") ? "__PAR__" : part);
     }
     return Joiner.on(File.separator).join(parts);
-  }
-
-  /**
-   * @return the preprocessed file name for the given source name.
-   */
-  private String getPreprocessOutputName(CxxSource.Type type, String name) {
-    CxxSource.Type outputType = CxxSourceTypes.getPreprocessorOutputType(type);
-    return getOutputName(name) + "." + Iterables.get(outputType.getExtensions(), 0);
-  }
-
-  /**
-   * @return a {@link BuildTarget} used for the rule that preprocesses the source by the given
-   * name and type.
-   */
-  @VisibleForTesting
-  public BuildTarget createPreprocessBuildTarget(String name, CxxSource.Type type) {
-    String outputName = CxxFlavorSanitizer.sanitize(
-        getPreprocessOutputName(
-            type,
-            name));
-    return BuildTarget
-        .builder(getParams().getBuildTarget())
-        .addFlavors(getCxxPlatform().getFlavor())
-        .addFlavors(
-            ImmutableFlavor.of(
-                String.format(
-                    PREPROCESS_FLAVOR_PREFIX + "%s%s",
-                    getPicType() == PicType.PIC ? "pic-" : "",
-                    outputName)))
-        .build();
-  }
-
-  public static boolean isPreprocessFlavoredBuildTarget(BuildTarget target) {
-    Set<Flavor> flavors = target.getFlavors();
-    for (Flavor flavor : flavors) {
-      if (flavor.getName().startsWith(PREPROCESS_FLAVOR_PREFIX)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
-   * @return the output path for an object file compiled from the source with the given name.
-   */
-  @VisibleForTesting
-  Path getPreprocessOutputPath(BuildTarget target, CxxSource.Type type, String name) {
-    return BuildTargets.getGenPath(getParams().getProjectFilesystem(), target, "%s")
-        .resolve(getPreprocessOutputName(type, name));
-  }
-
-  @VisibleForTesting
-  public CxxPreprocessAndCompile createPreprocessBuildRule(String name, CxxSource source) {
-    Preconditions.checkArgument(CxxSourceTypes.isPreprocessableType(source.getType()));
-
-    BuildTarget target = createPreprocessBuildTarget(name, source.getType());
-
-    DepsBuilder depsBuilder = new DepsBuilder(getPathResolver());
-    depsBuilder.add(requireAggregatedPreprocessDepsRule());
-
-    PreprocessorDelegateCacheValue preprocessorDelegateValue = preprocessorDelegates.getUnchecked(
-        PreprocessorDelegateCacheKey.of(source.getType(), source.getFlags()));
-    depsBuilder.add(preprocessorDelegateValue.getPreprocessorDelegate());
-
-    CompilerDelegate compilerDelegate =
-        new CompilerDelegate(
-            getPathResolver(),
-            getCxxPlatform().getCompilerDebugPathSanitizer(),
-            CxxSourceTypes.getCompiler(
-                getCxxPlatform(),
-                CxxSourceTypes.getPreprocessorOutputType(source.getType()))
-                .resolve(getResolver()),
-            computeCompilerFlags(source.getType(), source.getFlags()));
-    // We shouldn't really need to depend on the compiler for preprocess-only
-    // rules, but the `CxxPreprocessAndCompile` class adds the entire
-    // `CompilerDelegate` to the rule key, which means the input-based rule key
-    // factory expects to be included in the dep list.
-    depsBuilder.add(compilerDelegate);
-
-    depsBuilder.add(source);
-
-    // Build the CxxCompile rule and add it to our sorted set of build rules.
-    CxxPreprocessAndCompile result =
-        CxxPreprocessAndCompile.preprocess(
-            getParams().copyWithChanges(
-                target,
-                Suppliers.ofInstance(depsBuilder.build()),
-                Suppliers.ofInstance(ImmutableSortedSet.of())),
-            getPathResolver(),
-            preprocessorDelegateValue.getPreprocessorDelegate(),
-            compilerDelegate,
-            getPreprocessOutputPath(target, source.getType(), name),
-            source.getPath(),
-            source.getType(),
-            getCxxPlatform().getCompilerDebugPathSanitizer(),
-            getCxxPlatform().getAssemblerDebugPathSanitizer(),
-            getSandboxTree());
-    getResolver().addToIndex(result);
-    return result;
-  }
-
-  @VisibleForTesting
-  CxxPreprocessAndCompile requirePreprocessBuildRule(String name, CxxSource source) {
-    BuildTarget target = createPreprocessBuildTarget(name, source.getType());
-    Optional<CxxPreprocessAndCompile> existingRule = getResolver().getRuleOptionalWithType(
-        target, CxxPreprocessAndCompile.class);
-    if (existingRule.isPresent()) {
-      return existingRule.get();
-    }
-    return createPreprocessBuildRule(name, source);
   }
 
   /**
@@ -785,24 +672,6 @@ abstract class AbstractCxxSourceRuleFactory {
               return rule;
             }
 
-            case SEPARATE: {
-
-              // If this is a preprocessable source, first create the preprocess build rule and
-              // update the source and name to represent its compilable output.
-              if (CxxSourceTypes.isPreprocessableType(source.getType())) {
-                CxxPreprocessAndCompile rule = requirePreprocessBuildRule(name, source);
-                source = CxxSource.copyOf(source)
-                    .withType(CxxSourceTypes.getPreprocessorOutputType(source.getType()))
-                    .withPath(
-                        new BuildTargetSourcePath(rule.getBuildTarget()));
-              }
-
-              // Now build the compile build rule.
-              CxxPreprocessAndCompile rule = requireCompileBuildRule(name, source, true);
-              return rule;
-            }
-
-            // $CASES-OMITTED$
             default:
               throw new IllegalStateException();
           }

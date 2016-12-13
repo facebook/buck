@@ -69,7 +69,6 @@ public class NdkCxxPlatformTest {
   public TemporaryPaths tmp = new TemporaryPaths();
 
   enum Operation {
-    PREPROCESS,
     COMPILE,
     PREPROCESS_AND_COMPILE,
   }
@@ -107,15 +106,6 @@ public class NdkCxxPlatformTest {
         case PREPROCESS_AND_COMPILE:
           rule =
               cxxSourceRuleFactory.createPreprocessAndCompileBuildRule(
-                  source,
-                  CxxSource.of(
-                      CxxSource.Type.CXX,
-                      new FakeSourcePath(source),
-                      ImmutableList.of()));
-          break;
-        case PREPROCESS:
-          rule =
-              cxxSourceRuleFactory.createPreprocessBuildRule(
                   source,
                   CxxSource.of(
                       CxxSource.Type.CXX,
@@ -210,8 +200,6 @@ public class NdkCxxPlatformTest {
       Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>>
           preprocessAndCompileRukeKeys = Maps.newHashMap();
       Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>>
-          preprocessRukeKeys = Maps.newHashMap();
-      Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>>
           compileRukeKeys = Maps.newHashMap();
       Map<String, ImmutableMap<NdkCxxPlatforms.TargetCpuType, RuleKey>>
           linkRukeKeys = Maps.newHashMap();
@@ -242,9 +230,6 @@ public class NdkCxxPlatformTest {
           preprocessAndCompileRukeKeys.put(
               String.format("NdkCxxPlatform(%s, %s)", dir, platform),
               constructCompileRuleKeys(Operation.PREPROCESS_AND_COMPILE, platforms));
-          preprocessRukeKeys.put(
-              String.format("NdkCxxPlatform(%s, %s)", dir, platform),
-              constructCompileRuleKeys(Operation.PREPROCESS, platforms));
           compileRukeKeys.put(
               String.format("NdkCxxPlatform(%s, %s)", dir, platform),
               constructCompileRuleKeys(Operation.COMPILE, platforms));
@@ -260,10 +245,6 @@ public class NdkCxxPlatformTest {
       assertThat(
           Arrays.toString(preprocessAndCompileRukeKeys.entrySet().toArray()),
           Sets.newHashSet(preprocessAndCompileRukeKeys.values()),
-          Matchers.hasSize(1));
-      assertThat(
-          Arrays.toString(preprocessRukeKeys.entrySet().toArray()),
-          Sets.newHashSet(preprocessRukeKeys.values()),
           Matchers.hasSize(1));
       assertThat(
           Arrays.toString(compileRukeKeys.entrySet().toArray()),

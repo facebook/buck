@@ -185,7 +185,7 @@ public class CxxPreprocessAndCompileTest {
     // Verify that changing the operation causes a rulekey change.
 
     RuleKey operationChange = new DefaultRuleKeyFactory(0, hashCache, pathResolver).build(
-        CxxPreprocessAndCompile.preprocess(
+        CxxPreprocessAndCompile.preprocessAndCompile(
             params,
             pathResolver,
             new PreprocessorDelegate(
@@ -206,6 +206,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
+            Optional.empty(),
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
             CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
             Optional.empty()));
@@ -298,7 +299,7 @@ public class CxxPreprocessAndCompileTest {
     class TestData {
       public RuleKey generate(PreprocessorFlags flags) {
         return new DefaultRuleKeyFactory(0, hashCache, pathResolver).build(
-            CxxPreprocessAndCompile.preprocess(
+            CxxPreprocessAndCompile.preprocessAndCompile(
                 params,
                 pathResolver,
                 new PreprocessorDelegate(
@@ -319,6 +320,7 @@ public class CxxPreprocessAndCompileTest {
                 DEFAULT_OUTPUT,
                 DEFAULT_INPUT,
                 DEFAULT_INPUT_TYPE,
+                Optional.empty(),
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
                 Optional.empty()));
@@ -380,73 +382,6 @@ public class CxxPreprocessAndCompileTest {
   }
 
   @Test
-  public void usesCorrectCommandForPreprocess() {
-
-    // Setup some dummy values for inputs to the CxxPreprocessAndCompile.
-    SourcePathResolver pathResolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    CxxToolFlags preprocessorFlags = CxxToolFlags.explicitBuilder()
-        .addPlatformFlags("-Dtest=blah")
-        .addRuleFlags("-Dfoo=bar")
-        .build();
-    Path output = Paths.get("test.ii");
-    Path input = Paths.get("test.cpp");
-    Path prefixHeader = Paths.get("prefix.pch");
-    Path scratchDir = Paths.get("scratch");
-
-    CxxPreprocessAndCompile buildRule =
-        CxxPreprocessAndCompile.preprocess(
-            params,
-            pathResolver,
-            new PreprocessorDelegate(
-                pathResolver,
-                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
-                DEFAULT_WORKING_DIR,
-                DEFAULT_PREPROCESSOR,
-                PreprocessorFlags.builder()
-                    .setOtherFlags(preprocessorFlags)
-                    .setPrefixHeader(new FakeSourcePath(filesystem, prefixHeader.toString()))
-                    .build(),
-                DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
-                ImmutableList.of(),
-                Optional.empty()),
-            new CompilerDelegate(
-                pathResolver,
-                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                DEFAULT_COMPILER,
-                CxxToolFlags.of()),
-            output,
-            new FakeSourcePath(input.toString()),
-            DEFAULT_INPUT_TYPE,
-            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-            CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
-            Optional.empty());
-
-    // Verify it uses the expected command.
-    ImmutableList<String> expectedPreprocessCommand = ImmutableList.<String>builder()
-        .add("preprocessor")
-        .add("-Dtest=blah")
-        .add("-Dfoo=bar")
-        .add("-include")
-        .add(filesystem.resolve(prefixHeader).toString())
-        .add("-x", "c++")
-        .add("-E")
-        .add("-MD")
-        .add("-MF")
-        .add(filesystem.resolve(scratchDir).resolve("dep.tmp").toString())
-        .add(input.toString())
-        .build();
-    ImmutableList<String> actualPreprocessCommand =
-        buildRule.makeMainStep(scratchDir, false).getCommand();
-    assertEquals(expectedPreprocessCommand, actualPreprocessCommand);
-  }
-
-  @Test
   public void compilerAndPreprocessorAreAlwaysReturnedFromGetInputsAfterBuildingLocally()
       throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -470,7 +405,7 @@ public class CxxPreprocessAndCompileTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
 
     CxxPreprocessAndCompile cxxPreprocess =
-        CxxPreprocessAndCompile.preprocess(
+        CxxPreprocessAndCompile.preprocessAndCompile(
             params,
             pathResolver,
             new PreprocessorDelegate(
@@ -491,6 +426,7 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_OUTPUT,
             DEFAULT_INPUT,
             DEFAULT_INPUT_TYPE,
+            Optional.empty(),
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
             CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
             Optional.empty());
@@ -578,7 +514,7 @@ public class CxxPreprocessAndCompileTest {
     Path scratchDir = Paths.get("scratch");
 
     CxxPreprocessAndCompile buildRule =
-        CxxPreprocessAndCompile.preprocess(
+        CxxPreprocessAndCompile.preprocessAndCompile(
             params,
             pathResolver,
             new PreprocessorDelegate(
@@ -594,24 +530,33 @@ public class CxxPreprocessAndCompileTest {
             new CompilerDelegate(
                 pathResolver,
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                DEFAULT_COMPILER,
+                COMPILER_WITH_COLOR_SUPPORT,
                 CxxToolFlags.of()),
             output,
             new FakeSourcePath(input.toString()),
             DEFAULT_INPUT_TYPE,
+            Optional.empty(),
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
             CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
             Optional.empty());
 
     ImmutableList<String> command =
         buildRule.makeMainStep(scratchDir, false)
-            .makePreprocessArguments(/* allowColorsInDiagnostics */ false);
+            .makeCompileArguments(
+                input.toString(),
+                "c++",
+                /* preprocessable */ true,
+                /* allowColorsInDiagnostics */ false);
     assertThat(command, not(hasItem(PreprocessorWithColorSupport.COLOR_FLAG)));
 
     command =
         buildRule.makeMainStep(scratchDir, false)
-            .makePreprocessArguments(/* allowColorsInDiagnostics */ true);
-    assertThat(command, hasItem(PreprocessorWithColorSupport.COLOR_FLAG));
+            .makeCompileArguments(
+                input.toString(),
+                "c++",
+                /* preprocessable */ true,
+                /* allowColorsInDiagnostics */ true);
+    assertThat(command, hasItem(CompilerWithColorSupport.COLOR_FLAG));
   }
 
 }

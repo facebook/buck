@@ -32,7 +32,6 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -132,35 +131,6 @@ public class CxxPreprocessAndCompile
         resolver,
         CxxPreprocessAndCompileStep.Operation.COMPILE,
         Optional.empty(),
-        compilerDelegate,
-        output,
-        input,
-        inputType,
-        Optional.empty(),
-        compilerSanitizer,
-        assemblerSanitizer,
-        sandboxTree);
-  }
-
-  /**
-   * @return a {@link CxxPreprocessAndCompile} step that preprocesses the given source.
-   */
-  public static CxxPreprocessAndCompile preprocess(
-      BuildRuleParams params,
-      SourcePathResolver resolver,
-      PreprocessorDelegate preprocessorDelegate,
-      CompilerDelegate compilerDelegate,
-      Path output,
-      SourcePath input,
-      CxxSource.Type inputType,
-      DebugPathSanitizer compilerSanitizer,
-      DebugPathSanitizer assemblerSanitizer,
-      Optional<SymlinkTree> sandboxTree) {
-    return new CxxPreprocessAndCompile(
-        params,
-        resolver,
-        CxxPreprocessAndCompileStep.Operation.PREPROCESS,
-        Optional.of(preprocessorDelegate),
         compilerDelegate,
         output,
         input,
@@ -330,30 +300,22 @@ public class CxxPreprocessAndCompile
   }
 
   // Used for compdb
-  public ImmutableList<String> getCommand(
-      Optional<CxxPreprocessAndCompile> externalPreprocessRule) {
+  public ImmutableList<String> getCommand() {
     if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO) {
       return makeMainStep(getProjectFilesystem().getRootPath(), false).getCommand();
     }
 
-    CxxPreprocessAndCompile preprocessRule = externalPreprocessRule.orElse(this);
-    if (!preprocessRule.preprocessDelegate.isPresent()) {
-      throw new HumanReadableException(
-          "Neither %s nor %s handles preprocessing.",
-          externalPreprocessRule,
-          this);
-    }
-    PreprocessorDelegate effectivePreprocessorDelegate = preprocessRule.preprocessDelegate.get();
+    PreprocessorDelegate effectivePreprocessorDelegate = preprocessDelegate.get();
     ImmutableList.Builder<String> cmd = ImmutableList.builder();
     cmd.addAll(
         compilerDelegate.getCommand(
             effectivePreprocessorDelegate.getFlagsWithSearchPaths(/*pch*/ Optional.empty())));
     // use the input of the preprocessor, since the fact that this is going through preprocessor is
     // hidden to compdb.
-    cmd.add("-x", preprocessRule.inputType.getLanguage());
+    cmd.add("-x", inputType.getLanguage());
     cmd.add("-c");
     cmd.add("-o", output.toString());
-    cmd.add(getResolver().getAbsolutePath(preprocessRule.input).toString());
+    cmd.add(getResolver().getAbsolutePath(input).toString());
     return cmd.build();
   }
 

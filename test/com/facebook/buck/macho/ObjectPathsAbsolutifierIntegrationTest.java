@@ -187,7 +187,7 @@ public class ObjectPathsAbsolutifierIntegrationTest {
     assertThat(sanitizedOutput, containsString("SOL Apps/TestApp/main.c"));
     assertThat(unsanitizedOutput, not(containsString("SOL Apps/TestApp/main.c")));
 
-    // check that absolute path to included source file is correct
+    // check that absolute path to source file is correct
     assertThat(
         unsanitizedOutput,
         containsString("SOL " + newCompDirValue + "/Apps/TestApp/main.c"));
@@ -196,7 +196,6 @@ public class ObjectPathsAbsolutifierIntegrationTest {
         unsanitizedOutput,
         containsString("OSO " + newCompDirValue + "/buck-out/bin/" +
             relativeSanitizedObjectFilePath.toString()));
-    // check that absolute path to source file is correct
     assertThat(
         unsanitizedOutput,
         containsString(

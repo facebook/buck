@@ -36,7 +36,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.HumanReadableException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Suppliers;
@@ -48,7 +47,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 
 public class CxxCompilationDatabase extends AbstractBuildRule
     implements HasPostBuildSteps, HasRuntimeDeps {
@@ -58,8 +56,6 @@ public class CxxCompilationDatabase extends AbstractBuildRule
       ImmutableFlavor.of("uber-compilation-database");
 
   @AddToRuleKey
-  private final CxxPreprocessMode preprocessMode;
-  @AddToRuleKey
   private final ImmutableSortedSet<CxxPreprocessAndCompile> compileRules;
   @AddToRuleKey(stringify = true)
   private final Path outputJsonFile;
@@ -68,7 +64,6 @@ public class CxxCompilationDatabase extends AbstractBuildRule
   public static CxxCompilationDatabase createCompilationDatabase(
       BuildRuleParams params,
       SourcePathResolver pathResolver,
-      CxxPreprocessMode preprocessMode,
       Iterable<CxxPreprocessAndCompile> compileAndPreprocessRules,
       Iterable<HeaderSymlinkTree> headerSymlinkTreeRuntimeDeps) {
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
@@ -87,7 +82,6 @@ public class CxxCompilationDatabase extends AbstractBuildRule
             params.getExtraDeps()),
         pathResolver,
         compileRules.build(),
-        preprocessMode,
         ImmutableSortedSet.copyOf(headerSymlinkTreeRuntimeDeps));
   }
 
@@ -95,7 +89,6 @@ public class CxxCompilationDatabase extends AbstractBuildRule
       BuildRuleParams buildRuleParams,
       SourcePathResolver pathResolver,
       ImmutableSortedSet<CxxPreprocessAndCompile> compileRules,
-      CxxPreprocessMode preprocessMode,
       ImmutableSortedSet<BuildRule> runtimeDeps) {
     super(buildRuleParams, pathResolver);
     LOG.debug(
@@ -103,12 +96,10 @@ public class CxxCompilationDatabase extends AbstractBuildRule
         buildRuleParams.getBuildTarget(),
         runtimeDeps);
     this.compileRules = compileRules;
-    this.preprocessMode = preprocessMode;
-    this.outputJsonFile =
-        BuildTargets.getGenPath(
-            getProjectFilesystem(),
-            buildRuleParams.getBuildTarget(),
-            "__%s.json");
+    this.outputJsonFile = BuildTargets.getGenPath(
+        getProjectFilesystem(),
+        buildRuleParams.getBuildTarget(),
+        "__%s.json");
     this.runtimeDeps = runtimeDeps;
   }
 
@@ -164,34 +155,20 @@ public class CxxCompilationDatabase extends AbstractBuildRule
     Iterable<CxxCompilationDatabaseEntry> createEntries() {
       List<CxxCompilationDatabaseEntry> entries = Lists.newArrayList();
       for (CxxPreprocessAndCompile compileRule : compileRules) {
-        Optional<CxxPreprocessAndCompile> preprocessRule = Optional.empty();
-        if (preprocessMode == CxxPreprocessMode.SEPARATE) {
-          for (BuildRule buildRule : compileRule.getDeclaredDeps()) {
-            if (CxxSourceRuleFactory.isPreprocessFlavoredBuildTarget(buildRule.getBuildTarget())) {
-              preprocessRule = Optional.of((CxxPreprocessAndCompile) buildRule);
-              break;
-            }
-          }
-          if (!preprocessRule.isPresent()) {
-            throw new HumanReadableException("Can't find preprocess rule for " + compileRule);
-          }
-        }
-        entries.add(createEntry(preprocessRule, compileRule));
+        entries.add(createEntry(compileRule));
       }
       return entries;
     }
 
-    private CxxCompilationDatabaseEntry createEntry(
-        Optional<CxxPreprocessAndCompile> preprocessRule,
-        CxxPreprocessAndCompile compileRule) {
+    private CxxCompilationDatabaseEntry createEntry(CxxPreprocessAndCompile compileRule) {
 
-      SourcePath inputSourcePath = preprocessRule.orElse(compileRule).getInput();
-      ProjectFilesystem inputFilesystem = preprocessRule.orElse(compileRule).getProjectFilesystem();
+      SourcePath inputSourcePath = compileRule.getInput();
+      ProjectFilesystem inputFilesystem = compileRule.getProjectFilesystem();
 
       String fileToCompile = inputFilesystem
           .resolve(getResolver().getAbsolutePath(inputSourcePath))
           .toString();
-      ImmutableList<String> arguments = compileRule.getCommand(preprocessRule);
+      ImmutableList<String> arguments = compileRule.getCommand();
       return CxxCompilationDatabaseEntry.of(
           inputFilesystem.getRootPath().toString(),
           fileToCompile,

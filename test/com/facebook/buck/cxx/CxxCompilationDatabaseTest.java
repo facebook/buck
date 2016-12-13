@@ -75,11 +75,6 @@ public class CxxCompilationDatabaseTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     SourcePathResolver testSourcePathResolver = new SourcePathResolver(testBuildRuleResolver);
 
-    BuildTarget preprocessTarget = BuildTarget
-        .builder(testBuildRuleParams.getBuildTarget().getUnflavoredBuildTarget())
-        .addFlavors(
-            ImmutableFlavor.of("preprocess-test.cpp"))
-        .build();
     BuildTarget compileTarget = BuildTarget
         .builder(testBuildRuleParams.getBuildTarget().getUnflavoredBuildTarget())
         .addFlavors(
@@ -95,65 +90,6 @@ public class CxxCompilationDatabaseTest {
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> rules = ImmutableSortedSet.naturalOrder();
     BuildRuleParams compileBuildRuleParams;
     switch (strategy) {
-      case SEPARATE:
-        CxxPreprocessAndCompile preprocessRule =
-            CxxPreprocessAndCompile.preprocess(
-                new FakeBuildRuleParamsBuilder(preprocessTarget)
-                    .setProjectFilesystem(filesystem)
-                    .build(),
-                testSourcePathResolver,
-                new PreprocessorDelegate(
-                    testSourcePathResolver,
-                    CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                    CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
-                    filesystem.getRootPath(),
-                    new DefaultPreprocessor(new HashedFileTool(Paths.get("compiler"))),
-                    preprocessorFlags,
-                    new RuleKeyAppendableFunction<FrameworkPath, Path>() {
-                      @Override
-                      public void appendToRuleKey(RuleKeyObjectSink sink) {
-                        // Do nothing.
-                      }
-
-                      @Override
-                      public Path apply(FrameworkPath input) {
-                        throw new UnsupportedOperationException("should not be called");
-                      }
-                    },
-                    ImmutableList.of(),
-                    Optional.empty()),
-                new CompilerDelegate(
-                    testSourcePathResolver,
-                    CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                    new GccCompiler(new HashedFileTool(Paths.get("compiler"))),
-                    CxxToolFlags.of()),
-                Paths.get("test.ii"),
-                new FakeSourcePath(filesystem, "test.cpp"),
-                CxxSource.Type.CXX,
-                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
-                Optional.empty());
-        rules.add(preprocessRule);
-        compileBuildRuleParams = new FakeBuildRuleParamsBuilder(compileTarget)
-            .setProjectFilesystem(filesystem)
-            .setDeclaredDeps(ImmutableSortedSet.of(preprocessRule))
-            .build();
-        rules.add(
-            CxxPreprocessAndCompile.compile(
-                compileBuildRuleParams,
-                testSourcePathResolver,
-                new CompilerDelegate(
-                    testSourcePathResolver,
-                    CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                    new GccCompiler(new HashedFileTool(Paths.get("compiler"))),
-                    CxxToolFlags.of()),
-                Paths.get("test.o"),
-                new FakeSourcePath(filesystem, "test.ii"),
-                CxxSource.Type.CXX_CPP_OUTPUT,
-                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
-                Optional.empty()));
-        break;
       case COMBINED:
         compileBuildRuleParams = new FakeBuildRuleParamsBuilder(compileTarget)
             .setProjectFilesystem(filesystem)
@@ -218,7 +154,6 @@ public class CxxCompilationDatabaseTest {
     CxxCompilationDatabase compilationDatabase = CxxCompilationDatabase.createCompilationDatabase(
         testBuildRuleParams,
         testSourcePathResolver,
-        strategy,
         rules.build(),
         ImmutableSortedSet.of(privateSymlinkTree, exportedSymlinkTree));
 
@@ -270,19 +205,4 @@ public class CxxCompilationDatabaseTest {
             "test.o"));
   }
 
-  @Test
-  public void testCompilationDatabaseWithSeparatedPreprocessAndCompileStrategy() {
-    runCombinedTest(CxxPreprocessMode.SEPARATE,
-        ImmutableList.of(
-            "compiler",
-            "-isystem", "foo/bar",
-            "-isystem", "test",
-            // compdb will present a single command despite this being two commands under the hood,
-            // hence, this is compiling a cpp file, not cpp preprocessed output.
-            "-x", "c++",
-            "-c",
-            "-o",
-            "test.o",
-            "/Users/user/src/test.cpp"));
-  }
 }

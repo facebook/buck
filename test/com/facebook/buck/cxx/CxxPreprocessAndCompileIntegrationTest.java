@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -58,9 +57,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   public static Collection<Object[]> data() {
     return ImmutableList.of(
         new Object[] {CxxPreprocessMode.COMBINED, true},
-        new Object[] {CxxPreprocessMode.SEPARATE, true},
-        new Object[] {CxxPreprocessMode.COMBINED, false},
-        new Object[] {CxxPreprocessMode.SEPARATE, false});
+        new Object[] {CxxPreprocessMode.COMBINED, false});
   }
 
   @Parameterized.Parameter(0)
@@ -169,17 +166,10 @@ public class CxxPreprocessAndCompileIntegrationTest {
         workspace.getDestPath(),
         target,
         cxxPlatform);
-    BuildTarget preprocessTarget =
-        cxxSourceRuleFactory.createPreprocessBuildTarget(sourceName, AbstractCxxSource.Type.CXX);
     BuildTarget compileTarget = cxxSourceRuleFactory.createCompileBuildTarget(sourceName);
 
-    // Run the build and verify that the C++ source was (preprocessed and) compiled.
+    // Run the build and verify that the C++ source was compiled.
     workspace.runBuckBuild(target.toString()).assertSuccess();
-    if (mode == CxxPreprocessMode.SEPARATE) {
-      assertThat(
-          workspace.getBuildLog().getLogEntry(preprocessTarget).getSuccessType(),
-          equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
-    }
     assertThat(
         workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
         equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
@@ -198,12 +188,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
         workspace.getBuildLog().getLogEntry(genrule).getSuccessType(),
         equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
 
-    // Verify that the (preprocess and) compile rules aren't re-run.
-    if (mode == CxxPreprocessMode.SEPARATE) {
-      assertThat(
-          workspace.getBuildLog().getLogEntry(preprocessTarget).getSuccessType(),
-          equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
-    }
+    // Verify that the compile rules aren't re-run.
     assertThat(
         workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
         equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
@@ -221,18 +206,11 @@ public class CxxPreprocessAndCompileIntegrationTest {
         workspace.getDestPath(),
         target,
         cxxPlatform);
-    BuildTarget preprocessTarget =
-        cxxSourceRuleFactory.createPreprocessBuildTarget(sourceName, AbstractCxxSource.Type.CXX);
     BuildTarget compileTarget =
         cxxSourceRuleFactory.createCompileBuildTarget(sourceName);
 
-    // Run the build and verify that the C++ source was (preprocessed and) compiled.
+    // Run the build and verify that the C++ source was compiled.
     workspace.runBuckBuild(target.toString()).assertSuccess();
-    if (mode == CxxPreprocessMode.SEPARATE) {
-      assertThat(
-          workspace.getBuildLog().getLogEntry(preprocessTarget).getSuccessType(),
-          equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
-    }
     assertThat(
         workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
         equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
@@ -251,62 +229,10 @@ public class CxxPreprocessAndCompileIntegrationTest {
         workspace.getBuildLog().getLogEntry(genrule).getSuccessType(),
         equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
 
-    // Verify that the (preprocess and) compile rules aren't re-run.
-    if (mode == CxxPreprocessMode.SEPARATE) {
-      assertThat(
-          workspace.getBuildLog().getLogEntry(preprocessTarget).getSuccessType(),
-          equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
-    }
+    // Verify that the compile rules aren't re-run.
     assertThat(
         workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
         equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
-  }
-
-  @Test
-  public void inputBasedRuleKeyAvoidsRecompilingAfterChangeToUnusedHeader() throws Exception {
-
-    // This test is only meant to check the separate flow, as we want to avoid recompiling if only
-    // unused headers have changed.
-    assumeTrue(
-        "only tests \"separate\" preprocess mode",
-        mode == CxxPreprocessMode.SEPARATE);
-
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(
-        new CxxBuckConfig(FakeBuckConfig.builder().build()));
-    BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_unused_header");
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
-        workspace.getDestPath(),
-        target,
-        cxxPlatform);
-    String unusedHeaderName = "unused_header.h";
-    String sourceName = "source.cpp";
-    BuildTarget compileTarget = cxxSourceRuleFactory.createCompileBuildTarget(sourceName);
-
-    // Run the build and verify that the C++ source was compiled.
-    workspace.runBuckBuild(target.toString());
-    BuckBuildLog.BuildLogEntry firstRunEntry = workspace.getBuildLog().getLogEntry(compileTarget);
-    assertThat(
-        firstRunEntry.getSuccessType(),
-        equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
-
-    // Now modify the unused header.
-    workspace.writeContentsToPath(
-        "static inline int newFunction() { return 20; }",
-        unusedHeaderName);
-
-    // Run the build again and verify that got a matching input-based rule key, and therefore
-    // didn't recompile.
-    workspace.runBuckBuild(target.toString());
-    BuckBuildLog.BuildLogEntry secondRunEntry = workspace.getBuildLog().getLogEntry(compileTarget);
-    assertThat(
-        secondRunEntry.getSuccessType(),
-        equalTo(Optional.of(BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY)));
-
-
-    // Also, make sure the original rule keys are actually different.
-    assertThat(
-        secondRunEntry.getRuleKey(),
-        Matchers.not(equalTo(firstRunEntry.getRuleKey())));
   }
 
   private void depfileBasedRuleKeyRebuildsAfterChangeToUsedHeader(
@@ -318,12 +244,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance(targetName);
     String usedHeaderName = "source_full_header.h";
     String sourceName = "source_full_header.cpp";
-    BuildTarget preprocessTarget =
-        getPreprocessTarget(
-            cxxPlatform,
-            target,
-            sourceName,
-            AbstractCxxSource.Type.CXX);
+    BuildTarget preprocessTarget = getPreprocessTarget(cxxPlatform, target, sourceName);
 
     // Run the build and verify that the C++ source was preprocessed.
     workspace.runBuckBuild("--config", "build.depfiles=enabled", target.toString()).assertSuccess();
@@ -372,12 +293,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance(targetName);
     String usedHeaderName = "source_relative_header.h";
     String sourceName = "source_relative_header.cpp";
-    BuildTarget preprocessTarget =
-        getPreprocessTarget(
-            cxxPlatform,
-            target,
-            sourceName,
-            AbstractCxxSource.Type.CXX);
+    BuildTarget preprocessTarget = getPreprocessTarget(cxxPlatform, target, sourceName);
 
     // Run the build and verify that the C++ source was preprocessed.
     workspace.runBuckBuild("--config", "build.depfiles=enabled", target.toString()).assertSuccess();
@@ -433,8 +349,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
         getPreprocessTarget(
             cxxPlatform,
             target,
-            sourceName,
-            AbstractCxxSource.Type.CXX);
+            sourceName);
 
     // Run the build and verify that the C++ source was preprocessed.
     workspace.runBuckBuild("--config", "build.depfiles=enabled", target.toString()).assertSuccess();
@@ -486,12 +401,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance(targetName);
     String unusedHeaderName = "unused_header.h";
     String sourceName = "source.cpp";
-    BuildTarget preprocessTarget =
-        getPreprocessTarget(
-            cxxPlatform,
-            target,
-            sourceName,
-            AbstractCxxSource.Type.CXX);
+    BuildTarget preprocessTarget = getPreprocessTarget(cxxPlatform, target, sourceName);
 
     // Run the build and verify that the C++ source was preprocessed.
     workspace.runBuckBuild("--config", "build.depfiles=enabled", target.toString()).assertSuccess();
@@ -540,12 +450,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_used_full_header");
     String usedHeaderName = "source_full_header.h";
     String sourceName = "source_full_header.cpp";
-    BuildTarget preprocessTarget =
-        getPreprocessTarget(
-            cxxPlatform,
-            target,
-            sourceName,
-            AbstractCxxSource.Type.CXX);
+    BuildTarget preprocessTarget = getPreprocessTarget(cxxPlatform, target, sourceName);
 
     // Enable caching for manifest-based caching.
     workspace.enableDirCache();
@@ -589,12 +494,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_used_relative_header");
     String usedHeaderName = "source_relative_header.h";
     String sourceName = "source_relative_header.cpp";
-    BuildTarget preprocessTarget =
-        getPreprocessTarget(
-            cxxPlatform,
-            target,
-            sourceName,
-            AbstractCxxSource.Type.CXX);
+    BuildTarget preprocessTarget = getPreprocessTarget(cxxPlatform, target, sourceName);
 
     // Enable caching for manifest-based caching.
     workspace.enableDirCache();
@@ -637,12 +537,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_unused_header");
     String unusedHeaderName = "unused_header.h";
     String sourceName = "source.cpp";
-    BuildTarget preprocessTarget =
-        getPreprocessTarget(
-            cxxPlatform,
-            target,
-            sourceName,
-            AbstractCxxSource.Type.CXX);
+    BuildTarget preprocessTarget = getPreprocessTarget(cxxPlatform, target, sourceName);
 
     // Enable caching for manifest-based caching.
     workspace.enableDirCache();
@@ -767,18 +662,13 @@ public class CxxPreprocessAndCompileIntegrationTest {
   private BuildTarget getPreprocessTarget(
       CxxPlatform cxxPlatform,
       BuildTarget target,
-      String source,
-      CxxSource.Type type) {
+      String source) {
     CxxSourceRuleFactory cxxSourceRuleFactory =
         CxxSourceRuleFactoryHelper.of(
             workspace.getDestPath(),
             target,
             cxxPlatform);
-    if (mode == CxxPreprocessMode.SEPARATE) {
-      return cxxSourceRuleFactory.createPreprocessBuildTarget(source, type);
-    } else {
-      return cxxSourceRuleFactory.createCompileBuildTarget(source);
-    }
+    return cxxSourceRuleFactory.createCompileBuildTarget(source);
   }
 
 }

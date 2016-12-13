@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -435,6 +436,6 @@ public class CxxBinaryDescriptionTest {
     assertThat(((CxxBinary) resultRule).getLinkRule(), Matchers.instanceOf(CxxStrip.class));
 
     CxxStrip strip = (CxxStrip) ((CxxBinary) resultRule).getLinkRule();
-    assertThat(strip.getStripStyle(), Matchers.equalTo(StripStyle.ALL_SYMBOLS));
+    assertThat(strip.getStripStyle(), equalTo(StripStyle.ALL_SYMBOLS));
   }
 }
