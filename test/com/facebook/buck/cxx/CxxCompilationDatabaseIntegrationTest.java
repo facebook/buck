@@ -141,6 +141,9 @@ public class CxxCompilationDatabaseIntegrationTest {
     assertEquals(1, fileToEntry.size());
     String path =
         sandboxSources ? "buck-out/gen/binary_with_dep#default,sandbox/foo.cpp" : "foo.cpp";
+    BuildTarget compilationTarget = target.withFlavors(
+        ImmutableFlavor.of("default"),
+        ImmutableFlavor.of("compile-" + sanitize("foo.cpp.o")));
     assertHasEntry(
         fileToEntry,
         path,
@@ -159,18 +162,18 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-c")
             .add("-MD")
             .add("-MF")
-            .add(rootPath.resolve("dep.tmp").toString())
+            .add(
+                rootPath
+                    .resolve(
+                        BuildTargets.getScratchPath(
+                            filesystem,
+                            compilationTarget,
+                            "%s-tmp/dep.tmp"))
+                    .toString())
             .add(Paths.get(path).toString())
             .add("-o")
             .add(
-                BuildTargets
-                    .getGenPath(
-                        filesystem,
-                        target.withFlavors(
-                            ImmutableFlavor.of("default"),
-                            ImmutableFlavor.of("compile-" + sanitize("foo.cpp.o"))),
-                        "%s/foo.cpp.o")
-                    .toString())
+                BuildTargets.getGenPath(filesystem, compilationTarget, "%s/foo.cpp.o").toString())
             .build());
   }
 
@@ -212,6 +215,9 @@ public class CxxCompilationDatabaseIntegrationTest {
     assertEquals(1, fileToEntry.size());
     String path =
         sandboxSources ? "buck-out/gen/library_with_header#default,sandbox/bar.cpp" : "bar.cpp";
+    BuildTarget compilationTarget = target.withFlavors(
+        ImmutableFlavor.of("default"),
+        ImmutableFlavor.of("compile-pic-" + sanitize("bar.cpp.o")));
     assertHasEntry(
         fileToEntry,
         path,
@@ -232,18 +238,18 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-c")
             .add("-MD")
             .add("-MF")
-            .add(rootPath.resolve("dep.tmp").toString())
+            .add(
+                rootPath
+                    .resolve(
+                        BuildTargets.getScratchPath(
+                            filesystem,
+                            compilationTarget,
+                            "%s-tmp/dep.tmp"))
+                    .toString())
             .add(Paths.get(path).toString())
             .add("-o")
             .add(
-                BuildTargets
-                    .getGenPath(
-                        filesystem,
-                        target.withFlavors(
-                            ImmutableFlavor.of("default"),
-                            ImmutableFlavor.of("compile-pic-" + sanitize("bar.cpp.o"))),
-                        "%s/bar.cpp.o")
-                    .toString())
+                BuildTargets.getGenPath(filesystem, compilationTarget, "%s/bar.cpp.o").toString())
             .build());
   }
 
@@ -280,6 +286,9 @@ public class CxxCompilationDatabaseIntegrationTest {
     assertEquals(1, fileToEntry.size());
     String path =
         sandboxSources ? "buck-out/gen/test#default,sandbox/test.cpp" : "test.cpp";
+    BuildTarget compilationTarget = target.withFlavors(
+        ImmutableFlavor.of("default"),
+        ImmutableFlavor.of("compile-pic-" + sanitize("test.cpp.o")));
     assertHasEntry(
         fileToEntry,
         path,
@@ -300,18 +309,18 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-c")
             .add("-MD")
             .add("-MF")
-            .add(rootPath.resolve("dep.tmp").toString())
+            .add(
+                rootPath
+                    .resolve(
+                        BuildTargets.getScratchPath(
+                            filesystem,
+                            compilationTarget,
+                            "%s-tmp/dep.tmp"))
+                    .toString())
             .add(Paths.get(path).toString())
             .add("-o")
             .add(
-                BuildTargets
-                    .getGenPath(
-                        filesystem,
-                        target.withFlavors(
-                            ImmutableFlavor.of("default"),
-                            ImmutableFlavor.of("compile-pic-" + sanitize("test.cpp.o"))),
-                        "%s/test.cpp.o")
-                    .toString())
+                BuildTargets.getGenPath(filesystem, compilationTarget, "%s/test.cpp.o").toString())
             .build());
   }
 
@@ -352,6 +361,9 @@ public class CxxCompilationDatabaseIntegrationTest {
     assertEquals(1, fileToEntry.size());
     String path =
         sandboxSources ? "buck-out/gen/test#default,sandbox/test.cpp" : "test.cpp";
+    BuildTarget compilationTarget = target.withFlavors(
+        ImmutableFlavor.of("default"),
+        ImmutableFlavor.of("compile-pic-" + sanitize("test.cpp.o")));
     assertHasEntry(
         fileToEntry,
         path,
@@ -372,18 +384,18 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-c")
             .add("-MD")
             .add("-MF")
-            .add(rootPath.resolve("dep.tmp").toString())
+            .add(
+                rootPath
+                    .resolve(
+                        BuildTargets.getScratchPath(
+                            filesystem,
+                            compilationTarget,
+                            "%s-tmp/dep.tmp"))
+                    .toString())
             .add(Paths.get(path).toString())
             .add("-o")
             .add(
-                BuildTargets
-                    .getGenPath(
-                        filesystem,
-                        target.withFlavors(
-                            ImmutableFlavor.of("default"),
-                            ImmutableFlavor.of("compile-pic-" + sanitize("test.cpp.o"))),
-                        "%s/test.cpp.o")
-                    .toString())
+                BuildTargets.getGenPath(filesystem, compilationTarget, "%s/test.cpp.o").toString())
             .build());
   }
 

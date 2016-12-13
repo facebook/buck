@@ -54,9 +54,8 @@ import java.util.Optional;
 
 public class CxxCompilationDatabaseTest {
 
-  private void runCombinedTest(
-      CxxPreprocessMode strategy,
-      ImmutableList<String> expectedArguments) {
+  @Test
+  public void testCompilationDatabaseWithCombinedPreprocessAndCompileStrategy() {
     BuildTarget testBuildTarget = BuildTarget
         .builder(BuildTargetFactory.newInstance("//foo:baz"))
         .addAllFlavors(
@@ -89,7 +88,7 @@ public class CxxCompilationDatabaseTest {
 
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> rules = ImmutableSortedSet.naturalOrder();
     BuildRuleParams compileBuildRuleParams;
-    switch (strategy) {
+    switch (CxxPreprocessMode.COMBINED) {
       case COMBINED:
         compileBuildRuleParams = new FakeBuildRuleParamsBuilder(compileTarget)
             .setProjectFilesystem(filesystem)
@@ -178,31 +177,31 @@ public class CxxCompilationDatabaseTest {
         step.createEntries();
     Iterable<CxxCompilationDatabaseEntry> expectedEntries =
         ImmutableList.of(
-          CxxCompilationDatabaseEntry.of(
-              root,
-              root + "/test.cpp",
-              expectedArguments));
+            CxxCompilationDatabaseEntry.of(
+                root,
+                root + "/test.cpp",
+                ImmutableList.of(
+                    "compiler",
+                    "-isystem",
+                    "foo/bar",
+                    "-isystem",
+                    "test",
+                    "-x",
+                    "c++",
+                    "-c",
+                    "-MD",
+                    "-MF",
+                    fakeRoot
+                        .resolve(
+                            BuildTargets.getScratchPath(
+                                filesystem,
+                                testBuildTarget.withFlavors(ImmutableFlavor.of("compile-test.cpp")),
+                                "%s-tmp/dep.tmp"))
+                        .toString(),
+                    "test.cpp",
+                    "-o",
+                    "test.o")));
     MoreAsserts.assertIterablesEquals(expectedEntries, observedEntries);
-  }
-
-  @Test
-  public void testCompilationDatabaseWithCombinedPreprocessAndCompileStrategy() {
-    runCombinedTest(CxxPreprocessMode.COMBINED,
-        ImmutableList.of(
-            "compiler",
-            "-isystem",
-            "foo/bar",
-            "-isystem",
-            "test",
-            "-x",
-            "c++",
-            "-c",
-            "-MD",
-            "-MF",
-            "/Users/user/src/dep.tmp",
-            "test.cpp",
-            "-o",
-            "test.o"));
   }
 
 }

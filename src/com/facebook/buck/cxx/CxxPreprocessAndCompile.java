@@ -285,13 +285,15 @@ public class CxxPreprocessAndCompile
   public ImmutableList<Step> getBuildSteps(
       BuildContext context,
       BuildableContext buildableContext) {
-    Path scratchDir =
-        BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s-tmp");
     buildableContext.recordArtifact(output);
     return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
-        new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),
-        makeMainStep(scratchDir, compilerDelegate.isArgFileSupported()));
+        new MakeCleanDirectoryStep(getProjectFilesystem(), getScratchPath()),
+        makeMainStep(getScratchPath(), compilerDelegate.isArgFileSupported()));
+  }
+
+  private Path getScratchPath() {
+    return BuildTargets.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s-tmp");
   }
 
   @VisibleForTesting
@@ -302,7 +304,7 @@ public class CxxPreprocessAndCompile
   // Used for compdb
   public ImmutableList<String> getCommand() {
     if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO) {
-      return makeMainStep(getProjectFilesystem().getRootPath(), false).getCommand();
+      return makeMainStep(getScratchPath(), false).getCommand();
     }
 
     PreprocessorDelegate effectivePreprocessorDelegate = preprocessDelegate.get();

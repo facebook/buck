@@ -115,48 +115,36 @@ public class CompilationDatabaseIntegrationTest {
 
     // Verify the entries in the compilation database.
     assertFlags(
+        filesystem,
         "Libraries/EXExample/EXExample/EXExampleModel.m",
-        BuildTargets
-            .getGenPath(
-                filesystem,
-                target.withFlavors(
-                    ImmutableFlavor.of("iphonesimulator-x86_64"),
-                    ImmutableFlavor.of("compile-pic-" + sanitize("EXExample/EXExampleModel.m.o"))),
-                "%s")
-            .resolve("EXExample/EXExampleModel.m.o")
-            .toString(),
+        target.withFlavors(
+            ImmutableFlavor.of("iphonesimulator-x86_64"),
+            ImmutableFlavor.of("compile-pic-" + sanitize("EXExample/EXExampleModel.m.o"))),
+        Paths.get("EXExample/EXExampleModel.m.o"),
         /* isLibrary */ true,
         fileToEntry,
         frameworks,
         includes);
     assertFlags(
+        filesystem,
         "Libraries/EXExample/EXExample/EXUser.mm",
-        BuildTargets
-            .getGenPath(
-                filesystem,
-                target.withFlavors(
-                    ImmutableFlavor.of("iphonesimulator-x86_64"),
-                    ImmutableFlavor.of("compile-pic-" + sanitize("EXExample/EXUser.mm.o"))),
-                "%s")
-            .resolve("EXExample/EXUser.mm.o")
-            .toString(),
+        target.withFlavors(
+            ImmutableFlavor.of("iphonesimulator-x86_64"),
+            ImmutableFlavor.of("compile-pic-" + sanitize("EXExample/EXUser.mm.o"))),
+        Paths.get("EXExample/EXUser.mm.o"),
         /* isLibrary */ true,
         fileToEntry,
         frameworks,
         includes);
     assertFlags(
+        filesystem,
         "Libraries/EXExample/EXExample/Categories/NSString+Palindrome.m",
-        BuildTargets
-            .getGenPath(
-                filesystem,
-                target.withFlavors(
-                    ImmutableFlavor.of("iphonesimulator-x86_64"),
-                    ImmutableFlavor.of(
-                        "compile-pic-" +
-                            sanitize("EXExample/Categories/NSString+Palindrome.m.o"))),
-                "%s")
-            .resolve("EXExample/Categories/NSString+Palindrome.m.o")
-            .toString(),
+        target.withFlavors(
+            ImmutableFlavor.of("iphonesimulator-x86_64"),
+            ImmutableFlavor.of(
+                "compile-pic-" +
+                    sanitize("EXExample/Categories/NSString+Palindrome.m.o"))),
+        Paths.get("EXExample/Categories/NSString+Palindrome.m.o"),
         /* isLibrary */ true,
         fileToEntry,
         frameworks,
@@ -202,33 +190,25 @@ public class CompilationDatabaseIntegrationTest {
         filesystem.getBuckPaths().getBuckOut().toString());
 
     assertFlags(
+        filesystem,
         "Apps/Weather/Weather/EXViewController.m",
-        BuildTargets
-            .getGenPath(
-                filesystem,
-                target.withFlavors(
-                    ImmutableFlavor.of("iphonesimulator-x86_64"),
-                    ImmutableFlavor.of(
-                        "compile-" + sanitize("Weather/EXViewController.m.o"))),
-                "%s")
-            .resolve("Weather/EXViewController.m.o")
-            .toString(),
+        target.withFlavors(
+            ImmutableFlavor.of("iphonesimulator-x86_64"),
+            ImmutableFlavor.of(
+                "compile-" + sanitize("Weather/EXViewController.m.o"))),
+        Paths.get("Weather/EXViewController.m.o"),
         /* isLibrary */ false,
         fileToEntry,
         frameworks,
         includes);
     assertFlags(
+        filesystem,
         "Apps/Weather/Weather/main.m",
-        BuildTargets
-            .getGenPath(
-                filesystem,
-                target.withFlavors(
-                    ImmutableFlavor.of("iphonesimulator-x86_64"),
-                    ImmutableFlavor.of(
-                        "compile-" + sanitize("Weather/main.m.o"))),
-                "%s")
-            .resolve("Weather/main.m.o")
-            .toString(),
+        target.withFlavors(
+            ImmutableFlavor.of("iphonesimulator-x86_64"),
+            ImmutableFlavor.of(
+                "compile-" + sanitize("Weather/main.m.o"))),
+        Paths.get("Weather/main.m.o"),
         /* isLibrary */ false,
         fileToEntry,
         frameworks,
@@ -236,8 +216,10 @@ public class CompilationDatabaseIntegrationTest {
   }
 
   private void assertFlags(
+      ProjectFilesystem filesystem,
       String source,
-      String output,
+      BuildTarget outputTarget,
+      Path outputPath,
       boolean isLibrary,
       Map<String, CxxCompilationDatabaseEntry> fileToEntry,
       ImmutableSet<String> additionalFrameworks,
@@ -310,10 +292,13 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add("-c");
     commandArgs.add("-MD");
     commandArgs.add("-MF");
-    commandArgs.add(tmpRoot.resolve("dep.tmp").toString());
+    commandArgs.add(
+        tmpRoot.resolve(
+            BuildTargets.getScratchPath(filesystem, outputTarget, "%s-tmp/dep.tmp")).toString());
     commandArgs.add(source);
     commandArgs.add("-o");
-    commandArgs.add(output);
+    commandArgs.add(
+        BuildTargets.getGenPath(filesystem, outputTarget, "%s").resolve(outputPath).toString());
     assertThat(ImmutableList.copyOf(entry.getCommand().split(" ")), equalTo(commandArgs));
   }
 }
