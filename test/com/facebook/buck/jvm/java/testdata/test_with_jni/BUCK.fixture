@@ -70,10 +70,50 @@ java_test(
   use_cxx_libraries = True,
   cxx_library_whitelist = [
     '//:jlib-native',
+    '//:helper-lib',
   ],
   deps = [
     ':jlib',
     ':lib-broken',
+    ':junit-jar',
+    ':hamcrest-jar',
+  ],
+)
+
+cxx_library(
+  name = 'lib-pernicious',
+  soname = 'libpernicious.$(ext)',
+  srcs = ['pernicious.c'],
+)
+
+java_test(
+  name = 'jtest-pernicious',
+  srcs = ['JTestWithPernicious.java'],
+  use_cxx_libraries = True,
+  cxx_library_whitelist = [
+    '//:jlib-native',
+    '//:helper-lib',
+    '//:lib-pernicious',
+  ],
+  deps = [
+    ':jlib',
+    ':lib-pernicious',
+    ':junit-jar',
+    ':hamcrest-jar',
+  ],
+)
+
+java_test(
+  name = 'jtest-symlink',
+  srcs = ['JTestWithoutPernicious.java'],
+  use_cxx_libraries = True,
+  cxx_library_whitelist = [
+    '//:jlib-native',#delete-1
+    '//:helper-lib',
+  ],
+  deps = [
+    ':jlib',
+    ':lib-pernicious',
     ':junit-jar',
     ':hamcrest-jar',
   ],

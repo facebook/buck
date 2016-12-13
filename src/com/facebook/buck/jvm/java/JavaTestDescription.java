@@ -32,6 +32,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
@@ -45,8 +46,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
+import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.logging.Level;
 
 
@@ -228,11 +230,31 @@ public class JavaTestDescription implements
       if (useCxxLibraries.orElse(false)) {
         SymlinkTree nativeLibsSymlinkTree =
             buildNativeLibsSymlinkTreeRule(params, pathResolver, cxxPlatform);
-        Predicate<BuildRule> shouldInclude = x -> true;
+
+        // If the cxxLibraryWhitelist is present, remove symlinks that were not requested.
+        // They could point to old, invalid versions of the library in question.
         if (!cxxLibraryWhitelist.isEmpty()) {
-          shouldInclude = input -> cxxLibraryWhitelist.contains(
-              input.getBuildTarget().withFlavors());
+          ImmutableMap.Builder<Path, SourcePath> filteredLinks = ImmutableMap.builder();
+          for (Map.Entry<Path, SourcePath> entry : nativeLibsSymlinkTree.getLinks().entrySet()) {
+            if (!(entry.getValue() instanceof BuildTargetSourcePath)) {
+              // Could consider including these, but I don't know of any examples.
+              continue;
+            }
+            BuildTargetSourcePath sourcePath = (BuildTargetSourcePath) entry.getValue();
+            if (cxxLibraryWhitelist.contains(sourcePath.getTarget().withFlavors())) {
+              filteredLinks.put(entry.getKey(), entry.getValue());
+            }
+          }
+          nativeLibsSymlinkTree = new SymlinkTree(
+              params.copyWithChanges(
+                  nativeLibsSymlinkTree.getBuildTarget(),
+                  Suppliers.ofInstance(ImmutableSortedSet.of()),
+                  Suppliers.ofInstance(ImmutableSortedSet.of())),
+              pathResolver,
+              nativeLibsSymlinkTree.getRoot(),
+              filteredLinks.build());
         }
+
         updatedParams = params.appendExtraDeps(ImmutableList.<BuildRule>builder()
             .add(nativeLibsSymlinkTree)
             // Add all the native libraries as first-order dependencies.
@@ -240,11 +262,7 @@ public class JavaTestDescription implements
             // (1) They become runtime deps because JavaTest adds all first-order deps.
             // (2) They affect the JavaTest's RuleKey, so changing them will invalidate
             // the test results cache.
-            .addAll(
-                pathResolver.filterBuildRuleInputs(nativeLibsSymlinkTree.getLinks().values())
-                    .stream()
-                    .filter(shouldInclude)
-                    .iterator())
+            .addAll(pathResolver.filterBuildRuleInputs(nativeLibsSymlinkTree.getLinks().values()))
             .build());
         nativeLibsEnvironment =
             ImmutableMap.of(
