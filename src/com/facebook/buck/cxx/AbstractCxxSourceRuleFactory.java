@@ -276,8 +276,7 @@ abstract class AbstractCxxSourceRuleFactory {
   @VisibleForTesting
   public CxxPreprocessAndCompile createCompileBuildRule(
       String name,
-      CxxSource source,
-      boolean afterPreprocessing) {
+      CxxSource source) {
 
     Preconditions.checkArgument(CxxSourceTypes.isCompilableType(source.getType()));
 
@@ -323,7 +322,7 @@ abstract class AbstractCxxSourceRuleFactory {
         source.getType(),
         getCxxPlatform().getCompilerDebugPathSanitizer(),
         getCxxPlatform().getAssemblerDebugPathSanitizer(),
-        afterPreprocessing ? Optional.empty() : getSandboxTree());
+        getSandboxTree());
     getResolver().addToIndex(result);
     return result;
   }
@@ -331,8 +330,7 @@ abstract class AbstractCxxSourceRuleFactory {
   @VisibleForTesting
   CxxPreprocessAndCompile requireCompileBuildRule(
       String name,
-      CxxSource source,
-      boolean afterPreprocessing) {
+      CxxSource source) {
 
     BuildTarget target = createCompileBuildTarget(name);
     Optional<CxxPreprocessAndCompile> existingRule = getResolver().getRuleOptionalWithType(
@@ -345,7 +343,7 @@ abstract class AbstractCxxSourceRuleFactory {
       return existingRule.get();
     }
 
-    return createCompileBuildRule(name, source, afterPreprocessing);
+    return createCompileBuildRule(name, source);
 
   }
 
@@ -381,7 +379,7 @@ abstract class AbstractCxxSourceRuleFactory {
         .build();
   }
 
-  public CxxInferCapture requireInferCaptureBuildRule(
+  private CxxInferCapture requireInferCaptureBuildRule(
       String name,
       CxxSource source,
       InferBuckConfig inferConfig) {
@@ -396,7 +394,7 @@ abstract class AbstractCxxSourceRuleFactory {
     return createInferCaptureBuildRule(target, name, source, inferConfig);
   }
 
-  public CxxInferCapture createInferCaptureBuildRule(
+  private CxxInferCapture createInferCaptureBuildRule(
       BuildTarget target,
       String name,
       CxxSource source,
@@ -503,9 +501,7 @@ abstract class AbstractCxxSourceRuleFactory {
   }
 
   @VisibleForTesting
-  CxxPreprocessAndCompile requirePreprocessAndCompileBuildRule(
-      String name,
-      CxxSource source) {
+  CxxPreprocessAndCompile requirePreprocessAndCompileBuildRule(String name, CxxSource source) {
 
     BuildTarget target = createCompileBuildTarget(name);
     Optional<CxxPreprocessAndCompile> existingRule = getResolver().getRuleOptionalWithType(
@@ -521,8 +517,7 @@ abstract class AbstractCxxSourceRuleFactory {
     return createPreprocessAndCompileBuildRule(name, source);
   }
 
-  @VisibleForTesting
-  CxxPrecompiledHeader requirePrecompiledHeaderBuildRule(
+  private CxxPrecompiledHeader requirePrecompiledHeaderBuildRule(
       PreprocessorDelegateCacheValue preprocessorDelegateCacheValue,
       CxxSource source) {
 
@@ -642,7 +637,6 @@ abstract class AbstractCxxSourceRuleFactory {
 
   @VisibleForTesting
   ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
-      CxxPreprocessMode strategy,
       ImmutableMap<String, CxxSource> sources) {
 
     return sources.entrySet().stream()
@@ -656,24 +650,12 @@ abstract class AbstractCxxSourceRuleFactory {
 
           source = getSandboxedCxxSource(source);
 
-          switch (strategy) {
-
-            case COMBINED: {
-              CxxPreprocessAndCompile rule;
-
-              // If it's a preprocessable source, use a combine preprocess-and-compile build rule.
-              // Otherwise, use a regular compile rule.
-              if (CxxSourceTypes.isPreprocessableType(source.getType())) {
-                rule = requirePreprocessAndCompileBuildRule(name, source);
-              } else {
-                rule = requireCompileBuildRule(name, source, false);
-              }
-
-              return rule;
-            }
-
-            default:
-              throw new IllegalStateException();
+          // If it's a preprocessable source, use a combine preprocess-and-compile build rule.
+          // Otherwise, use a regular compile rule.
+          if (CxxSourceTypes.isPreprocessableType(source.getType())) {
+            return requirePreprocessAndCompileBuildRule(name, source);
+          } else {
+            return requireCompileBuildRule(name, source);
           }
         })
         .collect(MoreCollectors.toImmutableMap(
@@ -728,7 +710,6 @@ abstract class AbstractCxxSourceRuleFactory {
       ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput,
       ImmutableMultimap<CxxSource.Type, String> compilerFlags,
       Optional<SourcePath> prefixHeader,
-      CxxPreprocessMode strategy,
       ImmutableMap<String, CxxSource> sources,
       PicType pic,
       Optional<SymlinkTree> sandboxTree) {
@@ -743,7 +724,7 @@ abstract class AbstractCxxSourceRuleFactory {
         prefixHeader,
         pic,
         sandboxTree);
-    return factory.requirePreprocessAndCompileRules(strategy, sources);
+    return factory.requirePreprocessAndCompileRules(sources);
   }
 
   public enum PicType {

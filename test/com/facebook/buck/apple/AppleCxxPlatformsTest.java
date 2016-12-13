@@ -792,8 +792,7 @@ public class AppleCxxPlatformsTest {
                   CxxSource.of(
                       CxxSource.Type.CXX_CPP_OUTPUT,
                       new FakeSourcePath(source),
-                      ImmutableList.of()),
-                  false);
+                      ImmutableList.of()));
           break;
         default:
           throw new IllegalStateException();

@@ -1,3 +1,2 @@
 [cxx]
-  preprocess_mode = combined
   separate_debug_symbols = true

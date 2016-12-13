@@ -211,7 +211,6 @@ public class CxxPythonExtensionDescription implements
                 args.langCompilerFlags,
                 cxxPlatform),
             args.prefixHeader,
-            cxxBuckConfig.getPreprocessMode(),
             srcs,
             CxxSourceRuleFactory.PicType.PIC,
             sandboxTree);

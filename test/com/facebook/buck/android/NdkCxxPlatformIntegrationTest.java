@@ -24,7 +24,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.cxx.CxxPreprocessMode;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -54,32 +53,27 @@ import java.util.Optional;
 @RunWith(Parameterized.class)
 public class NdkCxxPlatformIntegrationTest {
 
-  @Parameterized.Parameters(name = "{0},{1},{2},{3}")
+  @Parameterized.Parameters(name = "{0},{1},{2}")
   public static Collection<Object[]> data() {
     List<Object[]> data = Lists.newArrayList();
     for (String arch : ImmutableList.of("arm", "armv7", "arm64", "x86", "x86_64")) {
-      for (CxxPreprocessMode mode : CxxPreprocessMode.values()) {
+      data.add(
+          new Object[]{
+              NdkCxxPlatformCompiler.Type.GCC,
+              NdkCxxPlatforms.CxxRuntime.GNUSTL,
+              arch});
+      // We don't support 64-bit clang yet.
+      if (!arch.equals("arm64") && !arch.equals("x86_64")) {
         data.add(
             new Object[]{
-                NdkCxxPlatformCompiler.Type.GCC,
+                NdkCxxPlatformCompiler.Type.CLANG,
                 NdkCxxPlatforms.CxxRuntime.GNUSTL,
-                arch,
-                mode});
-        // We don't support 64-bit clang yet.
-        if (!arch.equals("arm64") && !arch.equals("x86_64")) {
-          data.add(
-              new Object[]{
-                  NdkCxxPlatformCompiler.Type.CLANG,
-                  NdkCxxPlatforms.CxxRuntime.GNUSTL,
-                  arch,
-                  mode});
-          data.add(
-              new Object[]{
-                  NdkCxxPlatformCompiler.Type.CLANG,
-                  NdkCxxPlatforms.CxxRuntime.LIBCXX,
-                  arch,
-                  mode});
-        }
+                arch});
+        data.add(
+            new Object[]{
+                NdkCxxPlatformCompiler.Type.CLANG,
+                NdkCxxPlatforms.CxxRuntime.LIBCXX,
+                arch});
       }
     }
     return data;
@@ -94,9 +88,6 @@ public class NdkCxxPlatformIntegrationTest {
   @Parameterized.Parameter(value = 2)
   public String arch;
 
-  @Parameterized.Parameter(value = 3)
-  public CxxPreprocessMode mode;
-
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
 
@@ -105,14 +96,12 @@ public class NdkCxxPlatformIntegrationTest {
     workspace.setUp();
     workspace.writeContentsToPath(
         String.format(
-            "[cxx]\n  preprocess_mode = %s\n" +
             "[ndk]\n" +
             "  compiler = %s\n" +
             "  gcc_version = 4.9\n" +
             "  cxx_runtime = %s\n" +
             "  cpu_abis = arm, armv7, arm64, x86, x86_64\n" +
             "  app_platform = android-21\n",
-            mode.toString().toLowerCase(),
             compiler,
             cxxRuntime),
         ".buckconfig");
@@ -193,18 +182,13 @@ public class NdkCxxPlatformIntegrationTest {
     // Verify that the working directory is sanitized.
     assertFalse(contents.contains(tmp.getRoot().toString()));
 
-    // TODO(7534323): We don't currently support fixing up debug paths for the combined flow.
-    if (mode != CxxPreprocessMode.COMBINED) {
-
-      // Verify that we don't have any references to the build toolchain in the debug info.
-      for (NdkCxxPlatforms.Host host : NdkCxxPlatforms.Host.values()) {
-        assertFalse(contents.contains(host.toString()));
-      }
-
-      // Verify that the NDK path is sanitized.
-      assertFalse(contents.contains(getNdkRoot().toString()));
+    // Verify that we don't have any references to the build toolchain in the debug info.
+    for (NdkCxxPlatforms.Host host : NdkCxxPlatforms.Host.values()) {
+      assertFalse(contents.contains(host.toString()));
     }
 
+    // Verify that the NDK path is sanitized.
+    assertFalse(contents.contains(getNdkRoot().toString()));
   }
 
 }

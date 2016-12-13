@@ -1392,15 +1392,13 @@ public class CxxBinaryIntegrationTest {
     assertThat(Files.exists(Paths.get(outputPath.toString() + "-LinkMap.txt")), is(true));
   }
 
-  public void doTestSimpleCxxBinaryBuilds(String preprocessMode) throws Exception {
+  @Test
+  public void testSimpleCxxBinaryBuilds() throws Exception {
         Assume.assumeFalse("Test should be modified for sandboxing", sandboxSources);
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "simple", tmp);
     workspace.setUp();
     workspace.setupCxxSandboxing(sandboxSources);
-    workspace.writeContentsToPath(
-        String.format("[cxx]\npreprocess_mode = %s\n", preprocessMode),
-        ".buckconfig");
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(workspace.asCell().getBuckConfig());
     CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig);
     BuildTarget target = BuildTargetFactory.newInstance(workspace.getDestPath(), "//foo:simple");
@@ -1510,11 +1508,6 @@ public class CxxBinaryIntegrationTest {
     assertThat(
         buildLog.getLogEntry(target).getStatus(),
         Matchers.equalTo(BuildRuleStatus.CANCELED));
-  }
-
-  @Test
-  public void testSimpleCxxBinaryBuildsInCombinedMode() throws Exception {
-    doTestSimpleCxxBinaryBuilds("combined");
   }
 
   @Test

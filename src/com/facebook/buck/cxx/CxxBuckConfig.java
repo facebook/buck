@@ -132,12 +132,6 @@ public class CxxBuckConfig {
     return Optional.of(split.build());
   }
 
-  public CxxPreprocessMode getPreprocessMode() {
-    return delegate
-        .getEnum(cxxSection, "preprocess_mode", CxxPreprocessMode.class)
-        .orElse(CxxPreprocessMode.COMBINED);
-  }
-
   /*
    * Constructs the appropriate Archiver for the specified platform.
    */

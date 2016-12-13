@@ -29,14 +29,12 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.Ansi;
 import com.google.common.base.Functions;
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -64,34 +62,20 @@ public class CxxErrorTransformerFactoryTest {
     normalizerBuilder.addHeader(new FakeSourcePath(replacement.toString()), original);
     HeaderPathNormalizer normalizer = normalizerBuilder.build();
 
-    Path compilationDirectory = Paths.get("compDir");
-    Path sanitizedDir = Paths.get("hello");
-    Path unsanitizedDir = Paths.get("buck-out/foo#bar");
-    DebugPathSanitizer sanitizer = new MungingDebugPathSanitizer(
-        unsanitizedDir.toString().length(),
-        File.separatorChar,
-        compilationDirectory,
-        ImmutableBiMap.of(unsanitizedDir, sanitizedDir));
-
-
     return ImmutableList.copyOf(new Object[][] {
         {
             "relative paths",
             new CxxErrorTransformerFactory(
-                Optional.of(filesystem.getRootPath()),
                 Optional.empty(),
-                normalizer,
-                sanitizer),
+                normalizer),
             replacement,
             original
         },
         {
             "absolute paths",
             new CxxErrorTransformerFactory(
-                Optional.of(filesystem.getRootPath()),
                 Optional.of(filesystem::resolve),
-                normalizer,
-                sanitizer),
+                normalizer),
             replacement.toAbsolutePath(),
             original
         }

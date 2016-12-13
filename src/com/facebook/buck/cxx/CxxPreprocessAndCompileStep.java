@@ -296,7 +296,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     }
   }
 
-  private int executeOther(ExecutionContext context) throws Exception {
+  private int executeCompilation(ExecutionContext context) throws Exception {
     ProcessExecutorParams.Builder builder =
         makeSubprocessBuilder(context, ImmutableMap.of());
 
@@ -333,8 +333,7 @@ public class CxxPreprocessAndCompileStep implements Step {
     // We buffer error messages in memory, as these are typically small.
     ByteArrayOutputStream error = new ByteArrayOutputStream();
 
-    // Open the temp file to write the intermediate output to and also fire up managed threads
-    // to process the stdout and stderr lines from the preprocess command.
+    // Fire up managed threads to process the stdout and stderr lines.
     int exitCode;
     try {
       try (LineProcessorRunnable errorProcessor =
@@ -381,16 +380,10 @@ public class CxxPreprocessAndCompileStep implements Step {
 
   private CxxErrorTransformerFactory createErrorTransformerFactory(ExecutionContext context) {
     return new CxxErrorTransformerFactory(
-        // If we're compiling, we also need to restore the original working directory in the
-        // error output.
-        operation == Operation.COMPILE ?
-            Optional.of(filesystem.getRootPath()) :
-            Optional.empty(),
         context.shouldReportAbsolutePaths() ?
             Optional.of(filesystem::resolve) :
             Optional.empty(),
-        headerPathNormalizer,
-        getSanitizer());
+        headerPathNormalizer);
   }
 
   @Override
@@ -398,9 +391,9 @@ public class CxxPreprocessAndCompileStep implements Step {
     try {
       LOG.debug("%s %s -> %s", operation.toString().toLowerCase(), input, output);
 
-      int exitCode = executeOther(context);
+      int exitCode = executeCompilation(context);
 
-      if (operation.isPreprocess() && exitCode == 0 && compiler.isDependencyFileSupported()) {
+      if (exitCode == 0 && compiler.isDependencyFileSupported()) {
         exitCode =
             Depfiles.parseAndWriteBuckCompatibleDepfile(
                 context,

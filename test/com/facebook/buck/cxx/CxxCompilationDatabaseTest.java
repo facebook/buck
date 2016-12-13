@@ -55,7 +55,7 @@ import java.util.Optional;
 public class CxxCompilationDatabaseTest {
 
   @Test
-  public void testCompilationDatabaseWithCombinedPreprocessAndCompileStrategy() {
+  public void testCompilationDatabase() {
     BuildTarget testBuildTarget = BuildTarget
         .builder(BuildTargetFactory.newInstance("//foo:baz"))
         .addAllFlavors(
@@ -87,15 +87,12 @@ public class CxxCompilationDatabaseTest {
         .build();
 
     ImmutableSortedSet.Builder<CxxPreprocessAndCompile> rules = ImmutableSortedSet.naturalOrder();
-    BuildRuleParams compileBuildRuleParams;
-    switch (CxxPreprocessMode.COMBINED) {
-      case COMBINED:
-        compileBuildRuleParams = new FakeBuildRuleParamsBuilder(compileTarget)
-            .setProjectFilesystem(filesystem)
-            .build();
-        rules.add(
-            CxxPreprocessAndCompile.preprocessAndCompile(
-                compileBuildRuleParams,
+    BuildRuleParams compileBuildRuleParams = new FakeBuildRuleParamsBuilder(compileTarget)
+        .setProjectFilesystem(filesystem)
+        .build();
+    rules.add(
+        CxxPreprocessAndCompile.preprocessAndCompile(
+            compileBuildRuleParams,
                 testSourcePathResolver,
                 new PreprocessorDelegate(
                     testSourcePathResolver,
@@ -129,10 +126,6 @@ public class CxxCompilationDatabaseTest {
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
                 CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
                 Optional.empty()));
-        break;
-      default:
-        throw new RuntimeException("Invalid strategy");
-    }
 
     HeaderSymlinkTree privateSymlinkTree = CxxDescriptionEnhancer.createHeaderSymlinkTree(
         testBuildRuleParams,

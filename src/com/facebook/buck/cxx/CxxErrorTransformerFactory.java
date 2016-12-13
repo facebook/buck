@@ -42,26 +42,18 @@ import java.util.regex.Pattern;
  */
 class CxxErrorTransformerFactory {
 
-  private final Optional<Path> workingDir;
   private final Optional<Function<Path, Path>> absolutifier;
   private final HeaderPathNormalizer pathNormalizer;
-  private final DebugPathSanitizer sanitizer;
 
   /**
-   * @param workingDir If set, replace padded working dir with effective compilation directory.
    * @param absolutifier If set, run paths through the given function that absolutizes the path.
    * @param pathNormalizer Path replacements to rewrite symlinked C headers.
-   * @param sanitizer Used to perform workingDir to compdir translation.
    */
   public CxxErrorTransformerFactory(
-      Optional<Path> workingDir,
       Optional<Function<Path, Path>> absolutifier,
-      HeaderPathNormalizer pathNormalizer,
-      DebugPathSanitizer sanitizer) {
-    this.workingDir = workingDir;
+      HeaderPathNormalizer pathNormalizer) {
     this.absolutifier = absolutifier;
     this.pathNormalizer = pathNormalizer;
-    this.sanitizer = sanitizer;
   }
 
   /**
@@ -116,10 +108,7 @@ class CxxErrorTransformerFactory {
   }
 
   private String transformPath(String original) {
-    Path path = Paths.get(
-        workingDir.isPresent() ?
-            sanitizer.restore(workingDir, original) :
-            original);
+    Path path = Paths.get(original);
 
     // And, of course, we need to fixup any replacement paths.
     Optional<Path> normalizedPath = pathNormalizer.getRelativePathForUnnormalizedPath(path);

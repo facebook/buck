@@ -87,7 +87,7 @@ public class CxxPreprocessAndCompile
     if (precompiledHeaderRef.isPresent()) {
       Preconditions.checkState(
           operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO,
-          "Precompiled headers can only be used for same process preprocess/compile operations.");
+          "Precompiled headers can only be used for compile operations.");
     }
     this.operation = operation;
     this.preprocessDelegate = preprocessDelegate;
@@ -272,13 +272,7 @@ public class CxxPreprocessAndCompile
 
   @Override
   public String getType() {
-    if (operation.isCompile() && operation.isPreprocess()) {
-      return "cxx_preprocess_compile";
-    } else if (operation.isPreprocess()) {
-      return "cxx_preprocess";
-    } else {
-      return "cxx_compile";
-    }
+    return "cxx_preprocess_compile";
   }
 
   @Override
@@ -332,7 +326,7 @@ public class CxxPreprocessAndCompile
 
   @Override
   public boolean useDependencyFileRuleKeys() {
-    return compilerDelegate.isDependencyFileSupported() && operation.isPreprocess();
+    return compilerDelegate.isDependencyFileSupported();
   }
 
   @Override

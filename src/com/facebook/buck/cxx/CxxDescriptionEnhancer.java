@@ -764,7 +764,6 @@ public class CxxDescriptionEnhancer {
                 langCompilerFlags,
                 cxxPlatform),
             prefixHeader,
-            cxxBuckConfig.getPreprocessMode(),
             srcs,
             linkStyle == Linker.LinkableDepType.STATIC ?
                 CxxSourceRuleFactory.PicType.PDC :
@@ -1215,7 +1214,6 @@ public class CxxDescriptionEnhancer {
             args.langCompilerFlags,
             cxxPlatform),
         args.prefixHeader,
-        cxxBuckConfig.getPreprocessMode(),
         CxxDescriptionEnhancer.parseCxxSources(
             params.getBuildTarget(),
             sourcePathResolver,

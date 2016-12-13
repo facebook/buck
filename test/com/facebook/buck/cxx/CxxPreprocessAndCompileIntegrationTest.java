@@ -42,7 +42,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.IOException;
@@ -50,20 +49,16 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 
-@RunWith(Parameterized.class)
 public class CxxPreprocessAndCompileIntegrationTest {
 
-  @Parameterized.Parameters(name = "preprocess_mode={0},sandbox_sources={1}")
+  @Parameterized.Parameters(name = "sandbox_sources={0}")
   public static Collection<Object[]> data() {
     return ImmutableList.of(
-        new Object[] {CxxPreprocessMode.COMBINED, true},
-        new Object[] {CxxPreprocessMode.COMBINED, false});
+        new Object[] {true},
+        new Object[] {false});
   }
 
   @Parameterized.Parameter(0)
-  public CxxPreprocessMode mode;
-
-  @Parameterized.Parameter(1)
   public boolean sandboxSource;
 
   @Rule
@@ -77,7 +72,6 @@ public class CxxPreprocessAndCompileIntegrationTest {
     workspace.setUp();
     workspace.writeContentsToPath(
         "[cxx]\n" +
-        "  preprocess_mode = " + mode.toString().toLowerCase() + "\n" +
         "  sandbox_sources = " + sandboxSource + "\n" +
         "  asflags = -g\n" +
         "  cppflags = -g\n" +
@@ -578,7 +572,6 @@ public class CxxPreprocessAndCompileIntegrationTest {
     Assume.assumeFalse("parent directories do not work in sandbox mode", sandboxSource);
     workspace.writeContentsToPath(
         "[cxx]\n" +
-         "  preprocess_mode = " + mode.toString().toLowerCase() + "\n" +
          "  sandbox_sources = " + sandboxSource + "\n" +
         "[project]\n  check_package_boundary = false\n",
         ".buckconfig");
