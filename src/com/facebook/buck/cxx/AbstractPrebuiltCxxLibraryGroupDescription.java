@@ -39,6 +39,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
@@ -54,7 +55,8 @@ import java.util.Optional;
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractPrebuiltCxxLibraryGroupDescription implements
-    Description<AbstractPrebuiltCxxLibraryGroupDescription.Args> {
+    Description<AbstractPrebuiltCxxLibraryGroupDescription.Args>,
+    VersionPropagator<AbstractPrebuiltCxxLibraryGroupDescription.Args> {
 
   private static final MacroFinder FINDER = new MacroFinder();
   private static final String LIB_MACRO = "lib";
