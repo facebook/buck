@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -180,16 +181,7 @@ public class PreDexedFilesSorter {
 
     public void addPrimaryDex(DexWithClasses dexWithClasses) {
       primaryDexSize += dexWithClasses.getWeightEstimate();
-      if (primaryDexSize > dexWeightLimit) {
-        throw new HumanReadableException(
-            "Primary dex exceeds linear alloc limit. DexWithClasses %s with cost %s puts the " +
-                "linear alloc estimate for the primary dex at %s, exceeding the maximum of %s.",
-            dexWithClasses.getPathToDexFile(),
-            dexWithClasses.getWeightEstimate(),
-            primaryDexSize,
-            dexWeightLimit);
-      }
-      this.primaryDexContents.add(dexWithClasses);
+      primaryDexContents.add(dexWithClasses);
       dexInputsHashes.put(dexWithClasses.getPathToDexFile(), dexWithClasses.getClassesHash());
     }
 
@@ -222,6 +214,10 @@ public class PreDexedFilesSorter {
     }
 
     Result getResult() {
+      if (primaryDexSize > dexWeightLimit) {
+        throwErrorForPrimaryDexExceedsWeightLimit();
+      }
+
       Map<Path, DexWithClasses> metadataTxtEntries = Maps.newHashMap();
       ImmutableMultimap.Builder<Path, Path> secondaryOutputToInputs = ImmutableMultimap.builder();
       boolean isRootModule = apkModule.equals(apkModuleGraph.getRootAPKModule());
@@ -255,6 +251,24 @@ public class PreDexedFilesSorter {
           secondaryOutputToInputs.build(),
           metadataTxtEntries,
           dexInputsHashes.build());
+    }
+
+    private void throwErrorForPrimaryDexExceedsWeightLimit(){
+      StringBuilder message = new StringBuilder();
+      message.append(String.format(
+          "Primary dex weight %s exceeds limit of %s. It contains...%n",
+          primaryDexSize,
+          dexWeightLimit));
+      message.append(String.format("Weight\tDex file path%n"));
+      Comparator<DexWithClasses> bySizeDescending =
+          (o1, o2) -> Integer.compare(o2.getWeightEstimate(), o1.getWeightEstimate());
+      ImmutableList<DexWithClasses> sortedBySizeDescending = FluentIterable
+          .from(primaryDexContents)
+          .toSortedList(bySizeDescending);
+      for (DexWithClasses dex : sortedBySizeDescending) {
+        message.append(String.format("%s\t%s%n", dex.getWeightEstimate(), dex.getPathToDexFile()));
+      }
+      throw new HumanReadableException(message.toString());
     }
 
     /**
