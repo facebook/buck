@@ -86,4 +86,25 @@ public class ConnectionTest {
       assertThat(result, Matchers.equalTo(false));
     }
   }
+
+  @Test
+  public void testPassingNull() throws Exception {
+    ObjectMapper objectMapper = new ObjectMapper();
+    MessageSerializer messageSerializer = new MessageSerializer(objectMapper);
+    WorkerProcess workerProcess = new FakeWorkerProcess(
+        ImmutableMap.of(
+            "{\"type\":\"InvocationMessage\",\"name\":\"doBoolean\",\"args\":[null,42.1234]}",
+            WorkerJobResult.of(
+                0,
+                Optional.of("{\"type\":\"ReturnResultMessage\",\"value\":true}"),
+                Optional.empty())));
+    MessageTransport messageTransport = new MessageTransport(workerProcess, messageSerializer);
+
+    try (Connection<RemoteInterface> connection = new Connection<>(messageTransport)) {
+      connection.setRemoteInterface(RemoteInterface.class, RemoteInterface.class.getClassLoader());
+
+      boolean result = connection.getRemoteObjectProxy().doBoolean(null, 42.1234);
+      assertThat(result, Matchers.equalTo(true));
+    }
+  }
 }

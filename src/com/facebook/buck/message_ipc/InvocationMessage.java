@@ -16,13 +16,13 @@
 
 package com.facebook.buck.message_ipc;
 
-import com.google.common.collect.ImmutableList;
+import java.util.List;
 
 public class InvocationMessage {
   private final String methodName;
-  private final ImmutableList<Object> arguments;
+  private final List<Object> arguments;
 
-  public InvocationMessage(String methodName, ImmutableList<Object> arguments) {
+  public InvocationMessage(String methodName, List<Object> arguments) {
     this.methodName = methodName;
     this.arguments = arguments;
   }
@@ -31,7 +31,7 @@ public class InvocationMessage {
     return methodName;
   }
 
-  public ImmutableList<Object> getArguments() {
+  public List<Object> getArguments() {
     return arguments;
   }
 }

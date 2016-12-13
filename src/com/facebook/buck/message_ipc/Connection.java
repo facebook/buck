@@ -16,11 +16,10 @@
 package com.facebook.buck.message_ipc;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
@@ -62,15 +61,12 @@ public class Connection<REMOTE> implements AutoCloseable {
   @SuppressWarnings("unchecked")
   public void setRemoteInterface(Class<REMOTE> remoteInterface, ClassLoader classLoader) {
     checkNotClose();
-    InvocationHandler invocationHandler = new InvocationHandler() {
-      @Override
-      public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        InvocationMessage invocation = new InvocationMessage(
-            method.getName(),
-            ImmutableList.copyOf(args));
-        ReturnResultMessage response = messageTransport.sendMessageAndWaitForResponse(invocation);
-        return response.getValue();
-      }
+    InvocationHandler invocationHandler = (proxy, method, args) -> {
+      InvocationMessage invocation = new InvocationMessage(
+          method.getName(),
+          Arrays.asList(args));
+      ReturnResultMessage response = messageTransport.sendMessageAndWaitForResponse(invocation);
+      return response.getValue();
     };
     this.remoteObjectProxy = (REMOTE) Proxy.newProxyInstance(
         classLoader,

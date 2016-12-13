@@ -165,6 +165,7 @@
       "//src/com/facebook/buck/jvm/core:classhash",
       "//src/com/facebook/buck/jvm/core:packagefinder",
       "//src/com/facebook/buck/jvm/java:javac-sink",
+      "//src/com/facebook/buck/message_ipc:message_ipc",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/model:simple_types",
       "//src/com/facebook/buck/rules:build_rule",

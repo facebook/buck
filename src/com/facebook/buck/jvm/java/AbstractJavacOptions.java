@@ -173,7 +173,9 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
                 getCompilerClassName().orElse(COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL),
                 ImmutableSet.of(getJavacJarPath().get()));
           case OUT_OF_PROCESS:
-              throw new RuntimeException("OutOfProcessJarBackedJavac is not supported yet");
+            return new OutOfProcessJarBackedJavac(
+                getCompilerClassName().orElse(COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL),
+                ImmutableSet.of(getJavacJarPath().get()));
         }
         break;
       case JDK:
@@ -181,7 +183,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
           case IN_PROCESS:
             return new JdkProvidedInMemoryJavac();
           case OUT_OF_PROCESS:
-            throw new RuntimeException("OutOfProcessJdkProvidedInMemoryJavac is not supported yet");
+            return new OutOfProcessJdkProvidedInMemoryJavac();
         }
         break;
     }
