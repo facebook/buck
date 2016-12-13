@@ -55,6 +55,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.FluentIterable;
@@ -69,7 +70,8 @@ import java.util.Optional;
 
 public class CxxLuaExtensionDescription implements
     Description<CxxLuaExtensionDescription.Arg>,
-    ImplicitDepsInferringDescription<CxxLuaExtensionDescription.Arg> {
+    ImplicitDepsInferringDescription<CxxLuaExtensionDescription.Arg>,
+    VersionPropagator<CxxLuaExtensionDescription.Arg> {
 
   private final LuaConfig luaConfig;
   private final CxxBuckConfig cxxBuckConfig;
