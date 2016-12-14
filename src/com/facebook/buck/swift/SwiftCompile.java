@@ -126,8 +126,8 @@ class SwiftCompile
 
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     ImmutableList.Builder<String> compilerFlagsBuilder = ImmutableList.builder();
-    compilerFlagsBuilder.addAll(compilerFlags);
     compilerFlagsBuilder.addAll(swiftBuckConfig.getFlags().orElse(ImmutableSet.of()));
+    compilerFlagsBuilder.addAll(compilerFlags);
     this.compilerFlags = compilerFlagsBuilder.build();
     this.enableObjcInterop = enableObjcInterop.orElse(true);
     this.bridgingHeader = bridgingHeader;
