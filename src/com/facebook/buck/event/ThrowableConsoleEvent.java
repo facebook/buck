@@ -27,8 +27,6 @@ import java.util.logging.Level;
  */
 public class ThrowableConsoleEvent extends ConsoleEvent {
 
-  private final Throwable throwable;
-
   protected ThrowableConsoleEvent(Throwable throwable, String message) {
     this(throwable, Level.SEVERE, message);
   }
@@ -38,7 +36,6 @@ public class ThrowableConsoleEvent extends ConsoleEvent {
         level,
         /* containsAnsiEscapeCodes */ false,
         combineThrowableAndMessage(throwable, message));
-    this.throwable = throwable;
   }
 
   private static String combineThrowableAndMessage(Throwable throwable, String message) {
@@ -48,10 +45,6 @@ public class ThrowableConsoleEvent extends ConsoleEvent {
     }
     desc += "\n" + Throwables.getStackTraceAsString(throwable);
     return desc;
-  }
-
-  public Throwable getThrowable() {
-    return throwable;
   }
 
   public static ThrowableConsoleEvent create(Throwable throwable, String message, Object... args) {
