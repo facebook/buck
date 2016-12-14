@@ -87,7 +87,9 @@ public class DefaultRuleKeyFactory
 
   @Override
   protected RuleKeyBuilder<RuleKey> newBuilder(BuildRule rule) {
-    return newBuilder();
+    RuleKeyBuilder<RuleKey> builder = newBuilder();
+    addDepsToRuleKey(builder, rule);
+    return builder;
   }
 
   protected void addDepsToRuleKey(RuleKeyObjectSink sink, BuildRule buildRule) {
@@ -102,12 +104,4 @@ public class DefaultRuleKeyFactory
       sink.setReflectively("buck.deps", buildRule.getDeps());
     }
   }
-
-  @Override
-  public RuleKeyBuilder<RuleKey> newInstance(BuildRule buildRule) {
-    RuleKeyBuilder<RuleKey> builder = super.newInstance(buildRule);
-    addDepsToRuleKey(builder, buildRule);
-    return builder;
-  }
-
 }

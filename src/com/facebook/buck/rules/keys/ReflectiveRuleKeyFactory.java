@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyFactory;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -59,7 +60,8 @@ public abstract class ReflectiveRuleKeyFactory<
    */
   protected abstract RULE_KEY_BUILDER newBuilder(BuildRule rule);
 
-  protected RULE_KEY_BUILDER newInstance(BuildRule buildRule) {
+  @VisibleForTesting
+  public RULE_KEY_BUILDER newInstance(BuildRule buildRule) {
     RULE_KEY_BUILDER builder = newBuilder(buildRule);
     builder.setReflectively("buck.seed", seed);
     builder.setReflectively("name", buildRule.getBuildTarget().getFullyQualifiedName());

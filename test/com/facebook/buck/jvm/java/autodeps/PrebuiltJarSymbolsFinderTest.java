@@ -154,7 +154,7 @@ public class PrebuiltJarSymbolsFinderTest {
             throw new RuntimeException(e);
           }
           RuleKey ruleKey = new DefaultRuleKeyFactory(0, fileHashCache, pathResolver)
-              .newInstance(javaSymbolsRule).build();
+              .build(javaSymbolsRule);
           jarFile.delete();
 
           return ruleKey;
@@ -198,8 +198,8 @@ public class PrebuiltJarSymbolsFinderTest {
         new ProjectFilesystem(tmp.getRoot())
     );
 
-    RuleKey key1 = new DefaultRuleKeyFactory(0, fileHashCache, pathResolver).newInstance(
-        javaSymbolsRule1).build();
+    RuleKey key1 = new DefaultRuleKeyFactory(0, fileHashCache, pathResolver).build(
+        javaSymbolsRule1);
 
     JavaSymbolsRule javaSymbolsRule2 = new JavaSymbolsRule(
         BuildTargetFactory.newInstance("//foo:rule"),
@@ -208,8 +208,8 @@ public class PrebuiltJarSymbolsFinderTest {
         ObjectMappers.newDefaultInstance(),
         new ProjectFilesystem(tmp.getRoot())
     );
-    RuleKey key2 = new DefaultRuleKeyFactory(0, fileHashCache, pathResolver).newInstance(
-        javaSymbolsRule2).build();
+    RuleKey key2 = new DefaultRuleKeyFactory(0, fileHashCache, pathResolver).build(
+        javaSymbolsRule2);
 
     assertNotNull(key1);
     assertNotNull(key2);

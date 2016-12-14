@@ -253,14 +253,11 @@ public class RuleKeyTest {
     BuildRule buildRule = new FakeBuildRule(buildTarget, resolver);
 
     RuleKey empty1 = new DefaultRuleKeyFactory(0, new NullFileHashCache(), resolver)
-        .newInstance(buildRule)
-        .build();
+        .build(buildRule);
     RuleKey empty2 = new DefaultRuleKeyFactory(0, new NullFileHashCache(), resolver)
-        .newInstance(buildRule)
-        .build();
+        .build(buildRule);
     RuleKey empty3 = new DefaultRuleKeyFactory(1, new NullFileHashCache(), resolver)
-        .newInstance(buildRule)
-        .build();
+        .build(buildRule);
 
     assertThat(empty1, is(equalTo(empty2)));
     assertThat(empty1, is(not(equalTo(empty3))));
@@ -801,14 +798,14 @@ public class RuleKeyTest {
         new NoopBuildRule(paramsWithBothDeps, sourcePathResolver);
 
     assertNotEquals(
-        ruleKeyFactory.newInstance(ruleWithDeclaredDep).build(),
-        ruleKeyFactory.newInstance(ruleWithExtraDep).build());
+        ruleKeyFactory.build(ruleWithDeclaredDep),
+        ruleKeyFactory.build(ruleWithExtraDep));
     assertNotEquals(
-        ruleKeyFactory.newInstance(ruleWithDeclaredDep).build(),
-        ruleKeyFactory.newInstance(ruleWithBothDeps).build());
+        ruleKeyFactory.build(ruleWithDeclaredDep),
+        ruleKeyFactory.build(ruleWithBothDeps));
     assertNotEquals(
-        ruleKeyFactory.newInstance(ruleWithExtraDep).build(),
-        ruleKeyFactory.newInstance(ruleWithBothDeps).build());
+        ruleKeyFactory.build(ruleWithExtraDep),
+        ruleKeyFactory.build(ruleWithBothDeps));
   }
 
   private static class TestRuleKeyAppendable implements RuleKeyAppendable {

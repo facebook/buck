@@ -176,7 +176,7 @@ public class JavaLibrarySymbolsFinderTest {
               ObjectMappers.newDefaultInstance(),
               projectFilesystem
           );
-          return ruleKeyFactory.newInstance(javaSymbolsRule).build();
+          return ruleKeyFactory.build(javaSymbolsRule);
         };
 
     RuleKey key1 = createRuleKey.apply(example1Finder);
