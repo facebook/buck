@@ -91,8 +91,9 @@ class SwiftCompile
 
   private final boolean hasMainEntry;
   private final boolean enableObjcInterop;
+
+  @AddToRuleKey
   private final Optional<SourcePath> bridgingHeader;
-  private final SwiftBuckConfig swiftBuckConfig;
 
   private final Iterable<CxxPreprocessorInput> cxxPreprocessorInputs;
 
@@ -112,7 +113,6 @@ class SwiftCompile
     super(params, resolver);
     this.cxxPlatform = cxxPlatform;
     this.frameworks = frameworks;
-    this.swiftBuckConfig = swiftBuckConfig;
     this.cxxPreprocessorInputs =
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, params.getDeps());
     this.swiftCompiler = swiftCompiler;
@@ -125,7 +125,10 @@ class SwiftCompile
     this.objectPath = outputPath.resolve(escapedModuleName + ".o");
 
     this.srcs = ImmutableSortedSet.copyOf(srcs);
-    this.compilerFlags = compilerFlags;
+    ImmutableList.Builder<String> compilerFlagsBuilder = ImmutableList.builder();
+    compilerFlagsBuilder.addAll(compilerFlags);
+    compilerFlagsBuilder.addAll(swiftBuckConfig.getFlags().orElse(ImmutableSet.of()));
+    this.compilerFlags = compilerFlagsBuilder.build();
     this.enableObjcInterop = enableObjcInterop.orElse(true);
     this.bridgingHeader = bridgingHeader;
     this.hasMainEntry = FluentIterable.from(srcs).firstMatch(
@@ -173,10 +176,6 @@ class SwiftCompile
             .transform(SourcePaths.getToBuildTargetSourcePath())
             .transform(input -> getResolver().getAbsolutePath(input).toString())));
 
-    Optional<Iterable<String>> configFlags = swiftBuckConfig.getFlags();
-    if (configFlags.isPresent()) {
-      compilerCommand.addAll(configFlags.get());
-    }
     compilerCommand.add(
         "-enable-testing",
         "-c",
