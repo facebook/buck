@@ -46,6 +46,7 @@ import com.facebook.buck.rules.macros.StringExpander;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
@@ -66,7 +67,9 @@ import java.util.regex.Pattern;
 
 public class CxxGenruleDescription
     extends AbstractGenruleDescription<AbstractGenruleDescription.Arg>
-    implements Flavored {
+    implements
+        Flavored,
+        VersionPropagator<AbstractGenruleDescription.Arg> {
 
   private final FlavorDomain<CxxPlatform> cxxPlatforms;
 
@@ -188,7 +191,7 @@ public class CxxGenruleDescription
           protected BuildRule resolve(BuildRuleResolver resolver, BuildTarget input)
               throws MacroException {
             try {
-              return resolver.requireRule(input.withFlavors(cxxPlatform.get().getFlavor()));
+              return resolver.requireRule(input.withAppendedFlavors(cxxPlatform.get().getFlavor()));
             } catch (NoSuchBuildTargetException e) {
               throw new MacroException(e.getHumanReadableErrorMessage());
             }
@@ -232,7 +235,8 @@ public class CxxGenruleDescription
     if (cxxPlatform.isPresent()) {
       return super.createBuildRule(
           targetGraph,
-          params.withFlavor(cxxPlatform.get().getFlavor()),
+          params.copyWithBuildTarget(
+              params.getBuildTarget().withAppendedFlavors(cxxPlatform.get().getFlavor())),
           resolver,
           args);
     }

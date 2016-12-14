@@ -47,7 +47,8 @@ public class CxxGenrule extends NoopBuildRule implements HasOutputName {
   }
 
   public SourcePath getGenrule(CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
-    BuildRule rule = resolver.requireRule(getBuildTarget().withFlavors(cxxPlatform.getFlavor()));
+    BuildRule rule =
+        resolver.requireRule(getBuildTarget().withAppendedFlavors(cxxPlatform.getFlavor()));
     return new BuildTargetSourcePath(rule.getBuildTarget());
   }
 
