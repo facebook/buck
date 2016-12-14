@@ -19,19 +19,19 @@ package com.facebook.buck.graph;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 import java.io.IOException;
 
 public class Dot<T> {
 
-  private final TraversableGraph<T> graph;
+  private final DirectedAcyclicGraph<T> graph;
   private final String graphName;
   private final Function<T, String> nodeToName;
   private final Appendable output;
 
   public Dot(
-      TraversableGraph<T> graph,
+      DirectedAcyclicGraph<T> graph,
       String graphName,
       Function<T, String> nodeToName,
       Appendable output) {
@@ -64,7 +64,7 @@ public class Dot<T> {
   }
 
   public static <T> void writeSubgraphOutput(
-      final TraversableGraph<T> graph,
+      final DirectedAcyclicGraph<T> graph,
       final String graphName,
       final ImmutableSet<T> nodesToFilter,
       final Function<T, String> nodeToName,
@@ -82,7 +82,7 @@ public class Dot<T> {
           return;
         }
         String source = nodeToName.apply(node);
-        for (T sink : Iterables.filter(graph.getOutgoingNodesFor(node), nodesToFilter::contains)) {
+        for (T sink : Sets.filter(graph.getOutgoingNodesFor(node), nodesToFilter::contains)) {
           String sinkName = nodeToName.apply(sink);
           builder.add(String.format("  %s -> %s;\n", source, sinkName));
         }

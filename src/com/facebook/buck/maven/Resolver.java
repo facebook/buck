@@ -20,7 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.eclipse.aether.util.artifact.JavaScopes.TEST;
 
 import com.facebook.buck.graph.MutableDirectedGraph;
-import com.facebook.buck.graph.ParentTraversableGraph;
+import com.facebook.buck.graph.TraversableGraph;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -215,7 +215,7 @@ public class Resolver {
 
   private Map.Entry<Path, Prebuilt> downloadArtifact(
       final Artifact artifactToDownload,
-      ParentTraversableGraph<Artifact> graph)
+      TraversableGraph<Artifact> graph)
       throws IOException, ArtifactResolutionException {
     String projectName = getProjectName(artifactToDownload);
     Path project = buckRepoRoot.resolve(buckThirdPartyRelativePath).resolve(projectName);

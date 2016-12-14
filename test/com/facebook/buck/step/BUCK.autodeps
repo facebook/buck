@@ -5,7 +5,6 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/util:io",
-      "//src/com/facebook/buck/util:util",
       "//test/com/facebook/buck/event:testutil",
       "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/step:testutil",
