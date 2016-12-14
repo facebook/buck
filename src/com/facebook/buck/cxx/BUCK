@@ -33,6 +33,7 @@ PLATFORM_SRCS = [
   'PosixNmSymbolNameTool.java',
   'Preprocessor.java',
   'PreprocessorProvider.java',
+  'SharedLibraryInterfaceFactory.java',
   'SymbolNameTool.java',
   'WindowsArchiver.java',
   'WindowsCompiler.java',
