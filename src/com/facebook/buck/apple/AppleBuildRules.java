@@ -257,7 +257,7 @@ public final class AppleBuildRules {
       ImmutableSortedSet.Builder<TargetNode<?, ?>> directDepsBuilder,
       ImmutableSortedSet.Builder<TargetNode<?, ?>> exportedDepsBuilder
   ) {
-    directDepsBuilder.addAll(targetGraph.getAll(targetNode.getDeps()));
+    directDepsBuilder.addAll(targetGraph.getAll(targetNode.getDepsStream()::iterator));
     if (targetNode.getType() == Description.getBuildRuleType(AppleLibraryDescription.class) ||
         targetNode.getType() == Description.getBuildRuleType(CxxLibraryDescription.class)) {
       CxxLibraryDescription.Arg arg =
