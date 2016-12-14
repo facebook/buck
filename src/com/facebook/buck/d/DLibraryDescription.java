@@ -33,13 +33,16 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.nio.file.Path;
 
-public class DLibraryDescription implements Description<DLibraryDescription.Arg> {
+public class DLibraryDescription implements
+    Description<DLibraryDescription.Arg>,
+    VersionPropagator<DLibraryDescription.Arg> {
 
   private final DBuckConfig dBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
@@ -78,7 +81,7 @@ public class DLibraryDescription implements Description<DLibraryDescription.Arg>
     }
 
     BuildTarget sourceTreeTarget =
-        params.getBuildTarget().withFlavors(DDescriptionUtils.SOURCE_LINK_TREE);
+        params.getBuildTarget().withAppendedFlavors(DDescriptionUtils.SOURCE_LINK_TREE);
     DIncludes dIncludes =
         DIncludes.builder()
             .setLinkTree(new BuildTargetSourcePath(sourceTreeTarget))

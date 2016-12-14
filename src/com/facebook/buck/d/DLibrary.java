@@ -65,7 +65,7 @@ public class DLibrary extends NoopBuildRule implements NativeLinkable {
       Linker.LinkableDepType type) throws NoSuchBuildTargetException {
     Archive archive =
         (Archive) buildRuleResolver.requireRule(
-            getBuildTarget().withFlavors(
+            getBuildTarget().withAppendedFlavors(
                 cxxPlatform.getFlavor(),
                 CxxDescriptionEnhancer.STATIC_FLAVOR));
     return NativeLinkableInput.of(
@@ -85,7 +85,8 @@ public class DLibrary extends NoopBuildRule implements NativeLinkable {
   }
 
   public DIncludes getIncludes() throws NoSuchBuildTargetException {
-    buildRuleResolver.requireRule(getBuildTarget().withFlavors(DDescriptionUtils.SOURCE_LINK_TREE));
+    buildRuleResolver.requireRule(
+        getBuildTarget().withAppendedFlavors(DDescriptionUtils.SOURCE_LINK_TREE));
     return includes;
   }
 
