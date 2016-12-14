@@ -65,6 +65,7 @@ java_test(
   srcs = glob(ANDROID_BINARY_INTEGRATION_TEST_SRCS),
   resources = glob(['testdata/**'], include_dotfiles=True),
   autodeps = True,
+  labels = ['long_running'],
 )
 
 ANDROID_BUILD_CONFIG_INTEGRATION_TEST_SRCS = [
@@ -97,4 +98,5 @@ java_test(
       ANDROID_INSTRUMENTATION_INTEGRATION_TEST_SRCS),
   autodeps = True,
   resources = glob(['testdata/**'], include_dotfiles=True),
+  labels = ['long_running'],
 )

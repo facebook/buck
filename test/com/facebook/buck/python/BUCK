@@ -20,4 +20,5 @@ java_test(
   name = 'python',
   srcs = glob(['*Test.java']),
   autodeps = True,
+  labels = ['long_running'],
 )

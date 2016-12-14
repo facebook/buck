@@ -54,4 +54,5 @@ java_test(
   srcs = glob(['*Test.java'], excludes = SLOW_INTEGRATION_TESTS),
   resources = glob(['testdata/**'], include_dotfiles=True),
   autodeps = True,
+  labels = ['long_running'],
 )

@@ -20,5 +20,6 @@ java_test(
     run_test_separately = True,
     srcs = glob(STANDARD_INTEGRATION_TEST_SRCS),
     autodeps = True,
-    resources = glob(['testdata/**'])
+    resources = glob(['testdata/**']),
+    labels = ['long_running']
 )

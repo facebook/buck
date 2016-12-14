@@ -27,7 +27,8 @@ if os_platform == 'darwin':
       deps = [
         '//src/com/facebook/buck/util:constants',
       ],
-      resources = glob(['testdata/**'])
+      resources = glob(['testdata/**']),
+      labels = ['glacial']
     )
 
     java_test(
@@ -35,4 +36,5 @@ if os_platform == 'darwin':
       srcs = glob(['*Test.java'], excludes=APPLE_TEST_INTEGRATION_TEST_SRCS),
       autodeps = True,
       resources = glob(['testdata/**']),
+      labels = ['long_running']
     )

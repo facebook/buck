@@ -43,4 +43,5 @@ java_test(
   srcs = glob(STANDARD_TEST_SRCS, excludes=APPLE_INTEGRATION_TEST_SRCS),
   resources = glob(['testdata/**'], include_dotfiles=True),
   autodeps = True,
+  labels = ['long_running'],
 )

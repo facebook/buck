@@ -6,6 +6,7 @@ java_test(
   name = 'parser',
   srcs = PARSER_TEST_SRCS,
   autodeps = True,
+  labels = ['long_running'],
 )
 
 java_test(
