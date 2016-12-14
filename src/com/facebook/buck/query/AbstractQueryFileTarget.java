@@ -40,6 +40,7 @@ abstract class AbstractQueryFileTarget implements QueryTarget {
 
   @Override
   public String toString() {
-    return getPath().toString();
+    String separator = getPath().getFileSystem().getSeparator();
+    return getPath().toString().replace(separator, "/");
   }
 }

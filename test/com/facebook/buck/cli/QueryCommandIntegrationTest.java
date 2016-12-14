@@ -22,11 +22,10 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -34,7 +33,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 
 public class QueryCommandIntegrationTest {
 
@@ -444,7 +442,7 @@ public class QueryCommandIntegrationTest {
     result.assertSuccess();
     assertThat(
         result.getStdout(),
-        is(equalToIgnoringPlatformNewlines(Paths.get("example/1.txt") + "\n")));
+        is(equalToIgnoringPlatformNewlines("example/1.txt\n")));
   }
 
   @Test
@@ -460,8 +458,8 @@ public class QueryCommandIntegrationTest {
     assertThat(
         result.getStdout(),
         is(equalToIgnoringPlatformNewlines(String.format("%s%n%s%n",
-                    Paths.get("example/1.txt"),
-                    Paths.get("example/2.txt")))));
+                    "example/1.txt",
+                    "example/2.txt"))));
   }
 
   @Test
@@ -648,7 +646,7 @@ public class QueryCommandIntegrationTest {
 
     result.assertSuccess();
     assertThat(result.getStdout(),
-        is(equalToIgnoringPlatformNewlines(Paths.get("example/BUCK") + "\n")));
+        is(equalToIgnoringPlatformNewlines("example/BUCK\n")));
   }
 
   @Test
@@ -665,10 +663,8 @@ public class QueryCommandIntegrationTest {
         "other/8-test.txt");
 
     result.assertSuccess();
-    String expectedJson = Platform.detect() == Platform.WINDOWS ?
-        "stdout-buildfile-eight-nine-win.json" : "stdout-buildfile-eight-nine.json";
     assertThat(
         parseJSON(result.getStdout()),
-        is(equalTo(parseJSON(workspace.getFileContents(expectedJson)))));
+        is(equalTo(parseJSON(workspace.getFileContents("stdout-buildfile-eight-nine.json")))));
   }
 }
