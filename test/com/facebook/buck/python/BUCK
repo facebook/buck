@@ -17,8 +17,15 @@ java_library(
 )
 
 java_test(
+  name = 'python-binary-integration',
+  srcs = ['PythonBinaryIntegrationTest.java'],
+  autodeps = True,
+  labels = ['long_running'],
+)
+
+java_test(
   name = 'python',
-  srcs = glob(['*Test.java']),
+  srcs = glob(['*Test.java'], excludes=['PythonBinaryIntegrationTest.java']),
   autodeps = True,
   labels = ['long_running'],
 )
