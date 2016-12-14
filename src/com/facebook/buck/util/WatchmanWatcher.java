@@ -18,7 +18,6 @@ package com.facebook.buck.util;
 
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.WatchmanDiagnosticEvent;
 import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.PathOrGlobMatcher;
 import com.facebook.buck.io.ProjectWatch;
@@ -27,6 +26,7 @@ import com.facebook.buck.io.Watchman.Capability;
 import com.facebook.buck.io.WatchmanClient;
 import com.facebook.buck.io.WatchmanCursor;
 import com.facebook.buck.io.WatchmanDiagnostic;
+import com.facebook.buck.io.WatchmanDiagnosticEvent;
 import com.facebook.buck.io.WatchmanQuery;
 import com.facebook.buck.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
@@ -73,23 +73,12 @@ public class WatchmanWatcher {
   };
 
   private static final Logger LOG = Logger.get(WatchmanWatcher.class);
-  private static final int DEFAULT_OVERFLOW_THRESHOLD = 10000;
   private static final long DEFAULT_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(10);
 
   private final EventBus fileChangeEventBus;
   private final WatchmanClient watchmanClient;
   private final ImmutableMap<Path, WatchmanQuery> queries;
   private Map<Path, WatchmanCursor> cursors;
-
-  /**
-   * The maximum number of watchman changes to process in each call to postEvents before
-   * giving up and generating an overflow. The goal is to be able to process a reasonable
-   * number of human generated changes quickly, but not spend a long time processing lots
-   * of changes after a branch switch which will end up invalidating the entire cache
-   * anyway. If overflow is negative calls to postEvents will just generate a single
-   * overflow event.
-   */
-  private final int overflow;
 
   private final long timeoutMillis;
 
@@ -102,7 +91,6 @@ public class WatchmanWatcher {
     this(
         fileChangeEventBus,
         watchman.getWatchmanClient().get(),
-        DEFAULT_OVERFLOW_THRESHOLD,
         DEFAULT_TIMEOUT_MILLIS,
         createQueries(
             projectWatch,
@@ -114,13 +102,11 @@ public class WatchmanWatcher {
   @VisibleForTesting
   WatchmanWatcher(EventBus fileChangeEventBus,
                   WatchmanClient watchmanClient,
-                  int overflow,
                   long timeoutMillis,
                   ImmutableMap<Path, WatchmanQuery> queries,
                   Map<Path, WatchmanCursor> cursors) {
     this.fileChangeEventBus = fileChangeEventBus;
     this.watchmanClient = watchmanClient;
-    this.overflow = overflow;
     this.timeoutMillis = timeoutMillis;
     this.queries = queries;
     this.cursors = cursors;
@@ -309,13 +295,6 @@ public class WatchmanWatcher {
 
       List<Map<String, Object>> files = (List<Map<String, Object>>) response.get("files");
       if (files != null) {
-        if (files.size() > overflow) {
-          String message = "Too many changed files (" + files.size() + " > " + overflow + ")";
-          LOG.warn(message + ", posting overflow event");
-          postWatchEvent(createOverflowEvent(message));
-          return;
-        }
-
         for (Map<String, Object> file : files) {
           String fileName = (String) file.get("name");
           if (fileName == null) {

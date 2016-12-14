@@ -224,33 +224,6 @@ public class WatchmanWatcherTest {
   }
 
   @Test
-  public void whenTooManyChangesThenOverflowEventGenerated()
-      throws IOException, InterruptedException {
-    ImmutableMap<String, Object> watchmanOutput = ImmutableMap.of(
-        "files", ImmutableList.of(
-            ImmutableMap.<String, Object>of(
-                "name", "foo/bar/baz")));
-    Capture<WatchEvent<Path>> eventCapture = newCapture();
-    EventBus eventBus = createStrictMock(EventBus.class);
-    eventBus.post(capture(eventCapture));
-    replay(eventBus);
-    WatchmanWatcher watcher = createWatcher(
-        eventBus,
-        new FakeWatchmanClient(
-            0 /* queryElapsedTimeNanos */,
-            ImmutableMap.of(FAKE_UUID_QUERY, watchmanOutput)),
-        -1 /* overflow */,
-        10000 /* timeout */);
-    watcher.postEvents(
-        BuckEventBusFactory.newInstance(new FakeClock(0)),
-        WatchmanWatcher.FreshInstanceAction.NONE);
-    verify(eventBus);
-    assertEquals("Should be overflow event.",
-        StandardWatchEventKinds.OVERFLOW,
-        eventCapture.getValue().kind());
-  }
-
-  @Test
   public void whenWatchmanFailsThenOverflowEventGenerated()
       throws IOException, InterruptedException {
     Capture<WatchEvent<Path>> eventCapture = newCapture();
@@ -263,7 +236,6 @@ public class WatchmanWatcherTest {
             0 /* queryElapsedTimeNanos */,
             ImmutableMap.of(FAKE_UUID_QUERY, ImmutableMap.of()),
             new IOException("oops")),
-        200 /* overflow */,
         10000 /* timeout */);
     try {
       watcher.postEvents(
@@ -293,7 +265,6 @@ public class WatchmanWatcherTest {
             0 /* queryElapsedTimeNanos */,
             ImmutableMap.of(FAKE_UUID_QUERY, ImmutableMap.of()),
             new InterruptedException(message)),
-        200 /* overflow */,
         10000 /* timeout */);
     try {
       watcher.postEvents(
@@ -445,7 +416,6 @@ public class WatchmanWatcherTest {
         new FakeWatchmanClient(
             10000000000L /* queryElapsedTimeNanos */,
             ImmutableMap.of(FAKE_UUID_QUERY, watchmanOutput)),
-        200 /* overflow */,
         -1 /* timeout */);
     watcher.postEvents(
         BuckEventBusFactory.newInstance(new FakeClock(0)),
@@ -659,7 +629,6 @@ public class WatchmanWatcherTest {
         new FakeWatchmanClient(
             0 /* queryElapsedTimeNanos */,
             ImmutableMap.of(FAKE_CLOCK_QUERY, watchmanOutput)),
-        200 /* overflow */,
         10000 /* timeout */,
         "c:0:0" /* sinceParam */);
     assertThat(
@@ -683,31 +652,26 @@ public class WatchmanWatcherTest {
         new FakeWatchmanClient(
             0 /* queryElapsedTimeNanos */,
             ImmutableMap.of(FAKE_UUID_QUERY, response)),
-        200 /* overflow */,
         10000 /* timeout */);
   }
 
   private WatchmanWatcher createWatcher(EventBus eventBus,
                                         FakeWatchmanClient watchmanClient,
-                                        int overflow,
                                         long timeoutMillis) {
     return createWatcher(
         eventBus,
         watchmanClient,
-        overflow,
         timeoutMillis,
         "n:buckduuid" /* sinceCursor */);
   }
 
   private WatchmanWatcher createWatcher(EventBus eventBus,
                                         FakeWatchmanClient watchmanClient,
-                                        int overflow,
                                         long timeoutMillis,
                                         String sinceCursor) {
     return new WatchmanWatcher(
         eventBus,
         watchmanClient,
-        overflow,
         timeoutMillis,
         ImmutableMap.of(FAKE_ROOT, FAKE_QUERY),
         ImmutableMap.of(FAKE_ROOT, new WatchmanCursor(sinceCursor)));
