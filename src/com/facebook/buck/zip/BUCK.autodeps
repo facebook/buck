@@ -12,6 +12,7 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/step:step",
+      "//src/com/facebook/buck/versions:versions",
       "//third-party/java/guava:guava",
       "//third-party/java/infer-annotations:infer-annotations"
     ]
