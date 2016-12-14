@@ -576,6 +576,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testAndroidLibraryProject() throws IOException {
+    runBuckProjectAndVerify("android_library");
+  }
+
+  @Test
   public void testVersion2BuckProject() throws IOException {
     runBuckProjectAndVerify("experimental_project1");
   }

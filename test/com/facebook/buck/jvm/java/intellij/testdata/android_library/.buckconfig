@@ -1,0 +1,2 @@
+[intellij]
+    default_android_manifest_path = src/main/AndroidManifest.xml
