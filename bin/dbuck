@@ -1,7 +1,16 @@
 #!/bin/bash
 
 # Runs buck in debug mode with the given args
+if ! buck kill; then
+  echo "$0: failed to kill buck" >&2
+  exit 1
+fi
 
-buck kill && 
-lsof -i:8888 | tail +2 | awk '{ print $2 }' | xargs -L1 kill -9 &&
+pids=$(lsof -i:8888 | sed 1,1d | awk '{print $2}')
+if test -n "$pids"; then
+  for p in $pids; do
+    kill -9 $p
+  done
+fi
+
 BUCK_DEBUG_MODE=1 NO_BUCKD=1 buck "$@"
