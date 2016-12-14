@@ -11,3 +11,9 @@ java_test(
   deps = [ '//lib:testng' ],
 )
 
+java_test(
+  name = 'tests3',
+  srcs = glob(['*Junit412.java']),
+  deps = [ '//lib:junit-4.12' ],
+)
+

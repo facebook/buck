@@ -16,17 +16,17 @@
 
 package com.facebook.buck.testrunner;
 
-import java.io.File;
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
-
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.testrunner.ITestRunListener;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.android.ddmlib.testrunner.TestIdentifier;
+
+import java.io.File;
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
 
 public class InstrumentationTestRunner {
   private static final long ADB_CONNECT_TIMEOUT_MS = 5000;

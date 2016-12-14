@@ -393,7 +393,9 @@ public final class JUnitRunner extends BaseRunner {
     @Override
     public void testAssumptionFailure(Failure failure) {
       assumptionFailure = failure;
-      if (resultListener != null) {
+      if (resultListener == null) {
+        recordUnpairedResult(failure, ResultType.ASSUMPTION_VIOLATION);
+      } else {
         // Left in only to help catch future bugs -- right now this does nothing.
         resultListener.testAssumptionFailure(failure);
       }
@@ -402,7 +404,7 @@ public final class JUnitRunner extends BaseRunner {
     @Override
     public void testFailure(Failure failure) throws Exception {
       if (resultListener == null) {
-        recordUnpairedFailure(failure);
+        recordUnpairedResult(failure, ResultType.FAILURE);
       } else {
         resultListener.testFailure(failure);
       }
@@ -416,21 +418,21 @@ public final class JUnitRunner extends BaseRunner {
     }
 
     /**
-     * It's possible to encounter a Failure before we've started any tests (and therefore before
-     * testStarted() has been called).  The known example is a @BeforeClass that throws an
+     * It's possible to encounter a Failure/Skip before we've started any tests (and therefore
+     * before testStarted() has been called).  The known example is a @BeforeClass that throws an
      * exception, but there may be others.
      * <p>
      * Recording these unexpected failures helps us propagate failures back up to the "buck test"
      * process.
      */
-    private void recordUnpairedFailure(Failure failure) {
+    private void recordUnpairedResult(Failure failure, ResultType resultType) {
       long runtime = System.currentTimeMillis() - startTime;
       Description description = failure.getDescription();
       results.add(new TestResult(
           description.getClassName(),
           description.getMethodName(),
           runtime,
-          ResultType.FAILURE,
+          resultType,
           failure.getException(),
           null,
           null));

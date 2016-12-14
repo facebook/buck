@@ -21,8 +21,8 @@ import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 
 import org.junit.Before;
@@ -109,6 +109,17 @@ public class AssumptionViolationsTest {
         "PASS", 1, 0, 0, "com.example.PassingTestJunit")));
     assertThat(output, containsString(
         "TESTS PASSED (with some assumption violations)"));
+  }
+
+  @Test
+  public void shouldIndicateAssumptionViolationsBeforeClass() throws IOException {
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "test",
+        "//test:tests3");
+    result.assertSuccess();
+    String output = result.getStderr();
+    assertThat(output, containsRegex(createBuckTestOutputLineRegex(
+        "ASSUME", 0, 1, 0, "com.example.AssumptionTestBeforeClassJunit412")));
   }
 
 }
