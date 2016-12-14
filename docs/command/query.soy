@@ -56,6 +56,7 @@ a few extensions.
         <li><a href="#attrfilter"><code>attrfilter</code></a></li>
         <li><a href="#buildfile"><code>buildfile</code></a></li>
         <li><a href="#deps"><code>deps</code></a></li>
+        <li><a href="#inputs"><code>inputs</code></a></li>
         <li><a href="#set-operations"><code>except</code></a></li>
         <li><a href="#set-operations"><code>intersect</code></a></li>
         <li><a href="#filter"><code>filter</code></a></li>
@@ -146,6 +147,7 @@ expr ::= word
        | deps(expr)
        | deps(expr, depth)
        | filter(word, expr)
+       | inputs(expr)
        | kind(word, expr)
        | labels(word, expr)
        | owner(word)
@@ -448,6 +450,25 @@ Another example is <code>filter('.*\.java$', labels(srcs, /&#x2F;foo:bar))</code
 {sp}which filters the <code>java</code> files used to build
 {sp}<code>//foo:bar</code>. Quotation of the pattern is often required to make
 sure regular expressions, e.g. <code>.*xpto</code>, are parsed correctly.
+</p>
+
+
+{call .section}
+{param anchor: 'inputs' /}
+{param title: 'Direct input files: inputs'/}
+{/call}
+
+<p><pre>
+{literal}
+expr ::= inputs(expr)
+{/literal}
+</pre></p>
+
+<p>
+The <code>inputs(x)</code> operator evaluates to the files which are inputs
+to the argument set <i>x</i>, ignoring all dependencies. Note that it does not
+include any files required for parsing (e.g. the BUCK file), rather just the
+files required to actually run the build after parsing has been performed.
 </p>
 
 

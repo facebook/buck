@@ -55,6 +55,12 @@ public class FakeQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
+  public Set<QueryTarget> getInputs(QueryTarget targets)
+      throws QueryException {
+    throw new QueryException("Method not implemented in FakeQueryEnvironment");
+  }
+
+  @Override
   public Set<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets)
       throws QueryException, InterruptedException {
     throw new QueryException("Method not implemented in FakeQueryEnvironment");

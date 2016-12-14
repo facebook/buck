@@ -193,6 +193,8 @@ public interface QueryEnvironment {
   Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets)
       throws QueryException, InterruptedException;
 
+  Set<QueryTarget> getInputs(QueryTarget target) throws QueryException;
+
   /**
    * Returns the forward transitive closure of all of the targets in
    * "targets".  Callers must ensure that {@link #buildTransitiveClosure}
@@ -255,6 +257,7 @@ public interface QueryEnvironment {
           new AttrFilterFunction(),
           new BuildFileFunction(),
           new DepsFunction(),
+          new InputsFunction(),
           new FilterFunction(),
           new KindFunction(),
           new LabelsFunction(),

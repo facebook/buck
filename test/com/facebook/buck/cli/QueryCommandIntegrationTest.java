@@ -667,4 +667,39 @@ public class QueryCommandIntegrationTest {
         parseJSON(result.getStdout()),
         is(equalTo(parseJSON(workspace.getFileContents("stdout-buildfile-eight-nine.json")))));
   }
+
+  @Test
+  public void testInputs() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "inputs(//example:four-tests)");
+
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(equalToIgnoringPlatformNewlines("example/Test.plist\nexample/4-test.txt\n")));
+  }
+
+  @Test
+  public void testInputsTwoTargets() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "query_command", tmp);
+    workspace.setUp();
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
+        "query",
+        "inputs(//example:four-tests + //example:one)");
+
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(equalToIgnoringPlatformNewlines(String.format("%s%n%s%n%s%n",
+            "example/Test.plist",
+            "example/4-test.txt",
+            "example/1.txt"))));
+  }
 }

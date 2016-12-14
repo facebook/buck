@@ -38,6 +38,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -257,6 +258,14 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       result.addAll(getTargetsFromBuildTargetsContainer(graph.getIncomingNodesFor(node)));
     }
     return result;
+  }
+
+  @Override
+  public Set<QueryTarget> getInputs(QueryTarget target) throws QueryException {
+    TargetNode<?, ?> node = getNode(target);
+    return node.getInputs().stream()
+        .map(QueryFileTarget::of)
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   @Override
