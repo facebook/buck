@@ -101,4 +101,88 @@ public class Elf {
         magic[ElfHeader.EI_MAG3] == ElfHeader.ELFMAG3);
   }
 
+  public static class Elf32 {
+
+    private Elf32() {}
+
+    public static long getElf32Addr(ByteBuffer buffer) {
+      return buffer.getInt() & 0xffffffffL;
+    }
+
+    public static void putElf32Addr(ByteBuffer buffer, int val) {
+      buffer.putInt(val);
+    }
+
+    public static long getElf32Word(ByteBuffer buffer) {
+      return buffer.getInt() & 0xffffffffL;
+    }
+
+    public static void putElf32Word(ByteBuffer buffer, int val) {
+      buffer.putInt(val);
+    }
+
+    public static int getElf32Half(ByteBuffer buffer) {
+      return buffer.getShort() & 0xffff;
+    }
+
+    public static void putEl32fHalf(ByteBuffer buffer, short val) {
+      buffer.putShort(val);
+    }
+
+    public static int getElf32Sword(ByteBuffer buffer) {
+      return buffer.getInt();
+    }
+
+    public static void putEl32fSword(ByteBuffer buffer, int val) {
+      buffer.putInt(val);
+    }
+
+  }
+
+  public static class Elf64 {
+
+    private Elf64() {}
+
+    public static long getElf64Addr(ByteBuffer buffer) {
+      return buffer.getLong();
+    }
+
+    public static void putElf64Addr(ByteBuffer buffer, long val) {
+      buffer.putLong(val);
+    }
+
+    public static long getElf64Word(ByteBuffer buffer) {
+      return (buffer.getInt() & 0xffffffffL);
+    }
+
+    public static void putElf64Word(ByteBuffer buffer, int val) {
+      buffer.putInt(val);
+    }
+
+    public static long getElf64Xword(ByteBuffer buffer) {
+      return buffer.getLong();
+    }
+
+    public static void putElf64Xword(ByteBuffer buffer, long val) {
+      buffer.putLong(val);
+    }
+
+    public static int getElf64Half(ByteBuffer buffer) {
+      return buffer.getShort() & 0xffff;
+    }
+
+    public static void putElf64Half(ByteBuffer buffer, short val) {
+      buffer.putShort(val);
+    }
+
+    public static long getElf64Sxword(ByteBuffer buffer) {
+      return buffer.getLong();
+    }
+
+    public static void putElf64Sxword(ByteBuffer buffer, long val) {
+      buffer.putLong(val);
+    }
+
+  }
+
 }

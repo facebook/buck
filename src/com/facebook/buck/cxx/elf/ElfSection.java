@@ -45,6 +45,7 @@ public class ElfSection {
     } else {
       buffer.position((int) header.sh_off);
       body = buffer.slice();
+      body.order(buffer.order());
       body.limit((int) header.sh_size);
     }
 
