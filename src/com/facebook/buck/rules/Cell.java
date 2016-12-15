@@ -33,6 +33,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -120,8 +121,25 @@ public class Cell {
     return config.getView(ParserConfig.class).getBuildFileName();
   }
 
-  public boolean isEnforcingBuckPackageBoundaries() {
-    return config.getView(ParserConfig.class).getEnforceBuckPackageBoundary();
+  /**
+   * Whether the cell is enforcing buck package boundaries for the package at the passed path.
+   * @param path Path of package (or file in a package) relative to the cell root.
+   */
+  public boolean isEnforcingBuckPackageBoundaries(Path path) {
+    ParserConfig configView = config.getView(ParserConfig.class);
+    if (!configView.getEnforceBuckPackageBoundary()) {
+      return false;
+    }
+
+    Path absolutePath = filesystem.resolve(path);
+
+    ImmutableList<Path> exceptions = configView.getBuckPackageBoundaryExceptions();
+    for (Path exception : exceptions) {
+      if (absolutePath.startsWith(exception)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   public Cell getCellIgnoringVisibilityCheck(Path cellPath) {

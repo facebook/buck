@@ -271,4 +271,32 @@ public class ParserIntegrationTest {
     secondRun.assertSuccess();
     assertThat(secondRun.getStdout(), containsString("I am other Foo"));
   }
+
+  @Test
+  public void testBoundaryChecksAreEnforced() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "package_boundaries",
+        temporaryFolder);
+    workspace.setUp();
+    try {
+      workspace.runBuckCommand("build", "//java:foo");
+      fail("Expected exception");
+    } catch (HumanReadableException e) {
+      assertThat(e.getMessage(), containsString("package boundary"));
+    }
+
+    workspace.addBuckConfigLocalOption("project", "check_package_boundary", "false");
+    workspace.runBuckCommand("build", "//java:foo").assertSuccess();
+
+    workspace.addBuckConfigLocalOption("project", "check_package_boundary", "true");
+    workspace.addBuckConfigLocalOption("project", "package_boundary_exceptions", "java");
+    workspace.runBuckCommand("build", "//java:foo").assertSuccess();
+    try {
+      workspace.runBuckCommand("build", "//java2:foo").assertSuccess();
+      fail("Expected exception");
+    } catch (HumanReadableException e) {
+      assertThat(e.getMessage(), containsString("package boundary"));
+    }
+  }
 }

@@ -109,6 +109,15 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
     return getDelegate().getBooleanValue("project", "check_package_boundary", true);
   }
 
+  /**
+   * A list of absolute paths under which buck package boundary checks should not be performed.
+   */
+  @Value.Lazy
+  public ImmutableList<Path> getBuckPackageBoundaryExceptions() {
+    return getDelegate().getOptionalPathList("project", "package_boundary_exceptions")
+        .orElse(ImmutableList.of());
+  }
+
   @Value.Lazy
   public ImmutableSet<Pattern> getTempFilePatterns() {
     return getDelegate().getListWithoutComments("project", "temp_files").stream()

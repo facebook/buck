@@ -490,7 +490,7 @@ class DaemonicParserState {
 
     // If we're *not* enforcing package boundary checks, it's possible for multiple ancestor
     // packages to reference the same file
-    if (!cell.isEnforcingBuckPackageBoundaries()) {
+    if (!cell.isEnforcingBuckPackageBoundaries(path)) {
       while (packageBuildFile.isPresent() && packageBuildFile.get().getParent() != null) {
         packageBuildFile =
             buildFiles.getBasePathOfAncestorTarget(packageBuildFile.get().getParent());
