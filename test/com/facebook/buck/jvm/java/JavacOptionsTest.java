@@ -106,6 +106,13 @@ public class JavacOptionsTest {
   }
 
   @Test
+  public void spoolModeToDiskByDefault() {
+    JavacOptions options = createStandardBuilder().build();
+
+    assertThat(options.getSpoolMode(), is(JavacOptions.SpoolMode.INTERMEDIATE_TO_DISK));
+  }
+
+  @Test
   public void productionBuildsCanBeEnabled() {
     JavacOptions options = createStandardBuilder()
         .setProductionBuild(true)

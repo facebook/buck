@@ -98,9 +98,11 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         "java",
         "safe_annotation_processors");
 
-    AbstractJavacOptions.SpoolMode spoolMode = delegate
-        .getEnum("java", "jar_spool_mode", AbstractJavacOptions.SpoolMode.class).orElse(
-            AbstractJavacOptions.SpoolMode.INTERMEDIATE_TO_DISK);
+    Optional<AbstractJavacOptions.SpoolMode> spoolMode = delegate
+        .getEnum("java", "jar_spool_mode", AbstractJavacOptions.SpoolMode.class);
+    if (spoolMode.isPresent()) {
+      builder.setSpoolMode(spoolMode.get());
+    }
 
     // This is just to make it possible to turn off dep-based rulekeys in case anything goes wrong
     // and can be removed when we're sure class usage tracking and dep-based keys for Java
@@ -123,7 +125,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
             getJavacPath().map(Either::ofLeft))
         .setJavacJarPath(getJavacJarPath())
         .setCompilerClassName(getCompilerClassName())
-        .setSpoolMode(spoolMode)
         .putAllSourceToBootclasspath(bootclasspaths.build())
         .addAllExtraArguments(extraArguments)
         .setSafeAnnotationProcessors(safeAnnotationProcessors)
