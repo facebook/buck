@@ -407,7 +407,7 @@ public class AppleDescriptions {
 
     ImmutableSet<AppleWrapperResourceArg> coreDataModelArgs =
         AppleBuildRules.collectTransitiveBuildRules(
-            CoreDataModelDescription.class, targetGraph, ImmutableList.of(targetNode));
+            targetGraph, AppleBuildRules.CORE_DATA_MODEL_TYPES, ImmutableList.of(targetNode));
 
     BuildRuleParams coreDataModelParams = params.copyWithChanges(
         params.getBuildTarget().withAppendedFlavors(CoreDataModel.FLAVOR),
@@ -437,7 +437,7 @@ public class AppleDescriptions {
 
     ImmutableSet<AppleWrapperResourceArg> sceneKitAssetsArgs =
         AppleBuildRules.collectTransitiveBuildRules(
-            SceneKitAssetsDescription.class, targetGraph, ImmutableList.of(targetNode));
+            targetGraph, AppleBuildRules.SCENEKIT_ASSETS_TYPES, ImmutableList.of(targetNode));
 
     BuildRuleParams sceneKitAssetsParams = params.copyWithChanges(
         params.getBuildTarget().withAppendedFlavors(SceneKitAssets.FLAVOR),

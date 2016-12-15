@@ -33,6 +33,15 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
 public class AppleResources {
+
+  private static final BuildRuleType APPLE_RESOURCE_RULE_TYPE =
+      Description.getBuildRuleType(AppleResourceDescription.class);
+
+  private static final ImmutableSet<BuildRuleType> APPLE_RESOURCE_RULE_TYPES =
+      ImmutableSet.of(
+          Description.getBuildRuleType(AppleResourceDescription.class),
+          Description.getBuildRuleType(IosReactNativeLibraryDescription.class));
+
   // Utility class, do not instantiate.
   private AppleResources() { }
 
@@ -52,7 +61,7 @@ public class AppleResources {
             AppleBuildRules.newRecursiveRuleDependencyTransformer(
                 targetGraph,
                 AppleBuildRules.RecursiveDependenciesMode.COPYING,
-                ImmutableSet.of(Description.getBuildRuleType(AppleResourceDescription.class))))
+                ImmutableSet.of(APPLE_RESOURCE_RULE_TYPE)))
         .transform(
             input -> (AppleResourceDescription.Arg) input.getConstructorArg())
         .toSet();
@@ -63,17 +72,12 @@ public class AppleResources {
       TargetNode<T, ?> targetNode) {
     AppleBundleResources.Builder builder = AppleBundleResources.builder();
 
-    ImmutableSet<BuildRuleType> types =
-        ImmutableSet.of(
-            Description.getBuildRuleType(AppleResourceDescription.class),
-            Description.getBuildRuleType(IosReactNativeLibraryDescription.class));
-
     Iterable<TargetNode<?, ?>> resourceNodes =
         AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
             targetGraph,
             AppleBuildRules.RecursiveDependenciesMode.COPYING,
             targetNode,
-            Optional.of(types));
+            Optional.of(APPLE_RESOURCE_RULE_TYPES));
 
     ProjectFilesystem filesystem = targetNode.getFilesystem();
 
@@ -105,7 +109,7 @@ public class AppleResources {
     ImmutableSet.Builder<AppleResourceDescription.Arg> builder = ImmutableSet.builder();
     Iterable<TargetNode<?, ?>> deps = targetGraph.getAll(targetNode.getDeps());
     for (TargetNode<?, ?> node : deps) {
-      if (node.getType().equals(Description.getBuildRuleType(AppleResourceDescription.class))) {
+      if (node.getType().equals(APPLE_RESOURCE_RULE_TYPE)) {
         builder.add((AppleResourceDescription.Arg) node.getConstructorArg());
       }
     }

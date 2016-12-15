@@ -181,6 +181,17 @@ public class ProjectGenerator {
   public static final String SHOW_OUTPUT = "--show-output";
   public static final String PRODUCT_NAME = "PRODUCT_NAME";
 
+  private static final ImmutableSet<BuildRuleType> APPLE_NATIVE_RULE_TYPES =
+      ImmutableSet.of(
+          Description.getBuildRuleType(AppleBinaryDescription.class),
+          Description.getBuildRuleType(AppleLibraryDescription.class),
+          Description.getBuildRuleType(CxxLibraryDescription.class));
+
+  private static final ImmutableSet<AppleBundleExtension> APPLE_NATIVE_BUNDLE_EXTENSIONS =
+      ImmutableSet.of(
+          AppleBundleExtension.APP,
+          AppleBundleExtension.FRAMEWORK);
+
   public enum Option {
     /** Use short BuildTarget name instead of full name for targets */
     USE_SHORT_NAMES_FOR_TARGETS,
@@ -1555,8 +1566,8 @@ public class ProjectGenerator {
     addCoreDataModelBuildPhase(
         targetGroup,
         AppleBuildRules.collectTransitiveBuildRules(
-            CoreDataModelDescription.class,
             targetGraph,
+            AppleBuildRules.CORE_DATA_MODEL_TYPES,
             ImmutableList.of(targetNode)));
   }
 
@@ -1565,8 +1576,8 @@ public class ProjectGenerator {
       PBXGroup targetGroup) throws IOException {
     ImmutableSet<AppleWrapperResourceArg> allSceneKitAssets =
         AppleBuildRules.collectTransitiveBuildRules(
-            SceneKitAssetsDescription.class,
             targetGraph,
+            AppleBuildRules.SCENEKIT_ASSETS_TYPES,
             ImmutableList.of(targetNode));
 
     for (final AppleWrapperResourceArg sceneKitAssets : allSceneKitAssets) {
@@ -2121,13 +2132,8 @@ public class ProjectGenerator {
     return getAppleNativeNodeOfType(
         targetGraph,
         targetNode,
-        ImmutableSet.of(
-            Description.getBuildRuleType(AppleBinaryDescription.class),
-            Description.getBuildRuleType(AppleLibraryDescription.class),
-            Description.getBuildRuleType(CxxLibraryDescription.class)),
-        ImmutableSet.of(
-            AppleBundleExtension.APP,
-            AppleBundleExtension.FRAMEWORK));
+        APPLE_NATIVE_RULE_TYPES,
+        APPLE_NATIVE_BUNDLE_EXTENSIONS);
   }
 
   private static Optional<TargetNode<CxxLibraryDescription.Arg, ?>> getLibraryNode(
