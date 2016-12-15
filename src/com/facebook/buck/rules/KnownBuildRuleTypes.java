@@ -563,9 +563,10 @@ public class KnownBuildRuleTypes {
             platformFlavorsToSwiftPlatforms);
     builder.register(swiftLibraryDescription);
 
-    CodeSignIdentityStore codeSignIdentityStore = appleConfig.useDryRunCodeSigning() ?
-        CodeSignIdentityStore.fromIdentities(ImmutableList.of()) :
-        CodeSignIdentityStore.fromSystem(processExecutor);
+    CodeSignIdentityStore codeSignIdentityStore =
+        CodeSignIdentityStore.fromSystem(
+            processExecutor,
+            appleConfig.getCodeSignIdentitiesCommand());
     ProvisioningProfileStore provisioningProfileStore =
         ProvisioningProfileStore.fromSearchPath(
             processExecutor,

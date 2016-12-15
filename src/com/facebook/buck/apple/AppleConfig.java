@@ -361,6 +361,14 @@ public class AppleConfig {
     return ImmutableList.copyOf(Splitter.on(' ').splitToList(value.get()));
   }
 
+  public ImmutableList<String> getCodeSignIdentitiesCommand() {
+    Optional<String> value = delegate.getValue("apple", "code_sign_identities_command");
+    if (!value.isPresent()) {
+      return CodeSignIdentityStore.DEFAULT_IDENTITIES_COMMAND;
+    }
+    return ImmutableList.copyOf(Splitter.on(' ').splitToList(value.get()));
+  }
+
   /**
    * Returns the custom packager command specified in the config, if defined.
    *

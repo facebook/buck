@@ -18,21 +18,28 @@ package com.facebook.buck.apple;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 
+import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
+
+import java.nio.file.Path;
 
 public class CodeSignIdentityStoreTest {
   @Test
   public void testInvalidIdentitiesAreIgnored() throws Exception {
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
-            .addCommand("security", "find-identity", "-v", "-p", "codesigning")
+            .addCommand("unused")
             .build();
     FakeProcess process = new FakeProcess(
         0,
@@ -46,7 +53,9 @@ public class CodeSignIdentityStoreTest {
         "");
     FakeProcessExecutor processExecutor = new FakeProcessExecutor(
         ImmutableMap.of(processExecutorParams, process));
-    CodeSignIdentityStore store = CodeSignIdentityStore.fromSystem(processExecutor);
+    CodeSignIdentityStore store = CodeSignIdentityStore.fromSystem(
+        processExecutor,
+        ImmutableList.of("unused"));
     ImmutableList<CodeSignIdentity> expected = ImmutableList.of(
         CodeSignIdentity.builder()
             .setFingerprint(
@@ -54,5 +63,25 @@ public class CodeSignIdentityStoreTest {
             .setSubjectCommonName("iPhone Developer: Foo Bar (54321EDCBA)")
             .build());
     assertThat(store.getIdentities(), equalTo(expected));
+  }
+
+  @Test
+  public void testCodeSignIdentitiesCommandOverride() throws Exception {
+    ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
+    Path testdataDir =
+        TestDataHelper.getTestDataDirectory(this).resolve("code_sign_identity_store");
+
+    CodeSignIdentityStore store = CodeSignIdentityStore.fromSystem(
+        executor,
+        ImmutableList.of(testdataDir.resolve("fake_identities.sh").toString()));
+
+    ImmutableList<CodeSignIdentity> expected = ImmutableList.of(
+        CodeSignIdentity.builder()
+            .setFingerprint(
+                CodeSignIdentity.toFingerprint("0000000000000000000000000000000000000000"))
+            .setSubjectCommonName("iPhone Developer: Fake")
+            .build());
+
+    assertThat(store.getIdentities(), is(equalTo(expected)));
   }
 }

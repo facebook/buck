@@ -43,6 +43,8 @@ public class CodeSignIdentityStore implements RuleKeyAppendable {
   // Parse the fingerprint and name, but don't match invalid certificates (revoked, expired, etc).
   private static final Pattern CODE_SIGN_IDENTITY_PATTERN =
       Pattern.compile("([A-F0-9]{40}) \"(iPhone.*)\"(?!.*\\(CSSMERR_.*\\))");
+  public static final ImmutableList<String> DEFAULT_IDENTITIES_COMMAND =
+      ImmutableList.of("security", "find-identity", "-v", "-p", "codesigning");
 
   private final Supplier<ImmutableList<CodeSignIdentity>> identitiesSupplier;
 
@@ -67,15 +69,14 @@ public class CodeSignIdentityStore implements RuleKeyAppendable {
    *
    * The loading process is deferred till first access.
    */
-  public static CodeSignIdentityStore fromSystem(final ProcessExecutor processExecutor) {
+  public static CodeSignIdentityStore fromSystem(
+      final ProcessExecutor processExecutor,
+      ImmutableList<String> command) {
     return new CodeSignIdentityStore(Suppliers.memoize(
         () -> {
           ProcessExecutorParams processExecutorParams =
               ProcessExecutorParams.builder()
-                  .setCommand(
-                      ImmutableList.of(
-                          "security", "find-identity",
-                          "-v", "-p", "codesigning"))
+                  .addAllCommand(command)
                   .build();
           // Specify that stdout is expected, or else output may be wrapped in Ansi escape chars.
           Set<ProcessExecutor.Option> options =

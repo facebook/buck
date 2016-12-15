@@ -38,7 +38,9 @@ public class FakeAppleDeveloperEnvironment {
   private FakeAppleDeveloperEnvironment() { }
 
   private static final int numCodeSigningIdentities =
-      CodeSignIdentityStore.fromSystem(new DefaultProcessExecutor(new TestConsole()))
+      CodeSignIdentityStore.fromSystem(
+          new DefaultProcessExecutor(new TestConsole()),
+          CodeSignIdentityStore.DEFAULT_IDENTITIES_COMMAND)
           .getIdentities()
           .size();
 

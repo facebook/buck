@@ -405,6 +405,19 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'apple' /}
+  {param name: 'code_sign_identities_command' /}
+  {param example_value: 'path/to/command --arg1 --arg2' /}
+  {param description}
+    Specifies a command with any optional arguments that Buck will use to get
+    the current key fingerprints available for code signing.  This command should
+    output a list of hashes and common names to standard output in the same format
+    as <code>security find-identity -v -p codesigning</code>.  If unspecified,
+    Buck will use <code>security find-identity -v -p codesigning</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'apple' /}
   {param name: 'use_header_maps_in_xcode' /}
   {param example_value: 'false' /}
   {param description}
