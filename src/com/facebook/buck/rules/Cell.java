@@ -293,8 +293,8 @@ public class Cell {
     return knownRoots;
   }
 
-  public void ensureConcreteFilesExist() {
-    filesystem.ensureConcreteFilesExist();
+  public void ensureConcreteFilesExist(BuckEventBus eventBus) {
+    filesystem.ensureConcreteFilesExist(eventBus);
   }
 
   @SuppressWarnings("serial")

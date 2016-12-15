@@ -338,9 +338,9 @@ public class PerBuildState implements AutoCloseable {
         ignoreBuckAutodepsFiles);
   }
 
-  public void ensureConcreteFilesExist() {
+  public void ensureConcreteFilesExist(BuckEventBus eventBus) {
     for (Cell eachCell : cells.values()) {
-      eachCell.ensureConcreteFilesExist();
+      eachCell.ensureConcreteFilesExist(eventBus);
     }
   }
 

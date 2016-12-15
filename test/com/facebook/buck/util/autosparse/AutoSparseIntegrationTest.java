@@ -19,9 +19,11 @@ package com.facebook.buck.util.autosparse;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystemDelegate;
 import com.facebook.buck.io.ProjectFilesystemDelegateFactory;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.timing.FakeClock;
 import com.facebook.buck.util.TestProcessExecutorFactory;
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.DefaultVersionControlCmdLineInterfaceFactory;
@@ -209,7 +211,7 @@ public class AutoSparseIntegrationTest {
     // Only include the parent directory, not the file
     delegate.exists(repoPath.resolve("not_hidden_subdir/file_in_subdir_not_hidden"));
 
-    delegate.ensureConcreteFilesExist();
+    delegate.ensureConcreteFilesExist(BuckEventBusFactory.newInstance(new FakeClock(0)));
 
     List<String> lines = Files.readAllLines(
         repoPath.resolve(".hg/sparse"),

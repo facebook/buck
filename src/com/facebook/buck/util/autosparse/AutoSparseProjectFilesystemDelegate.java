@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.autosparse;
 
+import com.facebook.buck.event.EventBus;
 import com.facebook.buck.io.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.ProjectFilesystemDelegate;
 import com.facebook.buck.log.Logger;
@@ -51,9 +52,13 @@ public final class AutoSparseProjectFilesystemDelegate implements ProjectFilesys
   }
 
   @Override
-  public void ensureConcreteFilesExist() {
+  public void ensureConcreteFilesExist(EventBus eventBus) {
     LOG.debug("Materialising the sparse profile");
+    AutoSparseStateEvents.SparseRefreshStarted started =
+        new AutoSparseStateEvents.SparseRefreshStarted();
+    eventBus.post(started);
     autoSparseState.materialiseSparseProfile();
+    eventBus.post(new AutoSparseStateEvents.SparseRefreshFinished(started));
   }
 
   @Override

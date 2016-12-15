@@ -304,6 +304,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         getEstimatedProgressOfGeneratingProjectFiles(),
         lines);
 
+    logEventPair(
+        "REFRESHING SPARSE CHECKOUT",
+        /* suffix */ Optional.empty(),
+        currentTimeMillis,
+        /* offsetMs */ 0L,
+        autoSparseStateSparseRefreshStarted,
+        autoSparseStateSparseRefreshFinished,
+        /* progress*/ Optional.empty(),
+        lines);
+
     // If parsing has not finished, then there is no build rule information to print yet.
     if (parseTime != UNFINISHED_EVENT_PAIR) {
       lines.add(getNetworkStatsLine(buildFinished));
@@ -352,7 +362,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               buildFinished.getBuildId());
         }
       }
-
 
       if (buildStarted == null) {
         // All steps past this point require a build.

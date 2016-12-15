@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io;
 
+import com.facebook.buck.event.EventBus;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
@@ -40,7 +41,7 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
   }
 
   @Override
-  public void ensureConcreteFilesExist() {
+  public void ensureConcreteFilesExist(EventBus eventBus) {
     return;
   }
 

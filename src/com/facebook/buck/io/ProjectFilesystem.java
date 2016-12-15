@@ -17,6 +17,7 @@
 package com.facebook.buck.io;
 
 import com.facebook.buck.config.Config;
+import com.facebook.buck.event.EventBus;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
@@ -342,8 +343,8 @@ public class ProjectFilesystem {
    * Hook for virtual filesystems to materialise virtual files as Buck will need to be able to read
    * them past this point.
    */
-  public void ensureConcreteFilesExist() {
-    delegate.ensureConcreteFilesExist();
+  public void ensureConcreteFilesExist(EventBus eventBus) {
+    delegate.ensureConcreteFilesExist(eventBus);
   }
 
   /**

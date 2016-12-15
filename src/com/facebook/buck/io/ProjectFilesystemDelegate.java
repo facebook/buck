@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io;
 
+import com.facebook.buck.event.EventBus;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 
 import java.io.IOException;
@@ -31,9 +32,9 @@ public interface ProjectFilesystemDelegate {
 
   /**
    * Hook for virtual filesystems to materialise virtual files as Buck will need to be able to read
-   * them past this point.
+   * them past this point. The eventBus can be used to communicate about the progress.
    */
-  void ensureConcreteFilesExist();
+  void ensureConcreteFilesExist(EventBus eventBus);
 
   Sha1HashCode computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException;
 

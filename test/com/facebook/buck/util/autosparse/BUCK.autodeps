@@ -10,7 +10,9 @@
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol_hg",
       "//src/com/facebook/buck/zip:unzip",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
+      "//test/com/facebook/buck/event:testutil",
       "//test/com/facebook/buck/testutil/integration:util",
+      "//test/com/facebook/buck/timing:testutil",
       "//test/com/facebook/buck/util:testutil",
       "//third-party/java/guava:guava",
       "//third-party/java/junit:junit"

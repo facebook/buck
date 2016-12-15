@@ -81,6 +81,7 @@ import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.IncrementingFakeClock;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.autosparse.AutoSparseStateEvents;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.base.Joiner;
@@ -2108,6 +2109,52 @@ public class SuperConsoleEventBusListenerTest {
     // action graph cache hit scenario
     eventBus.post(ActionGraphEvent.Cache.hit());
     assertEquals(createParsingMessage(EMOJI_BUNNY, ""), listener.getParsingStatus());
+  }
+
+  @Test
+  public void testAutoSparseUpdates() {
+    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
+    BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
+    SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
+
+    AutoSparseStateEvents.SparseRefreshStarted sparseRefreshStarted =
+        new AutoSparseStateEvents.SparseRefreshStarted();
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            sparseRefreshStarted,
+            0L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+    validateConsole(listener, 0L, ImmutableList.of("[+] REFRESHING SPARSE CHECKOUT...0.0s"));
+
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            new AutoSparseStateEvents.SparseRefreshFinished(sparseRefreshStarted),
+            0L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+    validateConsole(listener, 0L, ImmutableList.of(
+        "[-] REFRESHING SPARSE CHECKOUT...FINISHED 0.0s"));
+
+    // starting a new refresh resets the message
+    sparseRefreshStarted = new AutoSparseStateEvents.SparseRefreshStarted();
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            sparseRefreshStarted,
+            0L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+    validateConsole(listener, 0L, ImmutableList.of("[+] REFRESHING SPARSE CHECKOUT...0.0s"));
+
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            new AutoSparseStateEvents.SparseRefreshFinished(sparseRefreshStarted),
+            0L,
+            TimeUnit.MILLISECONDS,
+            /* threadId */ 0L));
+    validateConsole(listener, 0L, ImmutableList.of(
+        "[-] REFRESHING SPARSE CHECKOUT...FINISHED 0.0s"));
+
   }
 
   @Test

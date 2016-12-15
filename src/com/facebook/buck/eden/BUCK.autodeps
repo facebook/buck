@@ -6,6 +6,7 @@
       "//src/com/facebook/buck/util:util"
     ],
     "exported_deps" : [
+      "//src/com/facebook/buck/event:interfaces",
       "//src/com/facebook/buck/io:ProjectFilesystemDelegate",
       "//src/com/facebook/buck/util/sha1:sha1",
       "//third-party/java/eden:eden-thrift-bindings",
