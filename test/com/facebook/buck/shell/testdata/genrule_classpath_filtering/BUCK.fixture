@@ -64,6 +64,12 @@ genrule(
   out = 'out',
 )
 
+genrule(
+  name = 'ensure_parsing_if_this_is_only_ref',
+  cmd = 'echo $(query_targets "//other:other") > $OUT',
+  out = 'out',
+)
+
 java_library(
   name = 'lib_a',
   srcs = ['A.java'],

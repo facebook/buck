@@ -193,6 +193,14 @@ public class GenruleDescriptionIntegrationTest {
             "//annotations:proc"));
   }
 
+  @Test
+  public void testQueryCanBeTheOnlyThingReferencingAFile() throws Exception {
+    // Assert the query can find the target even though it's the only reference to it
+    expectGenruleOutput(
+        ":ensure_parsing_if_this_is_only_ref",
+        ImmutableList.of("//other:other"));
+  }
+
   private void expectOutputPathsGenruleOutput(
       String genrule,
       List<String> expectedOutputs)
