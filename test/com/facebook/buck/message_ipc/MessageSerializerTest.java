@@ -48,6 +48,17 @@ public class MessageSerializerTest {
   }
 
   @Test
+  public void testDeserializeInvocationMessageWithNullArgs() throws Exception {
+    String value =
+        "{\"type\":\"InvocationMessage\",\"name\":\"myMethod\",\"args\":[null,100500]}";
+    MessageSerializer serializer = new MessageSerializer(ObjectMappers.newDefaultInstance());
+    InvocationMessage message = serializer.deserializeInvocation(value);
+    assertThat(message.getMethodName(), Matchers.equalToObject("myMethod"));
+    assertThat(message.getArguments().get(0), Matchers.equalTo(null));
+    assertThat(message.getArguments().get(1), Matchers.equalTo(100500));
+  }
+
+  @Test
   public void testSerializeReturnResultMessage() throws Exception {
     ReturnResultMessage message = new ReturnResultMessage(ImmutableMap.of("some_value", false));
     MessageSerializer serializer = new MessageSerializer(ObjectMappers.newDefaultInstance());

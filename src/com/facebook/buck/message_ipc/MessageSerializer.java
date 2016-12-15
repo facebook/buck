@@ -20,7 +20,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
@@ -59,7 +58,7 @@ public class MessageSerializer {
     Preconditions.checkArgument(type.equals(InvocationMessage.class.getSimpleName()));
     return new InvocationMessage(
         (String) rep.get(NAME),
-        ImmutableList.copyOf((List<Object>) rep.get(ARGS)));
+        (List<Object>) rep.get(ARGS));
   }
 
   public String serializeResult(ReturnResultMessage message) throws JsonProcessingException {
