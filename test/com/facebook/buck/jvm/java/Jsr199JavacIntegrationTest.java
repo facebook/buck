@@ -90,13 +90,13 @@ public class Jsr199JavacIntegrationTest {
             "-d %s " +
             "-classpath '' " +
             "@" + pathToSrcsList.toString(),
-            JavaBuckConfig.TARGETED_JAVA_VERSION,
-            JavaBuckConfig.TARGETED_JAVA_VERSION,
+            JavacOptions.TARGETED_JAVA_VERSION,
+            JavacOptions.TARGETED_JAVA_VERSION,
             pathToOutputDir),
         javac.getDescription(
             ImmutableList.of(
-                "-source", JavaBuckConfig.TARGETED_JAVA_VERSION,
-                "-target", JavaBuckConfig.TARGETED_JAVA_VERSION,
+                "-source", JavacOptions.TARGETED_JAVA_VERSION,
+                "-target", JavacOptions.TARGETED_JAVA_VERSION,
                 "-g",
                 "-d", pathToOutputDir,
                 "-classpath", "''"),

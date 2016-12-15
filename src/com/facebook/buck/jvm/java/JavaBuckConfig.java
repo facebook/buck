@@ -35,8 +35,6 @@ import java.util.Optional;
  * A java-specific "view" of BuckConfig.
  */
 public class JavaBuckConfig implements ConfigView<BuckConfig> {
-  // Default combined source and target level.
-  public static final String TARGETED_JAVA_VERSION = "7";
   private final BuckConfig delegate;
 
   // Interface for reflection-based ConfigView to instantiate this class.
@@ -72,8 +70,18 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   }
 
   public JavacOptions getDefaultJavacOptions() {
+    JavacOptions.Builder builder = JavacOptions.builderForUseInJavaBuckConfig();
+
     Optional<String> sourceLevel = delegate.getValue("java", "source_level");
+    if (sourceLevel.isPresent()) {
+      builder.setSourceLevel(sourceLevel.get());
+    }
+
     Optional<String> targetLevel = delegate.getValue("java", "target_level");
+    if (targetLevel.isPresent()) {
+      builder.setTargetLevel(targetLevel.get());
+    }
+
     ImmutableList<String> extraArguments = delegate.getListWithoutComments(
         "java",
         "extra_arguments");
@@ -99,13 +107,11 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
       }
     }
 
-    return JavacOptions.builderForUseInJavaBuckConfig()
+    return builder
         .setJavacPath(
             getJavacPath().map(Either::ofLeft))
         .setJavacJarPath(getJavacJarPath())
         .setCompilerClassName(getCompilerClassName())
-        .setSourceLevel(sourceLevel.orElse(TARGETED_JAVA_VERSION))
-        .setTargetLevel(targetLevel.orElse(TARGETED_JAVA_VERSION))
         .setSpoolMode(spoolMode)
         .putAllSourceToBootclasspath(bootclasspaths.build())
         .addAllExtraArguments(extraArguments)

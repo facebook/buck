@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 
-import static com.facebook.buck.jvm.java.JavaBuckConfig.TARGETED_JAVA_VERSION;
+import static com.facebook.buck.jvm.java.JavacOptions.TARGETED_JAVA_VERSION;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;

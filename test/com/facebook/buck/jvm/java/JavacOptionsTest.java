@@ -110,14 +110,22 @@ public class JavacOptionsTest {
   }
 
   @Test
+  public void sourceAndTarget7ByDefault() {
+    JavacOptions options = createStandardBuilder().build();
+
+    assertOptionsHasKeyValue(options, "source", "7");
+    assertOptionsHasKeyValue(options, "target", "7");
+  }
+
+  @Test
   public void shouldSetSourceAndTargetLevels() {
     JavacOptions original = createStandardBuilder()
-        .setSourceLevel("7")
+        .setSourceLevel("8")
         .setTargetLevel("5")
         .build();
 
     JavacOptions copy = JavacOptions.builder(original).build();
-    assertOptionsHasKeyValue(copy, "source", "7");
+    assertOptionsHasKeyValue(copy, "source", "8");
     assertOptionsHasKeyValue(copy, "target", "5");
   }
 
@@ -232,9 +240,7 @@ public class JavacOptionsTest {
   }
 
   private JavacOptions.Builder createStandardBuilder() {
-    return JavacOptions.builderForUseInJavaBuckConfig()
-        .setSourceLevel("5")
-        .setTargetLevel("5");
+    return JavacOptions.builderForUseInJavaBuckConfig();
   }
 
   private void assertOptionFlags(JavacOptions options, Matcher<Iterable<? super String>> matcher) {

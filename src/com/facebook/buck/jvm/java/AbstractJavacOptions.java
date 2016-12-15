@@ -52,6 +52,9 @@ import java.util.regex.Pattern;
 @BuckStyleImmutable
 abstract class AbstractJavacOptions implements RuleKeyAppendable {
 
+  // Default combined source and target level.
+  public static final String TARGETED_JAVA_VERSION = "7";
+
   public static final String COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL =
       "com.sun.tools.javac.api.JavacTool";
 
@@ -113,9 +116,16 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     return false;
   }
 
-  public abstract String getSourceLevel();
+  @Value.Default
+  public String getSourceLevel() {
+    return TARGETED_JAVA_VERSION;
+  }
+
   @VisibleForTesting
-  abstract String getTargetLevel();
+  @Value.Default
+  public String getTargetLevel() {
+    return TARGETED_JAVA_VERSION;
+  }
 
   @Value.Default
   public AnnotationProcessingParams getAnnotationProcessingParams() {
