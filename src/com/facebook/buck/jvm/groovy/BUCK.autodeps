@@ -4,7 +4,7 @@
       "//src/com/facebook/buck/io:executable-finder",
       "//src/com/facebook/buck/jvm/common:common",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:io"
+      "//src/com/facebook/buck/util:process_executor"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/cli:config",

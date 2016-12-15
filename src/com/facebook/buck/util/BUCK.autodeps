@@ -10,18 +10,16 @@
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util:exceptions",
       "//third-party/java/immutables:processor",
-      "//third-party/java/jna:jna-platform"
+      "//third-party/java/jsr:jsr305",
+      "//third-party/java/nuprocess:nuprocess"
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/io:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/util/immutables:immutables",
-      "//third-party/java/guava:guava",
-      "//third-party/java/jna:jna",
-      "//third-party/java/jsr:jsr305",
-      "//third-party/java/nuprocess:nuprocess",
-      "//third-party/java/oshi:oshi-core"
+      "//third-party/java/guava:guava"
     ]
   },
   "object_mapper" : {
@@ -40,6 +38,23 @@
     "exported_deps" : [
       "//src/com/facebook/buck/io:io",
       "//third-party/java/guava:guava"
+    ]
+  },
+  "process_executor" : {
+    "deps" : [
+      "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/util:util",
+      "//src/com/facebook/buck/util/environment:platform",
+      "//third-party/java/immutables:processor",
+      "//third-party/java/jna:jna-platform"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jna:jna",
+      "//third-party/java/jsr:jsr305",
+      "//third-party/java/nuprocess:nuprocess",
+      "//third-party/java/oshi:oshi-core"
     ]
   },
   "util" : {

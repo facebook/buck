@@ -17,6 +17,7 @@
     "exported_deps" : [
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
       "//third-party/java/jackson:jackson-annotations",

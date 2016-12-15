@@ -1,7 +1,9 @@
 {
-  "versioncontrol" : {
+  "autosparse" : {
     "deps" : [
-      "//src/com/facebook/buck/cli:config",
+      "//src/com/facebook/buck/io:ProjectFilesystemDelegate",
+      "//src/com/facebook/buck/io:ProjectFilesystemDelegateFactory",
+      "//src/com/facebook/buck/util/autosparse:autosparse",
       "//src/com/facebook/buck/util/versioncontrol:impl",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol_config",
@@ -11,7 +13,6 @@
       "//test/com/facebook/buck/testutil/integration:util",
       "//test/com/facebook/buck/util:testutil",
       "//third-party/java/guava:guava",
-      "//third-party/java/hamcrest:java-hamcrest",
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]

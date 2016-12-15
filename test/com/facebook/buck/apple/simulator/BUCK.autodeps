@@ -2,7 +2,7 @@
   "simulator" : {
     "deps" : [
       "//src/com/facebook/buck/apple/simulator:simulator",
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/testutil/integration:util",
       "//test/com/facebook/buck/util:testutil",

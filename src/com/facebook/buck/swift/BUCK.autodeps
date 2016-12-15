@@ -16,6 +16,7 @@
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util:util"
     ],
     "exported_deps" : [

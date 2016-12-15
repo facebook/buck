@@ -56,8 +56,8 @@
       "//src/com/facebook/buck/test:report-format",
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/environment:platform",
@@ -101,7 +101,7 @@
     "deps" : [
       "//src/com/facebook/buck/cxx:rules",
       "//src/com/facebook/buck/model:simple_types",
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/cxx:testutil",
       "//test/com/facebook/buck/jvm/java:javac-env",

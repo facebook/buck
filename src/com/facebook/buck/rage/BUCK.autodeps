@@ -23,6 +23,7 @@
       "//src/com/facebook/buck/util:constants",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/unit:unit",
+      "//src/com/facebook/buck/util/versioncontrol:versioncontrol_generator",
       "//src/com/facebook/buck/zip:stream",
       "//third-party/java/immutables:processor",
       "//third-party/java/jackson:jackson-core"
@@ -33,7 +34,7 @@
       "//src/com/facebook/buck/model:build_id",
       "//src/com/facebook/buck/rage:config",
       "//src/com/facebook/buck/timing:timing",
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util/environment:environment",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",

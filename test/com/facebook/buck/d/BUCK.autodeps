@@ -8,7 +8,7 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/cxx:testutil",

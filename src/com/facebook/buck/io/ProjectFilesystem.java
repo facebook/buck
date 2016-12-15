@@ -148,13 +148,14 @@ public class ProjectFilesystem {
   protected boolean ignoreValidityOfPaths;
 
   public ProjectFilesystem(Path root) {
-    this(root.getFileSystem(), root, ImmutableSet.of(), getDefaultBuckPaths(root));
+    this(root, new Config());
   }
 
   /**
    * This constructor is restricted to {@code protected} because it is generally best to let
-   * {@link ProjectFilesystemDelegateFactory#newInstance(Path)} create an appropriate
-   * delegate. Currently, the only case in which we need to override this behavior is in unit tests.
+   * {@link ProjectFilesystemDelegateFactory#newInstance(Path, String, boolean, ImmutableList,
+   * Optional)} create an appropriate delegate. Currently, the only case in which we need to
+   * override this behavior is in unit tests.
    */
   protected ProjectFilesystem(Path root, ProjectFilesystemDelegate delegate) {
     this(
@@ -170,20 +171,15 @@ public class ProjectFilesystem {
         root.getFileSystem(),
         root,
         extractIgnorePaths(root, config, getConfiguredBuckPaths(root, config)),
-        getConfiguredBuckPaths(root, config));
-  }
-
-  private ProjectFilesystem(
-      FileSystem vfs,
-      final Path root,
-      ImmutableSet<PathOrGlobMatcher> blackListedPaths,
-      BuckPaths buckPaths) {
-    this(
-        vfs,
-        root,
-        blackListedPaths,
-        buckPaths,
-        ProjectFilesystemDelegateFactory.newInstance(root));
+        getConfiguredBuckPaths(root, config),
+        ProjectFilesystemDelegateFactory.newInstance(
+            root,
+            config.getValue("version_control", "hg_cmd").orElse("hg"),
+            config.getBooleanValue("project", "enable_autosparse", false),
+            config.getListWithoutComments("autosparse", "ignore"),
+            config.getValue("autosparse", "baseprofile")
+        )
+    );
   }
 
   /**

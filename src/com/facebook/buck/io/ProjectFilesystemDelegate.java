@@ -33,7 +33,7 @@ public interface ProjectFilesystemDelegate {
    * Hook for virtual filesystems to materialise virtual files as Buck will need to be able to read
    * them past this point.
    */
-  public void ensureConcreteFilesExist();
+  void ensureConcreteFilesExist();
 
   Sha1HashCode computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException;
 

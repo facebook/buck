@@ -10,6 +10,7 @@
   },
   "test" : {
     "deps" : [
+      "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:util",
       "//third-party/java/immutables:processor"
     ],
@@ -20,7 +21,7 @@
       "//src/com/facebook/buck/test:report-format",
       "//src/com/facebook/buck/test/result/type:type",
       "//src/com/facebook/buck/test/selectors:selectors",
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
       "//third-party/java/jackson:jackson-annotations",

@@ -1,0 +1,15 @@
+java_immutables_library(
+  name = 'autosparse',
+  srcs = glob(['*.java']),
+  immutable_types = [
+    'ManifestInfo',
+  ],
+  tests = [
+    '//test/com/facebook/buck/util/autosparse:autosparse',
+  ],
+  autodeps = True,
+  visibility = [
+    'PUBLIC',
+  ],
+)
+

@@ -27,30 +27,48 @@ java_library(
 IO_SRCS = [
   'AbstractCharsetProcessListener.java',
   'AbstractDirectoryCleanerArgs.java',
-  'AbstractProcessExecutorParams.java',
-  'AbstractProcessResourceConsumption.java',
-  'Ansi.java',
   'AnsiEnvironmentChecking.java',
   'BestCompressionGZIPOutputStream.java',
-  'BgProcessKiller.java',
-  'CapturingPrintStream.java',
-  'Console.java',
-  'ContextualProcessExecutor.java',
   'DefaultFilteredDirectoryCopier.java',
-  'DefaultProcessExecutor.java',
   'DirectoryCleaner.java',
-  'DirtyPrintStreamDecorator.java',
   'FilteredDirectoryCopier.java',
-  'ForwardingProcessListener.java',
-  'InputStreamConsumer.java',
-  'Libc.java',
-  'LineFetcher.java',
   'LineIterating.java',
   'LineProcessorRunnable.java',
   'ListeningCharsetDecoder.java',
   'ListeningCharsetEncoder.java',
-  'ListeningProcessExecutor.java',
   'PkillProcessManager.java',
+  'SimpleProcessListener.java',
+  'TimeFormat.java',
+  'UnixUserIdFetcher.java',
+  'UserIdFetcher.java',
+]
+java_immutables_library(
+  name = 'io',
+  srcs = IO_SRCS,
+  immutable_types = [
+    'DirectoryCleanerArgs',
+  ],
+  tests = [
+  ],
+  autodeps = True,
+  visibility = [ 'PUBLIC' ],
+)
+
+PROCESS_EXECUTOR_SRCS = [
+  'AbstractProcessExecutorParams.java',
+  'AbstractProcessResourceConsumption.java',
+  'Ansi.java',
+  'BgProcessKiller.java',
+  'CapturingPrintStream.java',
+  'Console.java',
+  'ContextualProcessExecutor.java',
+  'DefaultProcessExecutor.java',
+  'DirtyPrintStreamDecorator.java',
+  'ForwardingProcessListener.java',
+  'InputStreamConsumer.java',
+  'Libc.java',
+  'LineFetcher.java',
+  'ListeningProcessExecutor.java',
   'PrintStreamProcessExecutorFactory.java',
   'ProcessExecutor.java',
   'ProcessExecutorSerializer.java',
@@ -58,18 +76,13 @@ IO_SRCS = [
   'ProcessHelper.java',
   'ProcessManager.java',
   'ProcessRegistry.java',
-  'SimpleProcessListener.java',
-  'TimeFormat.java',
   'Threads.java',
-  'UnixUserIdFetcher.java',
-  'UserIdFetcher.java',
   'Verbosity.java',
 ]
 java_immutables_library(
-  name = 'io',
-  srcs = IO_SRCS,
+  name = 'process_executor',
+  srcs = PROCESS_EXECUTOR_SRCS,
   immutable_types = [
-    'DirectoryCleanerArgs',
     'ProcessExecutorParams',
   ],
   tests = [
@@ -122,7 +135,7 @@ java_immutables_library(
     includes = ['*.java'],
     excludes = CONSTANT_SRCS + EXCEPTION_SRCS + IO_SRCS +
                WATCHMAN_WATCHER_SRCS + OBJECT_MAPPER_SRCS +
-               PACKAGED_RESOURCE_SRCS),
+               PACKAGED_RESOURCE_SRCS + PROCESS_EXECUTOR_SRCS),
   immutable_types = [
     'SampleRate',
     'PatternAndMessage',

@@ -22,8 +22,8 @@
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/environment:environment",
@@ -52,7 +52,7 @@
   "testutil" : {
     "deps" : [
       "//src/com/facebook/buck/model:simple_types",
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/util:testutil",

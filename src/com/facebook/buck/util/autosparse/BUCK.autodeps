@@ -1,0 +1,18 @@
+{
+  "autosparse" : {
+    "deps" : [
+      "//src/com/facebook/buck/io:DefaultProjectFilesystemDelegate",
+      "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+      "//third-party/java/immutables:processor"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/io:ProjectFilesystemDelegate",
+      "//src/com/facebook/buck/util/immutables:immutables",
+      "//src/com/facebook/buck/util/sha1:sha1",
+      "//src/com/facebook/buck/util/versioncontrol:versioncontrol_hg",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jsr:jsr305"
+    ]
+  }
+}

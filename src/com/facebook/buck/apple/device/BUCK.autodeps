@@ -4,7 +4,7 @@
       "//src/com/facebook/buck/log:api"
     ],
     "exported_deps" : [
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//third-party/java/guava:guava"
     ]
   }

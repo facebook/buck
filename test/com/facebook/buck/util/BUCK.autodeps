@@ -8,6 +8,7 @@
     "exported_deps" : [
       "//src/com/facebook/buck/log:log",
       "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//test/com/facebook/buck/timing:testutil",
       "//third-party/java/guava:guava",
@@ -27,6 +28,7 @@
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:packaged_resource",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util:watchman",
       "//src/com/facebook/buck/util/environment:platform",

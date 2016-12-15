@@ -27,7 +27,7 @@
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/test:test",
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",

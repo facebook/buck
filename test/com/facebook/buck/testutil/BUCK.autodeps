@@ -20,7 +20,7 @@
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/timing:timing",
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/environment:environment",
       "//src/com/facebook/buck/util/sha1:sha1",

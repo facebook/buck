@@ -136,8 +136,8 @@
       "//src/com/facebook/buck/rules:build_event",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/zip:unzip",
       "//third-party/java/immutables:processor",
@@ -245,7 +245,7 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:interfaces",
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//third-party/java/guava:guava"
     ]
   }

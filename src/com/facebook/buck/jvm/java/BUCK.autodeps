@@ -18,7 +18,7 @@
       "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//third-party/java/eclipse:eclipse_jdt",
       "//third-party/java/guava:guava"
     ]
@@ -139,7 +139,7 @@
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/test:report-format",
       "//src/com/facebook/buck/test/selectors:selectors",
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava"
     ]
@@ -170,7 +170,7 @@
       "//src/com/facebook/buck/model:simple_types",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:interfaces",
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//src/com/facebook/buck/zip:stream",

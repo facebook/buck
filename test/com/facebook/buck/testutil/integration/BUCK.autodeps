@@ -41,7 +41,7 @@
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:types",
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util/sha1:sha1",
       "//third-party/java/guava:guava",
       "//third-party/java/jetty:jetty",

@@ -2,27 +2,54 @@
   "impl" : {
     "deps" : [
       "//src/com/facebook/buck/log:api",
-      "//src/com/facebook/buck/util:util"
+      "//src/com/facebook/buck/util/versioncontrol:versioncontrol_hg"
     ],
     "exported_deps" : [
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
-      "//third-party/java/guava:guava",
-      "//third-party/java/jsr:jsr305"
+      "//src/com/facebook/buck/util/versioncontrol:versioncontrol_config",
+      "//third-party/java/guava:guava"
     ]
   },
   "versioncontrol" : {
     "deps" : [
-      "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/log/views:views",
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
-      "//src/com/facebook/buck/cli:config",
-      "//src/com/facebook/buck/event:event",
       "//src/com/facebook/buck/util/immutables:immutables",
       "//third-party/java/guava:guava",
       "//third-party/java/jackson:jackson-annotations"
+    ]
+  },
+  "versioncontrol_config" : {
+    "deps" : [ ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/cli:config"
+    ]
+  },
+  "versioncontrol_generator" : {
+    "deps" : [
+      "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/log/views:views",
+      "//third-party/java/jackson:jackson-annotations"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+      "//third-party/java/guava:guava"
+    ]
+  },
+  "versioncontrol_hg" : {
+    "deps" : [
+      "//src/com/facebook/buck/log:api",
+      "//src/com/facebook/buck/util:util"
+    ],
+    "exported_deps" : [
+      "//src/com/facebook/buck/util:process_executor",
+      "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+      "//third-party/java/guava:guava",
+      "//third-party/java/jsr:jsr305"
     ]
   }
 }

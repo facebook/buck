@@ -5,7 +5,7 @@
       "//src/com/facebook/buck/jvm/common:common",
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util:util"
     ],
     "exported_deps" : [

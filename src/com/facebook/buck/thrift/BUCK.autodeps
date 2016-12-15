@@ -25,7 +25,7 @@
       "//src/com/facebook/buck/rules/coercer:coercer",
       "//src/com/facebook/buck/shell:steps",
       "//src/com/facebook/buck/step:step",
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//third-party/java/guava:guava",
       "//third-party/java/infer-annotations:infer-annotations",
       "//third-party/java/jsr:jsr305"

@@ -4,7 +4,7 @@
       "//src/com/facebook/buck/go:go",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//test/com/facebook/buck/cli:FakeBuckConfig",
       "//test/com/facebook/buck/testutil:testutil",
       "//third-party/java/guava:guava",
@@ -15,7 +15,7 @@
   "integration" : {
     "deps" : [
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//test/com/facebook/buck/go:assumptions",
       "//test/com/facebook/buck/testutil/integration:util",
       "//third-party/java/hamcrest:java-hamcrest",

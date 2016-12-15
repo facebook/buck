@@ -7,7 +7,7 @@
       "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util:util",
       "//third-party/java/immutables:processor"
     ],

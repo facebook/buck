@@ -57,8 +57,8 @@
       "//src/com/facebook/buck/test/result/type:type",
       "//src/com/facebook/buck/timing:timing",
       "//src/com/facebook/buck/util:exceptions",
-      "//src/com/facebook/buck/util:io",
       "//src/com/facebook/buck/util:object_mapper",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util:util",
       "//src/com/facebook/buck/util:watchman",
       "//src/com/facebook/buck/util/cache:cache",
@@ -100,7 +100,7 @@
   },
   "cli-apple-integration" : {
     "deps" : [
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/testutil:testutil",
       "//test/com/facebook/buck/testutil/integration:util",
@@ -149,7 +149,7 @@
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules:types",
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util/environment:environment",
       "//src/com/facebook/buck/util/environment:platform",
       "//test/com/facebook/buck/testutil/integration:util",

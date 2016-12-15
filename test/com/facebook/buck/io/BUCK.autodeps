@@ -9,7 +9,7 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/io:watchman",
       "//src/com/facebook/buck/model:build_id",
-      "//src/com/facebook/buck/util:io",
+      "//src/com/facebook/buck/util:process_executor",
       "//src/com/facebook/buck/util/environment:platform",
       "//src/com/facebook/buck/zip:stream",
       "//test/com/facebook/buck/config:testutil",
