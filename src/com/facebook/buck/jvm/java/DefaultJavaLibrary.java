@@ -217,7 +217,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         classesToRemoveFromJar);
   }
 
-  private DefaultJavaLibrary(
+  protected DefaultJavaLibrary(
       BuildRuleParams params,
       final SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,

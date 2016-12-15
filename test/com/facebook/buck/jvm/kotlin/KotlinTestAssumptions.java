@@ -17,13 +17,19 @@
 package com.facebook.buck.jvm.kotlin;
 
 import static org.junit.Assume.assumeNoException;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.environment.Platform;
 
 import java.io.IOException;
 
 public abstract class KotlinTestAssumptions {
+  public static void assumeUnixLike() {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+  }
+
   public static void assumeCompilerAvailable() throws IOException {
     Throwable exception = null;
     try {
