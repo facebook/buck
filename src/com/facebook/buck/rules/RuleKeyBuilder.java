@@ -21,8 +21,6 @@ import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Either;
-import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.model.UnflavoredBuildTarget;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Preconditions;
@@ -353,8 +351,8 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
     } else if (val instanceof RuleKey) {
       ruleKeyLogger.addValue((RuleKey) val);
       feed(val.toString());
-    } else if (val instanceof BuildTarget || val instanceof UnflavoredBuildTarget) {
-      BuildTarget buildTarget = ((HasBuildTarget) val).getBuildTarget();
+    } else if (val instanceof BuildTarget) {
+      BuildTarget buildTarget = (BuildTarget) val;
       ruleKeyLogger.addValue(buildTarget);
       feed(buildTarget.getFullyQualifiedName());
     } else if (val instanceof Either) {
