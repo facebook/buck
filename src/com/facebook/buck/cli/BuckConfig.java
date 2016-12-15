@@ -610,6 +610,10 @@ public class BuckConfig implements ConfigPathGetter {
     return config.getFloat(sectionName, propertyName);
   }
 
+  public Optional<Boolean> getBoolean(String sectionName, String propertyName) {
+    return config.getBoolean(sectionName, propertyName);
+  }
+
   public boolean getBooleanValue(String sectionName, String propertyName, boolean defaultValue) {
     return config.getBooleanValue(sectionName, propertyName, defaultValue);
   }

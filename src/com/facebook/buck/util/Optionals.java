@@ -84,4 +84,11 @@ public class Optionals {
       return Stream.empty();
     }
   }
+
+  private static final Optional<Boolean> OPTIONAL_TRUE = Optional.of(true);
+  private static final Optional<Boolean> OPTIONAL_FALSE = Optional.of(false);
+
+  public static Optional<Boolean> ofBoolean(boolean b) {
+    return b ? OPTIONAL_TRUE : OPTIONAL_FALSE;
+  }
 }

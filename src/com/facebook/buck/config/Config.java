@@ -20,9 +20,9 @@ import com.facebook.buck.model.MacroException;
 import com.facebook.buck.model.MacroFinder;
 import com.facebook.buck.model.MacroReplacer;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.Optionals;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -271,20 +271,24 @@ public class Config {
   }
 
   public boolean getBooleanValue(String sectionName, String propertyName, boolean defaultValue) {
-    Map<String, String> entries = get(sectionName);
-    if (!entries.containsKey(propertyName)) {
-      return defaultValue;
+    return getBoolean(sectionName, propertyName).orElse(defaultValue);
+  }
+
+  public Optional<Boolean> getBoolean(String sectionName, String propertyName) {
+    Optional<String> value = getValue(sectionName, propertyName);
+    if (!value.isPresent()) {
+      return Optional.empty();
     }
 
-    String answer = Preconditions.checkNotNull(entries.get(propertyName));
+    String answer = value.get();
     switch (answer.toLowerCase()) {
       case "yes":
       case "true":
-        return true;
+        return Optionals.ofBoolean(true);
 
       case "no":
       case "false":
-        return false;
+        return Optionals.ofBoolean(false);
 
       default:
         throw new HumanReadableException(
