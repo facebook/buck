@@ -23,6 +23,8 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.NamedTemporaryFile;
+import com.facebook.buck.zip.Unzip;
 import com.google.common.base.Charsets;
 import com.google.common.eventbus.Subscribe;
 
@@ -31,6 +33,7 @@ import java.io.Closeable;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -87,11 +90,15 @@ public class DistBuildLoggerListener implements BuckEventListener, Closeable {
 
   private void rematerializeLogDirZip(String runId, byte[] zipContents) throws IOException {
     if (zipContents.length == 0) {
-      LOG.warn("Skipping materialiation of log zip for runId [%s] as content length was zero");
+      LOG.warn("Skipping materialiation of buck-out dir for runId [%s] as content length was zero");
       return;
     }
-    try (FileOutputStream zipFos = new FileOutputStream(getLogDirZipPath(runId).toFile())) {
-      zipFos.write(zipContents);
+    Path buckOutUnzipPath = getBuckOutUnzipPath(runId);
+
+    try (NamedTemporaryFile zipFile = new NamedTemporaryFile("runBuckOut", "zip")) {
+      Files.write(zipFile.get(), zipContents);
+      Unzip.extractZipFile(zipFile.get(), filesystem, buckOutUnzipPath,
+          Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
     }
   }
 
@@ -134,8 +141,8 @@ public class DistBuildLoggerListener implements BuckEventListener, Closeable {
     return getLogDirForRunId(runId).resolve(String.format("%s.log", streamType));
   }
 
-  private Path getLogDirZipPath(String runId) {
-    return getLogDirForRunId(runId).resolve("buck-out-logs.zip");
+  private Path getBuckOutUnzipPath(String runId) {
+    return getLogDirForRunId(runId).resolve("buck-out");
   }
 
   private void writeToLog(
