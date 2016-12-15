@@ -87,6 +87,7 @@ public class AppleBundle
   private static final String FRAMEWORK_EXTENSION =
       AppleBundleExtension.FRAMEWORK.toFileExtension();
   private static final String PP_DRY_RUN_RESULT_FILE = "BUCK_pp_dry_run.plist";
+  private static final String CODE_SIGN_DRY_RUN_ARGS_FILE = "BUCK_code_sign_args.plist";
   private static final String CODE_SIGN_DRY_RUN_ENTITLEMENTS_FILE =
       "BUCK_code_sign_entitlements.plist";
 
@@ -506,6 +507,9 @@ public class AppleBundle
               provisioningProfileCopyStep.getSelectedProvisioningProfileFuture());
 
           if (!selectedProfile.isPresent()) {
+            // This should only happen in dry-run codesign mode (since otherwise an exception
+            // would have been thrown already.)  Still, we need to return *something*.
+            Preconditions.checkState(dryRunCodeSigning);
             return CodeSignIdentity.AD_HOC;
           }
 
@@ -525,9 +529,6 @@ public class AppleBundle
             }
           }
 
-          if (dryRunCodeSigning) {
-            return CodeSignIdentity.AD_HOC;
-          }
           throw new HumanReadableException(
               "No code sign identity available for provisioning profile: %s\n" +
                   "Profile requires an identity with one of the following SHA1 fingerprints " +
@@ -549,22 +550,28 @@ public class AppleBundle
       for (Path codeSignOnCopyPath : codeSignOnCopyPathsBuilder.build()) {
         stepsBuilder.add(
             new CodeSignStep(
-                getProjectFilesystem().getRootPath(),
+                getProjectFilesystem(),
                 getResolver(),
                 codeSignOnCopyPath,
                 Optional.empty(),
                 codeSignIdentitySupplier,
-                codesignAllocatePath));
+                codesignAllocatePath,
+                dryRunCodeSigning ?
+                    Optional.of(codeSignOnCopyPath.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE)) :
+                    Optional.empty()));
       }
 
       stepsBuilder.add(
           new CodeSignStep(
-              getProjectFilesystem().getRootPath(),
+              getProjectFilesystem(),
               getResolver(),
               bundleRoot,
-              dryRunCodeSigning ? Optional.empty() : signingEntitlementsTempPath,
+              signingEntitlementsTempPath,
               codeSignIdentitySupplier,
-              codesignAllocatePath));
+              codesignAllocatePath,
+              dryRunCodeSigning ?
+                  Optional.of(bundleRoot.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE)) :
+                  Optional.empty()));
     } else {
       addSwiftStdlibStepIfNeeded(
           bundleRoot.resolve(Paths.get("Frameworks")),

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple;
 
+import com.dd.plist.NSDictionary;
+import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
@@ -35,30 +37,51 @@ import java.util.Optional;
 import java.util.Set;
 
 class CodeSignStep implements Step {
-  private final Path workingDirectory;
   private final SourcePathResolver resolver;
   private final Path pathToSign;
   private final Optional<Path> pathToSigningEntitlements;
   private final Supplier<CodeSignIdentity> codeSignIdentitySupplier;
   private final Optional<Tool> codesignAllocatePath;
+  private final Optional<Path> dryRunResultsPath;
+  private final ProjectFilesystem filesystem;
 
   public CodeSignStep(
-      Path workingDirectory,
+      ProjectFilesystem filesystem,
       SourcePathResolver resolver,
       Path pathToSign,
       Optional<Path> pathToSigningEntitlements,
       Supplier<CodeSignIdentity> codeSignIdentitySupplier,
-      Optional<Tool> codesignAllocatePath) {
-    this.workingDirectory = workingDirectory;
+      Optional<Tool> codesignAllocatePath,
+      Optional<Path> dryRunResultsPath) {
+    this.filesystem = filesystem;
     this.resolver = resolver;
     this.pathToSign = pathToSign;
     this.pathToSigningEntitlements = pathToSigningEntitlements;
     this.codeSignIdentitySupplier = codeSignIdentitySupplier;
     this.codesignAllocatePath = codesignAllocatePath;
+    this.dryRunResultsPath = dryRunResultsPath;
   }
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+    if (dryRunResultsPath.isPresent()) {
+      try {
+        NSDictionary dryRunResult = new NSDictionary();
+        dryRunResult.put(
+            "relative-path-to-sign",
+            dryRunResultsPath.get().getParent().relativize(pathToSign).toString());
+        dryRunResult.put("use-entitlements", pathToSigningEntitlements.isPresent());
+        dryRunResult.put("identity", getIdentityArg(codeSignIdentitySupplier.get()));
+        filesystem.writeContentsToPath(dryRunResult.toXMLPropertyList(), dryRunResultsPath.get());
+        return StepExecutionResult.SUCCESS;
+      } catch (IOException e) {
+        context.logError(e,
+            "Failed when trying to write dry run results: %s",
+            getDescription(context));
+        return StepExecutionResult.ERROR;
+      }
+    }
+
     ProcessExecutorParams.Builder paramsBuilder = ProcessExecutorParams.builder();
     if (codesignAllocatePath.isPresent()) {
       ImmutableList<String> commandPrefix = codesignAllocatePath.get().getCommandPrefix(resolver);
@@ -77,7 +100,7 @@ class CodeSignStep implements Step {
     ProcessExecutorParams processExecutorParams =
         paramsBuilder
             .setCommand(commandBuilder.build())
-            .setDirectory(workingDirectory)
+            .setDirectory(filesystem.getRootPath())
             .build();
     // Must specify that stdout is expected or else output may be wrapped in Ansi escape chars.
     Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
