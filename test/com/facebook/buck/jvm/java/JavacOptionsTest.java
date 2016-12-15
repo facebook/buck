@@ -23,8 +23,10 @@ import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -62,6 +64,45 @@ public class JavacOptionsTest {
     JavacOptions options = createStandardBuilder().build();
 
     assertThat(options.getJavacLocation(), is(JavacOptions.JavacLocation.IN_PROCESS));
+  }
+
+  @Test
+  public void trackClassUsageOnByDefault() {
+    JavacOptions options = createStandardBuilder().build();
+
+    assertTrue(options.getTrackClassUsageNotDisabled());
+  }
+
+  @Test
+  public void doNotTrackClassUsageForExternJavac() {
+    JavacOptions options = createStandardBuilder()
+        .setJavacPath(Either.ofRight(new FakeSourcePath("javac")))
+        .build();
+
+    assumeThat(options.getJavacSource(), is(JavacOptions.JavacSource.EXTERNAL));
+
+    assertFalse(options.trackClassUsage());
+  }
+
+  @Test
+  public void trackClassUsageForJavacFromJar() {
+    JavacOptions options = createStandardBuilder()
+        .setJavacJarPath(new FakeSourcePath("javac_jar"))
+        .build();
+
+    assumeThat(options.getJavacSource(), is(JavacOptions.JavacSource.JAR));
+
+    assertTrue(options.trackClassUsage());
+  }
+
+  @Test
+  public void trackClassUsageForJavacFromJDK() {
+    JavacOptions options = createStandardBuilder()
+        .build();
+
+    assumeThat(options.getJavacSource(), is(JavacOptions.JavacSource.JDK));
+
+    assertTrue(options.trackClassUsage());
   }
 
   @Test

@@ -105,7 +105,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     // This is just to make it possible to turn off dep-based rulekeys in case anything goes wrong
     // and can be removed when we're sure class usage tracking and dep-based keys for Java
     // work fine.
-    boolean trackClassUsage = delegate.getBooleanValue("java", "track_class_usage", true);
+    Optional<Boolean> trackClassUsage = delegate.getBoolean("java", "track_class_usage");
+    if (trackClassUsage.isPresent()) {
+      builder.setTrackClassUsageNotDisabled(trackClassUsage.get());
+    }
 
     ImmutableMap<String, String> allEntries = delegate.getEntriesForSection("java");
     ImmutableMap.Builder<String, String> bootclasspaths = ImmutableMap.builder();
@@ -124,7 +127,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         .putAllSourceToBootclasspath(bootclasspaths.build())
         .addAllExtraArguments(extraArguments)
         .setSafeAnnotationProcessors(safeAnnotationProcessors)
-        .setTrackClassUsageNotDisabled(trackClassUsage)
         .build();
   }
 
