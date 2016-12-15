@@ -86,6 +86,7 @@
       "//src/com/facebook/buck/config:config",
       "//src/com/facebook/buck/distributed:distributed",
       "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/event:interfaces",
       "//src/com/facebook/buck/httpserver:httpserver",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/json:json",

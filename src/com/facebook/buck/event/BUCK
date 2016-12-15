@@ -1,5 +1,26 @@
+EVENT_INTERFACES = [
+  'AbstractBuckEvent.java',
+  'AbstractEventKey.java',
+  'BroadcastEvent.java',
+  'BuckEvent.java',
+  'BuckEventListener.java',
+  'EventBus.java',
+  'LeafEvent.java',
+  'WorkAdvanceEvent.java',
+]
+
+java_immutables_library(
+  name = 'interfaces',
+  srcs = EVENT_INTERFACES,
+  autodeps = True,
+  immutable_types = [
+    'EventKey'
+  ],
+  visibility = [ 'PUBLIC' ],
+)
 
 standard_java_library(
+  srcs = glob(['*.java'], excludes = EVENT_INTERFACES),
   immutable_types = [
     'ScubaData',
   ],

@@ -15,7 +15,7 @@
       "//third-party/java/immutables:processor"
     ],
     "exported_deps" : [
-      "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/event:interfaces",
       "//src/com/facebook/buck/event/external:external_lib",
       "//src/com/facebook/buck/model:model",
       "//src/com/facebook/buck/test:report-format",

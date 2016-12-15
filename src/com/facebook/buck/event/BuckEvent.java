@@ -68,11 +68,11 @@ public interface BuckEvent extends BuckEventExternalInterface {
   EventKey getEventKey();
 
   class Scope implements AutoCloseable {
-    private final BuckEventBus eventBus;
+    private final EventBus eventBus;
     private Supplier<BuckEvent> eventSupplier;
 
     public Scope(
-        BuckEventBus eventBus,
+        EventBus eventBus,
         Supplier<BuckEvent> eventBuilder) {
       this.eventBus = eventBus;
       this.eventSupplier = eventBuilder;

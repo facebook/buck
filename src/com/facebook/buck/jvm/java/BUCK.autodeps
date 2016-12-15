@@ -161,6 +161,7 @@
     ],
     "exported_deps" : [
       "//src/com/facebook/buck/event:event",
+      "//src/com/facebook/buck/event:interfaces",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/core:classhash",
       "//src/com/facebook/buck/jvm/core:packagefinder",

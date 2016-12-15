@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Thin wrapper around guava event bus.
  */
-public class BuckEventBus implements Closeable {
+public class BuckEventBus implements Closeable, com.facebook.buck.event.EventBus {
 
   private static final Logger LOG = Logger.get(BuckEventBus.class);
 
@@ -77,6 +77,7 @@ public class BuckEventBus implements Closeable {
         () -> eventBus.post(event));
   }
 
+  @Override
   public void post(BuckEvent event) {
     timestamp(event);
     dispatch(event);
@@ -95,6 +96,7 @@ public class BuckEventBus implements Closeable {
   /**
    * Post event to the EventBus using the timestamp given by atTime.
    */
+  @Override
   public void post(BuckEvent event, BuckEvent atTime) {
     event.configure(
         atTime.getTimestamp(),
@@ -105,6 +107,7 @@ public class BuckEventBus implements Closeable {
     dispatch(event);
   }
 
+  @Override
   public void register(Object object) {
     eventBus.register(object);
   }
@@ -132,6 +135,7 @@ public class BuckEventBus implements Closeable {
    * <p>
    * In practice, this should be a short string, because it may be sent over the wire frequently.
    */
+  @Override
   public BuildId getBuildId() {
     return buildId;
   }
@@ -163,6 +167,7 @@ public class BuckEventBus implements Closeable {
    * Timestamp event. A timestamped event cannot subsequently being posted and is useful only to
    * pass its timestamp on to another posted event.
    */
+  @Override
   public void timestamp(BuckEvent event) {
     Long threadId = threadIdSupplier.get();
     event.configure(
