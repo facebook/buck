@@ -20,6 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -54,6 +55,13 @@ public class JavacOptionsTest {
     JavacOptions options = createStandardBuilder().build();
 
     assertOptionFlags(options, hasItem("g"));
+  }
+
+  @Test
+  public void locationIsInprocByDefault() {
+    JavacOptions options = createStandardBuilder().build();
+
+    assertThat(options.getJavacLocation(), is(JavacOptions.JavacLocation.IN_PROCESS));
   }
 
   @Test

@@ -311,8 +311,9 @@ public class JavaBuckConfigTest {
         "[java]",
         "    location = OUT_OF_PROCESS");
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
+    JavacOptions options = config.getDefaultJavacOptions();
     assertThat(
-        config.getJavacLocation(),
+        options.getJavacLocation(),
         Matchers.equalTo(JavacOptions.JavacLocation.OUT_OF_PROCESS));
   }
 
@@ -320,8 +321,10 @@ public class JavaBuckConfigTest {
   public void testJavaLocationInProcessByDefault()
       throws IOException, NoSuchBuildTargetException, InterruptedException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
+
+    JavacOptions options = config.getDefaultJavacOptions();
     assertThat(
-        config.getJavacLocation(),
+        options.getJavacLocation(),
         Matchers.equalTo(JavacOptions.JavacLocation.IN_PROCESS));
   }
 
@@ -332,8 +335,9 @@ public class JavaBuckConfigTest {
         "[java]",
         "    location = IN_PROCESS");
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
+    JavacOptions options = config.getDefaultJavacOptions();
     assertThat(
-        config.getJavacLocation(),
+        options.getJavacLocation(),
         Matchers.equalTo(JavacOptions.JavacLocation.IN_PROCESS));
   }
 
