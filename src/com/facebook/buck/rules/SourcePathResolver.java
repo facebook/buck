@@ -81,7 +81,7 @@ public class SourcePathResolver {
       return ((PathSourcePath) sourcePath).getFilesystem();
     }
     if (sourcePath instanceof BuildTargetSourcePath) {
-      return getRule(sourcePath).get().getProjectFilesystem();
+      return getRuleOrThrow((BuildTargetSourcePath) sourcePath).getProjectFilesystem();
     }
     throw new IllegalStateException();
   }
@@ -186,10 +186,18 @@ public class SourcePathResolver {
    *         {@link BuildRule}.
    */
   public Optional<BuildRule> getRule(SourcePath sourcePath) {
-    if (!(sourcePath instanceof BuildTargetSourcePath)) {
+    if (sourcePath instanceof BuildTargetSourcePath) {
+      return Optional.of(getRuleOrThrow((BuildTargetSourcePath) sourcePath));
+    } else {
       return Optional.empty();
     }
-    return Optional.of(ruleResolver.getRule(((BuildTargetSourcePath) sourcePath).getTarget()));
+  }
+
+  /**
+   * @return The {@link BuildRule} whose output {@code sourcePath} refers to its output.
+   */
+  public BuildRule getRuleOrThrow(BuildTargetSourcePath sourcePath) {
+    return Preconditions.checkNotNull(ruleResolver.getRule(sourcePath.getTarget()));
   }
 
   /**

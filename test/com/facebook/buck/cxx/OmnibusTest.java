@@ -433,7 +433,7 @@ public class OmnibusTest {
   }
 
   private CxxLink getCxxLinkRule(SourcePathResolver resolver, SourcePath path) {
-    return ((CxxLink) resolver.getRule(path).get());
+    return ((CxxLink) resolver.getRuleOrThrow((BuildTargetSourcePath) path));
   }
 
   private void assertCxxLinkContainsNativeLinkableInput(

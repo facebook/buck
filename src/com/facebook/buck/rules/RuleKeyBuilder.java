@@ -125,29 +125,28 @@ public abstract class RuleKeyBuilder<T> implements RuleKeyObjectSink {
       }
     }
 
-    // And now we need to figure out what this thing is.
-    Optional<BuildRule> buildRule = resolver.getRule(sourcePath);
-    if (buildRule.isPresent()) {
+    if (sourcePath instanceof BuildTargetSourcePath) {
+      BuildRule buildRule = resolver.getRuleOrThrow((BuildTargetSourcePath) sourcePath);
       feed(sourcePath.toString());
-      return setSingleValue(buildRule.get());
-    } else {
-      // The original version of this expected the path to be relative, however, sometimes the
-      // deprecated method returned an absolute path, which is obviously less than ideal. If we can,
-      // grab the relative path to the output. We also need to hash the contents of the absolute
-      // path no matter what.
-      Path absolutePath = resolver.getAbsolutePath(sourcePath);
-      Path ideallyRelative;
-      try {
-        ideallyRelative = resolver.getRelativePath(sourcePath);
-      } catch (IllegalStateException e) {
-        // Expected relative path was absolute. Yay.
-        ideallyRelative = absolutePath;
-      }
-      try {
-        return setPath(absolutePath, ideallyRelative);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
+      return setSingleValue(buildRule);
+    }
+
+    // The original version of this expected the path to be relative, however, sometimes the
+    // deprecated method returned an absolute path, which is obviously less than ideal. If we can,
+    // grab the relative path to the output. We also need to hash the contents of the absolute
+    // path no matter what.
+    Path absolutePath = resolver.getAbsolutePath(sourcePath);
+    Path ideallyRelative;
+    try {
+      ideallyRelative = resolver.getRelativePath(sourcePath);
+    } catch (IllegalStateException e) {
+      // Expected relative path was absolute. Yay.
+      ideallyRelative = absolutePath;
+    }
+    try {
+      return setPath(absolutePath, ideallyRelative);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 
