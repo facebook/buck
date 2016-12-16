@@ -129,17 +129,17 @@ public class TestRunning {
       final StepRunner stepRunner)
       throws IOException, ExecutionException, InterruptedException {
 
-    ImmutableSet<JavaLibrary> rulesUnderTest;
+    ImmutableSet<JavaLibrary> rulesUnderTestForCoverage;
     // If needed, we first run instrumentation on the class files.
     if (options.isCodeCoverageEnabled()) {
-      rulesUnderTest = getRulesUnderTest(tests);
-      if (!rulesUnderTest.isEmpty()) {
+      rulesUnderTestForCoverage = getRulesUnderTest(tests);
+      if (!rulesUnderTestForCoverage.isEmpty()) {
         try {
           // We'll use the filesystem of the first rule under test. This will fail if there are any
           // tests from a different repo, but it'll help us bootstrap ourselves to being able to
           // support multiple repos
           // TODO(t8220837): Support tests in multiple repos
-          JavaLibrary library = rulesUnderTest.iterator().next();
+          JavaLibrary library = rulesUnderTestForCoverage.iterator().next();
           stepRunner.runStepForBuildTarget(
               executionContext,
               new MakeCleanDirectoryStep(
@@ -153,7 +153,7 @@ public class TestRunning {
         }
       }
     } else {
-      rulesUnderTest = ImmutableSet.of();
+      rulesUnderTestForCoverage = ImmutableSet.of();
     }
 
     final ImmutableSet<String> testTargets =
@@ -424,14 +424,14 @@ public class TestRunning {
     }
 
     // Generate the code coverage report.
-    if (options.isCodeCoverageEnabled() && !rulesUnderTest.isEmpty()) {
+    if (options.isCodeCoverageEnabled() && !rulesUnderTestForCoverage.isEmpty()) {
       try {
         DefaultJavaPackageFinder defaultJavaPackageFinder =
             params.getBuckConfig().getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
         stepRunner.runStepForBuildTarget(
             executionContext,
             getReportCommand(
-                rulesUnderTest,
+                rulesUnderTestForCoverage,
                 Optional.of(defaultJavaPackageFinder),
                 params.getBuckConfig().getView(JavaBuckConfig.class)
                     .getDefaultJavaOptions()
