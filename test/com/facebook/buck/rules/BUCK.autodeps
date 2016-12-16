@@ -15,7 +15,6 @@
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/jvm/core:packagefinder",
       "//src/com/facebook/buck/jvm/java:rules",
-      "//src/com/facebook/buck/jvm/java:support",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/log:log",
       "//src/com/facebook/buck/model:build_id",
