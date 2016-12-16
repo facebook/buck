@@ -20,12 +20,8 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +29,10 @@ import java.net.URI;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class ClientSideSlb implements HttpLoadBalancer {
 
@@ -119,7 +119,6 @@ public class ClientSideSlb implements HttpLoadBalancer {
               .get()
               .build();
       long nowMillis = clock.currentTimeMillis();
-      Stopwatch stopwatch = Stopwatch.createStarted();
       try {
         Response response = pingClient.newCall(request).execute();
         try {
@@ -128,10 +127,13 @@ public class ClientSideSlb implements HttpLoadBalancer {
           try (InputStream inputStream = response.body().byteStream()) {
             ByteStreams.copy(inputStream, ByteStreams.nullOutputStream());
           }
-          long requestLatencyMillis = stopwatch.elapsed(TimeUnit.MILLISECONDS);
-          perServerData.setPingRequestLatencyMillis(requestLatencyMillis);
-          healthManager.reportPingLatency(serverUri, nowMillis, requestLatencyMillis);
-          healthManager.reportRequestSuccess(serverUri, nowMillis);
+          if (response.isSuccessful()) {
+            long requestLatencyMillis = response.receivedResponseAtMillis() -
+                response.sentRequestAtMillis();
+            perServerData.setPingRequestLatencyMillis(requestLatencyMillis);
+            healthManager.reportPingLatency(serverUri, nowMillis, requestLatencyMillis);
+            healthManager.reportRequestSuccess(serverUri, nowMillis);
+          }
         } finally {
           // This guarantees response resources are released. In OkHttp if the Response's stream
           // is not explicitly closed the connection is leaked from the connection pool and
