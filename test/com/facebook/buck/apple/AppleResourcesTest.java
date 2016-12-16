@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
+import java.util.Optional;
 import java.util.Set;
 
 public class AppleResourcesTest {
@@ -46,6 +47,7 @@ public class AppleResourcesTest {
     assertThat(
         AppleResources.collectRecursiveResources(
             targetGraph,
+            null,
             targetNodes),
         empty());
   }
@@ -79,6 +81,7 @@ public class AppleResourcesTest {
     assertThat(
         AppleResources.collectRecursiveResources(
             targetGraph,
+            Optional.empty(),
             targetNodes),
         hasItem(resourceNode.getConstructorArg()));
   }
@@ -118,6 +121,7 @@ public class AppleResourcesTest {
     assertThat(
         AppleResources.collectRecursiveResources(
             targetGraph,
+            Optional.empty(),
             targetNodes),
         hasItems(fooResourceNode.getConstructorArg(), barResourceNode.getConstructorArg()));
   }

@@ -20,6 +20,7 @@ import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleConfig;
+import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.apple.xcode.XCScheme;
@@ -84,6 +85,7 @@ public class WorkspaceAndProjectGenerator {
 
   private final Cell rootCell;
   private final TargetGraph projectGraph;
+  private final AppleDependenciesCache dependenciesCache;
   private final XcodeWorkspaceConfigDescription.Arg workspaceArguments;
   private final BuildTarget workspaceBuildTarget;
   private final ImmutableSet<UnflavoredBuildTarget> focusModules;
@@ -134,6 +136,7 @@ public class WorkspaceAndProjectGenerator {
       SwiftBuckConfig swiftBuckConfig) {
     this.rootCell = cell;
     this.projectGraph = projectGraph;
+    this.dependenciesCache = new AppleDependenciesCache(projectGraph);
     this.workspaceArguments = workspaceArguments;
     this.workspaceBuildTarget = workspaceBuildTarget;
     this.projectGeneratorOptions = ImmutableSet.copyOf(projectGeneratorOptions);
@@ -445,6 +448,7 @@ public class WorkspaceAndProjectGenerator {
         }
         generator = new ProjectGenerator(
             projectGraph,
+            dependenciesCache,
             rules,
             projectCell,
             projectDirectory,
@@ -502,6 +506,7 @@ public class WorkspaceAndProjectGenerator {
     LOG.debug("Generating a combined project");
     ProjectGenerator generator = new ProjectGenerator(
         projectGraph,
+        dependenciesCache,
         targetsInRequiredProjects,
         rootCell,
         outputDirectory.getParent(),
@@ -560,6 +565,7 @@ public class WorkspaceAndProjectGenerator {
         extraTestNodesBuilder = ImmutableSetMultimap.builder();
     addWorkspaceScheme(
         projectGraph,
+        dependenciesCache,
         workspaceName,
         workspaceArguments,
         schemeConfigsBuilder,
@@ -567,6 +573,7 @@ public class WorkspaceAndProjectGenerator {
         extraTestNodesBuilder);
     addExtraWorkspaceSchemes(
         projectGraph,
+        dependenciesCache,
         workspaceArguments.extraSchemes,
         schemeConfigsBuilder,
         schemeNameToSrcTargetNodeBuilder,
@@ -589,6 +596,7 @@ public class WorkspaceAndProjectGenerator {
 
   private static void addWorkspaceScheme(
       TargetGraph projectGraph,
+      AppleDependenciesCache dependenciesCache,
       String schemeName,
       XcodeWorkspaceConfigDescription.Arg schemeArguments,
       ImmutableMap.Builder<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigsBuilder,
@@ -604,6 +612,7 @@ public class WorkspaceAndProjectGenerator {
           Iterables.transform(
               AppleBuildRules.getSchemeBuildableTargetNodes(
                   projectGraph,
+                  Optional.of(dependenciesCache),
                   projectGraph.get(
                       schemeArguments.srcTarget.get().getBuildTarget())),
               Optional::of));
@@ -619,6 +628,7 @@ public class WorkspaceAndProjectGenerator {
           Iterables.transform(
               AppleBuildRules.getSchemeBuildableTargetNodes(
                   projectGraph,
+                  Optional.of(dependenciesCache),
                   Preconditions.checkNotNull(projectGraph.get(extraTarget))),
               Optional::of));
     }
@@ -632,6 +642,7 @@ public class WorkspaceAndProjectGenerator {
 
   private static void addExtraWorkspaceSchemes(
       TargetGraph projectGraph,
+      AppleDependenciesCache dependenciesCache,
       ImmutableSortedMap<String, BuildTarget> extraSchemes,
       ImmutableMap.Builder<String, XcodeWorkspaceConfigDescription.Arg> schemeConfigsBuilder,
       ImmutableSetMultimap.Builder<String, Optional<TargetNode<?, ?>>>
@@ -653,6 +664,7 @@ public class WorkspaceAndProjectGenerator {
       String schemeName = extraSchemeEntry.getKey();
       addWorkspaceScheme(
           projectGraph,
+          dependenciesCache,
           schemeName,
           extraSchemeArg,
           schemeConfigsBuilder,
@@ -770,6 +782,7 @@ public class WorkspaceAndProjectGenerator {
    */
   private static ImmutableSet<TargetNode<?, ?>> getTransitiveDepsAndInputs(
       final TargetGraph projectGraph,
+      final AppleDependenciesCache dependenciesCache,
       Iterable<? extends TargetNode<?, ?>> nodes,
       final ImmutableSet<TargetNode<?, ?>> excludes) {
     return FluentIterable
@@ -780,6 +793,7 @@ public class WorkspaceAndProjectGenerator {
               public Iterable<TargetNode<?, ?>> apply(TargetNode<?, ?> input) {
                 return AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                     projectGraph,
+                    Optional.of(dependenciesCache),
                     AppleBuildRules.RecursiveDependenciesMode.BUILDING,
                     input,
                     Optional.empty());
@@ -838,7 +852,11 @@ public class WorkspaceAndProjectGenerator {
           schemeName,
           Iterables.filter(
               TopologicalSort.sort(projectGraph),
-              getTransitiveDepsAndInputs(projectGraph, testNodes, targetNodes)::contains));
+              getTransitiveDepsAndInputs(
+                  projectGraph,
+                  dependenciesCache,
+                  testNodes,
+                  targetNodes)::contains));
     }
   }
 

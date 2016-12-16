@@ -332,7 +332,10 @@ public class AppleDescriptions {
     TargetNode<?, ?> targetNode = targetGraph.get(params.getBuildTarget());
 
     ImmutableSet<AppleAssetCatalogDescription.Arg> assetCatalogArgs =
-        AppleBuildRules.collectRecursiveAssetCatalogs(targetGraph, ImmutableList.of(targetNode));
+        AppleBuildRules.collectRecursiveAssetCatalogs(
+            targetGraph,
+            Optional.empty(),
+            ImmutableList.of(targetNode));
 
     ImmutableSortedSet.Builder<SourcePath> assetCatalogDirsBuilder =
         ImmutableSortedSet.naturalOrder();
@@ -407,7 +410,10 @@ public class AppleDescriptions {
 
     ImmutableSet<AppleWrapperResourceArg> coreDataModelArgs =
         AppleBuildRules.collectTransitiveBuildRules(
-            targetGraph, AppleBuildRules.CORE_DATA_MODEL_TYPES, ImmutableList.of(targetNode));
+            targetGraph,
+            Optional.empty(),
+            AppleBuildRules.CORE_DATA_MODEL_TYPES,
+            ImmutableList.of(targetNode));
 
     BuildRuleParams coreDataModelParams = params.copyWithChanges(
         params.getBuildTarget().withAppendedFlavors(CoreDataModel.FLAVOR),
@@ -437,7 +443,10 @@ public class AppleDescriptions {
 
     ImmutableSet<AppleWrapperResourceArg> sceneKitAssetsArgs =
         AppleBuildRules.collectTransitiveBuildRules(
-            targetGraph, AppleBuildRules.SCENEKIT_ASSETS_TYPES, ImmutableList.of(targetNode));
+            targetGraph,
+            Optional.empty(),
+            AppleBuildRules.SCENEKIT_ASSETS_TYPES,
+            ImmutableList.of(targetNode));
 
     BuildRuleParams sceneKitAssetsParams = params.copyWithChanges(
         params.getBuildTarget().withAppendedFlavors(SceneKitAssets.FLAVOR),
@@ -600,6 +609,7 @@ public class AppleDescriptions {
 
     AppleBundleResources collectedResources = AppleResources.collectResourceDirsAndFiles(
         targetGraph,
+        Optional.empty(),
         targetGraph.get(params.getBuildTarget()));
 
     ImmutableSet.Builder<SourcePath> frameworksBuilder = ImmutableSet.builder();

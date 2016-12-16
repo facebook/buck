@@ -28,6 +28,7 @@ import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleDebugFormat;
+import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleHeaderVisibilities;
 import com.facebook.buck.apple.AppleLibraryDescription;
@@ -255,6 +256,7 @@ public class ProjectGenerator {
 
   private final Function<SourcePath, Path> sourcePathResolver;
   private final TargetGraph targetGraph;
+  private final AppleDependenciesCache dependenciesCache;
   private final Cell projectCell;
   private final ProjectFilesystem projectFilesystem;
   private final Path outputDirectory;
@@ -299,6 +301,7 @@ public class ProjectGenerator {
 
   public ProjectGenerator(
       TargetGraph targetGraph,
+      AppleDependenciesCache dependenciesCache,
       Set<BuildTarget> initialTargets,
       Cell cell,
       Path outputDirectory,
@@ -321,6 +324,7 @@ public class ProjectGenerator {
     this.sourcePathResolver = this::resolveSourcePath;
 
     this.targetGraph = targetGraph;
+    this.dependenciesCache = dependenciesCache;
     this.initialTargets = ImmutableSet.copyOf(initialTargets);
     this.projectCell = cell;
     this.projectFilesystem = cell.getFilesystem();
@@ -895,6 +899,7 @@ public class ProjectGenerator {
     Iterable<TargetNode<?, ?>> copiedRules =
         AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
             targetGraph,
+            Optional.of(dependenciesCache),
             AppleBuildRules.RecursiveDependenciesMode.COPYING,
             targetNode,
             Optional.of(AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES));
@@ -921,11 +926,20 @@ public class ProjectGenerator {
         "%s." + getExtensionString(targetNode.getConstructorArg().getExtension()),
         Optional.of(infoPlistPath),
         /* includeFrameworks */ true,
-        AppleResources.collectRecursiveResources(targetGraph, ImmutableList.of(targetNode)),
+        AppleResources.collectRecursiveResources(
+            targetGraph,
+            Optional.of(dependenciesCache),
+            ImmutableList.of(targetNode)),
         AppleResources.collectDirectResources(targetGraph, targetNode),
-        AppleBuildRules.collectRecursiveAssetCatalogs(targetGraph, ImmutableList.of(targetNode)),
+        AppleBuildRules.collectRecursiveAssetCatalogs(
+            targetGraph,
+            Optional.of(dependenciesCache),
+            ImmutableList.of(targetNode)),
         AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
-        AppleBuildRules.collectRecursiveWrapperResources(targetGraph, ImmutableList.of(targetNode)),
+        AppleBuildRules.collectRecursiveWrapperResources(
+            targetGraph,
+            Optional.of(dependenciesCache),
+            ImmutableList.of(targetNode)),
         Optional.of(copyFilesBuildPhases), bundleLoaderNode);
 
     LOG.debug("Generated iOS bundle target %s", target);
@@ -1567,6 +1581,7 @@ public class ProjectGenerator {
         targetGroup,
         AppleBuildRules.collectTransitiveBuildRules(
             targetGraph,
+            Optional.of(dependenciesCache),
             AppleBuildRules.CORE_DATA_MODEL_TYPES,
             ImmutableList.of(targetNode)));
   }
@@ -1577,6 +1592,7 @@ public class ProjectGenerator {
     ImmutableSet<AppleWrapperResourceArg> allSceneKitAssets =
         AppleBuildRules.collectTransitiveBuildRules(
             targetGraph,
+            Optional.of(dependenciesCache),
             AppleBuildRules.SCENEKIT_ASSETS_TYPES,
             ImmutableList.of(targetNode));
 
@@ -2171,6 +2187,7 @@ public class ProjectGenerator {
     for (TargetNode<?, ?> input :
         AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
             targetGraph,
+            Optional.of(dependenciesCache),
             AppleBuildRules.RecursiveDependenciesMode.BUILDING,
             targetNode,
             Optional.of(
@@ -2203,6 +2220,7 @@ public class ProjectGenerator {
     for (TargetNode<?, ?> input :
         AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
             targetGraph,
+            Optional.of(dependenciesCache),
             AppleBuildRules.RecursiveDependenciesMode.BUILDING,
             targetNode,
             Optional.of(AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES))) {
@@ -2284,6 +2302,7 @@ public class ProjectGenerator {
         .transformAndConcat(
             AppleBuildRules.newRecursiveRuleDependencyTransformer(
                 targetGraph,
+                Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES))
         .transformAndConcat(
@@ -2315,6 +2334,7 @@ public class ProjectGenerator {
         .transformAndConcat(
             AppleBuildRules.newRecursiveRuleDependencyTransformer(
                 targetGraph,
+                Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 ImmutableSet.of(
                     Description.getBuildRuleType(AppleLibraryDescription.class),
@@ -2338,6 +2358,7 @@ public class ProjectGenerator {
         .transformAndConcat(
             AppleBuildRules.newRecursiveRuleDependencyTransformer(
                 targetGraph,
+                Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.BUILDING,
                 ImmutableSet.of(
                     Description.getBuildRuleType(AppleLibraryDescription.class),
@@ -2356,6 +2377,7 @@ public class ProjectGenerator {
         .transformAndConcat(
             AppleBuildRules.newRecursiveRuleDependencyTransformer(
                 targetGraph,
+                Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.BUILDING,
                 ImmutableSet.of(
                     Description.getBuildRuleType(AppleLibraryDescription.class),
@@ -2379,6 +2401,7 @@ public class ProjectGenerator {
         .transformAndConcat(
             AppleBuildRules.newRecursiveRuleDependencyTransformer(
                 targetGraph,
+                Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 ImmutableSet.of(
                     Description.getBuildRuleType(AppleLibraryDescription.class),
@@ -2403,6 +2426,7 @@ public class ProjectGenerator {
         .transformAndConcat(
             AppleBuildRules.newRecursiveRuleDependencyTransformer(
                 targetGraph,
+                Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 ImmutableSet.of(
                     Description.getBuildRuleType(AppleLibraryDescription.class),
@@ -2426,6 +2450,7 @@ public class ProjectGenerator {
         .transformAndConcat(
             AppleBuildRules.newRecursiveRuleDependencyTransformer(
                 targetGraph,
+                Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.LINKING,
                 AppleBuildRules.XCODE_TARGET_BUILD_RULE_TYPES))
         .filter(getLibraryWithSourcesToCompilePredicate())

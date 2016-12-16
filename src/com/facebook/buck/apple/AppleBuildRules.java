@@ -144,6 +144,7 @@ public final class AppleBuildRules {
 
   public static Iterable<TargetNode<?, ?>> getRecursiveTargetNodeDependenciesOfTypes(
       final TargetGraph targetGraph,
+      final Optional<AppleDependenciesCache> cache,
       final RecursiveDependenciesMode mode,
       final TargetNode<?, ?> targetNode,
       final Optional<ImmutableSet<BuildRuleType>> types) {
@@ -161,13 +162,20 @@ public final class AppleBuildRules {
 
       LOG.verbose("Finding children of node: %s", node);
 
-      ImmutableSortedSet.Builder<TargetNode<?, ?>> defaultDepsBuilder =
-          ImmutableSortedSet.naturalOrder();
-      ImmutableSortedSet.Builder<TargetNode<?, ?>> exportedDepsBuilder =
-          ImmutableSortedSet.naturalOrder();
-      addDirectAndExportedDeps(targetGraph, node, defaultDepsBuilder, exportedDepsBuilder);
-      ImmutableSortedSet<TargetNode<?, ?>> defaultDeps = defaultDepsBuilder.build();
-      ImmutableSortedSet<TargetNode<?, ?>> exportedDeps = exportedDepsBuilder.build();
+      ImmutableSortedSet<TargetNode<?, ?>> defaultDeps;
+      ImmutableSortedSet<TargetNode<?, ?>> exportedDeps;
+      if (!cache.isPresent()) {
+        ImmutableSortedSet.Builder<TargetNode<?, ?>> defaultDepsBuilder =
+            ImmutableSortedSet.naturalOrder();
+        ImmutableSortedSet.Builder<TargetNode<?, ?>> exportedDepsBuilder =
+            ImmutableSortedSet.naturalOrder();
+        addDirectAndExportedDeps(targetGraph, node, defaultDepsBuilder, exportedDepsBuilder);
+        defaultDeps = defaultDepsBuilder.build();
+        exportedDeps = exportedDepsBuilder.build();
+      } else {
+        defaultDeps = cache.get().getDefaultDeps(node);
+        exportedDeps = cache.get().getExportedDeps(node);
+      }
 
       if (node.getType().equals(APPLE_BUNDLE_RULE_TYPE)) {
         AppleBundleDescription.Arg arg =
@@ -272,7 +280,7 @@ public final class AppleBuildRules {
     return result;
   }
 
-  private static void addDirectAndExportedDeps(
+  static void addDirectAndExportedDeps(
       TargetGraph targetGraph,
       TargetNode<?, ?> targetNode,
       ImmutableSortedSet.Builder<TargetNode<?, ?>> directDepsBuilder,
@@ -292,10 +300,12 @@ public final class AppleBuildRules {
 
   public static ImmutableSet<TargetNode<?, ?>> getSchemeBuildableTargetNodes(
       TargetGraph targetGraph,
+      Optional<AppleDependenciesCache> cache,
       TargetNode<?, ?> targetNode) {
     Iterable<TargetNode<?, ?>> targetNodes = Iterables.concat(
         getRecursiveTargetNodeDependenciesOfTypes(
             targetGraph,
+            cache,
             RecursiveDependenciesMode.BUILDING,
             targetNode,
             Optional.empty()),
@@ -310,22 +320,28 @@ public final class AppleBuildRules {
   public static Function<TargetNode<?, ?>, Iterable<TargetNode<?, ?>>>
     newRecursiveRuleDependencyTransformer(
       final TargetGraph targetGraph,
+      final Optional<AppleDependenciesCache> cache,
       final RecursiveDependenciesMode mode,
       final ImmutableSet<BuildRuleType> types) {
     return input -> getRecursiveTargetNodeDependenciesOfTypes(
         targetGraph,
+        cache,
         mode,
         input,
         Optional.of(types));
   }
 
   public static <T> ImmutableSet<AppleAssetCatalogDescription.Arg>
-  collectRecursiveAssetCatalogs(TargetGraph targetGraph, Iterable<TargetNode<T, ?>> targetNodes) {
+  collectRecursiveAssetCatalogs(
+      TargetGraph targetGraph,
+      Optional<AppleDependenciesCache> cache,
+      Iterable<TargetNode<T, ?>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
         .transformAndConcat(
             newRecursiveRuleDependencyTransformer(
                 targetGraph,
+                cache,
                 RecursiveDependenciesMode.COPYING,
                 APPLE_ASSET_CATALOG_RULE_TYPES))
         .transform(
@@ -336,12 +352,14 @@ public final class AppleBuildRules {
   public static <T> ImmutableSet<AppleWrapperResourceArg>
   collectRecursiveWrapperResources(
       TargetGraph targetGraph,
+      Optional<AppleDependenciesCache> cache,
       Iterable<TargetNode<T, ?>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
         .transformAndConcat(
             newRecursiveRuleDependencyTransformer(
                 targetGraph,
+                cache,
                 RecursiveDependenciesMode.COPYING,
                 WRAPPER_RESOURCE_TYPES))
         .transform(
@@ -352,6 +370,7 @@ public final class AppleBuildRules {
   @SuppressWarnings("unchecked")
   public static <T, U extends Description<T>> ImmutableSet<T> collectTransitiveBuildRules(
       TargetGraph targetGraph,
+      Optional<AppleDependenciesCache> cache,
       ImmutableSet<BuildRuleType> types,
       Collection<TargetNode<?, ?>> targetNodes) {
     return targetNodes
@@ -360,6 +379,7 @@ public final class AppleBuildRules {
             targetNode -> StreamSupport.stream(
                 newRecursiveRuleDependencyTransformer(
                     targetGraph,
+                    cache,
                     RecursiveDependenciesMode.COPYING,
                     types)
                     .apply(targetNode)

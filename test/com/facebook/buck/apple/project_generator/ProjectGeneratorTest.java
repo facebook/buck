@@ -41,6 +41,7 @@ import com.facebook.buck.apple.AppleBinaryBuilder;
 import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleConfig;
+import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleResourceBuilder;
@@ -3552,8 +3553,10 @@ public class ProjectGeneratorTest {
 
     ImmutableSet<TargetNode<?, ?>> nodes = ImmutableSet.of(bundleNode, binaryNode);
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
+    final AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
     ProjectGenerator projectGenerator = new ProjectGenerator(
         targetGraph,
+        cache,
         nodes.stream()
             .map(HasBuildTarget::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()),
@@ -3658,8 +3661,10 @@ public class ProjectGeneratorTest {
 
     ImmutableSet<TargetNode<?, ?>> nodes = ImmutableSet.of(binaryNode);
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
+    final AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
     ProjectGenerator projectGenerator = new ProjectGenerator(
         targetGraph,
+        cache,
         nodes.stream()
             .map(HasBuildTarget::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()),
@@ -3739,8 +3744,10 @@ public class ProjectGeneratorTest {
 
     ImmutableSet<TargetNode<?, ?>> nodes = ImmutableSet.of(binaryNode);
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
+    final AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
     ProjectGenerator projectGenerator = new ProjectGenerator(
         targetGraph,
+        cache,
         nodes.stream()
             .map(HasBuildTarget::getBuildTarget)
             .collect(MoreCollectors.toImmutableSet()),
@@ -4421,8 +4428,10 @@ public class ProjectGeneratorTest {
         .collect(MoreCollectors.toImmutableSet());
 
     final TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes));
+    final AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
     return new ProjectGenerator(
         targetGraph,
+        cache,
         initialBuildTargets,
         projectCell,
         OUTPUT_DIRECTORY,

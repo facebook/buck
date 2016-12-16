@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import static com.facebook.buck.apple.project_generator.ProjectGeneratorTestUtils.createDescriptionArgWithDefaults;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -43,10 +44,24 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+import java.util.Collection;
 import java.util.Optional;
 
+@RunWith(Parameterized.class)
 public class AppleBuildRulesTest {
+
+  @Parameterized.Parameters(name = "useCache: {0}")
+  public static Collection<Object[]> data() {
+    return ImmutableList.of(
+        new Object[] {false},
+        new Object[] {true});
+  }
+
+  @Parameterized.Parameter(0)
+  public boolean useCache;
 
   @Test
   public void testAppleLibraryIsXcodeTargetBuildRuleType() throws Exception {
@@ -134,13 +149,21 @@ public class AppleBuildRulesTest {
         .setDeps(ImmutableSortedSet.of(libraryTarget, bundleTarget))
         .build();
 
-    Iterable<TargetNode<?, ?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-        TargetGraphFactory.newInstance(ImmutableSet.of(libraryNode, bundleNode, rootNode)),
-        AppleBuildRules.RecursiveDependenciesMode.BUILDING,
-        rootNode,
-        Optional.empty());
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(ImmutableSet.of(libraryNode, bundleNode, rootNode));
+    Optional<AppleDependenciesCache> cache =
+        useCache ? Optional.of(new AppleDependenciesCache(targetGraph)) : Optional.empty();
 
-    assertTrue(Iterables.elementsEqual(ImmutableSortedSet.of(libraryNode, bundleNode), rules));
+    for (int i = 0; i < (useCache ? 2 : 1); i++) {
+      Iterable<TargetNode<?, ?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+          targetGraph,
+          cache,
+          AppleBuildRules.RecursiveDependenciesMode.BUILDING,
+          rootNode,
+          Optional.empty());
+
+      assertTrue(Iterables.elementsEqual(ImmutableSortedSet.of(libraryNode, bundleNode), rules));
+    }
   }
 
   @Test
@@ -179,23 +202,30 @@ public class AppleBuildRulesTest {
         .setDeps(ImmutableSortedSet.of(barFrameworkTarget))
         .build();
 
-    Iterable<TargetNode<?, ?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-        TargetGraphFactory.newInstance(
-            ImmutableSet.of(
-                rootNode,
-                fooLibNode,
-                fooFrameworkNode,
-                barLibNode,
-                barFrameworkNode)),
-        AppleBuildRules.RecursiveDependenciesMode.LINKING,
-        rootNode,
-        Optional.empty());
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(
+        ImmutableSet.of(
+            rootNode,
+            fooLibNode,
+            fooFrameworkNode,
+            barLibNode,
+            barFrameworkNode));
+    Optional<AppleDependenciesCache> cache =
+        useCache ? Optional.of(new AppleDependenciesCache(targetGraph)) : Optional.empty();
 
-    assertEquals(
-        ImmutableSortedSet.of(
-            barFrameworkNode,
-            fooFrameworkNode),
-        ImmutableSortedSet.copyOf(rules));
+    for (int i = 0; i < (useCache ? 2 : 1); i++) {
+      Iterable<TargetNode<?, ?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+          targetGraph,
+          cache,
+          AppleBuildRules.RecursiveDependenciesMode.LINKING,
+          rootNode,
+          Optional.empty());
+
+      assertEquals(
+          ImmutableSortedSet.of(
+              barFrameworkNode,
+              fooFrameworkNode),
+          ImmutableSortedSet.copyOf(rules));
+    }
   }
 
   @Test
@@ -253,17 +283,24 @@ public class AppleBuildRulesTest {
             bazFrameworkNode)
           .build();
 
-    Iterable<TargetNode<?, ?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-        TargetGraphFactory.newInstance(targetNodes),
-        AppleBuildRules.RecursiveDependenciesMode.COPYING,
-        bazFrameworkNode,
-        Optional.empty());
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(targetNodes);
+    Optional<AppleDependenciesCache> cache =
+        useCache ? Optional.of(new AppleDependenciesCache(targetGraph)) : Optional.empty();
 
-    assertEquals(
-        ImmutableSortedSet.of(
-            barFrameworkNode,
-            fooFrameworkNode),
-        ImmutableSortedSet.copyOf(rules));
+    for (int i = 0; i < (useCache ? 2 : 1); i++) {
+      Iterable<TargetNode<?, ?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+          targetGraph,
+          cache,
+          AppleBuildRules.RecursiveDependenciesMode.COPYING,
+          bazFrameworkNode,
+          Optional.empty());
+
+      assertEquals(
+          ImmutableSortedSet.of(
+              barFrameworkNode,
+              fooFrameworkNode),
+          ImmutableSortedSet.copyOf(rules));
+    }
   }
 
   @Test
@@ -305,15 +342,22 @@ public class AppleBuildRulesTest {
             barFrameworkNode)
           .build();
 
-    Iterable<TargetNode<?, ?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-        TargetGraphFactory.newInstance(targetNodes),
-        AppleBuildRules.RecursiveDependenciesMode.LINKING,
-        barFrameworkNode,
-        Optional.empty());
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(targetNodes);
+    Optional<AppleDependenciesCache> cache =
+        useCache ? Optional.of(new AppleDependenciesCache(targetGraph)) : Optional.empty();
 
-    assertEquals(
-        ImmutableSortedSet.of(fooGenruleNode),
-        ImmutableSortedSet.copyOf(rules));
+    for (int i = 0; i < (useCache ? 2 : 1); i++) {
+      Iterable<TargetNode<?, ?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+          targetGraph,
+          cache,
+          AppleBuildRules.RecursiveDependenciesMode.LINKING,
+          barFrameworkNode,
+          Optional.empty());
+
+      assertEquals(
+          ImmutableSortedSet.of(fooGenruleNode),
+          ImmutableSortedSet.copyOf(rules));
+    }
   }
 
   @Test
@@ -355,15 +399,22 @@ public class AppleBuildRulesTest {
             barFrameworkNode)
           .build();
 
-    Iterable<TargetNode<?, ?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-        TargetGraphFactory.newInstance(targetNodes),
-        AppleBuildRules.RecursiveDependenciesMode.COPYING,
-        barFrameworkNode,
-        Optional.empty());
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(targetNodes);
+    Optional<AppleDependenciesCache> cache =
+        useCache ? Optional.of(new AppleDependenciesCache(targetGraph)) : Optional.empty();
 
-    assertEquals(
-        ImmutableSortedSet.of(fooGenruleNode),
-        ImmutableSortedSet.copyOf(rules));
+    for (int i = 0; i < (useCache ? 2 : 1); i++) {
+      Iterable<TargetNode<?, ?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+          targetGraph,
+          cache,
+          AppleBuildRules.RecursiveDependenciesMode.COPYING,
+          barFrameworkNode,
+          Optional.empty());
+
+      assertEquals(
+          ImmutableSortedSet.of(fooGenruleNode),
+          ImmutableSortedSet.copyOf(rules));
+    }
   }
 
   @Test
@@ -420,14 +471,62 @@ public class AppleBuildRulesTest {
                 bazFrameworkNode)
             .build();
 
-    Iterable<TargetNode<?, ?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-        TargetGraphFactory.newInstance(targetNodes),
-        AppleBuildRules.RecursiveDependenciesMode.BUILDING,
-        bazFrameworkNode,
-        Optional.empty());
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(targetNodes);
+    Optional<AppleDependenciesCache> cache =
+        useCache ? Optional.of(new AppleDependenciesCache(targetGraph)) : Optional.empty();
+
+    for (int i = 0; i < (useCache ? 2 : 1); i++) {
+      Iterable<TargetNode<?, ?>> rules = AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+          targetGraph,
+          cache,
+          AppleBuildRules.RecursiveDependenciesMode.BUILDING,
+          bazFrameworkNode,
+          Optional.empty());
+
+      assertEquals(
+          ImmutableSortedSet.of(barFrameworkNode, fooGenruleNode),
+          ImmutableSortedSet.copyOf(rules));
+    }
+  }
+
+  @Test
+  public void testDependenciesCache() throws Exception {
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
+    TargetNode<?, ?> libraryNode = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .build();
+
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo:bundle");
+    TargetNode<?, ?> bundleNode = AppleBundleBuilder
+        .createBuilder(bundleTarget)
+        .setExtension(Either.ofLeft(AppleBundleExtension.XCTEST))
+        .setBinary(libraryTarget)
+        .build();
+
+    BuildTarget rootTarget = BuildTargetFactory.newInstance("//foo:root");
+    TargetNode<?, ?> rootNode = AppleLibraryBuilder
+        .createBuilder(rootTarget)
+        .setDeps(ImmutableSortedSet.of(libraryTarget, bundleTarget))
+        .build();
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(ImmutableSet.of(libraryNode, bundleNode, rootNode));
+    AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
+
+    ImmutableSortedSet<TargetNode<?, ?>> cachedDefaultDeps = cache.getDefaultDeps(rootNode);
+    ImmutableSortedSet<TargetNode<?, ?>> cachedExportedDeps = cache.getExportedDeps(rootNode);
 
     assertEquals(
-        ImmutableSortedSet.of(barFrameworkNode, fooGenruleNode),
-        ImmutableSortedSet.copyOf(rules));
+        cachedDefaultDeps,
+        ImmutableSortedSet.of(bundleNode, libraryNode));
+    assertEquals(
+        cachedExportedDeps,
+        ImmutableSortedSet.of());
+
+    ImmutableSortedSet<TargetNode<?, ?>> defaultDeps = cache.getDefaultDeps(rootNode);
+    ImmutableSortedSet<TargetNode<?, ?>> exportedDeps = cache.getExportedDeps(rootNode);
+
+    assertSame(cachedDefaultDeps, defaultDeps);
+    assertSame(cachedExportedDeps, exportedDeps);
   }
 }

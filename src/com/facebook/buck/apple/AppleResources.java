@@ -54,12 +54,14 @@ public class AppleResources {
    */
   public static ImmutableSet<AppleResourceDescription.Arg> collectRecursiveResources(
       final TargetGraph targetGraph,
+      final Optional<AppleDependenciesCache> cache,
       Iterable<? extends TargetNode<?, ?>> targetNodes) {
     return FluentIterable
         .from(targetNodes)
         .transformAndConcat(
             AppleBuildRules.newRecursiveRuleDependencyTransformer(
                 targetGraph,
+                cache,
                 AppleBuildRules.RecursiveDependenciesMode.COPYING,
                 ImmutableSet.of(APPLE_RESOURCE_RULE_TYPE)))
         .transform(
@@ -68,13 +70,15 @@ public class AppleResources {
   }
 
   public static <T> AppleBundleResources collectResourceDirsAndFiles(
-      TargetGraph targetGraph,
+      final TargetGraph targetGraph,
+      final Optional<AppleDependenciesCache> cache,
       TargetNode<T, ?> targetNode) {
     AppleBundleResources.Builder builder = AppleBundleResources.builder();
 
     Iterable<TargetNode<?, ?>> resourceNodes =
         AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
             targetGraph,
+            cache,
             AppleBuildRules.RecursiveDependenciesMode.COPYING,
             targetNode,
             Optional.of(APPLE_RESOURCE_RULE_TYPES));
