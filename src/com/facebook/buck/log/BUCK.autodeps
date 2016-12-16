@@ -1,6 +1,7 @@
 {
   "log" : {
     "deps" : [
+      "//src/com/facebook/buck/build_type:build_type",
       "//src/com/facebook/buck/io:MorePaths.java",
       "//src/com/facebook/buck/io:io",
       "//src/com/facebook/buck/log:api",

@@ -10,7 +10,6 @@
       "//src/com/facebook/buck/artifact_cache:config",
       "//src/com/facebook/buck/autodeps:autodeps",
       "//src/com/facebook/buck/autodeps:model",
-      "//src/com/facebook/buck/build_type:build_type",
       "//src/com/facebook/buck/charset:charset",
       "//src/com/facebook/buck/counters:counters",
       "//src/com/facebook/buck/cxx:platform",

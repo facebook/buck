@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.environment;
 
+import com.facebook.buck.build_type.BuildType;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.StandardSystemProperty;
 import com.google.common.collect.ImmutableList;
@@ -43,6 +44,10 @@ abstract class AbstractBuildEnvironmentDescription {
   @Value.Default
   public int getJsonProtocolVersion() {
     return PROTOCOL_VERSION;
+  }
+  @Value.Default
+  public String getBuildType() {
+    return BuildType.CURRENT_BUILD_TYPE.get().toString();
   }
 
   public static BuildEnvironmentDescription of(

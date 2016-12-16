@@ -8,6 +8,7 @@
   },
   "environment" : {
     "deps" : [
+      "//src/com/facebook/buck/build_type:build_type",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/util/network/hostname:hostname",
       "//third-party/java/ObjCBridge:ObjCBridge",

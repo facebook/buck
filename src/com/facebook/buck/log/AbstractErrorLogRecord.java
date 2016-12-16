@@ -19,6 +19,7 @@ package com.facebook.buck.log;
 import static com.facebook.buck.util.MoreThrowables.getInitialCause;
 import static com.facebook.buck.util.MoreThrowables.getThrowableOrigin;
 
+import com.facebook.buck.build_type.BuildType;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.collect.ImmutableList;
@@ -67,6 +68,7 @@ abstract class AbstractErrorLogRecord {
         .put("os", System.getProperty("os.name", "unknown"))
         .put("osVersion", System.getProperty("os.version", "unknown"))
         .put("user", System.getProperty("user.name", "unknown"))
+        .put("buckBinaryBuildType", BuildType.CURRENT_BUILD_TYPE.get().toString())
         .put("hostname", hostname)
         .build();
     return traits;
