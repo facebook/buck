@@ -167,7 +167,7 @@
 			<string>AppDelegate.h</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
-			<key>explicitFileType</key>
+			<key>lastKnownFileType</key>
 			<string>sourcecode.c.h</string>
 		</dict>
 		<key>1DD70E29DAB1A72500000000</key>
@@ -180,7 +180,7 @@
 			<string>AppDelegate.m</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
-			<key>explicitFileType</key>
+			<key>lastKnownFileType</key>
 			<string>sourcecode.c.objc</string>
 		</dict>
 		<key>1DD70E29C98DD5FC00000000</key>
@@ -193,7 +193,7 @@
 			<string>AppViewController.h</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
-			<key>explicitFileType</key>
+			<key>lastKnownFileType</key>
 			<string>sourcecode.c.h</string>
 		</dict>
 		<key>1DD70E29C98DD60100000000</key>
@@ -206,7 +206,7 @@
 			<string>AppViewController.m</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
-			<key>explicitFileType</key>
+			<key>lastKnownFileType</key>
 			<string>sourcecode.c.objc</string>
 		</dict>
 		<key>1DD70E29BF88817800000000</key>
@@ -219,7 +219,7 @@
 			<string>main.m</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
-			<key>explicitFileType</key>
+			<key>lastKnownFileType</key>
 			<string>sourcecode.c.objc</string>
 		</dict>
 		<key>1DD70E2906C06BEE00000000</key>

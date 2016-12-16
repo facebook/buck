@@ -260,4 +260,18 @@ public final class FileTypes {
         "wrapper.scnassets"
     );
 
+  /**
+   * Set of identifiers for which we will use "lastKnownFileType" instead of "explicitFileType"
+   * in a PBXFileReference to allow the user to change the type by renaming the file.
+   */
+  public static final ImmutableSet<String> MODIFIABLE_FILE_TYPE_IDENTIFIERS =
+    ImmutableSet.of(
+        "sourcecode.c.c",
+        "sourcecode.c.h",
+        "sourcecode.cpp.cpp",
+        "sourcecode.cpp.h",
+        "sourcecode.c.objc",
+        "sourcecode.cpp.objcpp"
+    );
+
 }
