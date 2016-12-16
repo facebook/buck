@@ -22,7 +22,6 @@ import com.facebook.buck.graph.GraphTraversable;
 import com.facebook.buck.halide.HalideLibraryDescription;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -40,7 +39,6 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
-import javax.annotation.Nullable;
 
 /**
  * Helpers for reading properties of Apple target build rules.
@@ -52,57 +50,47 @@ public final class AppleBuildRules {
   // Utility class not to be instantiated.
   private AppleBuildRules() { }
 
-  public static final ImmutableSet<BuildRuleType> XCODE_TARGET_BUILD_RULE_TYPES =
-      ImmutableSet.of(
-          Description.getBuildRuleType(AppleLibraryDescription.class),
-          Description.getBuildRuleType(CxxLibraryDescription.class),
-          Description.getBuildRuleType(AppleBinaryDescription.class),
-          Description.getBuildRuleType(AppleBundleDescription.class),
-          Description.getBuildRuleType(AppleTestDescription.class),
-          Description.getBuildRuleType(HalideLibraryDescription.class));
+  @SuppressWarnings("unchecked")
+  public static final ImmutableSet<Class<? extends Description<?>>>
+      XCODE_TARGET_DESCRIPTION_CLASSES = ImmutableSet.of(
+          AppleLibraryDescription.class,
+          CxxLibraryDescription.class,
+          AppleBinaryDescription.class,
+          AppleBundleDescription.class,
+          AppleTestDescription.class,
+          HalideLibraryDescription.class);
 
   private static final ImmutableSet<Class<? extends BuildRule>> XCODE_TARGET_BUILD_RULE_TEST_TYPES =
       ImmutableSet.of(AppleTest.class);
 
-  private static final ImmutableSet<BuildRuleType> RECURSIVE_DEPENDENCIES_STOP_AT_TYPES =
-      ImmutableSet.of(
-          Description.getBuildRuleType(AppleBundleDescription.class),
-          Description.getBuildRuleType(AppleResourceDescription.class));
+  private static final ImmutableSet<Class<? extends Description<?>>>
+      RECURSIVE_DEPENDENCIES_STOP_AT_DESCRIPTION_CLASSES = ImmutableSet.of(
+          AppleBundleDescription.class,
+          AppleResourceDescription.class);
 
   private static final ImmutableSet<AppleBundleExtension> XCODE_TARGET_TEST_BUNDLE_EXTENSIONS =
       ImmutableSet.of(AppleBundleExtension.XCTEST);
 
-  private static final ImmutableSet<BuildRuleType> WRAPPER_RESOURCE_TYPES =
-      ImmutableSet.of(
-          Description.getBuildRuleType(CoreDataModelDescription.class),
-          Description.getBuildRuleType(SceneKitAssetsDescription.class));
+  private static final ImmutableSet<Class<? extends Description<?>>>
+      WRAPPER_RESOURCE_DESCRIPTION_CLASSES = ImmutableSet.of(
+          CoreDataModelDescription.class,
+          SceneKitAssetsDescription.class);
 
-  private static final BuildRuleType APPLE_BUNDLE_RULE_TYPE =
-      Description.getBuildRuleType(AppleBundleDescription.class);
+  private static final ImmutableSet<Class<? extends Description<?>>>
+      APPLE_ASSET_CATALOG_DESCRIPTION_CLASSES = ImmutableSet.of(
+          AppleAssetCatalogDescription.class);
 
-  private static final BuildRuleType APPLE_LIBRARY_RULE_TYPE =
-      Description.getBuildRuleType(AppleLibraryDescription.class);
+  public static final ImmutableSet<Class<? extends Description<?>>>
+      CORE_DATA_MODEL_DESCRIPTION_CLASSES = ImmutableSet.of(CoreDataModelDescription.class);
 
-  private static final BuildRuleType CXX_LIBRARY_RULE_TYPE =
-      Description.getBuildRuleType(CxxLibraryDescription.class);
-
-  private static final BuildRuleType APPLE_ASSET_CATALOG_RULE_TYPE =
-      Description.getBuildRuleType(AppleAssetCatalogDescription.class);
-
-  private static final ImmutableSet<BuildRuleType> APPLE_ASSET_CATALOG_RULE_TYPES =
-      ImmutableSet.of(Description.getBuildRuleType(AppleAssetCatalogDescription.class));
-
-  public static final ImmutableSet<BuildRuleType> CORE_DATA_MODEL_TYPES =
-      ImmutableSet.of(Description.getBuildRuleType(CoreDataModelDescription.class));
-
-  public static final ImmutableSet<BuildRuleType> SCENEKIT_ASSETS_TYPES =
-      ImmutableSet.of(Description.getBuildRuleType(SceneKitAssetsDescription.class));
+  public static final ImmutableSet<Class<? extends Description<?>>>
+      SCENEKIT_ASSETS_DESCRIPTION_CLASSES = ImmutableSet.of(SceneKitAssetsDescription.class);
 
   /**
    * Whether the build rule type is equivalent to some kind of Xcode target.
    */
-  public static boolean isXcodeTargetBuildRuleType(@Nullable BuildRuleType type) {
-    return XCODE_TARGET_BUILD_RULE_TYPES.contains(type);
+  public static boolean isXcodeTargetDescription(Description<?> description) {
+    return XCODE_TARGET_DESCRIPTION_CLASSES.contains(description.getClass());
   }
 
   /**
@@ -147,15 +135,15 @@ public final class AppleBuildRules {
       final Optional<AppleDependenciesCache> cache,
       final RecursiveDependenciesMode mode,
       final TargetNode<?, ?> targetNode,
-      final Optional<ImmutableSet<BuildRuleType>> types) {
+      final Optional<ImmutableSet<Class<? extends Description<?>>>> descriptionClasses) {
     LOG.verbose(
         "Getting recursive dependencies of node %s, mode %s, including only types %s\n",
         targetNode,
         mode,
-        types);
+        descriptionClasses);
 
     GraphTraversable<TargetNode<?, ?>> graphTraversable = node -> {
-      if (!isXcodeTargetBuildRuleType(node.getType()) ||
+      if (!isXcodeTargetDescription(node.getDescription()) ||
           SwiftLibraryDescription.isSwiftTarget(node.getBuildTarget())) {
         return Collections.emptyIterator();
       }
@@ -177,7 +165,7 @@ public final class AppleBuildRules {
         exportedDeps = cache.get().getExportedDeps(node);
       }
 
-      if (node.getType().equals(APPLE_BUNDLE_RULE_TYPE)) {
+      if (node.getDescription() instanceof AppleBundleDescription) {
         AppleBundleDescription.Arg arg =
             (AppleBundleDescription.Arg) node.getConstructorArg();
 
@@ -221,23 +209,25 @@ public final class AppleBuildRules {
         switch (mode) {
           case LINKING:
             boolean nodeIsAppleLibrary =
-                node.getType().equals(APPLE_LIBRARY_RULE_TYPE);
+                node.getDescription() instanceof AppleLibraryDescription;
             boolean nodeIsCxxLibrary =
-                node.getType().equals(CXX_LIBRARY_RULE_TYPE);
+                node.getDescription() instanceof CxxLibraryDescription;
             if (nodeIsAppleLibrary || nodeIsCxxLibrary) {
               if (AppleLibraryDescription.isSharedLibraryTarget(node.getBuildTarget())) {
                 deps = exportedDeps;
               } else {
                 deps = defaultDeps;
               }
-            } else if (RECURSIVE_DEPENDENCIES_STOP_AT_TYPES.contains(node.getType())) {
+            } else if (RECURSIVE_DEPENDENCIES_STOP_AT_DESCRIPTION_CLASSES.contains(
+                node.getDescription().getClass())) {
               deps = exportedDeps;
             } else {
               deps = defaultDeps;
             }
             break;
           case COPYING:
-            if (RECURSIVE_DEPENDENCIES_STOP_AT_TYPES.contains(node.getType())) {
+            if (RECURSIVE_DEPENDENCIES_STOP_AT_DESCRIPTION_CLASSES.contains(
+                node.getDescription().getClass())) {
               deps = exportedDeps;
             } else {
               deps = defaultDeps;
@@ -261,7 +251,8 @@ public final class AppleBuildRules {
     try {
       for (TargetNode<?, ?> node : traversal.traverse(ImmutableList.of(targetNode))) {
         if (node != targetNode &&
-            (!types.isPresent() || types.get().contains(node.getType()))) {
+            (!descriptionClasses.isPresent() ||
+             descriptionClasses.get().contains(node.getDescription().getClass()))) {
           filteredRules.add(node);
         }
       }
@@ -274,7 +265,7 @@ public final class AppleBuildRules {
         "Got recursive dependencies of node %s mode %s types %s: %s\n",
         targetNode,
         mode,
-        types,
+        descriptionClasses,
         result);
 
     return result;
@@ -287,8 +278,8 @@ public final class AppleBuildRules {
       ImmutableSortedSet.Builder<TargetNode<?, ?>> exportedDepsBuilder
   ) {
     directDepsBuilder.addAll(targetGraph.getAll(targetNode.getDepsStream()::iterator));
-    if (targetNode.getType() == APPLE_LIBRARY_RULE_TYPE ||
-        targetNode.getType() == CXX_LIBRARY_RULE_TYPE) {
+    if (targetNode.getDescription() instanceof AppleLibraryDescription ||
+        targetNode.getDescription() instanceof CxxLibraryDescription) {
       CxxLibraryDescription.Arg arg =
           (CxxLibraryDescription.Arg) targetNode.getConstructorArg();
       LOG.verbose("Exported deps of node %s: %s", targetNode, arg.exportedDeps);
@@ -314,7 +305,7 @@ public final class AppleBuildRules {
     return ImmutableSet.copyOf(
         Iterables.filter(
             targetNodes,
-            input -> isXcodeTargetBuildRuleType(input.getType())));
+            input -> isXcodeTargetDescription(input.getDescription())));
   }
 
   public static Function<TargetNode<?, ?>, Iterable<TargetNode<?, ?>>>
@@ -322,13 +313,13 @@ public final class AppleBuildRules {
       final TargetGraph targetGraph,
       final Optional<AppleDependenciesCache> cache,
       final RecursiveDependenciesMode mode,
-      final ImmutableSet<BuildRuleType> types) {
+      final ImmutableSet<Class<? extends Description<?>>> descriptionClasses) {
     return input -> getRecursiveTargetNodeDependenciesOfTypes(
         targetGraph,
         cache,
         mode,
         input,
-        Optional.of(types));
+        Optional.of(descriptionClasses));
   }
 
   public static <T> ImmutableSet<AppleAssetCatalogDescription.Arg>
@@ -343,7 +334,7 @@ public final class AppleBuildRules {
                 targetGraph,
                 cache,
                 RecursiveDependenciesMode.COPYING,
-                APPLE_ASSET_CATALOG_RULE_TYPES))
+                APPLE_ASSET_CATALOG_DESCRIPTION_CLASSES))
         .transform(
             input -> (AppleAssetCatalogDescription.Arg) input.getConstructorArg())
         .toSet();
@@ -361,7 +352,7 @@ public final class AppleBuildRules {
                 targetGraph,
                 cache,
                 RecursiveDependenciesMode.COPYING,
-                WRAPPER_RESOURCE_TYPES))
+                WRAPPER_RESOURCE_DESCRIPTION_CLASSES))
         .transform(
             input -> (AppleWrapperResourceArg) input.getConstructorArg())
         .toSet();
@@ -371,7 +362,7 @@ public final class AppleBuildRules {
   public static <T, U extends Description<T>> ImmutableSet<T> collectTransitiveBuildRules(
       TargetGraph targetGraph,
       Optional<AppleDependenciesCache> cache,
-      ImmutableSet<BuildRuleType> types,
+      ImmutableSet<Class<? extends Description<?>>> descriptionClasses,
       Collection<TargetNode<?, ?>> targetNodes) {
     return targetNodes
         .stream()
@@ -381,7 +372,7 @@ public final class AppleBuildRules {
                     targetGraph,
                     cache,
                     RecursiveDependenciesMode.COPYING,
-                    types)
+                    descriptionClasses)
                     .apply(targetNode)
                     .spliterator(), false))
         .map(input -> (T) input.getConstructorArg())
@@ -394,7 +385,7 @@ public final class AppleBuildRules {
     ImmutableSet.Builder<AppleAssetCatalogDescription.Arg> builder = ImmutableSet.builder();
     Iterable<TargetNode<?, ?>> deps = targetGraph.getAll(targetNode.getDeps());
     for (TargetNode<?, ?> node : deps) {
-      if (node.getType().equals(APPLE_ASSET_CATALOG_RULE_TYPE)) {
+      if (node.getDescription() instanceof AppleAssetCatalogDescription) {
         builder.add((AppleAssetCatalogDescription.Arg) node.getConstructorArg());
       }
     }

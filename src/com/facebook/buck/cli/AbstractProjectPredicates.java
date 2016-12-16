@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.apple.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AssociatedTargetNodePredicate;
-import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ProjectConfigDescription;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -62,11 +61,11 @@ abstract class AbstractProjectPredicates {
       case INTELLIJ:
         projectRootsPredicate =
             input ->
-                input.getType() == Description.getBuildRuleType(ProjectConfigDescription.class);
+                input.getDescription() instanceof ProjectConfigDescription;
         associatedProjectPredicate = (targetNode, targetGraph) -> {
           ProjectConfigDescription.Arg projectArg;
-          if (targetNode.getType() ==
-              Description.getBuildRuleType(ProjectConfigDescription.class)) {
+          if (targetNode.getDescription() instanceof
+              ProjectConfigDescription) {
             projectArg = (ProjectConfigDescription.Arg) targetNode.getConstructorArg();
           } else {
             return false;
@@ -84,8 +83,7 @@ abstract class AbstractProjectPredicates {
       case XCODE:
         projectRootsPredicate =
             input ->
-                Description.getBuildRuleType(XcodeWorkspaceConfigDescription.class) ==
-                    input.getType();
+                input.getDescription() instanceof XcodeWorkspaceConfigDescription;
         associatedProjectPredicate = (targetNode, targetGraph) -> false;
         break;
       default:

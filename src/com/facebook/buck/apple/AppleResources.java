@@ -21,7 +21,6 @@ import com.facebook.buck.js.IosReactNativeLibraryDescription;
 import com.facebook.buck.js.ReactNativeBundle;
 import com.facebook.buck.js.ReactNativeLibraryArgs;
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
@@ -34,13 +33,10 @@ import java.util.Optional;
 
 public class AppleResources {
 
-  private static final BuildRuleType APPLE_RESOURCE_RULE_TYPE =
-      Description.getBuildRuleType(AppleResourceDescription.class);
-
-  private static final ImmutableSet<BuildRuleType> APPLE_RESOURCE_RULE_TYPES =
-      ImmutableSet.of(
-          Description.getBuildRuleType(AppleResourceDescription.class),
-          Description.getBuildRuleType(IosReactNativeLibraryDescription.class));
+  private static final ImmutableSet<Class<? extends Description<?>>>
+      APPLE_RESOURCE_DESCRIPTION_CLASSES = ImmutableSet.of(
+          AppleResourceDescription.class,
+          IosReactNativeLibraryDescription.class);
 
   // Utility class, do not instantiate.
   private AppleResources() { }
@@ -63,7 +59,7 @@ public class AppleResources {
                 targetGraph,
                 cache,
                 AppleBuildRules.RecursiveDependenciesMode.COPYING,
-                ImmutableSet.of(APPLE_RESOURCE_RULE_TYPE)))
+                ImmutableSet.of(AppleResourceDescription.class)))
         .transform(
             input -> (AppleResourceDescription.Arg) input.getConstructorArg())
         .toSet();
@@ -81,7 +77,7 @@ public class AppleResources {
             cache,
             AppleBuildRules.RecursiveDependenciesMode.COPYING,
             targetNode,
-            Optional.of(APPLE_RESOURCE_RULE_TYPES));
+            Optional.of(APPLE_RESOURCE_DESCRIPTION_CLASSES));
 
     ProjectFilesystem filesystem = targetNode.getFilesystem();
 
@@ -113,7 +109,7 @@ public class AppleResources {
     ImmutableSet.Builder<AppleResourceDescription.Arg> builder = ImmutableSet.builder();
     Iterable<TargetNode<?, ?>> deps = targetGraph.getAll(targetNode.getDeps());
     for (TargetNode<?, ?> node : deps) {
-      if (node.getType().equals(APPLE_RESOURCE_RULE_TYPE)) {
+      if (node.getDescription() instanceof AppleResourceDescription) {
         builder.add((AppleResourceDescription.Arg) node.getConstructorArg());
       }
     }

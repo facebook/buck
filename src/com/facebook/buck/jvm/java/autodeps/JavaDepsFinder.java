@@ -271,7 +271,7 @@ public class JavaDepsFinder {
           provider -> provider.isVisibleTo(graph, rule) &&
               !providedDeps.contains(provider.getBuildTarget());
       final boolean isJavaTestRule =
-          rule.getType() == Description.getBuildRuleType(JavaTestDescription.class);
+          rule.getDescription() instanceof JavaTestDescription;
 
       for (DependencyType type : DependencyType.values()) {
         HashMultimap<TargetNode<?, ?>, String> ruleToSymbolsMap;

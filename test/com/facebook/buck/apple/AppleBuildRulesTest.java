@@ -31,10 +31,11 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
+import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -64,17 +65,28 @@ public class AppleBuildRulesTest {
   public boolean useCache;
 
   @Test
-  public void testAppleLibraryIsXcodeTargetBuildRuleType() throws Exception {
+  public void testAppleLibraryIsXcodeTargetDescription() throws Exception {
+    Cell rootCell = (new TestCellBuilder()).build();
+    BuildTarget libraryTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "lib").build();
+    TargetNode<AppleLibraryDescription.Arg, ?> library = AppleLibraryBuilder
+        .createBuilder(libraryTarget)
+        .setSrcs(ImmutableSortedSet.of())
+        .build();
     assertTrue(
-        AppleBuildRules.isXcodeTargetBuildRuleType(
-            Description.getBuildRuleType(AppleLibraryDescription.class)));
+        AppleBuildRules.isXcodeTargetDescription(library.getDescription()));
   }
 
   @Test
-  public void testIosResourceIsNotXcodeTargetBuildRuleType() throws Exception {
+  public void testIosResourceIsNotXcodeTargetDescription() throws Exception {
+    Cell rootCell = (new TestCellBuilder()).build();
+    BuildTarget resourceTarget = BuildTarget.builder(rootCell.getRoot(), "//foo", "res").build();
+    TargetNode<?, ?> resourceNode = AppleResourceBuilder
+        .createBuilder(resourceTarget)
+        .setFiles(ImmutableSet.of())
+        .setDirs(ImmutableSet.of())
+        .build();
     assertFalse(
-        AppleBuildRules.isXcodeTargetBuildRuleType(
-            Description.getBuildRuleType(AppleResourceDescription.class)));
+        AppleBuildRules.isXcodeTargetDescription(resourceNode.getDescription()));
   }
 
   @Test

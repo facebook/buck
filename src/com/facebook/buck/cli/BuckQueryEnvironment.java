@@ -34,6 +34,7 @@ import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.query.QueryTargetAccessor;
 import com.facebook.buck.rules.Cell;
+import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodes;
@@ -373,7 +374,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   @Override
   public String getTargetKind(QueryTarget target) throws QueryException, InterruptedException {
-    return getNode(target).getType().getName();
+    return Description.getBuildRuleType(getNode(target).getDescription()).getName();
   }
 
   @Override

@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java.intellij;
 
 import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -64,7 +63,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
    * @param <T> the type of the TargetNode.
    */
   abstract class TypedIjLibraryRule<T> implements IjLibraryRule {
-    abstract BuildRuleType getType();
+    abstract Class<? extends Description<?>> getDescriptionClass();
 
     abstract void apply(TargetNode<T, ?> targetNode, IjLibrary.Builder library);
 
@@ -75,7 +74,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
     }
   }
 
-  private Map<BuildRuleType, IjLibraryRule> libraryRuleIndex = new HashMap<>();
+  private Map<Class<? extends Description<?>>, IjLibraryRule> libraryRuleIndex = new HashMap<>();
   private Set<String> uniqueLibraryNamesSet = new HashSet<>();
   private IjLibraryFactoryResolver libraryFactoryResolver;
   private Map<TargetNode<?, ?>, Optional<IjLibrary>> libraryCache;
@@ -90,8 +89,8 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
   }
 
   private void addToIndex(TypedIjLibraryRule<?> rule) {
-    Preconditions.checkArgument(!libraryRuleIndex.containsKey(rule.getType()));
-    libraryRuleIndex.put(rule.getType(), rule);
+    Preconditions.checkArgument(!libraryRuleIndex.containsKey(rule.getDescriptionClass()));
+    libraryRuleIndex.put(rule.getDescriptionClass(), rule);
   }
 
   @Override
@@ -105,7 +104,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
   }
 
   private Optional<IjLibraryRule> getRule(TargetNode<?, ?> targetNode) {
-    IjLibraryRule rule = libraryRuleIndex.get(targetNode.getType());
+    IjLibraryRule rule = libraryRuleIndex.get(targetNode.getDescription().getClass());
     if (rule == null) {
       rule = libraryFactoryResolver.getPathIfJavaLibrary(targetNode)
           .map(JavaLibraryRule::new)
@@ -148,8 +147,8 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
       extends TypedIjLibraryRule<AndroidPrebuiltAarDescription.Arg> {
 
     @Override
-    public BuildRuleType getType() {
-      return Description.getBuildRuleType(AndroidPrebuiltAarDescription.class);
+    public Class<? extends Description<?>> getDescriptionClass() {
+      return AndroidPrebuiltAarDescription.class;
     }
 
     @Override
@@ -168,8 +167,8 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
       extends TypedIjLibraryRule<PrebuiltJarDescription.Arg> {
 
     @Override
-    public BuildRuleType getType() {
-      return Description.getBuildRuleType(PrebuiltJarDescription.class);
+    public Class<? extends Description<?>> getDescriptionClass() {
+      return PrebuiltJarDescription.class;
     }
 
     @Override

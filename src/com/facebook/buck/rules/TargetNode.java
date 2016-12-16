@@ -94,10 +94,6 @@ public class TargetNode<T, U extends Description<T>>
     return description;
   }
 
-  public BuildRuleType getType() {
-    return Description.getBuildRuleType(description);
-  }
-
   public T getConstructorArg() {
     return constructorArg;
   }

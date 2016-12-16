@@ -30,7 +30,6 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
@@ -61,16 +60,18 @@ public class IjModuleFactory {
   /**
    * These target types are mapped onto .iml module files.
    */
-  public static final ImmutableSet<BuildRuleType> SUPPORTED_MODULE_TYPES = ImmutableSet.of(
-      Description.getBuildRuleType(AndroidBinaryDescription.class),
-      Description.getBuildRuleType(AndroidLibraryDescription.class),
-      Description.getBuildRuleType(AndroidResourceDescription.class),
-      Description.getBuildRuleType(CxxLibraryDescription.class),
-      Description.getBuildRuleType(JavaLibraryDescription.class),
-      Description.getBuildRuleType(JavaTestDescription.class),
-      Description.getBuildRuleType(RobolectricTestDescription.class),
-      Description.getBuildRuleType(GroovyLibraryDescription.class),
-      Description.getBuildRuleType(GroovyTestDescription.class));
+  @SuppressWarnings("unchecked")
+  public static final ImmutableSet<Class<? extends Description<?>>>
+      SUPPORTED_MODULE_DESCRIPTION_CLASSES = ImmutableSet.of(
+          AndroidBinaryDescription.class,
+          AndroidLibraryDescription.class,
+          AndroidResourceDescription.class,
+          CxxLibraryDescription.class,
+          JavaLibraryDescription.class,
+          JavaTestDescription.class,
+          RobolectricTestDescription.class,
+          GroovyLibraryDescription.class,
+          GroovyTestDescription.class);
 
   /**
    * Provides the {@link IjModuleFactory} with {@link Path}s to various elements of the project.
@@ -289,7 +290,7 @@ public class IjModuleFactory {
    * @param <T> TargetNode type.
    */
   private interface IjModuleRule<T> {
-    BuildRuleType getType();
+    Class<? extends Description<?>> getDescriptionClass();
     void apply(TargetNode<T, ?> targetNode, ModuleBuildContext context);
   }
 
@@ -297,7 +298,8 @@ public class IjModuleFactory {
   private static final String SDK_TYPE_ANDROID = "Android SDK";
 
   private final ProjectFilesystem projectFilesystem;
-  private final Map<BuildRuleType, IjModuleRule<?>> moduleRuleIndex = new HashMap<>();
+  private final Map<Class<? extends Description<?>>, IjModuleRule<?>> moduleRuleIndex =
+      new HashMap<>();
   private final IjModuleFactoryResolver moduleFactoryResolver;
   private final IjProjectConfig projectConfig;
   private final boolean excludeShadows;
@@ -329,13 +331,14 @@ public class IjModuleFactory {
     this.moduleFactoryResolver = moduleFactoryResolver;
 
     Preconditions.checkState(
-        moduleRuleIndex.keySet().equals(SUPPORTED_MODULE_TYPES));
+        moduleRuleIndex.keySet().equals(SUPPORTED_MODULE_DESCRIPTION_CLASSES));
   }
 
   private void addToIndex(IjModuleRule<?> rule) {
-    Preconditions.checkArgument(!moduleRuleIndex.containsKey(rule.getType()));
-    Preconditions.checkArgument(SUPPORTED_MODULE_TYPES.contains(rule.getType()));
-    moduleRuleIndex.put(rule.getType(), rule);
+    Preconditions.checkArgument(!moduleRuleIndex.containsKey(rule.getDescriptionClass()));
+    Preconditions.checkArgument(SUPPORTED_MODULE_DESCRIPTION_CLASSES.contains(
+        rule.getDescriptionClass()));
+    moduleRuleIndex.put(rule.getDescriptionClass(), rule);
   }
 
   /**
@@ -359,7 +362,8 @@ public class IjModuleFactory {
     ModuleBuildContext context = new ModuleBuildContext(moduleBuildTargets);
 
     for (TargetNode<?, ?> targetNode : targetNodes) {
-      IjModuleRule<?> rule = Preconditions.checkNotNull(moduleRuleIndex.get(targetNode.getType()));
+      IjModuleRule<?> rule = Preconditions.checkNotNull(moduleRuleIndex.get(
+          targetNode.getDescription().getClass()));
       rule.apply((TargetNode) targetNode, context);
     }
 
@@ -403,8 +407,7 @@ public class IjModuleFactory {
       Iterable<TargetNode<?, ?>> targetNodes) {
     Optional<String> result = Optional.empty();
     for (TargetNode<?, ?> targetNode : targetNodes) {
-      BuildRuleType type = targetNode.getType();
-      if (!type.equals(Description.getBuildRuleType(JavaLibraryDescription.class))) {
+      if (!(targetNode.getDescription() instanceof JavaLibraryDescription)) {
         continue;
       }
 
@@ -588,8 +591,8 @@ public class IjModuleFactory {
       implements IjModuleRule<AndroidBinaryDescription.Arg> {
 
     @Override
-    public BuildRuleType getType() {
-      return Description.getBuildRuleType(AndroidBinaryDescription.class);
+    public Class<? extends Description<?>> getDescriptionClass() {
+      return AndroidBinaryDescription.class;
     }
 
     @Override
@@ -611,8 +614,8 @@ public class IjModuleFactory {
       implements IjModuleRule<AndroidLibraryDescription.Arg> {
 
     @Override
-    public BuildRuleType getType() {
-      return Description.getBuildRuleType(AndroidLibraryDescription.class);
+    public Class<? extends Description<?>> getDescriptionClass() {
+      return AndroidLibraryDescription.class;
     }
 
     @Override
@@ -642,8 +645,8 @@ public class IjModuleFactory {
       implements IjModuleRule<AndroidResourceDescription.Arg> {
 
     @Override
-    public BuildRuleType getType() {
-      return Description.getBuildRuleType(AndroidResourceDescription.class);
+    public Class<? extends Description<?>> getDescriptionClass() {
+      return AndroidResourceDescription.class;
     }
 
     @Override
@@ -699,8 +702,8 @@ public class IjModuleFactory {
   private class CxxLibraryModuleRule implements IjModuleRule<CxxLibraryDescription.Arg> {
 
     @Override
-    public BuildRuleType getType() {
-      return Description.getBuildRuleType(CxxLibraryDescription.class);
+    public Class<? extends Description<?>> getDescriptionClass() {
+      return CxxLibraryDescription.class;
     }
 
     @Override
@@ -716,8 +719,8 @@ public class IjModuleFactory {
   private class JavaLibraryModuleRule implements IjModuleRule<JavaLibraryDescription.Arg> {
 
     @Override
-    public BuildRuleType getType() {
-      return Description.getBuildRuleType(JavaLibraryDescription.class);
+    public Class<? extends Description<?>> getDescriptionClass() {
+      return JavaLibraryDescription.class;
     }
 
     @Override
@@ -735,8 +738,8 @@ public class IjModuleFactory {
   private class GroovyLibraryModuleRule implements IjModuleRule<GroovyLibraryDescription.Arg> {
 
     @Override
-    public BuildRuleType getType() {
-      return Description.getBuildRuleType(GroovyLibraryDescription.class);
+    public Class<? extends Description<?>> getDescriptionClass() {
+      return GroovyLibraryDescription.class;
     }
 
     @Override
@@ -753,8 +756,8 @@ public class IjModuleFactory {
   private class GroovyTestModuleRule implements IjModuleRule<GroovyTestDescription.Arg> {
 
     @Override
-    public BuildRuleType getType() {
-      return Description.getBuildRuleType(GroovyTestDescription.class);
+    public Class<? extends Description<?>> getDescriptionClass() {
+      return GroovyTestDescription.class;
     }
 
     @Override
@@ -771,8 +774,8 @@ public class IjModuleFactory {
   private class JavaTestModuleRule implements IjModuleRule<JavaTestDescription.Arg> {
 
     @Override
-    public BuildRuleType getType() {
-      return Description.getBuildRuleType(JavaTestDescription.class);
+    public Class<? extends Description<?>> getDescriptionClass() {
+      return JavaTestDescription.class;
     }
 
     @Override
@@ -788,8 +791,8 @@ public class IjModuleFactory {
   private class RobolectricTestModuleRule extends JavaTestModuleRule {
 
     @Override
-    public BuildRuleType getType() {
-      return Description.getBuildRuleType(RobolectricTestDescription.class);
+    public Class<? extends Description<?>> getDescriptionClass() {
+      return RobolectricTestDescription.class;
     }
   }
 }

@@ -412,7 +412,7 @@ public class AppleDescriptions {
         AppleBuildRules.collectTransitiveBuildRules(
             targetGraph,
             Optional.empty(),
-            AppleBuildRules.CORE_DATA_MODEL_TYPES,
+            AppleBuildRules.CORE_DATA_MODEL_DESCRIPTION_CLASSES,
             ImmutableList.of(targetNode));
 
     BuildRuleParams coreDataModelParams = params.copyWithChanges(
@@ -445,7 +445,7 @@ public class AppleDescriptions {
         AppleBuildRules.collectTransitiveBuildRules(
             targetGraph,
             Optional.empty(),
-            AppleBuildRules.SCENEKIT_ASSETS_TYPES,
+            AppleBuildRules.SCENEKIT_ASSETS_DESCRIPTION_CLASSES,
             ImmutableList.of(targetNode));
 
     BuildRuleParams sceneKitAssetsParams = params.copyWithChanges(
