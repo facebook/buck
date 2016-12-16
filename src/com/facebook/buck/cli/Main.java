@@ -204,7 +204,7 @@ public final class Main {
 
   private static final String BUCKD_COLOR_DEFAULT_ENV_VAR = "BUCKD_COLOR_DEFAULT";
 
-  private static final Duration DAEMON_SLAYER_TIMEOUT = Duration.ofHours(2);
+  private static final Duration DAEMON_SLAYER_TIMEOUT = Duration.ofDays(1);
 
   private static final Duration SUPER_CONSOLE_REFRESH_RATE = Duration.ofMillis(100);
 
