@@ -116,9 +116,11 @@ public class NativeLinkables {
             boolean shouldTraverse = true;
             switch (nativeLinkable.getPreferredLinkage(cxxPlatform)) {
               case ANY:
-                shouldTraverse = linkStyle != Linker.LinkableDepType.SHARED;
+                shouldTraverse = (linkStyle != Linker.LinkableDepType.SHARED &&
+                                  linkStyle != Linker.LinkableDepType.FRAMEWORK);
                 break;
               case SHARED:
+              case FRAMEWORK:
                 shouldTraverse = false;
                 break;
               case STATIC:
@@ -183,6 +185,9 @@ public class NativeLinkables {
         break;
       case ANY:
         linkStyle = requestedLinkStyle;
+        break;
+      case FRAMEWORK:
+        linkStyle = Linker.LinkableDepType.FRAMEWORK;
         break;
       default:
         throw new IllegalStateException();

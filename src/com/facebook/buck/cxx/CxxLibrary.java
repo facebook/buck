@@ -218,59 +218,90 @@ public class CxxLibrary
 
     // Build up the arguments used to link this library.  If we're linking the
     // whole archive, wrap the library argument in the necessary "ld" flags.
-    ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
-    linkerArgsBuilder.addAll(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform)));
+    NativeLinkableInput.Builder builder = NativeLinkableInput.builder();
+    builder.addAllArgs(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform)));
+    builder.addAllFrameworks(Preconditions.checkNotNull(frameworks));
+    builder.addAllLibraries(Preconditions.checkNotNull(libraries));
 
-    if (!headerOnly.apply(cxxPlatform)) {
-      boolean isStatic;
-      switch (linkage) {
+    Linkage linkStyle = linkage;
+    if (linkStyle == Linkage.ANY) {
+      switch (type) {
         case STATIC:
-          isStatic = true;
+        case STATIC_PIC:
+          linkStyle = Linkage.STATIC;
           break;
         case SHARED:
-          isStatic = false;
+          linkStyle = Linkage.SHARED;
+          break;
+        case FRAMEWORK:
+          linkStyle = Linkage.FRAMEWORK;
+          break;
+      }
+    }
+    if (!headerOnly.apply(cxxPlatform)) {
+      switch (linkStyle) {
+        case STATIC:
+          addStaticArguments(cxxPlatform, type, builder);
+          break;
+        case SHARED:
+          addSharedArguments(cxxPlatform, builder);
+          break;
+        case FRAMEWORK:
+          addFrameworkArguments(cxxPlatform, builder);
           break;
         case ANY:
-          isStatic = type != Linker.LinkableDepType.SHARED;
-          break;
-        default:
+        default: // ANY case should be replaced before switch
           throw new IllegalStateException("unhandled linkage type: " + linkage);
-      }
-      if (isStatic) {
-        Archive archive =
-            (Archive) requireBuildRule(
-                cxxPlatform.getFlavor(),
-                type == Linker.LinkableDepType.STATIC ?
-                    CxxDescriptionEnhancer.STATIC_FLAVOR :
-                    CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
-        if (linkWhole) {
-          Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
-          linkerArgsBuilder.addAll(linker.linkWhole(archive.toArg()));
-        } else {
-          Arg libraryArg = archive.toArg();
-          if (libraryArg instanceof SourcePathArg) {
-            linkerArgsBuilder.add(
-                FileListableLinkerInputArg.withSourcePathArg((SourcePathArg) libraryArg));
-          } else {
-            linkerArgsBuilder.add(libraryArg);
-          }
-        }
-      } else {
-        BuildRule rule =
-            requireBuildRule(
-                cxxPlatform.getFlavor(),
-                CxxDescriptionEnhancer.SHARED_FLAVOR);
-        linkerArgsBuilder.add(
-            new SourcePathArg(getResolver(), new BuildTargetSourcePath(rule.getBuildTarget())));
       }
     }
 
-    final ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
+    return builder.build();
+  }
 
-    return NativeLinkableInput.of(
-        linkerArgs,
-        Preconditions.checkNotNull(frameworks),
-        Preconditions.checkNotNull(libraries));
+  private void addFrameworkArguments(
+      CxxPlatform cxxPlatform,
+      NativeLinkableInput.Builder linkerArgsBuilder) throws NoSuchBuildTargetException {
+    BuildRule rule =
+        requireBuildRule(
+            cxxPlatform.getFlavor(),
+            CxxDescriptionEnhancer.FRAMEWORK_BUNDLE_FLAVOR);
+    linkerArgsBuilder.addFrameworks(
+        FrameworkPath.ofSourcePath(new BuildTargetSourcePath(rule.getBuildTarget())));
+  }
+
+  private void addSharedArguments(
+      CxxPlatform cxxPlatform,
+      NativeLinkableInput.Builder linkerArgsBuilder) throws NoSuchBuildTargetException {
+    BuildRule rule =
+        requireBuildRule(
+            cxxPlatform.getFlavor(),
+            CxxDescriptionEnhancer.SHARED_FLAVOR);
+    linkerArgsBuilder.addArgs(
+        new SourcePathArg(getResolver(), new BuildTargetSourcePath(rule.getBuildTarget())));
+  }
+
+  private void addStaticArguments(
+      CxxPlatform cxxPlatform,
+      Linker.LinkableDepType type,
+      NativeLinkableInput.Builder linkerArgsBuilder) throws NoSuchBuildTargetException {
+    Archive archive =
+        (Archive) requireBuildRule(
+            cxxPlatform.getFlavor(),
+            type == Linker.LinkableDepType.STATIC ?
+                CxxDescriptionEnhancer.STATIC_FLAVOR :
+                CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
+    if (linkWhole) {
+      Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
+      linkerArgsBuilder.addAllArgs(linker.linkWhole(archive.toArg()));
+    } else {
+      Arg libraryArg = archive.toArg();
+      if (libraryArg instanceof SourcePathArg) {
+        linkerArgsBuilder.addArgs(
+            FileListableLinkerInputArg.withSourcePathArg((SourcePathArg) libraryArg));
+      } else {
+        linkerArgsBuilder.addArgs(libraryArg);
+      }
+    }
   }
 
   @Override

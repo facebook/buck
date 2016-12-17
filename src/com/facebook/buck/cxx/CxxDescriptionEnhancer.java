@@ -86,6 +86,8 @@ public class CxxDescriptionEnhancer {
   public static final Flavor STATIC_FLAVOR = ImmutableFlavor.of("static");
   public static final Flavor STATIC_PIC_FLAVOR = ImmutableFlavor.of("static-pic");
   public static final Flavor SHARED_FLAVOR = ImmutableFlavor.of("shared");
+  public static final Flavor FRAMEWORK_BUNDLE_FLAVOR = ImmutableFlavor.of("framework-bundle");
+  public static final Flavor FRAMEWORK_BINARY_FLAVOR = ImmutableFlavor.of("framework-binary");
   public static final Flavor MACH_O_BUNDLE_FLAVOR = ImmutableFlavor.of("mach-o-bundle");
   public static final Flavor SHARED_LIBRARY_SYMLINK_TREE_FLAVOR =
       ImmutableFlavor.of("shared-library-symlink-tree");
@@ -508,6 +510,9 @@ public class CxxDescriptionEnhancer {
         break;
       case MACH_O_BUNDLE:
         linkFlavor = MACH_O_BUNDLE_FLAVOR;
+        break;
+      case FRAMEWORK:
+        linkFlavor = FRAMEWORK_BINARY_FLAVOR;
         break;
       case EXECUTABLE:
       default:
@@ -1331,6 +1336,8 @@ public class CxxDescriptionEnhancer {
         return STATIC_PIC_FLAVOR;
       case SHARED:
         return SHARED_FLAVOR;
+      case FRAMEWORK:
+        return FRAMEWORK_BUNDLE_FLAVOR;
     }
     throw new RuntimeException(
         String.format("Unsupported LinkableDepType: '%s'", linkableDepType));

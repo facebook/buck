@@ -329,7 +329,7 @@ public class AppleLibraryIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance(
         "//Libraries/TestLibrary:TestLibrary#macosx-x86_64,macosx-i386")
         .withAppendedFlavors(
-            AppleDescriptions.FRAMEWORK_FLAVOR,
+            CxxDescriptionEnhancer.FRAMEWORK_BUNDLE_FLAVOR,
             AppleDebugFormat.NONE.getFlavor());
     ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
         "build",

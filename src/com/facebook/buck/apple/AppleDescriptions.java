@@ -82,8 +82,6 @@ import java.util.Set;
  */
 public class AppleDescriptions {
 
-  public static final Flavor FRAMEWORK_FLAVOR = ImmutableFlavor.of("framework");
-
   public static final Flavor INCLUDE_FRAMEWORKS_FLAVOR = ImmutableFlavor.of("include-frameworks");
   public static final Flavor NO_INCLUDE_FRAMEWORKS_FLAVOR =
       ImmutableFlavor.of("no-include-frameworks");
@@ -618,7 +616,7 @@ public class AppleDescriptions {
         Optional<FrameworkDependencies> frameworkDependencies =
             resolver.requireMetadata(
                 BuildTarget.builder(dep)
-                    .addFlavors(FRAMEWORK_FLAVOR)
+                    .addFlavors(CxxDescriptionEnhancer.FRAMEWORK_BUNDLE_FLAVOR)
                     .addFlavors(NO_INCLUDE_FRAMEWORKS_FLAVOR)
                     .addFlavors(appleCxxPlatform.getCxxPlatform().getFlavor())
                     .build(),
@@ -677,7 +675,8 @@ public class AppleDescriptions {
         .withoutFlavors(StripStyle.FLAVOR_DOMAIN.getFlavors())
         .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
         .withoutFlavors(AppleDebuggableBinary.RULE_FLAVOR)
-        .withoutFlavors(ImmutableSet.of(AppleBinaryDescription.APP_FLAVOR));
+        .withoutFlavors(ImmutableSet.of(AppleBinaryDescription.APP_FLAVOR))
+        .withoutFlavors(BUNDLE_SPECIFIC_FLAVORS);
     Optional<LinkerMapMode> linkerMapMode =
         LinkerMapMode.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
     if (linkerMapMode.isPresent()) {
@@ -777,10 +776,10 @@ public class AppleDescriptions {
       BuildRuleResolver resolver,
       BuildTarget binary) throws NoSuchBuildTargetException {
     // Cxx targets must have one Platform Flavor set otherwise nothing gets compiled.
-    if (flavors.contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
+    if (flavors.contains(CxxDescriptionEnhancer.FRAMEWORK_BUNDLE_FLAVOR)) {
       flavors = ImmutableSet.<Flavor>builder()
           .addAll(flavors)
-          .add(CxxDescriptionEnhancer.SHARED_FLAVOR)
+          .add(CxxDescriptionEnhancer.FRAMEWORK_BINARY_FLAVOR)
           .build();
     }
     flavors =
@@ -788,7 +787,9 @@ public class AppleDescriptions {
             Sets.difference(
                 flavors,
                 ImmutableSet.of(
-                    AppleDescriptions.FRAMEWORK_FLAVOR,
+                    AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR,
+                    AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR,
+                    CxxDescriptionEnhancer.FRAMEWORK_BUNDLE_FLAVOR,
                     AppleBinaryDescription.APP_FLAVOR)));
     if (!cxxPlatformFlavorDomain.containsAnyOf(flavors)) {
       flavors = new ImmutableSet.Builder<Flavor>()

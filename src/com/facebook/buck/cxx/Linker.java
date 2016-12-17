@@ -135,6 +135,8 @@ public interface Linker extends Tool {
     // use that image's symbols.
     MACH_O_BUNDLE,
 
+    // similar to shared
+    FRAMEWORK,
   }
 
   /**
@@ -152,7 +154,11 @@ public interface Linker extends Tool {
 
     // Provide input suitable for dynamically linking this linkable (e.g. return references to
     // shared libraries, libfoo.so).
-    SHARED
+    SHARED,
+
+    // Provide input suitable for dynamically linking this linkable as a darwin style framework
+    // (e.g. return references to dynamic frameworks).
+    FRAMEWORK
 
   }
 
