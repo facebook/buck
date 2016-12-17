@@ -56,7 +56,8 @@ public class ElfSymbolTableScrubberStepTest {
         ElfSymbolTableScrubberStep.of(
             new ProjectFilesystem(tmp.getRoot()),
             tmp.getRoot().getFileSystem().getPath("libfoo.so"),
-            ".dynsym");
+            ".dynsym",
+            /* allowMissing */ false);
     step.execute(TestExecutionContext.newInstance());
 
     // Verify that the symbol table values and sizes are zero.
@@ -68,7 +69,8 @@ public class ElfSymbolTableScrubberStepTest {
       Elf elf = new Elf(buffer);
       Optional<ElfSection> section = elf.getSectionByName(SECTION);
       assertTrue(section.isPresent());
-      for (ByteBuffer body = section.get().body.duplicate(); body.hasRemaining(); ) {
+      long address = 1;
+      for (ByteBuffer body = section.get().body; body.hasRemaining(); ) {
         long stValue;
         long stSize;
         if (elf.header.ei_class == ElfHeader.EIClass.ELFCLASS32) {
@@ -86,8 +88,11 @@ public class ElfSymbolTableScrubberStepTest {
           stValue = Elf.Elf64.getElf64Addr(body);  // st_value;
           stSize = Elf.Elf64.getElf64Xword(body);  // st_size
         }
-        assertThat(stValue, Matchers.equalTo(0L));
-        assertThat(stSize, Matchers.equalTo(0L));
+        assertThat(stValue, Matchers.oneOf(0L, address));
+        assertThat(stSize, Matchers.oneOf(0L, ElfSymbolTableScrubberStep.STABLE_SIZE));
+        if (stValue > 0) {
+          address++;
+        }
       }
     }
   }

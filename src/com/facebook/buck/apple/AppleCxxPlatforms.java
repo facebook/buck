@@ -48,6 +48,7 @@ import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableBiMap;
@@ -371,6 +372,7 @@ public class AppleCxxPlatforms {
 
     CxxPlatform cxxPlatform = CxxPlatforms.build(
         targetFlavor,
+        Platform.MACOS,
         config,
         as,
         aspp,

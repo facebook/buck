@@ -46,7 +46,13 @@ class ElfSharedLibraryInterface
 
   // We only care about sections relevant to dynamic linking.
   private static final ImmutableSet<String> SECTIONS =
-      ImmutableSet.of(".dynamic", ".dynsym", ".dynstr");
+      ImmutableSet.of(
+          ".dynamic",
+          ".dynsym",
+          ".dynstr",
+          ".gnu.version",
+          ".gnu.version_d",
+          ".gnu.version_r");
 
   @AddToRuleKey
   private final Tool objcopy;
@@ -107,7 +113,16 @@ class ElfSharedLibraryInterface
             output,
             SECTIONS),
         ElfClearProgramHeadersStep.of(getProjectFilesystem(), output),
-        ElfSymbolTableScrubberStep.of(getProjectFilesystem(), output, ".dynsym"),
+        ElfSymbolTableScrubberStep.of(
+            getProjectFilesystem(),
+            output,
+            /* section */ ".dynsym",
+            /* allowMissing */ false),
+        ElfSymbolTableScrubberStep.of(
+            getProjectFilesystem(),
+            output,
+            /* section */ ".symtab",
+            /* allowMissing */ true),
         ElfDynamicSectionScrubberStep.of(getProjectFilesystem(), output));
   }
 

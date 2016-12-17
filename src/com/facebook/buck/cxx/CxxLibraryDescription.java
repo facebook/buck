@@ -22,6 +22,7 @@ import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.model.Flavored;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
@@ -29,6 +30,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
+import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
@@ -89,6 +91,7 @@ public class CxxLibraryDescription implements
     EXPORTED_HEADERS(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
     SANDBOX_TREE(CxxDescriptionEnhancer.SANDBOX_TREE_FLAVOR),
     SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR),
+    SHARED_INTERFACE(ImmutableFlavor.of("shared-interface")),
     STATIC_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR),
     STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR),
     MACH_O_BUNDLE(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR),
@@ -523,6 +526,38 @@ public class CxxLibraryDescription implements
         blacklist);
   }
 
+  private static <A extends Arg> BuildRule createSharedLibraryInterface(
+      BuildRuleParams baseParams,
+      BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform)
+      throws NoSuchBuildTargetException {
+    BuildTarget baseTarget = baseParams.getBuildTarget();
+
+    Optional<SharedLibraryInterfaceFactory> factory =
+        cxxPlatform.getSharedLibraryInterfaceFactory();
+    if (!factory.isPresent()) {
+      throw new HumanReadableException(
+          "%s: C/C++ platform %s does not support shared library interfaces",
+          baseTarget,
+          cxxPlatform.getFlavor());
+    }
+
+    BuildRule sharedLibrary =
+        resolver.requireRule(
+            baseTarget.withAppendedFlavors(
+                cxxPlatform.getFlavor(),
+                Type.SHARED.getFlavor()));
+
+    return factory.get().createSharedInterfaceLibrary(
+        baseTarget.withAppendedFlavors(
+            Type.SHARED_INTERFACE.getFlavor(),
+            cxxPlatform.getFlavor()),
+        baseParams,
+        resolver,
+        new SourcePathResolver(resolver),
+        new BuildTargetSourcePath(sharedLibrary.getBuildTarget()));
+  }
+
   @Override
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
@@ -642,6 +677,11 @@ public class CxxLibraryDescription implements
               linkableDepType.orElse(Linker.LinkableDepType.SHARED),
               Optional.empty(),
               blacklist);
+        case SHARED_INTERFACE:
+          return createSharedLibraryInterface(
+              untypedParams,
+              resolver,
+              platform.get());
         case MACH_O_BUNDLE:
           return createSharedLibraryBuildRule(
               untypedParams,

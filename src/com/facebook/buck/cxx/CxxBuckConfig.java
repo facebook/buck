@@ -290,6 +290,17 @@ public class CxxBuckConfig {
     return delegate.getInteger(cxxSection, "debug_path_sanitizer_limit").orElse(250);
   }
 
+  public Optional<ToolProvider> getToolProvider(String name) {
+    return delegate.getToolProvider(cxxSection, name);
+  }
+
+  /**
+   * @return whether to enabled shared library interfaces.
+   */
+  public boolean shouldUseSharedLibraryInterfaces() {
+    return delegate.getBooleanValue(cxxSection, "shared_library_interfaces", false);
+  }
+
   @Value.Immutable
   @BuckStyleImmutable
   abstract static class AbstractCxxToolProviderParams {

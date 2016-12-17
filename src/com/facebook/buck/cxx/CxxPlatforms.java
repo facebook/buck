@@ -48,8 +48,27 @@ public class CxxPlatforms {
   // Utility class, do not instantiate.
   private CxxPlatforms() { }
 
+  private static Optional<SharedLibraryInterfaceFactory> getSharedLibraryInterfaceFactory(
+      CxxBuckConfig config,
+      Platform platform) {
+    Optional<SharedLibraryInterfaceFactory> sharedLibraryInterfaceFactory = Optional.empty();
+    if (config.shouldUseSharedLibraryInterfaces()) {
+      switch (platform) {
+        case LINUX:
+          sharedLibraryInterfaceFactory =
+              Optional.of(
+                  ElfSharedLibraryInterfaceFactory.of(config.getToolProvider("objcopy").get()));
+          break;
+        // $CASES-OMITTED$
+        default:
+      }
+    }
+    return sharedLibraryInterfaceFactory;
+  }
+
   public static CxxPlatform build(
       Flavor flavor,
+      Platform platform,
       final CxxBuckConfig config,
       CompilerProvider as,
       PreprocessorProvider aspp,
@@ -118,6 +137,8 @@ public class CxxPlatforms {
       }
     }));
 
+    builder.setSharedLibraryInterfaceFactory(getSharedLibraryInterfaceFactory(config, platform));
+
     builder.addAllCflags(cflags);
     builder.addAllCxxflags(cflags);
     builder.addAllCppflags(cppflags);
@@ -134,10 +155,12 @@ public class CxxPlatforms {
    */
   public static CxxPlatform copyPlatformWithFlavorAndConfig(
       CxxPlatform defaultPlatform,
+      Platform platform,
       CxxBuckConfig config,
       Flavor flavor) {
     return CxxPlatforms.build(
         flavor,
+        platform,
         config,
         defaultPlatform.getAs(),
         defaultPlatform.getAspp(),

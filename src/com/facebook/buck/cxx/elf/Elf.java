@@ -125,7 +125,7 @@ public class Elf {
       return buffer.getShort() & 0xffff;
     }
 
-    public static void putEl32fHalf(ByteBuffer buffer, short val) {
+    public static void putElf32Half(ByteBuffer buffer, short val) {
       buffer.putShort(val);
     }
 

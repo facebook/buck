@@ -443,6 +443,7 @@ public class KnownBuildRuleTypes {
 
       cxxOverridePlatformsMap.put(flavor, CxxPlatforms.copyPlatformWithFlavorAndConfig(
           cxxOverridePlatformsMap.get(flavor),
+          platform,
           new CxxBuckConfig(config, flavor),
           flavor));
     }

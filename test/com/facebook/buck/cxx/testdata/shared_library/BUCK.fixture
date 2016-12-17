@@ -4,3 +4,10 @@ cxx_binary(
   srcs = [ 'binary.cpp' ],
   link_style = 'shared',
 )
+
+cxx_binary(
+  name = 'static_binary',
+  deps = ['//subdir:library'],
+  srcs = [ 'binary.cpp' ],
+  link_style = 'static',
+)

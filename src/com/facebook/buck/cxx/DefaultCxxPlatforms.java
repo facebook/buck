@@ -167,6 +167,7 @@ public class DefaultCxxPlatforms {
 
     return CxxPlatforms.build(
         FLAVOR,
+        platform,
         config,
         as,
         aspp,

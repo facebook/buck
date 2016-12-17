@@ -83,9 +83,12 @@ abstract class AbstractElfExtractSectionsStep implements Step {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(getObjcopyPrefix());
     for (String section : getSections()) {
-      args.add(
-          "--only-section", section,
-          "--change-section-address", String.format("%s=0x%x", section, addresses.get(section)));
+      Long address = addresses.get(section);
+      if (address != null) {
+        args.add(
+            "--only-section", section,
+            "--change-section-address", String.format("%s=0x%x", section, address));
+      }
     }
     args.add(getInput().toString());
     args.add(getOutput().toString());

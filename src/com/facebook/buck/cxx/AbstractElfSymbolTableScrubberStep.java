@@ -26,6 +26,7 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
+import com.google.common.annotations.VisibleForTesting;
 
 import org.immutables.value.Value;
 
@@ -44,9 +45,13 @@ import java.util.Optional;
 @BuckStyleTuple
 abstract class AbstractElfSymbolTableScrubberStep implements Step {
 
+  @VisibleForTesting
+  static final long STABLE_SIZE = 4;
+
   abstract ProjectFilesystem getFilesystem();
   abstract Path getPath();
   abstract String getSection();
+  abstract boolean isAllowMissing();
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
@@ -61,32 +66,83 @@ abstract class AbstractElfSymbolTableScrubberStep implements Step {
       // Locate the symbol table section.
       Optional<ElfSection> section = elf.getSectionByName(getSection());
       if (!section.isPresent()) {
-        throw new IOException(
-            String.format(
-                "Error parsing ELF file %s: no such section \"%s\"",
-                getPath(),
-                getSection()));
+        if (isAllowMissing()) {
+          return StepExecutionResult.SUCCESS;
+        } else {
+          throw new IOException(
+              String.format(
+                  "Error parsing ELF file %s: no such section \"%s\"",
+                  getPath(),
+                  getSection()));
+        }
       }
 
       // Iterate over each symbol table entry and zero out the address and size of each symbols.
-      for (ByteBuffer body = section.get().body.duplicate(); body.hasRemaining(); ) {
+      int address = 1;
+      for (ByteBuffer body = section.get().body; body.hasRemaining(); ) {
         if (elf.header.ei_class == ElfHeader.EIClass.ELFCLASS32) {
           Elf.Elf32.getElf32Word(body);  // st_name
-          Elf.Elf32.putElf32Addr(body, 0);  // st_value
-          Elf.Elf32.putElf32Word(body, 0);  // st_size
+
+          // Fixup the address to some stable value only if it's non-zero.
+          int addressPosition = body.position();
+          long previousAddress = Elf.Elf32.getElf32Addr(body);  // st_value
+          if (previousAddress != 0) {
+            body.position(addressPosition);
+            Elf.Elf32.putElf32Addr(body, address++);  // st_value
+          }
+
+          // Fixup the size to some stable value if it's non-zero.
+          int sizePosition = body.position();
+          long previousSize = Elf.Elf32.getElf32Word(body);  // st_size
+          if (previousSize != 0) {
+            body.position(sizePosition);
+            Elf.Elf32.putElf32Word(body, (int) STABLE_SIZE);  // st_size
+          }
+
           body.get();  // st_info;
           body.get();  // st_other;
-          Elf.Elf32.getElf32Half(body);  // st_shndx
+
+          // Fixup the section index to some stable value only if it's non-zero.
+          int shndxPosition = body.position();
+          int previousShndx = Elf.Elf32.getElf32Half(body);  // st_shndx
+          if (previousShndx > 0 && previousShndx <  0xFF00) {
+            body.position(shndxPosition);
+            Elf.Elf32.putElf32Half(body, (short) 1);  // st_shndx
+          }
+
         } else {
           Elf.Elf64.getElf64Word(body);  // st_name
           body.get();  // st_info;
           body.get();  // st_other;
-          Elf.Elf64.getElf64Half(body);  // st_shndx
-          Elf.Elf64.putElf64Addr(body, 0L);  // st_value;
-          Elf.Elf64.putElf64Xword(body, 0L);  // st_size
+
+          // Fixup the section index to some stable value only if it's non-zero.
+          int shndxPosition = body.position();
+          int previousShndx = Elf.Elf64.getElf64Half(body);  // st_shndx
+          if (previousShndx > 0 && previousShndx <  0xFF00) {
+            body.position(shndxPosition);
+            Elf.Elf64.putElf64Half(body, (short) 1);  // st_shndx
+          }
+
+          // Fixup the address to some stable value only if it's non-zero.
+          int addressPosition = body.position();
+          long previousAddress = Elf.Elf64.getElf64Addr(body);  // st_value;
+          if (previousAddress != 0) {
+            body.position(addressPosition);
+            Elf.Elf64.putElf64Addr(body, address++);  // st_value;
+          }
+
+          // Fixup the size to some stable value if it's non-zero.
+          int sizePosition = body.position();
+          long previousSize = Elf.Elf64.getElf64Xword(body);  // st_size
+          if (previousSize != 0) {
+            body.position(sizePosition);
+            Elf.Elf64.putElf64Xword(body, STABLE_SIZE);  // st_size
+          }
+
         }
       }
     }
+
     return StepExecutionResult.SUCCESS;
   }
 

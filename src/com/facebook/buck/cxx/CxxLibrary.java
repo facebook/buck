@@ -259,7 +259,9 @@ public class CxxLibrary
         BuildRule rule =
             requireBuildRule(
                 cxxPlatform.getFlavor(),
-                CxxDescriptionEnhancer.SHARED_FLAVOR);
+                cxxPlatform.getSharedLibraryInterfaceFactory().isPresent() ?
+                    CxxLibraryDescription.Type.SHARED_INTERFACE.getFlavor() :
+                    CxxLibraryDescription.Type.SHARED.getFlavor());
         linkerArgsBuilder.add(
             new SourcePathArg(getResolver(), new BuildTargetSourcePath(rule.getBuildTarget())));
       }
