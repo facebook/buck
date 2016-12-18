@@ -21,6 +21,7 @@ import com.facebook.buck.cxx.CxxBuckConfig;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxToolProvider;
 import com.facebook.buck.cxx.DefaultLinkerProvider;
+import com.facebook.buck.cxx.ElfSharedLibraryInterfaceFactory;
 import com.facebook.buck.cxx.GnuArchiver;
 import com.facebook.buck.cxx.GnuLinker;
 import com.facebook.buck.cxx.Linker;
@@ -620,7 +621,13 @@ public class NdkCxxPlatforms {
         .setSharedLibraryVersionedExtensionFormat("so.%s")
         .setStaticLibraryExtension("a")
         .setObjectFileExtension("o")
-    ;
+        .setSharedLibraryInterfaceFactory(
+            config.shouldUseSharedLibraryInterfaces() ?
+                Optional.of(
+                    ElfSharedLibraryInterfaceFactory.of(
+                        new ConstantToolProvider(
+                            getGccTool(toolchainPaths, "objcopy", version, executableFinder)))) :
+                Optional.empty());
 
     if (cxxRuntime != CxxRuntime.SYSTEM) {
       cxxPlatformBuilder.putRuntimeLdflags(
