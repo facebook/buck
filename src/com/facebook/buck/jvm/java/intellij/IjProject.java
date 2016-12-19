@@ -94,7 +94,7 @@ public class IjProject {
       throws IOException {
     final ImmutableSet.Builder<BuildTarget> requiredBuildTargets = ImmutableSet.builder();
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(
-        new DefaultIjLibraryFactory.IjLibraryFactoryResolver() {
+        new IjLibraryFactoryResolver() {
           @Override
           public Path getPath(SourcePath path) {
             Optional<BuildRule> rule = sourcePathResolver.getRule(path);

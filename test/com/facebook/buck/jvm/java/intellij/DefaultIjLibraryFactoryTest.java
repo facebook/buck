@@ -50,7 +50,7 @@ public class DefaultIjLibraryFactoryTest {
   private TargetNode<?, ?> base;
   private Path androidSupportBinaryJarPath;
   private Path baseOutputPath;
-  private DefaultIjLibraryFactory.IjLibraryFactoryResolver libraryFactoryResolver;
+  private IjLibraryFactoryResolver libraryFactoryResolver;
   private IjLibraryFactory factory;
 
   @Before
@@ -78,7 +78,7 @@ public class DefaultIjLibraryFactoryTest {
     androidSupportBinaryJarPath = Paths.get("buck_out/support.aar/classes.jar");
     baseOutputPath = Paths.get("buck-out/base.jar");
 
-    libraryFactoryResolver = new DefaultIjLibraryFactory.IjLibraryFactoryResolver() {
+    libraryFactoryResolver = new IjLibraryFactoryResolver() {
       @Override
       public Path getPath(SourcePath path) {
         return sourcePathResolver.getRelativePath(path);

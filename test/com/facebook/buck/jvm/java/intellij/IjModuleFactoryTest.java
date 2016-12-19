@@ -547,8 +547,8 @@ public class IjModuleFactoryTest {
         TargetGraph.EMPTY,
         new DefaultTargetNodeToBuildRuleTransformer());
     final SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
-    DefaultIjLibraryFactory.IjLibraryFactoryResolver ijLibraryFactoryResolver =
-        new DefaultIjLibraryFactory.IjLibraryFactoryResolver() {
+    IjLibraryFactoryResolver ijLibraryFactoryResolver =
+        new IjLibraryFactoryResolver() {
           @Override
           public Path getPath(SourcePath path) {
             return sourcePathResolver.getRelativePath(path);

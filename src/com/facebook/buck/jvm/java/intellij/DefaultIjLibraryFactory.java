@@ -19,8 +19,6 @@ package com.facebook.buck.jvm.java.intellij;
 import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -37,19 +35,6 @@ import java.util.Set;
  * TargetNodes and allows resolving those as dependencies of modules.
  */
 class DefaultIjLibraryFactory extends IjLibraryFactory {
-
-  public interface IjLibraryFactoryResolver {
-    /**
-     * see {@link SourcePathResolver#deprecatedGetPath(SourcePath)}
-     */
-    Path getPath(SourcePath path);
-
-    /**
-     * @param targetNode node to look up.
-     * @return path to the output of target but only if that path points to a .jar.
-     */
-    Optional<Path> getPathIfJavaLibrary(TargetNode<?, ?> targetNode);
-  }
 
   /**
    * Rule describing how to create a {@link IjLibrary} from a {@link TargetNode}.

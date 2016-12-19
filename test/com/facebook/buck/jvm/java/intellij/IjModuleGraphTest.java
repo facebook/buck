@@ -793,8 +793,8 @@ public class IjModuleGraphTest {
     final SourcePathResolver sourcePathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
-    DefaultIjLibraryFactory.IjLibraryFactoryResolver sourceOnlyResolver =
-        new DefaultIjLibraryFactory.IjLibraryFactoryResolver() {
+    IjLibraryFactoryResolver sourceOnlyResolver =
+        new IjLibraryFactoryResolver() {
           @Override
           public Path getPath(SourcePath path) {
             return sourcePathResolver.getAbsolutePath(path);
