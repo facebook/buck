@@ -78,4 +78,8 @@ public class DownloadConfig {
 
     return Optional.of(new PasswordAuthentication(user.get(), password.get().toCharArray()));
   }
+
+  public Optional<Integer> getMaxNumberOfRetries() {
+    return delegate.getInteger("download", "max_number_of_retries");
+  }
 }

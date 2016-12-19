@@ -16,9 +16,11 @@
 
 package com.facebook.buck.file;
 
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.BuckConfig;
@@ -33,6 +35,9 @@ import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 
 import org.easymock.EasyMock;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -153,17 +158,7 @@ public class StackedDownloaderTest {
         .build();
 
     Downloader downloader = StackedDownloader.createFromConfig(config, Optional.empty());
-
-    List<Downloader> downloaders = unpackDownloaders(downloader);
-    boolean seenRemote = false;
-
-    for (Downloader seen : downloaders) {
-      if (seen instanceof RemoteMavenDownloader) {
-        seenRemote = true;
-      }
-    }
-
-    assertTrue(seenRemote);
+    assertThat(downloader, includes(RemoteMavenDownloader.class));
   }
 
   @Test
@@ -247,4 +242,45 @@ public class StackedDownloaderTest {
     StackedDownloader.createFromConfig(config, Optional.empty());
   }
 
+  @Test
+  public void shouldUseRetryingDownloaderIfMaxNumberOfRetriesIsSet() throws IOException {
+    BuckConfig config = FakeBuckConfig.builder()
+        .setSections(
+            "[download]",
+            "max_number_of_retries = 1")
+        .build();
+
+    Downloader downloader = StackedDownloader.createFromConfig(config, Optional.empty());
+    assertThat(downloader, includes(RetryingDownloader.class));
+  }
+
+  @Test
+  public void shouldNotUseRetryingDownloaderIfMaxNumberOfRetriesIsSet() throws IOException {
+    BuckConfig config = FakeBuckConfig.builder().build();
+    Downloader downloader = StackedDownloader.createFromConfig(config, Optional.empty());
+    assertThat(downloader, not(includes(RetryingDownloader.class)));
+  }
+
+  private Matcher<Downloader> includes(final Class<? extends Downloader> clazz) {
+    return new BaseMatcher<Downloader>() {
+      @Override
+      public void describeTo(Description description) {
+        description.appendText("downloader must include ").appendValue(clazz);
+      }
+
+      @Override
+      public boolean matches(Object object) {
+        Downloader downloader = (Downloader) object;
+        List<Downloader> downloaders = unpackDownloaders(downloader);
+        boolean seenRetrying = false;
+
+        for (Downloader seen : downloaders) {
+          if (clazz.isInstance(seen)) {
+            seenRetrying = true;
+          }
+        }
+        return seenRetrying;
+      }
+    };
+  }
 }

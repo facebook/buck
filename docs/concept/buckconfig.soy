@@ -1149,6 +1149,16 @@ $ buck targets --resolve-alias app#src_jar
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'download' /}
+  {param name: 'max_number_of_retries' /}
+  {param example_value: '3' /}
+  {param description}
+    In case buck is unable to download a file, it will retry specified number of times before
+    giving up.
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'cxx' /}
   {param description}

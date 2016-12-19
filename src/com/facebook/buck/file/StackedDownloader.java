@@ -121,7 +121,9 @@ public class StackedDownloader implements Downloader {
       LOG.warn("Please configure maven repos by adding them to a 'maven_repositories' " +
               "section in your buckconfig");
     }
-    downloaders.add(httpDownloader);
+    downloaders.add(downloadConfig.getMaxNumberOfRetries()
+        .map(retries -> (Downloader) RetryingDownloader.from(httpDownloader, retries))
+        .orElse(httpDownloader));
 
     return new StackedDownloader(downloaders.build());
   }
