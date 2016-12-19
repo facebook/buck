@@ -55,10 +55,14 @@ public class AppleSdkDiscovery {
 
   private static final Logger LOG = Logger.get(AppleSdkDiscovery.class);
 
-  private static final Ordering<AppleSdk> APPLE_SDK_VERSION_ORDERING =
-    Ordering
-        .from(new VersionStringComparator())
-        .onResultOf(AppleSdk::getVersion);
+  private static final Ordering<AppleSdk> APPLE_SDK_VERSION_ORDERING = new Ordering<AppleSdk>() {
+    VersionStringComparator versionComparator = new VersionStringComparator();
+    @Override
+    public int compare(AppleSdk thisSdk, AppleSdk thatSdk) {
+      int result = versionComparator.compare(thisSdk.getVersion(), thatSdk.getVersion());
+      return result == 0 ? thisSdk.getName().compareTo(thatSdk.getName()) : result;
+    }
+  };
 
   private static final String DEFAULT_TOOLCHAIN_ID = "com.apple.dt.toolchain.XcodeDefault";
 
@@ -167,8 +171,14 @@ public class AppleSdkDiscovery {
     ImmutableMap<AppleSdk, AppleSdkPaths> discoveredSdkPaths = appleSdkPathsBuilder.build();
 
     for (ApplePlatform platform : orderedSdksForPlatform.keySet()) {
-      AppleSdk mostRecentSdkForPlatform = orderedSdksForPlatform.get(platform).last();
-      if (!mostRecentSdkForPlatform.getName().equals(platform.getName())) {
+      Set<AppleSdk> platformSdks = orderedSdksForPlatform.get(platform);
+      boolean shouldCreateUnversionedSdk = true;
+      for (AppleSdk sdk : platformSdks) {
+        shouldCreateUnversionedSdk &= !sdk.getName().equals(platform.getName());
+      }
+
+      if (shouldCreateUnversionedSdk) {
+        AppleSdk mostRecentSdkForPlatform = orderedSdksForPlatform.get(platform).last();
         appleSdkPathsBuilder.put(
             mostRecentSdkForPlatform.withName(platform.getName()),
             discoveredSdkPaths.get(mostRecentSdkForPlatform));

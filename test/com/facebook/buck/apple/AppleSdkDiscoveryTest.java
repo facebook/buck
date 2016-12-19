@@ -82,6 +82,73 @@ public class AppleSdkDiscoveryTest {
   }
 
   @Test
+  public void shouldResolveSdkVersionConflicts() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "sdk-discovery-conflict",
+        temp);
+    workspace.setUp();
+    Path root = workspace.getPath("");
+
+    ProjectWorkspace emptyWorkspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this,
+        "sdk-discovery-empty",
+        temp);
+    emptyWorkspace.setUp();
+    Path path = emptyWorkspace.getPath("");
+
+    ImmutableMap<String, AppleToolchain> toolchains = ImmutableMap.of(
+        "com.apple.dt.toolchain.XcodeDefault",
+        getDefaultToolchain(path));
+
+    AppleSdk macosxReleaseSdk =
+        AppleSdk.builder()
+            .setName("macosx")
+            .setVersion("10.9")
+            .setApplePlatform(ApplePlatform.MACOSX)
+            .addArchitectures("i386", "x86_64")
+            .addAllToolchains(toolchains.values())
+            .build();
+    AppleSdk macosxDebugSdk =
+        AppleSdk.builder()
+            .setName("macosx-Debug")
+            .setVersion("10.9")
+            .setApplePlatform(ApplePlatform.MACOSX)
+            .addArchitectures("i386", "x86_64")
+            .addAllToolchains(toolchains.values())
+            .build();
+    AppleSdkPaths macosxReleasePaths =
+        AppleSdkPaths.builder()
+            .setDeveloperPath(path)
+            .addToolchainPaths(path.resolve("Toolchains/XcodeDefault.xctoolchain"))
+            .setPlatformPath(root.resolve("Platforms/MacOSX.platform"))
+            .setSdkPath(root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
+            .build();
+    AppleSdkPaths macosxDebugPaths =
+        AppleSdkPaths.builder()
+            .setDeveloperPath(path)
+            .addToolchainPaths(path.resolve("Toolchains/XcodeDefault.xctoolchain"))
+            .setPlatformPath(root.resolve("Platforms/MacOSX.platform"))
+            .setSdkPath(root.resolve(
+                "Platforms/MacOSX.platform/Developer/SDKs/MacOSX-Debug10.9.sdk"))
+            .build();
+
+    ImmutableMap<AppleSdk, AppleSdkPaths> expected =
+        ImmutableMap.<AppleSdk, AppleSdkPaths>builder()
+            .put(macosxReleaseSdk, macosxReleasePaths)
+            .put(macosxDebugSdk, macosxDebugPaths)
+            .build();
+
+    assertThat(
+        AppleSdkDiscovery.discoverAppleSdkPaths(
+            Optional.of(path),
+            ImmutableList.of(root),
+            toolchains,
+            new FakeAppleConfig()),
+        equalTo(expected));
+  }
+
+  @Test
   public void shouldFindPlatformsInExtraPlatformDirectories() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this,
