@@ -73,13 +73,7 @@ public class FakeExecutor implements ScheduledExecutorService {
 
   @Override
   public ScheduledFuture<?> schedule(final Runnable command, long delay, TimeUnit unit) {
-    if (rejectSubmission) {
-      throw new RejectedExecutionException();
-    }
-
-    runnableList.add(new AnnotatedRunnable(command, delay, -1, unit));
-
-    return new FakeScheduledFuture<Void>(toCallable(command));
+    return schedule(toCallable(command), delay, unit);
   }
 
   private <T> Callable<T> toCallable(final Runnable runnable, final T result) {
@@ -96,9 +90,7 @@ public class FakeExecutor implements ScheduledExecutorService {
   }
 
   @Override
-  public <V> ScheduledFuture<V> schedule(
-      Callable<V> callable, long delay, TimeUnit unit
-  ) {
+  public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
     if (rejectSubmission) {
       throw new RejectedExecutionException();
     }

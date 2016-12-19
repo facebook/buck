@@ -132,16 +132,16 @@ import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import com.google.common.reflect.ClassPath;
-import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.ServiceManager;
 import com.martiansoftware.nailgun.NGContext;
+import com.martiansoftware.nailgun.NGListeningAddress;
 import com.martiansoftware.nailgun.NGServer;
 import com.sun.jna.LastErrorException;
 import com.sun.jna.Native;
@@ -1940,6 +1940,8 @@ public final class Main {
   }
 
   public static final class DaemonBootstrap {
+    private static @Nullable DaemonKillers daemonKillers;
+
     public static void main(String[] args) throws Exception {
       try {
         daemonizeIfPossible();
@@ -1951,7 +1953,52 @@ public final class Main {
         System.err.println(String.format("buckd: fatal error %s", ex));
         System.exit(1);
       }
-      NGServer.main(args);
+
+      if (args.length != 2) {
+        System.err.println("Usage: buckd socketpath heartbeatTimeout");
+        return;
+      }
+
+      String socketPath = args[0];
+      int heartbeatTimeout = Integer.parseInt(args[1]);
+      // Strip out optional local: prefix.  This server only use domain sockets.
+      if (socketPath.startsWith("local:")) {
+        socketPath = socketPath.substring("local:".length());
+      }
+      NGServer server = new NGServer(
+          new NGListeningAddress(socketPath),
+          NGServer.DEFAULT_SESSIONPOOLSIZE,
+          heartbeatTimeout);
+      daemonKillers = new DaemonKillers(server);
+      server.run();
+    }
+
+    public static DaemonKillers getDaemonKillers() {
+      return Preconditions.checkNotNull(daemonKillers, "Daemon killers should be initialized.");
+    }
+  }
+
+  private static class DaemonKillers {
+    private static final ScheduledExecutorService daemonKillerExecutorService =
+        Executors.newSingleThreadScheduledExecutor();
+
+    private final NGServer server;
+    private final IdleKiller idleKiller;
+
+    DaemonKillers(NGServer server) {
+      this.server = server;
+      this.idleKiller = new IdleKiller(
+          daemonKillerExecutorService,
+          DAEMON_SLAYER_TIMEOUT,
+          this::killServer);
+    }
+
+    IdleKiller.CommandExecutionScope newCommandExecutionScope() {
+      return idleKiller.newCommandExecutionScope();
+    }
+
+    private void killServer() {
+      server.shutdown(true);
     }
   }
 
@@ -1961,89 +2008,10 @@ public final class Main {
    * disconnections and interrupt command processing when they occur.
    */
   public static void nailMain(final NGContext context) throws InterruptedException {
-    try (DaemonSlayer.ExecuteCommandHandle handle =
-             DaemonSlayer.getSlayer(context).executeCommand()) {
+    try (IdleKiller.CommandExecutionScope ignored =
+             DaemonBootstrap.getDaemonKillers().newCommandExecutionScope()) {
       new Main(context.out, context.err, context.in)
           .runMainThenExit(context.getArgs(), Optional.of(context));
-    }
-  }
-
-
-  private static final class DaemonSlayer extends AbstractScheduledService {
-    private final NGContext context;
-    private final Duration slayerTimeout;
-    private int runCount;
-    private int lastRunCount;
-    private boolean executingCommand;
-
-    private static final class DaemonSlayerInstance {
-      final DaemonSlayer daemonSlayer;
-
-      private DaemonSlayerInstance(DaemonSlayer daemonSlayer) {
-        this.daemonSlayer = daemonSlayer;
-      }
-    }
-
-    @Nullable
-    private static volatile DaemonSlayerInstance daemonSlayerInstance;
-
-    public static DaemonSlayer getSlayer(NGContext context) {
-      if (daemonSlayerInstance == null) {
-        synchronized (DaemonSlayer.class) {
-          if (daemonSlayerInstance == null) {
-            DaemonSlayer slayer = new DaemonSlayer(context);
-            ServiceManager manager = new ServiceManager(ImmutableList.of(slayer));
-            manager.startAsync();
-            daemonSlayerInstance = new DaemonSlayerInstance(slayer);
-          }
-        }
-      }
-      return daemonSlayerInstance.daemonSlayer;
-    }
-
-    private DaemonSlayer(NGContext context) {
-      this.context = context;
-      this.runCount = 0;
-      this.lastRunCount = 0;
-      this.executingCommand = false;
-      this.slayerTimeout = DAEMON_SLAYER_TIMEOUT;
-    }
-
-    public class ExecuteCommandHandle implements AutoCloseable {
-      private ExecuteCommandHandle() {
-        synchronized (DaemonSlayer.this) {
-          executingCommand = true;
-        }
-      }
-
-      @Override
-      public void close() {
-        synchronized (DaemonSlayer.this) {
-          runCount++;
-          executingCommand = false;
-        }
-      }
-    }
-
-    public ExecuteCommandHandle executeCommand() {
-      return new ExecuteCommandHandle();
-    }
-
-    @Override
-    protected synchronized void runOneIteration() throws Exception {
-      if (!executingCommand && runCount == lastRunCount) {
-        context.getNGServer().shutdown(/* exitVM */ true);
-      } else {
-        lastRunCount = runCount;
-      }
-    }
-
-    @Override
-    protected Scheduler scheduler() {
-      return Scheduler.newFixedRateSchedule(
-          slayerTimeout.toMillis(),
-          slayerTimeout.toMillis(),
-          TimeUnit.MILLISECONDS);
     }
   }
 }
