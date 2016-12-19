@@ -270,7 +270,7 @@ public class IjModuleFactory {
 
   private void addDepsAndFolder(
       IjFolder.IJFolderFactory folderFactory,
-      IjModuleGraph.DependencyType dependencyType,
+      DependencyType dependencyType,
       TargetNode<?, ?> targetNode,
       boolean wantsPackagePrefix,
       ModuleBuildContext context,
@@ -287,7 +287,7 @@ public class IjModuleFactory {
 
   private void addDepsAndFolder(
       IjFolder.IJFolderFactory folderFactory,
-      IjModuleGraph.DependencyType dependencyType,
+      DependencyType dependencyType,
       TargetNode<?, ?> targetNode,
       boolean wantsPackagePrefix,
       ModuleBuildContext context
@@ -307,7 +307,7 @@ public class IjModuleFactory {
       ModuleBuildContext context) {
     addDepsAndFolder(
         SourceFolder.FACTORY,
-        IjModuleGraph.DependencyType.PROD,
+        DependencyType.PROD,
         targetNode,
         wantsPackagePrefix,
         context);
@@ -319,7 +319,7 @@ public class IjModuleFactory {
       ModuleBuildContext context) {
     addDepsAndFolder(
         TestFolder.FACTORY,
-        IjModuleGraph.DependencyType.TEST,
+        DependencyType.TEST,
         targetNode,
         wantsPackagePrefix,
         context);
@@ -328,7 +328,7 @@ public class IjModuleFactory {
   private static void addDeps(
       ImmutableMultimap<Path, Path> foldersToInputsIndex,
       TargetNode<?, ?> targetNode,
-      IjModuleGraph.DependencyType dependencyType,
+      DependencyType dependencyType,
       ModuleBuildContext context) {
     context.addDeps(
         foldersToInputsIndex.keySet(),
@@ -386,7 +386,7 @@ public class IjModuleFactory {
     public void apply(
         TargetNode<AndroidBinaryDescription.Arg, ?> target,
         ModuleBuildContext context) {
-      context.addDeps(target.getDeps(), IjModuleGraph.DependencyType.PROD);
+      context.addDeps(target.getDeps(), DependencyType.PROD);
 
       IjModuleAndroidFacet.Builder androidFacetBuilder = context.getOrCreateAndroidFacetBuilder();
       androidFacetBuilder
@@ -482,7 +482,7 @@ public class IjModuleFactory {
       }
       context.getOrCreateAndroidFacetBuilder().setAndroidLibrary(true);
 
-      context.addDeps(resourceFolders, target.getDeps(), IjModuleGraph.DependencyType.PROD);
+      context.addDeps(resourceFolders, target.getDeps(), DependencyType.PROD);
     }
   }
 

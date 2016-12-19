@@ -46,45 +46,6 @@ import javax.annotation.Nullable;
  */
 public class IjModuleGraph {
 
-  enum DependencyType {
-    /**
-     * The current {@link IjModule} depends on the other element from test code only. This
-     * only happens if a particular module contains both test and production code and only code in
-     * the test folders needs to reference the other element.
-     */
-    TEST,
-    /**
-     * The current {@link IjModule} depends on the other element from production (non-test)
-     * code.
-     */
-    PROD,
-    /**
-     * This dependency means that the other element contains a compiled counterpart to this element.
-     * This is used when the current element uses BUCK features which cannot be expressed in
-     * IntelliJ.
-     */
-    COMPILED_SHADOW,
-    ;
-
-    public static DependencyType merge(DependencyType left, DependencyType right) {
-      if (left.equals(right)) {
-        return left;
-      }
-      Preconditions.checkArgument(
-          !left.equals(COMPILED_SHADOW) && !right.equals(COMPILED_SHADOW),
-          "The COMPILED_SHADOW type cannot be merged with other types.");
-      return DependencyType.PROD;
-    }
-
-    public static <T> void putWithMerge(Map<T, DependencyType> map, T key, DependencyType value) {
-      DependencyType oldValue = map.get(key);
-      if (oldValue != null) {
-        value = merge(oldValue, value);
-      }
-      map.put(key, value);
-    }
-  }
-
   /**
    * Indicates how to aggregate {@link TargetNode}s into {@link IjModule}s.
    */

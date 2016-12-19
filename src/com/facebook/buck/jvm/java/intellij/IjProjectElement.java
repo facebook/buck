@@ -34,6 +34,6 @@ public interface IjProjectElement {
    */
   ImmutableSet<TargetNode<?, ?>> getTargets();
 
-  void addAsDependency(IjModuleGraph.DependencyType dependencyType,
+  void addAsDependency(DependencyType dependencyType,
       IjDependencyListBuilder dependencyListBuilder);
 }

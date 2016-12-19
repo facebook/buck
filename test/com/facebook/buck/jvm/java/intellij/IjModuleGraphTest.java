@@ -105,7 +105,7 @@ public class IjModuleGraphTest {
     IjModule productModule = getModuleForTarget(moduleGraph, productTarget);
 
     assertEquals(
-        ImmutableMap.of(libraryModule, IjModuleGraph.DependencyType.PROD),
+        ImmutableMap.of(libraryModule, DependencyType.PROD),
         moduleGraph.getDependentModulesFor(productModule));
     assertTrue(moduleGraph.getDependentModulesFor(libraryModule).isEmpty());
   }
@@ -138,8 +138,8 @@ public class IjModuleGraphTest {
 
     assertEquals(
         ImmutableMap.of(
-            junitReflectModule, IjModuleGraph.DependencyType.PROD,
-            junitCoreModule, IjModuleGraph.DependencyType.PROD),
+            junitReflectModule, DependencyType.PROD,
+            junitCoreModule, DependencyType.PROD),
         moduleGraph.getDependentModulesFor(junitRuleModule));
   }
 
@@ -169,7 +169,7 @@ public class IjModuleGraphTest {
     IjModule reExporterModule = getModuleForTarget(moduleGraph, reExporter);
 
     assertEquals(
-        ImmutableMap.of(reExporterModule, IjModuleGraph.DependencyType.PROD),
+        ImmutableMap.of(reExporterModule, DependencyType.PROD),
         moduleGraph.getDependentModulesFor(libraryModule));
   }
 
@@ -236,14 +236,14 @@ public class IjModuleGraphTest {
         moduleGraph.getDependentModulesFor(guavaModule));
 
     assertEquals(ImmutableMap.of(
-            guavaModule, IjModuleGraph.DependencyType.PROD,
-            junitModule, IjModuleGraph.DependencyType.PROD,
-            hamcrestModule, IjModuleGraph.DependencyType.TEST),
+            guavaModule, DependencyType.PROD,
+            junitModule, DependencyType.PROD,
+            hamcrestModule, DependencyType.TEST),
         moduleGraph.getDependentModulesFor(codeModule));
 
     assertEquals(ImmutableMap.of(
-            codeModule, IjModuleGraph.DependencyType.TEST,
-            junitModule, IjModuleGraph.DependencyType.TEST),
+            codeModule, DependencyType.TEST,
+            junitModule, DependencyType.TEST),
         moduleGraph.getDependentModulesFor(testModule));
   }
 
@@ -264,7 +264,7 @@ public class IjModuleGraphTest {
     IjModule coreModule = getModuleForTarget(moduleGraph, coreTargetNode);
     IjLibrary guavaElement = getLibraryForTarget(moduleGraph, guavaTargetNode);
 
-    assertEquals(ImmutableMap.of(guavaElement, IjModuleGraph.DependencyType.PROD),
+    assertEquals(ImmutableMap.of(guavaElement, DependencyType.PROD),
         moduleGraph.getDepsFor(coreModule));
   }
 
@@ -295,8 +295,8 @@ public class IjModuleGraphTest {
     IjModule testModule = getModuleForTarget(moduleGraph, testTargetNode);
 
     assertEquals(ImmutableMap.of(
-            junitModule, IjModuleGraph.DependencyType.TEST,
-            testLibModule, IjModuleGraph.DependencyType.TEST),
+            junitModule, DependencyType.TEST,
+            testLibModule, DependencyType.TEST),
         moduleGraph.getDependentModulesFor(testModule));
   }
 
@@ -328,8 +328,8 @@ public class IjModuleGraphTest {
 
     assertEquals(
         ImmutableMap.of(
-            junitReflectModule, IjModuleGraph.DependencyType.PROD,
-            junitCoreModule, IjModuleGraph.DependencyType.PROD),
+            junitReflectModule, DependencyType.PROD,
+            junitCoreModule, DependencyType.PROD),
         moduleGraph.getDependentModulesFor(junitRuleModule));
   }
 
@@ -366,7 +366,7 @@ public class IjModuleGraphTest {
     IjModule testRuleModule = getModuleForTarget(moduleGraph, testRule);
 
     assertEquals(
-        ImmutableMap.of(junitRuleModule, IjModuleGraph.DependencyType.PROD),
+        ImmutableMap.of(junitRuleModule, DependencyType.PROD),
         moduleGraph.getDependentModulesFor(testRuleModule));
   }
 
@@ -395,7 +395,7 @@ public class IjModuleGraphTest {
     IjModule libraryModule = getModuleForTarget(moduleGraph, libraryJavaTarget);
     IjModule productModule = getModuleForTarget(moduleGraph, productTarget);
 
-    assertEquals(ImmutableMap.of(libraryModule, IjModuleGraph.DependencyType.PROD),
+    assertEquals(ImmutableMap.of(libraryModule, DependencyType.PROD),
         moduleGraph.getDependentModulesFor(productModule));
     assertEquals(2, moduleGraph.getModuleNodes().size());
   }
@@ -432,8 +432,8 @@ public class IjModuleGraphTest {
 
     assertEquals(
         ImmutableMap.of(
-            libraryModule, IjModuleGraph.DependencyType.PROD,
-            productLibrary, IjModuleGraph.DependencyType.COMPILED_SHADOW),
+            libraryModule, DependencyType.PROD,
+            productLibrary, DependencyType.COMPILED_SHADOW),
         moduleGraph.getDepsFor(productModule));
   }
 
@@ -464,7 +464,7 @@ public class IjModuleGraphTest {
     assertEquals(ImmutableSet.of(rDotJavaClassPath), productModule.getExtraClassPathDependencies());
     assertEquals(ImmutableSet.of(rDotJavaClassPath), rDotJavaLibrary.getClassPaths());
     assertEquals(moduleGraph.getDependentLibrariesFor(productModule),
-        ImmutableMap.of(rDotJavaLibrary, IjModuleGraph.DependencyType.PROD));
+        ImmutableMap.of(rDotJavaLibrary, DependencyType.PROD));
   }
 
 
@@ -601,9 +601,9 @@ public class IjModuleGraphTest {
         Matchers.equalTo(Paths.get("java", "com", "example")));
     assertThat(
         moduleGraph.getDepsFor(baseModule),
-        Matchers.equalTo(ImmutableMap.<IjProjectElement, IjModuleGraph.DependencyType>of(
-                papayaModule, IjModuleGraph.DependencyType.PROD,
-                guavaModule, IjModuleGraph.DependencyType.PROD)));
+        Matchers.equalTo(ImmutableMap.<IjProjectElement, DependencyType>of(
+                papayaModule, DependencyType.PROD,
+                guavaModule, DependencyType.PROD)));
   }
 
   @Test

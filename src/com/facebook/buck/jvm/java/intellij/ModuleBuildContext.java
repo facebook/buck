@@ -40,7 +40,7 @@ class ModuleBuildContext {
   private ImmutableSet.Builder<IjFolder> generatedSourceCodeFoldersBuilder;
   private Map<Path, IjFolder> sourceFoldersMergeMap;
   // See comment in getDependencies for these two member variables.
-  private Map<BuildTarget, IjModuleGraph.DependencyType> dependencyTypeMap;
+  private Map<BuildTarget, DependencyType> dependencyTypeMap;
   private Multimap<Path, BuildTarget> dependencyOriginMap;
 
   public ModuleBuildContext(ImmutableSet<BuildTarget> circularDependencyInducingTargets) {
@@ -124,15 +124,15 @@ class ModuleBuildContext {
 
   public void addDeps(
       ImmutableSet<BuildTarget> buildTargets,
-      IjModuleGraph.DependencyType dependencyType) {
+      DependencyType dependencyType) {
     addDeps(ImmutableSet.of(), buildTargets, dependencyType);
   }
 
   public void addCompileShadowDep(BuildTarget buildTarget) {
-    IjModuleGraph.DependencyType.putWithMerge(
+    DependencyType.putWithMerge(
         dependencyTypeMap,
         buildTarget,
-        IjModuleGraph.DependencyType.COMPILED_SHADOW);
+        DependencyType.COMPILED_SHADOW);
   }
 
   /**
@@ -148,13 +148,13 @@ class ModuleBuildContext {
   public void addDeps(
       ImmutableSet<Path> sourcePaths,
       ImmutableSet<BuildTarget> buildTargets,
-      IjModuleGraph.DependencyType dependencyType) {
+      DependencyType dependencyType) {
     for (BuildTarget buildTarget : buildTargets) {
       if (circularDependencyInducingTargets.contains(buildTarget)) {
         continue;
       }
       if (sourcePaths.isEmpty()) {
-        IjModuleGraph.DependencyType.putWithMerge(dependencyTypeMap, buildTarget, dependencyType);
+        DependencyType.putWithMerge(dependencyTypeMap, buildTarget, dependencyType);
       } else {
         for (Path sourcePath : sourcePaths) {
           dependencyOriginMap.put(sourcePath, buildTarget);
@@ -163,7 +163,7 @@ class ModuleBuildContext {
     }
   }
 
-  public ImmutableMap<BuildTarget, IjModuleGraph.DependencyType> getDependencies() {
+  public ImmutableMap<BuildTarget, DependencyType> getDependencies() {
     // Some targets may introduce dependencies without contributing to the IjFolder set. These
     // are recorded in the dependencyTypeMap.
     // Dependencies associated with source paths inherit the type from the folder. This is because
@@ -174,14 +174,14 @@ class ModuleBuildContext {
     // merged anyway.
     // Merging types does not back-propagate: if TargetA depends on TargetB and the type of
     // TargetB has been changed that does not mean the dependency type of TargetA is changed too.
-    Map<BuildTarget, IjModuleGraph.DependencyType> result = new HashMap<>(dependencyTypeMap);
+    Map<BuildTarget, DependencyType> result = new HashMap<>(dependencyTypeMap);
     for (Path path : dependencyOriginMap.keySet()) {
-      IjModuleGraph.DependencyType dependencyType =
+      DependencyType dependencyType =
           Preconditions.checkNotNull(sourceFoldersMergeMap.get(path)) instanceof TestFolder ?
-              IjModuleGraph.DependencyType.TEST :
-              IjModuleGraph.DependencyType.PROD;
+              DependencyType.TEST :
+              DependencyType.PROD;
       for (BuildTarget buildTarget : dependencyOriginMap.get(path)) {
-        IjModuleGraph.DependencyType.putWithMerge(result, buildTarget, dependencyType);
+        DependencyType.putWithMerge(result, buildTarget, dependencyType);
       }
     }
     return ImmutableMap.copyOf(result);

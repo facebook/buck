@@ -63,7 +63,7 @@ abstract class AbstractIjModule implements IjProjectElement {
    * @return map of {@link BuildTarget}s the module depends on and information on whether it's a
    *         test-only dependency or not.
    */
-  public abstract ImmutableMap<BuildTarget, IjModuleGraph.DependencyType> getDependencies();
+  public abstract ImmutableMap<BuildTarget, DependencyType> getDependencies();
 
   public abstract Optional<IjModuleAndroidFacet> getAndroidFacet();
 
@@ -111,13 +111,13 @@ abstract class AbstractIjModule implements IjProjectElement {
         .map(HasBuildTarget::getBuildTarget)
         .collect(MoreCollectors.toImmutableSet());
 
-    for (Map.Entry<BuildTarget, IjModuleGraph.DependencyType> entry :
+    for (Map.Entry<BuildTarget, DependencyType> entry :
         getDependencies().entrySet()) {
       BuildTarget depBuildTarget = entry.getKey();
-      IjModuleGraph.DependencyType dependencyType = entry.getValue();
+      DependencyType dependencyType = entry.getValue();
       boolean isSelfDependency = buildTargets.contains(depBuildTarget);
 
-      if (dependencyType.equals(IjModuleGraph.DependencyType.COMPILED_SHADOW)) {
+      if (dependencyType.equals(DependencyType.COMPILED_SHADOW)) {
         Preconditions.checkArgument(
             isSelfDependency,
             "Target %s is a COMPILED_SHADOW dependency of module %s and therefore should be part" +
@@ -137,11 +137,11 @@ abstract class AbstractIjModule implements IjProjectElement {
 
   @Override
   public void addAsDependency(
-      IjModuleGraph.DependencyType dependencyType, IjDependencyListBuilder dependencyListBuilder) {
+      DependencyType dependencyType, IjDependencyListBuilder dependencyListBuilder) {
     Preconditions.checkArgument(
-        !dependencyType.equals(IjModuleGraph.DependencyType.COMPILED_SHADOW));
+        !dependencyType.equals(DependencyType.COMPILED_SHADOW));
     IjDependencyListBuilder.Scope scope = IjDependencyListBuilder.Scope.COMPILE;
-    if (dependencyType.equals(IjModuleGraph.DependencyType.TEST)) {
+    if (dependencyType.equals(DependencyType.TEST)) {
       scope = IjDependencyListBuilder.Scope.TEST;
     }
     dependencyListBuilder.addModule(getName(), scope, false /* exported */);

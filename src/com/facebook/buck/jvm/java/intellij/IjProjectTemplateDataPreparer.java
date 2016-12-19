@@ -324,13 +324,13 @@ public class IjProjectTemplateDataPreparer {
   }
 
   public ImmutableSet<DependencyEntry> getDependencies(IjModule module) {
-    ImmutableMap<IjProjectElement, IjModuleGraph.DependencyType> deps =
+    ImmutableMap<IjProjectElement, DependencyType> deps =
         moduleGraph.getDepsFor(module);
     IjDependencyListBuilder dependencyListBuilder = new IjDependencyListBuilder();
 
-    for (Map.Entry<IjProjectElement, IjModuleGraph.DependencyType> entry : deps.entrySet()) {
+    for (Map.Entry<IjProjectElement, DependencyType> entry : deps.entrySet()) {
       IjProjectElement element = entry.getKey();
-      IjModuleGraph.DependencyType dependencyType = entry.getValue();
+      DependencyType dependencyType = entry.getValue();
       element.addAsDependency(dependencyType, dependencyListBuilder);
     }
     return dependencyListBuilder.build();

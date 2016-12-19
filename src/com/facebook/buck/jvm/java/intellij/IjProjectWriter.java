@@ -297,7 +297,7 @@ public class IjProjectWriter {
   }
 
   private Optional<String> getFirstResourcePackageFromDependencies(IjModule module) {
-    ImmutableMap<IjModule, IjModuleGraph.DependencyType> deps =
+    ImmutableMap<IjModule, DependencyType> deps =
         moduleGraph.getDependentModulesFor(module);
     for (IjModule dep : deps.keySet()) {
       Optional<IjModuleAndroidFacet> facet = dep.getAndroidFacet();

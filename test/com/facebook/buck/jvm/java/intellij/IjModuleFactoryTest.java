@@ -77,7 +77,7 @@ public class IjModuleFactoryTest {
         moduleBasePath,
         ImmutableSet.of(javaLibBase));
 
-    assertEquals(ImmutableMap.of(buildTargetGuava, IjModuleGraph.DependencyType.PROD),
+    assertEquals(ImmutableMap.of(buildTargetGuava, DependencyType.PROD),
         module.getDependencies());
   }
 
@@ -107,8 +107,8 @@ public class IjModuleFactoryTest {
         ImmutableSet.of(javaLibBase, javaLibExtra));
 
     assertEquals(ImmutableMap.of(
-            buildTargetGuava, IjModuleGraph.DependencyType.PROD,
-            buildTargetJunit, IjModuleGraph.DependencyType.PROD),
+            buildTargetGuava, DependencyType.PROD,
+            buildTargetJunit, DependencyType.PROD),
         module.getDependencies());
   }
 
@@ -129,7 +129,7 @@ public class IjModuleFactoryTest {
         moduleBasePath,
         ImmutableSet.of(javaTestExtra));
 
-    assertEquals(ImmutableMap.of(buildTargetJunit, IjModuleGraph.DependencyType.TEST),
+    assertEquals(ImmutableMap.of(buildTargetJunit, DependencyType.TEST),
         module.getDependencies());
   }
 
@@ -161,8 +161,8 @@ public class IjModuleFactoryTest {
     // Guava is a dependency of both a prod and test target therefore it should be kept as a
     // prod dependency.
     assertEquals(ImmutableMap.of(
-            buildTargetGuava, IjModuleGraph.DependencyType.PROD,
-            buildTargetJunit, IjModuleGraph.DependencyType.TEST),
+            buildTargetGuava, DependencyType.PROD,
+            buildTargetJunit, DependencyType.TEST),
         module.getDependencies());
   }
 
@@ -206,9 +206,9 @@ public class IjModuleFactoryTest {
     // and prod sets. Therefore it is necessary to "promote" the test dependencies to prod so that
     // it's possible to compile all of the code in the folder.
     assertEquals(ImmutableMap.of(
-            buildTargetGuava, IjModuleGraph.DependencyType.PROD,
-            buildTargetJunit, IjModuleGraph.DependencyType.PROD,
-            buildTargetHamcrest, IjModuleGraph.DependencyType.TEST),
+            buildTargetGuava, DependencyType.PROD,
+            buildTargetJunit, DependencyType.PROD,
+            buildTargetHamcrest, DependencyType.TEST),
         module.getDependencies());
   }
 
@@ -239,11 +239,11 @@ public class IjModuleFactoryTest {
         ImmutableSet.of(androidBinary));
 
     assertEquals(ImmutableMap.of(
-            buildTargetGuava, IjModuleGraph.DependencyType.PROD),
+            buildTargetGuava, DependencyType.PROD),
         moduleJavaLib.getDependencies());
 
     assertEquals(ImmutableMap.of(
-            javaLibBase.getBuildTarget(), IjModuleGraph.DependencyType.PROD),
+            javaLibBase.getBuildTarget(), DependencyType.PROD),
         moduleFromBinary.getDependencies());
   }
 
@@ -276,13 +276,13 @@ public class IjModuleFactoryTest {
         ImmutableSet.of(javaLibWithAnnotationProcessor));
 
     assertEquals(ImmutableMap.of(
-            genruleBuildTarget, IjModuleGraph.DependencyType.PROD,
-            javaLibWithGenrule.getBuildTarget(), IjModuleGraph.DependencyType.COMPILED_SHADOW),
+            genruleBuildTarget, DependencyType.PROD,
+            javaLibWithGenrule.getBuildTarget(), DependencyType.COMPILED_SHADOW),
         moduleJavaLibWithGenrule.getDependencies());
 
     assertEquals(ImmutableMap.of(
             javaLibWithAnnotationProcessor.getBuildTarget(),
-            IjModuleGraph.DependencyType.COMPILED_SHADOW),
+            DependencyType.COMPILED_SHADOW),
         moduleJavaLibWithAnnotationProcessor.getDependencies());
   }
 
