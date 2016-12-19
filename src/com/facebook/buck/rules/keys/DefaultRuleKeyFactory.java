@@ -59,15 +59,11 @@ public class DefaultRuleKeyFactory
     this.pathResolver = pathResolver;
   }
 
-  protected DefaultRuleKeyFactory getDefaultRuleKeyFactory() {
-    return this;
-  }
-
   private RuleKeyBuilder<RuleKey> newBuilder() {
     return new RuleKeyBuilder<RuleKey>(pathResolver, hashLoader) {
       @Override
       protected RuleKeyBuilder<RuleKey> setBuildRule(BuildRule rule) {
-        return setSingleValue(getDefaultRuleKeyFactory().build(rule));
+        return setSingleValue(DefaultRuleKeyFactory.this.build(rule));
       }
 
       @Override
@@ -92,7 +88,7 @@ public class DefaultRuleKeyFactory
     return builder;
   }
 
-  protected void addDepsToRuleKey(RuleKeyObjectSink sink, BuildRule buildRule) {
+  private void addDepsToRuleKey(RuleKeyObjectSink sink, BuildRule buildRule) {
     if (buildRule instanceof AbstractBuildRule) {
       // TODO(marcinkosiba): We really need to get rid of declared/extra deps in rules. Instead
       // rules should explicitly take the needed sub-sets of deps as constructor args.
