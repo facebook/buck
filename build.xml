@@ -301,6 +301,7 @@
       <javac-params>
         <include name="com/facebook/buck/util/exportedfiles/Nullable.java" />
         <include name="com/facebook/buck/util/exportedfiles/Preconditions.java" />
+        <include name="com/facebook/buck/jvm/java/abi/source/**/*.java" />
         <include name="${javac-tracing.src.dir}/TracingTaskListener.java" />
       </javac-params>
     </ecj>
@@ -425,6 +426,7 @@
           <exclude name="com/facebook/buck/cli/quickstart/**" />
           <exclude name="com/facebook/buck/event/api/**" />
           <exclude name="com/facebook/buck/intellij/**" />
+          <exclude name="com/facebook/buck/jvm/java/abi/source/**" />
           <exclude name="com/facebook/buck/testrunner/**" />
         </patternset>
         <or>

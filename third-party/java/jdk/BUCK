@@ -8,8 +8,10 @@ prebuilt_jar(
   name = 'compiler-tree-api',
   binary_jar = 'stub-compiler-tree-api.jar',
   visibility = [
+    '//src/com/facebook/buck/jvm/java/abi/source:source',
     '//src/com/facebook/buck/jvm/java/tracing:compiler-plugin',
     '//test/com/facebook/buck/jvm/java/tracing:tracing',
+    '//test/com/facebook/buck/jvm/java/abi/source:source',
   ],
 )
 

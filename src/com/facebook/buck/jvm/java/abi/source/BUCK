@@ -1,0 +1,17 @@
+java_library(
+  name = 'source',
+  srcs = glob(['*.java']),
+  autodeps = True,
+  tests = [
+    '//test/com/facebook/buck/jvm/java/abi/source:source',
+  ],
+  provided_deps = [
+    # Tools.jar is the compiler itself, and will already be present at runtime;
+    # we compile against a stub.
+    '//third-party/java/jdk:compiler-tree-api',
+  ],
+  visibility = [
+    '//src/com/facebook/buck/jvm/java/plugin:javac-plugin',
+    '//test/com/facebook/buck/jvm/java/abi/source:source',
+  ],
+)
