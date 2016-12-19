@@ -469,7 +469,7 @@ public class IjModuleGraphTest {
 
 
   public void doSingleAggregationModePathFunctionTest(
-      IjModuleGraph.AggregationMode aggregationMode,
+      AggregationMode aggregationMode,
       int graphSize,
       boolean expectTrimmed) {
 
@@ -504,37 +504,37 @@ public class IjModuleGraphTest {
   public void testAggregationModePathFunction() {
 
     doSingleAggregationModePathFunctionTest(
-        IjModuleGraph.AggregationMode.NONE,
+        AggregationMode.NONE,
         10,
         /* expectTrimmed */ false);
     doSingleAggregationModePathFunctionTest(
-        IjModuleGraph.AggregationMode.NONE,
+        AggregationMode.NONE,
         10000,
         /* expectTrimmed */ false);
 
     doSingleAggregationModePathFunctionTest(
-        IjModuleGraph.AggregationMode.SHALLOW,
+        AggregationMode.SHALLOW,
         10,
         /* expectTrimmed */ true);
     doSingleAggregationModePathFunctionTest(
-        IjModuleGraph.AggregationMode.SHALLOW,
+        AggregationMode.SHALLOW,
         10000,
         /* expectTrimmed */ true);
 
     doSingleAggregationModePathFunctionTest(
-        IjModuleGraph.AggregationMode.AUTO,
+        AggregationMode.AUTO,
         10,
         /* expectTrimmed */ false);
     doSingleAggregationModePathFunctionTest(
-        IjModuleGraph.AggregationMode.AUTO,
+        AggregationMode.AUTO,
         10000,
         /* expectTrimmed */ true);
   }
 
   @Test
   public void testCustomAggregationMode() {
-    IjModuleGraph.AggregationMode testAggregationMode =
-        new IjModuleGraph.AggregationMode(2);
+    AggregationMode testAggregationMode =
+        new AggregationMode(2);
 
     ImmutableList<Path> originalPaths = ImmutableList.of(
         Paths.get("a", "b", "c"),
@@ -560,7 +560,7 @@ public class IjModuleGraphTest {
 
   @Test(expected = HumanReadableException.class)
   public void testCustomAggregationModeAtZero() {
-    IjModuleGraph.AggregationMode.fromString("0");
+    AggregationMode.fromString("0");
     fail("Should not be able to construct an aggregator with zero minimum depth.");
   }
 
@@ -588,7 +588,7 @@ public class IjModuleGraphTest {
         ImmutableSet.of(guava, papaya, base, core),
         ImmutableMap.of(),
         Functions.constant(Optional.empty()),
-        IjModuleGraph.AggregationMode.SHALLOW);
+        AggregationMode.SHALLOW);
 
     IjModule guavaModule = getModuleForTarget(moduleGraph, guava);
     IjModule papayaModule = getModuleForTarget(moduleGraph, papaya);
@@ -628,7 +628,7 @@ public class IjModuleGraphTest {
         ImmutableSet.of(blah1, blah2, commonApp),
         ImmutableMap.of(),
         Functions.constant(Optional.empty()),
-        IjModuleGraph.AggregationMode.SHALLOW);
+        AggregationMode.SHALLOW);
 
     IjModule blah1Module = getModuleForTarget(moduleGraph, blah1);
     IjModule blah2Module = getModuleForTarget(moduleGraph, blah2);
@@ -661,7 +661,7 @@ public class IjModuleGraphTest {
         ImmutableSet.of(blah1, blah2, commonApp),
         ImmutableMap.of(),
         Functions.constant(Optional.empty()),
-        IjModuleGraph.AggregationMode.SHALLOW);
+        AggregationMode.SHALLOW);
 
     IjModule blah1Module = getModuleForTarget(moduleGraph, blah1);
     IjModule blah2Module = getModuleForTarget(moduleGraph, blah2);
@@ -782,14 +782,14 @@ public class IjModuleGraphTest {
     return createModuleGraph(targets,
         javaLibraryPaths,
         rDotJavaClassPathResolver,
-        IjModuleGraph.AggregationMode.AUTO);
+        AggregationMode.AUTO);
   }
 
   public static IjModuleGraph createModuleGraph(
       ImmutableSet<TargetNode<?, ?>> targets,
       final ImmutableMap<TargetNode<?, ?>, Path> javaLibraryPaths,
       final Function<? super TargetNode<?, ?>, Optional<Path>> rDotJavaClassPathResolver,
-      IjModuleGraph.AggregationMode aggregationMode) {
+      AggregationMode aggregationMode) {
     final SourcePathResolver sourcePathResolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );

@@ -55,7 +55,7 @@ public class IjProject {
   private final BuildRuleResolver buildRuleResolver;
   private final SourcePathResolver sourcePathResolver;
   private final ProjectFilesystem projectFilesystem;
-  private final IjModuleGraph.AggregationMode aggregationMode;
+  private final AggregationMode aggregationMode;
   private final IjProjectConfig projectConfig;
   private final IntellijConfig intellijConfig;
 
@@ -66,7 +66,7 @@ public class IjProject {
       BuildRuleResolver buildRuleResolver,
       SourcePathResolver sourcePathResolver,
       ProjectFilesystem projectFilesystem,
-      IjModuleGraph.AggregationMode aggregationMode,
+      AggregationMode aggregationMode,
       BuckConfig buckConfig) {
     this.targetGraphAndTargets = targetGraphAndTargets;
     this.javaPackageFinder = javaPackageFinder;

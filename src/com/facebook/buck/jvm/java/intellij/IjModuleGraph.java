@@ -22,8 +22,6 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Ascii;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -45,61 +43,6 @@ import javax.annotation.Nullable;
  * Represents a graph of IjModules and the dependencies between them.
  */
 public class IjModuleGraph {
-
-  /**
-   * Indicates how to aggregate {@link TargetNode}s into {@link IjModule}s.
-   */
-  public static class AggregationMode {
-    private static final int MIN_SHALLOW_GRAPH_SIZE = 500;
-    private static final int SHALLOW_MAX_PATH_LENGTH = 3;
-
-    public static final AggregationMode AUTO = new AggregationMode();
-    public static final AggregationMode NONE = new AggregationMode(Integer.MAX_VALUE);
-    public static final AggregationMode SHALLOW = new AggregationMode(SHALLOW_MAX_PATH_LENGTH);
-
-
-    private Optional<Integer> minimumDepth;
-
-    AggregationMode() {
-      minimumDepth = Optional.empty();
-    }
-
-    AggregationMode(int minimumDepth) {
-      if (minimumDepth <= 0) {
-        throw new HumanReadableException(
-            "Aggregation level must be a positive integer (got " +
-            minimumDepth +
-            ")");
-      }
-
-      this.minimumDepth = Optional.of(minimumDepth);
-    }
-
-    public int getGraphMinimumDepth(int graphSize) {
-      return minimumDepth.orElse(
-          graphSize < MIN_SHALLOW_GRAPH_SIZE ? Integer.MAX_VALUE : SHALLOW_MAX_PATH_LENGTH);
-    }
-
-    public static AggregationMode fromString(String aggregationModeString) {
-      switch (Ascii.toLowerCase(aggregationModeString)) {
-        case "shallow":
-          return SHALLOW;
-        case "none":
-          return NONE;
-        case "auto":
-          return AUTO;
-        default:
-          try {
-            // See if a number was passed.
-            return new AggregationMode(Integer.parseInt(aggregationModeString));
-          } catch (NumberFormatException e) {
-            throw new HumanReadableException(
-                "Invalid aggregation mode value %s.",
-                aggregationModeString);
-          }
-      }
-    }
-  }
 
   /**
    * Create all the modules we are capable of representing in IntelliJ from the supplied graph.

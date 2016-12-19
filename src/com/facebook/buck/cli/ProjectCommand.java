@@ -35,7 +35,7 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.intellij.IjModuleGraph;
+import com.facebook.buck.jvm.java.intellij.AggregationMode;
 import com.facebook.buck.jvm.java.intellij.IjProject;
 import com.facebook.buck.jvm.java.intellij.IntellijConfig;
 import com.facebook.buck.jvm.java.intellij.Project;
@@ -213,7 +213,7 @@ public class ProjectCommand extends BuildCommand {
           "specifying 3 would aggrgate modules to a/b/c from lower levels where possible). " +
           "Defaults to 'auto' if not specified in .buckconfig.")
   @Nullable
-  private IjModuleGraph.AggregationMode intellijAggregationMode = null;
+  private AggregationMode intellijAggregationMode = null;
 
   @Option(
       name = "--run-ij-cleaner",
@@ -386,15 +386,15 @@ public class ProjectCommand extends BuildCommand {
     return buildCommand;
   }
 
-  public IjModuleGraph.AggregationMode getIntellijAggregationMode(BuckConfig buckConfig) {
+  public AggregationMode getIntellijAggregationMode(BuckConfig buckConfig) {
     if (intellijAggregationMode != null) {
       return intellijAggregationMode;
     }
-    Optional<IjModuleGraph.AggregationMode> aggregationMode =
+    Optional<AggregationMode> aggregationMode =
         buckConfig.getValue(
             "project",
-            "intellij_aggregation_mode").map(IjModuleGraph.AggregationMode::fromString);
-    return aggregationMode.orElse(IjModuleGraph.AggregationMode.AUTO);
+            "intellij_aggregation_mode").map(AggregationMode::fromString);
+    return aggregationMode.orElse(AggregationMode.AUTO);
   }
 
   @Override
@@ -1387,19 +1387,19 @@ public class ProjectCommand extends BuildCommand {
 
 
   public static class AggregationModeOptionHandler
-      extends OptionHandler<IjModuleGraph.AggregationMode> {
+      extends OptionHandler<AggregationMode> {
 
     public AggregationModeOptionHandler(
         CmdLineParser parser,
         OptionDef option,
-        Setter<? super IjModuleGraph.AggregationMode> setter) {
+        Setter<? super AggregationMode> setter) {
       super(parser, option, setter);
     }
 
     @Override
     public int parseArguments(Parameters params) throws CmdLineException {
       String param = params.getParameter(0);
-      setter.addValue(IjModuleGraph.AggregationMode.fromString(param));
+      setter.addValue(AggregationMode.fromString(param));
       return 1;
     }
 
