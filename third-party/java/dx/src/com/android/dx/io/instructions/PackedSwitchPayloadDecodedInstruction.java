@@ -42,7 +42,7 @@ public final class PackedSwitchPayloadDecodedInstruction
         this.targets = targets;
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public int getRegisterCount() {
         return 0;
     }
@@ -55,7 +55,7 @@ public final class PackedSwitchPayloadDecodedInstruction
         return targets;
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     public DecodedInstruction withIndex(int newIndex) {
         throw new UnsupportedOperationException("no index in instruction");
     }

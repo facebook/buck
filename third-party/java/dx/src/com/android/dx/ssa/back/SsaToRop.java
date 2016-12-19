@@ -25,7 +25,6 @@ import com.android.dx.rop.code.Rop;
 import com.android.dx.rop.code.RopMethod;
 import com.android.dx.rop.code.Rops;
 import com.android.dx.ssa.BasicRegisterMapper;
-import com.android.dx.ssa.Optimizer;
 import com.android.dx.ssa.PhiInsn;
 import com.android.dx.ssa.RegisterMapper;
 import com.android.dx.ssa.SsaBasicBlock;
@@ -44,9 +43,6 @@ import java.util.Comparator;
 public class SsaToRop {
     /** local debug flag */
     private static final boolean DEBUG = false;
-
-    /** optimizer that we're working for */
-    private final Optimizer optimizer;
 
     /** {@code non-null;} method to process */
     private final SsaMethod ssaMeth;
@@ -68,21 +64,19 @@ public class SsaToRop {
      * attempt to minimize the rop-form register count
      * @return {@code non-null;} rop-form output
      */
-    public static RopMethod convertToRopMethod(
-            Optimizer optimizer,
-            SsaMethod ssaMeth,
+    public static RopMethod convertToRopMethod(SsaMethod ssaMeth,
             boolean minimizeRegisters) {
-        return new SsaToRop(optimizer, ssaMeth, minimizeRegisters).convert();
+        return new SsaToRop(ssaMeth, minimizeRegisters).convert();
     }
 
     /**
      * Constructs an instance.
      *
-     * @param optimizer
+     * @param ssaMeth {@code non-null;} method to process
      * @param minimizeRegisters {@code true} if the converter should
+     * attempt to minimize the rop-form register count
      */
-    private SsaToRop(Optimizer optimizer, SsaMethod ssaMethod, boolean minimizeRegisters) {
-        this.optimizer = optimizer;
+    private SsaToRop(SsaMethod ssaMethod, boolean minimizeRegisters) {
         this.minimizeRegisters = minimizeRegisters;
         this.ssaMeth = ssaMethod;
         this.interference =
@@ -104,8 +98,7 @@ public class SsaToRop {
         // allocator = new FirstFitAllocator(ssaMeth, interference);
 
         RegisterAllocator allocator =
-            new FirstFitLocalCombiningAllocator(
-                    optimizer, ssaMeth, interference,
+            new FirstFitLocalCombiningAllocator(ssaMeth, interference,
                     minimizeRegisters);
 
         RegisterMapper mapper = allocator.allocateRegisters();

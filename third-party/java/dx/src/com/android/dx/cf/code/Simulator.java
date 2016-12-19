@@ -141,14 +141,19 @@ public class Simulator {
      * actually present on the stack.</p>
      *
      * <p>In the case where there is a known-null on the stack where
-     * an array is expected, we just fall back to the implied type of
-     * the instruction. Due to the quirk described above, this means
-     * that source code that uses <code>boolean[]</code> might get
-     * translated surprisingly -- but correctly -- into an instruction
-     * that specifies a <code>byte[]</code>. It will be correct,
-     * because should the code actually execute, it will necessarily
-     * throw a <code>NullPointerException</code>, and it won't matter
-     * what opcode variant is used to achieve that result.</p>
+     * an array is expected, our behavior depends on the implied type
+     * of the instruction. When the implied type is a reference, we
+     * don't attempt to infer anything, as we don't know the dimension
+     * of the null constant and thus any explicit inferred type could
+     * be wrong. When the implied type is a primitive, we fall back to
+     * the implied type of the instruction. Due to the quirk described
+     * above, this means that source code that uses
+     * <code>boolean[]</code> might get translated surprisingly -- but
+     * correctly -- into an instruction that specifies a
+     * <code>byte[]</code>. It will be correct, because should the
+     * code actually execute, it will necessarily throw a
+     * <code>NullPointerException</code>, and it won't matter what
+     * opcode variant is used to achieve that result.</p>
      *
      * @param impliedType {@code non-null;} type implied by the
      * instruction; is <i>not</i> an array type
@@ -160,7 +165,9 @@ public class Simulator {
     private static Type requiredArrayTypeFor(Type impliedType,
             Type foundArrayType) {
         if (foundArrayType == Type.KNOWN_NULL) {
-            return impliedType.getArrayType();
+            return impliedType.isReference()
+                ? Type.KNOWN_NULL
+                : impliedType.getArrayType();
         }
 
         if ((impliedType == Type.OBJECT)
@@ -317,7 +324,9 @@ public class Simulator {
                         requiredArrayTypeFor(type, foundArrayType);
 
                     // Make type agree with the discovered requiredArrayType.
-                    type = requiredArrayType.getComponentType();
+                    type = (requiredArrayType == Type.KNOWN_NULL)
+                        ? Type.KNOWN_NULL
+                        : requiredArrayType.getComponentType();
 
                     machine.popArgs(frame, requiredArrayType, Type.INT);
                     break;
@@ -375,7 +384,9 @@ public class Simulator {
                      * if it has local info.
                      */
                     if (foundArrayLocal) {
-                        type = requiredArrayType.getComponentType();
+                        type = (requiredArrayType == Type.KNOWN_NULL)
+                            ? Type.KNOWN_NULL
+                            : requiredArrayType.getComponentType();
                     }
 
                     machine.popArgs(frame, requiredArrayType, Type.INT, type);

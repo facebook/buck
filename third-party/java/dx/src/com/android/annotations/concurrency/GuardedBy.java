@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2013 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,21 @@
  * limitations under the License.
  */
 
-package com.android.dx;
+package com.android.annotations.concurrency;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Version number for dx.
+ * Indicates that the target field or method should only be accessed
+ * with the specified lock being held.
  */
-public class Version {
-    /** {@code non-null;} version string */
-    public static final String VERSION = "1.11";
+@Documented
+@Retention(RetentionPolicy.SOURCE)
+@Target({ElementType.METHOD, ElementType.FIELD})
+public @interface GuardedBy {
+    String value();
 }

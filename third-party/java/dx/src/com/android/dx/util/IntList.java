@@ -233,8 +233,6 @@ public final class IntList extends MutabilityControl {
      * @param value value to insert
      */
     public void insert(int n, int value) {
-        throwIfImmutable();
-
         if (n > size) {
             throw new IndexOutOfBoundsException("n > size()");
         }
@@ -257,8 +255,6 @@ public final class IntList extends MutabilityControl {
      * @param n  {@code >=0, < size();} index of element to remove
      */
     public void removeIndex(int n) {
-        throwIfImmutable();
-
         if (n >= size) {
             throw new IndexOutOfBoundsException("n >= size()");
         }

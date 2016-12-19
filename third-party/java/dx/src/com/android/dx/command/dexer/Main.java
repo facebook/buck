@@ -16,6 +16,10 @@
 
 package com.android.dx.command.dexer;
 
+import static java.lang.System.err;
+import static java.lang.System.out;
+
+import com.android.annotations.NonNull;
 import com.android.dex.Dex;
 import com.android.dex.DexException;
 import com.android.dex.DexFormat;
@@ -27,13 +31,10 @@ import com.android.dx.cf.direct.ClassPathOpener.FileNameFilter;
 import com.android.dx.cf.direct.DirectClassFile;
 import com.android.dx.cf.direct.StdAttributeFactory;
 import com.android.dx.cf.iface.ParseException;
-import com.android.dx.command.DxConsole;
 import com.android.dx.command.UsageException;
 import com.android.dx.dex.DexOptions;
 import com.android.dx.dex.cf.CfOptions;
 import com.android.dx.dex.cf.CfTranslator;
-import com.android.dx.dex.cf.CodeStatistics;
-import com.android.dx.dex.cf.OptimizerOptions;
 import com.android.dx.dex.code.PositionList;
 import com.android.dx.dex.file.ClassDefItem;
 import com.android.dx.dex.file.DexFile;
@@ -45,10 +46,11 @@ import com.android.dx.merge.DexMerger;
 import com.android.dx.rop.annotation.Annotation;
 import com.android.dx.rop.annotation.Annotations;
 import com.android.dx.rop.annotation.AnnotationsList;
+import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.cst.CstNat;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.cst.CstType;
-import com.google.common.collect.ImmutableList;
+import com.android.dx.rop.type.Prototype;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -59,7 +61,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,11 +71,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.Attributes;
@@ -86,6 +89,13 @@ import java.util.jar.Manifest;
  * Main class for the class file translator.
  */
 public class Main {
+
+    /**
+     * Concurrency level used by intern tables.
+     *
+     * <p>We pick a value that seems to give good results on a typical laptop.
+     */
+    public static final int CONCURRENCY_LEVEL = 8;
 
     /**
      * File extension of a {@code .dex} file.
@@ -104,36 +114,36 @@ public class Main {
      */
     private static final String IN_RE_CORE_CLASSES =
         "Ill-advised or mistaken usage of a core class (java.* or javax.*)\n" +
-        "when not building a core library.\n\n" +
-        "This is often due to inadvertently including a core library file\n" +
-        "in your application's project, when using an IDE (such as\n" +
-        "Eclipse). If you are sure you're not intentionally defining a\n" +
-        "core class, then this is the most likely explanation of what's\n" +
-        "going on.\n\n" +
-        "However, you might actually be trying to define a class in a core\n" +
-        "namespace, the source of which you may have taken, for example,\n" +
-        "from a non-Android virtual machine project. This will most\n" +
-        "assuredly not work. At a minimum, it jeopardizes the\n" +
-        "compatibility of your app with future versions of the platform.\n" +
-        "It is also often of questionable legality.\n\n" +
-        "If you really intend to build a core library -- which is only\n" +
-        "appropriate as part of creating a full virtual machine\n" +
-        "distribution, as opposed to compiling an application -- then use\n" +
-        "the \"--core-library\" option to suppress this error message.\n\n" +
-        "If you go ahead and use \"--core-library\" but are in fact\n" +
-        "building an application, then be forewarned that your application\n" +
-        "will still fail to build or run, at some point. Please be\n" +
-        "prepared for angry customers who find, for example, that your\n" +
-        "application ceases to function once they upgrade their operating\n" +
-        "system. You will be to blame for this problem.\n\n" +
-        "If you are legitimately using some code that happens to be in a\n" +
-        "core package, then the easiest safe alternative you have is to\n" +
-        "repackage that code. That is, move the classes in question into\n" +
-        "your own package namespace. This means that they will never be in\n" +
-        "conflict with core system classes. JarJar is a tool that may help\n" +
-        "you in this endeavor. If you find that you cannot do this, then\n" +
-        "that is an indication that the path you are on will ultimately\n" +
-        "lead to pain, suffering, grief, and lamentation.\n";
+            "when not building a core library.\n\n" +
+            "This is often due to inadvertently including a core library file\n" +
+            "in your application's project, when using an IDE (such as\n" +
+            "Eclipse). If you are sure you're not intentionally defining a\n" +
+            "core class, then this is the most likely explanation of what's\n" +
+            "going on.\n\n" +
+            "However, you might actually be trying to define a class in a core\n" +
+            "namespace, the source of which you may have taken, for example,\n" +
+            "from a non-Android virtual machine project. This will most\n" +
+            "assuredly not work. At a minimum, it jeopardizes the\n" +
+            "compatibility of your app with future versions of the platform.\n" +
+            "It is also often of questionable legality.\n\n" +
+            "If you really intend to build a core library -- which is only\n" +
+            "appropriate as part of creating a full virtual machine\n" +
+            "distribution, as opposed to compiling an application -- then use\n" +
+            "the \"--core-library\" option to suppress this error message.\n\n" +
+            "If you go ahead and use \"--core-library\" but are in fact\n" +
+            "building an application, then be forewarned that your application\n" +
+            "will still fail to build or run, at some point. Please be\n" +
+            "prepared for angry customers who find, for example, that your\n" +
+            "application ceases to function once they upgrade their operating\n" +
+            "system. You will be to blame for this problem.\n\n" +
+            "If you are legitimately using some code that happens to be in a\n" +
+            "core package, then the easiest safe alternative you have is to\n" +
+            "repackage that code. That is, move the classes in question into\n" +
+            "your own package namespace. This means that they will never be in\n" +
+            "conflict with core system classes. JarJar is a tool that may help\n" +
+            "you in this endeavor. If you find that you cannot do this, then\n" +
+            "that is an indication that the path you are on will ultimately\n" +
+            "lead to pain, suffering, grief, and lamentation.\n";
 
     /**
      * {@code non-null;} name of the standard manifest file in {@code .jar}
@@ -172,9 +182,6 @@ public class Main {
     /** {@code non-null;} parsed command-line arguments */
     private Arguments args;
 
-    /** {@code non-null;} console for reporting messages */
-    private DxConsole dxConsole;
-
     /** {@code non-null;} output file in-progress */
     private DexFile outputDex;
 
@@ -187,11 +194,38 @@ public class Main {
     /** Library .dex files to merge into the output .dex. */
     private final List<byte[]> libraryDexBuffers = new ArrayList<byte[]>();
 
-    /** thread pool object used for multi-threaded file processing */
-    private ExecutorService threadPool;
+    /** Thread pool object used for multi-thread class translation. */
+    private ExecutorService classTranslatorPool;
 
-    /** used to handle Errors for multi-threaded file processing */
-    private List<Future<Void>> parallelProcessorFutures;
+    /** Single thread executor, for collecting results of parallel translation,
+     * and adding classes to dex file in original input file order. */
+    private ExecutorService classDefItemConsumer;
+
+    /** Futures for {@code classDefItemConsumer} tasks. */
+    private List<Future<Boolean>> addToDexFutures =
+        new ArrayList<Future<Boolean>>();
+
+    /** Thread pool object used for multi-thread dex conversion (to byte array).
+     * Used in combination with multi-dex support, to allow outputing
+     * a completed dex file, in parallel with continuing processing. */
+    private ExecutorService dexOutPool;
+
+    /** Futures for {@code dexOutPool} task. */
+    private List<Future<byte[]>> dexOutputFutures = new ArrayList<Future<byte[]>>();
+
+    /** Lock object used to to coordinate dex file rotation, and
+     * multi-threaded translation. */
+    private Object dexRotationLock = new Object();
+
+    /** Record the number if method indices "reserved" for files
+     * committed to translation in the context of the current dex
+     * file, but not yet added. */
+    private int maxMethodIdsInProcess = 0;
+
+    /** Record the number if field indices "reserved" for files
+     * committed to translation in the context of the current dex
+     * file, but not yet added. */
+    private int maxFieldIdsInProcess = 0;
 
     /** true if any files are successfully processed */
     private volatile boolean anyFilesProcessed;
@@ -205,11 +239,10 @@ public class Main {
 
     private OutputStreamWriter humanOutWriter = null;
 
-    /**
-     * This class is uninstantiable.
-     */
-    public Main() {
-        // This space intentionally left blank.
+    private final DxContext context;
+
+    public Main(DxContext context) {
+        this.context = context;
     }
 
     /**
@@ -217,43 +250,37 @@ public class Main {
      * @param argArray the command line arguments
      */
     public static void main(String[] argArray) throws IOException {
-        int result = new Main().run(argArray, null, null);
+        DxContext context = new DxContext();
+        Arguments arguments = new Arguments();
+        arguments.parseCommandLine(argArray, context);
+
+        int result = new Main(context).run(arguments);
+
         if (result != 0) {
             System.exit(result);
         }
     }
-    
-    public int run(String[] args, PrintStream out, PrintStream err) throws IOException {
-        DxConsole console = new DxConsole();
-        if (out != null) {
-            console.out = out;
-        }
-        if (err != null) {
-            console.err = err;
-        }
- 
-        Arguments arguments = new Arguments();
-        arguments.parse(args);
- 
-        return run(arguments, console);
+
+    public static void clearInternTables() {
+        Prototype.clearInternTable();
+        RegisterSpec.clearInternTable();
     }
- 
+
     /**
      * Run and return a result code.
      * @param arguments the data + parameters for the conversion
-     * @return 0 if success > 0 otherwise.
+     * @return 0 if success &gt; 0 otherwise.
      */
-    public int run(Arguments arguments, DxConsole console) throws IOException {
+    public int run(Arguments arguments) throws IOException {
+
         // Reset the error count to start fresh.
         errors.set(0);
         // empty the list, so that  tools that load dx and keep it around
         // for multiple runs don't reuse older buffers.
         libraryDexBuffers.clear();
 
-		    dxConsole = console;
         args = arguments;
-        args.dxConsole = dxConsole;
-        args.makeOptionsObjects();
+        args.makeOptionsObjects(context);
 
         OutputStream humanOutRaw = null;
         if (args.humanOutName != null) {
@@ -268,13 +295,6 @@ public class Main {
                 return runMonoDex();
             }
         } finally {
-            if (threadPool != null) {
-                // Uh, oh.  We failed to shut down our thread pool.
-                // Let's do so now to avoid leaking threads in long-running processes.
-                // Worker threads shouldn't have any side effects,
-                // so we shouldn't have to shutdownNow or awaitTermination.
-                threadPool.shutdown();
-            }
             closeOutput(humanOutRaw);
         }
     }
@@ -282,13 +302,8 @@ public class Main {
     /**
      * {@code non-null;} Error message for too many method/field/type ids.
      */
-    public String getTooManyIdsErrorMessage() {
-        if (args.multiDex) {
-            return "The list of classes given in " + Arguments.MAIN_DEX_LIST_OPTION +
-                   " is too big and does not fit in the main dex.";
-        } else {
-            return "You may try using " + Arguments.MULTI_DEX_OPTION + " option.";
-        }
+    public static String getTooManyIdsErrorMessage() {
+        return "Too many classes to fit in one dex file.";
     }
 
     private int runMonoDex() throws IOException {
@@ -296,8 +311,8 @@ public class Main {
         File incrementalOutFile = null;
         if (args.incremental) {
             if (args.outName == null) {
-                System.err.println(
-                        "error: no incremental output name specified");
+                err.println(
+                    "error: no incremental output name specified");
                 return -1;
             }
             incrementalOutFile = new File(args.outName);
@@ -318,7 +333,7 @@ public class Main {
         byte[] outArray = null;
 
         if (!outputDex.isEmpty() || (args.humanOutName != null)) {
-            outArray = writeDex();
+            outArray = writeDex(outputDex);
 
             if (outArray == null) {
                 return 2;
@@ -355,12 +370,13 @@ public class Main {
     private int runMultiDex() throws IOException {
 
         assert !args.incremental;
-        assert args.numThreads == 1;
 
         if (args.mainDexListFile != null) {
             classesInMainDex = new HashSet<String>();
             readPathsFromFile(args.mainDexListFile, classesInMainDex);
         }
+
+        dexOutPool = Executors.newFixedThreadPool(args.numThreads);
 
         if (!processAllFiles()) {
             return 1;
@@ -372,17 +388,34 @@ public class Main {
 
         if (outputDex != null) {
             // this array is null if no classes were defined
-            dexOutputArrays.add(writeDex());
+
+            dexOutputFutures.add(dexOutPool.submit(new DexWriter(outputDex)));
 
             // Effectively free up the (often massive) DexFile memory.
             outputDex = null;
         }
+        try {
+            dexOutPool.shutdown();
+            if (!dexOutPool.awaitTermination(600L, TimeUnit.SECONDS)) {
+                throw new RuntimeException("Timed out waiting for dex writer threads.");
+            }
+
+            for (Future<byte[]> f : dexOutputFutures) {
+                dexOutputArrays.add(f.get());
+            }
+
+        } catch (InterruptedException ex) {
+            dexOutPool.shutdownNow();
+            throw new RuntimeException("A dex writer thread has been interrupted.");
+        } catch (Exception e) {
+            dexOutPool.shutdownNow();
+            throw new RuntimeException("Unexpected exception in dex writer thread");
+        }
 
         if (args.jarOutput) {
-
             for (int i = 0; i < dexOutputArrays.size(); i++) {
                 outputResources.put(getDexFileName(i),
-                        dexOutputArrays.get(i));
+                    dexOutputArrays.get(i));
             }
 
             if (!createJar(args.outName)) {
@@ -399,7 +432,6 @@ public class Main {
                     closeOutput(out);
                 }
             }
-
         }
 
         return 0;
@@ -441,7 +473,7 @@ public class Main {
      * @return the bytes of the merged dex file, or null if both the update
      *     and the base dex do not exist.
      */
-    private static byte[] mergeIncremental(byte[] update, File base) throws IOException {
+    private byte[] mergeIncremental(byte[] update, File base) throws IOException {
         Dex dexA = null;
         Dex dexB = null;
 
@@ -461,7 +493,11 @@ public class Main {
         } else if (dexB == null) {
             result = dexA;
         } else {
-            result = new DexMerger(ImmutableList.of(dexA, dexB), CollisionPolicy.KEEP_FIRST).merge();
+            DexMerger dexMerger = new DexMerger(
+                new Dex[]{dexA, dexB},
+                CollisionPolicy.KEEP_FIRST,
+                context);
+            result = dexMerger.merge();
         }
 
         ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
@@ -474,18 +510,22 @@ public class Main {
      * same type, this fails with an exception.
      */
     private byte[] mergeLibraryDexBuffers(byte[] outArray) throws IOException {
-        if (libraryDexBuffers.isEmpty()) {
-            return outArray;
-        }
-
-        ImmutableList.Builder<Dex> buffers = ImmutableList.builder();
+        ArrayList<Dex> dexes = new ArrayList<Dex>();
         if (outArray != null) {
-            buffers.add(new Dex(outArray));
+            dexes.add(new Dex(outArray));
         }
         for (byte[] libraryDex : libraryDexBuffers) {
-            buffers.add(new Dex(libraryDex));
+            dexes.add(new Dex(libraryDex));
         }
-        return new DexMerger(buffers.build(), CollisionPolicy.FAIL).merge().getBytes();
+        if (dexes.isEmpty()) {
+            return null;
+        }
+        DexMerger dexMerger = new DexMerger(
+            dexes.toArray(new Dex[dexes.size()]),
+            CollisionPolicy.FAIL,
+            context);
+        Dex merged = dexMerger.merge();
+        return merged.getBytes();
     }
 
     /**
@@ -503,11 +543,16 @@ public class Main {
 
         anyFilesProcessed = false;
         String[] fileNames = args.fileNames;
+        Arrays.sort(fileNames);
 
-        if (args.numThreads > 1) {
-            threadPool = Executors.newFixedThreadPool(args.numThreads);
-            parallelProcessorFutures = new ArrayList<Future<Void>>();
-        }
+        // translate classes in parallel
+        classTranslatorPool = new ThreadPoolExecutor(args.numThreads,
+            args.numThreads, 0, TimeUnit.SECONDS,
+            new ArrayBlockingQueue<Runnable>(2 * args.numThreads, true),
+            new ThreadPoolExecutor.CallerRunsPolicy());
+        // collect translated and write to dex in order
+        classDefItemConsumer = Executors.newSingleThreadExecutor();
+
 
         try {
             if (args.mainDexListFile != null) {
@@ -520,14 +565,26 @@ public class Main {
                     processOne(fileNames[i], mainPassFilter);
                 }
 
-                if (dexOutputArrays.size() > 0) {
+                if (dexOutputFutures.size() > 0) {
                     throw new DexException("Too many classes in " + Arguments.MAIN_DEX_LIST_OPTION
-                            + ", main dex capacity exceeded");
+                        + ", main dex capacity exceeded");
                 }
 
                 if (args.minimalMainDex) {
                     // start second pass directly in a secondary dex file.
-                    createDexFile();
+
+                    // Wait for classes in progress to complete
+                    synchronized(dexRotationLock) {
+                        while(maxMethodIdsInProcess > 0 || maxFieldIdsInProcess > 0) {
+                            try {
+                                dexRotationLock.wait();
+                            } catch(InterruptedException ex) {
+                                /* ignore */
+                            }
+                        }
+                    }
+
+                    rotateDexFile();
                 }
 
                 // remaining files
@@ -547,41 +604,47 @@ public class Main {
              */
         }
 
-        if (args.numThreads > 1) {
-            try {
-                threadPool.shutdown();
-                if (!threadPool.awaitTermination(600L, TimeUnit.SECONDS)) {
-                    throw new RuntimeException("Timed out waiting for threads.");
+        try {
+            classTranslatorPool.shutdown();
+            classTranslatorPool.awaitTermination(600L, TimeUnit.SECONDS);
+            classDefItemConsumer.shutdown();
+            classDefItemConsumer.awaitTermination(600L, TimeUnit.SECONDS);
+
+            for (Future<Boolean> f : addToDexFutures) {
+                try {
+                    f.get();
+                } catch(ExecutionException ex) {
+                    // Catch any previously uncaught exceptions from
+                    // class translation and adding to dex.
+                    int count = errors.incrementAndGet();
+                    if (count < 10) {
+                        if (args.debug) {
+                            context.err.println("Uncaught translation error:");
+                            ex.getCause().printStackTrace(context.err);
+                        } else {
+                            context.err.println("Uncaught translation error: " + ex.getCause());
+                        }
+                    } else {
+                        throw new InterruptedException("Too many errors");
+                    }
                 }
-            } catch (InterruptedException ex) {
-                threadPool.shutdownNow();
-                throw new RuntimeException("A thread has been interrupted.");
             }
 
-            try {
-              for (Future<?> future : parallelProcessorFutures) {
-                future.get();
-              }
-            } catch (ExecutionException e) {
-                Throwable cause = e.getCause();
-                // All Exceptions should have been handled in the ParallelProcessor, only Errors
-                // should remain
-                if (cause instanceof Error) {
-                    throw (Error) e.getCause();
-                } else {
-                    throw new AssertionError(e.getCause());
-                }
-            } catch (InterruptedException e) {
-              // If we're here, it means all threads have completed cleanly, so there should not be
-              // any InterruptedException
-              throw new AssertionError(e);
-            }
+        } catch (InterruptedException ie) {
+            classTranslatorPool.shutdownNow();
+            classDefItemConsumer.shutdownNow();
+            throw new RuntimeException("Translation has been interrupted", ie);
+        } catch (Exception e) {
+            classTranslatorPool.shutdownNow();
+            classDefItemConsumer.shutdownNow();
+            e.printStackTrace(out);
+            throw new RuntimeException("Unexpected exception in translator thread.", e);
         }
 
         int errorNum = errors.get();
         if (errorNum != 0) {
-            dxConsole.err.println(errorNum + " error" +
-                    ((errorNum == 1) ? "" : "s") + "; aborting");
+            context.err.println(errorNum + " error" +
+                ((errorNum == 1) ? "" : "s") + "; aborting");
             return false;
         }
 
@@ -590,27 +653,35 @@ public class Main {
         }
 
         if (!(anyFilesProcessed || args.emptyOk)) {
-            dxConsole.err.println("no classfiles specified");
+            context.err.println("no classfiles specified");
             return false;
         }
 
         if (args.optimize && args.statistics) {
-            args.cfOptions.codeStatistics.dumpStatistics(dxConsole.out);
+            context.codeStatistics.dumpStatistics(context.out);
         }
 
         return true;
     }
 
     private void createDexFile() {
-        if (outputDex != null) {
-            dexOutputArrays.add(writeDex());
-        }
-
         outputDex = new DexFile(args.dexOptions);
 
         if (args.dumpWidth != 0) {
             outputDex.setDumpWidth(args.dumpWidth);
         }
+    }
+
+    private void rotateDexFile() {
+        if (outputDex != null) {
+            if (dexOutPool != null) {
+                dexOutputFutures.add(dexOutPool.submit(new DexWriter(outputDex)));
+            } else {
+                dexOutputArrays.add(writeDex(outputDex));
+            }
+        }
+
+        createDexFile();
     }
 
     /**
@@ -624,46 +695,17 @@ public class Main {
     private void processOne(String pathname, FileNameFilter filter) {
         ClassPathOpener opener;
 
-        opener = new ClassPathOpener(pathname, false, filter,
-                new ClassPathOpener.Consumer() {
+        opener = new ClassPathOpener(pathname, true, filter, new FileBytesConsumer());
 
-            @Override
-            public boolean processFileBytes(String name, long lastModified, byte[] bytes) {
-                return Main.this.processFileBytes(name, lastModified, bytes);
-            }
-
-            @Override
-            public void onException(Exception ex) {
-                if (ex instanceof StopProcessing) {
-                    throw (StopProcessing) ex;
-                } else if (ex instanceof SimException) {
-                    dxConsole.err.println("\nEXCEPTION FROM SIMULATION:");
-                    dxConsole.err.println(ex.getMessage() + "\n");
-                    dxConsole.err.println(((SimException) ex).getContext());
-                } else {
-                    dxConsole.err.println("\nUNEXPECTED TOP-LEVEL EXCEPTION:");
-                    ex.printStackTrace(dxConsole.err);
-                }
-                errors.incrementAndGet();
-            }
-
-            @Override
-            public void onProcessArchiveStart(File file) {
-                if (args.verbose) {
-                    dxConsole.out.println("processing archive " + file +
-                            "...");
-                }
-            }
-        });
-
-        if (args.numThreads > 1) {
-            parallelProcessorFutures.add(threadPool.submit(new ParallelProcessor(opener)));
-        } else {
-            if (opener.process()) {
-                anyFilesProcessed = true;
-            }
+        if (opener.process()) {
+            updateStatus(true);
         }
     }
+
+    private void updateStatus(boolean res) {
+        anyFilesProcessed |= res;
+    }
+
 
     /**
      * Processes one file, which may be either a class or a resource.
@@ -673,19 +715,20 @@ public class Main {
      * @return whether processing was successful
      */
     private boolean processFileBytes(String name, long lastModified, byte[] bytes) {
+
         boolean isClass = name.endsWith(".class");
         boolean isClassesDex = name.equals(DexFormat.DEX_IN_JAR_NAME);
         boolean keepResources = (outputResources != null);
 
         if (!isClass && !isClassesDex && !keepResources) {
             if (args.verbose) {
-                dxConsole.out.println("ignored resource " + name);
+                context.out.println("ignored resource " + name);
             }
             return false;
         }
 
         if (args.verbose) {
-            dxConsole.out.println("processing " + name + "...");
+            context.out.println("processing " + name + "...");
         }
 
         String fixedName = fixPath(name);
@@ -700,7 +743,10 @@ public class Main {
             if (lastModified < minimumFileAge) {
                 return true;
             }
-            return processClass(fixedName, bytes);
+            processClass(fixedName, bytes);
+            // Assume that an exception may occur. Status will be updated
+            // asynchronously, if the class compiles without error.
+            return false;
         } else if (isClassesDex) {
             synchronized (libraryDexBuffers) {
                 libraryDexBuffers.add(bytes);
@@ -727,52 +773,47 @@ public class Main {
             checkClassName(name);
         }
 
-        DirectClassFile cf =
-            new DirectClassFile(bytes, name, args.cfOptions.strictNameCheck);
-
-        cf.setAttributeFactory(StdAttributeFactory.THE_ONE);
-        cf.getMagic();
-
-        int numMethodIds = outputDex.getMethodIds().items().size();
-        int numFieldIds = outputDex.getFieldIds().items().size();
-        int constantPoolSize = cf.getConstantPool().size();
-
-        int maxMethodIdsInDex = numMethodIds + constantPoolSize + cf.getMethods().size() +
-                MAX_METHOD_ADDED_DURING_DEX_CREATION;
-        int maxFieldIdsInDex = numFieldIds + constantPoolSize + cf.getFields().size() +
-                MAX_FIELD_ADDED_DURING_DEX_CREATION;
-
-        if (args.multiDex
-            // Never switch to the next dex if current dex is already empty
-            && (outputDex.getClassDefs().items().size() > 0)
-            && ((maxMethodIdsInDex > args.maxNumberOfIdxPerDex) ||
-                (maxFieldIdsInDex > args.maxNumberOfIdxPerDex))) {
-            DexFile completeDex = outputDex;
-            createDexFile();
-            assert  (completeDex.getMethodIds().items().size() <= numMethodIds +
-                    MAX_METHOD_ADDED_DURING_DEX_CREATION) &&
-                    (completeDex.getFieldIds().items().size() <= numFieldIds +
-                    MAX_FIELD_ADDED_DURING_DEX_CREATION);
+        try {
+            new DirectClassFileConsumer(name, bytes, null).call(
+                new ClassParserTask(name, bytes).call());
+        } catch(Exception ex) {
+            throw new RuntimeException("Exception parsing classes", ex);
         }
 
-        try {
-            ClassDefItem clazz =
-                CfTranslator.translate(cf, bytes, args.cfOptions, args.dexOptions, args.optimizerOptions, outputDex);
-            synchronized (outputDex) {
-                outputDex.add(clazz);
-            }
-            return true;
+        return true;
+    }
 
+
+    private DirectClassFile parseClass(String name, byte[] bytes) {
+
+        DirectClassFile cf = new DirectClassFile(bytes, name,
+            args.cfOptions.strictNameCheck);
+        cf.setAttributeFactory(StdAttributeFactory.THE_ONE);
+        cf.getMagic(); // triggers the actual parsing
+        return cf;
+    }
+
+    private ClassDefItem translateClass(byte[] bytes, DirectClassFile cf) {
+        try {
+            return CfTranslator.translate(context, cf, bytes, args.cfOptions,
+                args.dexOptions, outputDex);
         } catch (ParseException ex) {
-            dxConsole.err.println("\ntrouble processing:");
+            context.err.println("\ntrouble processing:");
             if (args.debug) {
-                ex.printStackTrace(dxConsole.err);
+                ex.printStackTrace(context.err);
             } else {
-                ex.printContext(dxConsole.err);
+                ex.printContext(context.err);
             }
         }
         errors.incrementAndGet();
-        return false;
+        return null;
+    }
+
+    private boolean addClassToDex(ClassDefItem clazz) {
+        synchronized (outputDex) {
+            outputDex.add(clazz);
+        }
+        return true;
     }
 
     /**
@@ -809,8 +850,8 @@ public class Main {
          * working. Try to help them understand what's happening.
          */
 
-        dxConsole.err.println("\ntrouble processing \"" + name + "\":\n\n" +
-                IN_RE_CORE_CLASSES);
+        context.err.println("\ntrouble processing \"" + name + "\":\n\n" +
+            IN_RE_CORE_CLASSES);
         errors.incrementAndGet();
         throw new StopProcessing();
     }
@@ -822,7 +863,7 @@ public class Main {
      * @return {@code null-ok;} the converted {@code byte[]} or {@code null}
      * if there was a problem
      */
-    private byte[] writeDex() {
+    private byte[] writeDex(DexFile outputDex) {
         byte[] outArray = null;
 
         try {
@@ -844,7 +885,7 @@ public class Main {
                 }
 
                 if (args.statistics) {
-                    dxConsole.out.println(outputDex.getStatistics().toHuman());
+                    context.out.println(outputDex.getStatistics().toHuman());
                 }
             } finally {
                 if (humanOutWriter != null) {
@@ -853,15 +894,14 @@ public class Main {
             }
         } catch (Exception ex) {
             if (args.debug) {
-                dxConsole.err.println("\ntrouble writing output:");
-                ex.printStackTrace(dxConsole.err);
+                context.err.println("\ntrouble writing output:");
+                ex.printStackTrace(context.err);
             } else {
-                dxConsole.err.println("\ntrouble writing output: " +
-                                   ex.getMessage());
+                context.err.println("\ntrouble writing output: " +
+                    ex.getMessage());
             }
             return null;
         }
-
         return outArray;
     }
 
@@ -881,18 +921,18 @@ public class Main {
         try {
             Manifest manifest = makeManifest();
             OutputStream out = openOutput(fileName);
+            JarOutputStream jarOut = new JarOutputStream(out, manifest);
 
             try {
-                JarOutputStream jarOut = new JarOutputStream(out, manifest);
                 for (Map.Entry<String, byte[]> e :
-                         outputResources.entrySet()) {
+                    outputResources.entrySet()) {
                     String name = e.getKey();
                     byte[] contents = e.getValue();
                     JarEntry entry = new JarEntry(name);
                     int length = contents.length;
 
                     if (args.verbose) {
-                        dxConsole.out.println("writing " + name + "; size " + length + "...");
+                        context.out.println("writing " + name + "; size " + length + "...");
                     }
 
                     entry.setSize(length);
@@ -900,18 +940,18 @@ public class Main {
                     jarOut.write(contents);
                     jarOut.closeEntry();
                 }
+            } finally {
                 jarOut.finish();
                 jarOut.flush();
-            } finally {
                 closeOutput(out);
             }
         } catch (Exception ex) {
             if (args.debug) {
-                dxConsole.err.println("\ntrouble writing output:");
-                ex.printStackTrace(dxConsole.err);
+                context.err.println("\ntrouble writing output:");
+                ex.printStackTrace(context.err);
             } else {
-                dxConsole.err.println("\ntrouble writing output: " +
-                                   ex.getMessage());
+                context.err.println("\ntrouble writing output: " +
+                    ex.getMessage());
             }
             return false;
         }
@@ -963,8 +1003,8 @@ public class Main {
      */
     private static OutputStream openOutput(String name) throws IOException {
         if (name.equals("-") ||
-                name.startsWith("-.")) {
-            return System.out;
+            name.startsWith("-.")) {
+            return out;
         }
 
         return new FileOutputStream(name);
@@ -985,7 +1025,7 @@ public class Main {
 
         stream.flush();
 
-        if (stream != System.out) {
+        if (stream != out) {
             stream.close();
         }
     }
@@ -1036,13 +1076,13 @@ public class Main {
      * @param out {@code non-null;} where to dump to
      */
     private void dumpMethod(DexFile dex, String fqName,
-            OutputStreamWriter out) {
+        OutputStreamWriter out) {
         boolean wildcard = fqName.endsWith("*");
         int lastDot = fqName.lastIndexOf('.');
 
         if ((lastDot <= 0) || (lastDot == (fqName.length() - 1))) {
-            dxConsole.err.println("bogus fully-qualified method name: " +
-                               fqName);
+            context.err.println("bogus fully-qualified method name: " +
+                fqName);
             return;
         }
 
@@ -1051,7 +1091,7 @@ public class Main {
         ClassDefItem clazz = dex.getClassOrNull(className);
 
         if (clazz == null) {
-            dxConsole.err.println("no such class: " + className);
+            context.err.println("no such class: " + className);
             return;
         }
 
@@ -1077,7 +1117,7 @@ public class Main {
         }
 
         if (meths.size() == 0) {
-            dxConsole.err.println("no such method: " + fqName);
+            context.err.println("no such method: " + fqName);
             return;
         }
 
@@ -1124,7 +1164,7 @@ public class Main {
         pw.flush();
     }
 
-    private class NotFilter implements FileNameFilter {
+    private static class NotFilter implements FileNameFilter {
         private final FileNameFilter filter;
 
         private NotFilter(FileNameFilter filter) {
@@ -1158,19 +1198,19 @@ public class Main {
      */
     private class BestEffortMainDexListFilter implements FileNameFilter {
 
-       Map<String, List<String>> map = new HashMap<String, List<String>>();
+        Map<String, List<String>> map = new HashMap<String, List<String>>();
 
-       public BestEffortMainDexListFilter() {
-           for (String pathOfClass : classesInMainDex) {
-               String normalized = fixPath(pathOfClass);
-               String simple = getSimpleName(normalized);
-               List<String> fullPath = map.get(simple);
-               if (fullPath == null) {
-                   fullPath = new ArrayList<String>(1);
-                   map.put(simple, fullPath);
-               }
-               fullPath.add(normalized);
-           }
+        public BestEffortMainDexListFilter() {
+            for (String pathOfClass : classesInMainDex) {
+                String normalized = fixPath(pathOfClass);
+                String simple = getSimpleName(normalized);
+                List<String> fullPath = map.get(simple);
+                if (fullPath == null) {
+                    fullPath = new ArrayList<String>(1);
+                    map.put(simple, fullPath);
+                }
+                fullPath.add(normalized);
+            }
         }
 
         @Override
@@ -1229,6 +1269,9 @@ public class Main {
         /** whether to run in debug mode */
         public boolean debug = false;
 
+        /** whether to emit warning messages */
+        public boolean warnings = true;
+
         /** whether to emit high-level verbose human-oriented output */
         public boolean verbose = false;
 
@@ -1284,7 +1327,7 @@ public class Main {
          *  to allow merges between dex files with many strings. */
         public boolean forceJumbo = false;
 
-        /** {@code non-null} after {@link #parse}; file name arguments */
+        /** {@code non-null} after {@link #parseCommandLine}; file name arguments */
         public String[] fileNames;
 
         /** whether to do SSA/register optimization */
@@ -1296,8 +1339,6 @@ public class Main {
         /** Filename containing list of methods to NOT optimize */
         public String dontOptimizeListFile = null;
 
-        public OptimizerOptions optimizerOptions = new OptimizerOptions();
-
         /** Whether to print statistics to stdout at end of compile cycle */
         public boolean statistics;
 
@@ -1306,9 +1347,6 @@ public class Main {
 
         /** Options for dex file output */
         public DexOptions dexOptions;
-
-        /** Console for reporting messages */
-        public DxConsole dxConsole;
 
         /** number of threads to run with */
         public int numThreads = 1;
@@ -1417,7 +1455,7 @@ public class Main {
                                 lastValue = current;
                                 return true;
                             } else {
-                                System.err.println("Missing value after parameter " + prefix);
+                                err.println("Missing value after parameter " + prefix);
                                 throw new UsageException();
                             }
                         }
@@ -1430,20 +1468,86 @@ public class Main {
             }
         }
 
-        /**
-         * Parses the given command-line arguments.
-         *
-         * @param args {@code non-null;} the arguments
-         */
-        public void parse(String[] args) {
-            ArgumentsParser parser = new ArgumentsParser(args);
-
+        private static class OutputOptions {
             boolean outputIsDirectory = false;
             boolean outputIsDirectDex = false;
+        }
+
+        /**
+         * Parses all command-line arguments.
+         *
+         * @param args {@code non-null;} the arguments
+         * @param context
+         */
+        public void parseCommandLine(String[] args, DxContext context) {
+            ArgumentsParser parser = new ArgumentsParser(args);
+
+            OutputOptions outputOptions = parseFlags(parser);
+
+            fileNames = parser.getRemaining();
+            if(inputList != null && !inputList.isEmpty()) {
+                // append the file names to the end of the input list
+                inputList.addAll(Arrays.asList(fileNames));
+                fileNames = inputList.toArray(new String[inputList.size()]);
+            }
+
+            if (fileNames.length == 0) {
+                if (!emptyOk) {
+                    err.println("no input files specified");
+                    throw new UsageException();
+                }
+            } else if (emptyOk) {
+                out.println("ignoring input files");
+            }
+
+            if ((humanOutName == null) && (methodToDump != null)) {
+                humanOutName = "-";
+            }
+
+            if (mainDexListFile != null && !multiDex) {
+                err.println(MAIN_DEX_LIST_OPTION + " is only supported in combination with "
+                    + MULTI_DEX_OPTION);
+                throw new UsageException();
+            }
+
+            if (minimalMainDex && (mainDexListFile == null || !multiDex)) {
+                err.println(MINIMAL_MAIN_DEX_OPTION + " is only supported in combination with "
+                    + MULTI_DEX_OPTION + " and " + MAIN_DEX_LIST_OPTION);
+                throw new UsageException();
+            }
+
+            if (multiDex && incremental) {
+                err.println(INCREMENTAL_OPTION + " is not supported with "
+                    + MULTI_DEX_OPTION);
+                throw new UsageException();
+            }
+
+            if (multiDex && outputOptions.outputIsDirectDex) {
+                err.println("Unsupported output \"" + outName +"\". " + MULTI_DEX_OPTION +
+                    " supports only archive or directory output");
+                throw new UsageException();
+            }
+
+            if (outputOptions.outputIsDirectory && !multiDex) {
+                outName = new File(outName, DexFormat.DEX_IN_JAR_NAME).getPath();
+            }
+
+            makeOptionsObjects(context);
+        }
+
+        public void parseFlags(String[] flags) {
+            parseFlags(new ArgumentsParser(flags));
+        }
+
+        @NonNull
+        private OutputOptions parseFlags(ArgumentsParser parser) {
+            OutputOptions outputOptions = new OutputOptions();
 
             while(parser.getNext()) {
                 if (parser.isArg("--debug")) {
                     debug = true;
+                } else if (parser.isArg("--no-warning")) {
+                    warnings = false;
                 } else if (parser.isArg("--verbose")) {
                     verbose = true;
                 } else if (parser.isArg("--verbose-dump")) {
@@ -1460,16 +1564,16 @@ public class Main {
                     statistics = true;
                 } else if (parser.isArg("--optimize-list=")) {
                     if (dontOptimizeListFile != null) {
-                        System.err.println("--optimize-list and "
-                                + "--no-optimize-list are incompatible.");
+                        err.println("--optimize-list and "
+                            + "--no-optimize-list are incompatible.");
                         throw new UsageException();
                     }
                     optimize = true;
                     optimizeListFile = parser.getLastValue();
                 } else if (parser.isArg("--no-optimize-list=")) {
                     if (dontOptimizeListFile != null) {
-                        System.err.println("--optimize-list and "
-                                + "--no-optimize-list are incompatible.");
+                        err.println("--optimize-list and "
+                            + "--no-optimize-list are incompatible.");
                         throw new UsageException();
                     }
                     optimize = true;
@@ -1480,16 +1584,16 @@ public class Main {
                     outName = parser.getLastValue();
                     if (new File(outName).isDirectory()) {
                         jarOutput = false;
-                        outputIsDirectory = true;
+                        outputOptions.outputIsDirectory = true;
                     } else if (FileUtils.hasArchiveSuffix(outName)) {
                         jarOutput = true;
                     } else if (outName.endsWith(".dex") ||
-                               outName.equals("-")) {
+                        outName.equals("-")) {
                         jarOutput = false;
-                        outputIsDirectDex = true;
+                        outputOptions.outputIsDirectDex = true;
                     } else {
-                        System.err.println("unknown output extension: " +
-                                           outName);
+                        err.println("unknown output extension: " +
+                            outName);
                         throw new UsageException();
                     }
                 } else if (parser.isArg("--dump-to=")) {
@@ -1508,8 +1612,8 @@ public class Main {
                     } else if (pstr == "lines") {
                         positionInfo = PositionList.LINES;
                     } else {
-                        System.err.println("unknown positions option: " +
-                                           pstr);
+                        err.println("unknown positions option: " +
+                            pstr);
                         throw new UsageException();
                     }
                 } else if (parser.isArg("--no-locals")) {
@@ -1534,77 +1638,24 @@ public class Main {
                         inputList = new ArrayList<String>();
                         readPathsFromFile(inputListFile.getAbsolutePath(), inputList);
                     } catch(IOException e) {
-                        System.err.println(
+                        err.println(
                             "Unable to read input list file: " + inputListFile.getName());
                         // problem reading the file so we should halt execution
                         throw new UsageException();
                     }
                 } else {
-                    System.err.println("unknown option: " + parser.getCurrent());
+                    err.println("unknown option: " + parser.getCurrent());
                     throw new UsageException();
                 }
             }
-
-            fileNames = parser.getRemaining();
-            if(inputList != null && !inputList.isEmpty()) {
-                // append the file names to the end of the input list
-                inputList.addAll(Arrays.asList(fileNames));
-                fileNames = inputList.toArray(new String[inputList.size()]);
-            }
-
-            if (fileNames.length == 0) {
-                if (!emptyOk) {
-                    System.err.println("no input files specified");
-                    throw new UsageException();
-                }
-            } else if (emptyOk) {
-                System.out.println("ignoring input files");
-            }
-
-            if ((humanOutName == null) && (methodToDump != null)) {
-                humanOutName = "-";
-            }
-
-            if (mainDexListFile != null && !multiDex) {
-                System.err.println(MAIN_DEX_LIST_OPTION + " is only supported in combination with "
-                    + MULTI_DEX_OPTION);
-                throw new UsageException();
-            }
-
-            if (minimalMainDex && (mainDexListFile == null || !multiDex)) {
-                System.err.println(MINIMAL_MAIN_DEX_OPTION + " is only supported in combination with "
-                    + MULTI_DEX_OPTION + " and " + MAIN_DEX_LIST_OPTION);
-                throw new UsageException();
-            }
-
-            if (multiDex && numThreads != 1) {
-                System.out.println(NUM_THREADS_OPTION + " is ignored when used with "
-                    + MULTI_DEX_OPTION);
-                numThreads = 1;
-            }
-
-            if (multiDex && incremental) {
-                System.err.println(INCREMENTAL_OPTION + " is not supported with "
-                    + MULTI_DEX_OPTION);
-                throw new UsageException();
-            }
-
-            if (multiDex && outputIsDirectDex) {
-                System.err.println("Unsupported output \"" + outName +"\". " + MULTI_DEX_OPTION +
-                        " supports only archive or directory output");
-                throw new UsageException();
-            }
-
-            if (outputIsDirectory && !multiDex) {
-                outName = new File(outName, DexFormat.DEX_IN_JAR_NAME).getPath();
-            }
+            return outputOptions;
         }
 
         /**
-         * Copies relevent arguments over into CfOptions and
+         * Copies relevant arguments over into CfOptions and
          * DexOptions instances.
          */
-        private void makeOptionsObjects() {
+        public void makeOptionsObjects(DxContext context) {
             cfOptions = new CfOptions();
             cfOptions.positionInfo = positionInfo;
             cfOptions.localInfo = localInfo;
@@ -1613,36 +1664,278 @@ public class Main {
             cfOptions.optimizeListFile = optimizeListFile;
             cfOptions.dontOptimizeListFile = dontOptimizeListFile;
             cfOptions.statistics = statistics;
-            cfOptions.warn = dxConsole.err;
-            cfOptions.codeStatistics = new CodeStatistics();
+
+            if (warnings) {
+                cfOptions.warn = context.err;
+            } else {
+                cfOptions.warn = context.noop;
+            }
 
             dexOptions = new DexOptions();
             dexOptions.forceJumbo = forceJumbo;
         }
     }
 
-    /** Callable helper class to process files in multiple threads */
-    private class ParallelProcessor implements Callable<Void> {
+    /**
+     * Callback class for processing input file bytes, produced by the
+     * ClassPathOpener.
+     */
+    private class FileBytesConsumer implements ClassPathOpener.Consumer {
 
-        ClassPathOpener classPathOpener;
-
-        private ParallelProcessor(ClassPathOpener classPathOpener) {
-            this.classPathOpener = classPathOpener;
+        @Override
+        public boolean processFileBytes(String name, long lastModified,
+            byte[] bytes)   {
+            return Main.this.processFileBytes(name, lastModified, bytes);
         }
 
         @Override
-        public Void call() throws Exception {
-            if (classPathOpener.process()) {
-                anyFilesProcessed = true;
+        public void onException(Exception ex) {
+            if (ex instanceof StopProcessing) {
+                throw (StopProcessing) ex;
+            } else if (ex instanceof SimException) {
+                context.err.println("\nEXCEPTION FROM SIMULATION:");
+                context.err.println(ex.getMessage() + "\n");
+                context.err.println(((SimException) ex).getContext());
+            } else {
+                context.err.println("\nUNEXPECTED TOP-LEVEL EXCEPTION:");
+                ex.printStackTrace(context.err);
             }
-            return null;
+            errors.incrementAndGet();
+        }
+
+        @Override
+        public void onProcessArchiveStart(File file) {
+            if (args.verbose) {
+                context.out.println("processing archive " + file + "...");
+            }
+        }
+    }
+
+    /** Callable helper class to parseCommandLine class bytes. */
+    private class ClassParserTask implements Callable<DirectClassFile> {
+
+        String name;
+        byte[] bytes;
+
+        private ClassParserTask(String name, byte[] bytes) {
+            this.name = name;
+            this.bytes = bytes;
+        }
+
+        @Override
+        public DirectClassFile call() throws Exception {
+            DirectClassFile cf =  parseClass(name, bytes);
+
+            return cf;
+        }
+    }
+
+    /**
+     * Callable helper class used to sequentially collect the results of
+     * the (optionally parallel) translation phase, in correct input file order.
+     * This class is also responsible for coordinating dex file rotation
+     * with the ClassDefItemConsumer class.
+     * We maintain invariant that the number of indices used in the current
+     * dex file plus the max number of indices required by classes passed to
+     * the translation phase and not yet added to the dex file, is less than
+     * or equal to the dex file limit.
+     * For each parsed file, we estimate the maximum number of indices it may
+     * require. If passing the file to the translation phase would invalidate
+     * the invariant, we wait, until the next class is added to the dex file,
+     * and then reevaluate the invariant. If there are no further classes in
+     * the translation phase, we rotate the dex file.
+     */
+    private class DirectClassFileConsumer implements Callable<Boolean> {
+
+        String name;
+        byte[] bytes;
+        Future<DirectClassFile> dcff;
+
+        private DirectClassFileConsumer(String name, byte[] bytes,
+            Future<DirectClassFile> dcff) {
+            this.name = name;
+            this.bytes = bytes;
+            this.dcff = dcff;
+        }
+
+        @Override
+        public Boolean call() throws Exception {
+
+            DirectClassFile cf = dcff.get();
+            return call(cf);
+        }
+
+        private Boolean call(DirectClassFile cf) {
+
+            int maxMethodIdsInClass = 0;
+            int maxFieldIdsInClass = 0;
+
+            if (args.multiDex) {
+
+                // Calculate max number of indices this class will add to the
+                // dex file.
+                // The possibility of overloading means that we can't easily
+                // know how many constant are needed for declared methods and
+                // fields. We therefore make the simplifying assumption that
+                // all constants are external method or field references.
+
+                int constantPoolSize = cf.getConstantPool().size();
+                maxMethodIdsInClass = constantPoolSize + cf.getMethods().size()
+                    + MAX_METHOD_ADDED_DURING_DEX_CREATION;
+                maxFieldIdsInClass = constantPoolSize + cf.getFields().size()
+                    + MAX_FIELD_ADDED_DURING_DEX_CREATION;
+                synchronized(dexRotationLock) {
+
+                    int numMethodIds;
+                    int numFieldIds;
+                    // Number of indices used in current dex file.
+                    synchronized(outputDex) {
+                        numMethodIds = outputDex.getMethodIds().items().size();
+                        numFieldIds = outputDex.getFieldIds().items().size();
+                    }
+                    // Wait until we're sure this class will fit in the current
+                    // dex file.
+                    while(((numMethodIds + maxMethodIdsInClass + maxMethodIdsInProcess
+                        > args.maxNumberOfIdxPerDex) ||
+                        (numFieldIds + maxFieldIdsInClass + maxFieldIdsInProcess
+                            > args.maxNumberOfIdxPerDex))) {
+
+                        if (maxMethodIdsInProcess > 0 || maxFieldIdsInProcess > 0) {
+                            // There are classes in the translation phase that
+                            // have not yet been added to the dex file, so we
+                            // wait for the next class to complete.
+                            try {
+                                dexRotationLock.wait();
+                            } catch(InterruptedException ex) {
+                                /* ignore */
+                            }
+                        } else if (outputDex.getClassDefs().items().size() > 0) {
+                            // There are no further classes in the translation
+                            // phase, and we have a full dex file. Rotate!
+                            rotateDexFile();
+                        } else {
+                            // The estimated number of indices is too large for
+                            // an empty dex file. We proceed hoping the actual
+                            // number of indices needed will fit.
+                            break;
+                        }
+                        synchronized(outputDex) {
+                            numMethodIds = outputDex.getMethodIds().items().size();
+                            numFieldIds = outputDex.getFieldIds().items().size();
+                        }
+                    }
+                    // Add our estimate to the total estimate for
+                    // classes under translation.
+                    maxMethodIdsInProcess += maxMethodIdsInClass;
+                    maxFieldIdsInProcess += maxFieldIdsInClass;
+                }
+            }
+
+            // Submit class to translation phase.
+            Future<ClassDefItem> cdif = classTranslatorPool.submit(
+                new ClassTranslatorTask(name, bytes, cf));
+            Future<Boolean> res = classDefItemConsumer.submit(new ClassDefItemConsumer(
+                name, cdif, maxMethodIdsInClass, maxFieldIdsInClass));
+            addToDexFutures.add(res);
+
+            return true;
         }
     }
 
 
+    /** Callable helper class to translate classes in parallel  */
+    private class ClassTranslatorTask implements Callable<ClassDefItem> {
+
+        String name;
+        byte[] bytes;
+        DirectClassFile classFile;
+
+        private ClassTranslatorTask(String name, byte[] bytes,
+            DirectClassFile classFile) {
+            this.name = name;
+            this.bytes = bytes;
+            this.classFile = classFile;
+        }
+
+        @Override
+        public ClassDefItem call() {
+            ClassDefItem clazz = translateClass(bytes, classFile);
+            return clazz;
+        }
+    }
+
+    /**
+     * Callable helper class used to collect the results of
+     * the parallel translation phase, adding the translated classes to
+     * the current dex file in correct (deterministic) file order.
+     * This class is also responsible for coordinating dex file rotation
+     * with the DirectClassFileConsumer class.
+     */
+    private class ClassDefItemConsumer implements Callable<Boolean> {
+
+        String name;
+        Future<ClassDefItem> futureClazz;
+        int maxMethodIdsInClass;
+        int maxFieldIdsInClass;
+
+        private ClassDefItemConsumer(String name, Future<ClassDefItem> futureClazz,
+            int maxMethodIdsInClass, int maxFieldIdsInClass) {
+            this.name = name;
+            this.futureClazz = futureClazz;
+            this.maxMethodIdsInClass = maxMethodIdsInClass;
+            this.maxFieldIdsInClass = maxFieldIdsInClass;
+        }
+
+        @Override
+        public Boolean call() throws Exception {
+            try {
+                ClassDefItem clazz = futureClazz.get();
+                if (clazz != null) {
+                    addClassToDex(clazz);
+                    updateStatus(true);
+                }
+                return true;
+            } catch(ExecutionException ex) {
+                // Rethrow previously uncaught translation exceptions.
+                // These, as well as any exceptions from addClassToDex,
+                // are handled and reported in processAllFiles().
+                Throwable t = ex.getCause();
+                throw (t instanceof Exception) ? (Exception) t : ex;
+            } finally {
+                if (args.multiDex) {
+                    // Having added our actual indicies to the dex file,
+                    // we subtract our original estimate from the total estimate,
+                    // and signal the translation phase, which may be paused
+                    // waiting to determine if more classes can be added to the
+                    // current dex file, or if a new dex file must be created.
+                    synchronized(dexRotationLock) {
+                        maxMethodIdsInProcess -= maxMethodIdsInClass;
+                        maxFieldIdsInProcess -= maxFieldIdsInClass;
+                        dexRotationLock.notifyAll();
+                    }
+                }
+            }
+        }
+    }
+
+    /** Callable helper class to convert dex files in worker threads */
+    private class DexWriter implements Callable<byte[]> {
+
+        private DexFile dexFile;
+
+        private DexWriter(DexFile dexFile) {
+            this.dexFile = dexFile;
+        }
+
+        @Override
+        public byte[] call() throws IOException {
+            return writeDex(dexFile);
+        }
+    }
+
     // Facebook addition: compute the resources referenced by this dex file.
     // Does not apply to any merging, just the input class.
-    private Set<String> resourceNames = new HashSet<>();
+    private final Set<String> resourceNames = new HashSet<>();
 
     public Collection<String> getReferencedResourceNames() {
         return resourceNames;
@@ -1650,7 +1943,7 @@ public class Main {
 
     private void computeReferencedResources() {
         for (Item genericItem : outputDex.getFieldIds().items()) {
-            FieldIdItem item = (FieldIdItem)genericItem;
+            FieldIdItem item = (FieldIdItem) genericItem;
             CstType fieldClass = item.getDefiningClass();
             CstString fieldName = item.getRef().getNat().getName();
             if (fieldClass.getClassType().getDescriptor().contains("/R$")) {

@@ -99,7 +99,7 @@ public class LocalsArraySet extends LocalsArray {
     }
 
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     @Override
     public void setImmutable() {
         primary.setImmutable();
@@ -112,13 +112,13 @@ public class LocalsArraySet extends LocalsArray {
         super.setImmutable();
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     @Override
     public LocalsArray copy() {
         return new LocalsArraySet(this);
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     @Override
     public void annotate(ExceptionWithContext ex) {
         ex.addContext("(locals array set; primary)");
@@ -137,7 +137,7 @@ public class LocalsArraySet extends LocalsArray {
         }
     }
 
-    /** {@inheritDoc*/
+    /** {@inheritDoc} */
     public String toHuman() {
         StringBuilder sb = new StringBuilder();
 
@@ -162,7 +162,7 @@ public class LocalsArraySet extends LocalsArray {
         return sb.toString();
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     @Override
     public void makeInitialized(Type type) {
         int len = primary.getMaxLocals();
@@ -183,13 +183,13 @@ public class LocalsArraySet extends LocalsArray {
         }
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     @Override
     public int getMaxLocals() {
         return primary.getMaxLocals();
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     @Override
     public void set(int idx, TypeBearer type) {
         throwIfImmutable();
@@ -203,13 +203,13 @@ public class LocalsArraySet extends LocalsArray {
         }
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     @Override
     public void set(RegisterSpec spec) {
         set(spec.getReg(), spec);
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     @Override
     public void invalidate(int idx) {
         throwIfImmutable();
@@ -223,25 +223,25 @@ public class LocalsArraySet extends LocalsArray {
         }
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     @Override
     public TypeBearer getOrNull(int idx) {
         return primary.getOrNull(idx);
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     @Override
     public TypeBearer get(int idx) {
         return primary.get(idx);
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     @Override
     public TypeBearer getCategory1(int idx) {
         return primary.getCategory1(idx);
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     @Override
     public TypeBearer getCategory2(int idx) {
         return primary.getCategory2(idx);
@@ -339,7 +339,7 @@ public class LocalsArraySet extends LocalsArray {
         return new LocalsArraySet(newPrimary, newSecondaries);
     }
 
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     @Override
     public LocalsArraySet merge(LocalsArray other) {
         LocalsArraySet result;
