@@ -21,7 +21,7 @@ import com.android.dx.rop.code.LocalItem;
 import com.android.dx.rop.code.RegisterSpec;
 import com.android.dx.rop.code.RegisterSpecList;
 import com.android.dx.rop.type.Type;
-
+import com.android.dx.rop.type.TypeBearer;
 import java.util.BitSet;
 import java.util.List;
 
@@ -148,7 +148,7 @@ public class PhiTypeResolver {
         }
 
         LocalItem firstLocal = first.getLocalItem();
-        Type mergedType = first.getType();
+        TypeBearer mergedType = first.getType();
         boolean sameLocals = true;
         for (int i = 0 ; i < szSources ; i++) {
             if (i == firstIndex) {
@@ -165,10 +165,10 @@ public class PhiTypeResolver {
             sameLocals = sameLocals
                     && equalsHandlesNulls(firstLocal, rs.getLocalItem());
 
-            mergedType = (Type)Merger.mergeType(mergedType, rs.getType());
+            mergedType = Merger.mergeType(mergedType, rs.getType());
         }
 
-        Type newResultType;
+        TypeBearer newResultType;
 
         if (mergedType != null) {
             newResultType = mergedType;

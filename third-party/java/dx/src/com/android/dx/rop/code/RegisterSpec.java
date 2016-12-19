@@ -16,12 +16,15 @@
 
 package com.android.dx.rop.code;
 
+import com.android.dx.command.dexer.Main;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstString;
 import com.android.dx.rop.type.Type;
 import com.android.dx.rop.type.TypeBearer;
 import com.android.dx.util.ToHuman;
-import java.util.HashMap;
+import com.google.common.collect.MapMaker;
+
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Combination of a register number and a type, used as the sources and
@@ -29,17 +32,18 @@ import java.util.HashMap;
  */
 public final class RegisterSpec
         implements TypeBearer, ToHuman, Comparable<RegisterSpec> {
-    private static boolean DISABLE_INTERNING = true;
-
     /** {@code non-null;} string to prefix register numbers with */
     public static final String PREFIX = "v";
 
-    /** {@code non-null;} intern table for instances */
-    private static final HashMap<Object, RegisterSpec> theInterns =
-        new HashMap<Object, RegisterSpec>(1000);
-
-    /** {@code non-null;} common comparison instance used while interning */
-    private static final ForComparison theInterningItem = new ForComparison();
+    /**
+     * Intern table for instances.
+     *
+     * <p>The initial capacity is based on a medium-size project.
+     */
+    private static final ConcurrentMap<RegisterSpec, RegisterSpec> theInterns = new MapMaker()
+            .concurrencyLevel(Main.CONCURRENCY_LEVEL)
+            .initialCapacity(100_000)
+            .makeMap();
 
     /** {@code >= 0;} register number */
     private final int reg;
@@ -64,22 +68,13 @@ public final class RegisterSpec
      */
     private static RegisterSpec intern(int reg, TypeBearer type,
             LocalItem local) {
-        if (DISABLE_INTERNING) {
-            return new RegisterSpec(reg, type, local);
-        }
+        RegisterSpec tmp = new RegisterSpec(reg, type, local);
+        RegisterSpec result = theInterns.putIfAbsent(tmp, tmp);
+        return result != null ? result : tmp;
+    }
 
-        synchronized (theInterns) {
-            theInterningItem.set(reg, type, local);
-            RegisterSpec found = theInterns.get(theInterningItem);
-
-            if (found != null) {
-                return found;
-            }
-
-            found = theInterningItem.toRegisterSpec();
-            theInterns.put(found, found);
-            return found;
-        }
+    public static void clearInternTable() {
+        theInterns.clear();
     }
 
     /**
@@ -171,10 +166,6 @@ public final class RegisterSpec
     @Override
     public boolean equals(Object other) {
         if (!(other instanceof RegisterSpec)) {
-            if (other instanceof ForComparison) {
-                ForComparison fc = (ForComparison) other;
-                return equals(fc.reg, fc.type, fc.local);
-            }
             return false;
         }
 
@@ -220,8 +211,7 @@ public final class RegisterSpec
     }
 
     /**
-     * Helper for {@link #equals} and {@link #ForComparison.equals},
-     * which actually does the test.
+     * Helper for {@link #equals} which actually does the test.
      *
      * @param reg value of the instance variable, for another instance
      * @param type value of the instance variable, for another instance
@@ -243,6 +233,7 @@ public final class RegisterSpec
      * @param other {@code non-null;} spec to compare to
      * @return {@code -1..1;} standard result of comparison
      */
+    @Override
     public int compareTo(RegisterSpec other) {
         if (this.reg < other.reg) {
             return -1;
@@ -272,8 +263,7 @@ public final class RegisterSpec
     }
 
     /**
-     * Helper for {@link #hashCode} and {@link #ForComparison.hashCode},
-     * which actually does the calculation.
+     * Helper for {@link #hashCode} which actually does the calculation.
      *
      * @param reg value of the instance variable
      * @param type value of the instance variable
@@ -294,31 +284,37 @@ public final class RegisterSpec
     }
 
     /** {@inheritDoc} */
+    @Override
     public String toHuman() {
         return toString0(true);
     }
 
     /** {@inheritDoc} */
+    @Override
     public Type getType() {
         return type.getType();
     }
 
     /** {@inheritDoc} */
+    @Override
     public TypeBearer getFrameType() {
         return type.getFrameType();
     }
 
     /** {@inheritDoc} */
+    @Override
     public final int getBasicType() {
         return type.getBasicType();
     }
 
     /** {@inheritDoc} */
+    @Override
     public final int getBasicFrameType() {
         return type.getBasicFrameType();
     }
 
     /** {@inheritDoc} */
+    @Override
     public final boolean isConstant() {
         return false;
     }
@@ -446,10 +442,6 @@ public final class RegisterSpec
 
         if ((other == null) || (reg != other.getReg())) {
             return null;
-        }
-
-        if (this.equals(other.reg, other.type, other.local)) {
-            return this;
         }
 
         LocalItem resultLocal =
@@ -606,67 +598,5 @@ public final class RegisterSpec
         }
 
         return sb.toString();
-    }
-
-    /**
-     * Holder of register spec data for the purposes of comparison (so that
-     * {@code RegisterSpec} itself can still keep {@code final}
-     * instance variables.
-     */
-    private static class ForComparison {
-        /** {@code >= 0;} register number */
-        private int reg;
-
-        /** {@code non-null;} type loaded or stored */
-        private TypeBearer type;
-
-        /**
-         * {@code null-ok;} local variable associated with this
-         * register, if any
-         */
-        private LocalItem local;
-
-        /**
-         * Set all the instance variables.
-         *
-         * @param reg {@code >= 0;} the register number
-         * @param type {@code non-null;} the type (or possibly actual
-         * value) which is loaded from or stored to the indicated
-         * register
-         * @param local {@code null-ok;} the associated local variable, if any
-         * @return {@code non-null;} an appropriately-constructed instance
-         */
-        public void set(int reg, TypeBearer type, LocalItem local) {
-            this.reg = reg;
-            this.type = type;
-            this.local = local;
-        }
-
-        /**
-         * Construct a {@code RegisterSpec} of this instance's
-         * contents.
-         *
-         * @return {@code non-null;} an appropriately-constructed instance
-         */
-        public RegisterSpec toRegisterSpec() {
-            return new RegisterSpec(reg, type, local);
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public boolean equals(Object other) {
-            if (!(other instanceof RegisterSpec)) {
-                return false;
-            }
-
-            RegisterSpec spec = (RegisterSpec) other;
-            return spec.equals(reg, type, local);
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public int hashCode() {
-            return hashCodeOf(reg, type, local);
-        }
     }
 }

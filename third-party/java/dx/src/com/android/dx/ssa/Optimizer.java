@@ -27,9 +27,9 @@ import java.util.EnumSet;
  * and returns it to rop form.
  */
 public class Optimizer {
-    private boolean preserveLocals = true;
+    private static boolean preserveLocals = true;
 
-    private TranslationAdvice advice;
+    private static TranslationAdvice advice;
 
     /** optional optimizer steps */
     public enum OptionalStep {
@@ -41,14 +41,14 @@ public class Optimizer {
      * @return true if local variable information should be preserved, even
      * at code size/register size cost
      */
-    public boolean getPreserveLocals() {
+    public static boolean getPreserveLocals() {
         return preserveLocals;
     }
 
     /**
      * @return {@code non-null;} translation advice
      */
-    public TranslationAdvice getAdvice() {
+    public static TranslationAdvice getAdvice() {
         return advice;
     }
 
@@ -65,7 +65,7 @@ public class Optimizer {
      * @param inAdvice {@code non-null;} translation advice
      * @return optimized method
      */
-    public RopMethod optimize(RopMethod rmeth, int paramWidth,
+    public static RopMethod optimize(RopMethod rmeth, int paramWidth,
             boolean isStatic, boolean inPreserveLocals,
             TranslationAdvice inAdvice) {
 
@@ -87,7 +87,7 @@ public class Optimizer {
      * @param steps set of optional optimization steps to run
      * @return optimized method
      */
-    public RopMethod optimize(RopMethod rmeth, int paramWidth,
+    public static RopMethod optimize(RopMethod rmeth, int paramWidth,
             boolean isStatic, boolean inPreserveLocals,
             TranslationAdvice inAdvice, EnumSet<OptionalStep> steps) {
         SsaMethod ssaMeth = null;
@@ -95,10 +95,10 @@ public class Optimizer {
         preserveLocals = inPreserveLocals;
         advice = inAdvice;
 
-        ssaMeth = SsaConverter.convertToSsaMethod(this, rmeth, paramWidth, isStatic);
+        ssaMeth = SsaConverter.convertToSsaMethod(rmeth, paramWidth, isStatic);
         runSsaFormSteps(ssaMeth, steps);
 
-        RopMethod resultMeth = SsaToRop.convertToRopMethod(this, ssaMeth, false);
+        RopMethod resultMeth = SsaToRop.convertToRopMethod(ssaMeth, false);
 
         if (resultMeth.getBlocks().getRegCount()
                 > advice.getMaxOptimalRegisterCount()) {
@@ -124,14 +124,14 @@ public class Optimizer {
      * @param steps set of optional optimization steps to run
      * @return optimized method
      */
-    private RopMethod optimizeMinimizeRegisters(RopMethod rmeth,
+    private static RopMethod optimizeMinimizeRegisters(RopMethod rmeth,
             int paramWidth, boolean isStatic,
             EnumSet<OptionalStep> steps) {
         SsaMethod ssaMeth;
         RopMethod resultMeth;
 
         ssaMeth = SsaConverter.convertToSsaMethod(
-                this, rmeth, paramWidth, isStatic);
+                rmeth, paramWidth, isStatic);
 
         EnumSet<OptionalStep> newSteps = steps.clone();
 
@@ -143,11 +143,11 @@ public class Optimizer {
 
         runSsaFormSteps(ssaMeth, newSteps);
 
-        resultMeth = SsaToRop.convertToRopMethod(this, ssaMeth, true);
+        resultMeth = SsaToRop.convertToRopMethod(ssaMeth, true);
         return resultMeth;
     }
 
-    private void runSsaFormSteps(SsaMethod ssaMeth,
+    private static void runSsaFormSteps(SsaMethod ssaMeth,
             EnumSet<OptionalStep> steps) {
         boolean needsDeadCodeRemover = true;
 
@@ -157,13 +157,13 @@ public class Optimizer {
 
         if (steps.contains(OptionalStep.SCCP)) {
             SCCP.process(ssaMeth);
-            DeadCodeRemover.process(this, ssaMeth);
+            DeadCodeRemover.process(ssaMeth);
             needsDeadCodeRemover = false;
         }
 
         if (steps.contains(OptionalStep.LITERAL_UPGRADE)) {
-            LiteralOpUpgrader.process(this, ssaMeth);
-            DeadCodeRemover.process(this, ssaMeth);
+            LiteralOpUpgrader.process(ssaMeth);
+            DeadCodeRemover.process(ssaMeth);
             needsDeadCodeRemover = false;
         }
 
@@ -172,26 +172,26 @@ public class Optimizer {
          */
         steps.remove(OptionalStep.ESCAPE_ANALYSIS);
         if (steps.contains(OptionalStep.ESCAPE_ANALYSIS)) {
-            EscapeAnalysis.process(this, ssaMeth);
-            DeadCodeRemover.process(this, ssaMeth);
+            EscapeAnalysis.process(ssaMeth);
+            DeadCodeRemover.process(ssaMeth);
             needsDeadCodeRemover = false;
         }
 
         if (steps.contains(OptionalStep.CONST_COLLECTOR)) {
             ConstCollector.process(ssaMeth);
-            DeadCodeRemover.process(this, ssaMeth);
+            DeadCodeRemover.process(ssaMeth);
             needsDeadCodeRemover = false;
         }
 
         // dead code remover must be run before phi type resolver
         if (needsDeadCodeRemover) {
-            DeadCodeRemover.process(this, ssaMeth);
+            DeadCodeRemover.process(ssaMeth);
         }
 
         PhiTypeResolver.process(ssaMeth);
     }
 
-    public SsaMethod debugEdgeSplit(RopMethod rmeth, int paramWidth,
+    public static SsaMethod debugEdgeSplit(RopMethod rmeth, int paramWidth,
             boolean isStatic, boolean inPreserveLocals,
             TranslationAdvice inAdvice) {
 
@@ -201,7 +201,7 @@ public class Optimizer {
         return SsaConverter.testEdgeSplit(rmeth, paramWidth, isStatic);
     }
 
-    public SsaMethod debugPhiPlacement(RopMethod rmeth, int paramWidth,
+    public static SsaMethod debugPhiPlacement(RopMethod rmeth, int paramWidth,
             boolean isStatic, boolean inPreserveLocals,
             TranslationAdvice inAdvice) {
 
@@ -211,17 +211,17 @@ public class Optimizer {
         return SsaConverter.testPhiPlacement(rmeth, paramWidth, isStatic);
     }
 
-    public SsaMethod debugRenaming(RopMethod rmeth, int paramWidth,
+    public static SsaMethod debugRenaming(RopMethod rmeth, int paramWidth,
             boolean isStatic, boolean inPreserveLocals,
             TranslationAdvice inAdvice) {
 
         preserveLocals = inPreserveLocals;
         advice = inAdvice;
 
-        return SsaConverter.convertToSsaMethod(this, rmeth, paramWidth, isStatic);
+        return SsaConverter.convertToSsaMethod(rmeth, paramWidth, isStatic);
     }
 
-    public SsaMethod debugDeadCodeRemover(RopMethod rmeth,
+    public static SsaMethod debugDeadCodeRemover(RopMethod rmeth,
             int paramWidth, boolean isStatic, boolean inPreserveLocals,
             TranslationAdvice inAdvice) {
 
@@ -230,13 +230,13 @@ public class Optimizer {
         preserveLocals = inPreserveLocals;
         advice = inAdvice;
 
-        ssaMeth = SsaConverter.convertToSsaMethod(this, rmeth, paramWidth, isStatic);
-        DeadCodeRemover.process(this, ssaMeth);
+        ssaMeth = SsaConverter.convertToSsaMethod(rmeth, paramWidth, isStatic);
+        DeadCodeRemover.process(ssaMeth);
 
         return ssaMeth;
     }
 
-    public SsaMethod debugNoRegisterAllocation(RopMethod rmeth,
+    public static SsaMethod debugNoRegisterAllocation(RopMethod rmeth,
             int paramWidth, boolean isStatic, boolean inPreserveLocals,
             TranslationAdvice inAdvice, EnumSet<OptionalStep> steps) {
 
@@ -245,7 +245,7 @@ public class Optimizer {
         preserveLocals = inPreserveLocals;
         advice = inAdvice;
 
-        ssaMeth = SsaConverter.convertToSsaMethod(this, rmeth, paramWidth, isStatic);
+        ssaMeth = SsaConverter.convertToSsaMethod(rmeth, paramWidth, isStatic);
 
         runSsaFormSteps(ssaMeth, steps);
 

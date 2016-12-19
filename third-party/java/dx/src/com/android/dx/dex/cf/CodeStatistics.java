@@ -66,6 +66,13 @@ public final class CodeStatistics {
     public int runningOriginalBytes = 0;
 
     /**
+     * This class is uninstantiable.
+     */
+    public CodeStatistics() {
+        // This space intentionally left blank.
+    }
+
+    /**
      * Updates the number of original bytecode bytes processed.
      *
      * @param count {@code >= 0;} the number of bytes to add
