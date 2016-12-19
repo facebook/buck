@@ -17,6 +17,7 @@
 package com.facebook.buck.intellij.ideabuck.configurations;
 
 
+import com.facebook.buck.intellij.ideabuck.endtoend.BuckTestCase;
 import com.intellij.execution.configurations.ConfigurationFactory;
 
 import org.jdom.Element;
@@ -24,8 +25,6 @@ import org.junit.Assert;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-
-import endtoend.BuckTestCase;
 
 public class TestConfigurationTest extends BuckTestCase {
 
