@@ -37,6 +37,7 @@ public final class Type implements TypeBearer, Comparable<Type> {
     private static final ConcurrentMap<String, Type> internTable = new MapMaker()
             .concurrencyLevel(Main.CONCURRENCY_LEVEL)
             .initialCapacity(10_000)
+            .weakValues()
             .makeMap();
 
 

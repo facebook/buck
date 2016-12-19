@@ -43,6 +43,8 @@ public final class RegisterSpec
     private static final ConcurrentMap<RegisterSpec, RegisterSpec> theInterns = new MapMaker()
             .concurrencyLevel(Main.CONCURRENCY_LEVEL)
             .initialCapacity(100_000)
+            .weakKeys()
+            .weakValues()
             .makeMap();
 
     /** {@code >= 0;} register number */

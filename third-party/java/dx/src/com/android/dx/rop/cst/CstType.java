@@ -35,6 +35,7 @@ public final class CstType extends TypedConstant {
     private static final ConcurrentMap<Type, CstType> interns = new MapMaker()
             .concurrencyLevel(Main.CONCURRENCY_LEVEL)
             .initialCapacity(1_000)
+            .weakValues()
             .makeMap();
 
     /** {@code non-null;} instance corresponding to the class {@code Object} */

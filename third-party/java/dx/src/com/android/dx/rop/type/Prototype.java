@@ -35,6 +35,7 @@ public final class Prototype implements Comparable<Prototype> {
     private static final ConcurrentMap<String, Prototype> internTable = new MapMaker()
             .concurrencyLevel(Main.CONCURRENCY_LEVEL)
             .initialCapacity(10_000)
+            .weakValues()
             .makeMap();
 
     /** {@code non-null;} method descriptor */
