@@ -16,7 +16,6 @@
 
 package com.facebook.buck.intellij.ideabuck.config;
 
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Strings;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
@@ -31,16 +30,16 @@ public final class BuckWSServerPortUtils {
   private static final String SEARCH_FOR = "http.port=";
 
   public static int getPort(String runInPath) throws
-      NumberFormatException, IOException, ExecutionException, HumanReadableException {
+      NumberFormatException, IOException, ExecutionException {
     BuckSettingsProvider.State state = BuckSettingsProvider.getInstance().getState();
     if (state == null) {
-      throw new HumanReadableException("Cannot load ideabuck settings.");
+      throw new RuntimeException("Cannot load ideabuck settings.");
     }
 
     String exec = state.buckExecutable;
 
     if (Strings.isNullOrEmpty(exec)) {
-      throw new HumanReadableException("Buck executable is not defined in settings.");
+      throw new RuntimeException("Buck executable is not defined in settings.");
     }
 
     GeneralCommandLine commandLine = new GeneralCommandLine();
@@ -69,7 +68,7 @@ public final class BuckWSServerPortUtils {
                   "[httpserver]\n" +
                   "    port = 0\n" +
                   "After that, restart IntelliJ or reopen your project.\n";
-          throw new HumanReadableException(error);
+          throw new RuntimeException(error);
         }
       }
     }

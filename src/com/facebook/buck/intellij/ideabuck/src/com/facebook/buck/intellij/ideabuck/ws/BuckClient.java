@@ -19,7 +19,6 @@ package com.facebook.buck.intellij.ideabuck.ws;
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
 import com.facebook.buck.intellij.ideabuck.config.BuckWSServerPortUtils;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.BuckEventsHandlerInterface;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.intellij.execution.ExecutionException;
 import com.intellij.openapi.application.ApplicationManager;
@@ -83,7 +82,7 @@ public class BuckClient {
             LOG.error(e);
           } catch (IOException e) {
             LOG.error(e);
-          } catch (HumanReadableException e) {
+          } catch (RuntimeException e) {
             if (!mProject.isDisposed()) {
               BuckModule buckModule = mProject.getComponent(BuckModule.class);
               buckModule.attachIfDetached();

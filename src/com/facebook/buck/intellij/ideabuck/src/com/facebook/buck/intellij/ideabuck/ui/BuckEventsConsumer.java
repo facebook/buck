@@ -42,7 +42,6 @@ import com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers.TestRunStarte
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.parts.TestCaseSummary;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.parts.TestResults;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.parts.TestResultsSummary;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.intellij.openapi.application.ApplicationManager;
@@ -611,10 +610,7 @@ public class BuckEventsConsumer implements
             AndroidDebugger.init();
             AndroidDebugger.attachDebugger(packageName, mProject);
             BuckInstallDebugAction.setDebug(false);
-          } catch (InterruptedException e) {
-            // Display the error on our console
-            consumeConsoleEvent(e.toString());
-          } catch (HumanReadableException e) {
+          } catch (InterruptedException | RuntimeException e) {
             // Display the error on our console
             consumeConsoleEvent(e.toString());
           }

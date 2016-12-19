@@ -20,7 +20,6 @@ import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.IDevice;
 import com.facebook.buck.intellij.ideabuck.config.BuckSettingsProvider;
-import com.facebook.buck.util.HumanReadableException;
 import com.intellij.execution.ProgramRunnerUtil;
 import com.intellij.execution.RunManager;
 import com.intellij.execution.RunnerAndConfigurationSettings;
@@ -44,7 +43,7 @@ public class AndroidDebugger {
 
   private AndroidDebugger() {}
 
-  public static void init() throws HumanReadableException, InterruptedException {
+  public static void init() throws InterruptedException {
     if (AndroidDebugBridge.getBridge() == null ||
         !isAdbInitialized(AndroidDebugBridge.getBridge())) {
       AndroidDebugBridge.initIfNeeded(/* clientSupport */ true);
@@ -76,7 +75,7 @@ public class AndroidDebugger {
   }
 
   public static void attachDebugger(final String packageName, final Project project)
-      throws HumanReadableException, InterruptedException {
+      throws InterruptedException {
     IDevice[] devices = AndroidDebugBridge.getBridge().getDevices();
     if (devices.length == 0) {
       return;
@@ -95,7 +94,7 @@ public class AndroidDebugger {
     } while (client == null && currentRetryNumber < MAX_RETRIES);
 
     if (client == null) {
-      throw new HumanReadableException("Connecting to the adb debug server timed out." +
+      throw new RuntimeException("Connecting to the adb debug server timed out." +
           "Can't find package with name " + packageName + ".");
     }
 

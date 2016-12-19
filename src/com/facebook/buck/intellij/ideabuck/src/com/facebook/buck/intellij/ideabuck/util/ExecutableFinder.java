@@ -20,7 +20,6 @@ import static java.io.File.pathSeparator;
 
 import com.facebook.buck.intellij.ideabuck.environment.EnvironmentFilter;
 import com.facebook.buck.intellij.ideabuck.environment.Platform;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableCollection;
@@ -73,7 +72,7 @@ public class ExecutableFinder {
       ImmutableMap<String, String> env) {
     Optional<Path> exe = getOptionalExecutable(suggestedExecutable, env);
     if (!exe.isPresent()) {
-      throw new HumanReadableException(String.format(
+      throw new RuntimeException(String.format(
           "Unable to locate %s on PATH, or it's not marked as being executable",
           suggestedExecutable));
     }

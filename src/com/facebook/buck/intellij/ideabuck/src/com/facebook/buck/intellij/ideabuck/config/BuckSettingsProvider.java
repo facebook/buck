@@ -16,7 +16,6 @@
 
 package com.facebook.buck.intellij.ideabuck.config;
 
-import com.facebook.buck.util.HumanReadableException;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.components.ExportableApplicationComponent;
@@ -55,10 +54,10 @@ public class BuckSettingsProvider implements PersistentStateComponent<BuckSettin
     if (state.buckExecutable == null || state.buckExecutable.isEmpty()) {
       try {
         state.buckExecutable = BuckExecutableDetector.getBuckExecutable();
-      } catch (HumanReadableException e) {
+      } catch (RuntimeException e) {
         // let the user insert the path to the executable
         state.buckExecutable = "";
-        LOG.error(e.getHumanReadableErrorMessage() + ". You can specify the buck path from " +
+        LOG.error(e + ". You can specify the buck path from " +
             "Preferences/Settings > Tools > Buck > Buck Executable Path", e);
       }
     }
@@ -66,10 +65,10 @@ public class BuckSettingsProvider implements PersistentStateComponent<BuckSettin
     if (state.adbExecutable == null || state.adbExecutable.isEmpty()) {
       try {
         state.adbExecutable = BuckExecutableDetector.getAdbExecutable();
-      } catch (HumanReadableException e) {
+      } catch (RuntimeException e) {
         // let the user insert the path to the executable
         state.adbExecutable = "";
-        LOG.error(e.getHumanReadableErrorMessage() + ". You can specify the adb path from " +
+        LOG.error(e + ". You can specify the adb path from " +
             "Preferences/Settings > Tools > Buck > Adb Executable Path", e);
       }
     }
