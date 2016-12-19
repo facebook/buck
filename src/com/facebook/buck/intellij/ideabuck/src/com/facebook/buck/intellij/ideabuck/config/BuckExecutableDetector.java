@@ -16,7 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.config;
 
-import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.intellij.ideabuck.util.ExecutableFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 
