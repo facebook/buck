@@ -119,8 +119,8 @@ public class IjProject {
             return Optional.ofNullable(rule.getPathToOutput());
           }
         });
-    IjModuleFactory.IjModuleFactoryResolver moduleFactoryResolver =
-        new IjModuleFactory.IjModuleFactoryResolver() {
+    IjModuleFactoryResolver moduleFactoryResolver =
+        new IjModuleFactoryResolver() {
 
           @Override
           public Optional<Path> getDummyRDotJavaPath(TargetNode<?, ?> targetNode) {

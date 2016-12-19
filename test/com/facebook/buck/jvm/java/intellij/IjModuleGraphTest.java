@@ -809,7 +809,7 @@ public class IjModuleGraphTest {
     IjProjectConfig projectConfig = IjProjectBuckConfig.create(buckConfig);
     IjModuleFactory moduleFactory = new IjModuleFactory(
         new FakeProjectFilesystem(),
-        new IjModuleFactory.IjModuleFactoryResolver() {
+        new IjModuleFactoryResolver() {
           @Override
           public Optional<Path> getDummyRDotJavaPath(TargetNode<?, ?> targetNode) {
             return rDotJavaClassPathResolver.apply(targetNode);

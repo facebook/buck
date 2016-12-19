@@ -578,7 +578,7 @@ public class IjModuleFactoryTest {
   private IjModuleFactory createIjModuleFactory(BuckConfig buckConfig) {
     return new IjModuleFactory(
         new FakeProjectFilesystem(),
-        new IjModuleFactory.IjModuleFactoryResolver() {
+        new IjModuleFactoryResolver() {
           @Override
           public Optional<Path> getDummyRDotJavaPath(TargetNode<?, ?> targetNode) {
             return Optional.empty();

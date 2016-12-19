@@ -74,57 +74,6 @@ public class IjModuleFactory {
           GroovyTestDescription.class);
 
   /**
-   * Provides the {@link IjModuleFactory} with {@link Path}s to various elements of the project.
-   */
-  public interface IjModuleFactoryResolver {
-    /**
-     * @param targetNode node to generate the path to
-     * @return  the project-relative path to a directory structure under which the R.class file can
-     *     be found (the structure will be the same as the package path of the R class). A path
-     *     should be returned only if the given TargetNode requires the R.class to compile.
-     */
-    Optional<Path> getDummyRDotJavaPath(TargetNode<?, ?> targetNode);
-
-    /**
-     * @param targetNode node describing the Android binary to get the manifest of.
-     * @return path on disk to the AndroidManifest.
-     */
-    Path getAndroidManifestPath(TargetNode<AndroidBinaryDescription.Arg, ?> targetNode);
-
-    /**
-     * @param targetNode node describing the Android library to get the manifest of.
-     * @return path on disk to the AndroidManifest.
-     */
-    Optional<Path> getLibraryAndroidManifestPath(
-        TargetNode<AndroidLibraryDescription.Arg, ?> targetNode);
-
-    /**
-     * @param targetNode node describing the Android binary to get the Proguard config of.
-     * @return path on disk to the proguard config.
-     */
-    Optional<Path> getProguardConfigPath(TargetNode<AndroidBinaryDescription.Arg, ?> targetNode);
-
-    /**
-     * @param targetNode node describing the Android resources to get the path of.
-     * @return path on disk to the resources folder.
-     */
-    Optional<Path> getAndroidResourcePath(TargetNode<AndroidResourceDescription.Arg, ?> targetNode);
-
-    /**
-     * @param targetNode node describing the Android assets to get the path of.
-     * @return path on disk to the assets folder.
-     */
-    Optional<Path> getAssetsPath(TargetNode<AndroidResourceDescription.Arg, ?> targetNode);
-
-    /**
-     * @param targetNode node which may use annotation processors.
-     * @return path to the annotation processor output if any annotation proceessors are configured
-     *        for the given node.
-     */
-    Optional<Path> getAnnotationOutputPath(TargetNode<? extends JvmLibraryArg, ?> targetNode);
-  }
-
-  /**
    * Holds all of the mutable state required during {@link IjModule} creation.
    */
   private static class ModuleBuildContext {
