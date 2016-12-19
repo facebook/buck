@@ -17,19 +17,12 @@
 package com.facebook.buck.jvm.java.tracing;
 
 import com.facebook.buck.jvm.java.JavacEventSink;
+import com.facebook.buck.jvm.java.plugin.PluginLoader;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.util.ClassLoaderCache;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.ByteStreams;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.Method;
-import java.net.URL;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -53,61 +46,26 @@ import javax.tools.JavaCompiler;
  * This class translates the tracing data from the conceptual model back into something that more
  * closely matches the actual implementation:
  * <ul>
- *   <li>Parse, enter, analyze, and generate phases pass thru unchanged</li>
- *   <li>What javac traces as an annotation processing round is renamed
- *   "run annotation processors"</li>
- *   <li>Annotation processing rounds are traced from the beginning of "run annotation processors"
- *   to the beginning of the next "run annotation processors" or (for the last round)
- *   the first analyze phase</li>
- *   <li>Annotation processing is traced from the beginning of the first round to
- *   the end of the last</li>
- *   <li>If compilation ends during annotation processing (as can happen with -proc:only), it
- *   detects this (via being closed by its caller) and emits appropriate tracing</li>
+ * <li>Parse, enter, analyze, and generate phases pass thru unchanged</li>
+ * <li>What javac traces as an annotation processing round is renamed
+ * "run annotation processors"</li>
+ * <li>Annotation processing rounds are traced from the beginning of "run annotation processors"
+ * to the beginning of the next "run annotation processors" or (for the last round)
+ * the first analyze phase</li>
+ * <li>Annotation processing is traced from the beginning of the first round to
+ * the end of the last</li>
+ * <li>If compilation ends during annotation processing (as can happen with -proc:only), it
+ * detects this (via being closed by its caller) and emits appropriate tracing</li>
  * </ul>
  * In this way, the time attributed to annotation processing is always time
  * that would not have been spent if annotation processors were not present.
  */
 public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoCloseable {
   private static final Logger LOG = Logger.get(TranslatingJavacPhaseTracer.class);
-  private static final String JAVAC_PLUGIN_JAR_RESOURCE_PATH = "javac-plugin.jar";
-  @Nullable
-  private static final URL JAVAC_PLUGIN_JAR_URL = extractJavacPluginJar();
-
   private final JavacPhaseEventLogger logger;
 
   private boolean isProcessingAnnotations = false;
   private int roundNumber = 0;
-
-  /**
-   * Extracts the jar containing {@link TracingTaskListener} and returns a URL that can be given
-   * to a {@link java.net.URLClassLoader}.
-   */
-  @Nullable
-  private static URL extractJavacPluginJar() {
-    @Nullable final URL resourceURL =
-        TranslatingJavacPhaseTracer.class.getResource(JAVAC_PLUGIN_JAR_RESOURCE_PATH);
-    if (resourceURL == null) {
-      return null;
-    } else if ("file".equals(resourceURL.getProtocol())) {
-      // When Buck is running from the repo, the jar is actually already on disk, so no extraction
-      // is necessary
-      return resourceURL;
-    } else {
-      // Running from a .pex file, extraction is required
-      try (InputStream resourceStream = TranslatingJavacPhaseTracer.class.getResourceAsStream(
-          JAVAC_PLUGIN_JAR_RESOURCE_PATH)) {
-        File tempFile = File.createTempFile("javac-plugin", ".jar");
-        tempFile.deleteOnExit();
-        try (OutputStream tempFileStream = new FileOutputStream(tempFile)) {
-          ByteStreams.copy(resourceStream, tempFileStream);
-          return tempFile.toURI().toURL();
-        }
-      } catch (IOException e) {
-        LOG.warn(e, "Failed to extract javac plugin jar");
-        return null;
-      }
-    }
-  }
 
   @Nullable
   public static TranslatingJavacPhaseTracer setupTracing(
@@ -115,22 +73,9 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
       ClassLoaderCache classLoaderCache,
       JavacEventSink eventSink,
       JavaCompiler.CompilationTask task) {
-    if (JAVAC_PLUGIN_JAR_URL == null) {
-      return null;
-    }
-
     try {
-      // TracingTaskListener is an implementation of com.sun.source.util.TaskListener that traces
-      // the TaskEvents to a JavacPhaseTracer. TaskListener is a public API that is packaged in the
-      // javac compiler JAR. However, Buck allows Java rules to supply custom compiler JARs. In
-      // order to implement TaskListener, then, TracingTaskListener must be loaded in a ClassLoader
-      // that has access to the appropriate compiler JAR.
-      final ClassLoader compilerClassLoader = task.getClass().getClassLoader();
       final ClassLoader tracingTaskListenerClassLoader =
-          classLoaderCache.getClassLoaderForClassPath(
-              compilerClassLoader,
-              ImmutableList.of(JAVAC_PLUGIN_JAR_URL));
-
+          PluginLoader.getPluginClassLoader(classLoaderCache, task);
       final Class<?> tracingTaskListenerClass = Class.forName(
           "com.facebook.buck.jvm.java.tracing.TracingTaskListener",
           false,

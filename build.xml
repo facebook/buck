@@ -309,8 +309,8 @@
     </jar>
 
     <!-- Put the tracing jar in resources so it can be dynamically loaded at runtime. See
-     TranslatingJavacPhaseTracer -->
-    <copy file="${javac-plugin.jar}" todir="${classes.dir}/com/facebook/buck/jvm/java/tracing" />
+     com.facebook.buck.jvm.java.plugin.Plugin -->
+    <copy file="${javac-plugin.jar}" todir="${classes.dir}/com/facebook/buck/jvm/java/plugin" />
   </target>
 
   <target name="compile-aosp" depends="checkversion">

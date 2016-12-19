@@ -8,9 +8,6 @@ java_library(
   tests = [
     '//test/com/facebook/buck/jvm/java/tracing:tracing',
   ],
-  resources = [
-    ':javac-plugin',
-  ],
   exported_deps = [
     # Have to export this manually. `buck autodeps` does not export it because it is in the
     # provided_deps. This should be fixed in `buck autodeps`.
@@ -26,13 +23,6 @@ java_library(
     '//src/com/facebook/buck/jvm/java:support',
     '//test/com/facebook/buck/event/listener:listener',
     '//test/com/facebook/buck/jvm/java/tracing:tracing',
-  ],
-)
-
-java_binary(
-  name = 'javac-plugin',
-  deps = [
-    ':compiler-plugin',
   ],
 )
 
@@ -55,6 +45,7 @@ java_library(
     ':api',
   ],
   visibility = [
+    '//src/com/facebook/buck/jvm/java/plugin:javac-plugin',
     '//test/com/facebook/buck/jvm/java/tracing:tracing',
   ],
 )

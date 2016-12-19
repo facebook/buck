@@ -1,0 +1,19 @@
+java_library(
+  name = 'plugin',
+  srcs = glob(['*.java']),
+  resources = [
+    ':javac-plugin',
+  ],
+  autodeps = True,
+  visibility = [
+    'PUBLIC',
+  ],
+)
+
+java_binary(
+  name = 'javac-plugin',
+  deps = [
+    '//src/com/facebook/buck/jvm/java/tracing:compiler-plugin',
+  ],
+)
+
