@@ -10,6 +10,7 @@ java_library(
     'MavenUrlDecoder.java',
     'OnDiskMavenDownloader.java',
     'RemoteMavenDownloader.java',
+    'RetryingDownloader.java',
     'StackedDownloader.java',
   ],
   autodeps = True,
