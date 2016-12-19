@@ -417,6 +417,72 @@ public class InterCellIntegrationTest {
     root.runBuckBuild("//:rule", "other//:rule").assertSuccess();
   }
 
+  @Test
+  public void shouldBeAbleToTestACxxLibrary() throws IOException {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+    ProjectWorkspace workspace = createWorkspace("inter-cell/gtest/secondary");
+    TestDataHelper.overrideBuckconfig(
+        workspace,
+        ImmutableMap.of("cxx", ImmutableMap.of("gtest_dep", "//gtest:gtest")));
+
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//test:cxxtest");
+    result.assertSuccess();
+
+    result = workspace.runBuckCommand("test", "//test:cxxtest");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void shouldBeAbleToTestACxxLibraryXCell() throws IOException {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/gtest/primary",
+        "inter-cell/gtest/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
+    TestDataHelper.overrideBuckconfig(
+        secondary,
+        ImmutableMap.of("cxx", ImmutableMap.of("gtest_dep", "//gtest:gtest")));
+
+    ProjectWorkspace.ProcessResult result = primary.runBuckBuild("secondary//test:cxxtest");
+    result.assertSuccess();
+
+    result = primary.runBuckCommand("test", "secondary//test:cxxtest");
+    result.assertSuccess();
+
+    result = primary.runBuckCommand("test", "//main:main");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void shouldBeAbleToShareGtest() throws IOException {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+
+    Pair<ProjectWorkspace, ProjectWorkspace> cells = prepare(
+        "inter-cell/gtest/primary",
+        "inter-cell/gtest/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    ProjectWorkspace secondary = cells.getSecond();
+    TestDataHelper.overrideBuckconfig(
+        primary,
+        ImmutableMap.of("cxx", ImmutableMap.of("gtest_dep", "secondary//gtest:gtest")));
+    // TODO(mzlee,illicitonion): secondary//gtest:gtest should be //gtest:gtest or we
+    // should be able to use different cell names
+    registerCell(secondary, "secondary", secondary);
+    TestDataHelper.overrideBuckconfig(
+        secondary,
+        ImmutableMap.of("cxx", ImmutableMap.of("gtest_dep", "secondary//gtest:gtest")));
+
+    // TODO(mzlee,illicitonion): //test:cxxtest should be able to safely depend on
+    // secondary//lib:cxxlib instead of having its own copy
+    ProjectWorkspace.ProcessResult result = primary.runBuckCommand(
+        "test",
+        "//test:cxxtest",
+        "secondary//test:cxxtest");
+    result.assertSuccess();
+  }
+
   private Pair<ProjectWorkspace, ProjectWorkspace> prepare(
       String primaryPath,
       String secondaryPath) throws IOException {

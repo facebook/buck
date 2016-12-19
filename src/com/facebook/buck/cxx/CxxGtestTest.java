@@ -148,7 +148,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
     // summary with the output we have.
     Document doc;
     try {
-      doc = XmlDomParser.parse(results);
+      doc = XmlDomParser.parse(getProjectFilesystem().resolve(results));
     } catch (SAXException e) {
       return ImmutableList.of(
           getProgramFailureSummary(
