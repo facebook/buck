@@ -69,9 +69,9 @@ import javax.tools.JavaCompiler;
  */
 public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoCloseable {
   private static final Logger LOG = Logger.get(TranslatingJavacPhaseTracer.class);
-  private static final String JAVAC_TRACING_JAR_RESOURCE_PATH = "javac-tracing-compiler-plugin.jar";
+  private static final String JAVAC_PLUGIN_JAR_RESOURCE_PATH = "javac-plugin.jar";
   @Nullable
-  private static final URL JAVAC_TRACING_JAR_URL = extractJavaTracingJar();
+  private static final URL JAVAC_PLUGIN_JAR_URL = extractJavacPluginJar();
 
   private final JavacPhaseEventLogger logger;
 
@@ -83,9 +83,9 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
    * to a {@link java.net.URLClassLoader}.
    */
   @Nullable
-  private static URL extractJavaTracingJar() {
+  private static URL extractJavacPluginJar() {
     @Nullable final URL resourceURL =
-        TranslatingJavacPhaseTracer.class.getResource(JAVAC_TRACING_JAR_RESOURCE_PATH);
+        TranslatingJavacPhaseTracer.class.getResource(JAVAC_PLUGIN_JAR_RESOURCE_PATH);
     if (resourceURL == null) {
       return null;
     } else if ("file".equals(resourceURL.getProtocol())) {
@@ -95,15 +95,15 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
     } else {
       // Running from a .pex file, extraction is required
       try (InputStream resourceStream = TranslatingJavacPhaseTracer.class.getResourceAsStream(
-          JAVAC_TRACING_JAR_RESOURCE_PATH)) {
-        File tempFile = File.createTempFile("javac-tracing", ".jar");
+          JAVAC_PLUGIN_JAR_RESOURCE_PATH)) {
+        File tempFile = File.createTempFile("javac-plugin", ".jar");
         tempFile.deleteOnExit();
         try (OutputStream tempFileStream = new FileOutputStream(tempFile)) {
           ByteStreams.copy(resourceStream, tempFileStream);
           return tempFile.toURI().toURL();
         }
       } catch (IOException e) {
-        LOG.warn(e, "Failed to extract javac tracing jar");
+        LOG.warn(e, "Failed to extract javac plugin jar");
         return null;
       }
     }
@@ -115,7 +115,7 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
       ClassLoaderCache classLoaderCache,
       JavacEventSink eventSink,
       JavaCompiler.CompilationTask task) {
-    if (JAVAC_TRACING_JAR_URL == null) {
+    if (JAVAC_PLUGIN_JAR_URL == null) {
       return null;
     }
 
@@ -129,7 +129,7 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
       final ClassLoader tracingTaskListenerClassLoader =
           classLoaderCache.getClassLoaderForClassPath(
               compilerClassLoader,
-              ImmutableList.of(JAVAC_TRACING_JAR_URL));
+              ImmutableList.of(JAVAC_PLUGIN_JAR_URL));
 
       final Class<?> tracingTaskListenerClass = Class.forName(
           "com.facebook.buck.jvm.java.tracing.TracingTaskListener",

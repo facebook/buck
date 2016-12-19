@@ -16,8 +16,8 @@
   <property name="tracing-api.classes.dir" value="${build.dir}/tracing-api/classes" />
   <property name="tracing-api.jar" value="${build.dir}/tracing-api/tracing-api.jar"/>
   <property name="javac-tracing.src.dir" value="com/facebook/buck/jvm/java/tracing" />
-  <property name="javac-tracing.classes.dir" value="${build.dir}/javac-tracing/classes" />
-  <property name="javac-tracing.jar" value="${build.dir}/javac-tracing/javac-tracing-compiler-plugin.jar" />
+  <property name="javac-plugin.classes.dir" value="${build.dir}/javac-plugin/classes" />
+  <property name="javac-plugin.jar" value="${build.dir}/javac-plugin/javac-plugin.jar" />
   <property name="buck.path_to_pex" value="${basedir}/src/com/facebook/buck/python/make_pex.py" />
   <property name="buck.path_to_python_test_main" value="${basedir}/src/com/facebook/buck/python/__test_main__.py" />
   <property name="buck.path_to_sh_binary_template" value="${basedir}/src/com/facebook/buck/shell/sh_binary_template" />
@@ -199,7 +199,7 @@
        do more than one thing.
 
        clear-successful-build must be first, and mark-successful-build last, in the list of dependencies.-->
-  <target name="default" depends="clear-successful-build, compile, dx, javac-tracing, report-generator-jar, mark-successful-build" />
+  <target name="default" depends="clear-successful-build, compile, dx, javac-plugin, report-generator-jar, mark-successful-build" />
 
   <target name="checkversion">
     <!-- The function Function class was only introduced in Java 8. -->
@@ -286,7 +286,7 @@
     </jar>
   </target>
 
-  <path id="javac-tracing.classpath">
+  <path id="javac-plugin.classpath">
     <!-- This jar is loaded in each compiler class loader, which is unrelated to Buck's class
     loader. Do not take dependencies on Buck code outside of the bootstrapper here. Compiler
     code (tools.jar) and third-party libraries are OK, though keep in mind that every class included
@@ -295,22 +295,22 @@
     <pathelement location="${bootstrapper.jar}" />
   </path>
 
-  <target name="javac-tracing" depends="checkversion, tracing-api">
-    <mkdir dir="${javac-tracing.classes.dir}" />
-    <ecj destdir="${javac-tracing.classes.dir}" classpathref="javac-tracing.classpath">
+  <target name="javac-plugin" depends="checkversion, tracing-api">
+    <mkdir dir="${javac-plugin.classes.dir}" />
+    <ecj destdir="${javac-plugin.classes.dir}" classpathref="javac-plugin.classpath">
       <javac-params>
         <include name="com/facebook/buck/util/exportedfiles/Nullable.java" />
         <include name="com/facebook/buck/util/exportedfiles/Preconditions.java" />
         <include name="${javac-tracing.src.dir}/TracingTaskListener.java" />
       </javac-params>
     </ecj>
-    <jar destfile="${javac-tracing.jar}">
-      <fileset dir="${javac-tracing.classes.dir}"/>
+    <jar destfile="${javac-plugin.jar}">
+      <fileset dir="${javac-plugin.classes.dir}"/>
     </jar>
 
     <!-- Put the tracing jar in resources so it can be dynamically loaded at runtime. See
      TranslatingJavacPhaseTracer -->
-    <copy file="${javac-tracing.jar}" todir="${classes.dir}/com/facebook/buck/jvm/java/tracing" />
+    <copy file="${javac-plugin.jar}" todir="${classes.dir}/com/facebook/buck/jvm/java/tracing" />
   </target>
 
   <target name="compile-aosp" depends="checkversion">
@@ -585,7 +585,7 @@
         <exclude name="**/testdata/**" />
 
         <!-- This test cannot build with the rest because it is testing TracingTaskListener,
-        which lives in the javac-tracing-compiler-plugin.jar, which is loaded dynamically at
+        which lives in the javac-plugin.jar, which is loaded dynamically at
         runtime. This test is run in the Buck build, which is capable of more isolated testing
         than the Ant build is. -->
         <exclude name="com/facebook/buck/jvm/java/tracing/TracingTaskListenerCleanerTest.java" />

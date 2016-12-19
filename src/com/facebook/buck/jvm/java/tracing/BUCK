@@ -9,7 +9,7 @@ java_library(
     '//test/com/facebook/buck/jvm/java/tracing:tracing',
   ],
   resources = [
-    ':javac-tracing-compiler-plugin',
+    ':javac-plugin',
   ],
   exported_deps = [
     # Have to export this manually. `buck autodeps` does not export it because it is in the
@@ -30,7 +30,7 @@ java_library(
 )
 
 java_binary(
-  name = 'javac-tracing-compiler-plugin',
+  name = 'javac-plugin',
   deps = [
     ':compiler-plugin',
   ],
