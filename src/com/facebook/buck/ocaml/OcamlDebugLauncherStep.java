@@ -25,7 +25,6 @@ import com.facebook.buck.shell.Shell;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.fs.MakeExecutableStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Function;
@@ -67,14 +66,8 @@ public class OcamlDebugLauncherStep implements Step {
         filesystem,
         debugLauncherScript,
         args.getOutput(),
-        /* executable */ false);
-    StepExecutionResult writeExecutionResult = writeFile.execute(context);
-    if (!writeExecutionResult.isSuccess()) {
-      return writeExecutionResult;
-    }
-
-    Step chmod = new MakeExecutableStep(filesystem, args.getOutput());
-    return chmod.execute(context);
+        /* executable */ true);
+    return writeFile.execute(context);
   }
 
   private String getDebugLauncherScript(String debugCmdStr) {
