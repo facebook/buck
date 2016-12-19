@@ -90,7 +90,8 @@ public class InputCountingRuleKeyFactory extends
 
       @Override
       protected RuleKeyBuilder<Result> setNonHashingSourcePath(SourcePath sourcePath) {
-        return setSourcePath(sourcePath);
+        sourcePaths.add(sourcePath);
+        return this;
       }
 
       @Override
