@@ -145,7 +145,7 @@ public class JavaTestDescription implements
                     SourcePaths.toSourcePath(params.getProjectFilesystem())::apply),
                 /* postprocessClassesCommands */ ImmutableList.of(),
                 /* exportDeps */ ImmutableSortedSet.of(),
-                /* providedDeps */ ImmutableSortedSet.of(),
+                resolver.getAllRules(args.providedDeps),
                 abiJarTarget,
                 JavaLibraryRules.getAbiInputs(resolver, testsLibraryParams.getDeps()),
                 javacOptions.trackClassUsage(),
