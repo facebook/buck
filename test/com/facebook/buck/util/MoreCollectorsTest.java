@@ -16,7 +16,9 @@
 package com.facebook.buck.util;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
@@ -24,6 +26,7 @@ import com.google.common.collect.Ordering;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 public class MoreCollectorsTest {
@@ -74,5 +77,27 @@ public class MoreCollectorsTest {
         ImmutableSortedSet.copyOf(Ordering.natural().reverse(), sampleInput),
         sampleInput.stream().collect(
             MoreCollectors.toImmutableSortedSet(Ordering.natural().reverse())));
+  }
+
+  @Test
+  public void toImmutableMultimapMapsKeysAndValues() {
+    ImmutableList<Integer> sampleInput = ImmutableList.of(4, 2, 3, 1, 2);
+    AtomicInteger i = new AtomicInteger(0);
+    Assert.assertEquals(
+        ImmutableMultimap.of(4, 1, 2, 2, 3, 3, 1, 4, 2, 5),
+        sampleInput.stream().collect(MoreCollectors.toImmutableMultimap(
+            x -> x,
+            x -> i.addAndGet(1))));
+  }
+
+  @Test
+  public void toImmutableListMultimapMapsKeysAndValues() {
+    ImmutableList<Integer> sampleInput = ImmutableList.of(4, 2, 3, 1, 2);
+    AtomicInteger i = new AtomicInteger(0);
+    Assert.assertEquals(
+        ImmutableListMultimap.of(4, 1, 2, 2, 3, 3, 1, 4, 2, 5),
+        sampleInput.stream().collect(MoreCollectors.toImmutableListMultimap(
+            x -> x,
+            x -> i.addAndGet(1))));
   }
 }

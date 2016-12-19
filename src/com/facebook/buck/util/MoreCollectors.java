@@ -16,7 +16,9 @@
 package com.facebook.buck.util;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -112,4 +114,57 @@ public final class MoreCollectors {
         ImmutableMap.Builder::build);
   }
 
+  /**
+   * Returns a {@code Collector} that builds an {@code ImmutableMultimap}, whose keys and values
+   * are the result of applying mapping functions to the input elements.
+   *
+   * This {@code Collector} behaves similar to
+   * {@code Collectors.collectingAndThen(Collectors.toMap(), ImmutableMultimap::copyOf)} but
+   * preserves iteration order and does not build an intermediate map.
+   *
+   * @param <T> the type of the input elements
+   * @param <K> the output type of the key mapping function
+   * @param <U> the output type of the value mapping function
+   *
+   * @param keyMapper a mapping function to produce keys
+   * @param valueMapper a mapping function to produce values
+   *
+   * @return a {@code Collector} that builds an {@code ImmutableMultimap}.
+   */
+  public static <T, K, U> Collector<T, ?, ImmutableMultimap<K, U>> toImmutableMultimap(
+      Function<? super T, ? extends K> keyMapper,
+      Function<? super T, ? extends U> valueMapper) {
+    return Collector.<T, ImmutableMultimap.Builder<K, U>, ImmutableMultimap<K, U>>of(
+        ImmutableListMultimap::builder,
+        (builder, elem) -> builder.put(keyMapper.apply(elem), valueMapper.apply(elem)),
+        (left, right) -> left.putAll(right.build()),
+        ImmutableMultimap.Builder::build);
+  }
+
+  /**
+   * Returns a {@code Collector} that builds an {@code ImmutableListMultimap}, whose keys and values
+   * are the result of applying mapping functions to the input elements.
+   *
+   * This {@code Collector} behaves similar to
+   * {@code Collectors.collectingAndThen(Collectors.toMap(), ImmutableListMultimap::copyOf)} but
+   * preserves iteration order and does not build an intermediate map.
+   *
+   * @param <T> the type of the input elements
+   * @param <K> the output type of the key mapping function
+   * @param <U> the output type of the value mapping function
+   *
+   * @param keyMapper a mapping function to produce keys
+   * @param valueMapper a mapping function to produce values
+   *
+   * @return a {@code Collector} that builds an {@code ImmutableListMultimap}.
+   */
+  public static <T, K, U> Collector<T, ?, ImmutableListMultimap<K, U>> toImmutableListMultimap(
+      Function<? super T, ? extends K> keyMapper,
+      Function<? super T, ? extends U> valueMapper) {
+    return Collector.<T, ImmutableListMultimap.Builder<K, U>, ImmutableListMultimap<K, U>>of(
+        ImmutableListMultimap::builder,
+        (builder, elem) -> builder.put(keyMapper.apply(elem), valueMapper.apply(elem)),
+        (left, right) -> left.putAll(right.build()),
+        ImmutableListMultimap.Builder::build);
+  }
 }

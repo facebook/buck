@@ -65,19 +65,18 @@ public class IjModuleGraph {
         .filter(input -> IjModuleFactory.SUPPORTED_MODULE_DESCRIPTION_CLASSES.contains(
             input.getDescription().getClass()))
         .collect(
-            ImmutableListMultimap::<Path, TargetNode<?, ?>>builder,
-            (builder, input) -> {
-              Path path;
-              Path basePath = input.getBuildTarget().getBasePath();
-              if (input.getConstructorArg() instanceof AndroidResourceDescription.Arg) {
-                path = basePath;
-              } else {
-                path = simplifyPath(basePath, minimumPathDepth, blockedPathTree);
-              }
-              builder.put(path, input);
-            },
-            (builder1, builder2) -> builder1.putAll(builder2.build()))
-        .build();
+            MoreCollectors.toImmutableListMultimap(
+                targetNode -> {
+                  Path path;
+                  Path basePath = targetNode.getBuildTarget().getBasePath();
+                  if (targetNode.getConstructorArg() instanceof AndroidResourceDescription.Arg) {
+                    path = basePath;
+                  } else {
+                    path = simplifyPath(basePath, minimumPathDepth, blockedPathTree);
+                  }
+                  return path;
+                },
+                targetNode -> targetNode));
 
     ImmutableMap.Builder<BuildTarget, IjModule> moduleMapBuilder = new ImmutableMap.Builder<>();
 

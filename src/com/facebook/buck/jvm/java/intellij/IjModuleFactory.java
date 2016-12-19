@@ -227,13 +227,13 @@ public class IjModuleFactory {
     return paths
         .stream()
         .collect(
-            ImmutableMultimap::<Path, Path>builder,
-            (builder, path) -> {
-              Path parent = path.getParent();
-              builder.put(parent == null ? defaultParent : parent, path);
-            },
-            (builder1, builder2) -> builder1.putAll(builder2.build()))
-        .build();
+            MoreCollectors.toImmutableMultimap(
+                path -> {
+                  Path parent = path.getParent();
+                  return parent == null ? defaultParent : parent;
+                },
+                path -> path)
+        );
   }
 
   /**
