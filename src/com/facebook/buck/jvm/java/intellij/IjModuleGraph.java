@@ -22,9 +22,8 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
-import com.google.common.base.Function;
+import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -36,6 +35,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
@@ -60,21 +60,24 @@ public class IjModuleGraph {
 
     final BlockedPathNode blockedPathTree = createAggregationHaltPoints(projectConfig, targetGraph);
 
-    ImmutableListMultimap<Path, TargetNode<?, ?>> baseTargetPathMultimap =
-        FluentIterable
-          .from(targetGraph.getNodes())
-          .filter(input -> IjModuleFactory.SUPPORTED_MODULE_DESCRIPTION_CLASSES.contains(
-              input.getDescription().getClass()))
-          .index(
-              input -> {
-                Path basePath = input.getBuildTarget().getBasePath();
-
-                if (input.getConstructorArg() instanceof AndroidResourceDescription.Arg) {
-                  return basePath;
-                }
-
-                return simplifyPath(basePath, minimumPathDepth, blockedPathTree);
-              });
+    ImmutableListMultimap<Path, TargetNode<?, ?>> baseTargetPathMultimap = targetGraph.getNodes()
+        .stream()
+        .filter(input -> IjModuleFactory.SUPPORTED_MODULE_DESCRIPTION_CLASSES.contains(
+            input.getDescription().getClass()))
+        .collect(
+            ImmutableListMultimap::<Path, TargetNode<?, ?>>builder,
+            (builder, input) -> {
+              Path path;
+              Path basePath = input.getBuildTarget().getBasePath();
+              if (input.getConstructorArg() instanceof AndroidResourceDescription.Arg) {
+                path = basePath;
+              } else {
+                path = simplifyPath(basePath, minimumPathDepth, blockedPathTree);
+              }
+              builder.put(path, input);
+            },
+            (builder1, builder2) -> builder1.putAll(builder2.build()))
+        .build();
 
     ImmutableMap.Builder<BuildTarget, IjModule> moduleMapBuilder = new ImmutableMap.Builder<>();
 
@@ -192,9 +195,10 @@ public class IjModuleGraph {
             depElements = ImmutableSet.of();
           }
         } else {
-          depElements = FluentIterable.from(
-              exportedDepsClosureResolver.getExportedDepsClosure(depBuildTarget))
-              .append(depBuildTarget)
+          depElements = Stream
+              .concat(
+                  exportedDepsClosureResolver.getExportedDepsClosure(depBuildTarget).stream(),
+                  Stream.of(depBuildTarget))
               .filter(
                   input -> {
                     // The exported deps closure can contain references back to targets contained
@@ -202,21 +206,17 @@ public class IjModuleGraph {
                     TargetNode<?, ?> targetNode = targetGraph.get(input);
                     return !module.getTargets().contains(targetNode);
                   })
-              .transform(
-                  new Function<BuildTarget, IjProjectElement>() {
-                    @Nullable
-                    @Override
-                    public IjProjectElement apply(BuildTarget depTarget) {
-                      IjModule depModule = rulesToModules.get(depTarget);
-                      if (depModule != null) {
-                        return depModule;
-                      }
-                      TargetNode<?, ?> targetNode = targetGraph.get(depTarget);
-                      return libraryFactory.getLibrary(targetNode).orElse(null);
+              .map(
+                  depTarget-> {
+                    IjModule depModule = rulesToModules.get(depTarget);
+                    if (depModule != null) {
+                      return depModule;
                     }
+                    TargetNode<?, ?> targetNode = targetGraph.get(depTarget);
+                    return libraryFactory.getLibrary(targetNode).orElse(null);
                   })
               .filter(Objects::nonNull)
-              .toSet();
+              .collect(MoreCollectors.toImmutableSet());
         }
 
         for (IjProjectElement depElement : depElements) {
@@ -234,17 +234,16 @@ public class IjModuleGraph {
         moduleDeps.put(extraClassPathLibrary, DependencyType.PROD);
       }
 
-      referencedLibraries.addAll(
-          FluentIterable.from(moduleDeps.keySet())
-              .filter(IjLibrary.class)
-              .toSet());
+      moduleDeps.keySet()
+          .stream()
+          .filter(dep -> dep instanceof IjLibrary)
+          .map(library -> (IjLibrary) library)
+          .forEach(referencedLibraries::add);
 
       depsBuilder.put(module, ImmutableMap.copyOf(moduleDeps));
     }
 
-    for (IjLibrary library : referencedLibraries) {
-      depsBuilder.put(library, ImmutableMap.of());
-    }
+    referencedLibraries.forEach(library -> depsBuilder.put(library, ImmutableMap.of()));
 
     return new IjModuleGraph(depsBuilder.build());
   }
@@ -254,7 +253,12 @@ public class IjModuleGraph {
   }
 
   public ImmutableSet<IjModule> getModuleNodes() {
-    return FluentIterable.from(deps.keySet()).filter(IjModule.class).toSet();
+    return deps
+        .keySet()
+        .stream()
+        .filter(dep -> dep instanceof IjModule)
+        .map(module -> (IjModule) module)
+        .collect(MoreCollectors.toImmutableSet());
   }
 
   public ImmutableMap<IjProjectElement, DependencyType> getDepsFor(IjProjectElement source) {
@@ -263,16 +267,24 @@ public class IjModuleGraph {
 
   public ImmutableMap<IjModule, DependencyType> getDependentModulesFor(IjModule source) {
     final ImmutableMap<IjProjectElement, DependencyType> deps = getDepsFor(source);
-    return FluentIterable.from(deps.keySet()).filter(IjModule.class)
-        .toMap(
-            input -> Preconditions.checkNotNull(deps.get(input)));
+    return deps
+        .keySet()
+        .stream()
+        .filter(dep -> dep instanceof IjModule)
+        .map(module -> (IjModule) module)
+        .collect(MoreCollectors.toImmutableMap(k -> k,
+            input -> Preconditions.checkNotNull(deps.get(input))));
   }
 
   public ImmutableMap<IjLibrary, DependencyType> getDependentLibrariesFor(IjModule source) {
     final ImmutableMap<IjProjectElement, DependencyType> deps = getDepsFor(source);
-    return FluentIterable.from(deps.keySet()).filter(IjLibrary.class)
-        .toMap(
-            input -> Preconditions.checkNotNull(deps.get(input)));
+    return deps
+        .keySet()
+        .stream()
+        .filter(dep -> dep instanceof IjLibrary)
+        .map(library -> (IjLibrary) library)
+        .collect(MoreCollectors.toImmutableMap(k -> k,
+            input -> Preconditions.checkNotNull(deps.get(input))));
   }
 
   private static void checkNamesAreUnique(
