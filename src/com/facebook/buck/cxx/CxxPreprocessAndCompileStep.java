@@ -393,7 +393,7 @@ public class CxxPreprocessAndCompileStep implements Step {
 
       int exitCode = executeCompilation(context);
 
-      if (exitCode == 0 && compiler.isDependencyFileSupported()) {
+      if (operation.isPreprocess() && exitCode == 0 && compiler.isDependencyFileSupported()) {
         exitCode =
             Depfiles.parseAndWriteBuckCompatibleDepfile(
                 context,
