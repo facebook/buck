@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -38,6 +39,8 @@ import com.google.common.collect.ImmutableSortedSet;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
+
+import java.util.regex.Pattern;
 
 
 public class PrebuiltCxxLibraryGroupDescriptionTest {
@@ -268,6 +271,57 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
             Linker.LinkableDepType.STATIC);
     SourcePath lib = cxxGenrule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM);
     assertThat(input.getArgs(), Matchers.contains(new SourcePathArg(pathResolver, lib)));
+  }
+
+  @Test
+  public void supportedPlatforms() throws Exception {
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    CxxLibrary dep1 =
+        (CxxLibrary) new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .build(resolver);
+    CxxLibrary dep2 =
+        (CxxLibrary) new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep2"))
+            .build(resolver);
+    BuildTarget target = BuildTargetFactory.newInstance("//:lib");
+    SourcePath lib1 = new FakeSourcePath("dir/lib1.so");
+    SourcePath lib2 = new FakeSourcePath("dir/lib2.so");
+    BuildRule buildRule = new PrebuiltCxxLibraryGroupBuilder(target)
+        .setSharedLink(ImmutableList.of("$(lib lib1.so)", "$(lib lib2.so)"))
+        .setSharedLibs(ImmutableMap.of("lib1.so", lib1))
+        .setProvidedSharedLibs(ImmutableMap.of("lib2.so", lib2))
+        .setExportedDeps(ImmutableSortedSet.of(dep1.getBuildTarget()))
+        .setDeps(ImmutableSortedSet.of(dep2.getBuildTarget()))
+        .setSupportedPlatformsRegex(Pattern.compile("nothing"))
+        .build(resolver);
+
+    NativeLinkable lib =
+        (NativeLinkable) buildRule;
+
+    assertThat(
+        lib.getNativeLinkableInput(
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            Linker.LinkableDepType.SHARED),
+        Matchers.equalTo(NativeLinkableInput.of()));
+
+    assertThat(
+        lib.getNativeLinkableExportedDepsForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.emptyIterable());
+
+    assertThat(
+        lib.getNativeLinkableDepsForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.emptyIterable());
+
+    assertThat(
+        lib.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.anEmptyMap());
+
+    CxxPreprocessorDep cxxPreprocessorDep = (CxxPreprocessorDep) buildRule;
+
+    assertThat(
+        cxxPreprocessorDep.getCxxPreprocessorDeps(CxxPlatformUtils.DEFAULT_PLATFORM),
+        Matchers.emptyIterable());
+
   }
 
 }

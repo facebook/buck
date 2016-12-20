@@ -23,6 +23,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
+import java.util.Optional;
+import java.util.regex.Pattern;
+
 
 public class PrebuiltCxxLibraryGroupBuilder
     extends
@@ -80,8 +83,18 @@ public class PrebuiltCxxLibraryGroupBuilder
     return this;
   }
 
+  public PrebuiltCxxLibraryGroupBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
+    arg.deps = deps;
+    return this;
+  }
+
   public PrebuiltCxxLibraryGroupBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> deps) {
     arg.exportedDeps = deps;
+    return this;
+  }
+
+  public PrebuiltCxxLibraryGroupBuilder setSupportedPlatformsRegex(Pattern pattern) {
+    arg.supportedPlatformsRegex = Optional.of(pattern);
     return this;
   }
 
