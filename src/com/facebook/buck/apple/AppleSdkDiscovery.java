@@ -32,7 +32,6 @@ import com.google.common.collect.TreeMultimap;
 import org.xml.sax.SAXException;
 
 import java.io.BufferedInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.DirectoryStream;
@@ -250,8 +249,8 @@ public class AppleSdkDiscovery {
         sdkBuilder.addAllArchitectures(architectures);
         return true;
       }
-    } catch (FileNotFoundException e) {
-      LOG.error(e, "No SDKSettings.plist found under SDK path %s", sdkDir);
+    } catch (NoSuchFileException e) {
+      LOG.warn(e, "Skipping SDK at path %s, no SDKSettings.plist found", sdkDir);
       return false;
     }
   }
