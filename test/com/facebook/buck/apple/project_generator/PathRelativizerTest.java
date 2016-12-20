@@ -40,7 +40,7 @@ public class PathRelativizerTest {
         new SourcePathResolver(
             new BuildRuleResolver(
                 TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer()))::deprecatedGetPath);
+                new DefaultTargetNodeToBuildRuleTransformer()))::getRelativePath);
   }
 
   @Test

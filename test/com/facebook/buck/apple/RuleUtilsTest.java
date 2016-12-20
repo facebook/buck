@@ -50,7 +50,7 @@ public class RuleUtilsTest {
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
      );
     ImmutableList<GroupedSource> sources = RuleUtils.createGroupsFromSourcePaths(
-        resolver::deprecatedGetPath,
+        resolver::getRelativePath,
         input,
         /* extraXcodeSources */ ImmutableSortedSet.of(),
         /* publicHeaders */ ImmutableSortedSet.of(),
@@ -137,7 +137,7 @@ public class RuleUtilsTest {
      );
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
-            resolver::deprecatedGetPath,
+            resolver::getRelativePath,
             ImmutableList.of(),
             ImmutableSortedSet.of(),
             ImmutableList.of(),
@@ -174,7 +174,7 @@ public class RuleUtilsTest {
      );
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
-            resolver::deprecatedGetPath,
+            resolver::getRelativePath,
             ImmutableList.of(),
             ImmutableSortedSet.of(),
             ImmutableList.of(),
@@ -197,7 +197,7 @@ public class RuleUtilsTest {
      );
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
-            resolver::deprecatedGetPath,
+            resolver::getRelativePath,
             ImmutableList.of(),
             ImmutableList.of(),
             ImmutableList.of(),
@@ -215,7 +215,7 @@ public class RuleUtilsTest {
      );
     ImmutableList<GroupedSource> actual =
         RuleUtils.createGroupsFromSourcePaths(
-            resolver::deprecatedGetPath,
+            resolver::getRelativePath,
             ImmutableList.of(),
             ImmutableList.of(),
             ImmutableList.of(),
@@ -304,7 +304,7 @@ public class RuleUtilsTest {
     ImmutableList<GroupedSource> actual = RuleUtils.createGroupsFromEntryMaps(
         subgroups,
         entries,
-        new RuleUtils.GroupedSourceNameComparator(resolver::deprecatedGetPath),
+        new RuleUtils.GroupedSourceNameComparator(resolver::getRelativePath),
         Paths.get("root"),
         Paths.get("root"));
 
@@ -357,7 +357,7 @@ public class RuleUtilsTest {
     ImmutableList<GroupedSource> actual = RuleUtils.createGroupsFromEntryMaps(
         subgroups,
         entries,
-        new RuleUtils.GroupedSourceNameComparator(resolver::deprecatedGetPath),
+        new RuleUtils.GroupedSourceNameComparator(resolver::getRelativePath),
         Paths.get("root"),
         Paths.get("root"));
 
@@ -380,7 +380,7 @@ public class RuleUtilsTest {
     ImmutableList<GroupedSource> actual = RuleUtils.createGroupsFromEntryMaps(
         subgroups,
         entries,
-        new RuleUtils.GroupedSourceNameComparator(resolver::deprecatedGetPath),
+        new RuleUtils.GroupedSourceNameComparator(resolver::getRelativePath),
         Paths.get("root"),
         Paths.get("root"));
 
@@ -400,7 +400,7 @@ public class RuleUtilsTest {
     ImmutableList<GroupedSource> actual = RuleUtils.createGroupsFromEntryMaps(
         subgroups,
         entries,
-        new RuleUtils.GroupedSourceNameComparator(resolver::deprecatedGetPath),
+        new RuleUtils.GroupedSourceNameComparator(resolver::getRelativePath),
         Paths.get("root"),
         Paths.get("root"));
 

@@ -191,8 +191,7 @@ public class DirectHeaderMapTest {
     RuleKey key1 = defaultRuleKeyFactory.build(buildRule);
 
     // Change the contents of the target of the link.
-    Path existingFile =
-        projectFilesystem.resolve(resolver.deprecatedGetPath(links.values().asList().get(0)));
+    Path existingFile = resolver.getAbsolutePath(links.values().asList().get(0));
     Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
 
     // Re-calculate the rule key

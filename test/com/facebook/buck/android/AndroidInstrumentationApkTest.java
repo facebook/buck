@@ -140,7 +140,7 @@ public class AndroidInstrumentationApkTest {
                 javaLibrary3.getBuildTarget(),
                 "%s.jar")),
         androidBinary.getAndroidPackageableCollection().getClasspathEntriesToDex().stream()
-            .map(pathResolver::deprecatedGetPath)
+            .map(pathResolver::getRelativePath)
             .collect(MoreCollectors.toImmutableSet()));
     assertEquals(
         "//apps:instrumentation should have one JAR file to dex.",
@@ -152,7 +152,7 @@ public class AndroidInstrumentationApkTest {
         androidInstrumentationApk
             .getAndroidPackageableCollection()
             .getClasspathEntriesToDex().stream()
-            .map(pathResolver::deprecatedGetPath)
+            .map(pathResolver::getRelativePath)
             .collect(MoreCollectors.toImmutableSet()));
   }
 }

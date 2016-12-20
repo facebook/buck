@@ -37,7 +37,7 @@ public class PathSourcePathTest {
     SourcePathResolver resolver = new SourcePathResolver(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
      );
-    Path resolved = resolver.deprecatedGetPath(path);
+    Path resolved = resolver.getRelativePath(path);
 
     assertEquals(Paths.get("cheese"), resolved);
   }

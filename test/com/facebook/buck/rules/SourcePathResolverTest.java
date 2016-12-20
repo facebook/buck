@@ -58,7 +58,7 @@ public class SourcePathResolverTest {
     Path expectedPath = Paths.get("foo");
     SourcePath sourcePath = new PathSourcePath(projectFilesystem, expectedPath);
 
-    assertEquals(expectedPath, pathResolver.deprecatedGetPath(sourcePath));
+    assertEquals(expectedPath, pathResolver.getRelativePath(sourcePath));
   }
 
   @Test
@@ -74,7 +74,7 @@ public class SourcePathResolverTest {
     resolver.addToIndex(rule);
     SourcePath sourcePath = new BuildTargetSourcePath(rule.getBuildTarget());
 
-    assertEquals(expectedPath, pathResolver.deprecatedGetPath(sourcePath));
+    assertEquals(expectedPath, pathResolver.getRelativePath(sourcePath));
   }
 
   @Test
@@ -123,7 +123,7 @@ public class SourcePathResolverTest {
     resolver.addToIndex(rule);
     SourcePath sourcePath = new BuildTargetSourcePath(rule.getBuildTarget(), expectedPath);
 
-    assertEquals(expectedPath, pathResolver.deprecatedGetPath(sourcePath));
+    assertEquals(expectedPath, pathResolver.getRelativePath(sourcePath));
   }
 
   @Test
