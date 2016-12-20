@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -110,6 +111,50 @@ public class PrebuiltAppleFrameworkIntegrationTest {
         .resolve("Frameworks")
         .resolve("BuckTest.framework");
     assertTrue(Files.isDirectory(includedFramework));
+  }
+
+
+  @Test
+  public void testStaticWithDependencies() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "prebuilt_apple_framework_static", tmp);
+    workspace.setUp();
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//app:TestApp#static,macosx-x86_64");
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path testBinaryPath = workspace.getPath(BuildTargets.getGenPath(filesystem, target, "%s"));
+
+    ProcessExecutor.Result otoolResult = workspace.runCommand(
+        "otool", "-L", testBinaryPath.toString());
+    assertEquals(0, otoolResult.getExitCode());
+    assertThat(
+        otoolResult.getStdout().orElse(""),
+        containsString("Foundation.framework"));
+    assertThat(
+        otoolResult.getStdout().orElse(""),
+        not(containsString("@rpath/BuckTest.framework/BuckTest")));
+
+    ProcessExecutor.Result nmResult = workspace.runCommand(
+        "nm", testBinaryPath.toString());
+    assertEquals(0, nmResult.getExitCode());
+    assertThat(
+        nmResult.getStdout().orElse(""),
+        containsString("S _OBJC_CLASS_$_Hello"));
+    assertThat(
+        nmResult.getStdout().orElse(""),
+        not(containsString("U _OBJC_CLASS_$_Hello")));
+    assertThat(
+        nmResult.getStdout().orElse(""),
+        containsString("S _OBJC_CLASS_$_Strings"));
+    assertThat(
+        nmResult.getStdout().orElse(""),
+        not(containsString("U _OBJC_CLASS_$_Strings")));
   }
 
 }
