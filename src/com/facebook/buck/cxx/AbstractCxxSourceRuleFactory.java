@@ -670,9 +670,8 @@ abstract class AbstractCxxSourceRuleFactory {
           getPathResolver().getSourcePathName(
               getParams().getBuildTarget(),
               source.getPath()));
-      Path sandboxPath = CxxDescriptionEnhancer.getLinkOutputPath(
-          sandboxTree.getBuildTarget(),
-          getParams().getProjectFilesystem());
+      Path sandboxPath =  BuildTargets.getGenPath(
+          getParams().getProjectFilesystem(), sandboxTree.getBuildTarget(), "%s");
       BuildTargetSourcePath path =
           new BuildTargetSourcePath(
               sandboxTree.getBuildTarget(),

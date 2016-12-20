@@ -32,6 +32,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -126,6 +127,19 @@ public class WindowsCxxIntegrationTest {
     assertThat(
         runResult.getStdout(),
         Matchers.containsString("BUCK ON WINDOWS"));
+  }
+
+  @Test
+  public void simpleBinaryIsExecutableByCmd() throws IOException {
+    ProjectWorkspace.ProcessResult runResult =
+        workspace.runBuckCommand(
+            "build",
+            "//app:log");
+    runResult.assertSuccess();
+    Path outputPath = workspace.resolve("buck-out/gen/app/log/log.txt");
+    assertThat(
+        workspace.getFileContents(outputPath),
+        Matchers.containsString("The process is 64bits"));
   }
 
   private static void checkAssumptions() {

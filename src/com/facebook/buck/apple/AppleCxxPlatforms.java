@@ -401,7 +401,8 @@ public class AppleCxxPlatforms {
         "o",
         compilerDebugPathSanitizer,
         assemblerDebugPathSanitizer,
-        macros);
+        macros,
+        Optional.empty());
 
     ApplePlatform applePlatform = targetSdk.getApplePlatform();
     ImmutableList.Builder<Path> swiftOverrideSearchPathBuilder = ImmutableList.builder();

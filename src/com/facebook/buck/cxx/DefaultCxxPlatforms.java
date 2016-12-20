@@ -65,6 +65,7 @@ public class DefaultCxxPlatforms {
     LinkerProvider.Type linkerType;
     Archiver archiver;
     DebugPathSanitizer compilerSanitizer;
+    Optional<String> binaryExtension;
     switch (platform) {
       case LINUX:
         sharedLibraryExtension = "so";
@@ -82,6 +83,7 @@ public class DefaultCxxPlatforms {
             ImmutableBiMap.of(),
             filesystem.getRootPath().toAbsolutePath(),
             CxxToolProvider.Type.GCC);
+        binaryExtension = Optional.empty();
         break;
       case MACOS:
         sharedLibraryExtension = "dylib";
@@ -99,6 +101,7 @@ public class DefaultCxxPlatforms {
             ImmutableBiMap.of(),
             filesystem.getRootPath().toAbsolutePath(),
             CxxToolProvider.Type.CLANG);
+        binaryExtension = Optional.empty();
         break;
       case WINDOWS:
         sharedLibraryExtension = "dll";
@@ -116,6 +119,7 @@ public class DefaultCxxPlatforms {
             ImmutableBiMap.of(),
             filesystem.getRootPath().toAbsolutePath(),
             CxxToolProvider.Type.GCC);
+        binaryExtension = Optional.of("exe");
         break;
       case FREEBSD:
         sharedLibraryExtension = "so";
@@ -133,6 +137,7 @@ public class DefaultCxxPlatforms {
             ImmutableBiMap.of(),
             filesystem.getRootPath().toAbsolutePath(),
             CxxToolProvider.Type.GCC);
+        binaryExtension = Optional.empty();
         break;
       //$CASES-OMITTED$
       default:
@@ -197,7 +202,8 @@ public class DefaultCxxPlatforms {
             File.separatorChar,
             Paths.get("."),
             ImmutableBiMap.of()),
-        ImmutableMap.of());
+        ImmutableMap.of(),
+        binaryExtension);
   }
 
 }

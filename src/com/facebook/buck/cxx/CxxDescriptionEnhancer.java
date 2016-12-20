@@ -36,7 +36,6 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.SymlinkTree;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.MacroArg;
@@ -265,7 +264,7 @@ public class CxxDescriptionEnhancer {
       ProjectFilesystem filesystem,
       BuildTarget target) {
     return target.getCellPath().resolve(
-        getLinkOutputPath(target, filesystem));
+        BuildTargets.getGenPath(filesystem, target, "%s"));
   }
 
   public static Flavor getHeaderSymlinkTreeFlavor(HeaderVisibility headerVisibility) {
@@ -583,9 +582,12 @@ public class CxxDescriptionEnhancer {
     return BuildTargets.getGenPath(filesystem, sharedLibraryTarget, "%s/" + soname);
   }
 
-  @VisibleForTesting
-  protected static Path getLinkOutputPath(BuildTarget target, ProjectFilesystem filesystem) {
-    return BuildTargets.getGenPath(filesystem, target, "%s");
+  private static Path getBinaryOutputPath(
+      BuildTarget target,
+      ProjectFilesystem filesystem,
+      Optional<String> extension) {
+    String format = extension.map(ext -> "%s." + ext).orElse("%s");
+    return BuildTargets.getGenPath(filesystem, target, format);
   }
 
   @VisibleForTesting
@@ -707,7 +709,10 @@ public class CxxDescriptionEnhancer {
     if (flavoredLinkerMapMode.isPresent()) {
       target = target.withAppendedFlavors(flavoredLinkerMapMode.get().getFlavor());
     }
-    Path linkOutput = getLinkOutputPath(target, params.getProjectFilesystem());
+    Path linkOutput = getBinaryOutputPath(
+        target,
+        params.getProjectFilesystem(),
+        cxxPlatform.getBinaryExtension());
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
@@ -856,10 +861,10 @@ public class CxxDescriptionEnhancer {
       CxxStrip stripRule = createCxxStripRule(
           cxxParams,
           resolver,
-          cxxPlatform.getStrip(),
           stripStyle.get(),
           sourcePathResolver,
-          cxxLink);
+          cxxLink,
+          cxxPlatform);
       cxxStrip = Optional.of(stripRule);
       binaryRuleForExecutable = stripRule;
     } else {
@@ -930,10 +935,10 @@ public class CxxDescriptionEnhancer {
   public static CxxStrip createCxxStripRule(
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      Tool stripTool,
       StripStyle stripStyle,
       SourcePathResolver sourcePathResolver,
-      BuildRule unstrippedBinaryRule) {
+      BuildRule unstrippedBinaryRule,
+      CxxPlatform cxxPlatform) {
     BuildRuleParams stripRuleParams = params
         .copyWithChanges(
             params.getBuildTarget().withAppendedFlavors(
@@ -950,10 +955,11 @@ public class CxxDescriptionEnhancer {
           sourcePathResolver,
           stripStyle,
           new BuildTargetSourcePath(unstrippedBinaryRule.getBuildTarget()),
-          stripTool,
-          CxxDescriptionEnhancer.getLinkOutputPath(
+          cxxPlatform.getStrip(),
+          CxxDescriptionEnhancer.getBinaryOutputPath(
               stripRuleParams.getBuildTarget(),
-              params.getProjectFilesystem()));
+              params.getProjectFilesystem(),
+              cxxPlatform.getBinaryExtension()));
       resolver.addToIndex(cxxStrip);
       return cxxStrip;
     }

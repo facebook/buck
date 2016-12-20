@@ -285,10 +285,10 @@ public class AppleLibraryDescription implements
     BuildRule strippedBinaryRule = CxxDescriptionEnhancer.createCxxStripRule(
         params,
         resolver,
-        representativePlatform.getStrip(),
         flavoredStripStyle.orElse(StripStyle.NON_GLOBAL_SYMBOLS),
         pathResolver,
-        unstrippedBinaryRule);
+        unstrippedBinaryRule,
+        representativePlatform);
 
     return AppleDescriptions.createAppleDebuggableBinary(
         params,

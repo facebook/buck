@@ -104,4 +104,6 @@ interface AbstractCxxPlatform extends FlavorConvertible {
    */
   Optional<SharedLibraryInterfaceFactory> getSharedLibraryInterfaceFactory();
 
+  Optional<String> getBinaryExtension();
+
 }
