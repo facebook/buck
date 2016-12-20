@@ -1,6 +1,11 @@
 RULES_SRCS = [
   'JsonConcatenate.java',
 ]
+
+PYTHON_PROD_SRCS = glob(
+  ['buck_parser/**/*.py'],
+  excludes=['buck_parser/**/*_test.py'])
+
 java_library(
   name = 'rules',
   srcs = RULES_SRCS,
@@ -30,20 +35,14 @@ java_immutables_library(
   tests = [
     '//test/com/facebook/buck/json:json',
   ],
-  resources = [
-    '//src/com/facebook/buck/json:python_bundle',
-  ],
+  # Place the python package in the JAR root so the jar can be imported by
+  # python's built in zip importer.
+  resources_root = '.',
+  resources = PYTHON_PROD_SRCS,
   autodeps = True,
   visibility = [
     'PUBLIC',
   ],
-)
-
-PYTHON_PROD_SRCS = glob(['buck_parser/**/*.py'], excludes=['buck_parser/**/*_test.py'])
-
-zip_file(
-  name = 'python_bundle',
-  srcs = PYTHON_PROD_SRCS,
 )
 
 python_library(

@@ -25,18 +25,19 @@ import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Writer;
+import java.net.JarURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.Optional;
 
 /**
  * Represents a serialized copy of the buck python program used to read BUCK files.
@@ -50,21 +51,6 @@ import java.util.Optional;
  * </pre>
  */
 class BuckPythonProgram implements AutoCloseable {
-  /**
-   * Path to the resource containing the buck python package.
-   */
-  private static final String BUCK_PY_RESOURCE = "python_bundle.zip";
-
-  /**
-   * Location of buck python package directory on disk. If set, used in favor of built-in resource.
-   *
-   * Used in intellij tests as it doesn't permit easy compile-time creation of the resource zip
-   * file.
-   */
-  private static final Optional<Path> BUCK_PY_PACKAGE_OVERRIDE =
-      Optional.ofNullable(System.getProperty("buck.override_python_package_path", null))
-          .map(Paths::get);
-
 
   private static final Path PATH_TO_PATHLIB_PY =
       Paths.get(System.getProperty("buck.path_to_pathlib_py", "third-party/py/pathlib/pathlib.py"));
@@ -83,27 +69,46 @@ class BuckPythonProgram implements AutoCloseable {
       ConstructorArgMarshaller marshaller,
       ImmutableSet<Description<?>> descriptions) throws IOException {
 
-    Path rootDir = Files.createTempDirectory("buck_python_program");
     Path pythonPath;
 
-    LOG.debug("Creating temporary buck.py instance at %s.", rootDir);
 
-    if (BUCK_PY_PACKAGE_OVERRIDE.isPresent()) {
-      // Use python source file location directly.
-      pythonPath = BUCK_PY_PACKAGE_OVERRIDE.get();
-    } else {
-      // Use zip file built in as a resource.
-      URL resource = Resources.getResource(BuckPythonProgram.class, BUCK_PY_RESOURCE);
-      pythonPath = rootDir.resolve("python_bundle.zip");
-      try (InputStream stream = Resources.asByteSource(resource).openStream()) {
-        Files.copy(stream, pythonPath, StandardCopyOption.REPLACE_EXISTING);
+    try {
+      URL url = Resources.getResource("buck_parser");
+
+      if ("jar".equals(url.getProtocol())) {
+        // Buck is being executed from a JAR file. Extract the jar file from the resource path, and
+        // verify it is correct.
+        // When python attempts to import `buck_parser`, it will see the jar file, and load it via
+        // zipimport, and look into the `buck_parser` directory in the root of the jar.
+        JarURLConnection connection = (JarURLConnection) url.openConnection();
+        Preconditions.checkState(
+            connection.getEntryName().equals("buck_parser"),
+            "buck_parser directory should be at the root of the jar file.");
+        URI jarFileURI = connection.getJarFileURL().toURI();
+        pythonPath = Paths.get(jarFileURI);
+      } else if ("file".equals(url.getProtocol())) {
+        // Buck is being executed from classpath on disk. Set the parent directory as the python
+        // path.
+        // When python attempts to import `buck_parser`, it will look for a `buck_parser` child
+        // directory in the given path.
+        pythonPath = Paths.get(url.toURI()).getParent();
+      } else {
+        throw new IllegalStateException(
+            "buck_python resource directory should reside in a local directory or in a jar file. " +
+                "Got: " + url);
       }
+    } catch (URISyntaxException e) {
+      throw new IllegalStateException(
+          "Failed to determine location of buck_parser python package",
+          e);
     }
 
+    Path generatedRoot = Files.createTempDirectory("buck_python_program");
+    LOG.debug("Writing python rules stub to %s.", generatedRoot);
     try (
         Writer out =
             Files.newBufferedWriter(
-                rootDir.resolve("generated_rules.py"),
+                generatedRoot.resolve("generated_rules.py"),
                 UTF_8)) {
       out.write("from buck_parser.buck import *\n\n");
       BuckPyFunction function = new BuckPyFunction(marshaller);
@@ -118,7 +123,7 @@ class BuckPythonProgram implements AutoCloseable {
 
     String pathlibDir = PATH_TO_PATHLIB_PY.getParent().toString();
     String watchmanDir = PATH_TO_PYWATCHMAN.toString();
-    try (Writer out = Files.newBufferedWriter(rootDir.resolve("__main__.py"), UTF_8)) {
+    try (Writer out = Files.newBufferedWriter(generatedRoot.resolve("__main__.py"), UTF_8)) {
       out.write(Joiner.on("\n").join(
           "from __future__ import absolute_import",
           "import sys",
@@ -126,8 +131,12 @@ class BuckPythonProgram implements AutoCloseable {
               Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(pathlibDir)) + "\")",
           "sys.path.insert(0, \"" +
               Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(watchmanDir)) + "\")",
+          // Path to the bundled python code.
           "sys.path.insert(0, \"" +
               Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(pythonPath)) + "\")",
+          // Path to the generated rules stub.
+          "sys.path.insert(0, \"" +
+              Escaper.escapeAsBashString(MorePaths.pathWithUnixSeparators(generatedRoot)) + "\")",
           "if __name__ == '__main__':",
           "    try:",
           "        from buck_parser import buck",
@@ -137,8 +146,8 @@ class BuckPythonProgram implements AutoCloseable {
           ""));
     }
 
-    LOG.debug("Created temporary buck.py instance at %s.", rootDir);
-    return new BuckPythonProgram(rootDir);
+    LOG.debug("Created temporary buck.py instance at %s.", generatedRoot);
+    return new BuckPythonProgram(generatedRoot);
   }
 
   public Path getExecutablePath() {

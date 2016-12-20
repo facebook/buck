@@ -401,11 +401,16 @@
     <copy file="${third-party.dir}/java/kxml2/kxml2-2.3.0.jar"
           tofile="${classes.dir}/com/facebook/buck/android/kxml2.jar"/>
 
-    <zip basedir="src/com/facebook/buck/json"
-         destfile="${classes.dir}/com/facebook/buck/json/python_bundle.zip"
-         includes="buck_parser/**/*.py"
-         excludes="BUCK,buck_parser/**/*_test.py"
-         defaultexcludes="no"/>
+    <!--
+      Copy the buck python parser code into the jar root so it can be imported
+      by python's built in zip importer.
+    -->
+    <copy todir="${classes.dir}/buck_parser">
+      <fileset dir="src/com/facebook/buck/json/buck_parser">
+        <include name="**/*.py"/>
+        <exclude name="**/*_test.py"/>
+      </fileset>
+    </copy>
 
   </target>
 
