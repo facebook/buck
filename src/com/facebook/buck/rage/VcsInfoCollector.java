@@ -67,7 +67,7 @@ public class VcsInfoCollector {
     }
 
     Optional<String> diff = Optional.of(
-        vcCmdLineInterface.diffBetweenRevisions(currentRevisionId, baseRevisionId));
+        vcCmdLineInterface.diffBetweenRevisions(baseRevisionId, currentRevisionId));
 
     return SourceControlInfo.builder()
         .setCurrentRevisionId(currentRevisionId)

@@ -205,18 +205,31 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   @Override
-  public String diffBetweenRevisions(String revisionIdOne, String revisionIdTwo)
+  public String diffBetweenRevisions(String baseRevision, String tipRevision)
       throws VersionControlCommandFailedException, InterruptedException {
-    validateRevisionId(revisionIdOne);
-    validateRevisionId(revisionIdTwo);
-    return executeCommand(
-        ImmutableList.of(
-            HG_CMD_TEMPLATE,
-            "diff",
-            "--rev",
-            revisionIdOne,
-            "--rev",
-            revisionIdTwo));
+    validateRevisionId(baseRevision);
+    validateRevisionId(tipRevision);
+
+    File temp = null;
+    try {
+      temp = File.createTempFile("diff", ".tmp");
+      // Command: hg export -r "base::tip - base"
+      executeCommand(
+          ImmutableList.of(
+              HG_CMD_TEMPLATE,
+              "export",
+              "-o",
+              temp.toString(),
+              "--rev",
+              baseRevision + "::" + tipRevision + " - " + baseRevision));
+      return new String(Files.readAllBytes(temp.toPath()));
+    } catch (IOException e) {
+      throw new VersionControlCommandFailedException("Command failed. Reason: " + e.getMessage());
+    } finally {
+      if (temp != null) {
+        temp.delete();
+      }
+    }
   }
 
   @Override

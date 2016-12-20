@@ -80,13 +80,13 @@ public interface VersionControlCmdLineInterface {
 
   /**
    *
-   * @param revisionIdOne
-   * @param revisionIdTwo
+   * @param baseRevision
+   * @param tipRevision
    * @return the produced diff between two revisions
    * @throws VersionControlCommandFailedException
    * @throws InterruptedException
    */
-  String diffBetweenRevisions(String revisionIdOne, String revisionIdTwo)
+  String diffBetweenRevisions(String baseRevision, String tipRevision)
       throws VersionControlCommandFailedException, InterruptedException;
 
   /**

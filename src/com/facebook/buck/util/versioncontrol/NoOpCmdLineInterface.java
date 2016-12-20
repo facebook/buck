@@ -63,7 +63,7 @@ public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   @Override
-  public String diffBetweenRevisions(String revisionIdOne, String revisionIdTwo)
+  public String diffBetweenRevisions(String baseRevision, String tipRevision)
       throws VersionControlCommandFailedException, InterruptedException {
     return "";
   }

@@ -38,7 +38,9 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
@@ -51,6 +53,10 @@ import java.util.Optional;
 
 
 public class HgCmdLineInterfaceIntegrationTest {
+
+  @Rule
+  public ExpectedException exception = ExpectedException.none();
+
   /**
    * Test constants
    */
@@ -226,28 +232,30 @@ public class HgCmdLineInterfaceIntegrationTest {
   }
 
   @Test
-  public void testDiffBetweenRevisions()
-      throws VersionControlCommandFailedException, InterruptedException {
-    assertEquals(
-        "diff --git a/change2 b/change2new file mode 100644diff --git a/file3 b/file3deleted " +
-            "file mode 100644",
-        repoThreeCmdLine.diffBetweenRevisions("adf7a0", "2911b3"));
-  }
-
-  @Test
   public void testDiffBetweenTheSameRevision()
       throws VersionControlCommandFailedException, InterruptedException {
-    assertEquals("", repoThreeCmdLine.diffBetweenRevisions("adf7a0", "adf7a0"));
+    exception.expect(VersionControlCommandFailedException.class);
+    repoThreeCmdLine.diffBetweenRevisions("adf7a0", "adf7a0");
   }
 
   @Test
-  public void testDiffBetweenDiffsOfDifferentBranches()
+  public void testDiffBetweenDiffs()
       throws VersionControlCommandFailedException, InterruptedException {
+    ImmutableList<String> expectedValue = ImmutableList.of(
+        "# HG changeset patch",
+        "# User Joe Blogs <joe.blogs@fb.com>",
+        "# Date 1440589545 -3600",
+        "#      Wed Aug 26 12:45:45 2015 +0100",
+        "# Node ID 2911b3cab6b24374a3649ebb96b0e53324e9c02e",
+        "# Parent  b1fd7e5896af8aa30e3e797ef1445605eec6d055",
+        "diverge from master_2",
+        "",
+        "diff --git a/change2 b/change2",
+        "new file mode 100644",
+        "");
     assertEquals(
-        "diff --git a/change2 b/change2deleted file mode 100644diff --git a/change3 b/change3new " +
-            "file mode 100644diff --git a/change3-2 b/change3-2new file mode 100644diff " +
-            "--git a/file3 b/file3new file mode 100644",
-        repoThreeCmdLine.diffBetweenRevisions("2911b3", "dee670"));
+        String.join("\n", expectedValue),
+        repoThreeCmdLine.diffBetweenRevisions("b1fd7e", "2911b3"));
   }
 
   @Test
