@@ -420,6 +420,7 @@ public class CachingBuildEngineTest {
           .setBuildContext(
               BuildContext.builder()
                   .setActionGraph(new ActionGraph(ImmutableList.of(buildRule)))
+                  .setSourcePathResolver(pathResolver)
                   .setJavaPackageFinder(createMock(JavaPackageFinder.class))
                   .setEventBus(buckEventBus)
                   .build())
@@ -494,6 +495,7 @@ public class CachingBuildEngineTest {
       BuildEngineBuildContext buildContext = BuildEngineBuildContext.builder()
           .setBuildContext(BuildContext.builder()
               .setActionGraph(new ActionGraph(ImmutableList.of(buildRule)))
+              .setSourcePathResolver(pathResolver)
               .setJavaPackageFinder(createMock(JavaPackageFinder.class))
               .setEventBus(buckEventBus)
               .build())

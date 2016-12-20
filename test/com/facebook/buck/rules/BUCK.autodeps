@@ -96,6 +96,7 @@
       "//test/com/facebook/buck/model:testutil",
       "//test/com/facebook/buck/testutil:testutil",
       "//third-party/java/cglib:cglib",
+      "//third-party/java/easymock:easymock",
       "//third-party/java/jackson:jackson-databind",
       "//third-party/java/junit:junit"
     ],

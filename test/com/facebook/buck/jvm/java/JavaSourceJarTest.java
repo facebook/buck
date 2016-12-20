@@ -95,6 +95,7 @@ public class JavaSourceJarTest {
 
     BuildContext buildContext = BuildContext.builder()
         .setActionGraph(new ActionGraph(ImmutableList.of()))
+        .setSourcePathResolver(pathResolver)
         .setJavaPackageFinder(finderStub)
         .setEventBus(BuckEventBusFactory.newInstance())
         .build();

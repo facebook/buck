@@ -1,6 +1,8 @@
 {
   "cxx" : {
     "deps" : [
+      "//src/com/facebook/buck/android:steps",
+      "//src/com/facebook/buck/android:utils",
       "//src/com/facebook/buck/apple/clang:headermap",
       "//src/com/facebook/buck/apple/xcode:xcode",
       "//src/com/facebook/buck/cli:config",

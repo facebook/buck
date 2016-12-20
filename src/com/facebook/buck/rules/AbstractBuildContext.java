@@ -30,6 +30,8 @@ abstract class AbstractBuildContext {
 
   public abstract ActionGraph getActionGraph();
 
+  public abstract SourcePathResolver getSourcePathResolver();
+
   public abstract JavaPackageFinder getJavaPackageFinder();
   public abstract BuckEventBus getEventBus();
 

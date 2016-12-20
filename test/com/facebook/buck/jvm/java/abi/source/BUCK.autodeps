@@ -3,7 +3,6 @@
     "deps" : [
       "//src/com/facebook/buck/jvm/java/abi/source:source",
       "//third-party/java/guava:guava",
-      "//third-party/java/jsr:jsr305",
       "//third-party/java/junit:junit"
     ],
     "exported_deps" : [ ]

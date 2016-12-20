@@ -33,6 +33,7 @@ import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
@@ -164,6 +165,7 @@ final class JavaBuildGraphProcessor {
           .setBuildContext(BuildContext.builder()
               // Note we do not create a real action graph because we do not need one.
               .setActionGraph(new ActionGraph(ImmutableList.of()))
+              .setSourcePathResolver(new SourcePathResolver(buildRuleResolver))
               .setJavaPackageFinder(executionContext.getJavaPackageFinder())
               .setEventBus(eventBus)
               .build())

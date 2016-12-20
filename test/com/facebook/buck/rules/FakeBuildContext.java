@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules;
 
+import static org.easymock.EasyMock.createMock;
+
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.google.common.collect.ImmutableList;
@@ -31,6 +33,7 @@ public class FakeBuildContext {
   /** A BuildContext which doesn't touch the host filesystem or actually execute steps. */
   public static final BuildContext NOOP_CONTEXT = BuildContext.builder()
       .setActionGraph(new ActionGraph(ImmutableList.of()))
+      .setSourcePathResolver(createMock(SourcePathResolver.class))
       .setJavaPackageFinder(new FakeJavaPackageFinder())
       .setEventBus(BuckEventBusFactory.newInstance())
       .build();
