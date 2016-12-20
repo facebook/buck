@@ -17,6 +17,8 @@ package com.facebook.buck.model;
 
 import com.google.common.collect.ImmutableSet;
 
+import java.util.Optional;
+
 /**
  * When applied to a {@link com.facebook.buck.rules.Description} this indicates that it supports
  * flavours.
@@ -29,4 +31,8 @@ public interface Flavored {
    * created.
    */
   boolean hasFlavors(ImmutableSet<Flavor> flavors);
+
+  default Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+    return Optional.empty();
+  }
 }
