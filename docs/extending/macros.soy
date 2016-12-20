@@ -17,6 +17,8 @@ Because build files accept valid Python code, it is possible to define
 Python functions that have the side-effect of creating build rules.
 Such functions are called <strong>macros</strong>.
 
+<h3>Defining A Macro</h3>
+
 <p>
 
 <strong>Warning:</strong> Although build files are evaluated as Python
@@ -61,6 +63,8 @@ java_library_using_guava(
 )
 </pre>{/literal}
 
+<h3>Sharing Macros Within Your Project</h3>
+
 If you wish to include your macros in multiple BUCK files, you can 
 use <a href="/function/include_defs.html"><code>include_defs()</code></a>:
 {literal}<pre class="prettyprint lang-py">
@@ -77,6 +81,8 @@ include a <a href="/concept/buckconfig.html#buildfile.includes">buildfile.includ
   includes = //MACROS
 </pre>{/literal}
 
+
+<h3>Compound Build Rules</h3>
 
 You can also create more sophisticated macros that create multiple build
 rules. For example, you might want to create a single build rule that
