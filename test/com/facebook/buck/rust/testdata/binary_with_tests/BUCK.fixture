@@ -9,6 +9,8 @@ rust_test(
 rust_test(
   name = "test_success",
   crate = "test_success",
+  labels = [ 'foo', 'bar', 'expensive', ],
+  contacts = [ 'hello world' ],
   srcs = [
     "test_success.rs",
   ],

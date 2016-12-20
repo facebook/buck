@@ -73,6 +73,8 @@ public class RustTest
   private final String crate;
   private final Path testOutputFile;
   private final Path testStdoutFile;
+  private final ImmutableSet<Label> labels;
+  private final ImmutableSet<String> contacts;
 
   public RustTest(
       BuildRuleParams params,
@@ -80,6 +82,8 @@ public class RustTest
       String crate,
       Optional<SourcePath> crateRoot,
       ImmutableSortedSet<SourcePath> srcs,
+      ImmutableSet<Label> labels,
+      ImmutableSet<String> contacts,
       ImmutableSortedSet<String> features,
       ImmutableList<String> rustcFlags,
       Supplier<Tool> compiler,
@@ -113,6 +117,8 @@ public class RustTest
         linkStyle);
 
     this.crate = crate;
+    this.labels = labels;
+    this.contacts = contacts;
     this.testOutputFile = getProjectFilesystem().resolve(getPathToTestResults());
     this.testStdoutFile = getProjectFilesystem().resolve(getPathToTestStdout());
   }
@@ -162,13 +168,12 @@ public class RustTest
 
   @Override
   public ImmutableSet<Label> getLabels() {
-    return ImmutableSet.of();
+    return labels;
   }
 
   @Override
   public ImmutableSet<String> getContacts() {
-    // TODO(StanislavGlebik)
-    return ImmutableSet.of();
+    return contacts;
   }
 
   @Override

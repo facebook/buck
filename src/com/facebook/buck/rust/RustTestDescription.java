@@ -32,6 +32,7 @@ import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
+import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
@@ -86,6 +87,8 @@ public class RustTestDescription implements
         args.crate.orElse(ruleToCrateName(params.getBuildTarget().getShortName())),
         args.crateRoot,
         ImmutableSortedSet.copyOf(args.srcs),
+        args.labels,
+        args.contacts,
         ImmutableSortedSet.copyOf(args.features),
         rustcArgs.build(),
         () -> rustBuckConfig.getRustCompiler().resolve(resolver),
@@ -127,6 +130,8 @@ public class RustTestDescription implements
   @SuppressFieldNotInitialized
   public static class Arg extends AbstractDescriptionArg {
     public ImmutableSortedSet<SourcePath> srcs;
+    public ImmutableSet<Label> labels = ImmutableSet.of();
+    public ImmutableSet<String> contacts = ImmutableSet.of();
     public ImmutableSortedSet<String> features = ImmutableSortedSet.of();
     public List<String> rustcFlags = ImmutableList.of();
     public ImmutableList<String> linkerFlags = ImmutableList.of();
