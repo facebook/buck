@@ -611,6 +611,8 @@ if __name__ == '__main__':
         if key == '--disable_android_auto_generation_setting':
             android_auto_generation_disabled = True
 
+    print >> sys.stderr, ('--deprecated-ij-generation is deprecated and will be removed soon')
+
     parsed_json = json.load(open(json_file, 'r'))
 
     libraries = parsed_json['libraries']
