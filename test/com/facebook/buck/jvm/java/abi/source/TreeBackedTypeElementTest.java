@@ -34,6 +34,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -46,18 +47,31 @@ public class TreeBackedTypeElementTest {
   public TemporaryFolder tempFolder = new TemporaryFolder();
 
   private Trees trees;
+  private Elements javacElements;
+  private TreeBackedElements treesElements;
 
   @Test
   public void testGetSimpleName() throws IOException {
-    TypeElement javacElement = compile("public class Foo {}");
+    compile("public class Foo {}");
+    TypeElement javacElement = javacElements.getTypeElement("Foo");
+    TypeElement treesElement = treesElements.getTypeElement("Foo");
     ClassTree tree = trees.getTree(javacElement);
-    TypeElement treesElement = new TreeBackedTypeElement(tree);
 
     assertEquals(javacElement.getSimpleName(), treesElement.getSimpleName());
     assertEquals(tree.getSimpleName(), treesElement.getSimpleName());
   }
 
-  private TypeElement compile(String source) throws IOException {
+  @Test
+  public void testGetQualifiedNameUnnamedPackage() throws IOException {
+    compile("public class Foo {}");
+
+    TypeElement javacElement = javacElements.getTypeElement("Foo");
+    TypeElement treesElement = treesElements.getTypeElement("Foo");
+
+    assertEquals(javacElement.getQualifiedName(), treesElement.getQualifiedName());
+  }
+
+  private void compile(String source) throws IOException {
     File sourceFile = tempFolder.newFile("Foo.java");
     Files.write(source, sourceFile, StandardCharsets.UTF_8);
 
@@ -70,7 +84,16 @@ public class TreeBackedTypeElementTest {
         (JavacTask) compiler.getTask(null, fileManager, null, null, null, sourceObjects);
 
     trees = Trees.instance(task);
+    javacElements = task.getElements();
+    TreeResolver treeResolver = new TreeResolver(task.getElements());
+    treesElements = treeResolver.getElements();
 
-    return (TypeElement) task.analyze().iterator().next();
+    task.parse().forEach(tree -> treeResolver.enterTree(tree));
+
+    // Make sure we've got elements for things. Technically this is going a little further than
+    // the compiler ordinarily would by the time annotation processors get involved, but this
+    // shouldn't matter for interface-level things. If need be there's a private method we can
+    // reflect to to get more exact behavior.
+    task.analyze();
   }
 }
