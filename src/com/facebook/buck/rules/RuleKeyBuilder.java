@@ -151,7 +151,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     if (sourcePath instanceof BuildTargetSourcePath) {
       BuildRule buildRule = resolver.getRuleOrThrow((BuildTargetSourcePath) sourcePath);
       feed(sourcePath.toString());
-      return setSingleValue(buildRule);
+      return setBuildRule(buildRule);
     }
 
     // The original version of this expected the path to be relative, however, sometimes the
@@ -192,7 +192,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
    */
   protected abstract RuleKeyBuilder<RULE_KEY> setBuildRule(BuildRule rule);
 
-  protected RuleKeyBuilder<RULE_KEY> setAppendableRuleKey(String key, RuleKey ruleKey) {
+  protected final RuleKeyBuilder<RULE_KEY> setAppendableRuleKey(String key, RuleKey ruleKey) {
     return setReflectively(key + ".appendableSubKey", ruleKey);
   }
 
@@ -327,7 +327,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     return this;
   }
 
-  protected RuleKeyBuilder<RULE_KEY> setSingleValue(@Nullable Object val) {
+  protected final RuleKeyBuilder<RULE_KEY> setSingleValue(@Nullable Object val) {
     if (val == null) { // Null value first
       ruleKeyLogger.addNullValue();
       return feed(new byte[0]);
@@ -403,7 +403,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     return this;
   }
 
-  protected RuleKey buildRuleKey() {
+  protected final RuleKey buildRuleKey() {
     RuleKey ruleKey = new RuleKey(hasher.hash());
     ruleKeyLogger.registerRuleKey(ruleKey);
     return ruleKey;
