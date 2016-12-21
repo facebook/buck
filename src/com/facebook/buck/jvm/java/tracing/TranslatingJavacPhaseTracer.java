@@ -101,9 +101,9 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
       return tracer;
     } catch (ReflectiveOperationException e) {
       LOG.warn(
-          e,
-          "Failed loading TracingTaskListener. " +
-              "Perhaps using a compiler that doesn't support com.sun.source.util.JavaTask?");
+          "Failed loading TracingTaskListener (%s: %s). " +
+              "Perhaps using a compiler that doesn't support com.sun.source.util.JavaTask?",
+          e.getClass().getSimpleName(), e.getMessage());
       return null;
     }
   }
