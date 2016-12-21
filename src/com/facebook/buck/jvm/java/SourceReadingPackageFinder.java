@@ -216,7 +216,7 @@ class SourceReadingPackageFinder implements JavaPackageFinder {
 
         if (last == '*' && ch == '/') {
           // Strip the trailing * from the comment
-          return new Token(Token.Kind.COMMENT, value.substring(0, value.length() -1));
+          return new Token(Token.Kind.COMMENT, value.substring(0, value.length() - 1));
         }
 
         last = ch;
