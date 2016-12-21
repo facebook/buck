@@ -1969,7 +1969,7 @@ public final class Main {
           new NGListeningAddress(socketPath),
           NGServer.DEFAULT_SESSIONPOOLSIZE,
           heartbeatTimeout);
-      daemonKillers = new DaemonKillers(server);
+      daemonKillers = new DaemonKillers(server, Paths.get(socketPath));
       server.run();
     }
 
@@ -1984,16 +1984,22 @@ public final class Main {
 
     private final NGServer server;
     private final IdleKiller idleKiller;
+    private final SocketLossKiller socketLossKiller;
 
-    DaemonKillers(NGServer server) {
+    DaemonKillers(NGServer server, Path socketPath) {
       this.server = server;
       this.idleKiller = new IdleKiller(
           daemonKillerExecutorService,
           DAEMON_SLAYER_TIMEOUT,
           this::killServer);
+      this.socketLossKiller = new SocketLossKiller(
+          daemonKillerExecutorService,
+          socketPath.toAbsolutePath(),
+          this::killServer);
     }
 
     IdleKiller.CommandExecutionScope newCommandExecutionScope() {
+      socketLossKiller.arm();  // Arm the socket loss killer also.
       return idleKiller.newCommandExecutionScope();
     }
 
