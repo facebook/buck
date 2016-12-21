@@ -30,7 +30,6 @@ import com.facebook.buck.rage.RageConfig;
 import com.facebook.buck.rage.VcsInfoCollector;
 import com.facebook.buck.rage.WatchmanDiagReportCollector;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.versioncontrol.DefaultVersionControlCmdLineInterfaceFactory;
@@ -59,7 +58,6 @@ public class RageCommand extends AbstractCommand {
     ProjectFilesystem filesystem = params.getCell().getFilesystem();
     BuckConfig buckConfig = params.getBuckConfig();
     RageConfig rageConfig = RageConfig.of(buckConfig);
-    DirtyPrintStreamDecorator stdOut = params.getConsole().getStdOut();
     ProcessExecutor processExecutor = new DefaultProcessExecutor(params.getConsole());
 
     VersionControlCmdLineInterfaceFactory vcsFactory =
@@ -96,7 +94,6 @@ public class RageCommand extends AbstractCommand {
           filesystem,
           params.getObjectMapper(),
           params.getConsole(),
-          stdOut,
           params.getStdIn(),
           params.getBuildEnvironmentDescription(),
           vcsInfoCollector,
@@ -108,7 +105,7 @@ public class RageCommand extends AbstractCommand {
           reporter,
           filesystem,
           params.getObjectMapper(),
-          stdOut,
+          params.getConsole(),
           params.getBuildEnvironmentDescription(),
           gatherVcsInfo ? vcsInfoCollector : Optional.empty(),
           rageConfig,

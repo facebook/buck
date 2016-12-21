@@ -28,13 +28,13 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -44,6 +44,10 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
 
 public class InteractiveReportIntegrationTest {
@@ -53,6 +57,10 @@ public class InteractiveReportIntegrationTest {
   private static final String DEPS_PATH = "buck-out/log/" +
         "2016-06-21_16h18m51s_autodepscommand_d09893d5-b11e-4e3f-a5bf-70c60a06896e/";
   private static final String WATCHMAN_DIAG_COMMAND = "watchman-diag";
+  private static final ImmutableMap<String, String> TIMESTAMPS = ImmutableMap.of(
+      BUILD_PATH, "2016-06-21T16:16:24.00Z",
+      DEPS_PATH, "2016-06-21T16:18:51.00Z"
+  );
 
   private ProjectWorkspace traceWorkspace;
   private String tracePath1;
@@ -62,7 +70,7 @@ public class InteractiveReportIntegrationTest {
   public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws Exception {
     tracePath1 = BUILD_PATH + "file.trace";
     tracePath2 = DEPS_PATH + "file.trace";
     traceWorkspace  = TestDataHelper.createProjectWorkspaceForScenario(
@@ -72,6 +80,15 @@ public class InteractiveReportIntegrationTest {
     traceWorkspace.setUp();
     traceWorkspace.writeContentsToPath(new String(new char[32 * 1024]), tracePath1);
     traceWorkspace.writeContentsToPath(new String(new char[64 * 1024]), tracePath2);
+
+    ProjectFilesystem filesystem = traceWorkspace.asCell().getFilesystem();
+    for (Map.Entry<String, String> timestampEntry : TIMESTAMPS.entrySet()) {
+      for (Path path : filesystem.getDirectoryContents(Paths.get(timestampEntry.getKey()))) {
+        filesystem.setLastModifiedTime(
+            path,
+            FileTime.from(Instant.parse(timestampEntry.getValue())));
+      }
+    }
   }
 
   @Test
@@ -102,7 +119,7 @@ public class InteractiveReportIntegrationTest {
         report.getReportSubmitLocation().get());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);
-    zipInspector.assertFileExists(tracePath2);
+    zipInspector.assertFileExists(tracePath1);
   }
 
   @Test
@@ -114,8 +131,9 @@ public class InteractiveReportIntegrationTest {
         report.getReportSubmitLocation().get());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);
-    zipInspector.assertFileExists(tracePath1);
-    zipInspector.assertFileDoesNotExist(tracePath2);
+    // The second command was more recent, so its file should be included.
+    zipInspector.assertFileExists(tracePath2);
+    zipInspector.assertFileDoesNotExist(tracePath1);
   }
 
   @Test
@@ -152,7 +170,6 @@ public class InteractiveReportIntegrationTest {
     ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
     RageConfig rageConfig = RageConfig.of(workspace.asCell().getBuckConfig());
     Clock clock = new DefaultClock();
-    CapturingPrintStream outputStream = new CapturingPrintStream();
     ExtraInfoCollector extraInfoCollector = Optional::empty;
     TestConsole console = new TestConsole();
     DefectReporter defectReporter = new DefaultDefectReporter(filesystem,
@@ -170,7 +187,6 @@ public class InteractiveReportIntegrationTest {
             filesystem,
             objectMapper,
             console,
-            outputStream,
             inputStream,
             TestBuildEnvironmentDescription.INSTANCE,
             VcsInfoCollector.create(new NoOpCmdLineInterface()),

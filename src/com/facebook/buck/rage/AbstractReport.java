@@ -23,6 +23,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigPaths;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildId;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
@@ -37,7 +38,6 @@ import org.immutables.value.Value;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,7 +54,7 @@ public abstract class AbstractReport {
   private final ProjectFilesystem filesystem;
   private final DefectReporter defectReporter;
   private final BuildEnvironmentDescription buildEnvironmentDescription;
-  private final PrintStream output;
+  private final Console output;
   private final RageConfig rageConfig;
   private final ExtraInfoCollector extraInfoCollector;
   private final Optional<WatchmanDiagReportCollector> watchmanDiagReportCollector;
@@ -63,7 +63,7 @@ public abstract class AbstractReport {
       ProjectFilesystem filesystem,
       DefectReporter defectReporter,
       BuildEnvironmentDescription buildEnvironmentDescription,
-      PrintStream output,
+      Console output,
       RageConfig rageBuckConfig,
       ExtraInfoCollector extraInfoCollector,
       Optional<WatchmanDiagReportCollector> watchmanDiagReportCollector) {
@@ -106,7 +106,7 @@ public abstract class AbstractReport {
         extraInfo = Optional.of(extraInfoResultOptional.get().getOutput());
       }
     } catch (DefaultExtraInfoCollector.ExtraInfoExecutionException e) {
-      output.printf("There was a problem gathering additional information: %s. " +
+      output.printErrorText("There was a problem gathering additional information: %s. " +
           "The results will not be attached to the report.", e.getMessage());
     }
 
@@ -156,7 +156,7 @@ public abstract class AbstractReport {
         .setUserLocalConfiguration(userLocalConfiguration)
         .build();
 
-    output.println("Writing report, please wait..");
+    output.getStdOut().println("Writing report, please wait..\n");
     return Optional.of(defectReporter.submitReport(defectReport));
   }
 
@@ -164,18 +164,20 @@ public abstract class AbstractReport {
       Optional<DefectSubmitResult> defectSubmitResult,
       boolean showJson) {
     if (!defectSubmitResult.isPresent()) {
-      output.println("No logs of interesting commands were found. Check if buck-out/log contains " +
-          "commands except buck launch & buck rage.");
+      output.printErrorText("No logs of interesting commands were found. Check if buck-out/log " +
+          "contains commands except buck launch & buck rage.");
       return;
     }
     DefectSubmitResult result = defectSubmitResult.get();
+    LOG.debug("Got defect submit result %s", result);
+
     // If request has an empty isRequestSuccessful, it means we did not try to upload it somewhere.
     if (!result.getIsRequestSuccessful().isPresent()) {
       if (result.getReportSubmitLocation().isPresent()) {
-        output.printf("Report saved at %s\n", result.getReportSubmitLocation().get());
+        output.printSuccess("Report saved at %s", result.getReportSubmitLocation().get());
       } else {
-        output.printf(
-            "=> Failed to save report locally. Reason: %s\n",
+        output.printErrorText(
+            "=> Failed to save report locally. Reason: %s",
             result.getReportSubmitErrorMessage().orElse("Unknown"));
       }
       return;
@@ -183,7 +185,7 @@ public abstract class AbstractReport {
 
     if (result.getIsRequestSuccessful().get()) {
      if (result.getRequestProtocol().equals(RageProtocolVersion.SIMPLE)) {
-       output.printf("%s", result.getReportSubmitMessage().get());
+       output.getStdOut().printf("%s", result.getReportSubmitMessage().get());
      } else {
        String message = "=> Upload was successful.\n";
        if (result.getReportSubmitLocation().isPresent()) {
@@ -192,11 +194,11 @@ public abstract class AbstractReport {
        if (result.getReportSubmitMessage().isPresent() && showJson) {
          message += "=> Full Response was: " + result.getReportSubmitMessage().get() + "\n";
        }
-       output.print(message);
+       output.getStdOut().print(message);
      }
     } else {
-      output.printf(
-          "=> Failed to upload report because of error: %s.\n=> Report was saved locally at %s\n",
+      output.printErrorText(
+          "=> Failed to upload report because of error: %s.\n=> Report was saved locally at %s",
           result.getReportSubmitErrorMessage().get(),
           result.getReportSubmitLocation());
     }
@@ -281,7 +283,7 @@ public abstract class AbstractReport {
     try {
       watchmanDiagReport = watchmanDiagReportCollector.get().run();
     } catch (ExtraInfoCollector.ExtraInfoExecutionException e) {
-      output.printf("There was a problem getting the watchman-diag report: %s. " +
+      output.printErrorText("There was a problem getting the watchman-diag report: %s. " +
           "The information will be omitted from the report.", e);
     }
 

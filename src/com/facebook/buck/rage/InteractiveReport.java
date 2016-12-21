@@ -31,7 +31,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -48,14 +47,12 @@ public class InteractiveReport extends AbstractReport {
   private final Optional<VcsInfoCollector> vcsInfoCollector;
   private final Console console;
   private final UserInput input;
-  private final PrintStream output;
 
   public InteractiveReport(
       DefectReporter defectReporter,
       ProjectFilesystem filesystem,
       ObjectMapper objectMapper,
       Console console,
-      PrintStream output,
       InputStream stdin,
       BuildEnvironmentDescription buildEnvironmentDescription,
       Optional<VcsInfoCollector> vcsInfoCollector,
@@ -65,15 +62,16 @@ public class InteractiveReport extends AbstractReport {
     super(filesystem,
         defectReporter,
         buildEnvironmentDescription,
-        output,
+        console,
         rageConfig,
         extraInfoCollector,
         watchmanDiagReportCollector);
     this.buildLogHelper = new BuildLogHelper(filesystem, objectMapper);
     this.vcsInfoCollector = vcsInfoCollector;
-    this.output = output;
     this.console = console;
-    this.input = new UserInput(output, new BufferedReader(new InputStreamReader(stdin)));
+    this.input = new UserInput(
+        console.getStdOut(),
+        new BufferedReader(new InputStreamReader(stdin)));
   }
 
   @Override
@@ -133,7 +131,8 @@ public class InteractiveReport extends AbstractReport {
     try {
       return Optional.of(vcsInfoCollector.get().gatherScmInformation());
     } catch (VersionControlCommandFailedException e) {
-      output.printf("Failed to get source control information: %s, proceeding regardless.\n", e);
+      console.printErrorText(
+          "Failed to get source control information: %s, proceeding regardless.", e);
     }
     return Optional.empty();
   }

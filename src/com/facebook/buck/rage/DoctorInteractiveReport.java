@@ -18,12 +18,12 @@ package com.facebook.buck.rage;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.Optional;
 
 /**
@@ -41,7 +41,7 @@ public class DoctorInteractiveReport extends AbstractReport {
   public DoctorInteractiveReport(
       DefectReporter defectReporter,
       ProjectFilesystem filesystem,
-      PrintStream output,
+      Console console,
       UserInput input,
       BuildEnvironmentDescription buildEnvironmentDescription,
       Optional<VcsInfoCollector> vcsInfoCollector,
@@ -52,7 +52,7 @@ public class DoctorInteractiveReport extends AbstractReport {
     super(filesystem,
         defectReporter,
         buildEnvironmentDescription,
-        output,
+        console,
         rageConfig,
         extraInfoCollector,
         watchmanDiagReportCollector);

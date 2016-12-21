@@ -17,13 +17,13 @@
 package com.facebook.buck.rage;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.Optional;
 
 /**
@@ -33,13 +33,13 @@ import java.util.Optional;
 public class AutomatedReport extends AbstractReport {
   private final BuildLogHelper buildLogHelper;
   private final Optional<VcsInfoCollector> vcsInfoCollector;
-  private final PrintStream output;
+  private final Console console;
 
   public AutomatedReport(
       DefectReporter defectReporter,
       ProjectFilesystem filesystem,
       ObjectMapper objectMapper,
-      PrintStream output,
+      Console console,
       BuildEnvironmentDescription buildEnvironmentDescription,
       Optional<VcsInfoCollector> vcsInfoCollector,
       RageConfig rageConfig,
@@ -47,13 +47,13 @@ public class AutomatedReport extends AbstractReport {
     super(filesystem,
         defectReporter,
         buildEnvironmentDescription,
-        output,
+        console,
         rageConfig,
         extraInfoCollector,
         Optional.empty());
     this.vcsInfoCollector = vcsInfoCollector;
     this.buildLogHelper = new BuildLogHelper(filesystem, objectMapper);
-    this.output = output;
+    this.console = console;
   }
 
   @Override
@@ -69,7 +69,8 @@ public class AutomatedReport extends AbstractReport {
         return Optional.of(vcsInfoCollector.get().gatherScmInformation());
       }
     } catch (VersionControlCommandFailedException e) {
-      output.printf("Failed to get source control information: %s, proceeding regardless.\n", e);
+      console.printErrorText(
+          "Failed to get source control information: %s, proceeding regardless.", e);
     }
     return Optional.empty();
   }

@@ -113,7 +113,7 @@ public class DoctorCommand extends AbstractCommand {
             params.getBuckEventBus(),
             params.getClock()),
         params.getCell().getFilesystem(),
-        params.getConsole().getStdOut(),
+        params.getConsole(),
         userInput,
         params.getBuildEnvironmentDescription(),
         VcsInfoCollector.create(vcsFactory.createCmdLineInterface()),

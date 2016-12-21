@@ -80,11 +80,25 @@ public class Console {
   }
 
   /**
+   * Prints a formatted success message. {@see #printSuccess(String)}
+   */
+  public void printSuccess(String successMessage, Object... args) {
+    printSuccess(String.format(successMessage, args));
+  }
+
+  /**
    * Prints an error message to stderr that will be highlighted in red if stderr is a tty.
    */
   public void printErrorText(String message) {
     LOG.warn("Build error: %s", message);
     stdErr.println(ansi.asErrorText(message));
+  }
+
+  /**
+   * Prints a formatted error message. {@see #printErrorText(String)}
+   */
+  public void printErrorText(String message, Object... args) {
+    printErrorText(String.format(message, args));
   }
 
   /**
