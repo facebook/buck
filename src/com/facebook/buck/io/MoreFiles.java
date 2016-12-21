@@ -114,6 +114,16 @@ public final class MoreFiles {
 
   /**
    * Recursively copies all files under {@code fromPath} to {@code toPath}.
+   */
+  public static void copyRecursivelyWithFilter(
+      final Path fromPath,
+      final Path toPath,
+      final Function<Path, Boolean> filter) throws IOException {
+    copyRecursively(fromPath, toPath, Functions.identity(), filter);
+  }
+
+  /**
+   * Recursively copies all files under {@code fromPath} to {@code toPath}.
    * The {@code transform} will be applied after the destination path for a file has been
    * relativized.
    * @param fromPath item to copy
@@ -125,6 +135,14 @@ public final class MoreFiles {
       final Path fromPath,
       final Path toPath,
       final Function<Path, Path> transform) throws IOException {
+    copyRecursively(fromPath, toPath, transform, input -> true);
+  }
+
+  public static void copyRecursively(
+      final Path fromPath,
+      final Path toPath,
+      final Function<Path, Path> transform,
+      final Function<Path, Boolean> filter) throws IOException {
     // Adapted from http://codingjunkie.net/java-7-copy-move/.
     SimpleFileVisitor<Path> copyDirVisitor = new SimpleFileVisitor<Path>() {
 
@@ -140,6 +158,9 @@ public final class MoreFiles {
 
       @Override
       public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+        if (!filter.apply(file)) {
+          return FileVisitResult.CONTINUE;
+        }
         Path destPath = toPath.resolve(fromPath.relativize(file));
         Path transformedDestPath = transform.apply(destPath);
         if (transformedDestPath != null) {
