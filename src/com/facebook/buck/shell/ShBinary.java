@@ -102,7 +102,8 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
                   .join(Collections.nCopies(levelsBelowRoot, ".."));
 
               ImmutableList<String> resourceStrings = FluentIterable
-                  .from(getResolver().deprecatedAllPaths(resources))
+                  .from(resources)
+                  .transform(getResolver()::getRelativePath)
                   .transform(Object::toString)
                   .transform(Escaper.BASH_ESCAPER)
                   .toList();
