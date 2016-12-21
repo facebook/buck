@@ -160,10 +160,4 @@ abstract class IjFolder implements Comparable<IjFolder> {
               .build();
   }
 
-  /**
-   * Interface for factory classes which can create each type of folder.
-   */
-  protected interface IJFolderFactory {
-    IjFolder create(Path path, boolean wantsPrefix, ImmutableSortedSet<Path> inputs);
-  }
 }

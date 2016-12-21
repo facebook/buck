@@ -253,7 +253,7 @@ public class IjModuleFactory {
    * @param context the module to add the folders to.
    */
   private static void addSourceFolders(
-      IjFolder.IJFolderFactory factory,
+      IJFolderFactory factory,
       ImmutableMultimap<Path, Path> foldersToInputsIndex,
       boolean wantsPackagePrefix,
       ModuleBuildContext context) {
@@ -269,7 +269,7 @@ public class IjModuleFactory {
   }
 
   private void addDepsAndFolder(
-      IjFolder.IJFolderFactory folderFactory,
+      IJFolderFactory folderFactory,
       DependencyType dependencyType,
       TargetNode<?, ?> targetNode,
       boolean wantsPackagePrefix,
@@ -286,7 +286,7 @@ public class IjModuleFactory {
   }
 
   private void addDepsAndFolder(
-      IjFolder.IJFolderFactory folderFactory,
+      IJFolderFactory folderFactory,
       DependencyType dependencyType,
       TargetNode<?, ?> targetNode,
       boolean wantsPackagePrefix,
@@ -353,7 +353,7 @@ public class IjModuleFactory {
 
   @SuppressWarnings("unchecked")
   private void addAnnotationOutputIfNeeded(
-      IjFolder.IJFolderFactory folderFactory,
+      IJFolderFactory folderFactory,
       TargetNode<?, ?> targetNode,
       ModuleBuildContext context) {
     TargetNode<? extends JvmLibraryArg, ?> jvmLibraryTargetNode =

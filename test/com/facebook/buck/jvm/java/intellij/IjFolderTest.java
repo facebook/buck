@@ -29,7 +29,7 @@ import java.nio.file.Paths;
 @Ignore
 public abstract class IjFolderTest {
 
-  IjFolder.IJFolderFactory folderFactory;
+  IJFolderFactory folderFactory;
 
   public abstract void setupFolderFactory();
 
@@ -130,7 +130,7 @@ public abstract class IjFolderTest {
         expectedMergedInputs);
   }
 
-  public void testMerge(IjFolder.IJFolderFactory otherFactory) {
+  public void testMerge(IJFolderFactory otherFactory) {
     Path path = Paths.get("/src");
 
     IjFolder left = folderFactory.create(path, false, ImmutableSortedSet.of());
