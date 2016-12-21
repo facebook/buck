@@ -67,12 +67,17 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
   private boolean isProcessingAnnotations = false;
   private int roundNumber = 0;
 
+  /**
+   * @param next a TaskListener that should be notified of events outside of the trace windows. It
+   *             is passed as Object because TaskListener is not available in Buck's ClassLoader
+   */
   @Nullable
   public static TranslatingJavacPhaseTracer setupTracing(
       BuildTarget invokingTarget,
       ClassLoaderCache classLoaderCache,
       JavacEventSink eventSink,
-      JavaCompiler.CompilationTask task) {
+      JavaCompiler.CompilationTask task,
+      Object next) {
     try {
       final ClassLoader tracingTaskListenerClassLoader =
           PluginLoader.getPluginClassLoader(classLoaderCache, task);
@@ -83,13 +88,15 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
       final Method setupTracingMethod = tracingTaskListenerClass.getMethod(
           "setupTracing",
           JavaCompiler.CompilationTask.class,
-          JavacPhaseTracer.class);
+          JavacPhaseTracer.class,
+          Object.class);
       final TranslatingJavacPhaseTracer tracer = new TranslatingJavacPhaseTracer(
           new JavacPhaseEventLogger(invokingTarget, eventSink));
       setupTracingMethod.invoke(
           null,
           task,
-          tracer);
+          tracer,
+          next);
 
       return tracer;
     } catch (ReflectiveOperationException e) {

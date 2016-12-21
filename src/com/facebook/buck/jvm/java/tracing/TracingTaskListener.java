@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.tracing;
 
+import com.facebook.buck.jvm.java.plugin.adapter.TaskListenerWrapper;
 import com.facebook.buck.util.exportedfiles.Nullable;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskEvent;
@@ -33,23 +34,36 @@ import javax.tools.JavaCompiler;
 public class TracingTaskListener implements TaskListener {
   private final JavacPhaseTracer tracing;
   private final TraceCleaner traceCleaner;
+  private final TaskListenerWrapper inner;
 
-  public static void setupTracing(JavaCompiler.CompilationTask task, JavacPhaseTracer tracing) {
+  public static void setupTracing(
+      JavaCompiler.CompilationTask task,
+      JavacPhaseTracer tracing,
+      Object next) {
     if (!(task instanceof JavacTask)) {
       return;
     }
 
     final JavacTask javacTask = (JavacTask) task;
-    javacTask.setTaskListener(new TracingTaskListener(tracing));
+
+    // The main part of Buck doesn't have access to `TaskListener`, since that's defined in the
+    // compiler jar. So we had to pass it as an object and downcast.
+    final TaskListener nextListener = (TaskListener) next;
+    javacTask.setTaskListener(new TracingTaskListener(tracing, nextListener));
   }
 
-  public TracingTaskListener(JavacPhaseTracer tracing) {
+  public TracingTaskListener(JavacPhaseTracer tracing, TaskListener next) {
+    inner = new TaskListenerWrapper(next);
     this.tracing = tracing;
     traceCleaner = new TraceCleaner(tracing);
   }
 
   @Override
   public synchronized void started(TaskEvent e) {
+    // Chain start events before tracing, so that the tracing most closely tracks the actual event
+    // time
+    inner.started(e);
+
     // Because TaskListener, TaskEvent, etc. live in tools.jar, and our build has only a stub for
     // that, we can't call started() and finished() directly within tests. So we write started()
     // to extract necessary information from TaskEvent and dispatch any interesting work to helper
@@ -101,6 +115,10 @@ public class TracingTaskListener implements TaskListener {
         // The tracing doesn't care about these events
         break;
     }
+
+    // Chain finished events after tracing, so that the tracing most closely tracks the actual
+    // event time
+    inner.finished(e);
   }
 
   /**

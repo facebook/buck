@@ -253,6 +253,7 @@ public abstract class Jsr199Javac implements Javac {
     boolean isSuccess = false;
     BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
         new Jsr199TracingBridge(context.getEventSink(), invokingRule));
+    Object abiValidatingTaskListener = null;
     try {
       try (
           // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
@@ -261,7 +262,8 @@ public abstract class Jsr199Javac implements Javac {
               invokingRule,
               context.getClassLoaderCache(),
               context.getEventSink(),
-              compilationTask);
+              compilationTask,
+              abiValidatingTaskListener);
 
           // Ensure annotation processors are loaded from their own classloader. If we don't do
           // this, then the evidence suggests that they get one polluted with Buck's own classpath,

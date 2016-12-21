@@ -1,0 +1,11 @@
+{
+  "adapter" : {
+    "deps" : [
+      "//src/com/facebook/buck/jvm/java/plugin/adapter:adapter",
+      "//test/com/facebook/buck/testutil:testutil",
+      "//third-party/java/easymock:easymock",
+      "//third-party/java/junit:junit"
+    ],
+    "exported_deps" : [ ]
+  }
+}

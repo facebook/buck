@@ -1,11 +1,7 @@
 java_test(
-  name = 'tracing',
+  name = 'adapter',
   srcs = glob(['*.java']),
   autodeps = True,
-  deps = [
-    # Autodeps can't figure this out for some reason
-    '//src/com/facebook/buck/jvm/java/plugin/adapter:adapter',
-  ],
   provided_deps = [
   # Tools.jar is the compiler itself, and will already be present at runtime;
   # we compile against a stub.

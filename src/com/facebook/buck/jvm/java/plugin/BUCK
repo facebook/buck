@@ -14,6 +14,7 @@ java_binary(
   name = 'javac-plugin',
   deps = [
     '//src/com/facebook/buck/jvm/java/abi/source:source',
+    '//src/com/facebook/buck/jvm/java/plugin/adapter:adapter',
     '//src/com/facebook/buck/jvm/java/tracing:compiler-plugin',
   ],
 )
