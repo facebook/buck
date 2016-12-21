@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.rage.AbstractReport;
@@ -27,6 +28,7 @@ import com.facebook.buck.rage.ExtraInfoCollector;
 import com.facebook.buck.rage.InteractiveReport;
 import com.facebook.buck.rage.RageConfig;
 import com.facebook.buck.rage.VcsInfoCollector;
+import com.facebook.buck.rage.WatchmanDiagReportCollector;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
@@ -73,6 +75,14 @@ public class RageCommand extends AbstractCommand {
     ExtraInfoCollector extraInfoCollector =
         new DefaultExtraInfoCollector(rageConfig, filesystem, processExecutor);
 
+    Optional<WatchmanDiagReportCollector> watchmanDiagReportCollector =
+        WatchmanDiagReportCollector.newInstanceIfWatchmanUsed(
+            params.getCell(),
+            filesystem,
+            processExecutor,
+            new ExecutableFinder(),
+            params.getEnvironment());
+
     AbstractReport report;
     DefaultDefectReporter reporter = new DefaultDefectReporter(
         filesystem,
@@ -91,7 +101,8 @@ public class RageCommand extends AbstractCommand {
           params.getBuildEnvironmentDescription(),
           vcsInfoCollector,
           rageConfig,
-          extraInfoCollector);
+          extraInfoCollector,
+          watchmanDiagReportCollector);
     } else {
       report = new AutomatedReport(
           reporter,

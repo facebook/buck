@@ -60,13 +60,15 @@ public class InteractiveReport extends AbstractReport {
       BuildEnvironmentDescription buildEnvironmentDescription,
       Optional<VcsInfoCollector> vcsInfoCollector,
       RageConfig rageConfig,
-      ExtraInfoCollector extraInfoCollector) {
+      ExtraInfoCollector extraInfoCollector,
+      Optional<WatchmanDiagReportCollector> watchmanDiagReportCollector) {
     super(filesystem,
         defectReporter,
         buildEnvironmentDescription,
         output,
         rageConfig,
-        extraInfoCollector);
+        extraInfoCollector,
+        watchmanDiagReportCollector);
     this.buildLogHelper = new BuildLogHelper(filesystem, objectMapper);
     this.vcsInfoCollector = vcsInfoCollector;
     this.output = output;
@@ -111,6 +113,12 @@ public class InteractiveReport extends AbstractReport {
               humanReadableSize.getFirst(),
               humanReadableSize.getSecond().getAbbreviation());
         });
+  }
+
+  @Override
+  protected Optional<FileChangesIgnoredReport> getFileChangesIgnoredReport()
+      throws IOException, InterruptedException {
+    return runWatchmanDiagReportCollector(input);
   }
 
   @Override

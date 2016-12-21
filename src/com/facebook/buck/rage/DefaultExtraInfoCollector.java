@@ -21,6 +21,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -61,14 +62,35 @@ public class DefaultExtraInfoCollector implements ExtraInfoCollector {
     projectFilesystem.deleteRecursivelyIfExists(rageExtraFilesDir);
     projectFilesystem.mkdirs(rageExtraFilesDir);
 
+    String extraInfoCommandOutput = runCommandAndGetStdout(
+        Iterables.concat(
+            extraInfoCommand,
+            ImmutableList.of(
+                "--output-dir",
+                projectFilesystem.resolve(rageExtraFilesDir).toString())),
+        projectFilesystem,
+        processExecutor);
+
+    ImmutableSet<Path> rageExtraFiles = projectFilesystem.getFilesUnderPath(rageExtraFilesDir);
+
+    return Optional.of(
+        ExtraInfoResult.builder()
+            .setExtraFiles(rageExtraFiles)
+            .setOutput(extraInfoCommandOutput)
+            .build());
+  }
+
+  public static String runCommandAndGetStdout(
+      Iterable<String> command,
+      ProjectFilesystem projectFilesystem,
+      ProcessExecutor processExecutor)
+      throws IOException, InterruptedException, ExtraInfoExecutionException {
+
     ProcessExecutor.Result extraInfoResult;
     try {
       extraInfoResult = processExecutor.launchAndExecute(
           ProcessExecutorParams.builder()
-              .addAllCommand(extraInfoCommand)
-              .addCommand(
-                  "--output-dir",
-                  projectFilesystem.resolve(rageExtraFilesDir).toString())
+              .addAllCommand(command)
               .setDirectory(projectFilesystem.getRootPath())
               .build(),
           ImmutableSet.of(
@@ -86,24 +108,16 @@ public class DefaultExtraInfoCollector implements ExtraInfoCollector {
       throw new ExtraInfoExecutionException(
           String.format(
               "Gathering extra information for rage report from %s timed out after %d ms",
-              extraInfoCommand,
+              command,
               PROCESS_TIMEOUT_MS));
     }
 
     if (extraInfoResult.getExitCode() != 0) {
       throw new ExtraInfoExecutionException(
           extraInfoResult.getMessageForResult(
-              "Could not get extra info for report from " + extraInfoCommand));
+              "Could not get extra info for report from " + command));
     }
 
-    ImmutableSet<Path> rageExtraFiles = projectFilesystem.getFilesUnderPath(rageExtraFilesDir);
-
-    return Optional.of(
-        ExtraInfoResult.builder()
-            .setExtraFiles(rageExtraFiles)
-            .setOutput(extraInfoResult.getStdout().orElse(""))
-            .build());
-
+    return extraInfoResult.getStdout().orElse("");
   }
-
 }

@@ -49,7 +49,8 @@ public class AutomatedReport extends AbstractReport {
         buildEnvironmentDescription,
         output,
         rageConfig,
-        extraInfoCollector);
+        extraInfoCollector,
+        Optional.empty());
     this.vcsInfoCollector = vcsInfoCollector;
     this.buildLogHelper = new BuildLogHelper(filesystem, objectMapper);
     this.output = output;
@@ -70,6 +71,11 @@ public class AutomatedReport extends AbstractReport {
     } catch (VersionControlCommandFailedException e) {
       output.printf("Failed to get source control information: %s, proceeding regardless.\n", e);
     }
+    return Optional.empty();
+  }
+
+  @Override
+  protected Optional<FileChangesIgnoredReport> getFileChangesIgnoredReport() {
     return Optional.empty();
   }
 

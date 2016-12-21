@@ -29,6 +29,7 @@ import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -56,6 +57,7 @@ public abstract class AbstractReport {
   private final PrintStream output;
   private final RageConfig rageConfig;
   private final ExtraInfoCollector extraInfoCollector;
+  private final Optional<WatchmanDiagReportCollector> watchmanDiagReportCollector;
 
   public AbstractReport(
       ProjectFilesystem filesystem,
@@ -63,13 +65,15 @@ public abstract class AbstractReport {
       BuildEnvironmentDescription buildEnvironmentDescription,
       PrintStream output,
       RageConfig rageBuckConfig,
-      ExtraInfoCollector extraInfoCollector) {
+      ExtraInfoCollector extraInfoCollector,
+      Optional<WatchmanDiagReportCollector> watchmanDiagReportCollector) {
     this.filesystem = filesystem;
     this.defectReporter = defectReporter;
     this.buildEnvironmentDescription = buildEnvironmentDescription;
     this.output = output;
     this.rageConfig = rageBuckConfig;
     this.extraInfoCollector = extraInfoCollector;
+    this.watchmanDiagReportCollector = watchmanDiagReportCollector;
   }
 
   protected abstract ImmutableSet<BuildLogEntry> promptForBuildSelection() throws IOException;
@@ -78,6 +82,9 @@ public abstract class AbstractReport {
       throws IOException, InterruptedException;
 
   protected abstract Optional<UserReport> getUserReport() throws IOException;
+
+  protected abstract Optional<FileChangesIgnoredReport> getFileChangesIgnoredReport()
+      throws IOException, InterruptedException;
 
   public final Optional<DefectSubmitResult> collectAndSubmitResult()
       throws IOException, InterruptedException {
@@ -103,6 +110,8 @@ public abstract class AbstractReport {
           "The results will not be attached to the report.", e.getMessage());
     }
 
+    Optional<FileChangesIgnoredReport> fileChangesIgnoredReport = getFileChangesIgnoredReport();
+
     UserLocalConfiguration userLocalConfiguration =
         UserLocalConfiguration.of(isNoBuckCheckPresent(), getLocalConfigs());
 
@@ -121,6 +130,11 @@ public abstract class AbstractReport {
         .append(extraInfoPaths)
         .append(userLocalConfiguration.getLocalConfigsContents().keySet())
         .append(getTracePathsOfBuilds(selectedBuilds))
+        .append(
+            fileChangesIgnoredReport
+                .flatMap(r -> r.getWatchmanDiagReport())
+                .map(ImmutableList::of)
+                .orElse(ImmutableList.of()))
         .toSet();
 
     DefectReport defectReport = DefectReport.builder()
@@ -138,6 +152,7 @@ public abstract class AbstractReport {
         .setSourceControlInfo(sourceControlInfo)
         .setIncludedPaths(includedPaths)
         .setExtraInfo(extraInfo)
+        .setFileChangesIgnoredReport(fileChangesIgnoredReport)
         .setUserLocalConfiguration(userLocalConfiguration)
         .build();
 
@@ -253,4 +268,27 @@ public abstract class AbstractReport {
   private boolean isNoBuckCheckPresent() {
     return Files.exists(filesystem.getRootPath().resolve(".nobuckcheck"));
   }
+
+  protected Optional<FileChangesIgnoredReport> runWatchmanDiagReportCollector(UserInput input)
+      throws IOException, InterruptedException {
+    if (!watchmanDiagReportCollector.isPresent() ||
+        !input.confirm("Is buck not picking up changes to files? " +
+            "(saying 'yes' will run extra consistency checks)")) {
+      return Optional.empty();
+    }
+
+    Path watchmanDiagReport = null;
+    try {
+      watchmanDiagReport = watchmanDiagReportCollector.get().run();
+    } catch (ExtraInfoCollector.ExtraInfoExecutionException e) {
+      output.printf("There was a problem getting the watchman-diag report: %s. " +
+          "The information will be omitted from the report.", e);
+    }
+
+    return Optional.of(
+        FileChangesIgnoredReport.builder()
+            .setWatchmanDiagReport(watchmanDiagReport)
+            .build());
+  }
+
 }

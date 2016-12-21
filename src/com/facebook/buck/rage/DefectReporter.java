@@ -65,6 +65,15 @@ public interface DefectReporter {
     Optional<String> getReportSubmitErrorMessage();
   }
 
+  /**
+   * Information helpful when diagnosing 'buck is not picking up changes' reports.
+   */
+  @Value.Immutable
+  @BuckStyleImmutable
+  interface AbstractFileChangesIgnoredReport {
+    Optional<Path> getWatchmanDiagReport();
+  }
+
   @Value.Immutable
   @BuckStyleImmutable
   interface AbstractDefectReport {
@@ -74,6 +83,7 @@ public interface DefectReporter {
     BuildEnvironmentDescription getBuildEnvironmentDescription();
     Optional<SourceControlInfo> getSourceControlInfo();
     Optional<String> getExtraInfo();
+    Optional<FileChangesIgnoredReport> getFileChangesIgnoredReport();
     UserLocalConfiguration getUserLocalConfiguration();
   }
 }

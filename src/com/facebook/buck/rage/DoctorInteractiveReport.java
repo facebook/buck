@@ -30,28 +30,33 @@ import java.util.Optional;
  * Responsible for gathering logs and other interesting information from buck when part of the
  * information is already available when calling the constructor.
  */
-public class PopulatedReport extends AbstractReport {
+public class DoctorInteractiveReport extends AbstractReport {
 
-  private static final Logger LOG = Logger.get(PopulatedReport.class);
+  private static final Logger LOG = Logger.get(DoctorInteractiveReport.class);
 
   private final Optional<VcsInfoCollector> vcsInfoCollector;
   private final ImmutableSet<BuildLogEntry> buildLogEntries;
+  private final UserInput input;
 
-  public PopulatedReport(
+  public DoctorInteractiveReport(
       DefectReporter defectReporter,
       ProjectFilesystem filesystem,
       PrintStream output,
+      UserInput input,
       BuildEnvironmentDescription buildEnvironmentDescription,
       Optional<VcsInfoCollector> vcsInfoCollector,
       RageConfig rageConfig,
       ExtraInfoCollector extraInfoCollector,
-      ImmutableSet<BuildLogEntry> buildLogEntries) {
+      ImmutableSet<BuildLogEntry> buildLogEntries,
+      Optional<WatchmanDiagReportCollector> watchmanDiagReportCollector) {
     super(filesystem,
         defectReporter,
         buildEnvironmentDescription,
         output,
         rageConfig,
-        extraInfoCollector);
+        extraInfoCollector,
+        watchmanDiagReportCollector);
+    this.input = input;
     this.vcsInfoCollector = vcsInfoCollector;
     this.buildLogEntries = buildLogEntries;
   }
@@ -75,7 +80,13 @@ public class PopulatedReport extends AbstractReport {
   }
 
   @Override
-  protected Optional<UserReport> getUserReport() throws IOException {
+  protected Optional<FileChangesIgnoredReport> getFileChangesIgnoredReport()
+      throws IOException, InterruptedException {
+    return runWatchmanDiagReportCollector(input);
+  }
+
+  @Override
+  protected Optional<UserReport> getUserReport() {
     return Optional.empty();
   }
 

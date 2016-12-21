@@ -63,7 +63,12 @@ public class UserInput {
       output.println(question + " (Y/n)?");
       output.flush();
 
-      String response = reader.readLine().trim().toLowerCase();
+      String line = reader.readLine();
+      // Stdin was closed.
+      if (line == null) {
+        return false;
+      }
+      String response = line.trim().toLowerCase();
       if (supportedResponses.containsKey(response)) {
         return supportedResponses.get(response);
       } else {

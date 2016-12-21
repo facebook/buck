@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rage;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBusFactory;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -29,10 +29,14 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.timing.Clock;
 import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.FakeProcess;
+import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,6 +52,7 @@ public class InteractiveReportIntegrationTest {
       "2016-06-21_16h16m24s_buildcommand_ac8bd626-6137-4747-84dd-5d4f215c876c/";
   private static final String DEPS_PATH = "buck-out/log/" +
         "2016-06-21_16h18m51s_autodepscommand_d09893d5-b11e-4e3f-a5bf-70c60a06896e/";
+  private static final String WATCHMAN_DIAG_COMMAND = "watchman-diag";
 
   private ProjectWorkspace traceWorkspace;
   private String tracePath1;
@@ -97,7 +102,7 @@ public class InteractiveReportIntegrationTest {
         report.getReportSubmitLocation().get());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);
-    assertEquals(6, zipInspector.getZipFileEntries().size());
+    zipInspector.assertFileExists(tracePath2);
   }
 
   @Test
@@ -109,7 +114,34 @@ public class InteractiveReportIntegrationTest {
         report.getReportSubmitLocation().get());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);
-    assertEquals(8, zipInspector.getZipFileEntries().size());
+    zipInspector.assertFileExists(tracePath1);
+    zipInspector.assertFileDoesNotExist(tracePath2);
+  }
+
+  @Test
+  public void testWatchmanDiagReport() throws Exception {
+    DefectSubmitResult report = createDefectReport(
+        traceWorkspace,
+        new ByteArrayInputStream("0,1\nreport text\n\n".getBytes("UTF-8")));
+    Path reportFile = traceWorkspace.asCell().getFilesystem().resolve(
+        report.getReportSubmitLocation().get());
+
+    ZipInspector zipInspector = new ZipInspector(reportFile);
+    assertThat(
+        zipInspector.getZipFileEntries(),
+        Matchers.hasItem(Matchers.stringContainsInOrder("watchman-diag-report")));
+  }
+
+  private static FakeProcessExecutor createFakeWatchmanDiagProcessExecutor(Console console) {
+    return new FakeProcessExecutor(
+        params -> {
+          if (params.getCommand().get(0).equals(WATCHMAN_DIAG_COMMAND)) {
+            return new FakeProcess(0, "fake watchman diag", "");
+          } else {
+            return new FakeProcess(33);
+          }
+        },
+        console);
   }
 
   private static DefectSubmitResult createDefectReport(
@@ -120,25 +152,31 @@ public class InteractiveReportIntegrationTest {
     ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
     RageConfig rageConfig = RageConfig.of(workspace.asCell().getBuckConfig());
     Clock clock = new DefaultClock();
+    CapturingPrintStream outputStream = new CapturingPrintStream();
+    ExtraInfoCollector extraInfoCollector = Optional::empty;
+    TestConsole console = new TestConsole();
     DefectReporter defectReporter = new DefaultDefectReporter(filesystem,
         objectMapper,
         rageConfig,
         BuckEventBusFactory.newInstance(clock),
         clock);
-    CapturingPrintStream outputStream = new CapturingPrintStream();
-    ExtraInfoCollector extraInfoCollector = Optional::empty;
+    WatchmanDiagReportCollector watchmanDiagReportCollector = new WatchmanDiagReportCollector(
+        filesystem,
+        WATCHMAN_DIAG_COMMAND,
+        createFakeWatchmanDiagProcessExecutor(console));
     InteractiveReport interactiveReport =
         new InteractiveReport(
             defectReporter,
             filesystem,
             objectMapper,
-            new TestConsole(),
+            console,
             outputStream,
             inputStream,
             TestBuildEnvironmentDescription.INSTANCE,
             VcsInfoCollector.create(new NoOpCmdLineInterface()),
             rageConfig,
-            extraInfoCollector);
+            extraInfoCollector,
+            Optional.of(watchmanDiagReportCollector));
     return interactiveReport.collectAndSubmitResult().get();
   }
 }
