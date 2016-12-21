@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.abi.source;
 import com.google.common.io.Files;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.JavacTask;
+import com.sun.source.util.TaskListener;
 import com.sun.source.util.Trees;
 
 import org.junit.Rule;
@@ -36,6 +37,10 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
 public abstract class CompilerTreeApiTest {
+  protected interface TaskListenerFactory {
+    TaskListener newTaskListener(JavacTask task);
+  }
+
   @Rule
   public TemporaryFolder tempFolder = new TemporaryFolder();
   protected JavacTask javacTask;
@@ -45,6 +50,12 @@ public abstract class CompilerTreeApiTest {
   protected TreeBackedElements treesElements;
 
   protected Iterable<? extends CompilationUnitTree> compile(String source) throws IOException {
+    return compile(source, null);
+  }
+
+  protected Iterable<? extends CompilationUnitTree> compile(
+      String source,
+      TaskListenerFactory taskListenerFactory) throws IOException {
     File sourceFile = tempFolder.newFile("Foo.java");
     Files.write(source, sourceFile, StandardCharsets.UTF_8);
 
@@ -55,6 +66,10 @@ public abstract class CompilerTreeApiTest {
 
     javacTask =
         (JavacTask) compiler.getTask(null, fileManager, null, null, null, sourceObjects);
+
+    if (taskListenerFactory != null) {
+      javacTask.setTaskListener(taskListenerFactory.newTaskListener(javacTask));
+    }
 
     trees = Trees.instance(javacTask);
     javacElements = javacTask.getElements();

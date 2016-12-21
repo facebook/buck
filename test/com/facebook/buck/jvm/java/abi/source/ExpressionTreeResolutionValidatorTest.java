@@ -18,22 +18,36 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.testutil.CompilerTreeApiTestRunner;
 import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.util.JavacTask;
+import com.sun.source.util.TaskListener;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
 
+import javax.tools.Diagnostic;
+
 @RunWith(CompilerTreeApiTestRunner.class)
 public class ExpressionTreeResolutionValidatorTest extends CompilerTreeApiTest {
   @Test
   public void testSimpleClassPasses() throws IOException {
-    final Iterable<? extends CompilationUnitTree> compilationUnits =
-        compile("public class Foo { }");
+    compileWithValidation("public class Foo { }");
 
-    ExpressionTreeResolutionValidator validator =
-        new ExpressionTreeResolutionValidator(javacTask, treeResolver);
-    compilationUnits.forEach(cu -> validator.validate(cu, null));
     // Expect no exceptions
+  }
+
+  protected Iterable<? extends CompilationUnitTree> compileWithValidation(
+      String source) throws IOException {
+    return compile(
+        source,
+        // A side effect of our hacky test class loader appears to be that this only works if
+        // it's NOT a lambda. LoL.
+        new TaskListenerFactory() {
+          @Override
+          public TaskListener newTaskListener(JavacTask task) {
+            return new ValidatingTaskListener(task, Diagnostic.Kind.ERROR);
+          }
+        });
   }
 }
