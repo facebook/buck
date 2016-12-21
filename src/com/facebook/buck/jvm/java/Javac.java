@@ -46,7 +46,8 @@ public interface Javac extends RuleKeyAppendable, Tool {
       ImmutableSet<String> safeAnnotationProcessors,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
-      Optional<Path> workingDirectory) throws InterruptedException;
+      Optional<Path> workingDirectory,
+      JavacOptions.AbiGenerationMode abiGenerationMode) throws InterruptedException;
 
   String getDescription(
       ImmutableList<String> options,

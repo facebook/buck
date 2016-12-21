@@ -136,7 +136,8 @@ public class Jsr199JavacIntegrationTest {
         ImmutableSet.of(),
         SOURCE_PATHS,
         pathToSrcsList,
-        Optional.empty());
+        Optional.empty(),
+        JavacOptions.AbiGenerationMode.CLASS);
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
     assertTrue(Files.exists(pathToSrcsList));
@@ -184,7 +185,8 @@ public class Jsr199JavacIntegrationTest {
         ImmutableSet.of(),
         SOURCE_PATHS,
         pathToSrcsList,
-        Optional.empty());
+        Optional.empty(),
+        JavacOptions.AbiGenerationMode.CLASS);
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
     assertTrue(Files.exists(pathToSrcsList));
@@ -288,7 +290,8 @@ public class Jsr199JavacIntegrationTest {
           ImmutableSet.of(),
           SOURCE_PATHS,
           pathToSrcsList,
-          Optional.empty());
+          Optional.empty(),
+          JavacOptions.AbiGenerationMode.CLASS);
       fail("Did not expect compilation to succeed");
     } catch (UnsupportedOperationException ex) {
       if (ex.toString().contains("abcdef")) {

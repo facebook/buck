@@ -118,7 +118,8 @@ public abstract class Jsr199Javac implements Javac {
       ImmutableSet<String> safeAnnotationProcessors,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
-      Optional<Path> workingDirectory) {
+      Optional<Path> workingDirectory,
+      JavacOptions.AbiGenerationMode abiGenerationMode) {
     JavaCompiler compiler = createCompiler(context);
     CustomZipOutputStream jarOutputStream = null;
     StandardJavaFileManager fileManager = null;
@@ -161,7 +162,8 @@ public abstract class Jsr199Javac implements Javac {
             pathToSrcsList,
             compiler,
             fileManager,
-            compilationUnits);
+            compilationUnits,
+            abiGenerationMode);
         if (result != 0 || !context.getDirectToJarOutputSettings().isPresent()) {
           return result;
         }
@@ -221,7 +223,8 @@ public abstract class Jsr199Javac implements Javac {
       Path pathToSrcsList,
       JavaCompiler compiler,
       StandardJavaFileManager fileManager,
-      Iterable<? extends JavaFileObject> compilationUnits) {
+      Iterable<? extends JavaFileObject> compilationUnits,
+      JavacOptions.AbiGenerationMode abiGenerationMode) {
     // write javaSourceFilePaths to classes file
     // for buck user to have a list of all .java files to be compiled
     // since we do not print them out to console in case of error

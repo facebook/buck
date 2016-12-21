@@ -53,7 +53,8 @@ public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
       ImmutableSet<String> safeAnnotationProcessors,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
-      Optional<Path> workingDirectory) throws InterruptedException {
+      Optional<Path> workingDirectory,
+      JavacOptions.AbiGenerationMode abiGenerationMode) throws InterruptedException {
 
     Map<String, Object> serializedContext = JavacExecutionContextSerializer.serialize(context);
     if (LOG.isVerboseEnabled()) {
@@ -68,7 +69,8 @@ public class OutOfProcessJarBackedJavac extends OutOfProcessJsr199Javac {
         safeAnnotationProcessors.asList(),
         ImmutableList.copyOf(javaSourceFilePaths.stream().map(Path::toString).iterator()),
         pathToSrcsList.toString(),
-        workingDirectory.isPresent() ? workingDirectory.get().toString() : null);
+        workingDirectory.isPresent() ? workingDirectory.get().toString() : null,
+        abiGenerationMode);
   }
 
   @Override

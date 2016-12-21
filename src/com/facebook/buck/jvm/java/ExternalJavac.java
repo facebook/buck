@@ -33,6 +33,7 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.zip.Unzip;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -172,7 +173,12 @@ public class ExternalJavac implements Javac {
       ImmutableSet<String> safeAnnotationProcessors,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
-      Optional<Path> workingDirectory) throws InterruptedException {
+      Optional<Path> workingDirectory,
+      JavacOptions.AbiGenerationMode abiGenerationMode) throws InterruptedException {
+
+    Preconditions.checkArgument(
+        abiGenerationMode == AbstractJavacOptions.AbiGenerationMode.CLASS,
+        "Source ABI verification requires JSR199");
     ImmutableList.Builder<String> command = ImmutableList.builder();
     command.add(
         pathToJavac.isLeft() ?

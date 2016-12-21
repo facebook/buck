@@ -43,5 +43,6 @@ public interface OutOfProcessJavacConnectionInterface {
       List<String> setOfSafeAnnotationProcessorsAsList,
       List<String> sortedSetOfJavaSourceFilePathsAsStringsAsList,
       String pathToSrcsListAsString,
-      String workingDirectory);
+      String workingDirectory,
+      JavacOptions.AbiGenerationMode abiGenerationMode);
 }
