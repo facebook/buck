@@ -39,7 +39,7 @@ public class CompilerTreeApiTestRunner extends BlockJUnit4ClassRunner {
     super(reloadFromCompilerClassLoader(klass));
   }
 
-  private static Class<?> reloadFromCompilerClassLoader(Class<?> clazz) throws InitializationError {
+  public static Class<?> reloadFromCompilerClassLoader(Class<?> clazz) throws InitializationError {
     try {
       return Class.forName(clazz.getName(), true, TEST_CLASS_LOADER);
     } catch (ClassNotFoundException e) {

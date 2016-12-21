@@ -18,38 +18,64 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.testutil.CompilerTreeApiTestRunner;
-import com.sun.source.tree.ClassTree;
+import com.facebook.buck.testutil.CompilerTreeApiParameterized;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.io.IOException;
 
+import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
 
-@RunWith(CompilerTreeApiTestRunner.class)
+@RunWith(CompilerTreeApiParameterized.class)
 public class TreeBackedTypeElementTest extends CompilerTreeApiTest {
+  private static final String JAVAC = "javac";
+  private static final String TREES = "trees";
+
+  @Parameterized.Parameters
+  public static Object[] getParameters() {
+    return new Object[] { JAVAC, TREES };
+  }
+
+  @Parameterized.Parameter
+  public String implementation;
+  private Elements elements;
 
   @Test
   public void testGetSimpleName() throws IOException {
     compile("public class Foo {}");
-    TypeElement javacElement = javacElements.getTypeElement("Foo");
-    TypeElement treesElement = treesElements.getTypeElement("Foo");
-    ClassTree tree = trees.getTree(javacElement);
+    TypeElement element = elements.getTypeElement("Foo");
 
-    assertEquals(javacElement.getSimpleName(), treesElement.getSimpleName());
-    assertEquals(tree.getSimpleName(), treesElement.getSimpleName());
+    assertNameEquals("Foo", element.getSimpleName());
   }
 
   @Test
   public void testGetQualifiedNameUnnamedPackage() throws IOException {
     compile("public class Foo {}");
 
-    TypeElement javacElement = javacElements.getTypeElement("Foo");
-    TypeElement treesElement = treesElements.getTypeElement("Foo");
+    TypeElement element = elements.getTypeElement("Foo");
 
-    assertEquals(javacElement.getQualifiedName(), treesElement.getQualifiedName());
+    assertNameEquals("Foo", element.getQualifiedName());
   }
 
+  private void assertNameEquals(String expected, Name actual) {
+    assertEquals(elements.getName(expected), actual);
+  }
+
+  @Override
+  protected void compile(String source) throws IOException {
+    super.compile(source);
+
+    switch (implementation) {
+      case JAVAC:
+        elements = javacElements;
+        break;
+      case TREES:
+        elements = treesElements;
+        break;
+    }
+  }
 }
