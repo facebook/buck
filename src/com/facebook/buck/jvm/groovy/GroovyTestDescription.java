@@ -92,16 +92,20 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
 
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
 
+    JavacOptions javacOptions = JavacOptionsFactory
+        .create(
+          defaultJavacOptions,
+          params,
+          resolver,
+          pathResolver,
+          args
+        )
+        // groovyc may or may not play nice with generating ABIs from source, so disabling for now
+        .withAbiGenerationMode(JavacOptions.AbiGenerationMode.CLASS);
     GroovycToJarStepFactory stepFactory = new GroovycToJarStepFactory(
         groovyBuckConfig.getGroovyCompiler().get(),
         Optional.of(args.extraGroovycArguments),
-        JavacOptionsFactory.create(
-            defaultJavacOptions,
-            params,
-            resolver,
-            pathResolver,
-            args
-        ));
+        javacOptions);
 
     BuildRuleParams testsLibraryParams =
         params.appendExtraDeps(

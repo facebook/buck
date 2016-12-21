@@ -90,6 +90,15 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
                     params.getDeclaredDeps().get(),
                     exportedDeps,
                     resolver.getAllRules(args.providedDeps))));
+    JavacOptions javacOptions = JavacOptionsFactory
+        .create(
+          defaultJavacOptions,
+          params,
+          resolver,
+          pathResolver,
+          args)
+        // groovyc may or may not play nice with generating ABIs from source, so disabling for now
+        .withAbiGenerationMode(JavacOptions.AbiGenerationMode.CLASS);
     return new DefaultJavaLibrary(
         javaLibraryParams,
         pathResolver,
@@ -110,12 +119,7 @@ public class GroovyLibraryDescription implements Description<GroovyLibraryDescri
         new GroovycToJarStepFactory(
             groovyBuckConfig.getGroovyCompiler().get(),
             Optional.of(args.extraGroovycArguments),
-            JavacOptionsFactory.create(
-                defaultJavacOptions,
-                params,
-                resolver,
-                pathResolver,
-                args)),
+            javacOptions),
         Optional.empty(),
         /* manifest file */ Optional.empty(),
         Optional.empty(),

@@ -46,6 +46,7 @@ public class JvmLibraryArg extends AbstractDescriptionArg {
   public ImmutableList<String> annotationProcessorParams = ImmutableList.of();
   public ImmutableSet<String> annotationProcessors = ImmutableSet.of();
   public Optional<Boolean> annotationProcessorOnly;
+  public Optional<Boolean> generateAbiFromSource;
 
   public AnnotationProcessingParams buildAnnotationProcessingParams(
       BuildTarget owner,

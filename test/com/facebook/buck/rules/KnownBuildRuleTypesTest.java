@@ -131,6 +131,7 @@ public class KnownBuildRuleTypesTest {
     arg.exportedDeps = ImmutableSortedSet.of();
     arg.deps = ImmutableSortedSet.of();
     arg.tests = ImmutableSortedSet.of();
+    arg.generateAbiFromSource = Optional.empty();
   }
 
   private DefaultJavaLibrary createJavaLibrary(KnownBuildRuleTypes buildRuleTypes)

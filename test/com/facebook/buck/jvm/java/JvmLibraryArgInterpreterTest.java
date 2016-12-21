@@ -18,9 +18,11 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.BuiltInJavac.DEFAULT;
 import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
@@ -220,6 +222,27 @@ public class JvmLibraryArgInterpreterTest {
     assertEquals(Optional.of(new PathSourcePath(filesystem, expected)), options.getJavacJarPath());
     assertEquals(Optional.empty(), options.getJavacPath());
     assertTrue(javac.getClass().getName(), javac instanceof Jsr199Javac);
+  }
+
+  @Test
+  public void sourceAbiGenerationCanBeDisabledPerTarget() {
+    arg.generateAbiFromSource = Optional.of(false);
+    defaults = defaults.withAbiGenerationMode(JavacOptions.AbiGenerationMode.SOURCE);
+
+    JavacOptions options = createJavacOptions(arg);
+
+    assertEquals(options.getAbiGenerationMode(), JavacOptions.AbiGenerationMode.CLASS);
+  }
+
+  @Test
+  public void sourceAbiGenerationCannotBeEnabledPerTargetIfTheFeatureIsDisabled() {
+    assumeThat(defaults.getAbiGenerationMode(), is(JavacOptions.AbiGenerationMode.CLASS));
+
+    arg.generateAbiFromSource = Optional.of(true);
+
+    JavacOptions options = createJavacOptions(arg);
+
+    assertEquals(options.getAbiGenerationMode(), JavacOptions.AbiGenerationMode.CLASS);
   }
 
   private JavacOptions createJavacOptions(JvmLibraryArg arg) {

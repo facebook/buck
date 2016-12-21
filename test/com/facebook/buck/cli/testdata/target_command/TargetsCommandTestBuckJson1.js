@@ -13,6 +13,7 @@
   "exportedDeps": null,
   "extraArguments": null,
   "fully_qualified_name": "//:test-library",
+  "generateAbiFromSource": null,
   "generatedSymbols": null,
   "licenses": null,
   "javac": null,
