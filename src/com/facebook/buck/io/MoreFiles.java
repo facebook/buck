@@ -57,6 +57,8 @@ public final class MoreFiles {
   @SuppressWarnings("PMD.AvoidUsingOctalValues")
   public static final long S_IFDIR = 0040000;
   @SuppressWarnings("PMD.AvoidUsingOctalValues")
+  public static final long S_IFREG = 0100000;
+  @SuppressWarnings("PMD.AvoidUsingOctalValues")
   public static final long S_IFLNK = 0120000;
 
   public enum DeleteRecursivelyOptions {

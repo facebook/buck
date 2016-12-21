@@ -1442,6 +1442,7 @@ public class CachingBuildEngineTest {
       assertEquals(
           new ZipInspector(artifact).getZipFileEntries(),
           new ZipInspector(fetchedArtifact).getZipFileEntries());
+
       MoreAsserts.assertContentsEqual(artifact, fetchedArtifact);
     }
 
@@ -3335,7 +3336,7 @@ public class CachingBuildEngineTest {
         entry.setTime(ZipConstants.getFakeTime());
         // We set the external attributes to this magic value which seems to match the attributes
         // of entries created by {@link InMemoryArtifactCache}.
-        entry.setExternalAttributes(420 << 16);
+        entry.setExternalAttributes(33188L << 16);
         zip.putNextEntry(entry);
         zip.write(mapEntry.getValue().getBytes());
         zip.closeEntry();

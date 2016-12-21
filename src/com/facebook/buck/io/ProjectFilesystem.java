@@ -1079,6 +1079,8 @@ public class ProjectFilesystem {
 
     if (isDirectory(path)) {
       mode |= MoreFiles.S_IFDIR;
+    } else if (isFile(path)) {
+      mode |= MoreFiles.S_IFREG;
     }
 
     // Propagate any additional permissions
