@@ -23,6 +23,7 @@
       "//src/com/facebook/buck/js:js",
       "//src/com/facebook/buck/log:api",
       "//src/com/facebook/buck/model:macros",
+      "//src/com/facebook/buck/rules:command_tool",
       "//src/com/facebook/buck/step/fs:fs",
       "//src/com/facebook/buck/swift:platform",
       "//src/com/facebook/buck/test/result/type:type",

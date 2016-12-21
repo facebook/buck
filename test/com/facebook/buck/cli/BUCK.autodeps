@@ -53,6 +53,7 @@
       "//src/com/facebook/buck/rules:rules",
       "//src/com/facebook/buck/rules:types",
       "//src/com/facebook/buck/rules/coercer:coercer",
+      "//src/com/facebook/buck/shell:rules",
       "//src/com/facebook/buck/step:step",
       "//src/com/facebook/buck/test:test",
       "//src/com/facebook/buck/test/result/type:type",
