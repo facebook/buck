@@ -34,6 +34,8 @@ public final class BuckTracing {
 
   private final String pluginName;
 
+  private final TraceSection traceSection = new TraceSection();
+
   /**
    * Gets an instance of {@link BuckTracing} for tracing in the given plugin. All
    * {@link BuckTracing} instances are backed by the same trace buffer, so
@@ -48,12 +50,31 @@ public final class BuckTracing {
     this.pluginName = pluginName;
   }
 
+  public TraceSection traceSection(final String eventName) {
+    begin(eventName);
+
+    return traceSection;
+  }
+
+  /**
+   * Records the beginning of a traced section, and returns an object that can be used within a
+   * try-with-resources block to automatically end the section. The section will appear in the trace
+   * labeled with eventName.
+   */
+  public TraceSection traceSection(final String eventName, final Map<String, String> args) {
+    begin(eventName, args);
+
+    return traceSection;
+  }
+
+
   /**
    * Records the beginning of a traced section. The section will appear in the trace labeled with
    * eventName.
    *
    * For best results, this call should be immediately before a try block, and a corresponding call
-   * to {@link #end(Map)} should be in the finally block.
+   * to {@link #end(Map)} should be in the finally block. Consider using
+   * {@link #traceSection(String)} in a try-with-resources block instead.
    */
   public void begin(final String eventName) {
     begin(eventName, Collections.emptyMap());
@@ -64,7 +85,8 @@ public final class BuckTracing {
    * eventName, and the supplied arguments will be visible when the section is selected.
    *
    * For best results, this call should be immediately before a try block, and a corresponding call
-   * to {@link #end(Map)} should be in the finally block.
+   * to {@link #end(Map)} should be in the finally block. Consider using
+   * {@link #traceSection(String, Map)} in a try-with-resources block instead.
    */
   public void begin(final String eventName, final Map<String, String> args) {
     final BuckTracingInterface tracingInterface = curThreadTracingInterface.get();
@@ -119,5 +141,18 @@ public final class BuckTracing {
    */
   public static void clearCurrentThreadTracingInterfaceFromJsr199Javac() {
     curThreadTracingInterface.set(null);
+  }
+
+  /**
+   * An {@link AutoCloseable} that can be used in a try-with-resources block to ensure a trace
+   * section is ended properly when exited.
+   */
+  public class TraceSection implements AutoCloseable {
+    @Override
+    public void close() {
+      // We're just going to use the same instance of this thing over and over again, so don't
+      // bother doing any kind of duplicate-close checking.
+      end();
+    }
   }
 }
