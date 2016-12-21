@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.abi.source;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.testutil.CompilerTreeApiParameterized;
+import com.google.common.base.Joiner;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,6 +62,44 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiTest {
     assertNameEquals("Foo", element.getQualifiedName());
   }
 
+  @Test
+  public void testGetQualifiedNameNamedPackage() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.buck;",
+        "public class Foo {}"));
+
+    TypeElement element = elements.getTypeElement("com.facebook.buck.Foo");
+
+    assertNameEquals("com.facebook.buck.Foo", element.getQualifiedName());
+  }
+
+  @Test
+  public void testGetQualifiedNameInnerClass() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.buck;",
+        "public class Foo {",
+        "  public class Bar { }",
+        "}"));
+
+    TypeElement element = elements.getTypeElement("com.facebook.buck.Foo.Bar");
+
+    assertNameEquals("com.facebook.buck.Foo.Bar", element.getQualifiedName());
+  }
+
+  @Test
+  public void testGetQualifiedNameEnumAnonymousMember() throws IOException {
+    compile(Joiner.on('\n').join(
+        "public enum Foo {",
+        "  BAR,",
+        "  BAZ() {",
+        "  }",
+        "}"
+    ));
+
+    // Expect no crash. Enum anonymous members don't have qualified names, but at one point during
+    // development we would crash trying to make one for them.
+  }
+
   private void assertNameEquals(String expected, Name actual) {
     assertEquals(elements.getName(expected), actual);
   }
@@ -78,4 +117,5 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiTest {
         break;
     }
   }
+
 }

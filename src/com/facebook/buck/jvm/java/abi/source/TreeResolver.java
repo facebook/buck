@@ -18,8 +18,13 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.IdentifierTree;
+import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
+import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.TreeScanner;
 
 import javax.lang.model.element.Name;
@@ -47,10 +52,11 @@ class TreeResolver {
 
   void enterTree(CompilationUnitTree tree) {
     tree.accept(new TreeScanner<Void, Void>() {
+      CharSequence scope;
+
       @Override
       public Void visitCompilationUnit(CompilationUnitTree node, Void aVoid) {
-        assert node.getPackageName() == null;
-        // TODO(jkeljo): Implement proper qualified name support
+        scope = expressionToName(node.getPackageName());
 
         return super.visitCompilationUnit(node, aVoid);
       }
@@ -58,13 +64,21 @@ class TreeResolver {
       @Override
       public Void visitClass(ClassTree node, Void aVoid) {
         Name qualifiedName = node.getSimpleName();
+        if (scope.length() > 0) {
+          qualifiedName = elements.getName(String.format("%s.%s", scope, qualifiedName));
+        }
 
         TreeBackedTypeElement typeElement = new TreeBackedTypeElement(node, qualifiedName);
 
         elements.enterTypeElement(typeElement);
 
-        // TODO(jkeljo): Implement proper nested class support
-        return null;
+        CharSequence oldScope = scope;
+        scope = typeElement.getQualifiedName();
+        try {
+          return super.visitClass(node, aVoid);
+        } finally {
+          scope = oldScope;
+        }
       }
 
       @Override
@@ -83,6 +97,36 @@ class TreeResolver {
         // Except for constants, we shouldn't look at the next part of a variable decl, because
         // there might be anonymous classes there and those are not part of the ABI
         return null;
+      }
+    }, null);
+  }
+
+  /**
+   * Takes a {@link MemberSelectTree} or {@link IdentifierTree} and returns the name it represents
+   * as a {@link CharSequence}.
+   */
+  private static CharSequence expressionToName(ExpressionTree expression) {
+    if (expression == null) {
+      return "";
+    }
+
+    return expression.accept(new SimpleTreeVisitor<CharSequence, Void>() {
+      @Override
+      protected CharSequence defaultAction(Tree node, Void aVoid) {
+        throw new AssertionError(String.format("Unexpected tree of kind: %s", node.getKind()));
+      }
+
+      @Override
+      public CharSequence visitMemberSelect(MemberSelectTree node, Void aVoid) {
+        return String.format(
+            "%s.%s",
+            node.getExpression().accept(this, aVoid),
+            node.getIdentifier());
+      }
+
+      @Override
+      public CharSequence visitIdentifier(IdentifierTree node, Void aVoid) {
+        return node.getName();
       }
     }, null);
   }
