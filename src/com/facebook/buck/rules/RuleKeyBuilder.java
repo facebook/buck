@@ -209,10 +209,18 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
       // appendToRuleKey() does).
     }
 
-    // Optionals get special handling. Unwrap them if necessary and recurse.
+    // Optionals and alike types get special handling. Unwrap them if necessary and recurse.
     if (val instanceof Optional) {
       Object o = ((Optional<?>) val).orElse(null);
       return setReflectively(key, o);
+    }
+    if (val instanceof Either) {
+      Either<?, ?> either = (Either<?, ?>) val;
+      if (either.isLeft()) {
+        return setReflectively(key, either.getLeft());
+      } else {
+        return setReflectively(key, either.getRight());
+      }
     }
 
     int oldSize = keyStack.size();
@@ -353,13 +361,6 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
       BuildTarget buildTarget = (BuildTarget) val;
       ruleKeyLogger.addValue(buildTarget);
       feed(buildTarget.getFullyQualifiedName());
-    } else if (val instanceof Either) {
-      Either<?, ?> either = (Either<?, ?>) val;
-      if (either.isLeft()) {
-        setSingleValue(either.getLeft());
-      } else {
-        setSingleValue(either.getRight());
-      }
     } else if (val instanceof SourcePath) {
       return setSourcePath((SourcePath) val);
     } else if (val instanceof NonHashableSourcePathContainer) {

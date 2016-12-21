@@ -45,13 +45,19 @@ import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.facebook.buck.util.sha1.Sha1HashCode;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -392,26 +398,51 @@ public class DefaultRuleKeyFactoryTest {
   }
 
   @Test
-  public void testKeysGetHashed() {
+  public void testBothKeysAndValuesGetHashed() {
     assertKeysGetHashed(null);
-    assertKeysGetHashed(true);
-    assertKeysGetHashed((double) 456);
-    assertKeysGetHashed((float) 123);
-    assertKeysGetHashed(123);
-    assertKeysGetHashed((long) 123);
-    assertKeysGetHashed((short) 123);
-    assertKeysGetHashed((byte) 123);
-    assertKeysGetHashed(new byte[] {1, 2, 3});
-    assertKeysGetHashed(DummyEnum.BLACK);
-    assertKeysGetHashed("abc");
-    assertKeysGetHashed(Pattern.compile("regex"));
-    assertKeysGetHashed(Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c"));
-    assertKeysGetHashed(new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac52c"));
-    assertKeysGetHashed(BuildRuleType.of("rule_type"));
-    assertKeysGetHashed(BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one"));
-    assertKeysGetHashed(new SourceRoot("root"));
-    assertKeysGetHashed(Either.ofLeft("abc"));
-    assertKeysGetHashed(Either.ofRight("def"));
+    assertBothKeysAndValuesGetHashed(true, false);
+    assertBothKeysAndValuesGetHashed((double) 123, (double) 42);
+    assertBothKeysAndValuesGetHashed((float) 123, (float) 42);
+    assertBothKeysAndValuesGetHashed(123, 42); // (int)
+    assertBothKeysAndValuesGetHashed((long) 123, (long) 42);
+    assertBothKeysAndValuesGetHashed((short) 123, (short) 42);
+    assertBothKeysAndValuesGetHashed((byte) 123, (byte) 42);
+    assertBothKeysAndValuesGetHashed(new byte[] {1, 2, 3}, new byte[] {4, 2});
+    assertBothKeysAndValuesGetHashed(DummyEnum.BLACK, DummyEnum.WHITE);
+    assertBothKeysAndValuesGetHashed("abc", "def");
+    assertBothKeysAndValuesGetHashed(Pattern.compile("regex1"), Pattern.compile("regex2"));
+    assertBothKeysAndValuesGetHashed(
+        Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c"),
+        Sha1HashCode.of("b67816b13867c32ac52ca002b39af204cdfaa5fd"));
+    assertBothKeysAndValuesGetHashed(
+        new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac52c"),
+        new RuleKey("b67816b13867c32ac52ca002b39af204cdfaa5fd"));
+    assertBothKeysAndValuesGetHashed(BuildRuleType.of("rule_type"), BuildRuleType.of("type2"));
+    assertBothKeysAndValuesGetHashed(
+        BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one"),
+        BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:two"));
+    assertBothKeysAndValuesGetHashed(new SourceRoot("root1"), new SourceRoot("root2"));
+
+    // wrapper types
+    assertBothKeysAndValuesGetHashed(Optional.of("abc"), Optional.of("def"));
+    assertBothKeysAndValuesGetHashed(Either.ofLeft("abc"), Either.ofLeft("def"));
+    assertBothKeysAndValuesGetHashed(Either.ofRight("def"), Either.ofRight("ghi"));
+    assertBothKeysAndValuesGetHashed(Suppliers.ofInstance("abc"), Suppliers.ofInstance("def"));
+
+    // iterables & maps
+    assertBothKeysAndValuesGetHashed(Arrays.asList(1, 2, 3), Arrays.asList(4, 2));
+    assertBothKeysAndValuesGetHashed(ImmutableList.of("abc", "xy"), ImmutableList.of("xy", "abc"));
+    assertBothKeysAndValuesGetHashed(ImmutableMap.of("key", "v1"), ImmutableMap.of("key", "v2"));
+
+    // nested
+    assertBothKeysAndValuesGetHashed(
+        ImmutableMap.of("key", Optional.of(ImmutableList.of(1, 2, 3))),
+        ImmutableMap.of("key", Optional.of(ImmutableList.of(1, 2, 4))));
+  }
+
+  private void assertBothKeysAndValuesGetHashed(@Nullable Object val1, @Nullable Object val2) {
+    assertKeysGetHashed(val1);
+    assertValuesGetHashed(val1, val2);
   }
 
   private void assertKeysGetHashed(@Nullable Object val) {
@@ -429,6 +460,24 @@ public class DefaultRuleKeyFactoryTest {
     RuleKey key2 = factory.newInstance(rule).setReflectively("key2", val).build();
     assertEquals("Rule keys should be same! " + val, key1, key1again);
     assertNotEquals("Rule keys should be different! " + val, key1, key2);
+  }
+
+  private void assertValuesGetHashed(@Nullable Object val1, @Nullable Object val2) {
+    Preconditions.checkArgument(!Objects.equal(val1, val2), "Values should be different!");
+    BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
+    SourcePathResolver pathResolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
+    BuildRule rule = new EmptyRule(target);
+
+    DefaultRuleKeyFactory factory =
+        new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver);
+
+    RuleKey key1 = factory.newInstance(rule).setReflectively("key", val1).build();
+    RuleKey key1again = factory.newInstance(rule).setReflectively("key", val1).build();
+    RuleKey key2 = factory.newInstance(rule).setReflectively("key", val2).build();
+    assertEquals("Rule keys should be same! " + val1, key1, key1again);
+    assertNotEquals("Rule keys should be different! " + val1 + " != " + val2, key1, key2);
   }
 
   private static class Appender implements RuleKeyAppendable {
