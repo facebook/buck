@@ -516,7 +516,7 @@ public class AndroidBinary
         nativeLibraryDirectoriesBuilder.build(),
         zipFiles.build(),
         packageableCollection.getPathsToThirdPartyJars().stream()
-            .map(getResolver()::deprecatedGetPath)
+            .map(getResolver()::getAbsolutePath)
             .collect(MoreCollectors.toImmutableSet()),
         getResolver().getAbsolutePath(keystorePath),
         getResolver().getAbsolutePath(keystorePropertiesPath),
@@ -701,7 +701,7 @@ public class AndroidBinary
     ImmutableSet<Path> classpathEntriesToDex =
         FluentIterable
             .from(enhancementResult.getClasspathEntriesToDex())
-            .transform(getResolver()::deprecatedGetPath)
+            .transform(getResolver()::getRelativePath)
             .append(Collections.singleton(
                 // Note: Need that call to Collections.singleton because
                 // unfortunately Path implements Iterable<Path>.
@@ -1066,10 +1066,10 @@ public class AndroidBinary
           proguardFullConfigFile,
           proguardMappingFile,
           dexSplitMode,
-          dexSplitMode.getPrimaryDexScenarioFile().map(getResolver()::deprecatedGetPath),
-          dexSplitMode.getPrimaryDexClassesFile().map(getResolver()::deprecatedGetPath),
-          dexSplitMode.getSecondaryDexHeadClassesFile().map(getResolver()::deprecatedGetPath),
-          dexSplitMode.getSecondaryDexTailClassesFile().map(getResolver()::deprecatedGetPath),
+          dexSplitMode.getPrimaryDexScenarioFile().map(getResolver()::getAbsolutePath),
+          dexSplitMode.getPrimaryDexClassesFile().map(getResolver()::getAbsolutePath),
+          dexSplitMode.getSecondaryDexHeadClassesFile().map(getResolver()::getAbsolutePath),
+          dexSplitMode.getSecondaryDexTailClassesFile().map(getResolver()::getAbsolutePath),
           additionalDexStoreToJarPathMap,
           enhancementResult.getAPKModuleGraph(),
           zipSplitReportDir);
