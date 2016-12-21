@@ -117,6 +117,11 @@ class BuckTool(object):
     def _get_resource(self, resource):
         raise NotImplementedError()
 
+    # Return the path to the file used to determine if another buck process is using the same
+    # resources folder (used for cleanup coordination).
+    def _get_resource_lock_path(self):
+        raise NotImplementedError()
+
     def _use_buckd(self):
         return not os.environ.get('NO_BUCKD') and not self._command_line.is_help()
 
@@ -378,6 +383,11 @@ class BuckTool(object):
                 "-Dbuck.buckd_dir={0}".format(self._buck_project.buckd_dir),
                 "-Dorg.eclipse.jetty.util.log.class=org.eclipse.jetty.util.log.JavaUtilLog",
             ]
+
+            resource_lock_path = self._get_resource_lock_path()
+            if resource_lock_path is not None:
+                java_args.append("-Dbuck.resource_lock_path={0}".format(resource_lock_path))
+
             for resource in EXPORTED_RESOURCES:
                 if self._has_resource(resource):
                     java_args.append(

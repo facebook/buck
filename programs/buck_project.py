@@ -6,6 +6,7 @@ import textwrap
 import shutil
 import sys
 
+import file_locks
 from tracing import Tracing
 
 
@@ -83,7 +84,7 @@ class BuckProject:
     def clean_up_buckd(self):
         with Tracing('BuckProject.clean_up_buckd'):
             if os.path.exists(self.buckd_dir):
-                shutil.rmtree(self.buckd_dir)
+                file_locks.rmtree_if_can_lock(self.buckd_dir)
 
     def create_buckd_tmp_dir(self):
         if self.buckd_tmp_dir is not None:

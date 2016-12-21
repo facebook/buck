@@ -158,6 +158,8 @@ import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.FileSystems;
 import java.nio.file.LinkOption;
@@ -165,6 +167,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.Arrays;
@@ -286,6 +289,9 @@ public final class Main {
   private static final Logger LOG = Logger.get(Main.class);
 
   private static boolean isSessionLeader;
+
+  @Nullable
+  private static FileLock resourcesFileLock = null;
 
   private static final HangMonitor.AutoStartInstance HANG_MONITOR =
       new HangMonitor.AutoStartInstance(
@@ -2009,11 +2015,41 @@ public final class Main {
   }
 
   /**
+   * To prevent 'buck kill' from deleting resources from underneath a 'live' buckd we hold on to
+   * the FileLock for the entire lifetime of the process. We depend on the fact that on Linux and
+   * MacOS Java FileLock is implemented using the same mechanism as the Python fcntl.lockf method.
+   * Should this not be the case we'll simply have a small race between buckd start and `buck kill`.
+   */
+  private static void obtainResourceFileLock() {
+    if (resourcesFileLock != null) {
+      return;
+    }
+    String resourceLockFilePath = System.getProperties().getProperty("buck.resource_lock_path");
+    if (resourceLockFilePath == null) {
+      // Running from ant, no resource lock needed.
+      return;
+    }
+    try {
+      // R+W+A is equivalent to 'a+' in Python (which is how the lock file is opened in Python)
+      // because WRITE in Java does not imply truncating the file.
+      FileChannel fileChannel = FileChannel.open(
+          Paths.get(resourceLockFilePath),
+          StandardOpenOption.READ,
+          StandardOpenOption.WRITE,
+          StandardOpenOption.CREATE);
+      resourcesFileLock = fileChannel.tryLock(0L, Long.MAX_VALUE, true);
+    } catch (IOException e) {
+      LOG.error(e, "Error when attempting to acquire resources file lock.");
+    }
+  }
+
+  /**
    * When running as a daemon in the NailGun server, {@link #nailMain(NGContext)} is called instead
    * of {@link #main(String[])} so that the given context can be used to listen for client
    * disconnections and interrupt command processing when they occur.
    */
   public static void nailMain(final NGContext context) throws InterruptedException {
+    obtainResourceFileLock();
     try (IdleKiller.CommandExecutionScope ignored =
              DaemonBootstrap.getDaemonKillers().newCommandExecutionScope()) {
       new Main(context.out, context.err, context.in)

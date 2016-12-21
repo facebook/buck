@@ -86,6 +86,7 @@ python_library(
     'buck_package.py',
     'timing.py',
     'tracing.py',
+    'file_locks.py',
   ],
   resources=BUCK_CORE_RESOURCES,
   deps = [

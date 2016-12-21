@@ -281,6 +281,9 @@ class BuckRepo(BuckTool):
                 self._run_ant(ant)
                 print("All done, continuing with build.", file=sys.stderr)
 
+    def _get_resource_lock_path(self):
+        return None
+
     def _has_resource(self, resource):
         return True
 

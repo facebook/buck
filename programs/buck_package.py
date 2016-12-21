@@ -7,6 +7,7 @@ import stat
 import tempfile
 
 import pkg_resources
+import file_locks
 
 from buck_tool import BuckTool, Resource
 
@@ -36,13 +37,14 @@ def closable_named_temporary_file(*args, **kwargs):
                 raise
 
 
-
 class BuckPackage(BuckTool):
 
     def __init__(self, buck_project):
         super(BuckPackage, self).__init__(buck_project)
         self._package_info = json.loads(
             pkg_resources.resource_string(__name__, 'buck_package_info'))
+        self._resource_subdir = None
+        self._lock_file = None
 
     def _get_buck_version_uid(self):
         return self._package_info['version']
@@ -54,15 +56,41 @@ class BuckPackage(BuckTool):
             base_dir = self._tmp_dir
         return os.path.join(base_dir, 'resources')
 
+    def _get_resource_subdir(self):
+        def try_subdir(lock_file_dir):
+            if not os.path.exists(lock_file_dir):
+                os.makedirs(lock_file_dir)
+            lock_file_path = os.path.join(lock_file_dir, file_locks.BUCK_LOCK_FILE_NAME)
+            lock_file = open(lock_file_path, 'a+')
+            if file_locks.acquire_shared_lock(lock_file):
+                return lock_file
+            else:
+                return None
+
+        if self._resource_subdir is None:
+            buck_version_uid = self._get_buck_version_uid()
+            resource_dir = self._get_resource_dir()
+            subdir = os.path.join(resource_dir, buck_version_uid)
+            self._lock_file = try_subdir(subdir)
+            if self._lock_file:
+                self._resource_subdir = subdir
+            else:
+                subdir = tempfile.mkdtemp(dir=resource_dir, prefix=buck_version_uid)
+                self._lock_file = try_subdir(subdir)
+                if not self._lock_file:
+                    raise Exception('Could not acquire lock in fresh tmp dir: ' + subdir)
+                self._resource_subdir = subdir
+
+        return self._resource_subdir
+
+    def _get_resource_lock_path(self):
+        return os.path.join(self._get_resource_subdir(), file_locks.BUCK_LOCK_FILE_NAME)
+
     def _has_resource(self, resource):
         return pkg_resources.resource_exists(__name__, resource.name)
 
     def _get_resource(self, resource):
-        buck_version_uid = self._get_buck_version_uid()
-        resource_path = os.path.join(
-            self._get_resource_dir(),
-            buck_version_uid,
-            resource.basename)
+        resource_path = os.path.join(self._get_resource_subdir(), resource.basename)
         if not os.path.exists(resource_path):
             if not os.path.exists(os.path.dirname(resource_path)):
                 os.makedirs(os.path.dirname(resource_path))
