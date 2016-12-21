@@ -225,7 +225,11 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
       }
 
       if (val instanceof Iterator) {
-        return setReflectively(key, (Iterator<?>) val);
+        Iterator<?> iterator = (Iterator<?>) val;
+        while (iterator.hasNext()) {
+          setReflectively(key, iterator.next());
+        }
+        return this;
       }
 
       if (val instanceof Map) {
@@ -264,30 +268,6 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     }
   }
 
-  private RuleKeyBuilder<RULE_KEY> setReflectively(String key, Iterator<?> iterator) {
-    while (iterator.hasNext()) {
-      setReflectively(key, iterator.next());
-    }
-    return this;
-  }
-
-  protected RuleKeyBuilder<RULE_KEY> setPath(Path ideallyRelative, HashCode sha1) {
-    Path addToKey;
-    if (ideallyRelative.isAbsolute()) {
-      logger.warn(
-          "Attempting to add absolute path to rule key. Only using file name: %s", ideallyRelative);
-      addToKey = ideallyRelative.getFileName();
-    } else {
-      addToKey = ideallyRelative;
-    }
-
-    ruleKeyLogger.addPath(addToKey, sha1);
-
-    feed(addToKey.toString());
-    feed(sha1.toString());
-    return this;
-  }
-
   // Paths get added as a combination of the file name and file hash. If the path is absolute
   // then we only include the file name (assuming that it represents a tool of some kind
   // that's being used for compilation or some such). This does mean that if a user renames a
@@ -304,7 +284,19 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
       throw new RuntimeException("No SHA for " + absolutePath);
     }
 
-    setPath(ideallyRelative, sha1);
+    Path addToKey;
+    if (ideallyRelative.isAbsolute()) {
+      logger.warn(
+          "Attempting to add absolute path to rule key. Only using file name: %s", ideallyRelative);
+      addToKey = ideallyRelative.getFileName();
+    } else {
+      addToKey = ideallyRelative;
+    }
+
+    ruleKeyLogger.addPath(addToKey, sha1);
+
+    feed(addToKey.toString());
+    feed(sha1.toString());
     return this;
   }
 
