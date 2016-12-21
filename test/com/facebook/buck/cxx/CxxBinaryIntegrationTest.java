@@ -30,6 +30,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -1359,6 +1360,61 @@ public class CxxBinaryIntegrationTest {
       assertTrue("Path must be absolute", path.isAbsolute());
       assertTrue("Path must exist", Files.exists(path));
     }
+  }
+
+  @Test
+  public void testChangingCompilerPathForcesRebuild() throws Exception {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "simple", tmp);
+    workspace.setUp();
+    workspace.enableDirCache(); // enable the cache
+    workspace.setupCxxSandboxing(sandboxSources);
+    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:simple");
+
+    // Get the real location of the compiler executable.
+    String executable = Platform.detect() == Platform.MACOS ? "clang++" : "g++";
+    Path executableLocation = new ExecutableFinder()
+        .getOptionalExecutable(Paths.get(executable), ImmutableMap.copyOf(System.getenv()))
+        .orElse(Paths.get("/usr/bin/"));
+
+    // Write scripts with different content to different paths.
+    filesystem.createParentDirs(Paths.get("path1/" + executable));
+    filesystem.writeContentsToPath(
+      "#!/bin/sh\n" +
+          "exec " + executableLocation.toString() + " \"$@\"\n",
+      Paths.get("path1/" + executable));
+    Path path1 = filesystem.resolve("path1/");
+
+    filesystem.createParentDirs(Paths.get("path2/" + executable));
+    filesystem.writeContentsToPath(
+      "#!/bin/sh\n" +
+          "exec " + executableLocation.toString() + " \"$@\"\n" +
+          "# Comment to make hash different.\n",
+      Paths.get("path2/" + executable));
+    Path path2 = filesystem.resolve("path2/");
+
+    // Run two builds, each with different PATH locations pointing at different
+    // compiler "binaries".
+    workspace.runBuckCommandWithEnvironmentOverridesAndContext(
+      workspace.getDestPath(),
+      Optional.empty(),
+      ImmutableMap.of("PATH", path1.toString()),
+      "build",
+      target.getFullyQualifiedName()).assertSuccess();
+
+    workspace.resetBuildLogFile();
+
+    workspace.runBuckCommandWithEnvironmentOverridesAndContext(
+      workspace.getDestPath(),
+      Optional.empty(),
+      ImmutableMap.of("PATH", path2.toString()),
+      "build",
+      target.getFullyQualifiedName()).assertSuccess();
+
+    // Make sure the PATH change caused a rebuild.
+    workspace.getBuildLog().assertTargetBuiltLocally(target.toString());
   }
 
   @Test
