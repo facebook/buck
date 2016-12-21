@@ -30,6 +30,10 @@ cp -r "$BUCK_OUT_DIR"/. "$DIST_BUILD_TEMP_DIR"
 
 echo Copied local buck-out to "$LOCAL_BUILD_TEMP_DIR"
 echo Copied distributed buck-out to "$DIST_BUILD_TEMP_DIR"
+echo Results dir: "$TEMP_DIR"
 
 echo Running diff between local and distributed builds
-python "$SCRIPTS_DIR"/../diff_buck_out.py "$LOCAL_BUILD_TEMP_DIR" "$DIST_BUILD_TEMP_DIR"
+python "$SCRIPTS_DIR"/../diff_buck_out.py "$LOCAL_BUILD_TEMP_DIR" \
+"$DIST_BUILD_TEMP_DIR" > "$TEMP_DIR"/buck_out_diff.txt
+python "$SCRIPTS_DIR"/diff_machine_log_rule_keys.py "$LOCAL_BUILD_TEMP_DIR" \
+"$DIST_BUILD_TEMP_DIR" > "$TEMP_DIR"/rule_key_diff.txt
