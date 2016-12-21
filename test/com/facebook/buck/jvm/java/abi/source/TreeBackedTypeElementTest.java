@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.testutil.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
+import com.sun.source.tree.CompilationUnitTree;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -105,8 +106,8 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiTest {
   }
 
   @Override
-  protected void compile(String source) throws IOException {
-    super.compile(source);
+  protected Iterable<? extends CompilationUnitTree> compile(String source) throws IOException {
+    final Iterable<? extends CompilationUnitTree> result = super.compile(source);
 
     switch (implementation) {
       case JAVAC:
@@ -116,6 +117,8 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiTest {
         elements = treesElements;
         break;
     }
+
+    return result;
   }
 
 }

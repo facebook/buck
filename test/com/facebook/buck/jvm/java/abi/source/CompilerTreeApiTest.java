@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.google.common.io.Files;
+import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.Trees;
 
@@ -43,7 +44,7 @@ public abstract class CompilerTreeApiTest {
   protected TreeResolver treeResolver;
   protected TreeBackedElements treesElements;
 
-  protected void compile(String source) throws IOException {
+  protected Iterable<? extends CompilationUnitTree> compile(String source) throws IOException {
     File sourceFile = tempFolder.newFile("Foo.java");
     Files.write(source, sourceFile, StandardCharsets.UTF_8);
 
@@ -60,12 +61,15 @@ public abstract class CompilerTreeApiTest {
     treeResolver = new TreeResolver(javacTask.getElements());
     treesElements = treeResolver.getElements();
 
-    javacTask.parse().forEach(tree -> treeResolver.enterTree(tree));
+    final Iterable<? extends CompilationUnitTree> compilationUnits = javacTask.parse();
+    compilationUnits.forEach(tree -> treeResolver.enterTree(tree));
 
     // Make sure we've got elements for things. Technically this is going a little further than
     // the compiler ordinarily would by the time annotation processors get involved, but this
     // shouldn't matter for interface-level things. If need be there's a private method we can
     // reflect to to get more exact behavior.
     javacTask.analyze();
+
+    return compilationUnits;
   }
 }

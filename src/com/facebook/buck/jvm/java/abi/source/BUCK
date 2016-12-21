@@ -1,6 +1,9 @@
 java_library(
   name = 'source',
-  srcs = glob(['*.java']),
+  srcs = glob(['*.java']) + [
+    '//src/com/facebook/buck/util/exportedfiles:Nullable.java',
+    '//src/com/facebook/buck/util/exportedfiles:Preconditions.java',
+  ],
   tests = [
     '//test/com/facebook/buck/jvm/java/abi/source:source',
   ],
