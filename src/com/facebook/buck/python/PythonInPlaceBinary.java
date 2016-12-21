@@ -107,6 +107,11 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
     this.python = python;
   }
 
+  @Override
+  public boolean supportsBuckBuildInto() {
+    return true;
+  }
+
   private static String getRunInplaceResource() {
     try {
       return Resources.toString(Resources.getResource(RUN_INPLACE_RESOURCE), Charsets.UTF_8);

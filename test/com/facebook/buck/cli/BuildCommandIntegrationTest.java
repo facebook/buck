@@ -16,12 +16,15 @@
 
 package com.facebook.buck.cli;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.testutil.integration.ZipInspector;
 
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -113,5 +116,39 @@ public class BuildCommandIntegrationTest {
     assertThat(
         runBuckResult.getStdout(),
         Matchers.containsString("//:bar " + shaValue + " buck-out"));
+  }
+
+  @Test
+  public void buckBuildIntoWithBuildTargetThatSupportsIt() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "build_into", tmp);
+    workspace.setUp();
+
+    Path externalOutputs = tmp.newFolder("into-output");
+    Path output = externalOutputs.resolve("the_example.jar");
+    assertFalse(output.toFile().exists());
+    workspace.runBuckBuild("//:example", "--into", output.toString()).assertSuccess();
+    assertTrue(output.toFile().exists());
+
+    ZipInspector zipInspector = new ZipInspector(output);
+    zipInspector.assertFileExists("com/example/Example.class");
+  }
+
+  @Test
+  public void buckBuildIntoWithBuildTargetThatDoesNotSupportIt() throws IOException {
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
+        this, "build_into", tmp);
+    workspace.setUp();
+
+    Path externalOutputs = tmp.newFolder("into-output");
+    Path output = externalOutputs.resolve("pylib.zip");
+    assertFalse(output.toFile().exists());
+    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(
+        "//:example_py",
+        "--into",
+        output.toString());
+    result.assertFailure();
+    assertThat(result.getStderr(), Matchers.containsString(
+        "//:example_py does not have an output that is compatible with `buck build --into`"));
   }
 }

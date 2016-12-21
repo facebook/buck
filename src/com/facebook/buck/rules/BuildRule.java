@@ -70,6 +70,16 @@ public interface BuildRule extends Comparable<BuildRule>, HasBuildTarget {
   @Nullable
   Path getPathToOutput();
 
+  /**
+   * @return true if the output of this build rule is compatible with {@code buck build --into}.
+   *     To be compatible, that means (1) {@link #getPathToOutput()} cannot return {@code null},
+   *     and (2) the output file works as intended when copied to an arbitrary path (i.e., does not
+   *     have any dependencies on relative symlinks).
+   */
+  default boolean supportsBuckBuildInto() {
+    return getPathToOutput() != null;
+  }
+
   ProjectFilesystem getProjectFilesystem();
 
   /**

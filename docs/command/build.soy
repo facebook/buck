@@ -116,6 +116,15 @@ Buck. To build a rule, pass its target to buck build:
 {/call}
 
 {call buck.param}
+  {param name: 'into' /}
+  {param desc}
+  Takes the output of the build target and copies it to the specified path.
+  Only works with a single build target, and the corresponding build rule
+  must support this option.
+  {/param}
+{/call}
+
+{call buck.param}
   {param name: 'populate-cache' /}
   {param desc}
 

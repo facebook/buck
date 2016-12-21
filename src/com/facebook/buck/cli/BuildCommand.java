@@ -113,6 +113,7 @@ public class BuildCommand extends AbstractCommand {
   private static final String BUILD_REPORT_LONG_ARG = "--build-report";
   private static final String JUST_BUILD_LONG_ARG = "--just-build";
   private static final String DEEP_LONG_ARG = "--deep";
+  private static final String INTO_LONG_ARG = "--into";
   private static final String POPULATE_CACHE_LONG_ARG = "--populate-cache";
   private static final String SHALLOW_LONG_ARG = "--shallow";
   private static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
@@ -177,6 +178,12 @@ public class BuildCommand extends AbstractCommand {
       name = SHOW_OUTPUT_LONG_ARG,
       usage = "Print the path to the output for each of the built rules relative to the cell.")
   private boolean showOutput;
+
+
+  @Option(
+      name = INTO_LONG_ARG,
+      usage = "Copies the output of the lone build target to this path.")
+  private Path outputPathForSingleBuildTarget;
 
   @Option(
       name = SHOW_FULL_OUTPUT_LONG_ARG,
@@ -385,6 +392,19 @@ public class BuildCommand extends AbstractCommand {
       // Parse the build files to create a TargetGraph and ActionGraph.
       TargetGraphAndBuildTargets targetGraphAndBuildTargets =
           createTargetGraph(params, executorService);
+
+      // Ideally, we would error out of this before we build the entire graph, but it is possible
+      // that `getArguments().size()` is 1 but `targetGraphAndBuildTargets.getBuildTargets().size()`
+      // is greater than 1 if the lone argument is a wildcard build target that ends in "...".
+      // As such, we have to get the result of createTargetGraph() before we can do this check.
+      if (outputPathForSingleBuildTarget != null &&
+          targetGraphAndBuildTargets.getBuildTargets().size() != 1) {
+        throw new ActionGraphCreationException(String.format(
+            "When using %s you must specify exactly one build target, but you specified %s",
+            INTO_LONG_ARG,
+            targetGraphAndBuildTargets.getBuildTargets()));
+      }
+
       ActionGraphAndResolver actionGraphAndResolver = createActionGraphAndResolver(
           params,
           targetGraphAndBuildTargets);
@@ -399,8 +419,33 @@ public class BuildCommand extends AbstractCommand {
         exitCode = executeLocalBuild(params, actionGraphAndResolver, executorService);
       }
 
-      if (exitCode == 0 && (showOutput || showFullOutput || showRuleKey)) {
-        showOutputs(params, actionGraphAndResolver);
+      if (exitCode == 0) {
+        if (showOutput || showFullOutput || showRuleKey) {
+          showOutputs(params, actionGraphAndResolver);
+        }
+        if (outputPathForSingleBuildTarget != null) {
+          BuildTarget loneTarget = Iterables.getOnlyElement(
+              targetGraphAndBuildTargets.getBuildTargets());
+          BuildRule rule = actionGraphAndResolver.getResolver().getRule(loneTarget);
+          if (!rule.supportsBuckBuildInto()) {
+            params.getConsole().printErrorText(String.format(
+                "%s does not have an output that is compatible with `buck build --into`",
+                loneTarget));
+            exitCode = 1;
+          } else {
+            Path output = rule.getPathToOutput();
+            Preconditions.checkNotNull(
+                output,
+                "%s specified a build target that does not have an output file: %s",
+                INTO_LONG_ARG,
+                loneTarget);
+
+            ProjectFilesystem projectFilesystem = rule.getProjectFilesystem();
+            projectFilesystem.copyFile(
+                projectFilesystem.resolve(output),
+                outputPathForSingleBuildTarget);
+          }
+        }
       }
     } catch (ActionGraphCreationException e) {
       params.getConsole().printBuildFailure(e.getMessage());
