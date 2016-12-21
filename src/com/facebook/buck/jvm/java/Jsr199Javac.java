@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.event.api.BuckTracing;
+import com.facebook.buck.jvm.java.abi.SourceBasedAbiStubber;
 import com.facebook.buck.jvm.java.tracing.TranslatingJavacPhaseTracer;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
@@ -257,6 +258,15 @@ public abstract class Jsr199Javac implements Javac {
     BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(
         new Jsr199TracingBridge(context.getEventSink(), invokingRule));
     Object abiValidatingTaskListener = null;
+    if (abiGenerationMode != JavacOptions.AbiGenerationMode.CLASS) {
+      abiValidatingTaskListener = SourceBasedAbiStubber.newValidatingTaskListener(
+          context.getClassLoaderCache(),
+          compilationTask,
+          abiGenerationMode == JavacOptions.AbiGenerationMode.SOURCE ?
+              Diagnostic.Kind.ERROR :
+              Diagnostic.Kind.MANDATORY_WARNING);
+    }
+
     try {
       try (
           // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing

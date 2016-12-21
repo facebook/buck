@@ -7,6 +7,7 @@ java_library(
   autodeps = True,
   visibility = [
     '//src/com/facebook/buck/jvm/java:steps',
+    '//src/com/facebook/buck/jvm/java:support',
     '//test/com/facebook/buck/jvm/java/abi:abi'
   ],
 )
