@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.event.api.BuckTracing;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ExpressionTree;
@@ -40,6 +41,7 @@ import javax.lang.model.util.Elements;
  * {@link com.facebook.buck.jvm.java.abi.source} for details.
  */
 class TreeResolver {
+  private static final BuckTracing BUCK_TRACING = BuckTracing.getInstance("TreeResolver");
   private final TreeBackedElements elements;
 
   public TreeResolver(Elements javacElements) {
@@ -51,54 +53,56 @@ class TreeResolver {
   }
 
   void enterTree(CompilationUnitTree tree) {
-    tree.accept(new TreeScanner<Void, Void>() {
-      CharSequence scope;
+    try (BuckTracing.TraceSection t = BUCK_TRACING.traceSection("buck.abi.enterTree")) {
+      tree.accept(new TreeScanner<Void, Void>() {
+        CharSequence scope;
 
-      @Override
-      public Void visitCompilationUnit(CompilationUnitTree node, Void aVoid) {
-        scope = expressionToName(node.getPackageName());
+        @Override
+        public Void visitCompilationUnit(CompilationUnitTree node, Void aVoid) {
+          scope = expressionToName(node.getPackageName());
 
-        return super.visitCompilationUnit(node, aVoid);
-      }
-
-      @Override
-      public Void visitClass(ClassTree node, Void aVoid) {
-        Name qualifiedName = node.getSimpleName();
-        if (scope.length() > 0) {
-          qualifiedName = elements.getName(String.format("%s.%s", scope, qualifiedName));
+          return super.visitCompilationUnit(node, aVoid);
         }
 
-        TreeBackedTypeElement typeElement = new TreeBackedTypeElement(node, qualifiedName);
+        @Override
+        public Void visitClass(ClassTree node, Void aVoid) {
+          Name qualifiedName = node.getSimpleName();
+          if (scope.length() > 0) {
+            qualifiedName = elements.getName(String.format("%s.%s", scope, qualifiedName));
+          }
 
-        elements.enterTypeElement(typeElement);
+          TreeBackedTypeElement typeElement = new TreeBackedTypeElement(node, qualifiedName);
 
-        CharSequence oldScope = scope;
-        scope = typeElement.getQualifiedName();
-        try {
-          return super.visitClass(node, aVoid);
-        } finally {
-          scope = oldScope;
+          elements.enterTypeElement(typeElement);
+
+          CharSequence oldScope = scope;
+          scope = typeElement.getQualifiedName();
+          try {
+            return super.visitClass(node, aVoid);
+          } finally {
+            scope = oldScope;
+          }
         }
-      }
 
-      @Override
-      public Void visitMethod(MethodTree node, Void aVoid) {
-        // TODO(jkeljo): Construct an ExecutableElement
+        @Override
+        public Void visitMethod(MethodTree node, Void aVoid) {
+          // TODO(jkeljo): Construct an ExecutableElement
 
-        // The body of a method is not part of the ABI, so don't recurse into them
-        return null;
-      }
+          // The body of a method is not part of the ABI, so don't recurse into them
+          return null;
+        }
 
-      @Override
-      public Void visitVariable(VariableTree node, Void aVoid) {
-        // TODO(jkeljo): Construct a VariableElement
-        // TODO(jkeljo): Evaluate constants
+        @Override
+        public Void visitVariable(VariableTree node, Void aVoid) {
+          // TODO(jkeljo): Construct a VariableElement
+          // TODO(jkeljo): Evaluate constants
 
-        // Except for constants, we shouldn't look at the next part of a variable decl, because
-        // there might be anonymous classes there and those are not part of the ABI
-        return null;
-      }
-    }, null);
+          // Except for constants, we shouldn't look at the next part of a variable decl, because
+          // there might be anonymous classes there and those are not part of the ABI
+          return null;
+        }
+      }, null);
+    }
   }
 
   /**

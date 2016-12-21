@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.util.exportedfiles.Preconditions;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
@@ -36,6 +37,9 @@ import javax.lang.model.util.Elements;
  * it guessed wrong.
  */
 class ExpressionTreeResolutionValidator {
+  private static final BuckTracing BUCK_TRACING =
+      BuckTracing.getInstance("ExpressionTreeResolutionValidator");
+
   public interface Listener {
     void onIncorrectTypeResolution(
         CompilationUnitTree file,
@@ -54,25 +58,27 @@ class ExpressionTreeResolutionValidator {
 
 
   public void validate(CompilationUnitTree compilationUnit, Listener listener) {
-    new TreePathScanner<Void, Listener>() {
-      @Override
-      public Void visitClass(ClassTree node, Listener listener) {
-        TypeElement javacElement = (TypeElement) javacTrees.getElement(getCurrentPath());
-        Preconditions.checkNotNull(javacElement);
+    try (BuckTracing.TraceSection trace = BUCK_TRACING.traceSection("buck.abi.validate")) {
+      new TreePathScanner<Void, Listener>() {
+        @Override
+        public Void visitClass(ClassTree node, Listener listener) {
+          TypeElement javacElement = (TypeElement) javacTrees.getElement(getCurrentPath());
+          Preconditions.checkNotNull(javacElement);
 
-        Name qualifiedName = javacElement.getQualifiedName();
-        TypeElement treesElement = treesElements.getTypeElement(qualifiedName);
-        if (treesElement == null) {
-          throw new AssertionError(
-              String.format(
-                  "BUG: Should have been able to load trees element for %s", qualifiedName));
+          Name qualifiedName = javacElement.getQualifiedName();
+          TypeElement treesElement = treesElements.getTypeElement(qualifiedName);
+          if (treesElement == null) {
+            throw new AssertionError(
+                String.format(
+                    "BUG: Should have been able to load trees element for %s", qualifiedName));
+          }
+
+          // NOTE: Lots more checks will go here as implementation progresses
+
+          // TODO(jkeljo): inner class support
+          return null;
         }
-
-        // NOTE: Lots more checks will go here as implementation progresses
-
-        // TODO(jkeljo): inner class support
-        return null;
-      }
-    }.scan(compilationUnit, listener);
+      }.scan(compilationUnit, listener);
+    }
   }
 }
