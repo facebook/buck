@@ -91,23 +91,7 @@ public class NullRuleKeyLogger implements RuleKeyLogger {
   }
 
   @Override
-  public void addValue(double value) {
-  }
-
-  @Override
-  public void addValue(float value) {
-  }
-
-  @Override
-  public void addValue(int value) {
-  }
-
-  @Override
-  public void addValue(long value) {
-  }
-
-  @Override
-  public void addValue(short value) {
+  public void addValue(Number value) {
   }
 
   @Override

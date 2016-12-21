@@ -18,14 +18,17 @@ package com.facebook.buck.rules.keys;
 
 import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -34,18 +37,22 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourceRoot;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.UncachedRuleKeyBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 import org.junit.Test;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
@@ -384,6 +391,46 @@ public class DefaultRuleKeyFactoryTest {
     assertEquals(expected, seen);
   }
 
+  @Test
+  public void testKeysGetHashed() {
+    assertKeysGetHashed(null);
+    assertKeysGetHashed(true);
+    assertKeysGetHashed((double) 456);
+    assertKeysGetHashed((float) 123);
+    assertKeysGetHashed(123);
+    assertKeysGetHashed((long) 123);
+    assertKeysGetHashed((short) 123);
+    assertKeysGetHashed((byte) 123);
+    assertKeysGetHashed(new byte[] {1, 2, 3});
+    assertKeysGetHashed(DummyEnum.BLACK);
+    assertKeysGetHashed("abc");
+    assertKeysGetHashed(Pattern.compile("regex"));
+    assertKeysGetHashed(Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c"));
+    assertKeysGetHashed(new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac52c"));
+    assertKeysGetHashed(BuildRuleType.of("rule_type"));
+    assertKeysGetHashed(BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one"));
+    assertKeysGetHashed(new SourceRoot("root"));
+    assertKeysGetHashed(Either.ofLeft("abc"));
+    assertKeysGetHashed(Either.ofRight("def"));
+  }
+
+  private void assertKeysGetHashed(@Nullable Object val) {
+    BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
+    SourcePathResolver pathResolver = new SourcePathResolver(
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+    );
+    BuildRule rule = new EmptyRule(target);
+
+    DefaultRuleKeyFactory factory =
+        new DefaultRuleKeyFactory(0, new NullFileHashCache(), pathResolver);
+
+    RuleKey key1 = factory.newInstance(rule).setReflectively("key1", val).build();
+    RuleKey key1again = factory.newInstance(rule).setReflectively("key1", val).build();
+    RuleKey key2 = factory.newInstance(rule).setReflectively("key2", val).build();
+    assertEquals("Rule keys should be same! " + val, key1, key1again);
+    assertNotEquals("Rule keys should be different! " + val, key1, key2);
+  }
+
   private static class Appender implements RuleKeyAppendable {
     @Override
     public void appendToRuleKey(RuleKeyObjectSink sink) {
@@ -458,5 +505,10 @@ public class DefaultRuleKeyFactoryTest {
     public boolean isCacheable() {
       return true;
     }
+  }
+
+  private enum DummyEnum {
+    BLACK,
+    WHITE,
   }
 }

@@ -44,11 +44,7 @@ public interface RuleKeyLogger {
   void addValue(String value);
   void addValue(boolean value);
   void addValue(Enum<?> value);
-  void addValue(double value);
-  void addValue(float value);
-  void addValue(int value);
-  void addValue(long value);
-  void addValue(short value);
+  void addValue(Number value);
   void addValue(Pattern value);
   void addValue(BuildRuleType value);
   void addValue(RuleKey value);

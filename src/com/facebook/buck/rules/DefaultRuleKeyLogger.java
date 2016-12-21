@@ -124,27 +124,7 @@ public class DefaultRuleKeyLogger implements RuleKeyLogger {
   }
 
   @Override
-  public void addValue(int value) {
-    appendLogElement(String.format("number(%s):", value));
-  }
-
-  @Override
-  public void addValue(double value) {
-    appendLogElement(String.format("number(%s):", value));
-  }
-
-  @Override
-  public void addValue(float value) {
-    appendLogElement(String.format("number(%s):", value));
-  }
-
-  @Override
-  public void addValue(long value) {
-    appendLogElement(String.format("number(%s):", value));
-  }
-
-  @Override
-  public void addValue(short value) {
+  public void addValue(Number value) {
     appendLogElement(String.format("number(%s):", value));
   }
 

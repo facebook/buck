@@ -29,7 +29,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import com.google.common.primitives.Primitives;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -52,6 +51,14 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   private final Hasher hasher;
   private final FileHashLoader hashLoader;
   private final RuleKeyLogger ruleKeyLogger;
+
+  // Some RuleKey implementations may want to ignore some fields. To achieve this, in addition to
+  // not hashing values of such fields, we must also not hash the keys (names) of those fields.
+  // This stack is kept of (recursive) keys so that we can delay hashing the keys until we
+  // decide that a value actually needs hashing. Before a value is hashed, we pop through the stack
+  // hashing the keys.
+  // Right now this is implemented as a stack which pops and hashes the keys in the reverse order.
+  // This may potentially be a correctness issue so this should converted to a FIFO behavior.
   private Stack<String> keyStack;
 
   public RuleKeyBuilder(
@@ -76,38 +83,54 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
             new NullRuleKeyLogger());
   }
 
-  private void putBytes(String string) {
+  private void hashString(String string) {
     hasher.putUnencodedChars(string);
   }
 
-  private RuleKeyBuilder<RULE_KEY> feed(String key) {
+  private void hashKeyStack() {
     while (!keyStack.isEmpty()) {
-      putBytes(keyStack.pop());
+      hashString(keyStack.pop());
       hasher.putByte(SEPARATOR);
     }
+  }
 
-    putBytes(key);
+  private RuleKeyBuilder<RULE_KEY> feed(Number val) {
+    hashKeyStack();
+    if (val instanceof Double) {
+      hasher.putDouble((Double) val);
+    } else if (val instanceof Float) {
+      hasher.putFloat((Float) val);
+    } else if (val instanceof Integer) {
+      hasher.putInt((Integer) val);
+    } else if (val instanceof Long) {
+      hasher.putLong((Long) val);
+    } else if (val instanceof Short) {
+      hasher.putShort((Short) val);
+    } else if (val instanceof Byte) {
+      hasher.putByte((Byte) val);
+    } else {
+      throw new RuntimeException(("Unhandled number type: " + val.getClass()));
+    }
+    hasher.putByte(SEPARATOR);
+    return this;
+  }
+
+  private RuleKeyBuilder<RULE_KEY> feed(String key) {
+    hashKeyStack();
+    hashString(key);
     hasher.putByte(SEPARATOR);
     return this;
   }
 
   private RuleKeyBuilder<RULE_KEY> feed(byte[] bytes) {
-    while (!keyStack.isEmpty()) {
-      putBytes(keyStack.pop());
-      hasher.putByte(SEPARATOR);
-    }
-
+    hashKeyStack();
     hasher.putBytes(bytes);
     hasher.putByte(SEPARATOR);
     return this;
   }
 
   private RuleKeyBuilder<RULE_KEY> feed(Sha1HashCode sha1) {
-    while (!keyStack.isEmpty()) {
-      putBytes(keyStack.pop());
-      hasher.putByte(SEPARATOR);
-    }
-
+    hashKeyStack();
     sha1.update(hasher);
     hasher.putByte(SEPARATOR);
     return this;
@@ -305,7 +328,6 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   }
 
   protected RuleKeyBuilder<RULE_KEY> setSingleValue(@Nullable Object val) {
-
     if (val == null) { // Null value first
       ruleKeyLogger.addNullValue();
       return feed(new byte[0]);
@@ -316,25 +338,8 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
       ruleKeyLogger.addValue((Enum<?>) val);
       feed(String.valueOf(val));
     } else if (val instanceof Number) {
-      Class<?> wrapped = Primitives.wrap(val.getClass());
-      if (Double.class.equals(wrapped)) {
-        ruleKeyLogger.addValue((Double) val);
-        hasher.putDouble((Double) val);
-      } else if (Float.class.equals(wrapped)) {
-        ruleKeyLogger.addValue((Float) val);
-        hasher.putFloat((Float) val);
-      } else if (Integer.class.equals(wrapped)) {
-        ruleKeyLogger.addValue((Integer) val);
-        hasher.putInt((Integer) val);
-      } else if (Long.class.equals(wrapped)) {
-        ruleKeyLogger.addValue((Long) val);
-        hasher.putLong((Long) val);
-      } else if (Short.class.equals(wrapped)) {
-        ruleKeyLogger.addValue((Short) val);
-        hasher.putShort((Short) val);
-      } else {
-        throw new RuntimeException(("Unhandled number type: " + val.getClass()));
-      }
+      ruleKeyLogger.addValue((Number) val);
+      feed((Number) val);
     } else if (val instanceof Path) {
       throw new HumanReadableException(
           "It's not possible to reliably disambiguate Paths. They are disallowed from rule keys");
@@ -395,7 +400,6 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     } else {
       throw new RuntimeException("Unsupported value type: " + val.getClass());
     }
-
     return this;
   }
 
