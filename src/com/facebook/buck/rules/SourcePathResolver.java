@@ -30,6 +30,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 
 import java.nio.file.Path;
@@ -127,11 +128,11 @@ public class SourcePathResolver {
     return ArchiveMemberPath.of(archiveRelativePath, archiveMemberSourcePath.getMemberPath());
   }
 
-  public ImmutableList<Path> getAllAbsolutePaths(Collection<? extends SourcePath> sourcePaths) {
-    // Maintain ordering and duplication if necessary.
+  public ImmutableSortedSet<Path> getAllAbsolutePaths(
+      Collection<? extends SourcePath> sourcePaths) {
     return sourcePaths.stream()
         .map(this::getAbsolutePath)
-        .collect(MoreCollectors.toImmutableList());
+        .collect(MoreCollectors.toImmutableSortedSet());
   }
 
   /**

@@ -1089,8 +1089,7 @@ public class CxxDescriptionEnhancer {
                         compilationDatabases.get().getSourcePaths()))),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,
-        ImmutableSortedSet.copyOf(
-            pathResolver.getAllAbsolutePaths(compilationDatabases.get().getSourcePaths())),
+        pathResolver.getAllAbsolutePaths(compilationDatabases.get().getSourcePaths()),
         "compilation-database-concatenate",
         "Concatenate compilation databases",
         "uber-compilation-database",

@@ -58,6 +58,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -530,7 +531,7 @@ public class OcamlRuleBuilder {
   }
 
   private static ImmutableMap<Path, ImmutableList<Path>> filterCurrentRuleInput(
-      final List<Path> mlInput,
+      final Set<Path> mlInput,
       ImmutableMap<Path, ImmutableList<Path>> deps) {
     ImmutableMap.Builder<Path, ImmutableList<Path>> builder = ImmutableMap.builder();
     for (ImmutableMap.Entry<Path, ImmutableList<Path>> entry : deps.entrySet()) {

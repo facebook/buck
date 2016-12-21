@@ -413,7 +413,7 @@ public class OcamlBuildStep implements Step {
 
   private ImmutableList<Path> sortDependency(
       String depOutput,
-      ImmutableList<Path> mlInput) { // NOPMD doesn't understand method reference
+      ImmutableSet<Path> mlInput) { // NOPMD doesn't understand method reference
     OcamlDependencyGraphGenerator graphGenerator = new OcamlDependencyGraphGenerator();
     return
         FluentIterable.from(graphGenerator.generate(depOutput))

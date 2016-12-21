@@ -46,7 +46,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 
 import java.io.IOException;
@@ -176,9 +175,7 @@ public class AaptPackageResources extends AbstractBuildRule
             getProjectFilesystem().getRootPath(),
             getAndroidManifestXml(),
             filteredResourcesProvider.getResDirectories(),
-            ImmutableSortedSet.copyOf(
-                Ordering.natural(),
-                getResolver().getAllAbsolutePaths(assetsDirectories)),
+            getResolver().getAllAbsolutePaths(assetsDirectories),
             getResourceApkPath(),
             rDotTxtDir,
             pathToGeneratedProguardConfig,

@@ -272,7 +272,7 @@ public class Project {
         AndroidBinary androidBinary = (AndroidBinary) srcRule;
         AndroidPackageableCollection packageableCollection =
             androidBinary.getAndroidPackageableCollection();
-        ImmutableList<Path> dxAbsolutePaths =
+        ImmutableSortedSet<Path> dxAbsolutePaths =
             resolver.getAllAbsolutePaths(packageableCollection.getNoDxClasspathEntries());
         noDxJarsBuilder.addAll(
             dxAbsolutePaths.stream().map(projectFilesystem::relativize).iterator());

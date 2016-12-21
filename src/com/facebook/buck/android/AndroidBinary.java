@@ -778,8 +778,9 @@ public class AndroidBinary
     if (packageType.isBuildWithObfuscation()) {
       classpathEntriesToDex = addProguardCommands(
           classpathEntriesToDex,
-          ImmutableSet.copyOf(
-              getResolver().deprecatedAllPaths(packageableCollection.getProguardConfigs())),
+          packageableCollection.getProguardConfigs().stream()
+              .map(getResolver()::getAbsolutePath)
+              .collect(MoreCollectors.toImmutableSet()),
           steps,
           buildableContext);
     }
