@@ -203,7 +203,7 @@ public class PrebuiltJar extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableSortedSet<Path> getJavaSrcs() {
+  public ImmutableSortedSet<SourcePath> getJavaSrcs() {
     return ImmutableSortedSet.of();
   }
 

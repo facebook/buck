@@ -66,7 +66,7 @@ public interface JavaLibrary extends BuildRule, HasClasspathEntries,
   // AndroidPackageable.
   public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries();
 
-  public ImmutableSortedSet<Path> getJavaSrcs();
+  public ImmutableSortedSet<SourcePath> getJavaSrcs();
 
   @Override
   public ImmutableSortedSet<SourcePath> getSources();

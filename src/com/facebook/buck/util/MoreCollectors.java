@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 
 import java.util.Comparator;
 import java.util.function.Function;
@@ -63,6 +64,27 @@ public final class MoreCollectors {
         ImmutableSet.Builder::add,
         (left, right) -> left.addAll(right.build()),
         ImmutableSet.Builder::build);
+  }
+
+  /**
+   * Returns a {@code Collector} that builds an {@code ImmutableSortedSet}.
+   *
+   * This {@code Collector} behaves similar to:
+   * {@code Collectors.collectingAndThen(
+   *    Collectors.toList(), list -> ImmutableSortedSet.copyOf(comparator, list))
+   *  }
+   *  but without building the intermediate list.
+   *
+   * @param <T> the type of the input elements
+   * @return a {@code Collector} that builds an {@code ImmutableSortedSet}.
+   */
+  public static <T extends Comparable<T>> Collector<T, ?, ImmutableSortedSet<T>>
+      toImmutableSortedSet() {
+    return Collector.of(
+        () -> new ImmutableSortedSet.Builder<T>(Ordering.natural()),
+        ImmutableSortedSet.Builder::add,
+        (left, right) -> left.addAll(right.build()),
+        ImmutableSortedSet.Builder::build);
   }
 
   /**

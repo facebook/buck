@@ -332,8 +332,8 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableSortedSet<Path> getJavaSrcs() {
-    return ImmutableSortedSet.copyOf(getResolver().deprecatedAllPaths(srcs));
+  public ImmutableSortedSet<SourcePath> getJavaSrcs() {
+    return srcs;
   }
 
   @Override
@@ -494,9 +494,13 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
       Optional<Path> workingDirectory = Optional.of(scratchDir);
 
+      ImmutableSortedSet<Path> javaSrcs = getJavaSrcs().stream()
+          .map(getResolver()::getRelativePath)
+          .collect(MoreCollectors.toImmutableSortedSet());
+
       compileStepFactory.createCompileToJarStep(
           context,
-          getJavaSrcs(),
+          javaSrcs,
           target,
           getResolver(),
           getProjectFilesystem(),

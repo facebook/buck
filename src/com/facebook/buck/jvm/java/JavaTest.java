@@ -36,6 +36,7 @@ import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasPostBuildSteps;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
+import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -531,7 +532,8 @@ public class JavaTest
       classNamesForSources = getClassNamesForSources(
           rule.compiledTestsLibrary.getJavaSrcs(),
           outputPath,
-          rule.getProjectFilesystem());
+          rule.getProjectFilesystem(),
+          rule.getResolver());
     }
 
     public Set<String> getClassNamesForSources() {
@@ -556,19 +558,20 @@ public class JavaTest
      * @param jarFilePath jar where the generated .class files were written
      */
     @VisibleForTesting
-    static ImmutableSet<String>  getClassNamesForSources(
-        Set<Path> sources,
+    static ImmutableSet<String> getClassNamesForSources(
+        Set<SourcePath> sources,
         @Nullable Path jarFilePath,
-        ProjectFilesystem projectFilesystem) {
+        ProjectFilesystem projectFilesystem,
+        SourcePathResolver resolver) {
       if (jarFilePath == null) {
         return ImmutableSet.of();
       }
 
       final Set<String> sourceClassNames = Sets.newHashSetWithExpectedSize(sources.size());
-      for (Path path : sources) {
+      for (SourcePath path : sources) {
         // We support multiple languages in this rule - the file extension doesn't matter so long
         // as the language supports filename == classname.
-        sourceClassNames.add(MorePaths.getNameWithoutExtension(path));
+        sourceClassNames.add(MorePaths.getNameWithoutExtension(resolver.getRelativePath(path)));
       }
 
       final ImmutableSet.Builder<String> testClassNames = ImmutableSet.builder();

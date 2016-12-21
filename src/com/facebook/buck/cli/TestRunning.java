@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
@@ -36,6 +35,8 @@ import com.facebook.buck.rules.BuildEngine;
 import com.facebook.buck.rules.BuildResult;
 import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.IndividualTestEvent;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.rules.TestStatusMessageEvent;
@@ -126,7 +127,8 @@ public class TestRunning {
       final TestRunningOptions options,
       ListeningExecutorService service,
       BuildEngine buildEngine,
-      final StepRunner stepRunner)
+      final StepRunner stepRunner,
+      SourcePathResolver sourcePathResolver)
       throws IOException, ExecutionException, InterruptedException {
 
     ImmutableSet<JavaLibrary> rulesUnderTestForCoverage;
@@ -437,6 +439,7 @@ public class TestRunning {
                     .getDefaultJavaOptions()
                     .getJavaRuntimeLauncher(),
                 params.getCell().getFilesystem(),
+                sourcePathResolver,
                 JacocoConstants.getJacocoOutputDir(params.getCell().getFilesystem()),
                 options.getCoverageReportFormat(),
                 options.getCoverageReportTitle(),
@@ -769,6 +772,7 @@ public class TestRunning {
       Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional,
       JavaRuntimeLauncher javaRuntimeLauncher,
       ProjectFilesystem filesystem,
+      SourcePathResolver sourcePathResolver,
       Path outputDirectory,
       CoverageReportFormat format,
       String title,
@@ -780,7 +784,7 @@ public class TestRunning {
     // Add all source directories of java libraries that we are testing to -sourcepath.
     for (JavaLibrary rule : rulesUnderTest) {
       ImmutableSet<String> sourceFolderPath =
-          getPathToSourceFolders(rule, defaultJavaPackageFinderOptional, filesystem);
+          getPathToSourceFolders(rule, sourcePathResolver, defaultJavaPackageFinderOptional);
       if (!sourceFolderPath.isEmpty()) {
         srcDirectories.addAll(sourceFolderPath);
       }
@@ -809,9 +813,9 @@ public class TestRunning {
   @VisibleForTesting
   static ImmutableSet<String> getPathToSourceFolders(
       JavaLibrary rule,
-      Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional,
-      ProjectFilesystem filesystem) {
-    ImmutableSet<Path> javaSrcs = rule.getJavaSrcs();
+      SourcePathResolver sourcePathResolver,
+      Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional) {
+    ImmutableSet<SourcePath> javaSrcs = rule.getJavaSrcs();
 
     // A Java library rule with just resource files has an empty javaSrcs.
     if (javaSrcs.isEmpty()) {
@@ -831,15 +835,17 @@ public class TestRunning {
     // folders for the source paths.
     Set<String> srcFolders = Sets.newHashSet();
     loopThroughSourcePath:
-    for (Path javaSrcPath : javaSrcs) {
-      if (MoreProjectFilesystems.isGeneratedFile(filesystem, javaSrcPath)) {
+    for (SourcePath javaSrcPath : javaSrcs) {
+      if (sourcePathResolver.getRule(javaSrcPath).isPresent()) {
         continue;
       }
+
+      Path javaSrcRelativePath = sourcePathResolver.getRelativePath(javaSrcPath);
 
       // If the source path is already under a known source folder, then we can skip this
       // source path.
       for (String srcFolder : srcFolders) {
-        if (javaSrcPath.startsWith(srcFolder)) {
+        if (javaSrcRelativePath.startsWith(srcFolder)) {
           continue loopThroughSourcePath;
         }
       }
@@ -848,7 +854,7 @@ public class TestRunning {
       // root.
       ImmutableSortedSet<String> pathsFromRoot = defaultJavaPackageFinder.getPathsFromRoot();
       for (String root : pathsFromRoot) {
-        if (javaSrcPath.startsWith(root)) {
+        if (javaSrcRelativePath.startsWith(root)) {
           srcFolders.add(root);
           continue loopThroughSourcePath;
         }
@@ -857,7 +863,7 @@ public class TestRunning {
       // Traverse the file system from the parent directory of the java file until we hit the
       // parent of the src root directory.
       ImmutableSet<String> pathElements = defaultJavaPackageFinder.getPathElements();
-      Path directory = filesystem.getPathForRelativePath(javaSrcPath.getParent());
+      Path directory = sourcePathResolver.getAbsolutePath(javaSrcPath).getParent();
       if (pathElements.isEmpty()) {
         continue;
       }

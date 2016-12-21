@@ -35,6 +35,7 @@ import com.facebook.buck.rules.ExternalTestRunnerRule;
 import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
@@ -313,7 +314,8 @@ public class TestCommand extends BuildCommand {
           getTestRunningOptions(params),
           testPool.getExecutor(),
           buildEngine,
-          new DefaultStepRunner());
+          new DefaultStepRunner(),
+          new SourcePathResolver(build.getRuleResolver()));
     } catch (ExecutionException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));

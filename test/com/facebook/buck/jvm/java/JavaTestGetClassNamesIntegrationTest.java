@@ -16,9 +16,14 @@
 
 package com.facebook.buck.jvm.java;
 
+import static org.easymock.EasyMock.createMock;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.rules.BuildRuleResolver;
+import com.facebook.buck.rules.PathSourcePath;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -39,6 +44,7 @@ public class JavaTestGetClassNamesIntegrationTest {
   public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   private ProjectFilesystem projectFilesystem;
+  private SourcePathResolver resolver;
 
   @Before
   public void setUp() throws IOException {
@@ -48,58 +54,63 @@ public class JavaTestGetClassNamesIntegrationTest {
         temporaryFolder);
     workspace.setUp();
     projectFilesystem = new ProjectFilesystem(temporaryFolder.getRoot());
+    resolver = new SourcePathResolver(createMock(BuildRuleResolver.class));
   }
 
   @Test
   public void testGetClassNamesForSources() {
     Path classesFolder = Paths.get("default.jar");
-    Set<Path> sources = ImmutableSet.of(
-        Paths.get("src/com/facebook/DummyTest.java"));
+    Set<SourcePath> sources = ImmutableSet.of(
+        makeSourcePath("src/com/facebook/DummyTest.java"));
     Set<String> classNames =
         JavaTest.CompiledClassFileFinder.getClassNamesForSources(
             sources,
             classesFolder,
-            projectFilesystem);
+            projectFilesystem,
+            resolver);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
   }
 
   @Test
   public void testGetClassNamesForSourcesWithInnerClasses() {
     Path classesFolder = Paths.get("case1.jar");
-    Set<Path> sources = ImmutableSet.of(
-        Paths.get("src/com/facebook/DummyTest.java"));
+    Set<SourcePath> sources = ImmutableSet.of(
+        makeSourcePath("src/com/facebook/DummyTest.java"));
     Set<String> classNames =
         JavaTest.CompiledClassFileFinder.getClassNamesForSources(
             sources,
             classesFolder,
-            projectFilesystem);
+            projectFilesystem,
+            resolver);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
   }
 
   @Test
   public void testGetClassNamesForSourcesWithMultipleTopLevelClasses() {
     Path classesFolder = Paths.get("case2.jar");
-    Set<Path> sources = ImmutableSet.of(
-        Paths.get("src/com/facebook/DummyTest.java"));
+    Set<SourcePath> sources = ImmutableSet.of(
+        makeSourcePath("src/com/facebook/DummyTest.java"));
     Set<String> classNames =
         JavaTest.CompiledClassFileFinder.getClassNamesForSources(
             sources,
             classesFolder,
-            projectFilesystem);
+            projectFilesystem,
+            resolver);
     assertEquals(ImmutableSet.of("com.facebook.DummyTest"), classNames);
   }
 
   @Test
   public void testGetClassNamesForSourcesWithImperfectHeuristic() {
     Path classesFolder = Paths.get("case2fail.jar");
-    Set<Path> sources = ImmutableSet.of(
-        Paths.get("src/com/facebook/feed/DummyTest.java"),
-        Paths.get("src/com/facebook/nav/OtherDummyTest.java"));
+    Set<SourcePath> sources = ImmutableSet.of(
+        makeSourcePath("src/com/facebook/feed/DummyTest.java"),
+        makeSourcePath("src/com/facebook/nav/OtherDummyTest.java"));
     Set<String> classNames =
         JavaTest.CompiledClassFileFinder.getClassNamesForSources(
             sources,
             classesFolder,
-            projectFilesystem);
+            projectFilesystem,
+            resolver);
     assertEquals("Ideally, if the implementation of getClassNamesForSources() were tightened up," +
         " the set would not include com.facebook.feed.OtherDummyTest because" +
         " it was not specified in sources.",
@@ -109,5 +120,9 @@ public class JavaTestGetClassNamesIntegrationTest {
             "com.facebook.nav.OtherDummyTest"
         ),
         classNames);
+  }
+
+  private SourcePath makeSourcePath(String relative) {
+    return new PathSourcePath(projectFilesystem, Paths.get(relative));
   }
 }
