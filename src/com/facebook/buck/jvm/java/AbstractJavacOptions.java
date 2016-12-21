@@ -97,6 +97,15 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     OUT_OF_PROCESS,
   }
 
+  public enum AbiGenerationMode {
+    /** Generate ABIs by stripping .class files */
+    CLASS,
+    /** Output warnings for things that aren't legal when generating ABIs from source */
+    MIGRATING_TO_SOURCE,
+    /** Generate ABIs by parsing .java files (has some limitations) */
+    SOURCE,
+  }
+
   protected abstract Optional<Either<Path, SourcePath>> getJavacPath();
   protected abstract Optional<SourcePath> getJavacJarPath();
   protected abstract Optional<String> getCompilerClassName();
@@ -167,6 +176,11 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
   @Value.Default
   public JavacLocation getJavacLocation() {
     return JavacLocation.IN_PROCESS;
+  }
+
+  @Value.Default
+  public AbiGenerationMode getAbiGenerationMode() {
+    return AbiGenerationMode.CLASS;
   }
 
   @Value.Lazy
@@ -291,7 +305,8 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
         .setReflectively("javac", getJavac())
         .setReflectively("annotationProcessingParams", getAnnotationProcessingParams())
         .setReflectively("spoolMode", getSpoolMode())
-        .setReflectively("trackClassUsage", trackClassUsage());
+        .setReflectively("trackClassUsage", trackClassUsage())
+        .setReflectively("abiGenerationMode", getAbiGenerationMode());
   }
 
   public ImmutableSortedSet<SourcePath> getInputs(SourcePathResolver resolver) {

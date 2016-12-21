@@ -341,6 +341,27 @@ public class JavaBuckConfigTest {
         Matchers.equalTo(JavacOptions.JavacLocation.IN_PROCESS));
   }
 
+  @Test
+  public void testAbisGeneratedFromClassByDefault() throws IOException {
+    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
+    JavacOptions options = config.getDefaultJavacOptions();
+    assertThat(
+        options.getAbiGenerationMode(),
+        Matchers.equalTo(JavacOptions.AbiGenerationMode.CLASS));
+  }
+
+  @Test
+  public void testAbisMigratingToSource() throws IOException {
+    String content = Joiner.on('\n').join(
+        "[java]",
+        "    abi_generation_mode = migrating_to_source");
+    JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(content));
+    JavacOptions options = config.getDefaultJavacOptions();
+    assertThat(
+        options.getAbiGenerationMode(),
+        Matchers.equalTo(JavacOptions.AbiGenerationMode.MIGRATING_TO_SOURCE));
+  }
+
   private void assertOptionKeyAbsent(JavacOptions options, String key) {
     OptionAccumulator optionsConsumer = visitOptions(options);
     assertThat(optionsConsumer.keyVals, not(hasKey(key)));

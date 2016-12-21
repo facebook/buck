@@ -113,6 +113,13 @@ public class JavacOptionsTest {
   }
 
   @Test
+  public void abiGenerationModeClassByDefault() {
+    JavacOptions options = createStandardBuilder().build();
+
+    assertThat(options.getAbiGenerationMode(), is(JavacOptions.AbiGenerationMode.CLASS));
+  }
+
+  @Test
   public void productionBuildsCanBeEnabled() {
     JavacOptions options = createStandardBuilder()
         .setProductionBuild(true)

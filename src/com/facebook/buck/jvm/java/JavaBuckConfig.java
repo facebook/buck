@@ -112,6 +112,12 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
       builder.setTrackClassUsageNotDisabled(trackClassUsage.get());
     }
 
+    Optional<JavacOptions.AbiGenerationMode> abiGenerationMode =
+        delegate.getEnum("java", "abi_generation_mode", JavacOptions.AbiGenerationMode.class);
+    if (abiGenerationMode.isPresent()) {
+      builder.setAbiGenerationMode(abiGenerationMode.get());
+    }
+
     ImmutableMap<String, String> allEntries = delegate.getEntriesForSection("java");
     ImmutableMap.Builder<String, String> bootclasspaths = ImmutableMap.builder();
     for (Map.Entry<String, String> entry : allEntries.entrySet()) {
