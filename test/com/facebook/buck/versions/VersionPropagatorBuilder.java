@@ -32,7 +32,7 @@ import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Optional;
 
-class VersionPropagatorBuilder
+public class VersionPropagatorBuilder
     extends
     AbstractNodeBuilder<
         VersionPropagatorBuilder.Arg,

@@ -121,6 +121,7 @@
       "//src/com/facebook/buck/util/cache:cache",
       "//src/com/facebook/buck/util/concurrent:concurrent",
       "//src/com/facebook/buck/util/sha1:sha1",
+      "//src/com/facebook/buck/versions:types",
       "//test/com/facebook/buck/util:testutil",
       "//third-party/java/guava:guava",
       "//third-party/java/jsr:jsr305"

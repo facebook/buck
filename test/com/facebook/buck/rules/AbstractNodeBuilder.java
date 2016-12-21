@@ -24,13 +24,16 @@ import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.versions.Version;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
 import java.lang.reflect.Field;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -52,6 +55,7 @@ public abstract class AbstractNodeBuilder<A, B extends Description<A>> {
   private final CellPathResolver cellRoots;
   @Nullable
   private final HashCode rawHashCode;
+  private Optional<ImmutableMap<BuildTarget, Version>> selectedVersions = Optional.empty();
 
   protected AbstractNodeBuilder(
       B description,
@@ -114,19 +118,31 @@ public abstract class AbstractNodeBuilder<A, B extends Description<A>> {
       HashCode hash = rawHashCode == null ?
           Hashing.sha1().hashString(target.getFullyQualifiedName(), UTF_8) :
           rawHashCode;
-
-      return new TargetNodeFactory(TYPE_COERCER_FACTORY).create(
-          // This hash will do in a pinch.
-          hash,
-          description,
-          arg,
-          filesystem,
-          target,
-          getDepsFromArg(),
-          ImmutableSet.of(
-              VISIBILITY_PATTERN_PARSER.parse(null, VisibilityPatternParser.VISIBILITY_PUBLIC)
-          ),
-          cellRoots);
+      TargetNodeFactory factory = new TargetNodeFactory(TYPE_COERCER_FACTORY);
+      TargetNode<A, B> node =
+          factory.create(
+              // This hash will do in a pinch.
+              hash,
+              description,
+              arg,
+              filesystem,
+              target,
+              getDepsFromArg(),
+              ImmutableSet.of(
+                  VISIBILITY_PATTERN_PARSER.parse(
+                      null,
+                      VisibilityPatternParser.VISIBILITY_PUBLIC)),
+              cellRoots);
+      if (selectedVersions.isPresent()) {
+        node =
+            node.withTargetConstructorArgDepsAndSelectedVerisons(
+                node.getBuildTarget(),
+                node.getConstructorArg(),
+                node.getDeclaredDeps(),
+                node.getExtraDeps(),
+                selectedVersions);
+      }
+      return node;
     } catch (NoSuchBuildTargetException e) {
       throw Throwables.propagate(e);
     }
@@ -207,6 +223,12 @@ public abstract class AbstractNodeBuilder<A, B extends Description<A>> {
 
   public BuildTarget getTarget() {
     return target;
+  }
+
+  public AbstractNodeBuilder<A, B> setSelectedVersions(
+      ImmutableMap<BuildTarget, Version> selectedVersions) {
+    this.selectedVersions = Optional.of(selectedVersions);
+    return this;
   }
 
 }

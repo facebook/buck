@@ -44,11 +44,13 @@ import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.AllExistingProjectFilesystem;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
 import com.facebook.buck.util.MoreCollectors;
+import com.facebook.buck.versions.Version;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -338,6 +340,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         filesystem,
         resolver,
         platform,
+        Optional.empty(),
         libDir,
         libName);
     assertEquals(
@@ -363,6 +366,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         filesystem,
         resolver,
         platform,
+        Optional.empty(),
         Optional.of("lib"),
         Optional.empty());
 
@@ -452,6 +456,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             filesystem,
             resolver,
             platform1,
+            Optional.empty(),
             libDir,
             libName)));
     assertEquals(
@@ -463,6 +468,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             filesystem,
             resolver,
             platform1,
+            Optional.empty(),
             libDir,
             libName)));
 
@@ -478,6 +484,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             filesystem,
             resolver,
             platform2,
+            Optional.empty(),
             libDir,
             libName)));
     assertEquals(
@@ -489,6 +496,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             filesystem,
             resolver,
             platform2,
+            Optional.empty(),
             libDir,
             libName)));
   }
@@ -1003,6 +1011,34 @@ public class PrebuiltCxxLibraryDescriptionTest {
                 Linker.LinkableDepType.SHARED)
             .getArgs(),
         empty());
+  }
+
+  @Test
+  public void versionSubDir() throws Exception {
+    BuildTarget dep = BuildTargetFactory.newInstance("//:dep");
+    PrebuiltCxxLibraryBuilder depBuilder = new PrebuiltCxxLibraryBuilder(dep);
+    PrebuiltCxxLibraryBuilder builder = new PrebuiltCxxLibraryBuilder(TARGET);
+    builder.setSelectedVersions(ImmutableMap.of(dep, Version.of("1.0")));
+    builder.setVersionedSubDir(
+        VersionMatchedCollection.<String>builder()
+            .add(ImmutableMap.of(dep, Version.of("1.0")), "sub-dir")
+            .build());
+    TargetGraph graph = TargetGraphFactory.newInstance(depBuilder.build(), builder.build());
+    BuildRuleResolver resolver =
+        new BuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
+    ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
+    depBuilder.build(resolver, filesystem, graph);
+    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) builder.build(resolver, filesystem, graph);
+    NativeLinkableInput nativeLinkableInput =
+        lib.getNativeLinkableInput(
+            CXX_PLATFORM,
+            Linker.LinkableDepType.STATIC);
+    assertThat(
+        Arg.stringify(nativeLinkableInput.getArgs()).get(0),
+        Matchers.equalTo(
+            filesystem.resolve("sub-dir")
+                .resolve(getStaticLibraryPath(builder.build().getConstructorArg()))
+                .toString()));
   }
 
 }

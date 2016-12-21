@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.AbstractMap;
 import java.util.Map;
 
-class VersionedAliasBuilder
+public class VersionedAliasBuilder
     extends
     AbstractNodeBuilder<
         AbstractVersionedAliasDescription.Arg,

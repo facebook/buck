@@ -46,12 +46,15 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.rules.macros.StringExpander;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.Optionals;
+import com.facebook.buck.versions.Version;
+import com.facebook.buck.versions.VersionPropagator;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
@@ -72,7 +75,8 @@ import java.util.regex.Pattern;
 
 public class PrebuiltCxxLibraryDescription implements
     Description<PrebuiltCxxLibraryDescription.Arg>,
-    ImplicitDepsInferringDescription<PrebuiltCxxLibraryDescription.Arg> {
+    ImplicitDepsInferringDescription<PrebuiltCxxLibraryDescription.Arg>,
+    VersionPropagator<PrebuiltCxxLibraryDescription.Arg> {
 
   private static final MacroFinder MACRO_FINDER = new MacroFinder();
 
@@ -145,6 +149,7 @@ public class PrebuiltCxxLibraryDescription implements
       final ProjectFilesystem filesystem,
       final BuildRuleResolver ruleResolver,
       final CxxPlatform cxxPlatform,
+      Optional<String> versionSubDir,
       final String basePathString,
       final Optional<String> addedPathString) {
     ImmutableList<BuildRule> deps;
@@ -154,12 +159,19 @@ public class PrebuiltCxxLibraryDescription implements
     } catch (MacroException e) {
       deps = ImmutableList.of();
     }
-    final Path libDirPath = Paths.get(expandMacros(
-        handler,
-        target,
-        cellRoots,
-        ruleResolver,
-        basePathString));
+    Path libDirPath =
+        filesystem.getRootPath().getFileSystem().getPath(
+            expandMacros(
+                handler,
+                target,
+                cellRoots,
+                ruleResolver,
+                basePathString));
+
+    if (versionSubDir.isPresent()) {
+      libDirPath =
+          filesystem.getRootPath().getFileSystem().getPath(versionSubDir.get()).resolve(libDirPath);
+    }
 
     // If there are no deps then this is just referencing a path that should already be there
     // So just expand the macros and return a PathSourcePath
@@ -209,17 +221,18 @@ public class PrebuiltCxxLibraryDescription implements
   }
 
   private static SourcePath getLibraryPath(
-      final BuildTarget target,
-      final CellPathResolver cellRoots,
-      final ProjectFilesystem filesystem,
-      final BuildRuleResolver ruleResolver,
-      final CxxPlatform cxxPlatform,
-      final Optional<String> libDir,
-      final Optional<String> libName,
+      BuildTarget target,
+      CellPathResolver cellRoots,
+      ProjectFilesystem filesystem,
+      BuildRuleResolver ruleResolver,
+      CxxPlatform cxxPlatform,
+      Optional<String> versionSubDir,
+      Optional<String> libDir,
+      Optional<String> libName,
       String suffix) {
 
-    final String libDirString = libDir.orElse("lib");
-    final String fileNameString = String.format(
+    String libDirString = libDir.orElse("lib");
+    String fileNameString = String.format(
         "lib%s%s",
         libName.orElse(target.getShortName()),
         suffix);
@@ -230,6 +243,7 @@ public class PrebuiltCxxLibraryDescription implements
         filesystem,
         ruleResolver,
         cxxPlatform,
+        versionSubDir,
         libDirString,
         Optional.of(fileNameString)
     );
@@ -238,9 +252,10 @@ public class PrebuiltCxxLibraryDescription implements
   static SourcePath getSharedLibraryPath(
       BuildTarget target,
       CellPathResolver cellNames,
-      final ProjectFilesystem filesystem,
+      ProjectFilesystem filesystem,
       BuildRuleResolver ruleResolver,
       CxxPlatform cxxPlatform,
+      Optional<String> versionSubDir,
       Optional<String> libDir,
       Optional<String> libName) {
     return getLibraryPath(
@@ -249,6 +264,7 @@ public class PrebuiltCxxLibraryDescription implements
         filesystem,
         ruleResolver,
         cxxPlatform,
+        versionSubDir,
         libDir,
         libName,
         String.format(".%s", cxxPlatform.getSharedLibraryExtension()));
@@ -257,9 +273,10 @@ public class PrebuiltCxxLibraryDescription implements
   static SourcePath getStaticLibraryPath(
       BuildTarget target,
       CellPathResolver cellNames,
-      final ProjectFilesystem filesystem,
+      ProjectFilesystem filesystem,
       BuildRuleResolver ruleResolver,
       CxxPlatform cxxPlatform,
+      Optional<String> versionSubDir,
       Optional<String> libDir,
       Optional<String> libName) {
     return getLibraryPath(
@@ -268,6 +285,7 @@ public class PrebuiltCxxLibraryDescription implements
         filesystem,
         ruleResolver,
         cxxPlatform,
+        versionSubDir,
         libDir,
         libName,
         ".a");
@@ -279,6 +297,7 @@ public class PrebuiltCxxLibraryDescription implements
       final ProjectFilesystem filesystem,
       BuildRuleResolver ruleResolver,
       CxxPlatform cxxPlatform,
+      Optional<String> versionSubDir,
       Optional<String> libDir,
       Optional<String> libName) {
     return getLibraryPath(
@@ -287,6 +306,7 @@ public class PrebuiltCxxLibraryDescription implements
         filesystem,
         ruleResolver,
         cxxPlatform,
+        versionSubDir,
         libDir,
         libName,
         "_pic.a");
@@ -344,6 +364,7 @@ public class PrebuiltCxxLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       A args) throws NoSuchBuildTargetException {
 
     final SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
@@ -357,6 +378,12 @@ public class PrebuiltCxxLibraryDescription implements
         args.soname,
         args.libName);
 
+    Optional<String> versionSubDir =
+        selectedVersions.isPresent() ?
+            Optional.of(
+                args.versionedSubDir.orElse(VersionMatchedCollection.<String>of())
+                    .getMatchingValues(selectedVersions.get()).get(0)) :
+            Optional.empty();
 
     // Use the static PIC variant, if available.
     SourcePath staticLibraryPath =
@@ -366,6 +393,7 @@ public class PrebuiltCxxLibraryDescription implements
             params.getProjectFilesystem(),
             ruleResolver,
             cxxPlatform,
+            versionSubDir,
             args.libDir,
             args.libName);
     if (!params.getProjectFilesystem().exists(pathResolver.getAbsolutePath(staticLibraryPath))) {
@@ -375,6 +403,7 @@ public class PrebuiltCxxLibraryDescription implements
           params.getProjectFilesystem(),
           ruleResolver,
           cxxPlatform,
+          versionSubDir,
           args.libDir,
           args.libName);
     }
@@ -445,6 +474,9 @@ public class PrebuiltCxxLibraryDescription implements
     Optional<Map.Entry<Flavor, CxxPlatform>> platform = cxxPlatforms.getFlavorAndValue(
         params.getBuildTarget());
 
+    Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
+        targetGraph.get(params.getBuildTarget()).getSelectedVersions();
+
     // If we *are* building a specific type of this lib, call into the type specific
     // rule builder methods.  Currently, we only support building a shared lib from the
     // pre-existing static lib, which we do here.
@@ -461,7 +493,22 @@ public class PrebuiltCxxLibraryDescription implements
             params,
             ruleResolver,
             platform.get().getValue(),
+            selectedVersions,
             args);
+      }
+    }
+
+    if (selectedVersions.isPresent() && args.versionedSubDir.isPresent()) {
+      ImmutableList<String> versionSubDirs =
+          args.versionedSubDir.orElse(VersionMatchedCollection.<String>of())
+              .getMatchingValues(selectedVersions.get());
+      if (versionSubDirs.size() != 1) {
+        throw new HumanReadableException(
+            "%s: could not get a single version sub dir: %s, %s, %s",
+            params.getBuildTarget(),
+            args.versionedSubDir,
+            versionSubDirs,
+            selectedVersions);
       }
     }
 
@@ -470,6 +517,12 @@ public class PrebuiltCxxLibraryDescription implements
     final SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     final boolean headerOnly = args.headerOnly.orElse(false);
     final boolean forceStatic = args.forceStatic.orElse(false);
+    final Optional<String> versionSubdir =
+        selectedVersions.isPresent() && args.versionedSubDir.isPresent() ?
+            Optional.of(
+                args.versionedSubDir.orElse(VersionMatchedCollection.of())
+                    .getMatchingValues(selectedVersions.get()).get(0)) :
+            Optional.empty();
     return new PrebuiltCxxLibrary(params, pathResolver) {
 
       private final Map<Pair<Flavor, Linker.LinkableDepType>, NativeLinkableInput>
@@ -543,6 +596,7 @@ public class PrebuiltCxxLibraryDescription implements
                 getProjectFilesystem(),
                 ruleResolver,
                 cxxPlatform,
+                versionSubdir,
                 args.libDir,
                 args.libName);
 
@@ -559,7 +613,7 @@ public class PrebuiltCxxLibraryDescription implements
         // Otherwise, generate it's build rule.
         BuildRule sharedLibrary =
             ruleResolver.requireRule(
-                getBuildTarget().withFlavors(
+                getBuildTarget().withAppendedFlavors(
                     cxxPlatform.getFlavor(),
                     CxxDescriptionEnhancer.SHARED_FLAVOR));
 
@@ -578,6 +632,7 @@ public class PrebuiltCxxLibraryDescription implements
                 params.getProjectFilesystem(),
                 ruleResolver,
                 cxxPlatform,
+                versionSubdir,
                 args.libDir,
                 args.libName);
         if (params.getProjectFilesystem().exists(
@@ -593,6 +648,7 @@ public class PrebuiltCxxLibraryDescription implements
                 getProjectFilesystem(),
                 ruleResolver,
                 cxxPlatform,
+                versionSubdir,
                 args.libDir,
                 args.libName);
         if (params.getProjectFilesystem().exists(
@@ -642,6 +698,7 @@ public class PrebuiltCxxLibraryDescription implements
                             params.getProjectFilesystem(),
                             ruleResolver,
                             cxxPlatform,
+                            versionSubdir,
                             input,
                             Optional.empty()))
                     .collect(MoreCollectors.toImmutableList());
@@ -754,6 +811,7 @@ public class PrebuiltCxxLibraryDescription implements
                         params.getProjectFilesystem(),
                         ruleResolver,
                         cxxPlatform,
+                        versionSubdir,
                         args.libDir,
                         args.libName);
             SourcePathArg staticLibrary =
@@ -954,6 +1012,7 @@ public class PrebuiltCxxLibraryDescription implements
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     public ImmutableSortedSet<BuildTarget> exportedDeps = ImmutableSortedSet.of();
     public Optional<Pattern> supportedPlatformsRegex;
+    public Optional<VersionMatchedCollection<String>> versionedSubDir;
   }
 
 }
