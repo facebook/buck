@@ -1178,9 +1178,8 @@ public class AndroidBinary
     if (isReorderingClasses()) {
       IntraDexReorderStep intraDexReorderStep = new IntraDexReorderStep(
           getProjectFilesystem(),
-          dexReorderToolFile,
-          dexReorderDataDumpFile,
-          getResolver(),
+          getResolver().getAbsolutePath(dexReorderToolFile.get()),
+          getResolver().getAbsolutePath(dexReorderDataDumpFile.get()),
           getBuildTarget(),
           selectedPrimaryDexPath,
           primaryDexPath,
