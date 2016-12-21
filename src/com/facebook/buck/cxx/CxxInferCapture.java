@@ -115,7 +115,7 @@ public class CxxInferCapture
         .add("-x", inputType.getLanguage())
         .add("-o", output.toString()) // TODO(martinoluca): Use -fsyntax-only for better perf
         .add("-c")
-        .add(getResolver().deprecatedGetPath(input).toString())
+        .add(getResolver().getAbsolutePath(input).toString())
         .build();
   }
 
@@ -228,7 +228,7 @@ public class CxxInferCapture
           preprocessorDelegate.getHeaderVerification(),
           sourceDepfile,
           destDepfile,
-          getResolver().deprecatedGetPath(input),
+          getResolver().getRelativePath(input),
           output);
       return StepExecutionResult.SUCCESS;
     }
