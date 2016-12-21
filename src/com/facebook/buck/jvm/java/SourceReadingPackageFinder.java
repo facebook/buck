@@ -51,7 +51,10 @@ class SourceReadingPackageFinder implements JavaPackageFinder {
 
       Iterator<String> segments = Splitter.on('.').split(packageName).iterator();
       if (!segments.hasNext()) {
-        throw new IllegalStateException("Unable to create path from " + packageName);
+        throw new HumanReadableException(
+            "Unable to create path from %s in %s",
+            packageName,
+            pathRelativeToProjectRoot);
       }
       Path path = pathRelativeToProjectRoot.getFileSystem().getPath(segments.next());
       while (segments.hasNext()) {
@@ -91,6 +94,7 @@ class SourceReadingPackageFinder implements JavaPackageFinder {
         case PACKAGE:
           return token.getValue();
 
+        case EOF:
         case UNKNOWN:
           // We have no idea what to do. Assume the default package
           return "";
@@ -136,7 +140,7 @@ class SourceReadingPackageFinder implements JavaPackageFinder {
         int ch = reader.read();
 
         if (ch == -1) {
-          return new Token(Token.Kind.UNKNOWN, "");
+          return new Token(Token.Kind.EOF, "");
         }
 
         if (!Character.isWhitespace(ch)) {
@@ -168,7 +172,7 @@ class SourceReadingPackageFinder implements JavaPackageFinder {
 
         switch (ch) {
           case -1:
-            return new Token(Token.Kind.UNKNOWN, "");
+            return new Token(Token.Kind.EOF, "");
 
           // New-line always means the end of the line
           case '\n':
@@ -211,7 +215,8 @@ class SourceReadingPackageFinder implements JavaPackageFinder {
         }
 
         if (last == '*' && ch == '/') {
-          return new Token(Token.Kind.COMMENT, value.toString());
+          // Strip the trailing * from the comment
+          return new Token(Token.Kind.COMMENT, value.substring(0, value.length() -1));
         }
 
         last = ch;
@@ -257,6 +262,7 @@ class SourceReadingPackageFinder implements JavaPackageFinder {
 
     public enum Kind {
       COMMENT,
+      EOF,
       PACKAGE,
       UNKNOWN,
       WHITE_SPACE

@@ -49,7 +49,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Optional;
 
 public class JavaLibraryDescription implements
@@ -102,13 +101,13 @@ public class JavaLibraryDescription implements
           JarShape.MAVEN : JarShape.SINGLE;
 
       JarShape.Summary summary = shape.gatherDeps(baseLibrary);
-      if (flavors.contains(Javadoc.DOC_JAR)) {
-        ImmutableSet<SourcePath> sources = summary.getPackagedRules().stream()
-            .filter(HasSources.class::isInstance)
-            .map(rule -> ((HasSources) rule).getSources())
-            .flatMap(Collection::stream)
-            .collect(MoreCollectors.toImmutableSet());
 
+      ImmutableSortedSet<SourcePath> sources = summary.getPackagedRules().stream()
+          .filter(HasSources.class::isInstance)
+          .flatMap(dep -> ((HasSources) dep).getSources().stream())
+          .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+
+      if (flavors.contains(Javadoc.DOC_JAR)) {
         // In theory, the only deps we need are the ones that contribute to the sourcepaths.
         // However, javadoc wants to have classes being documented have all their deps be available
         // somewhere. Ideally, we'd not build everything, but then we're not able to document any
@@ -136,15 +135,18 @@ public class JavaLibraryDescription implements
             summary.getMavenDeps(),
             sources);
       } else if (flavors.contains(JavaLibrary.SRC_JAR)) {
-        ImmutableSortedSet<SourcePath> sources = summary.getPackagedRules().stream()
-            .filter(HasSources.class::isInstance)
-            .flatMap(dep -> ((HasSources) dep).getSources().stream())
-            .collect(MoreCollectors.toImmutableSortedSet(Ordering.natural()));
+        ImmutableSortedSet<BuildRule> extraDeps;
+        if (args.mavenPomTemplate.isPresent()) {
+          extraDeps = ImmutableSortedSet.copyOf(
+              ruleFinder.filterBuildRuleInputs(args.mavenPomTemplate.get()));
+        } else {
+          extraDeps = ImmutableSortedSet.of();
+        }
 
         BuildRuleParams emptyParams = params.copyWithDeps(
             Suppliers.ofInstance(
                 ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(sources))),
-            Suppliers.ofInstance(ImmutableSortedSet.of()));
+            Suppliers.ofInstance(extraDeps));
 
         return new JavaSourceJar(
             emptyParams,
