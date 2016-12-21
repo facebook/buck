@@ -116,7 +116,7 @@ public class GenStringSourceMapStep extends AbstractExecutionStep {
     super("build_string_source_map");
     this.filesystem = filesystem;
     this.rDotTxtDir = rDotTxtDir;
-    this.resDirectories = ImmutableList.copyOf(resDirectories);
+    this.resDirectories = resDirectories;
     this.destinationPath = destinationPath;
   }
 
