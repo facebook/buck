@@ -144,7 +144,7 @@ public class TestRunningTest {
     replay(mocks);
 
     ImmutableSet<String> result = TestRunning.getPathToSourceFolders(
-        javaLibrary, resolver, Optional.of(defaultJavaPackageFinder));
+        javaLibrary, resolver, defaultJavaPackageFinder);
 
     assertThat("No path should be returned if the library contains only generated files.",
         result, Matchers.empty());
@@ -183,7 +183,7 @@ public class TestRunningTest {
     replay(defaultJavaPackageFinder);
 
     ImmutableSet<String> result = TestRunning.getPathToSourceFolders(
-        javaLibrary, resolver, Optional.of(defaultJavaPackageFinder));
+        javaLibrary, resolver, defaultJavaPackageFinder);
 
     String expected = javaLibrary.getProjectFilesystem().getRootPath().resolve("package/src") + "/";
     assertEquals("All non-generated source files are under one source tmp.",
@@ -219,7 +219,7 @@ public class TestRunningTest {
     replay(defaultJavaPackageFinder);
 
     TestRunning.getPathToSourceFolders(
-        javaLibrary, resolver, Optional.of(defaultJavaPackageFinder));
+        javaLibrary, resolver, defaultJavaPackageFinder);
 
     verify(defaultJavaPackageFinder);
   }
@@ -253,7 +253,7 @@ public class TestRunningTest {
     replay(mocks);
 
     ImmutableSet<String> result = TestRunning.getPathToSourceFolders(
-        javaLibrary, resolver, Optional.of(defaultJavaPackageFinder));
+        javaLibrary, resolver, defaultJavaPackageFinder);
 
     assertEquals("All non-generated source files are under one source tmp.",
         ImmutableSet.of("java/"), result);
@@ -303,7 +303,7 @@ public class TestRunningTest {
     replay(defaultJavaPackageFinder);
 
     ImmutableSet<String> result = TestRunning.getPathToSourceFolders(
-        javaLibrary, resolver, Optional.of(defaultJavaPackageFinder));
+        javaLibrary, resolver, defaultJavaPackageFinder);
 
     Path rootPath = javaLibrary.getProjectFilesystem().getRootPath();
     ImmutableSet<String> expected = ImmutableSet.of(

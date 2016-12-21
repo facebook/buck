@@ -434,7 +434,7 @@ public class TestRunning {
             executionContext,
             getReportCommand(
                 rulesUnderTestForCoverage,
-                Optional.of(defaultJavaPackageFinder),
+                defaultJavaPackageFinder,
                 params.getBuckConfig().getView(JavaBuckConfig.class)
                     .getDefaultJavaOptions()
                     .getJavaRuntimeLauncher(),
@@ -769,7 +769,7 @@ public class TestRunning {
    */
   private static Step getReportCommand(
       ImmutableSet<JavaLibrary> rulesUnderTest,
-      Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional,
+      DefaultJavaPackageFinder defaultJavaPackageFinder,
       JavaRuntimeLauncher javaRuntimeLauncher,
       ProjectFilesystem filesystem,
       SourcePathResolver sourcePathResolver,
@@ -784,7 +784,7 @@ public class TestRunning {
     // Add all source directories of java libraries that we are testing to -sourcepath.
     for (JavaLibrary rule : rulesUnderTest) {
       ImmutableSet<String> sourceFolderPath =
-          getPathToSourceFolders(rule, sourcePathResolver, defaultJavaPackageFinderOptional);
+          getPathToSourceFolders(rule, sourcePathResolver, defaultJavaPackageFinder);
       if (!sourceFolderPath.isEmpty()) {
         srcDirectories.addAll(sourceFolderPath);
       }
@@ -814,22 +814,13 @@ public class TestRunning {
   static ImmutableSet<String> getPathToSourceFolders(
       JavaLibrary rule,
       SourcePathResolver sourcePathResolver,
-      Optional<DefaultJavaPackageFinder> defaultJavaPackageFinderOptional) {
+      DefaultJavaPackageFinder defaultJavaPackageFinder) {
     ImmutableSet<SourcePath> javaSrcs = rule.getJavaSrcs();
 
     // A Java library rule with just resource files has an empty javaSrcs.
     if (javaSrcs.isEmpty()) {
       return ImmutableSet.of();
     }
-
-    // If defaultJavaPackageFinderOptional is not present, then it could mean that there was an
-    // error reading from the buck configuration file.
-    if (!defaultJavaPackageFinderOptional.isPresent()) {
-      throw new HumanReadableException(
-          "Please include a [java] section with src_root property in the .buckconfig file.");
-    }
-
-    DefaultJavaPackageFinder defaultJavaPackageFinder = defaultJavaPackageFinderOptional.get();
 
     // Iterate through all source paths to make sure we are generating a complete set of source
     // folders for the source paths.
