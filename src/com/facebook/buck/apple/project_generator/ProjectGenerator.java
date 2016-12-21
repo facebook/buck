@@ -768,6 +768,8 @@ public class ProjectGenerator {
       PBXProject project,
       TargetNode<HalideLibraryDescription.Arg, ?> targetNode) throws IOException {
     final BuildTarget buildTarget = targetNode.getBuildTarget();
+    boolean isFocusedOnTarget = shouldIncludeBuildTargetIntoFocusedProject(
+        focusModules, buildTarget);
     String productName = getProductNameForBuildTarget(buildTarget);
     Path outputPath = getHalideOutputPath(targetNode.getFilesystem(), buildTarget);
 
@@ -785,7 +787,7 @@ public class ProjectGenerator {
         .setPreBuildRunScriptPhases(ImmutableList.of(scriptPhase));
 
     NewNativeTargetProjectMutator.Result targetBuilderResult;
-    targetBuilderResult = mutator.buildTargetAndAddToProject(project);
+    targetBuilderResult = mutator.buildTargetAndAddToProject(project, isFocusedOnTarget);
 
     BuildTarget compilerTarget =
         HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget);
@@ -1186,16 +1188,18 @@ public class ProjectGenerator {
     }
 
     NewNativeTargetProjectMutator.Result targetBuilderResult;
-    targetBuilderResult = mutator.buildTargetAndAddToProject(project);
-    PBXGroup targetGroup = targetBuilderResult.targetGroup;
+    targetBuilderResult = mutator.buildTargetAndAddToProject(project, isFocusedOnTarget);
+    Optional<PBXGroup> targetGroup = targetBuilderResult.targetGroup;
 
-    SourceTreePath buckFilePath = new SourceTreePath(
-        PBXReference.SourceTree.SOURCE_ROOT,
-        pathRelativizer.outputPathToBuildTargetPath(buildTarget).resolve(buildFileName),
-        Optional.empty());
-    PBXFileReference buckReference =
-        targetGroup.getOrCreateFileReferenceBySourceTreePath(buckFilePath);
-    buckReference.setExplicitFileType(Optional.of("text.script.python"));
+    if (isFocusedOnTarget) {
+      SourceTreePath buckFilePath = new SourceTreePath(
+          PBXReference.SourceTree.SOURCE_ROOT,
+          pathRelativizer.outputPathToBuildTargetPath(buildTarget).resolve(buildFileName),
+          Optional.empty());
+      PBXFileReference buckReference =
+          targetGroup.get().getOrCreateFileReferenceBySourceTreePath(buckFilePath);
+      buckReference.setExplicitFileType(Optional.of("text.script.python"));
+    }
 
     // -- configurations
     ImmutableMap.Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
@@ -1320,25 +1324,26 @@ public class ProjectGenerator {
 
     ImmutableMap.Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
 
-    ImmutableSet<Path> recursiveHeaderSearchPaths = collectRecursiveHeaderSearchPaths(targetNode);
-    ImmutableSet<Path> headerMapBases = recursiveHeaderSearchPaths.isEmpty() ?
-        ImmutableSet.of() :
-        ImmutableSet.of(
-            pathRelativizer.outputDirToRootRelative(
-                buildTargetNode.getFilesystem().getBuckPaths().getBuckOut()));
-
-    appendConfigsBuilder
-        .put(
-            "HEADER_SEARCH_PATHS",
-            Joiner.on(' ').join(Iterables.concat(recursiveHeaderSearchPaths, headerMapBases)))
-        .put(
-            "LIBRARY_SEARCH_PATHS",
-            Joiner.on(' ').join(collectRecursiveLibrarySearchPaths(ImmutableSet.of(targetNode))))
-        .put(
-            "FRAMEWORK_SEARCH_PATHS",
-            Joiner.on(' ').join(
-                collectRecursiveFrameworkSearchPaths(ImmutableList.of(targetNode))));
     if (isFocusedOnTarget) {
+      ImmutableSet<Path> recursiveHeaderSearchPaths = collectRecursiveHeaderSearchPaths(targetNode);
+      ImmutableSet<Path> headerMapBases = recursiveHeaderSearchPaths.isEmpty() ?
+          ImmutableSet.of() :
+          ImmutableSet.of(
+              pathRelativizer.outputDirToRootRelative(
+                  buildTargetNode.getFilesystem().getBuckPaths().getBuckOut()));
+
+      appendConfigsBuilder
+          .put(
+              "HEADER_SEARCH_PATHS",
+              Joiner.on(' ').join(Iterables.concat(recursiveHeaderSearchPaths, headerMapBases)))
+          .put(
+              "LIBRARY_SEARCH_PATHS",
+              Joiner.on(' ').join(collectRecursiveLibrarySearchPaths(ImmutableSet.of(targetNode))))
+          .put(
+              "FRAMEWORK_SEARCH_PATHS",
+              Joiner.on(' ').join(
+                  collectRecursiveFrameworkSearchPaths(ImmutableList.of(targetNode))));
+
       Iterable<String> otherCFlags = Iterables.concat(
           cxxBuckConfig.getFlags("cflags").orElse(DEFAULT_CFLAGS),
           collectRecursiveExportedPreprocessorFlags(
@@ -1424,11 +1429,11 @@ public class ProjectGenerator {
       }
     }
 
-    ImmutableMap<String, String> appendedConfig = appendConfigsBuilder.build();
-
     PBXNativeTarget target = targetBuilderResult.target;
 
     if (isFocusedOnTarget) {
+      ImmutableMap<String, String> appendedConfig = appendConfigsBuilder.build();
+
       Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs =
           getXcodeBuildConfigurationsForTargetNode(
               targetNode,
@@ -1450,16 +1455,18 @@ public class ProjectGenerator {
         getPublicCxxHeaders(targetNode),
         getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC),
         arg.xcodePublicHeadersSymlinks.orElse(true) || headerMapDisabled);
-    createHeaderSymlinkTree(
-        sourcePathResolver,
-        getPrivateCxxHeaders(targetNode),
-        getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE),
-        arg.xcodePrivateHeadersSymlinks.orElse(true) || headerMapDisabled);
+    if (isFocusedOnTarget) {
+      createHeaderSymlinkTree(
+          sourcePathResolver,
+          getPrivateCxxHeaders(targetNode),
+          getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE),
+          arg.xcodePrivateHeadersSymlinks.orElse(true) || headerMapDisabled);
+    }
 
-    if (appleTargetNode.isPresent()) {
+    if (appleTargetNode.isPresent() && isFocusedOnTarget) {
       // Use Core Data models from immediate dependencies only.
-      addCoreDataModelsIntoTarget(appleTargetNode.get(), targetGroup);
-      addSceneKitAssetsIntoTarget(appleTargetNode.get(), targetGroup);
+      addCoreDataModelsIntoTarget(appleTargetNode.get(), targetGroup.get());
+      addSceneKitAssetsIntoTarget(appleTargetNode.get(), targetGroup.get());
     }
 
     return target;

@@ -91,9 +91,9 @@ class NewNativeTargetProjectMutator {
 
   public static class Result {
     public final PBXNativeTarget target;
-    public final PBXGroup targetGroup;
+    public final Optional<PBXGroup> targetGroup;
 
-    private Result(PBXNativeTarget target, PBXGroup targetGroup) {
+    private Result(PBXNativeTarget target, Optional<PBXGroup> targetGroup) {
       this.target = target;
       this.targetGroup = targetGroup;
     }
@@ -276,20 +276,28 @@ class NewNativeTargetProjectMutator {
     return this;
   }
 
-  public Result buildTargetAndAddToProject(PBXProject project) {
+  public Result buildTargetAndAddToProject(PBXProject project, boolean addBuildPhases) {
     PBXNativeTarget target = new PBXNativeTarget(targetName);
 
-    PBXGroup targetGroup = project.getMainGroup().getOrCreateDescendantGroupByPath(targetGroupPath);
-    targetGroup = targetGroup.getOrCreateChildGroupByName(targetName);
+    Optional<PBXGroup> optTargetGroup;
+    if (addBuildPhases) {
+      PBXGroup targetGroup =
+          project.getMainGroup().getOrCreateDescendantGroupByPath(targetGroupPath);
+      targetGroup = targetGroup.getOrCreateChildGroupByName(targetName);
 
-    // Phases
-    addRunScriptBuildPhases(target, preBuildRunScriptPhases);
-    addPhasesAndGroupsForSources(target, targetGroup);
-    addFrameworksBuildPhase(project, target);
-    addResourcesFileReference(targetGroup);
-    addResourcesBuildPhase(target, targetGroup);
-    target.getBuildPhases().addAll((Collection<? extends PBXBuildPhase>) copyFilesPhases);
-    addRunScriptBuildPhases(target, postBuildRunScriptPhases);
+      // Phases
+      addRunScriptBuildPhases(target, preBuildRunScriptPhases);
+      addPhasesAndGroupsForSources(target, targetGroup);
+      addFrameworksBuildPhase(project, target);
+      addResourcesFileReference(targetGroup);
+      addResourcesBuildPhase(target, targetGroup);
+      target.getBuildPhases().addAll((Collection<? extends PBXBuildPhase>) copyFilesPhases);
+      addRunScriptBuildPhases(target, postBuildRunScriptPhases);
+
+      optTargetGroup = Optional.of(targetGroup);
+    } else {
+      optTargetGroup = Optional.empty();
+    }
 
     // Product
 
@@ -304,7 +312,7 @@ class NewNativeTargetProjectMutator {
     target.setProductType(productType);
 
     project.getTargets().add(target);
-    return new Result(target, targetGroup);
+    return new Result(target, optTargetGroup);
   }
 
   private void addPhasesAndGroupsForSources(PBXNativeTarget target, PBXGroup targetGroup) {
