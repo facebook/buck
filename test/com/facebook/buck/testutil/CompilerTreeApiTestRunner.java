@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.jvm.java.abi.source;
+package com.facebook.buck.testutil;
 
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.InitializationError;

@@ -2,6 +2,7 @@
   "source" : {
     "deps" : [
       "//src/com/facebook/buck/jvm/java/abi/source:source",
+      "//test/com/facebook/buck/testutil:testutil",
       "//third-party/java/guava:guava",
       "//third-party/java/junit:junit"
     ],

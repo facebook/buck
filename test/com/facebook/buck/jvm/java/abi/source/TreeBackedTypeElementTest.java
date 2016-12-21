@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.testutil.CompilerTreeApiTestRunner;
 import com.sun.source.tree.ClassTree;
 
 import org.junit.Test;
