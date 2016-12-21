@@ -18,37 +18,17 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.io.Files;
 import com.sun.source.tree.ClassTree;
-import com.sun.source.util.JavacTask;
-import com.sun.source.util.Trees;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
 
 @RunWith(CompilerTreeApiTestRunner.class)
-public class TreeBackedTypeElementTest {
-
-  @Rule
-  public TemporaryFolder tempFolder = new TemporaryFolder();
-
-  private Trees trees;
-  private Elements javacElements;
-  private TreeBackedElements treesElements;
+public class TreeBackedTypeElementTest extends CompilerTreeApiTest {
 
   @Test
   public void testGetSimpleName() throws IOException {
@@ -71,29 +51,4 @@ public class TreeBackedTypeElementTest {
     assertEquals(javacElement.getQualifiedName(), treesElement.getQualifiedName());
   }
 
-  private void compile(String source) throws IOException {
-    File sourceFile = tempFolder.newFile("Foo.java");
-    Files.write(source, sourceFile, StandardCharsets.UTF_8);
-
-    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-    StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
-    Iterable<? extends JavaFileObject> sourceObjects =
-        fileManager.getJavaFileObjectsFromFiles(Arrays.asList(sourceFile));
-
-    JavacTask task =
-        (JavacTask) compiler.getTask(null, fileManager, null, null, null, sourceObjects);
-
-    trees = Trees.instance(task);
-    javacElements = task.getElements();
-    TreeResolver treeResolver = new TreeResolver(task.getElements());
-    treesElements = treeResolver.getElements();
-
-    task.parse().forEach(tree -> treeResolver.enterTree(tree));
-
-    // Make sure we've got elements for things. Technically this is going a little further than
-    // the compiler ordinarily would by the time annotation processors get involved, but this
-    // shouldn't matter for interface-level things. If need be there's a private method we can
-    // reflect to to get more exact behavior.
-    task.analyze();
-  }
 }
