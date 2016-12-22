@@ -25,11 +25,11 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.testutil.ParameterizedTests;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -92,7 +92,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
         ImmutableList.of(ndkPlatforms.values().iterator().next().getCxxPlatform().getFlavor()));
   }
 
-  @Parameterized.Parameters(name = "platform={0}")
+  @Parameterized.Parameters(name = "type={0},platform={1}")
   public static Collection<Object[]> data() {
     List<Flavor> platforms = new ArrayList<>();
 
@@ -105,12 +105,15 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
     Optional<ImmutableList<Flavor>> ndkPlatforms = getNdkPlatforms();
     ndkPlatforms.ifPresent(platforms::addAll);
 
-    return RichStream.from(platforms)
-        .map(f -> new Object[]{f})
-        .toImmutableList();
+    return ParameterizedTests.getPermutations(
+        ImmutableList.of("cxx_library", "prebuilt_cxx_library"),
+        platforms);
   }
 
   @Parameterized.Parameter
+  public String type;
+
+  @Parameterized.Parameter(value = 1)
   public Flavor platform;
 
   private ProjectWorkspace workspace;
@@ -118,25 +121,39 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
   @Rule
   public TemporaryPaths tmp = new TemporaryPaths();
 
+  private BuildTarget sharedBinaryTarget;
+  private BuildTarget sharedBinaryBuiltTarget;
+  private BuildTarget staticBinaryTarget;
+  private BuildTarget staticBinaryBuiltTarget;
+  private Optional<BuildTarget> sharedLibraryTarget;
+
   @Before
   public void setUp() throws IOException {
     workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "shared_library", tmp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "shared_library_interfaces", tmp);
     workspace.setUp();
+    staticBinaryTarget =
+        BuildTargetFactory.newInstance("//:static_binary_" + type)
+            .withAppendedFlavors(platform);
+    staticBinaryBuiltTarget =
+        staticBinaryTarget.withAppendedFlavors(CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR);
+    sharedBinaryTarget =
+        BuildTargetFactory.newInstance("//:shared_binary_" + type)
+            .withAppendedFlavors(platform);
+    sharedBinaryBuiltTarget =
+        sharedBinaryTarget.withAppendedFlavors(CxxDescriptionEnhancer.CXX_LINK_BINARY_FLAVOR);
+    sharedLibraryTarget =
+        !type.equals("cxx_library") ?
+            Optional.empty() :
+            Optional.of(
+                CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
+                    BuildTargetFactory.newInstance("//:" + type),
+                    platform,
+                    Linker.LinkType.SHARED));
   }
 
   @Test
   public void sharedInterfaceLibraryPreventsRebuildAfterNonLocalVarNameChange() throws IOException {
-    BuildTarget binaryTarget =
-        CxxDescriptionEnhancer.createCxxLinkTarget(
-            BuildTargetFactory.newInstance("//:binary"),
-            Optional.empty())
-            .withAppendedFlavors(platform);
-    BuildTarget libraryTarget =
-        CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
-            BuildTargetFactory.newInstance("//subdir:library"),
-            platform,
-            Linker.LinkType.SHARED);
     BuckBuildLog log;
 
     // First verify that *not* using shared library interfaces causes a rebuild even after making a
@@ -145,14 +162,17 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
         ImmutableList.of(
             "-c", "cxx.shared_library_interfaces=false",
             "-c", "cxx.objcopy=/usr/bin/objcopy",
-            "//:binary#" + platform);
+            "-c", "cxx.platform=" + platform,
+            sharedBinaryTarget.getFullyQualifiedName());
     String[] argv = args.toArray(new String[args.size()]);
     workspace.runBuckBuild(argv).assertSuccess();
-    workspace.replaceFileContents("subdir/library.cpp", "bar1", "bar2");
+    workspace.replaceFileContents("library.cpp", "bar1", "bar2");
     workspace.runBuckBuild(argv).assertSuccess();
     log = workspace.getBuildLog();
-    log.assertTargetBuiltLocally(libraryTarget.toString());
-    log.assertTargetBuiltLocally(binaryTarget.toString());
+    if (sharedLibraryTarget.isPresent()) {
+      log.assertTargetBuiltLocally(sharedLibraryTarget.get().toString());
+    }
+    log.assertTargetBuiltLocally(sharedBinaryBuiltTarget.toString());
 
     // Now verify that using shared library interfaces does not cause a rebuild after making a
     // non-interface change.
@@ -160,28 +180,21 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
         ImmutableList.of(
             "-c", "cxx.shared_library_interfaces=true",
             "-c", "cxx.objcopy=/usr/bin/objcopy",
-            "//:binary#" + platform);
+            "-c", "cxx.platform=" + platform,
+            sharedBinaryTarget.getFullyQualifiedName());
     String[] iArgv = iArgs.toArray(new String[iArgs.size()]);
     workspace.runBuckBuild(iArgv).assertSuccess();
-    workspace.replaceFileContents("subdir/library.cpp", "bar2", "bar3");
+    workspace.replaceFileContents("library.cpp", "bar2", "bar3");
     workspace.runBuckBuild(iArgv).assertSuccess();
     log = workspace.getBuildLog();
-    log.assertTargetBuiltLocally(libraryTarget.toString());
-    log.assertTargetHadMatchingInputRuleKey(binaryTarget.toString());
+    if (sharedLibraryTarget.isPresent()) {
+      log.assertTargetBuiltLocally(sharedLibraryTarget.get().toString());
+    }
+    log.assertTargetHadMatchingInputRuleKey(sharedBinaryBuiltTarget.toString());
   }
 
   @Test
   public void sharedInterfaceLibraryPreventsRebuildAfterCodeChange() throws IOException {
-    BuildTarget libraryTarget =
-        CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
-            BuildTargetFactory.newInstance("//subdir:library"),
-            platform,
-            Linker.LinkType.SHARED);
-    BuildTarget binaryTarget =
-        CxxDescriptionEnhancer.createCxxLinkTarget(
-            BuildTargetFactory.newInstance("//:binary"),
-            Optional.empty())
-            .withAppendedFlavors(platform);
     BuckBuildLog log;
 
     // First verify that *not* using shared library interfaces causes a rebuild even after making a
@@ -190,14 +203,17 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
         ImmutableList.of(
             "-c", "cxx.shared_library_interfaces=false",
             "-c", "cxx.objcopy=/usr/bin/objcopy",
-            "//:binary#" + platform);
+            "-c", "cxx.platform=" + platform,
+            sharedBinaryTarget.getFullyQualifiedName());
     String[] argv = args.toArray(new String[args.size()]);
     workspace.runBuckBuild(argv).assertSuccess();
-    workspace.replaceFileContents("subdir/library.cpp", "bar1 = 0", "bar1 = 1");
+    workspace.replaceFileContents("library.cpp", "bar1 = 0", "bar1 = 1");
     workspace.runBuckBuild(argv).assertSuccess();
     log = workspace.getBuildLog();
-    log.assertTargetBuiltLocally(libraryTarget.toString());
-    log.assertTargetBuiltLocally(binaryTarget.toString());
+    if (sharedLibraryTarget.isPresent()) {
+      log.assertTargetBuiltLocally(sharedLibraryTarget.get().toString());
+    }
+    log.assertTargetBuiltLocally(sharedBinaryBuiltTarget.toString());
 
     // Now verify that using shared library interfaces does not cause a rebuild after making a
     // non-interface change.
@@ -205,28 +221,21 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
         ImmutableList.of(
             "-c", "cxx.shared_library_interfaces=true",
             "-c", "cxx.objcopy=/usr/bin/objcopy",
-            "//:binary#" + platform);
+            "-c", "cxx.platform=" + platform,
+            sharedBinaryTarget.getFullyQualifiedName());
     String[] iArgv = iArgs.toArray(new String[iArgs.size()]);
     workspace.runBuckBuild(iArgv).assertSuccess();
-    workspace.replaceFileContents("subdir/library.cpp", "bar1 = 1", "bar1 = 2");
+    workspace.replaceFileContents("library.cpp", "bar1 = 1", "bar1 = 2");
     workspace.runBuckBuild(iArgv).assertSuccess();
     log = workspace.getBuildLog();
-    log.assertTargetBuiltLocally(libraryTarget.toString());
-    log.assertTargetHadMatchingInputRuleKey(binaryTarget.toString());
+    if (sharedLibraryTarget.isPresent()) {
+      log.assertTargetBuiltLocally(sharedLibraryTarget.get().toString());
+    }
+    log.assertTargetHadMatchingInputRuleKey(sharedBinaryBuiltTarget.toString());
   }
 
   @Test
   public void sharedInterfaceLibraryPreventsRebuildAfterAddedCode() throws IOException {
-    BuildTarget libraryTarget =
-        CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
-            BuildTargetFactory.newInstance("//subdir:library"),
-            platform,
-            Linker.LinkType.SHARED);
-    BuildTarget binaryTarget =
-        CxxDescriptionEnhancer.createCxxLinkTarget(
-            BuildTargetFactory.newInstance("//:binary"),
-            Optional.empty())
-            .withAppendedFlavors(platform);
     BuckBuildLog log;
 
     // First verify that *not* using shared library interfaces causes a rebuild even after making a
@@ -235,17 +244,20 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
         ImmutableList.of(
             "-c", "cxx.shared_library_interfaces=false",
             "-c", "cxx.objcopy=/usr/bin/objcopy",
-            "//:binary#" + platform);
+            "-c", "cxx.platform=" + platform,
+            sharedBinaryTarget.getFullyQualifiedName());
     String[] argv = args.toArray(new String[args.size()]);
     workspace.runBuckBuild(argv).assertSuccess();
-    workspace.replaceFileContents("subdir/library.cpp", "return bar1", "return bar1 += 15");
+    workspace.replaceFileContents("library.cpp", "return bar1", "return bar1 += 15");
     workspace.runBuckBuild(argv).assertSuccess();
     log = workspace.getBuildLog();
-    log.assertTargetBuiltLocally(libraryTarget.toString());
-    log.assertTargetBuiltLocally(binaryTarget.toString());
+    if (sharedLibraryTarget.isPresent()) {
+      log.assertTargetBuiltLocally(sharedLibraryTarget.get().toString());
+    }
+    log.assertTargetBuiltLocally(sharedBinaryBuiltTarget.toString());
 
     // Revert changes.
-    workspace.replaceFileContents("subdir/library.cpp", "return bar1 += 15", "return bar1");
+    workspace.replaceFileContents("library.cpp", "return bar1 += 15", "return bar1");
 
     // Now verify that using shared library interfaces does not cause a rebuild after making a
     // non-interface change.
@@ -253,14 +265,17 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
         ImmutableList.of(
             "-c", "cxx.shared_library_interfaces=true",
             "-c", "cxx.objcopy=/usr/bin/objcopy",
-            "//:binary#" + platform);
+            "-c", "cxx.platform=" + platform,
+            sharedBinaryTarget.getFullyQualifiedName());
     String[] iArgv = iArgs.toArray(new String[iArgs.size()]);
     workspace.runBuckBuild(iArgv).assertSuccess();
-    workspace.replaceFileContents("subdir/library.cpp", "return bar1", "return bar1 += 15");
+    workspace.replaceFileContents("library.cpp", "return bar1", "return bar1 += 15");
     workspace.runBuckBuild(iArgv).assertSuccess();
     log = workspace.getBuildLog();
-    log.assertTargetBuiltLocally(libraryTarget.toString());
-    log.assertTargetHadMatchingInputRuleKey(binaryTarget.toString());
+    if (sharedLibraryTarget.isPresent()) {
+      log.assertTargetBuiltLocally(sharedLibraryTarget.get().toString());
+    }
+    log.assertTargetHadMatchingInputRuleKey(sharedBinaryBuiltTarget.toString());
   }
 
   @Test
@@ -269,25 +284,16 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
         ImmutableList.of(
             "-c", "cxx.shared_library_interfaces=true",
             "-c", "cxx.objcopy=/usr/bin/objcopy",
-            "//:binary#" + platform);
+            "-c", "cxx.platform=" + platform,
+            sharedBinaryTarget.getFullyQualifiedName());
     String[] argv = args.toArray(new String[args.size()]);
     workspace.runBuckBuild(argv).assertSuccess();
-    workspace.replaceFileContents("subdir/library.cpp", "foo", "bar");
+    workspace.replaceFileContents("library.cpp", "foo", "bar");
     workspace.runBuckBuild(argv).assertFailure();
   }
 
   @Test
   public void sharedInterfaceLibraryDoesNotAffectStaticLinking() throws IOException {
-    BuildTarget binaryTarget =
-        CxxDescriptionEnhancer.createCxxLinkTarget(
-            BuildTargetFactory.newInstance("//:static_binary"),
-            Optional.empty())
-            .withAppendedFlavors(platform);
-    BuildTarget libraryTarget =
-        CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
-            BuildTargetFactory.newInstance("//subdir:library"),
-            platform,
-            CxxSourceRuleFactory.PicType.PDC);
     BuckBuildLog log;
 
     // Verify that using shared library interfaces does not affect static linking.
@@ -295,14 +301,14 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
         ImmutableList.of(
             "-c", "cxx.shared_library_interfaces=true",
             "-c", "cxx.objcopy=/usr/bin/objcopy",
-            "//:static_binary#" + platform);
+            "-c", "cxx.platform=" + platform,
+            staticBinaryTarget.getFullyQualifiedName());
     String[] iArgv = iArgs.toArray(new String[iArgs.size()]);
     workspace.runBuckBuild(iArgv).assertSuccess();
-    workspace.replaceFileContents("subdir/library.cpp", "bar1", "bar2");
+    workspace.replaceFileContents("library.cpp", "bar1", "bar2");
     workspace.runBuckBuild(iArgv).assertSuccess();
     log = workspace.getBuildLog();
-    log.assertTargetBuiltLocally(libraryTarget.toString());
-    log.assertTargetBuiltLocally(binaryTarget.toString());
+    log.assertTargetBuiltLocally(staticBinaryBuiltTarget.toString());
   }
 
 }

@@ -18,8 +18,6 @@ package com.facebook.buck.testutil;
 
 import com.google.common.collect.ImmutableList;
 
-import java.util.Arrays;
-
 public class ParameterizedTests {
 
   private ParameterizedTests() {}
@@ -27,26 +25,27 @@ public class ParameterizedTests {
   /**
    * @return the cross-product of the input iterables, useful for parameterized tests.
    */
-  public static ImmutableList<Object[]> getPermutations(Iterable<?>... iterables) {
-    if (iterables.length == 0) {
-      return ImmutableList.of();
-    }
+  public static ImmutableList<Object[]> getPermutations(
+      ImmutableList<? extends Iterable<?>> iterables) {
     ImmutableList.Builder<Object[]> perms = ImmutableList.builder();
-    ImmutableList<Object[]> childPerms =
-        getPermutations(Arrays.copyOfRange(iterables, 1, iterables.length));
-    for (Object object : iterables[0]) {
-      if (!childPerms.isEmpty()) {
+    if (iterables.size() == 1) {
+      iterables.get(0).forEach(o -> perms.add(new Object[]{o}));
+    } else if (iterables.size() > 1) {
+      ImmutableList<Object[]> childPerms = getPermutations(iterables.subList(1, iterables.size()));
+      for (Object object : iterables.get(0)) {
         for (Object[] childPerm : childPerms) {
-          Object[] perm = new Object[iterables.length];
+          Object[] perm = new Object[iterables.size()];
           perm[0] = object;
           System.arraycopy(childPerm, 0, perm, 1, childPerm.length);
           perms.add(perm);
         }
-      } else {
-        perms.add(new Object[]{object});
       }
     }
     return perms.build();
+  }
+
+  public static ImmutableList<Object[]> getPermutations(Iterable<?>... iterables) {
+    return getPermutations(ImmutableList.copyOf(iterables));
   }
 
 }

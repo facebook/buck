@@ -24,6 +24,7 @@ import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.FlavorConvertible;
 import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.model.ImmutableFlavor;
 import com.facebook.buck.model.MacroException;
 import com.facebook.buck.model.MacroFinder;
 import com.facebook.buck.model.Pair;
@@ -80,9 +81,10 @@ public class PrebuiltCxxLibraryDescription implements
 
   private static final MacroFinder MACRO_FINDER = new MacroFinder();
 
-  private enum Type implements FlavorConvertible {
+  enum Type implements FlavorConvertible {
     EXPORTED_HEADERS(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
     SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR),
+    SHARED_INTERFACE(ImmutableFlavor.of("shared-interface"))
     ;
 
     private final Flavor flavor;
@@ -460,6 +462,99 @@ public class PrebuiltCxxLibraryDescription implements
             .build());
   }
 
+  /**
+   * Makes sure all build rules needed to produce the shared library are added to the action
+   * graph.
+   *
+   * @return the {@link SourcePath} representing the actual shared library.
+   */
+  private SourcePath requireSharedLibrary(
+      BuildTarget target,
+      BuildRuleResolver resolver,
+      SourcePathResolver pathResolver,
+      CellPathResolver cellRoots,
+      ProjectFilesystem filesystem,
+      CxxPlatform cxxPlatform,
+      Optional<String> versionSubdir,
+      Arg args)
+      throws NoSuchBuildTargetException {
+    SourcePath sharedLibraryPath =
+        PrebuiltCxxLibraryDescription.getSharedLibraryPath(
+            target,
+            cellRoots,
+            filesystem,
+            resolver,
+            cxxPlatform,
+            versionSubdir,
+            args.libDir,
+            args.libName);
+
+    // If the shared library is prebuilt, just return a reference to it.
+    // TODO(alisdair04): this code misbehaves. whether the file exists should have been figured
+    // out earlier during parsing/target graph creation, or it should be later when steps being
+    // produced. This is preventing distributed build loading files lazily.
+    if (sharedLibraryPath instanceof BuildTargetSourcePath ||
+        filesystem.exists(
+            pathResolver.getAbsolutePath(sharedLibraryPath))) {
+      return sharedLibraryPath;
+    }
+
+    // Otherwise, generate it's build rule.
+    BuildRule sharedLibrary =
+        resolver.requireRule(
+            target.withAppendedFlavors(
+                cxxPlatform.getFlavor(),
+                CxxDescriptionEnhancer.SHARED_FLAVOR));
+
+    return new BuildTargetSourcePath(sharedLibrary.getBuildTarget());
+  }
+
+  private <A extends Arg> BuildRule createSharedLibraryInterface(
+      BuildTarget baseTarget,
+      BuildRuleParams baseParams,
+      BuildRuleResolver resolver,
+      CxxPlatform cxxPlatform,
+      Optional<String> versionSubdir,
+      A args)
+      throws NoSuchBuildTargetException {
+
+    if (!args.supportsSharedLibraryInterface) {
+      throw new HumanReadableException(
+          "%s: rule does not support shared library interfaces",
+          baseTarget,
+          cxxPlatform.getFlavor());
+    }
+
+    Optional<SharedLibraryInterfaceFactory> factory =
+        cxxPlatform.getSharedLibraryInterfaceFactory();
+    if (!factory.isPresent()) {
+      throw new HumanReadableException(
+          "%s: C/C++ platform %s does not support shared library interfaces",
+          baseTarget,
+          cxxPlatform.getFlavor());
+    }
+
+    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+
+    SourcePath sharedLibrary =
+        requireSharedLibrary(
+            baseTarget.getBuildTarget(),
+            resolver,
+            pathResolver,
+            baseParams.getCellRoots(),
+            baseParams.getProjectFilesystem(),
+            cxxPlatform,
+            versionSubdir,
+            args);
+
+    return factory.get().createSharedInterfaceLibrary(
+        baseTarget.withAppendedFlavors(Type.SHARED_INTERFACE.getFlavor(), cxxPlatform.getFlavor()),
+        baseParams,
+        resolver,
+        new SourcePathResolver(resolver),
+        sharedLibrary);
+  }
+
   @Override
   public <A extends Arg> BuildRule createBuildRule(
       TargetGraph targetGraph,
@@ -476,12 +571,20 @@ public class PrebuiltCxxLibraryDescription implements
 
     Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
         targetGraph.get(params.getBuildTarget()).getSelectedVersions();
+    final Optional<String> versionSubdir =
+        selectedVersions.isPresent() && args.versionedSubDir.isPresent() ?
+            Optional.of(
+                args.versionedSubDir.orElse(VersionMatchedCollection.of())
+                    .getMatchingValues(selectedVersions.get()).get(0)) :
+            Optional.empty();
 
     // If we *are* building a specific type of this lib, call into the type specific
     // rule builder methods.  Currently, we only support building a shared lib from the
     // pre-existing static lib, which we do here.
     if (type.isPresent()) {
       Preconditions.checkState(platform.isPresent());
+      BuildTarget baseTarget =
+          params.getBuildTarget().withoutFlavors(type.get().getKey(), platform.get().getKey());
       if (type.get().getValue() == Type.EXPORTED_HEADERS) {
         return createExportedHeaderSymlinkTreeBuildRule(
             params,
@@ -494,6 +597,14 @@ public class PrebuiltCxxLibraryDescription implements
             ruleResolver,
             platform.get().getValue(),
             selectedVersions,
+            args);
+      } else if (type.get().getValue() == Type.SHARED_INTERFACE) {
+        return createSharedLibraryInterface(
+            baseTarget,
+            params,
+            ruleResolver,
+            platform.get().getValue(),
+            versionSubdir,
             args);
       }
     }
@@ -517,12 +628,6 @@ public class PrebuiltCxxLibraryDescription implements
     final SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
     final boolean headerOnly = args.headerOnly.orElse(false);
     final boolean forceStatic = args.forceStatic.orElse(false);
-    final Optional<String> versionSubdir =
-        selectedVersions.isPresent() && args.versionedSubDir.isPresent() ?
-            Optional.of(
-                args.versionedSubDir.orElse(VersionMatchedCollection.of())
-                    .getMatchingValues(selectedVersions.get()).get(0)) :
-            Optional.empty();
     return new PrebuiltCxxLibrary(params, pathResolver) {
 
       private final Map<Pair<Flavor, Linker.LinkableDepType>, NativeLinkableInput>
@@ -587,37 +692,27 @@ public class PrebuiltCxxLibraryDescription implements
        *
        * @return the {@link SourcePath} representing the actual shared library.
        */
-      private SourcePath requireSharedLibrary(CxxPlatform cxxPlatform)
+      private SourcePath requireSharedLibrary(CxxPlatform cxxPlatform, boolean link)
           throws NoSuchBuildTargetException {
-        SourcePath sharedLibraryPath =
-            PrebuiltCxxLibraryDescription.getSharedLibraryPath(
-                getBuildTarget(),
-                params.getCellRoots(),
-                getProjectFilesystem(),
-                ruleResolver,
-                cxxPlatform,
-                versionSubdir,
-                args.libDir,
-                args.libName);
-
-        // If the shared library is prebuilt, just return a reference to it.
-        // TODO(alisdair04): this code misbehaves. whether the file exists should have been figured
-        // out earlier during parsing/target graph creation, or it should be later when steps being
-        // produced. This is preventing distributed build loading files lazily.
-        if (sharedLibraryPath instanceof BuildTargetSourcePath ||
-            params.getProjectFilesystem().exists(
-                getResolver().getAbsolutePath(sharedLibraryPath))) {
-          return sharedLibraryPath;
+        if (link &&
+            args.supportsSharedLibraryInterface &&
+            cxxPlatform.getSharedLibraryInterfaceFactory().isPresent()) {
+          BuildTarget target =
+              params.getBuildTarget().withAppendedFlavors(
+                  cxxPlatform.getFlavor(),
+                  Type.SHARED_INTERFACE.getFlavor());
+          ruleResolver.requireRule(target);
+          return new BuildTargetSourcePath(target);
         }
-
-        // Otherwise, generate it's build rule.
-        BuildRule sharedLibrary =
-            ruleResolver.requireRule(
-                getBuildTarget().withAppendedFlavors(
-                    cxxPlatform.getFlavor(),
-                    CxxDescriptionEnhancer.SHARED_FLAVOR));
-
-        return new BuildTargetSourcePath(sharedLibrary.getBuildTarget());
+        return PrebuiltCxxLibraryDescription.this.requireSharedLibrary(
+            params.getBuildTarget(),
+            ruleResolver,
+            pathResolver,
+            params.getCellRoots(),
+            params.getProjectFilesystem(),
+            cxxPlatform,
+            versionSubdir,
+            args);
       }
 
       /**
@@ -788,7 +883,7 @@ public class PrebuiltCxxLibraryDescription implements
         if (!headerOnly) {
           if (type == Linker.LinkableDepType.SHARED) {
             Preconditions.checkState(getPreferredLinkage(cxxPlatform) != Linkage.STATIC);
-            final SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);
+            final SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform, true);
             if (args.linkWithoutSoname) {
               if (!(sharedLibrary instanceof PathSourcePath)) {
                 throw new HumanReadableException(
@@ -798,7 +893,7 @@ public class PrebuiltCxxLibraryDescription implements
               linkerArgsBuilder.add(new RelativeLinkArg((PathSourcePath) sharedLibrary));
             } else {
               linkerArgsBuilder.add(
-                  new SourcePathArg(getResolver(), requireSharedLibrary(cxxPlatform)));
+                  new SourcePathArg(getResolver(), requireSharedLibrary(cxxPlatform, true)));
             }
           } else {
             Preconditions.checkState(getPreferredLinkage(cxxPlatform) != Linkage.SHARED);
@@ -884,7 +979,7 @@ public class PrebuiltCxxLibraryDescription implements
         String resolvedSoname = getSoname(cxxPlatform);
         ImmutableMap.Builder<String, SourcePath> solibs = ImmutableMap.builder();
         if (!headerOnly && !args.provided) {
-          SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform);
+          SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform, false);
           solibs.put(resolvedSoname, sharedLibrary);
         }
         return solibs.build();
@@ -1013,6 +1108,7 @@ public class PrebuiltCxxLibraryDescription implements
     public ImmutableSortedSet<BuildTarget> exportedDeps = ImmutableSortedSet.of();
     public Optional<Pattern> supportedPlatformsRegex;
     public Optional<VersionMatchedCollection<String>> versionedSubDir;
+    public boolean supportsSharedLibraryInterface = false;
   }
 
 }
