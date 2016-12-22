@@ -35,4 +35,6 @@ public interface SharedLibraryInterfaceFactory {
       SourcePathResolver pathResolver,
       SourcePath library);
 
+  Iterable<BuildTarget> getParseTimeDeps();
+
 }

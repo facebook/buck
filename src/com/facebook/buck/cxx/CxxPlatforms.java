@@ -302,6 +302,8 @@ public class CxxPlatforms {
       deps.addAll(cxxPlatform.getAsm().get().getParseTimeDeps());
     }
     deps.addAll(cxxPlatform.getLd().getParseTimeDeps());
+    cxxPlatform.getSharedLibraryInterfaceFactory()
+        .ifPresent(f -> deps.addAll(f.getParseTimeDeps()));
     return deps.build();
   }
 

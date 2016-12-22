@@ -48,4 +48,9 @@ abstract class AbstractElfSharedLibraryInterfaceFactory implements SharedLibrary
         library);
   }
 
+  @Override
+  public Iterable<BuildTarget> getParseTimeDeps() {
+    return getObjcopy().getParseTimeDeps();
+  }
+
 }
