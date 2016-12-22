@@ -320,6 +320,14 @@ public class TargetsCommand extends AbstractCommand {
       ImmutableMap<BuildTarget, ShowOptions> showRulesResult;
       TargetGraphAndBuildTargets targetGraphAndBuildTargetsForShowRules =
           buildTargetGraphAndTargetsForShowRules(params, executor, descriptionClasses);
+      boolean useVersioning =
+          isShowRuleKey() || isShowOutput() || isShowFullOutput() ?
+              params.getBuckConfig().getBuildVersions() :
+              params.getBuckConfig().getTargetsVersions();
+      targetGraphAndBuildTargetsForShowRules =
+          useVersioning ?
+              toVersionedTargetGraph(params, targetGraphAndBuildTargetsForShowRules) :
+              targetGraphAndBuildTargetsForShowRules;
       showRulesResult = computeShowRules(
           params,
           executor,
