@@ -1626,11 +1626,11 @@ public class CachingBuildEngine implements BuildEngine {
         ruleKeyFactories.getUnchecked(rule.getProjectFilesystem())
             .depFileRuleKeyFactory.buildManifestKey((SupportsDependencyFileRuleKey) rule);
     if (!manifestKey.isPresent()) {
-      buildInfoRecorder.addBuildMetadata(
-          BuildInfo.MetadataKey.MANIFEST_KEY,
-          manifestKey.get().getFirst().toString());
       return Optional.empty();
     }
+    buildInfoRecorder.addBuildMetadata(
+        BuildInfo.MetadataKey.MANIFEST_KEY,
+        manifestKey.get().getFirst().toString());
 
     final LazyPath tempFile = new LazyPath() {
       @Override
