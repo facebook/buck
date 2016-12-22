@@ -3,6 +3,7 @@
     "deps" : [ ],
     "exported_deps" : [
       "//src/com/facebook/buck/model:model",
+      "//src/com/facebook/buck/model:simple_types",
       "//src/com/facebook/buck/rules:build_rule",
       "//src/com/facebook/buck/versions:types",
       "//third-party/java/guava:guava"

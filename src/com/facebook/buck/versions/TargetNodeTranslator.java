@@ -16,6 +16,10 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.Pair;
+import com.facebook.buck.rules.BuildTargetSourcePath;
+import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -85,6 +89,19 @@ public abstract class TargetNodeTranslator {
     return modified ? Optional.of(builder.build()) : Optional.empty();
   }
 
+  public <A extends Comparable<?>, B> Optional<ImmutableMap<A, B>> translateMap(
+      ImmutableMap<A, B> val) {
+    boolean modified = false;
+    ImmutableMap.Builder<A, B> builder = ImmutableMap.builder();
+    for (Map.Entry<A, B> ent : val.entrySet()) {
+      Optional<A> key = translate(ent.getKey());
+      Optional<B> value = translate(ent.getValue());
+      modified = modified || key.isPresent() || value.isPresent();
+      builder.put(key.orElse(ent.getKey()), value.orElse(ent.getValue()));
+    }
+    return modified ? Optional.of(builder.build()) : Optional.empty();
+  }
+
   public <A extends Comparable<?>, B> Optional<ImmutableSortedMap<A, B>> translateSortedMap(
       ImmutableSortedMap<A, B> val) {
     boolean modified = false;
@@ -96,6 +113,30 @@ public abstract class TargetNodeTranslator {
       builder.put(key.orElse(ent.getKey()), value.orElse(ent.getValue()));
     }
     return modified ? Optional.of(builder.build()) : Optional.empty();
+  }
+
+  public <A, B> Optional<Pair<A, B>> translatePair(Pair<A, B> val) {
+    Optional<A> first = translate(val.getFirst());
+    Optional<B> second = translate(val.getSecond());
+    if (!first.isPresent() && !second.isPresent()) {
+      return Optional.empty();
+    }
+    return Optional.of(new Pair<>(first.orElse(val.getFirst()), second.orElse(val.getSecond())));
+  }
+
+  public Optional<BuildTargetSourcePath> translateBuildTargetSourcePath(BuildTargetSourcePath val) {
+    BuildTarget target = val.getTarget();
+    Optional<BuildTarget> translatedTarget = translate(target);
+    return translatedTarget.isPresent() ?
+        Optional.of(new BuildTargetSourcePath(translatedTarget.get())) :
+        Optional.empty();
+  }
+
+  public Optional<SourceWithFlags> translateSourceWithFlags(SourceWithFlags val) {
+    Optional<SourcePath> translatedSourcePath = translate(val.getSourcePath());
+    return translatedSourcePath.isPresent() ?
+        Optional.of(SourceWithFlags.of(translatedSourcePath.get(), val.getFlags())) :
+        Optional.empty();
   }
 
   @SuppressWarnings("unchecked")
@@ -112,6 +153,14 @@ public abstract class TargetNodeTranslator {
     } else if (object instanceof ImmutableSortedMap) {
       return (Optional<A>) translateSortedMap(
           (ImmutableSortedMap<? extends Comparable<?>, ?>) object);
+    } else if (object instanceof ImmutableMap) {
+      return (Optional<A>) translateMap((ImmutableMap<? extends Comparable<?>, ?>) object);
+    } else if (object instanceof Pair) {
+      return (Optional<A>) translatePair((Pair<?, ?>) object);
+    } else if (object instanceof BuildTargetSourcePath) {
+      return (Optional<A>) translateBuildTargetSourcePath((BuildTargetSourcePath) object);
+    } else if (object instanceof SourceWithFlags) {
+      return (Optional<A>) translateSourceWithFlags((SourceWithFlags) object);
     } else if (object instanceof BuildTarget) {
       return (Optional<A>) translateBuildTarget((BuildTarget) object);
     } else if (object instanceof TargetTranslatable) {
