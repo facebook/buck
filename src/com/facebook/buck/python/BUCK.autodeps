@@ -54,6 +54,7 @@
       "//src/com/facebook/buck/test/selectors:selectors",
       "//src/com/facebook/buck/util:exceptions",
       "//src/com/facebook/buck/util/immutables:immutables",
+      "//src/com/facebook/buck/versions:types",
       "//src/com/facebook/buck/versions:versions",
       "//third-party/java/guava:guava",
       "//third-party/java/infer-annotations:infer-annotations"

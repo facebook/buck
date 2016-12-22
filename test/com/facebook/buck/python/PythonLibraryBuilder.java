@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
@@ -58,6 +59,17 @@ public class PythonLibraryBuilder
 
   public PythonLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
     arg.deps = deps;
+    return this;
+  }
+
+  public PythonLibraryBuilder setVersionedSrcs(VersionMatchedCollection<SourceList> versionedSrcs) {
+    arg.versionedSrcs = Optional.of(versionedSrcs);
+    return this;
+  }
+
+  public PythonLibraryBuilder setVersionedResources(
+      VersionMatchedCollection<SourceList> versionedResources) {
+    arg.versionedResources = Optional.of(versionedResources);
     return this;
   }
 

@@ -25,6 +25,7 @@ import com.facebook.buck.model.FlavorDomain;
 import com.facebook.buck.rules.AbstractNodeBuilder;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -111,6 +112,17 @@ public class PythonTestBuilder
 
   public PythonTestBuilder setPackageStyle(PythonBuckConfig.PackageStyle packageStyle) {
     arg.packageStyle = Optional.of(packageStyle);
+    return this;
+  }
+
+  public PythonTestBuilder setVersionedSrcs(VersionMatchedCollection<SourceList> versionedSrcs) {
+    arg.versionedSrcs = Optional.of(versionedSrcs);
+    return this;
+  }
+
+  public PythonTestBuilder setVersionedResources(
+      VersionMatchedCollection<SourceList> versionedResources) {
+    arg.versionedResources = Optional.of(versionedResources);
     return this;
   }
 

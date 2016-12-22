@@ -44,6 +44,7 @@ import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.OptionalCompat;
+import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
@@ -182,6 +183,8 @@ public class PythonTestDescription implements
         defaultCxxPlatform);
     SourcePathResolver pathResolver = new SourcePathResolver(resolver);
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
+    Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
+        targetGraph.get(params.getBuildTarget()).getSelectedVersions();
 
     ImmutableMap<Path, SourcePath> srcs =
         PythonUtil.getModules(
@@ -191,7 +194,9 @@ public class PythonTestDescription implements
             baseModule,
             args.srcs,
             args.platformSrcs,
-            pythonPlatform);
+            pythonPlatform,
+            args.versionedSrcs,
+            selectedVersions);
 
     ImmutableMap<Path, SourcePath> resources =
         PythonUtil.getModules(
@@ -201,7 +206,9 @@ public class PythonTestDescription implements
             baseModule,
             args.resources,
             args.platformResources,
-            pythonPlatform);
+            pythonPlatform,
+            args.versionedResources,
+            selectedVersions);
 
     // Convert the passed in module paths into test module names.
     ImmutableSet.Builder<String> testModulesBuilder = ImmutableSet.builder();

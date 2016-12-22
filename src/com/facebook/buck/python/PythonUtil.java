@@ -41,9 +41,11 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.MacroHandler;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.versions.Version;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -78,7 +80,9 @@ public class PythonUtil {
       Path baseModule,
       SourceList items,
       PatternMatchedCollection<SourceList> platformItems,
-      PythonPlatform pythonPlatform) {
+      PythonPlatform pythonPlatform,
+      Optional<VersionMatchedCollection<SourceList>> versionItems,
+      Optional<ImmutableMap<BuildTarget, Version>> versions) {
     return ImmutableMap.<Path, SourcePath>builder()
         .putAll(
             PythonUtil.toModuleMap(
@@ -94,6 +98,15 @@ public class PythonUtil {
                 "platform" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
                 baseModule,
                 platformItems.getMatchingValues(pythonPlatform.getFlavor().toString())))
+        .putAll(
+            PythonUtil.toModuleMap(
+                target,
+                resolver,
+                "versioned" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
+                baseModule,
+                versions.isPresent() && versionItems.isPresent() ?
+                    versionItems.get().getMatchingValues(versions.get()) :
+                    ImmutableList.of()))
         .build();
   }
 
