@@ -29,10 +29,8 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -74,13 +72,6 @@ public class JavaLibraryRules {
       ProjectFilesystem filesystem,
       OnDiskBuildInfo onDiskBuildInfo)
       throws IOException {
-    Optional<Sha1HashCode> abiKeyHash = onDiskBuildInfo.getHash(AbiRule.ABI_KEY_ON_DISK_METADATA);
-    if (!abiKeyHash.isPresent()) {
-      throw new IllegalStateException(String.format(
-          "Should not be initializing %s from disk if the ABI key is not written.",
-          buildTarget));
-    }
-
     List<String> lines =
         onDiskBuildInfo.getOutputFileContentsByLine(getPathToClassHashes(buildTarget, filesystem));
     ImmutableSortedMap<String, HashCode> classHashes = AccumulateClassNamesStep.parseClassHashes(

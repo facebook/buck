@@ -46,7 +46,6 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
@@ -521,9 +520,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           classesToRemoveFromJar);
     }
 
-    Path abiJar = getOutputJarDirPath(target, getProjectFilesystem())
-        .resolve(String.format("%s-abi.jar", target.getShortNameAndFlavorPostfix()));
-
     if (outputJar.isPresent()) {
       Path output = outputJar.get();
 
@@ -540,17 +536,6 @@ public class DefaultJavaLibrary extends AbstractBuildRule
                 classesToRemoveFromJar));
       }
       buildableContext.recordArtifact(output);
-
-      // Calculate the ABI.
-      steps.add(new CalculateAbiStep(buildableContext, getProjectFilesystem(), output, abiJar));
-    } else {
-      Path scratch = BuildTargets.getScratchPath(
-          getProjectFilesystem(),
-          target,
-          String.format("%%s/%s-temp-abi.jar", target.getShortNameAndFlavorPostfix()));
-      steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratch.getParent()));
-      steps.add(new TouchStep(getProjectFilesystem(), scratch));
-      steps.add(new CalculateAbiStep(buildableContext, getProjectFilesystem(), scratch, abiJar));
     }
 
     JavaLibraryRules.addAccumulateClassNamesStep(this, buildableContext, steps);
