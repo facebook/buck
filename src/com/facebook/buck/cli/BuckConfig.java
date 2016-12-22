@@ -100,7 +100,8 @@ public class BuckConfig implements ConfigPathGetter {
   private static final ImmutableMap<String, ImmutableSet<String>> IGNORE_FIELDS_FOR_DAEMON_RESTART =
       ImmutableMap.of(
           "build", ImmutableSet.of("threads", "load_limit"),
-          "cache", ImmutableSet.of("dir", "dir_mode", "http_mode", "http_url", "mode"),
+          "cache", ImmutableSet.of(
+              "dir", "dir_mode", "http_mode", "http_url", "mode", "slb_server_pool"),
           "client", ImmutableSet.of("id"),
           "project", ImmutableSet.of("ide_prompt", "xcode_focus_disable_build_with_buck")
   );
