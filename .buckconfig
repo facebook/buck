@@ -4,6 +4,7 @@
     src_roots = src, test
     source_level = 8
     target_level = 8
+    jar_spool_mode = direct_to_jar
 [alias]
     buck = //programs:buck
     buck-android-support = //src/com/facebook/buck/android/support:buck-android-support
