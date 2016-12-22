@@ -63,7 +63,6 @@ import java.util.stream.StreamSupport;
 public class VersionedTargetGraphBuilder {
 
   private static final Logger LOG = Logger.get(VersionedTargetGraphBuilder.class);
-  private static final int NON_ROOT_NODE_PACK_SIZE = 100;
 
   private final ForkJoinPool pool;
   private final VersionSelector versionSelector;
@@ -272,41 +271,20 @@ public class VersionedTargetGraphBuilder {
     long start = System.currentTimeMillis();
 
     // Walk through explicit built targets, separating them into root and non-root nodes.
-    ImmutableList.Builder<TargetNode<?, ?>> rootNodesBuilder = ImmutableList.builder();
-    ImmutableList.Builder<TargetNode<?, ?>> nonRootNodesBuilder = ImmutableList.builder();
-    for (BuildTarget root : unversionedTargetGraphAndBuildTargets.getBuildTargets()) {
-      TargetNode<?, ?> node = getNode(root);
-      if (TargetGraphVersionTransformations.isVersionRoot(node)) {
-        rootNodesBuilder.add(node);
-      } else {
-        nonRootNodesBuilder.add(node);
-      }
-    }
-    ImmutableList<TargetNode<?, ?>> rootNodes = rootNodesBuilder.build();
-    ImmutableList<TargetNode<?, ?>> nonRootNodes = nonRootNodesBuilder.build();
+    ImmutableList<RootAction> actions =
+        unversionedTargetGraphAndBuildTargets.getBuildTargets().stream()
+            .map(this::getNode)
+            .map(RootAction::new)
+            .collect(MoreCollectors.toImmutableList());
 
-    List<Action> actions =
-        new ArrayList<>(unversionedTargetGraphAndBuildTargets.getBuildTargets().size());
+    // Add actions to the `rootActions` member for bookkeeping.
+    actions.forEach(a -> rootActions.put(a.getRoot().getBuildTarget(), a));
 
     // Kick off the jobs to process the root nodes.
-    for (TargetNode<?, ?> root : rootNodes) {
-      RootAction action = new RootAction(root);
-      actions.add(action);
-      rootActions.put(root.getBuildTarget(), action);
-    }
+    actions.forEach(pool::submit);
 
-    // Kick off jobs to process batches of non-root nodes.
-    for (int i = 0; i < nonRootNodes.size(); i += NON_ROOT_NODE_PACK_SIZE) {
-      actions.add(
-          new NodePackAction(
-              nonRootNodes.subList(i, Math.min(i + NON_ROOT_NODE_PACK_SIZE, nonRootNodes.size()))));
-    }
-
-    // Wait for actions to finish.
-    for (Action action : actions) {
-      pool.submit(action);
-    }
-    for (Action action : actions) {
+    // Wait for actions to complete.
+    for (RootAction action : actions) {
       action.getChecked();
     }
 
@@ -337,14 +315,26 @@ public class VersionedTargetGraphBuilder {
   }
 
   /**
-   * An action for transforming nodes.
+   * Transform a version sub-graph at the given root node.
    */
-  private abstract class Action extends RecursiveAction {
+  private class RootAction extends RecursiveAction {
+
+    private final TargetNode<?, ?> node;
+
+    RootAction(TargetNode<?, ?> node) {
+      this.node = node;
+    }
+
+    private final Predicate<BuildTarget> isVersionPropagator =
+        target -> TargetGraphVersionTransformations.isVersionPropagator(getNode(target));
+
+    private final Predicate<BuildTarget> isVersioned =
+        target -> TargetGraphVersionTransformations.getVersionedNode(getNode(target)).isPresent();
 
     /**
      * Process a non-root node in the graph.
      */
-    TargetNode<?, ?> processNode(TargetNode<?, ?> node) throws VersionException {
+    private TargetNode<?, ?> processNode(TargetNode<?, ?> node) throws VersionException {
 
       // If we've already processed this node, exit now.
       TargetNode<?, ?> processed = index.get(node.getBuildTarget());
@@ -369,7 +359,7 @@ public class VersionedTargetGraphBuilder {
     /**
      * Dispatch new jobs to transform the given nodes in parallel and wait for their results.
      */
-    protected Iterable<TargetNode<?, ?>> process(Iterable<BuildTarget> targets)
+    private Iterable<TargetNode<?, ?>> process(Iterable<BuildTarget> targets)
         throws VersionException {
       int size = Iterables.size(targets);
       List<RootAction> newActions = new ArrayList<>(size);
@@ -418,7 +408,7 @@ public class VersionedTargetGraphBuilder {
           .collect(MoreCollectors.toImmutableList());
     }
 
-    protected Void getChecked() throws VersionException, InterruptedException {
+    public Void getChecked() throws VersionException, InterruptedException {
       try {
         return get();
       } catch (ExecutionException e) {
@@ -430,25 +420,6 @@ public class VersionedTargetGraphBuilder {
             e);
       }
     }
-
-  }
-
-  /**
-   * Transform a version sub-graph at the given root node.
-   */
-  private class RootAction extends Action {
-
-    private final TargetNode<?, ?> node;
-
-    RootAction(TargetNode<?, ?> node) {
-      this.node = node;
-    }
-
-    private final Predicate<BuildTarget> isVersionPropagator =
-        target -> TargetGraphVersionTransformations.isVersionPropagator(getNode(target));
-
-    private final Predicate<BuildTarget> isVersioned =
-        target -> TargetGraphVersionTransformations.getVersionedNode(getNode(target)).isPresent();
 
     @SuppressWarnings("unchecked")
     private TargetNode<?, ?> processVersionSubGraphNode(
@@ -532,7 +503,10 @@ public class VersionedTargetGraphBuilder {
                 CacheBuilder.newBuilder()
                     .build(
                         CacheLoader.from(
-                            target -> getTranslateBuildTarget(getNode(target), selectedVersions)));
+                            target ->
+                                root.getBuildTarget().equals(target) ?
+                                    Optional.of(target) :
+                                    getTranslateBuildTarget(getNode(target), selectedVersions)));
 
             @Override
             public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
@@ -563,28 +537,8 @@ public class VersionedTargetGraphBuilder {
       }
     }
 
-  }
-
-  /**
-   * Transform a group of nodes.
-   */
-  private class NodePackAction extends Action {
-
-    private final Iterable<TargetNode<?, ?>> nodes;
-
-    NodePackAction(Iterable<TargetNode<?, ?>> nodes) {
-      this.nodes = nodes;
-    }
-
-    @Override
-    protected void compute() {
-      try {
-        for (TargetNode<?, ?> node : nodes) {
-          processNode(node);
-        }
-      } catch (VersionException e) {
-        completeExceptionally(e);
-      }
+    public TargetNode<?, ?> getRoot() {
+      return node;
     }
 
   }

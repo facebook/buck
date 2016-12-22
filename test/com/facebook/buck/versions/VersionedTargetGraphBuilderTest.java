@@ -337,4 +337,34 @@ public class VersionedTargetGraphBuilderTest {
     assertEquals(expectedTargetGraph, versionedGraph);
   }
 
+  @Test
+  public void explicitNonRootTreatedAsRoot() throws Exception {
+    TargetGraph graph =
+        TargetGraphFactory.newInstance(
+            new VersionPropagatorBuilder("//:dep")
+                .build(),
+            new VersionedAliasBuilder("//:versioned")
+                .setVersions("1.0", "//:dep")
+                .build(),
+            new VersionPropagatorBuilder("//:root")
+                .setDeps("//:versioned")
+                .build());
+    VersionedTargetGraphBuilder builder =
+        new VersionedTargetGraphBuilder(
+            POOL,
+            new NaiveVersionSelector(),
+            TargetGraphAndBuildTargets.of(
+                graph,
+                ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))));
+    TargetGraph versionedGraph = builder.build();
+    TargetGraph expectedTargetGraph =
+        TargetGraphFactory.newInstance(
+            new VersionPropagatorBuilder("//:dep")
+                .build(),
+            new VersionPropagatorBuilder("//:root")
+                .setDeps("//:dep")
+                .build());
+    assertEquals(expectedTargetGraph, versionedGraph);
+  }
+
 }
