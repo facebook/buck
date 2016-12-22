@@ -49,7 +49,7 @@
 %generatedSourceFolders:{generatedFolder |
     <content url="%generatedFolder.url%">
       <%generatedFolder.type% url="%generatedFolder.url%" %\\%
-        isTestSource="%generatedFolder.isTestSource%" %\\%
+        isTestSource="%generatedFolder.isTestSource%" generated="true" %\\%
         %if(generatedFolder.packagePrefix)% packagePrefix="%generatedFolder.packagePrefix%"%endif%%\\%
         %if(generatedFolder.isAndroidResources)% type="java-resource" %endif%/>
     </content>

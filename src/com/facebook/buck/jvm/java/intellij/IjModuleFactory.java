@@ -29,6 +29,7 @@ import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.model.HasBuildTarget;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
@@ -36,6 +37,7 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.MoreCollectors;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -45,9 +47,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Builds {@link IjModule}s out of {@link TargetNode}s.
@@ -280,6 +284,8 @@ public class IjModuleFactory {
     addSourceFolders(folderFactory, foldersToInputsIndex, wantsPackagePrefix, context);
     addDeps(foldersToInputsIndex, targetNode, dependencyType, context);
 
+    addGeneratedOutputIfNeeded(folderFactory, targetNode, context);
+
     if (targetNode.getConstructorArg() instanceof JvmLibraryArg) {
       addAnnotationOutputIfNeeded(folderFactory, targetNode, context);
     }
@@ -372,6 +378,57 @@ public class IjModuleFactory {
             false,
             ImmutableSortedSet.of(annotationOutputPath))
     );
+  }
+
+  private void addGeneratedOutputIfNeeded(
+      IJFolderFactory folderFactory,
+      TargetNode<?, ?> targetNode,
+      ModuleBuildContext context) {
+
+    Set<Path> generatedSourcePaths = findConfiguredGeneratedSourcePaths(targetNode);
+
+    if (generatedSourcePaths == null) {
+      return;
+    }
+
+    for (Path generatedSourcePath : generatedSourcePaths) {
+      context.addGeneratedSourceCodeFolder(
+          folderFactory.create(
+              generatedSourcePath,
+              false,
+              ImmutableSortedSet.of(generatedSourcePath))
+      );
+    }
+  }
+
+  private Set<Path> findConfiguredGeneratedSourcePaths(TargetNode<?, ?> targetNode) {
+    ImmutableMap<String, String> depToGeneratedSourcesMap =
+        projectConfig.getDepToGeneratedSourcesMap();
+    BuildTarget buildTarget = targetNode.getBuildTarget();
+
+    Set<Path> generatedSourcePaths = null;
+
+    for (BuildTarget dependencyTarget : targetNode.getDeps()) {
+      String buildTargetName = dependencyTarget.toString();
+      String generatedSourceWithPattern = depToGeneratedSourcesMap.get(buildTargetName);
+      if (generatedSourceWithPattern != null) {
+        String generatedSource = generatedSourceWithPattern.replaceAll(
+            "%name%",
+            buildTarget.getShortNameAndFlavorPostfix());
+        Path generatedSourcePath = BuildTargets.getGenPath(
+            projectFilesystem,
+            buildTarget,
+            generatedSource);
+
+        if (generatedSourcePaths == null) {
+          generatedSourcePaths = new HashSet<>();
+        }
+
+        generatedSourcePaths.add(generatedSourcePath);
+      }
+    }
+
+    return generatedSourcePaths;
   }
 
   private class AndroidBinaryModuleRule

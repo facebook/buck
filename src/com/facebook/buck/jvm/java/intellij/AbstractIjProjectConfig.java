@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.intellij;
 import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableMap;
 
 import org.immutables.value.Value;
 
@@ -52,5 +53,7 @@ abstract class AbstractIjProjectConfig {
   public abstract Optional<String> getProjectLanguageLevel();
 
   public abstract List<String> getExcludedResourcePaths();
+
+  public abstract ImmutableMap<String, String> getDepToGeneratedSourcesMap();
 
 }

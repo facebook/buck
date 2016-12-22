@@ -1672,6 +1672,18 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'intellij' /}
+  {param name: 'generated_srcs_map' /}
+  {param example_value: '//path/to/target1 => __%name%_target1__, \n                       //path/to/target2 => __%name%_target2__' /}
+  {param description}
+    Allows adding folders with generated source code to IntelliJ project. These folders are added
+    only if a module depends on a key target. In the example below, if
+    module <code>//app/target</code> depends on <code>//path/to/target1</code>
+    folder <code>buck-out/gen/app/lib/__lib_target1__</code> will be added to IntelliJ project.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'intellij' /}
   {param name: 'remove_unused_libraries' /}
   {param example_value: 'true' /}
   {param description}

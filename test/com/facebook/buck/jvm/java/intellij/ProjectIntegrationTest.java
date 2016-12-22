@@ -645,6 +645,11 @@ public class ProjectIntegrationTest {
     runBuckProjectAndVerify("experimental_project_with_language_level");
   }
 
+  @Test
+  public void testVersion2BuckProjectWithGeneratedSources() throws IOException {
+    runBuckProjectAndVerify("experimental_project_with_generated_sources");
+  }
+
   private ProcessResult runBuckProjectAndVerify(
       String folderWithTestData,
       String... commandArgs) throws IOException {
