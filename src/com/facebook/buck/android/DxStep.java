@@ -65,6 +65,11 @@ public class DxStep extends ShellStep {
      * This only works with custom dx.
      */
     RUN_IN_PROCESS,
+
+    /**
+     * Run DX with the --no-locals flag.
+     */
+    NO_LOCALS,
     ;
   }
 
@@ -141,6 +146,11 @@ public class DxStep extends ShellStep {
 
     if (options.contains(Option.FORCE_JUMBO)) {
       builder.add("--force-jumbo");
+    }
+
+    // --no-locals flag, if appropriate.
+    if (options.contains(Option.NO_LOCALS)) {
+      builder.add("--no-locals");
     }
 
     // verbose flag, if appropriate.

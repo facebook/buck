@@ -1148,7 +1148,7 @@ public class AndroidBinary
     // being executed.  For example, aapt is internally threaded by default when preprocessing
     // images.
     EnumSet<DxStep.Option> dxOptions = PackageType.RELEASE.equals(packageType)
-        ? EnumSet.noneOf(DxStep.Option.class)
+        ? EnumSet.of(DxStep.Option.NO_LOCALS)
         : EnumSet.of(DxStep.Option.NO_OPTIMIZE);
     Path selectedPrimaryDexPath = primaryDexPath;
     if (isReorderingClasses()) {
