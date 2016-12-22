@@ -43,7 +43,7 @@ public class ExternalApplePackageIntegrationTest {
         "//:FooPackage#iphonesimulator-x86_64")
         .assertSuccess();
     assertThat(
-        workspace.getFileContents("buck-out/gen/FooPackage/FooPackage.omg"),
+        workspace.getFileContents("buck-out/gen/FooPackage#iphonesimulator-x86_64/FooPackage.omg"),
         matchesPattern("I AM A BUNDLE FROM .*/iPhoneSimulator\\.sdk .*/FooBundle.app\n"));
   }
 

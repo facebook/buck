@@ -141,9 +141,7 @@ public class Genrule extends AbstractBuildRule
 
     this.out = out;
     BuildTarget target = params.getBuildTarget();
-    this.pathToOutDirectory = getProjectFilesystem().getBuckPaths().getGenDir()
-        .resolve(target.getBasePath())
-        .resolve(target.getShortName());
+    this.pathToOutDirectory = BuildTargets.getGenPath(getProjectFilesystem(), target, "%s");
     this.pathToOutFile = this.pathToOutDirectory.resolve(out);
     if (!pathToOutFile.startsWith(pathToOutDirectory) || pathToOutFile.equals(pathToOutDirectory)) {
       throw new HumanReadableException(

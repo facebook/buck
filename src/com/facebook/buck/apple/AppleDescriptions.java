@@ -51,6 +51,7 @@ import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.OptionalCompat;
@@ -776,6 +777,12 @@ public class AppleDescriptions {
       ImmutableSet<Flavor> flavors,
       BuildRuleResolver resolver,
       BuildTarget binary) throws NoSuchBuildTargetException {
+
+    // Don't flavor genrule deps.
+    if (targetGraph.get(binary).getDescription() instanceof AbstractGenruleDescription) {
+      return resolver.requireRule(binary);
+    }
+
     // Cxx targets must have one Platform Flavor set otherwise nothing gets compiled.
     if (flavors.contains(AppleDescriptions.FRAMEWORK_FLAVOR)) {
       flavors = ImmutableSet.<Flavor>builder()
