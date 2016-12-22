@@ -57,6 +57,22 @@ be downloaded as part of {call buck.cmd_build /}. See the note there about the
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'type' /}
+  {param default: 'data' /}
+  {param desc}
+  An optional type of the downloaded file.
+  <dl>
+    <dt><code>data</code></dt>
+    <dd>Regular data file.</dd>
+    <dt><code>executable</code></dt>
+    <dd>
+      Executable file. Buck will ensure that output has appropriate permissions if applicable.
+    </dd>
+  </dl>
+  {/param}
+{/call}
+
 {/param} // close args
 
 {param examples}

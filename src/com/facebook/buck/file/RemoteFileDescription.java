@@ -68,7 +68,8 @@ public class RemoteFileDescription implements Description<RemoteFileDescription.
         downloader,
         args.url,
         sha1,
-        out);
+        out,
+        args.type.orElse(RemoteFile.Type.DATA));
   }
 
   @SuppressFieldNotInitialized
@@ -76,5 +77,6 @@ public class RemoteFileDescription implements Description<RemoteFileDescription.
     public URI url;
     public String sha1;
     public Optional<String> out;
+    public Optional<RemoteFile.Type> type;
   }
 }

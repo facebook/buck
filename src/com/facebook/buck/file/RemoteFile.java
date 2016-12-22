@@ -26,6 +26,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MakeExecutableStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 
@@ -45,6 +46,8 @@ public class RemoteFile extends AbstractBuildRule {
   @AddToRuleKey(stringify = true)
   private final Path output;
   private final Downloader downloader;
+  @AddToRuleKey(stringify = true)
+  private final Type type;
 
   public RemoteFile(
       BuildRuleParams params,
@@ -52,12 +55,14 @@ public class RemoteFile extends AbstractBuildRule {
       Downloader downloader,
       URI uri,
       HashCode sha1,
-      String out) {
+      String out,
+      Type type) {
     super(params, resolver);
 
     this.uri = uri;
     this.sha1 = sha1;
     this.downloader = downloader;
+    this.type = type;
 
     output = BuildTargets.getGenPath(
         getProjectFilesystem(),
@@ -80,6 +85,9 @@ public class RemoteFile extends AbstractBuildRule {
 
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()));
     steps.add(CopyStep.forFile(getProjectFilesystem(), tempFile, output));
+    if (type == Type.EXECUTABLE) {
+      steps.add(new MakeExecutableStep(getProjectFilesystem(), output));
+    }
 
     buildableContext.recordArtifact(output);
 
@@ -89,5 +97,9 @@ public class RemoteFile extends AbstractBuildRule {
   @Override
   public Path getPathToOutput() {
     return output;
+  }
+
+  enum Type {
+    DATA, EXECUTABLE,
   }
 }
