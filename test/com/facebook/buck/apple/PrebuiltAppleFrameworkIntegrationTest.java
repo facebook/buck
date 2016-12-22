@@ -33,7 +33,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -83,10 +82,10 @@ public class PrebuiltAppleFrameworkIntegrationTest {
     ProcessExecutor.Result otoolResult = workspace.runCommand(
         "otool", "-L", testBinaryPath.toString());
     assertEquals(0, otoolResult.getExitCode());
-    Assert.assertThat(
+    assertThat(
         otoolResult.getStdout().orElse(""),
         containsString("@rpath/BuckTest.framework/BuckTest"));
-    Assert.assertThat(
+    assertThat(
         otoolResult.getStdout().orElse(""),
         not(containsString("BuckTest.dylib")));
   }
