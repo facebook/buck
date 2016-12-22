@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.GenerateCodeCoverageReportStep;
 import com.facebook.buck.jvm.java.JacocoConstants;
@@ -779,7 +778,7 @@ public class TestRunning {
       Optional<String> coverageIncludes,
       Optional<String> coverageExcludes) {
     ImmutableSet.Builder<String> srcDirectories = ImmutableSet.builder();
-    ImmutableSet.Builder<Path> pathsToClasses = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> pathsToJars = ImmutableSet.builder();
 
     // Add all source directories of java libraries that we are testing to -sourcepath.
     for (JavaLibrary rule : rulesUnderTest) {
@@ -788,18 +787,18 @@ public class TestRunning {
       if (!sourceFolderPath.isEmpty()) {
         srcDirectories.addAll(sourceFolderPath);
       }
-      Path classesDir = DefaultJavaLibrary.getClassesDir(rule.getBuildTarget(), filesystem);
-      if (classesDir == null) {
+      Path jarFile = rule.getPathToOutput();
+      if (jarFile == null) {
         continue;
       }
-      pathsToClasses.add(classesDir);
+      pathsToJars.add(jarFile);
     }
 
     return new GenerateCodeCoverageReportStep(
         javaRuntimeLauncher,
         filesystem,
         srcDirectories.build(),
-        pathsToClasses.build(),
+        pathsToJars.build(),
         outputDirectory,
         format,
         title,
