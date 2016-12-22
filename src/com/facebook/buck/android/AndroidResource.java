@@ -41,7 +41,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.HumanReadableException;
-import com.facebook.buck.util.MoreCollectors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -348,9 +347,8 @@ public class AndroidResource extends AbstractBuildRule
           false /* executable */));
     }
 
-    ImmutableSet<Path> pathsToSymbolsOfDeps = symbolsOfDeps.get().stream()
-        .map(getResolver()::getAbsolutePath)
-        .collect(MoreCollectors.toImmutableSet());
+    ImmutableSet<Path> pathsToSymbolsOfDeps =
+        getResolver().getAllAbsolutePaths(symbolsOfDeps.get());
     steps.add(
         new MiniAapt(
             getResolver(),

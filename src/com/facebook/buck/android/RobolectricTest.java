@@ -78,8 +78,7 @@ public class RobolectricTest extends JavaTest {
       "buck.robolectric_manifest";
 
   private final Function<HasAndroidResourceDeps, Path> resourceDirectoryFunction =
-      input -> Optional.ofNullable(input.getRes()).map(getResolver()::getRelativePath)
-          .get();
+      input -> getResolver().getRelativePath(input.getRes());
   private final Function<DummyRDotJava, ImmutableSet<BuildRule>> resourceRulesFunction =
       input -> {
         ImmutableSet.Builder<BuildRule> resourceDeps = ImmutableSet.builder();

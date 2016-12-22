@@ -160,8 +160,7 @@ abstract class RustCompile extends AbstractBuildRule {
         new SymlinkFilesIntoDirectoryStep(
             getProjectFilesystem(),
             getProjectFilesystem().getRootPath(),
-            srcs.stream().map(resolver::getRelativePath)
-                .collect(MoreCollectors.toImmutableList()),
+            resolver.getAllRelativePaths(srcs),
             scratchDir),
         new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()),
         new RustCompileStep(
