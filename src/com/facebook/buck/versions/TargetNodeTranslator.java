@@ -114,6 +114,10 @@ public abstract class TargetNodeTranslator {
           (ImmutableSortedMap<? extends Comparable<?>, ?>) object);
     } else if (object instanceof BuildTarget) {
       return (Optional<A>) translateBuildTarget((BuildTarget) object);
+    } else if (object instanceof TargetTranslatable) {
+      TargetTranslatable<A> targetTranslatable = (TargetTranslatable<A>) object;
+      Optional<A> res = targetTranslatable.translateTargets(this);
+      return res;
     } else {
       return Optional.empty();
     }

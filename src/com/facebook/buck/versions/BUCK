@@ -11,6 +11,17 @@ java_immutables_library(
   visibility = ['PUBLIC'],
 )
 
+TRANSLATOR_SRCS = [
+  'TargetNodeTranslator.java',
+  'TargetTranslatable.java',
+]
+java_library(
+  name = 'translator',
+  srcs = TRANSLATOR_SRCS,
+  autodeps = True,
+  visibility = ['PUBLIC'],
+)
+
 java_immutables_library(
   name = 'versions',
   immutable_types = [
@@ -21,7 +32,7 @@ java_immutables_library(
     'VersionInfo',
     'VersionUniverse',
   ],
-  srcs = glob(['*.java'], excludes=TYPES_SRCS),
+  srcs = glob(['*.java'], excludes=TYPES_SRCS + TRANSLATOR_SRCS),
   tests = [
     '//test/com/facebook/buck/versions:versions',
   ],
