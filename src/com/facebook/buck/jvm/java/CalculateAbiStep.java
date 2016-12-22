@@ -16,12 +16,9 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.abi.StubJar;
-import com.facebook.buck.rules.keys.AbiRule;
 import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -49,38 +46,16 @@ public class CalculateAbiStep implements Step {
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) {
-    Sha1HashCode abiKey;
     try {
-      Path out = getPathToHash(context, buildableContext);
-
-      abiKey = filesystem.computeSha1(out);
-    } catch (IOException e) {
+      Path binJar = filesystem.resolve(binaryJar);
+      new StubJar(binJar).writeTo(filesystem, abiJar);
+      buildableContext.recordArtifact(abiJar);
+    } catch (IOException | IllegalArgumentException e) {
       context.logError(e, "Failed to calculate ABI for %s.", binaryJar);
       return StepExecutionResult.ERROR;
     }
 
-    buildableContext.addMetadata(AbiRule.ABI_KEY_ON_DISK_METADATA, abiKey.getHash());
-
     return StepExecutionResult.SUCCESS;
-  }
-
-  private Path getPathToHash(
-      ExecutionContext context,
-      BuildableContext buildableContext) throws IOException {
-    Path binJar = filesystem.resolve(binaryJar);
-
-    try {
-      new StubJar(binJar).writeTo(filesystem, abiJar);
-      buildableContext.recordArtifact(abiJar);
-      return abiJar;
-    } catch (IllegalArgumentException e) {
-      // Thrown when ASM chokes on an input file. Fall back to the input jar, but warn the user.
-      context.postEvent(
-          ConsoleEvent.warning(
-              "Unable to create abi jar from %s. Falling back to hashing that jar",
-              binaryJar));
-      return binJar;
-    }
   }
 
   @Override
