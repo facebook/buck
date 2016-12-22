@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.log.Logger;
+import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -48,15 +49,21 @@ public class CxxPrepareForLinkStep extends CompositeStep {
       Path output,
       ImmutableList<Arg> args,
       Linker linker,
-      Path currentCellPath) {
+      Path currentCellPath,
+      SourcePathResolver resolver) {
 
-    ImmutableList<Arg> allArgs = ImmutableList.<Arg>builder()
+    ImmutableList<Arg> allArgs = new ImmutableList.Builder<Arg>()
         .addAll(StringArg.from(linker.outputArgs(output.toString())))
         .addAll(args)
         .addAll(linkerArgsToSupportFileList)
         .build();
 
     boolean hasLinkArgsToSupportFileList = linkerArgsToSupportFileList.iterator().hasNext();
+
+    LOG.debug("Link command (pwd=%s): %s %s",
+        currentCellPath.toString(),
+        String.join("", linker.getCommandPrefix(resolver)),
+        String.join(" ", CxxWriteArgsToFileStep.stringify(allArgs, currentCellPath)));
 
     CxxWriteArgsToFileStep createArgFileStep = new CxxWriteArgsToFileStep(
         argFilePath,

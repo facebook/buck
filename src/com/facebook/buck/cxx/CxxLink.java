@@ -116,7 +116,8 @@ public class CxxLink
             output,
             args,
             linker,
-            getBuildTarget().getCellPath()),
+            getBuildTarget().getCellPath(),
+            getResolver()),
         new CxxLinkStep(
             getProjectFilesystem().getRootPath(),
             linker.getEnvironment(),

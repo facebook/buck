@@ -69,7 +69,8 @@ public class CxxPrepareForLinkStepTest {
         dummyPath,
         dummyArgs,
         CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
-        dummyPath);
+        dummyPath,
+        pathResolver);
 
     ImmutableList<Step> containingSteps = ImmutableList.copyOf(
         cxxPrepareForLinkStepSupportFileList.iterator());
@@ -87,7 +88,8 @@ public class CxxPrepareForLinkStepTest {
         dummyPath,
         dummyArgs,
         CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
-        dummyPath);
+        dummyPath,
+        pathResolver);
 
     containingSteps = ImmutableList.copyOf(
         cxxPrepareForLinkStepNoSupportFileList.iterator());
@@ -167,7 +169,8 @@ public class CxxPrepareForLinkStepTest {
         output,
         args,
         CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
-        currentCellPath);
+        currentCellPath,
+        pathResolver);
 
     step.execute(context);
 

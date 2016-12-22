@@ -59,7 +59,7 @@ public class CxxWriteArgsToFileStep implements Step {
     if (Files.notExists(argFilePath.getParent())) {
       Files.createDirectories(argFilePath.getParent());
     }
-    ImmutableList<String> argFileContents = stringify(args);
+    ImmutableList<String> argFileContents = stringify(args, currentCellPath);
     if (escaper.isPresent()) {
       argFileContents = argFileContents.stream()
           .map(escaper.get()::apply)
@@ -68,7 +68,9 @@ public class CxxWriteArgsToFileStep implements Step {
     MoreFiles.writeLinesToFile(argFileContents, argFilePath);
   }
 
-  private ImmutableList<String> stringify(ImmutableCollection<Arg> args) {
+  static ImmutableList<String> stringify(
+      ImmutableCollection<Arg> args,
+      Path currentCellPath) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     for (Arg arg : args) {
       if (arg instanceof FileListableLinkerInputArg) {
