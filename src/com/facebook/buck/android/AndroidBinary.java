@@ -718,7 +718,7 @@ public class AndroidBinary
             .stream()
             .map(input -> new AbstractMap.SimpleEntry<>(
                 input.getKey(),
-                getResolver().deprecatedGetPath(input.getValue())))
+                getResolver().getRelativePath(input.getValue())))
             .collect(MoreCollectors.toImmutableSet()));
     ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap =
         additionalDexStoreToJarPathMapBuilder.build();

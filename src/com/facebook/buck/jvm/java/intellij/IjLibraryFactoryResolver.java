@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java.intellij;
 
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetNode;
 
 import java.nio.file.Path;
@@ -25,7 +24,7 @@ import java.util.Optional;
 
 public interface IjLibraryFactoryResolver {
   /**
-   * see {@link SourcePathResolver#deprecatedGetPath(SourcePath)}
+   * Does it get an absolute path? Does it get a relative path? Who knows!
    */
   Path getPath(SourcePath path);
 

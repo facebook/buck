@@ -46,17 +46,6 @@ public class SourcePathResolver {
     this.ruleResolver = ruleResolver;
   }
 
-  /**
-   * Use either {@link #getRelativePath(SourcePath)} or {@link #getAbsolutePath(SourcePath)}
-   * depending on your needs.
-   */
-  public Path deprecatedGetPath(SourcePath sourcePath) {
-    Preconditions.checkState(
-        !(sourcePath instanceof ResourceSourcePath),
-        "ResourceSourcePath is not supported by deprecatedGetPath.");
-    return getPathPrivateImpl(sourcePath);
-  }
-
   public <T> ImmutableMap<T, Path> getMappedPaths(Map<T, SourcePath> sourcePathMap) {
     ImmutableMap.Builder<T, Path> paths = ImmutableMap.builder();
     for (ImmutableMap.Entry<T, SourcePath> entry : sourcePathMap.entrySet()) {

@@ -247,14 +247,21 @@ public class CxxPreprocessAndCompile
       compilerCommand = Optional.empty();
     }
 
+    // TODO(10194465): This uses relative paths where possible so as to get relative paths in
+    // the dep file
+    Path inputPath;
+    try {
+      inputPath = getResolver().getRelativePath(input);
+    } catch (IllegalStateException e) {
+      inputPath = getResolver().getAbsolutePath(input);
+    }
+
     return new CxxPreprocessAndCompileStep(
         getProjectFilesystem(),
         operation,
         output,
         getDepFilePath(),
-        // TODO(10194465): This uses relative paths where possible so as to get relative paths in
-        // the dep file
-        getResolver().deprecatedGetPath(input),
+        inputPath,
         inputType,
         preprocessorCommand,
         compilerCommand,
