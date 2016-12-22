@@ -20,6 +20,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -54,6 +55,23 @@ public class VersionMatchedCollection<T> {
       }
     }
     return matchingValues.build();
+  }
+
+  /**
+   * @return the only item that matches the given version map, or throw.
+   */
+  public T getOnlyMatchingValue(ImmutableMap<BuildTarget, Version> selected) {
+    ImmutableList<T> matching = getMatchingValues(selected);
+    Preconditions.checkState(
+        !matching.isEmpty(),
+        "no matches for %s found",
+        selected);
+    Preconditions.checkState(
+        matching.size() < 2,
+        "multiple matches for %s found: %s",
+        selected,
+        matching);
+    return matching.get(0);
   }
 
   public ImmutableList<T> getValues() {

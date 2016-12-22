@@ -381,10 +381,8 @@ public class PrebuiltCxxLibraryDescription implements
         args.libName);
 
     Optional<String> versionSubDir =
-        selectedVersions.isPresent() ?
-            Optional.of(
-                args.versionedSubDir.orElse(VersionMatchedCollection.<String>of())
-                    .getMatchingValues(selectedVersions.get()).get(0)) :
+        selectedVersions.isPresent() && args.versionedSubDir.isPresent() ?
+            Optional.of(args.versionedSubDir.get().getOnlyMatchingValue(selectedVersions.get())) :
             Optional.empty();
 
     // Use the static PIC variant, if available.
@@ -573,9 +571,7 @@ public class PrebuiltCxxLibraryDescription implements
         targetGraph.get(params.getBuildTarget()).getSelectedVersions();
     final Optional<String> versionSubdir =
         selectedVersions.isPresent() && args.versionedSubDir.isPresent() ?
-            Optional.of(
-                args.versionedSubDir.orElse(VersionMatchedCollection.of())
-                    .getMatchingValues(selectedVersions.get()).get(0)) :
+            Optional.of(args.versionedSubDir.get().getOnlyMatchingValue(selectedVersions.get())) :
             Optional.empty();
 
     // If we *are* building a specific type of this lib, call into the type specific

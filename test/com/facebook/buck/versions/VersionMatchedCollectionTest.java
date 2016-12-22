@@ -28,43 +28,61 @@ import org.junit.Test;
 
 public class VersionMatchedCollectionTest {
 
+  private static final BuildTarget A = BuildTargetFactory.newInstance("//:a");
+  private static final BuildTarget B = BuildTargetFactory.newInstance("//:b");
+  private static final Version V1 = Version.of("1.0");
+  private static final Version V2 = Version.of("2.0");
+  private static final VersionMatchedCollection<String> COLLECTION =
+      VersionMatchedCollection.<String>builder()
+          .add(ImmutableMap.of(A, V1, B, V1), "a-1.0,b-1.0")
+          .add(ImmutableMap.of(A, V1, B, V2), "a-1.0,b-2.0")
+          .add(ImmutableMap.of(A, V2, B, V1), "a-2.0,b-1.0")
+          .add(ImmutableMap.of(A, V2, B, V2), "a-2.0,b-2.0")
+          .build();
+
   @Test
-  public void test() {
-    BuildTarget a = BuildTargetFactory.newInstance("//:a");
-    BuildTarget b = BuildTargetFactory.newInstance("//:b");
-    Version v1 = Version.of("1.0");
-    Version v2 = Version.of("2.0");
-    VersionMatchedCollection<String> collection =
-        VersionMatchedCollection.<String>builder()
-            .add(ImmutableMap.of(a, v1), "a-1.0")
-            .add(ImmutableMap.of(a, v2), "a-2.0")
-            .add(ImmutableMap.of(b, v1), "b-1.0")
-            .add(ImmutableMap.of(b, v2), "b-2.0")
-            .build();
+  public void testGetMatchingValues() {
     assertThat(
-        collection.getMatchingValues(ImmutableMap.of(a, v1)),
-        Matchers.equalTo(ImmutableList.of("a-1.0", "b-1.0", "b-2.0")));
+        COLLECTION.getMatchingValues(ImmutableMap.of(A, V1)),
+        Matchers.equalTo(ImmutableList.of("a-1.0,b-1.0", "a-1.0,b-2.0")));
     assertThat(
-        collection.getMatchingValues(ImmutableMap.of(a, v2)),
-        Matchers.equalTo(ImmutableList.of("a-2.0", "b-1.0", "b-2.0")));
+        COLLECTION.getMatchingValues(ImmutableMap.of(A, V2)),
+        Matchers.equalTo(ImmutableList.of("a-2.0,b-1.0", "a-2.0,b-2.0")));
     assertThat(
-        collection.getMatchingValues(ImmutableMap.of(b, v1)),
-        Matchers.equalTo(ImmutableList.of("a-1.0", "a-2.0", "b-1.0")));
+        COLLECTION.getMatchingValues(ImmutableMap.of(B, V1)),
+        Matchers.equalTo(ImmutableList.of("a-1.0,b-1.0", "a-2.0,b-1.0")));
     assertThat(
-        collection.getMatchingValues(ImmutableMap.of(b, v2)),
-        Matchers.equalTo(ImmutableList.of("a-1.0", "a-2.0", "b-2.0")));
+        COLLECTION.getMatchingValues(ImmutableMap.of(B, V2)),
+        Matchers.equalTo(ImmutableList.of("a-1.0,b-2.0", "a-2.0,b-2.0")));
     assertThat(
-        collection.getMatchingValues(ImmutableMap.of(a, v1, b, v1)),
-        Matchers.equalTo(ImmutableList.of("a-1.0", "b-1.0")));
+        COLLECTION.getMatchingValues(ImmutableMap.of(A, V1, B, V1)),
+        Matchers.equalTo(ImmutableList.of("a-1.0,b-1.0")));
     assertThat(
-        collection.getMatchingValues(ImmutableMap.of(a, v1, b, v2)),
-        Matchers.equalTo(ImmutableList.of("a-1.0", "b-2.0")));
+        COLLECTION.getMatchingValues(ImmutableMap.of(A, V1, B, V2)),
+        Matchers.equalTo(ImmutableList.of("a-1.0,b-2.0")));
     assertThat(
-        collection.getMatchingValues(ImmutableMap.of(a, v2, b, v1)),
-        Matchers.equalTo(ImmutableList.of("a-2.0", "b-1.0")));
+        COLLECTION.getMatchingValues(ImmutableMap.of(A, V2, B, V1)),
+        Matchers.equalTo(ImmutableList.of("a-2.0,b-1.0")));
     assertThat(
-        collection.getMatchingValues(ImmutableMap.of(a, v2, b, v2)),
-        Matchers.equalTo(ImmutableList.of("a-2.0", "b-2.0")));
+        COLLECTION.getMatchingValues(ImmutableMap.of(A, V2, B, V2)),
+        Matchers.equalTo(ImmutableList.of("a-2.0,b-2.0")));
+  }
+
+  @Test
+  public void testGetOnlyMatchingValue() {
+    assertThat(
+        COLLECTION.getOnlyMatchingValue(ImmutableMap.of(A, V1, B, V1)),
+        Matchers.equalTo("a-1.0,b-1.0"));
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testGetOnlyMatchingValueThrowsOnTooManyValues() {
+    System.out.println(COLLECTION.getOnlyMatchingValue(ImmutableMap.of(A, V1)));
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testGetOnlyMatchingValueThrowsOnNoMatches() {
+    System.out.println(COLLECTION.getOnlyMatchingValue(ImmutableMap.of(A, Version.of("3.0"))));
   }
 
 }
