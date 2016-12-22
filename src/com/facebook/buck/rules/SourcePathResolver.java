@@ -28,7 +28,6 @@ import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
@@ -38,7 +37,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.StreamSupport;
 
 public class SourcePathResolver {
 
@@ -57,13 +55,6 @@ public class SourcePathResolver {
         !(sourcePath instanceof ResourceSourcePath),
         "ResourceSourcePath is not supported by deprecatedGetPath.");
     return getPathPrivateImpl(sourcePath);
-  }
-
-  public ImmutableList<Path> deprecatedAllPaths(Iterable<? extends SourcePath> sourcePaths) {
-    // Maintain ordering and duplication if necessary.
-    return StreamSupport.stream(sourcePaths.spliterator(), false)
-        .map(this::deprecatedGetPath)
-        .collect(MoreCollectors.toImmutableList());
   }
 
   public <T> ImmutableMap<T, Path> getMappedPaths(Map<T, SourcePath> sourcePathMap) {
@@ -132,6 +123,13 @@ public class SourcePathResolver {
       Collection<? extends SourcePath> sourcePaths) {
     return sourcePaths.stream()
         .map(this::getAbsolutePath)
+        .collect(MoreCollectors.toImmutableSortedSet());
+  }
+
+  public ImmutableSortedSet<Path> getAllRelativePaths(
+      Collection<? extends SourcePath> sourcePaths) {
+    return sourcePaths.stream()
+        .map(this::getRelativePath)
         .collect(MoreCollectors.toImmutableSortedSet());
   }
 

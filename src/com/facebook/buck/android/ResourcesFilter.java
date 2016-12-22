@@ -136,8 +136,9 @@ public class ResourcesFilter extends AbstractBuildRule
 
     final ImmutableList.Builder<Path> filteredResDirectoriesBuilder = ImmutableList.builder();
     ImmutableSet<Path> whitelistedStringPaths =
-        ImmutableSet.copyOf(getResolver().deprecatedAllPaths(whitelistedStringDirs));
-    ImmutableList<Path> resPaths = getResolver().deprecatedAllPaths(resDirectories);
+        getResolver().getAllRelativePaths(whitelistedStringDirs);
+    ImmutableList<Path> resPaths = ImmutableList.copyOf(
+        getResolver().getAllRelativePaths(resDirectories));
     final FilterResourcesStep filterResourcesStep = createFilterResourcesStep(
         resPaths,
         whitelistedStringPaths,

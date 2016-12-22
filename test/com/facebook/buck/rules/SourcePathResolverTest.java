@@ -127,43 +127,6 @@ public class SourcePathResolverTest {
   }
 
   @Test
-  public void resolveMixedPaths() {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    Path pathSourcePathExpectedPath = Paths.get("foo");
-    Path buildTargetSourcePathExpectedPath = Paths.get("bar");
-    Path buildRuleWithOverriddenOutputPathExpectedPath = Paths.get("baz");
-    SourcePath pathSourcePath = new PathSourcePath(projectFilesystem, pathSourcePathExpectedPath);
-    BuildRule rule = new PathReferenceRule(
-        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:bar")).build(),
-        pathResolver,
-        buildTargetSourcePathExpectedPath);
-    resolver.addToIndex(rule);
-    SourcePath buildTargetSourcePath = new BuildTargetSourcePath(rule.getBuildTarget());
-    BuildRule ruleWithOverriddenOutputPath = new PathReferenceRule(
-        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:baz")).build(),
-        pathResolver,
-        Paths.get("notbaz"));
-    resolver.addToIndex(ruleWithOverriddenOutputPath);
-    SourcePath buildTargetSourcePathWithOverriddenOutputPath = new BuildTargetSourcePath(
-        ruleWithOverriddenOutputPath.getBuildTarget(),
-        buildRuleWithOverriddenOutputPathExpectedPath);
-
-    assertEquals(
-        ImmutableList.of(
-            pathSourcePathExpectedPath,
-            buildTargetSourcePathExpectedPath,
-            buildRuleWithOverriddenOutputPathExpectedPath),
-        pathResolver.deprecatedAllPaths(
-            ImmutableList.of(
-                pathSourcePath,
-                buildTargetSourcePath,
-                buildTargetSourcePathWithOverriddenOutputPath)));
-  }
-
-  @Test
   public void getRuleCanGetRuleOfBuildRuleSoucePath() {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());

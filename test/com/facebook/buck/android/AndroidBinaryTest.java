@@ -109,10 +109,8 @@ public class AndroidBinaryTest {
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     androidBinary.addProguardCommands(
-        ImmutableSet.copyOf(
-            pathResolver.deprecatedAllPaths(packageableCollection.getClasspathEntriesToDex())),
-        ImmutableSet.copyOf(
-            pathResolver.deprecatedAllPaths(packageableCollection.getProguardConfigs())),
+        pathResolver.getAllRelativePaths(packageableCollection.getClasspathEntriesToDex()),
+        pathResolver.getAllAbsolutePaths(packageableCollection.getProguardConfigs()),
         commands,
         buildableContext);
 
