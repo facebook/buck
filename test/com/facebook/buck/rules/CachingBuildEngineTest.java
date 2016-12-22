@@ -49,7 +49,6 @@ import com.facebook.buck.model.BuildId;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.keys.AbiRuleKeyFactory;
 import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
@@ -1289,7 +1288,6 @@ public class CachingBuildEngineTest {
                       new FakeInputBasedRuleKeyFactory(ImmutableMap.of(
                           rule.getBuildTarget(),
                           Optional.of(inputRuleKey))),
-                      NOOP_RULE_KEY_FACTORY,
                       NOOP_DEP_FILE_RULE_KEY_FACTORY,
                       NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
@@ -1343,7 +1341,6 @@ public class CachingBuildEngineTest {
                       defaultRuleKeyFactory,
                       new FakeInputBasedRuleKeyFactory(
                           ImmutableMap.of(rule.getBuildTarget(), Optional.of(inputRuleKey))),
-                      NOOP_RULE_KEY_FACTORY,
                       NOOP_DEP_FILE_RULE_KEY_FACTORY,
                       NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
@@ -1414,7 +1411,6 @@ public class CachingBuildEngineTest {
                       defaultRuleKeyFactory,
                       new FakeInputBasedRuleKeyFactory(
                           ImmutableMap.of(rule.getBuildTarget(), Optional.of(inputRuleKey))),
-                      NOOP_RULE_KEY_FACTORY,
                       NOOP_DEP_FILE_RULE_KEY_FACTORY,
                       NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
@@ -1504,7 +1500,6 @@ public class CachingBuildEngineTest {
                       defaultRuleKeyFactory,
                       new FakeInputBasedRuleKeyFactory(
                           ImmutableMap.of(rule.getBuildTarget(), Optional.empty())),
-                      NOOP_RULE_KEY_FACTORY,
                       NOOP_DEP_FILE_RULE_KEY_FACTORY,
                       NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
@@ -2070,7 +2065,6 @@ public class CachingBuildEngineTest {
                   new CachingBuildEngine.RuleKeyFactories(
                       defaultRuleKeyFactory,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      NOOP_RULE_KEY_FACTORY,
                       depFileFactory,
                       inputCountingRuleKeyFactory)))
           .build();
@@ -2142,7 +2136,6 @@ public class CachingBuildEngineTest {
                       new CachingBuildEngine.RuleKeyFactories(
                           defaultRuleKeyFactory,
                           inputBasedRuleKeyFactory,
-                          defaultRuleKeyFactory,
                           depFilefactory,
                           inputCountingRuleKeyFactory)))
               .build();
@@ -2247,7 +2240,6 @@ public class CachingBuildEngineTest {
                       new CachingBuildEngine.RuleKeyFactories(
                           defaultRuleKeyFactory,
                           inputBasedRuleKeyFactory,
-                          defaultRuleKeyFactory,
                           depFilefactory,
                           inputCountingRuleKeyFactory)))
               .build();
@@ -2366,7 +2358,6 @@ public class CachingBuildEngineTest {
                       new CachingBuildEngine.RuleKeyFactories(
                           defaultRuleKeyFactory,
                           inputBasedRuleKeyFactory,
-                          defaultRuleKeyFactory,
                           depFilefactory,
                           inputCountingRuleKeyFactory)))
               .build();
@@ -2475,7 +2466,6 @@ public class CachingBuildEngineTest {
                       new CachingBuildEngine.RuleKeyFactories(
                           defaultRuleKeyFactory,
                           inputBasedRuleKeyFactory,
-                          defaultRuleKeyFactory,
                           depFilefactory,
                           NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
               .build();
@@ -2522,138 +2512,6 @@ public class CachingBuildEngineTest {
     }
   }
 
-  public static class AbiRuleKeyTests extends CommonFixture {
-    @Test
-    public void abiRuleKeyIsWrittenForSupportedRules() throws Exception {
-      BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-      BuildRuleParams params =
-          new FakeBuildRuleParamsBuilder(target)
-              .setProjectFilesystem(filesystem)
-              .build();
-      FakeAbiRuleBuildRule rule = new FakeAbiRuleBuildRule(params, pathResolver);
-      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
-          .setRuleKeyFactoriesFunction(
-              Functions.constant(
-                  new CachingBuildEngine.RuleKeyFactories(
-                      defaultRuleKeyFactory,
-                      NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      new AbiRuleKeyFactory(
-                          0,
-                          fileHashCache,
-                          pathResolver,
-                          defaultRuleKeyFactory),
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
-                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
-          .build();
-
-      BuildResult result =
-          cachingBuildEngine.build(buildContext, TestExecutionContext.newInstance(), rule).get();
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
-
-      OnDiskBuildInfo onDiskBuildInfo = buildContext.createOnDiskBuildInfoFor(target, filesystem);
-      Optional<RuleKey> abiRuleKey =
-          onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.ABI_RULE_KEY);
-      assertThat(abiRuleKey.isPresent(), is(true));
-
-      // Verify that the dep file rule key and dep file were written to the cached artifact.
-      Path fetchedArtifact = tmp.newFile("fetched_artifact.zip");
-      CacheResult cacheResult =
-          cache.fetch(defaultRuleKeyFactory.build(rule), LazyPath.ofInstance(fetchedArtifact));
-      assertThat(
-          cacheResult.getType(),
-          equalTo(CacheResultType.HIT));
-      assertThat(
-          cacheResult.getMetadata().get(BuildInfo.MetadataKey.ABI_RULE_KEY),
-          equalTo(abiRuleKey.get().toString()));
-    }
-
-    @Test
-    public void abiRuleKeyMatchAvoidsBuilding() throws Exception {
-      BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-      BuildRuleParams params =
-          new FakeBuildRuleParamsBuilder(target)
-              .setProjectFilesystem(filesystem)
-              .build();
-      FakeAbiRuleBuildRule rule = new FakeAbiRuleBuildRule(params, pathResolver);
-      final AbiRuleKeyFactory abiRuleKeyFactory = new AbiRuleKeyFactory(
-          0,
-          fileHashCache,
-          pathResolver,
-          defaultRuleKeyFactory);
-      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
-          .setRuleKeyFactoriesFunction(
-              Functions.constant(
-                  new CachingBuildEngine.RuleKeyFactories(
-                      defaultRuleKeyFactory,
-                      NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      abiRuleKeyFactory,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
-                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
-          .build();
-
-      // Prepopulate the dep file rule key and dep file.
-      filesystem.writeContentsToPath(
-          abiRuleKeyFactory.build(rule).toString(),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.ABI_RULE_KEY));
-
-      // Prepopulate the recorded paths metadata.
-      filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of()),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
-
-      // Run the build.
-      BuildResult result =
-          cachingBuildEngine.build(buildContext, TestExecutionContext.newInstance(), rule).get();
-      assertEquals(BuildRuleSuccessType.MATCHING_ABI_RULE_KEY, result.getSuccess());
-    }
-
-    @Test
-    public void abiRuleKeyChangeCausesRebuild() throws Exception {
-      BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-      BuildRuleParams params =
-          new FakeBuildRuleParamsBuilder(target)
-              .setProjectFilesystem(filesystem)
-              .build();
-      FakeAbiRuleBuildRule rule = new FakeAbiRuleBuildRule(params, pathResolver);
-      final AbiRuleKeyFactory abiRuleKeyFactory = new AbiRuleKeyFactory(
-          0,
-          fileHashCache,
-          pathResolver,
-          NOOP_RULE_KEY_FACTORY);
-      CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory()
-          .setRuleKeyFactoriesFunction(
-              Functions.constant(
-                  new CachingBuildEngine.RuleKeyFactories(
-                      NOOP_RULE_KEY_FACTORY,
-                      NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      abiRuleKeyFactory,
-                      NOOP_DEP_FILE_RULE_KEY_FACTORY,
-                      NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
-          .build();
-
-      // Prepopulate the dep file rule key and dep file.
-      filesystem.writeContentsToPath(
-          new StringBuilder(abiRuleKeyFactory.build(rule).toString())
-              .reverse()
-              .toString(),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.ABI_RULE_KEY));
-
-      // Prepopulate the recorded paths metadata.
-      filesystem.writeContentsToPath(
-          MAPPER.writeValueAsString(ImmutableList.of()),
-          BuildInfo.getPathToMetadataDirectory(target, filesystem)
-              .resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
-
-      // Run the build.
-      BuildResult result =
-          cachingBuildEngine.build(buildContext, TestExecutionContext.newInstance(), rule).get();
-      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
-    }
-  }
-
   public static class UncachableRuleTests extends CommonFixture {
     @Test
     public void uncachableRulesDoNotTouchTheCache() throws Exception {
@@ -2673,7 +2531,6 @@ public class CachingBuildEngineTest {
                   new CachingBuildEngine.RuleKeyFactories(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      NOOP_RULE_KEY_FACTORY,
                       NOOP_DEP_FILE_RULE_KEY_FACTORY,
                       NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
@@ -2757,7 +2614,6 @@ public class CachingBuildEngineTest {
                   new CachingBuildEngine.RuleKeyFactories(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      NOOP_RULE_KEY_FACTORY,
                       NOOP_DEP_FILE_RULE_KEY_FACTORY,
                       NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
@@ -2859,7 +2715,6 @@ public class CachingBuildEngineTest {
                   new CachingBuildEngine.RuleKeyFactories(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      NOOP_RULE_KEY_FACTORY,
                       NOOP_DEP_FILE_RULE_KEY_FACTORY,
                       NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
@@ -2901,7 +2756,6 @@ public class CachingBuildEngineTest {
                   new CachingBuildEngine.RuleKeyFactories(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      NOOP_RULE_KEY_FACTORY,
                       NOOP_DEP_FILE_RULE_KEY_FACTORY,
                       NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();
@@ -2942,7 +2796,6 @@ public class CachingBuildEngineTest {
                   new CachingBuildEngine.RuleKeyFactories(
                       NOOP_RULE_KEY_FACTORY,
                       NOOP_INPUT_BASED_RULE_KEY_FACTORY,
-                      NOOP_RULE_KEY_FACTORY,
                       NOOP_DEP_FILE_RULE_KEY_FACTORY,
                       NOOP_INPUT_COUNTING_RULE_KEY_FACTORY)))
           .build();

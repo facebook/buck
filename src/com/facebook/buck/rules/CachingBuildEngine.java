@@ -31,8 +31,6 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.keys.AbiRule;
-import com.facebook.buck.rules.keys.AbiRuleKeyFactory;
 import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
@@ -425,20 +423,6 @@ public class CachingBuildEngine implements BuildEngine {
 
         if (manifestResult.isPresent()) {
           return Futures.immediateFuture(manifestResult);
-        }
-      }
-
-      try (BuildRuleEvent.Scope scope = BuildRuleCacheEvent.startCacheCheckScope(
-          context.getEventBus(), rule, BuildRuleCacheEvent.CacheStepType.ABI_BASED)) {
-        // Perform an ABI-based fetch.
-        Optional<BuildResult> abiResult = performAbiBasedCacheFetch(
-            rule,
-            ruleKeyFactory,
-            buildInfoRecorder,
-            onDiskBuildInfo);
-
-        if (abiResult.isPresent()) {
-          return Futures.immediateFuture(abiResult);
         }
       }
 
@@ -1768,53 +1752,6 @@ public class CachingBuildEngine implements BuildEngine {
     return Optional.empty();
   }
 
-  private Optional<BuildResult> performAbiBasedCacheFetch(
-      BuildRule rule,
-      RuleKeyFactories ruleKeyFactory,
-      BuildInfoRecorder buildInfoRecorder,
-      OnDiskBuildInfo onDiskBuildInfo) {
-    // ABI check:
-    // Deciding whether we need to rebuild is tricky business. We want to
-    // rebuild as little as possible while always being sound.
-    //
-    // For java_library rules that depend only on their first-order deps,
-    // they only need to rebuild themselves if any of the following conditions
-    // hold:
-    // (1) The definition of the build rule has changed.
-    // (2) Any of the input files (which includes resources as well as .java
-    //     files) have changed.
-    // (3) The ABI of any of its dependent java_library rules has changed.
-    //
-    // For other types of build rules, we have to be more conservative when
-    // rebuilding
-    // In those cases, we rebuild if any of the following conditions hold:
-    // (1) The definition of the build rule has changed.
-    // (2) Any of the input files have changed.
-    // (3) Any of the RuleKeys of this rule's deps have changed.
-    //
-    // Because a RuleKey for a rule will change if any of its transitive deps
-    // have changed, that means a change in one of the leaves can result in
-    // almost all rules being rebuilt, which is slow. Fortunately, we limit
-    // the effects of this when building Java code when checking the ABI of
-    // deps instead of the RuleKey for deps.
-    if (rule instanceof AbiRule) {
-      RuleKey abiRuleKey = ruleKeyFactory.abiRuleKeyFactory.build(rule);
-      buildInfoRecorder.addBuildMetadata(
-          BuildInfo.MetadataKey.ABI_RULE_KEY,
-          abiRuleKey.toString());
-
-      Optional<RuleKey> lastAbiRuleKey =
-          onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.ABI_RULE_KEY);
-      if (abiRuleKey.equals(lastAbiRuleKey.orElse(null))) {
-        return Optional.of(BuildResult.success(
-            rule,
-            BuildRuleSuccessType.MATCHING_ABI_RULE_KEY,
-            CacheResult.localKeyUnchangedHit()));
-      }
-    }
-    return Optional.empty();
-  }
-
   private ResourceAmounts getRuleResourceAmounts(BuildRule rule) {
     if (resourceAwareSchedulingInfo.isResourceAwareSchedulingEnabled()) {
       return resourceAwareSchedulingInfo.getResourceAmountsForRule(rule);
@@ -1884,7 +1821,6 @@ public class CachingBuildEngine implements BuildEngine {
   static class RuleKeyFactories {
     public final RuleKeyFactory<RuleKey> defaultRuleKeyFactory;
     public final RuleKeyFactory<Optional<RuleKey>> inputBasedRuleKeyFactory;
-    public final RuleKeyFactory<RuleKey> abiRuleKeyFactory;
     public final DependencyFileRuleKeyFactory depFileRuleKeyFactory;
     public final InputCountingRuleKeyFactory inputCountingRuleKeyFactory;
 
@@ -1906,11 +1842,6 @@ public class CachingBuildEngine implements BuildEngine {
               fileHashCache,
               pathResolver,
               inputRuleKeyFileSizeLimit),
-          new AbiRuleKeyFactory(
-              seed,
-              fileHashCache,
-              pathResolver,
-              defaultRuleKeyFactory),
           new DefaultDependencyFileRuleKeyFactory(
               seed,
               fileHashCache,
@@ -1925,12 +1856,10 @@ public class CachingBuildEngine implements BuildEngine {
     RuleKeyFactories(
         RuleKeyFactory<RuleKey> defaultRuleKeyFactory,
         RuleKeyFactory<Optional<RuleKey>> inputBasedRuleKeyFactory,
-        RuleKeyFactory<RuleKey> abiRuleKeyFactory,
         DependencyFileRuleKeyFactory depFileRuleKeyFactory,
         InputCountingRuleKeyFactory inputCountingRuleKeyFactory) {
       this.defaultRuleKeyFactory = defaultRuleKeyFactory;
       this.inputBasedRuleKeyFactory = inputBasedRuleKeyFactory;
-      this.abiRuleKeyFactory = abiRuleKeyFactory;
       this.depFileRuleKeyFactory = depFileRuleKeyFactory;
       this.inputCountingRuleKeyFactory = inputCountingRuleKeyFactory;
     }
