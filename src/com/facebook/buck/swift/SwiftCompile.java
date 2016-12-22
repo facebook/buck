@@ -24,8 +24,10 @@ import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.file.MoreFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.model.BuildTargets;
 import com.facebook.buck.rules.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.rules.AddToRuleKey;
 import com.facebook.buck.rules.BuildContext;
@@ -41,7 +43,9 @@ import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.MoreIterables;
@@ -53,6 +57,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -143,7 +149,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         !buildTarget.getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR));
   }
 
-  private SwiftCompileStep makeCompileStep(SourcePathResolver resolver) {
+  private SwiftCompileStep makeCompileStep(SourcePathResolver resolver, Path swiftFileListPath) {
     ImmutableList.Builder<String> compilerCommand = ImmutableList.builder();
     compilerCommand.addAll(swiftCompiler.getCommandPrefix(resolver));
 
@@ -203,9 +209,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         });
 
     compilerCommand.addAll(Arg.stringify(compilerFlags, resolver));
-    for (SourcePath sourcePath : srcs) {
-      compilerCommand.add(resolver.getRelativePath(sourcePath).toString());
-    }
+    compilerCommand.add("-filelist", swiftFileListPath.toString());
 
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return new SwiftCompileStep(
@@ -229,11 +233,49 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(outputPath);
+
+    Path swiftFileListPath =
+        getProjectFilesystem()
+            .getRootPath()
+            .resolve(
+                BuildTargets.getScratchPath(
+                    getProjectFilesystem(), getBuildTarget(), "%s__filelist.txt"));
+
     return ImmutableList.of(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), outputPath)),
-        makeCompileStep(context.getSourcePathResolver()));
+        makeFileListStep(context.getSourcePathResolver(), swiftFileListPath),
+        makeCompileStep(context.getSourcePathResolver(), swiftFileListPath));
+  }
+
+  private Step makeFileListStep(SourcePathResolver resolver, Path swiftFileListPath) {
+    ImmutableList<String> relativePaths =
+        srcs.stream()
+            .map(sourcePath -> resolver.getRelativePath(sourcePath).toString())
+            .collect(MoreCollectors.toImmutableList());
+
+    return new Step() {
+      @Override
+      public StepExecutionResult execute(ExecutionContext context)
+          throws IOException, InterruptedException {
+        if (Files.notExists(swiftFileListPath.getParent())) {
+          Files.createDirectories(swiftFileListPath.getParent());
+        }
+        MoreFiles.writeLinesToFile(relativePaths, swiftFileListPath);
+        return StepExecutionResult.SUCCESS;
+      }
+
+      @Override
+      public String getShortName() {
+        return "swift-filelist";
+      }
+
+      @Override
+      public String getDescription(ExecutionContext context) {
+        return "swift-filelist";
+      }
+    };
   }
 
   @Override
