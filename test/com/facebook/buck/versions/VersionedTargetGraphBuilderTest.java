@@ -28,6 +28,7 @@ import com.facebook.buck.testutil.TargetGraphFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 
 import org.hamcrest.Matchers;
@@ -365,6 +366,29 @@ public class VersionedTargetGraphBuilderTest {
                 .setDeps("//:dep")
                 .build());
     assertEquals(expectedTargetGraph, versionedGraph);
+  }
+
+  @Test
+  public void nodeWithTestParameterReferringToNonExistentTarget() throws Exception {
+    TargetGraph graph =
+        TargetGraphFactory.newInstance(
+            new VersionPropagatorBuilder("//:root2")
+                .setTests(ImmutableSortedSet.of(BuildTargetFactory.newInstance("//:test")))
+                .build(),
+            new VersionRootBuilder("//:root1")
+                .setDeps("//:root2")
+                .build());
+    VersionedTargetGraphBuilder builder =
+        new VersionedTargetGraphBuilder(
+            POOL,
+            new NaiveVersionSelector(),
+            TargetGraphAndBuildTargets.of(
+                graph,
+                ImmutableSet.of(
+                    BuildTargetFactory.newInstance("//:root1"),
+                    BuildTargetFactory.newInstance("//:root2"))));
+    TargetGraph versionedGraph = builder.build();
+    assertEquals(graph, versionedGraph);
   }
 
 }

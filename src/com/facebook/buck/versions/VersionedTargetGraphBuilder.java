@@ -128,6 +128,10 @@ public class VersionedTargetGraphBuilder {
     return unversionedTargetGraphAndBuildTargets.getTargetGraph().get(target);
   }
 
+  private Optional<TargetNode<?, ?>> getNodeOptional(BuildTarget target) {
+    return unversionedTargetGraphAndBuildTargets.getTargetGraph().getOptional(target);
+  }
+
   private void addNode(TargetNode<?, ?> node) {
     Preconditions.checkArgument(
         !TargetGraphVersionTransformations.getVersionedNode(node).isPresent(),
@@ -503,10 +507,23 @@ public class VersionedTargetGraphBuilder {
                 CacheBuilder.newBuilder()
                     .build(
                         CacheLoader.from(
-                            target ->
-                                root.getBuildTarget().equals(target) ?
-                                    Optional.of(target) :
-                                    getTranslateBuildTarget(getNode(target), selectedVersions)));
+                            target -> {
+
+                              // If we're handling the root node, there's nothing to translate.
+                              if (root.getBuildTarget().equals(target)) {
+                                return Optional.empty();
+                              }
+
+                              // If this target isn't in the target graph, which can be the case
+                              // of build targets in the `tests` parameter, don't do any
+                              // translation.
+                              Optional<TargetNode<?, ?>> node = getNodeOptional(target);
+                              if (!node.isPresent()) {
+                                return Optional.empty();
+                              }
+
+                              return getTranslateBuildTarget(getNode(target), selectedVersions);
+                            }));
 
             @Override
             public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
