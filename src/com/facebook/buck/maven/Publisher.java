@@ -123,8 +123,8 @@ public class Publisher {
     this.dryRun = dryRun;
   }
 
-  public ImmutableSet<DeployResult> publish(
-      ImmutableSet<MavenPublishable> publishables) throws DeploymentException, InterruptedException {
+  public ImmutableSet<DeployResult> publish(ImmutableSet<MavenPublishable> publishables)
+      throws DeploymentException, InterruptedException {
     ImmutableListMultimap<UnflavoredBuildTarget, UnflavoredBuildTarget> duplicateBuiltinBuileRules =
         checkForDuplicatePackagedDeps(publishables);
     if (duplicateBuiltinBuileRules.size() > 0) {
@@ -295,12 +295,10 @@ public class Publisher {
     try (PrintStream stdout = new PrintStream(new ByteArrayOutputStream());
          PrintStream stderr = new PrintStream(new ByteArrayOutputStream())) {
       File expectedOutput = new File(file.getAbsolutePath() + ".asc");
-      if (expectedOutput.exists()) {
-        if (!expectedOutput.delete()) {
-          throw new HumanReadableException(
-              "Existing signature exists, but cannot be deleted: %s",
-              file);
-        }
+      if (expectedOutput.exists() && !expectedOutput.delete()) {
+        throw new HumanReadableException(
+            "Existing signature exists, but cannot be deleted: %s",
+            file);
       }
 
       ProcessExecutor processExecutor = createProcessExecutor(stdout, stderr);

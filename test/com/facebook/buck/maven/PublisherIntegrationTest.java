@@ -20,8 +20,6 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.io.MorePaths;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.MavenPublishable;
@@ -51,7 +49,6 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
@@ -113,7 +110,8 @@ public class PublisherIntegrationTest {
   }
 
   @Test
-  public void shouldInvokeSignerIfRequested() throws IOException, NoSuchBuildTargetException, InterruptedException, DeploymentException {
+  public void shouldInvokeSignerIfRequested()
+      throws IOException, NoSuchBuildTargetException, InterruptedException, DeploymentException {
     ProjectFilesystem filesystem = new ProjectFilesystem(temp.getRoot());
 
     MavenPublishable publishable = (MavenPublishable)
@@ -133,7 +131,10 @@ public class PublisherIntegrationTest {
     // everything up.
     Set<String> signatures = new HashSet<>();
     ImmutableMap.Builder<ProcessExecutorParams, FakeProcess> commands = ImmutableMap.builder();
-    for (String out : ImmutableSet.of(publishable.getPathToOutput().toString(), "buck-out/gen/lib#maven.pom")) {
+    ImmutableSet<String> outputs = ImmutableSet.of(
+        publishable.getPathToOutput().toString(),
+        "buck-out/gen/lib#maven.pom");
+    for (String out : outputs) {
       Path path = filesystem.getPathForRelativePath(out);
       Path signed = filesystem.getPathForRelativePath(out + ".asc");
 
@@ -150,8 +151,8 @@ public class PublisherIntegrationTest {
     Publisher publisher = new Publisher(
         filesystem,
         Optional.of(temp.newFolder().toUri().toURL()),
-        Optional.<String>empty(),
-        Optional.<String>empty(),
+        Optional.empty(),
+        Optional.empty(),
         Optional.of("passphrase"),
         false) {
       @Override
