@@ -82,12 +82,7 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
     );
     return Futures.transform(
         allNodesListJob,
-        new Function<List<T>, ImmutableSet<T>>() {
-          @Override
-          public ImmutableSet<T> apply(List<T> input) {
-            return ImmutableSet.copyOf(input);
-          }
-        },
+        (Function<List<T>, ImmutableSet<T>>) ImmutableSet::copyOf,
         executorService
     );
   }
