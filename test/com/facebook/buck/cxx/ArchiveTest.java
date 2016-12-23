@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
@@ -181,10 +182,11 @@ public class ArchiveTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     Archive archive = Archive.from(
         target,
         params,
-        new SourcePathResolver(ruleFinder),
+        pathResolver,
         ruleFinder,
         DEFAULT_ARCHIVER,
         ImmutableList.of("-foo"),
@@ -194,8 +196,13 @@ public class ArchiveTest {
         DEFAULT_OUTPUT,
         ImmutableList.of(new FakeSourcePath("simple.o")));
 
+    BuildContext buildContext = BuildContext.builder()
+        .from(FakeBuildContext.NOOP_CONTEXT)
+        .setSourcePathResolver(pathResolver)
+        .build();
+
     ImmutableList<Step> steps =
-        archive.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
+        archive.getBuildSteps(buildContext, new FakeBuildableContext());
     Step archiveStep = FluentIterable.from(steps).filter(ArchiveStep.class).first().get();
     assertThat(
         archiveStep.getDescription(TestExecutionContext.newInstance()),

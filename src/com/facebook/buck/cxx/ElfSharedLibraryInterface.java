@@ -55,6 +55,7 @@ class ElfSharedLibraryInterface
           ".gnu.version_d",
           ".gnu.version_r");
 
+  private final SourcePathResolver pathResolver;
   @AddToRuleKey
   private final Tool objcopy;
 
@@ -67,6 +68,7 @@ class ElfSharedLibraryInterface
       Tool objcopy,
       SourcePath input) {
     super(buildRuleParams, resolver);
+    this.pathResolver = resolver;
     this.objcopy = objcopy;
     this.input = input;
   }
@@ -97,7 +99,7 @@ class ElfSharedLibraryInterface
   }
 
   private String getSharedAbiLibraryName() {
-    return getResolver().getRelativePath(input).getFileName().toString();
+    return pathResolver.getRelativePath(input).getFileName().toString();
   }
 
   @Override
@@ -110,8 +112,8 @@ class ElfSharedLibraryInterface
         new MakeCleanDirectoryStep(getProjectFilesystem(), getOutputDir()),
         ElfExtractSectionsStep.of(
             getProjectFilesystem(),
-            objcopy.getCommandPrefix(getResolver()),
-            getResolver().getAbsolutePath(input),
+            objcopy.getCommandPrefix(context.getSourcePathResolver()),
+            context.getSourcePathResolver().getAbsolutePath(input),
             output,
             SECTIONS),
         ElfClearProgramHeadersStep.of(getProjectFilesystem(), output),

@@ -60,6 +60,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule
   @AddToRuleKey(stringify = true)
   private final Path outputJsonFile;
   private final ImmutableSortedSet<BuildRule> runtimeDeps;
+  private final SourcePathResolver pathResolver;
 
   public static CxxCompilationDatabase createCompilationDatabase(
       BuildRuleParams params,
@@ -91,6 +92,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule
       ImmutableSortedSet<CxxPreprocessAndCompile> compileRules,
       ImmutableSortedSet<BuildRule> runtimeDeps) {
     super(buildRuleParams, pathResolver);
+    this.pathResolver = pathResolver;
     LOG.debug(
         "Creating compilation database %s with runtime deps %s",
         buildRuleParams.getBuildTarget(),
@@ -166,7 +168,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule
       ProjectFilesystem inputFilesystem = compileRule.getProjectFilesystem();
 
       String fileToCompile = inputFilesystem
-          .resolve(getResolver().getAbsolutePath(inputSourcePath))
+          .resolve(pathResolver.getAbsolutePath(inputSourcePath))
           .toString();
       ImmutableList<String> arguments = compileRule.getCommand();
       return CxxCompilationDatabaseEntry.of(

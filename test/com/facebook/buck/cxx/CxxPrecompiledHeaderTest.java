@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
@@ -87,8 +88,12 @@ public class CxxPrecompiledHeaderTest {
         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
         CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
         /* pchILogEnabled: not needed for this test */ false);
+    BuildContext buildContext = BuildContext.builder()
+        .from(FakeBuildContext.NOOP_CONTEXT)
+        .setSourcePathResolver(sourcePathResolver)
+        .build();
     ImmutableList<Step> postBuildSteps = precompiledHeader.getBuildSteps(
-        FakeBuildContext.NOOP_CONTEXT,
+        buildContext,
         new FakeBuildableContext());
     CxxPreprocessAndCompileStep step = Iterables.getOnlyElement(
         Iterables.filter(postBuildSteps, CxxPreprocessAndCompileStep.class));

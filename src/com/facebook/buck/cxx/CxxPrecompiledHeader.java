@@ -31,7 +31,6 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -129,7 +128,7 @@ public class CxxPrecompiledHeader
     return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
         new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir),
-        makeMainStep(scratchDir));
+        makeMainStep(context.getSourcePathResolver(), scratchDir));
   }
 
   @Override
@@ -172,16 +171,7 @@ public class CxxPrecompiledHeader
     return ImmutableList.copyOf(getProjectFilesystem().readLines(getDepFilePath()));
   }
 
-  private Path getIncludeLogPath() {
-    return getSuffixedOutput(".ilog");
-  }
-
-  public IncludeLog getIncludeLog() throws IOException {
-    return IncludeLog.read(getIncludeLogPath());
-  }
-
-  @VisibleForTesting
-  private CxxPreprocessAndCompileStep makeMainStep(Path scratchDir) {
+  private CxxPreprocessAndCompileStep makeMainStep(SourcePathResolver resolver, Path scratchDir) {
     try {
       preprocessorDelegate.checkForConflictingHeaders();
     } catch (PreprocessorDelegate.ConflictingHeadersException e) {
@@ -193,7 +183,7 @@ public class CxxPrecompiledHeader
         getPathToOutput(),
         getDepFilePath(),
         // TODO(10194465): This uses relative path so as to get relative paths in the dep file
-        getResolver().getRelativePath(input),
+        resolver.getRelativePath(input),
         inputType,
         Optional.of(
             new CxxPreprocessAndCompileStep.ToolCommand(

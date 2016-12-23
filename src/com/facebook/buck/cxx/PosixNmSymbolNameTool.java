@@ -131,7 +131,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
           new DefaultShellStep(
               getProjectFilesystem().getRootPath(),
               ImmutableList.<String>builder()
-                  .addAll(nm.getCommandPrefix(getResolver()))
+                  .addAll(nm.getCommandPrefix(context.getSourcePathResolver()))
                   // Prepend all lines with the name of the input file to which it
                   // corresponds.  Added only to make parsing the output a bit easier.
                   .add("-A")
@@ -143,7 +143,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
                   .add("-u")
                   .addAll(
                       StreamSupport.stream(inputs.spliterator(), false)
-                          .map(getResolver()::getAbsolutePath)
+                          .map(context.getSourcePathResolver()::getAbsolutePath)
                           .map(Object::toString)
                           .iterator())
                   .build(),

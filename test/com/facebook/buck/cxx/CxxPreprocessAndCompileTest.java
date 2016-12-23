@@ -385,7 +385,7 @@ public class CxxPreprocessAndCompileTest {
         .add("-o", output.toString())
         .build();
     ImmutableList<String> actualCompileCommand =
-        buildRule.makeMainStep(scratchDir, false).getCommand();
+        buildRule.makeMainStep(pathResolver, scratchDir, false).getCommand();
     assertEquals(expectedCompileCommand, actualCompileCommand);
   }
 
@@ -492,7 +492,7 @@ public class CxxPreprocessAndCompileTest {
             Optional.empty());
 
     ImmutableList<String> command =
-        buildRule.makeMainStep(buildRule.getProjectFilesystem().getRootPath(), false)
+        buildRule.makeMainStep(pathResolver, buildRule.getProjectFilesystem().getRootPath(), false)
             .makeCompileArguments(
                 input.toString(),
                 "c++",
@@ -501,7 +501,7 @@ public class CxxPreprocessAndCompileTest {
     assertThat(command, not(hasItem(CompilerWithColorSupport.COLOR_FLAG)));
 
     command =
-        buildRule.makeMainStep(scratchDir, false)
+        buildRule.makeMainStep(pathResolver, scratchDir, false)
             .makeCompileArguments(
                 input.toString(),
                 "c++",
@@ -549,7 +549,7 @@ public class CxxPreprocessAndCompileTest {
             Optional.empty());
 
     ImmutableList<String> command =
-        buildRule.makeMainStep(scratchDir, false)
+        buildRule.makeMainStep(pathResolver, scratchDir, false)
             .makeCompileArguments(
                 input.toString(),
                 "c++",
@@ -558,7 +558,7 @@ public class CxxPreprocessAndCompileTest {
     assertThat(command, not(hasItem(PreprocessorWithColorSupport.COLOR_FLAG)));
 
     command =
-        buildRule.makeMainStep(scratchDir, false)
+        buildRule.makeMainStep(pathResolver, scratchDir, false)
             .makeCompileArguments(
                 input.toString(),
                 "c++",

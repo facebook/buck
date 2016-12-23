@@ -102,14 +102,17 @@ public class PrecompiledHeaderFeatureTest {
 
     @Test
     public void test() {
-      CxxPreprocessAndCompile rule = preconfiguredSourceRuleFactoryBuilder()
+      BuildRuleResolver resolver =
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+      CxxPreprocessAndCompile rule = preconfiguredSourceRuleFactoryBuilder(resolver)
           .setCxxPlatform(platform)
           .setPrefixHeader(new FakeSourcePath(("foo.pch")))
           .build()
           .createPreprocessAndCompileBuildRule(
               "foo.c",
               preconfiguredCxxSourceBuilder().build());
-      boolean usesPch = commandLineContainsPchFlag(rule);
+      boolean usesPch = commandLineContainsPchFlag(
+          new SourcePathResolver(new SourcePathRuleFinder(resolver)), rule);
       if (supportsPch) {
         assertTrue("should only use PCH if toolchain supports it", usesPch);
       } else {
@@ -123,7 +126,9 @@ public class PrecompiledHeaderFeatureTest {
     public void buildTargetShouldDeriveFromSanitizedFlags() {
       class TestData {
         public CxxPrecompiledHeader generate(Path from) {
-          CxxSourceRuleFactory factory = preconfiguredSourceRuleFactoryBuilder()
+          BuildRuleResolver resolver = new BuildRuleResolver(
+              TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+          CxxSourceRuleFactory factory = preconfiguredSourceRuleFactoryBuilder(resolver)
               .setCxxPlatform(
                   PLATFORM_SUPPORTING_PCH.withCompilerDebugPathSanitizer(
                       new MungingDebugPathSanitizer(
@@ -160,7 +165,9 @@ public class PrecompiledHeaderFeatureTest {
     public void buildTargetShouldVaryWithCompilerFlags() {
       class TestData {
         public CxxPrecompiledHeader generate(Iterable<String> flags) {
-          CxxSourceRuleFactory factory = preconfiguredSourceRuleFactoryBuilder()
+          BuildRuleResolver resolver = new BuildRuleResolver(
+              TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+          CxxSourceRuleFactory factory = preconfiguredSourceRuleFactoryBuilder(resolver)
               .putAllCompilerFlags(CxxSource.Type.C_CPP_OUTPUT, flags)
               .setPrefixHeader(new FakeSourcePath(("foo.pch")))
               .build();
@@ -187,7 +194,9 @@ public class PrecompiledHeaderFeatureTest {
     public void buildTargetShouldVaryWithPreprocessorFlags() {
       class TestData {
         public CxxPrecompiledHeader generate(String flags) {
-          CxxSourceRuleFactory factory = preconfiguredSourceRuleFactoryBuilder()
+          BuildRuleResolver resolver = new BuildRuleResolver(
+              TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+          CxxSourceRuleFactory factory = preconfiguredSourceRuleFactoryBuilder(resolver)
               .setCxxPreprocessorInput(
                   ImmutableList.of(
                       CxxPreprocessorInput.builder()
@@ -368,9 +377,10 @@ public class PrecompiledHeaderFeatureTest {
    *
    * This serves as an indicator that the file is being compiled with PCH enabled.
    */
-  private static boolean commandLineContainsPchFlag(CxxPreprocessAndCompile rule) {
+  private static boolean commandLineContainsPchFlag(
+      SourcePathResolver resolver, CxxPreprocessAndCompile rule) {
     return Iterables.tryFind(
-        rule.makeMainStep(Paths.get("/tmp/unused_scratch_dir"), false).getCommand(),
+        rule.makeMainStep(resolver, Paths.get("/tmp/unused_scratch_dir"), false).getCommand(),
         "-include-pch"::equals).isPresent();
   }
 
@@ -395,10 +405,9 @@ public class PrecompiledHeaderFeatureTest {
         .setCxxBuckConfig(CXX_CONFIG_PCH_ENABLED);
   }
 
-  private static CxxSourceRuleFactory.Builder preconfiguredSourceRuleFactoryBuilder() {
-    return preconfiguredSourceRuleFactoryBuilder(
-        "//foo:bar",
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+  private static CxxSourceRuleFactory.Builder preconfiguredSourceRuleFactoryBuilder(
+      BuildRuleResolver resolver) {
+    return preconfiguredSourceRuleFactoryBuilder("//foo:bar", resolver);
   }
 
   /**

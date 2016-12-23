@@ -104,21 +104,6 @@ public class CxxInferCapture
         .add("@" + getArgfile())
         .build();
   }
-
-  private ImmutableList<String> getCompilerArgs() {
-    ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
-    return commandBuilder
-        .add("-MD", "-MF", getTempDepFilePath().toString())
-        .addAll(
-            CxxToolFlags.concat(preprocessorFlags, getSearchPathFlags(), compilerFlags)
-                .getAllFlags())
-        .add("-x", inputType.getLanguage())
-        .add("-o", output.toString()) // TODO(martinoluca): Use -fsyntax-only for better perf
-        .add("-c")
-        .add(getResolver().getRelativePath(input).toString())
-        .build();
-  }
-
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
@@ -126,16 +111,18 @@ public class CxxInferCapture
 
     buildableContext.recordArtifact(this.getPathToOutput());
 
+    Path inputRelativePath = context.getSourcePathResolver().getRelativePath(input);
     return ImmutableList.<Step>builder()
         .add(new MkdirStep(getProjectFilesystem(), resultsDir))
         .add(new MkdirStep(getProjectFilesystem(), output.getParent()))
-        .add(new WriteArgFileStep())
+        .add(new WriteArgFileStep(inputRelativePath))
         .add(
             new DefaultShellStep(
                 getProjectFilesystem().getRootPath(),
                 frontendCommand,
                 ImmutableMap.of()))
-        .add(new ParseAndWriteBuckCompatibleDepfileStep(getTempDepFilePath(), getDepFilePath()))
+        .add(new ParseAndWriteBuckCompatibleDepfileStep(
+            getTempDepFilePath(), getDepFilePath(), inputRelativePath))
         .build();
   }
 
@@ -212,10 +199,13 @@ public class CxxInferCapture
 
     private Path sourceDepfile;
     private Path destDepfile;
+    private Path inputRelativePath;
 
-    public ParseAndWriteBuckCompatibleDepfileStep(Path sourceDepfile, Path destDepfile) {
+    public ParseAndWriteBuckCompatibleDepfileStep(
+        Path sourceDepfile, Path destDepfile, Path inputRelativePath) {
       this.sourceDepfile = sourceDepfile;
       this.destDepfile = destDepfile;
+      this.inputRelativePath = inputRelativePath;
     }
 
     @Override
@@ -228,7 +218,7 @@ public class CxxInferCapture
           preprocessorDelegate.getHeaderVerification(),
           sourceDepfile,
           destDepfile,
-          getResolver().getRelativePath(input),
+          inputRelativePath,
           output);
       return StepExecutionResult.SUCCESS;
     }
@@ -245,6 +235,12 @@ public class CxxInferCapture
   }
 
   private class WriteArgFileStep implements Step {
+
+    private final Path inputRelativePath;
+
+    public WriteArgFileStep(Path inputRelativePath) {
+      this.inputRelativePath = inputRelativePath;
+    }
 
     @Override
     public StepExecutionResult execute(ExecutionContext context)
@@ -264,6 +260,19 @@ public class CxxInferCapture
     public String getDescription(ExecutionContext context) {
       return "Write argfile for clang";
     }
-  }
 
+    private ImmutableList<String> getCompilerArgs() {
+      ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
+      return commandBuilder
+          .add("-MD", "-MF", getTempDepFilePath().toString())
+          .addAll(
+              CxxToolFlags.concat(preprocessorFlags, getSearchPathFlags(), compilerFlags)
+                  .getAllFlags())
+          .add("-x", inputType.getLanguage())
+          .add("-o", output.toString()) // TODO(martinoluca): Use -fsyntax-only for better perf
+          .add("-c")
+          .add(inputRelativePath.toString())
+          .build();
+    }
+  }
 }

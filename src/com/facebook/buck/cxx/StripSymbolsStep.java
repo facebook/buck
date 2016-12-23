@@ -16,35 +16,34 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
 public class StripSymbolsStep implements Step {
   private final Path input;
-  private final Tool strip;
+  private final ImmutableList<String> stripCommandPrefix;
+  private final ImmutableMap<String, String> stripEnvironment;
   private final ImmutableList<String> stripToolArgs;
   private final ProjectFilesystem projectFilesystem;
-  private final SourcePathResolver resolver;
 
   public StripSymbolsStep(
       Path input,
-      Tool strip,
+      ImmutableList<String> stripCommandPrefix,
+      ImmutableMap<String, String> stripEnvironment,
       ImmutableList<String> stripToolArgs,
-      ProjectFilesystem projectFilesystem,
-      SourcePathResolver resolver) {
+      ProjectFilesystem projectFilesystem) {
     this.input = input;
-    this.strip = strip;
+    this.stripCommandPrefix = stripCommandPrefix;
+    this.stripEnvironment = stripEnvironment;
     this.stripToolArgs = stripToolArgs;
     this.projectFilesystem = projectFilesystem;
-    this.resolver = resolver;
   }
 
   @Override
@@ -53,11 +52,11 @@ public class StripSymbolsStep implements Step {
     return (new DefaultShellStep(
         projectFilesystem.getRootPath(),
         ImmutableList.<String>builder()
-            .addAll(strip.getCommandPrefix(resolver))
+            .addAll(stripCommandPrefix)
             .addAll(stripToolArgs)
             .add(projectFilesystem.resolve(input).toString())
             .build(),
-        strip.getEnvironment()))
+        stripEnvironment))
         .execute(context);
   }
 

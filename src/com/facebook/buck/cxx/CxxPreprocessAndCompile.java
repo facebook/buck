@@ -65,6 +65,7 @@ public class CxxPreprocessAndCompile
   private final CxxSource.Type inputType;
   private final DebugPathSanitizer compilerSanitizer;
   private final DebugPathSanitizer assemblerSanitizer;
+  private final SourcePathResolver pathResolver;
   private final Optional<SymlinkTree> sandboxTree;
 
   @VisibleForTesting
@@ -82,6 +83,7 @@ public class CxxPreprocessAndCompile
       DebugPathSanitizer assemblerSanitizer,
       Optional<SymlinkTree> sandboxTree) {
     super(params, resolver);
+    this.pathResolver = resolver;
     this.sandboxTree = sandboxTree;
     Preconditions.checkState(operation.isPreprocess() == preprocessDelegate.isPresent());
     if (precompiledHeaderRef.isPresent()) {
@@ -192,7 +194,8 @@ public class CxxPreprocessAndCompile
   }
 
   @VisibleForTesting
-  CxxPreprocessAndCompileStep makeMainStep(Path scratchDir, boolean useArgfile) {
+  CxxPreprocessAndCompileStep makeMainStep(
+      SourcePathResolver resolver, Path scratchDir, boolean useArgfile) {
 
     // Check for conflicting headers.
     if (preprocessDelegate.isPresent()) {
@@ -207,7 +210,7 @@ public class CxxPreprocessAndCompile
     HeaderPathNormalizer headerPathNormalizer =
         preprocessDelegate.isPresent() ?
             preprocessDelegate.get().getHeaderPathNormalizer() :
-            HeaderPathNormalizer.empty(getResolver());
+            HeaderPathNormalizer.empty(resolver);
 
     Optional<CxxPreprocessAndCompileStep.ToolCommand> preprocessorCommand;
     if (operation.isPreprocess()) {
@@ -251,9 +254,9 @@ public class CxxPreprocessAndCompile
     // the dep file
     Path inputPath;
     try {
-      inputPath = getResolver().getRelativePath(input);
+      inputPath = resolver.getRelativePath(input);
     } catch (IllegalStateException e) {
-      inputPath = getResolver().getAbsolutePath(input);
+      inputPath = resolver.getAbsolutePath(input);
     }
 
     return new CxxPreprocessAndCompileStep(
@@ -290,7 +293,10 @@ public class CxxPreprocessAndCompile
     return ImmutableList.of(
         new MkdirStep(getProjectFilesystem(), output.getParent()),
         new MakeCleanDirectoryStep(getProjectFilesystem(), getScratchPath()),
-        makeMainStep(getScratchPath(), compilerDelegate.isArgFileSupported()));
+        makeMainStep(
+            context.getSourcePathResolver(),
+            getScratchPath(),
+            compilerDelegate.isArgFileSupported()));
   }
 
   private Path getScratchPath() {
@@ -305,7 +311,7 @@ public class CxxPreprocessAndCompile
   // Used for compdb
   public ImmutableList<String> getCommand() {
     if (operation == CxxPreprocessAndCompileStep.Operation.COMPILE_MUNGE_DEBUGINFO) {
-      return makeMainStep(getScratchPath(), false).getCommand();
+      return makeMainStep(pathResolver, getScratchPath(), false).getCommand();
     }
 
     PreprocessorDelegate effectivePreprocessorDelegate = preprocessDelegate.get();
@@ -318,7 +324,7 @@ public class CxxPreprocessAndCompile
     cmd.add("-x", inputType.getLanguage());
     cmd.add("-c");
     cmd.add("-o", output.toString());
-    cmd.add(getResolver().getAbsolutePath(input).toString());
+    cmd.add(pathResolver.getAbsolutePath(input).toString());
     return cmd.build();
   }
 

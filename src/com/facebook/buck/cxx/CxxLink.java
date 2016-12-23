@@ -117,11 +117,11 @@ public class CxxLink
             args,
             linker,
             getBuildTarget().getCellPath(),
-            getResolver()),
+            context.getSourcePathResolver()),
         new CxxLinkStep(
             getProjectFilesystem().getRootPath(),
             linker.getEnvironment(),
-            linker.getCommandPrefix(getResolver()),
+            linker.getCommandPrefix(context.getSourcePathResolver()),
             argFilePath,
             getProjectFilesystem().getRootPath().resolve(scratchDir)),
         new FileScrubberStep(
