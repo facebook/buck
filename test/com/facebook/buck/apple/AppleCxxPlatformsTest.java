@@ -57,6 +57,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.VersionedTool;
@@ -171,7 +172,7 @@ public class AppleCxxPlatformsTest {
 
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
+    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
 
     assertEquals(
         ImmutableList.of("usr/bin/actool"),
@@ -277,7 +278,7 @@ public class AppleCxxPlatformsTest {
 
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
+    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
 
     assertEquals(
         ImmutableList.of("usr/bin/actool"),
@@ -377,7 +378,8 @@ public class AppleCxxPlatformsTest {
 
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
     assertEquals(
         ImmutableList.of("usr/bin/actool"),
@@ -752,7 +754,8 @@ public class AppleCxxPlatformsTest {
       ImmutableMap<Flavor, AppleCxxPlatform> cxxPlatforms) {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     String source = "source.cpp";
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
@@ -761,7 +764,8 @@ public class AppleCxxPlatformsTest {
                 ImmutableMap.<String, String>builder()
                     .put("source.cpp", Strings.repeat("a", 40))
                     .build()),
-            pathResolver);
+            pathResolver,
+            ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     ImmutableMap.Builder<Flavor, RuleKey> ruleKeys =
         ImmutableMap.builder();
@@ -770,6 +774,7 @@ public class AppleCxxPlatformsTest {
           .setParams(new FakeBuildRuleParamsBuilder(target).build())
           .setResolver(resolver)
           .setPathResolver(pathResolver)
+          .setRuleFinder(ruleFinder)
           .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
           .setCxxPlatform(entry.getValue().getCxxPlatform())
           .setPicType(CxxSourceRuleFactory.PicType.PIC)
@@ -807,7 +812,8 @@ public class AppleCxxPlatformsTest {
       ImmutableMap<Flavor, AppleCxxPlatform> cxxPlatforms) throws NoSuchBuildTargetException {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
             0,
@@ -815,7 +821,8 @@ public class AppleCxxPlatformsTest {
                 ImmutableMap.<String, String>builder()
                     .put("input.o", Strings.repeat("a", 40))
                     .build()),
-            pathResolver);
+            pathResolver,
+            ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     ImmutableMap.Builder<Flavor, RuleKey> ruleKeys =
         ImmutableMap.builder();
@@ -827,6 +834,7 @@ public class AppleCxxPlatformsTest {
               new FakeBuildRuleParamsBuilder(target).build(),
               resolver,
               pathResolver,
+              ruleFinder,
               target,
               Linker.LinkType.EXECUTABLE,
               Optional.empty(),

@@ -19,7 +19,7 @@ package com.facebook.buck.rules.args;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -36,7 +36,7 @@ public abstract class Arg implements RuleKeyAppendable {
   /**
    * @return any {@link BuildRule}s that need to be built before this argument can be used.
    */
-  public abstract ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver);
+  public abstract ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder);
 
   /**
    * @return any {@link BuildRule}s that need to be built before this argument can be used.

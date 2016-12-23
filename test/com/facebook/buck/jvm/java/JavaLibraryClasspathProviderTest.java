@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -119,7 +120,7 @@ public class JavaLibraryClasspathProviderTest {
         TargetGraphFactory.newInstance(aNode, bNode, cNode, dNode, eNode, zNode);
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    resolver = new SourcePathResolver(ruleResolver);
+    resolver = new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
 
     a = ruleResolver.requireRule(aNode.getBuildTarget());
     b = ruleResolver.requireRule(bNode.getBuildTarget());

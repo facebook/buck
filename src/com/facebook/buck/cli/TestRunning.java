@@ -36,6 +36,7 @@ import com.facebook.buck.rules.BuildRuleSuccessType;
 import com.facebook.buck.rules.IndividualTestEvent;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.rules.TestStatusMessageEvent;
@@ -127,7 +128,8 @@ public class TestRunning {
       ListeningExecutorService service,
       BuildEngine buildEngine,
       final StepRunner stepRunner,
-      SourcePathResolver sourcePathResolver)
+      SourcePathResolver sourcePathResolver,
+      SourcePathRuleFinder ruleFinder)
       throws IOException, ExecutionException, InterruptedException {
 
     ImmutableSet<JavaLibrary> rulesUnderTestForCoverage;
@@ -439,6 +441,7 @@ public class TestRunning {
                     .getJavaRuntimeLauncher(),
                 params.getCell().getFilesystem(),
                 sourcePathResolver,
+                ruleFinder,
                 JacocoConstants.getJacocoOutputDir(params.getCell().getFilesystem()),
                 options.getCoverageReportFormat(),
                 options.getCoverageReportTitle(),
@@ -772,6 +775,7 @@ public class TestRunning {
       JavaRuntimeLauncher javaRuntimeLauncher,
       ProjectFilesystem filesystem,
       SourcePathResolver sourcePathResolver,
+      SourcePathRuleFinder ruleFinder,
       Path outputDirectory,
       CoverageReportFormat format,
       String title,
@@ -783,7 +787,7 @@ public class TestRunning {
     // Add all source directories of java libraries that we are testing to -sourcepath.
     for (JavaLibrary rule : rulesUnderTest) {
       ImmutableSet<String> sourceFolderPath =
-          getPathToSourceFolders(rule, sourcePathResolver, defaultJavaPackageFinder);
+          getPathToSourceFolders(rule, sourcePathResolver, ruleFinder, defaultJavaPackageFinder);
       if (!sourceFolderPath.isEmpty()) {
         srcDirectories.addAll(sourceFolderPath);
       }
@@ -813,6 +817,7 @@ public class TestRunning {
   static ImmutableSet<String> getPathToSourceFolders(
       JavaLibrary rule,
       SourcePathResolver sourcePathResolver,
+      SourcePathRuleFinder ruleFinder,
       DefaultJavaPackageFinder defaultJavaPackageFinder) {
     ImmutableSet<SourcePath> javaSrcs = rule.getJavaSrcs();
 
@@ -826,7 +831,7 @@ public class TestRunning {
     Set<String> srcFolders = Sets.newHashSet();
     loopThroughSourcePath:
     for (SourcePath javaSrcPath : javaSrcs) {
-      if (sourcePathResolver.getRule(javaSrcPath).isPresent()) {
+      if (ruleFinder.getRule(javaSrcPath).isPresent()) {
         continue;
       }
 

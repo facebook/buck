@@ -20,7 +20,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -73,8 +73,8 @@ abstract class AbstractHaskellPackage implements RuleKeyAppendable {
   /**
    * @return all dependencies required to use this package at build time.
    */
-  public final Stream<BuildRule> getDeps(SourcePathResolver pathResolver) {
+  public final Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.of(ImmutableList.of(getPackageDb()), getLibraries(), getInterfaces())
-        .flatMap(input -> pathResolver.filterBuildRuleInputs(input).stream());
+        .flatMap(input -> ruleFinder.filterBuildRuleInputs(input).stream());
   }
 }

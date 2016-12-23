@@ -27,6 +27,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.HumanReadableException;
@@ -58,10 +59,10 @@ public class NativeLinkablesTest {
         BuildRule... ruleDeps) {
       super(
           BuildTargetFactory.newInstance(target),
-          new SourcePathResolver(
+          new SourcePathResolver(new SourcePathRuleFinder(
               new BuildRuleResolver(
                   TargetGraph.EMPTY,
-                  new DefaultTargetNodeToBuildRuleTransformer())),
+                  new DefaultTargetNodeToBuildRuleTransformer()))),
           ImmutableSortedSet.copyOf(ruleDeps));
       this.deps = ImmutableList.copyOf(deps);
       this.exportedDeps = ImmutableList.copyOf(exportedDeps);
@@ -263,7 +264,7 @@ public class NativeLinkablesTest {
   public void nonNativeLinkableDepsAreIgnored() {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     FakeNativeLinkable c =
         new FakeNativeLinkable(
             "//:c",

@@ -47,6 +47,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
 
   private static final Logger logger = Logger.get(RuleKeyBuilder.class);
 
+  private final SourcePathRuleFinder ruleFinder;
   private final SourcePathResolver resolver;
   private final Hasher hasher;
   private final FileHashLoader hashLoader;
@@ -62,9 +63,11 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   private Stack<String> keyStack;
 
   public RuleKeyBuilder(
+      SourcePathRuleFinder ruleFinder,
       SourcePathResolver resolver,
       FileHashLoader hashLoader,
       RuleKeyLogger ruleKeyLogger) {
+    this.ruleFinder = ruleFinder;
     this.resolver = resolver;
     this.hasher = Hashing.sha1().newHasher();
     this.hashLoader = hashLoader;
@@ -73,9 +76,11 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
   }
 
   public RuleKeyBuilder(
+      SourcePathRuleFinder ruleFinder,
       SourcePathResolver resolver,
       FileHashLoader hashLoader) {
     this(
+        ruleFinder,
         resolver,
         hashLoader,
         logger.isVerboseEnabled() ?
@@ -149,7 +154,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
     }
 
     if (sourcePath instanceof BuildTargetSourcePath) {
-      BuildRule buildRule = resolver.getRuleOrThrow((BuildTargetSourcePath) sourcePath);
+      BuildRule buildRule = ruleFinder.getRuleOrThrow((BuildTargetSourcePath) sourcePath);
       feed(sourcePath.toString());
       return setBuildRule(buildRule);
     }

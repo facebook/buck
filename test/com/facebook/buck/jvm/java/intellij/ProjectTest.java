@@ -53,6 +53,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.ProjectConfigBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.step.ExecutionContext;
@@ -852,7 +853,7 @@ public class ProjectTest {
 
     ImmutableMap<Path, String> basePathToAliasMap = ImmutableMap.of();
     Project project = new Project(
-        new SourcePathResolver(ruleResolver),
+        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)),
         projectConfigs,
         basePathToAliasMap,
         javaPackageFinder,
@@ -930,9 +931,9 @@ public class ProjectTest {
 
   @Test
   public void testDoNotIgnoreAllOfBuckOut() {
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+     ));
     ProjectFilesystem projectFilesystem =
         FakeProjectFilesystem.createJavaOnlyFilesystem("/opt/src/buck");
 

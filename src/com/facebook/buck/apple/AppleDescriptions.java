@@ -45,6 +45,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
@@ -501,7 +502,7 @@ public class AppleDescriptions {
                     unstrippedBinaryRule,
                     appleDsym)),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
-        new SourcePathResolver(resolver),
+        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         buildRuleForDebugFormat);
     return rule;
   }
@@ -562,7 +563,7 @@ public class AppleDescriptions {
                     .addAll(unstrippedBinaryBuildRule.getStaticLibraryDeps())
                     .build()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
-        new SourcePathResolver(resolver),
+        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         appleCxxPlatform.getDsymutil(),
         appleCxxPlatform.getLldb(),
         new BuildTargetSourcePath(unstrippedBinaryBuildRule.getBuildTarget()),
@@ -631,7 +632,8 @@ public class AppleDescriptions {
     }
     ImmutableSet<SourcePath> frameworks = frameworksBuilder.build();
 
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
     BuildRuleParams paramsWithoutBundleSpecificFlavors = stripBundleSpecificFlavors(params);
 
     Optional<AppleAssetCatalog> assetCatalog =

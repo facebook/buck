@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -50,7 +51,7 @@ public class XcodeWorkspaceConfigDescription
       final BuildRuleParams params,
       final BuildRuleResolver resolver,
       A args) {
-    return new NoopBuildRule(params, new SourcePathResolver(resolver));
+    return new NoopBuildRule(params, new SourcePathResolver(new SourcePathRuleFinder(resolver)));
   }
 
   public static String getWorkspaceNameFromArg(Arg arg) {

@@ -24,6 +24,7 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.TestResultSummary;
@@ -70,12 +71,14 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
 
   private static final Pattern ERROR = Pattern.compile("^.*\\(\\d+\\): error .*");
 
+  private final SourcePathRuleFinder ruleFinder;
   private final BuildRule binary;
   private final Tool executable;
 
   public CxxBoostTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       BuildRule binary,
       Tool executable,
       Supplier<ImmutableMap<String, String>> env,
@@ -98,6 +101,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         contacts,
         runTestSeparately,
         testRuleTimeoutMs);
+    this.ruleFinder = ruleFinder;
     this.binary = binary;
     this.executable = executable;
   }
@@ -238,7 +242,7 @@ public class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(super.getRuntimeDeps())
-        .addAll(executable.getDeps(getResolver()))
+        .addAll(executable.getDeps(ruleFinder))
         .build();
   }
 

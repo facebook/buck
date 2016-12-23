@@ -141,7 +141,7 @@ public class TargetNodeTest {
         BuildRuleParams params,
         BuildRuleResolver resolver,
         A args) {
-      return new FakeBuildRule(params, new SourcePathResolver(resolver));
+      return new FakeBuildRule(params, new SourcePathResolver(new SourcePathRuleFinder(resolver)));
     }
   }
 

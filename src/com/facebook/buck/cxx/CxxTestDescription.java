@@ -31,6 +31,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
@@ -103,7 +104,8 @@ public class CxxTestDescription implements
 
     Optional<CxxPlatform> platform = cxxPlatforms.getValue(params.getBuildTarget());
     CxxPlatform cxxPlatform = platform.orElse(defaultCxxPlatform);
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     if (params.getBuildTarget().getFlavors()
           .contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
@@ -111,6 +113,7 @@ public class CxxTestDescription implements
           params,
           resolver,
           pathResolver,
+          ruleFinder,
           cxxBuckConfig,
           cxxPlatform,
           args);
@@ -149,7 +152,7 @@ public class CxxTestDescription implements
     // Construct the actual build params we'll use, notably with an added dependency on the
     // CxxLink rule above which builds the test binary.
     BuildRuleParams testParams =
-        params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(pathResolver));
+        params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder));
     testParams = CxxStrip.restoreStripStyleFlavorInParams(
         testParams,
         flavoredStripStyle);
@@ -219,6 +222,7 @@ public class CxxTestDescription implements
         test = new CxxGtestTest(
             testParams,
             pathResolver,
+            ruleFinder,
             cxxLinkAndCompileRules.getBinaryRule(),
             cxxLinkAndCompileRules.executable,
             testEnv,
@@ -238,6 +242,7 @@ public class CxxTestDescription implements
         test = new CxxBoostTest(
             testParams,
             pathResolver,
+            ruleFinder,
             cxxLinkAndCompileRules.getBinaryRule(),
             cxxLinkAndCompileRules.executable,
             testEnv,

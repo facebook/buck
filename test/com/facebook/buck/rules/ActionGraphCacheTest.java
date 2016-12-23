@@ -252,9 +252,10 @@ public class ActionGraphCacheTest {
   private Map<BuildRule, RuleKey> getRuleKeysFromBuildRules(
       Iterable<BuildRule> buildRules,
       BuildRuleResolver buildRuleResolver) {
-    SourcePathResolver pathResolver = new SourcePathResolver(buildRuleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     ContentAgnosticRuleKeyFactory factory =
-        new ContentAgnosticRuleKeyFactory(0, pathResolver);
+        new ContentAgnosticRuleKeyFactory(0, pathResolver, ruleFinder);
 
     HashMap<BuildRule, RuleKey> ruleKeysMap = new HashMap<>();
 

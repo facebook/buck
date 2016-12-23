@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.google.common.collect.ImmutableList;
@@ -42,11 +43,11 @@ public class PythonUtilTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ImmutableMap<Path, SourcePath> srcs = PythonUtil.toModuleMap(
         target,
-        new SourcePathResolver(
+        new SourcePathResolver(new SourcePathRuleFinder(
             new BuildRuleResolver(
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
-        ),
+        )),
         "srcs",
         target.getBasePath(),
         ImmutableList.of(

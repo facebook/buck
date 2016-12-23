@@ -44,10 +44,11 @@ public class FakeInputBasedRuleKeyFactory
   }
 
   private RuleKeyBuilder<Optional<RuleKey>> newInstance(final BuildRule buildRule) {
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
-    return new RuleKeyBuilder<Optional<RuleKey>>(resolver, fileHashCache) {
+    );
+    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    return new RuleKeyBuilder<Optional<RuleKey>>(ruleFinder, resolver, fileHashCache) {
 
       @Override
       protected RuleKeyBuilder<Optional<RuleKey>> setBuildRule(BuildRule rule) {

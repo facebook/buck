@@ -36,6 +36,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -127,13 +128,15 @@ abstract class DDescriptionUtils {
       throws NoSuchBuildTargetException {
 
     BuildTarget buildTarget = params.getBuildTarget();
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
 
     ImmutableList<SourcePath> sourcePaths =
         sourcePathsForCompiledSources(
             params,
             buildRuleResolver,
             sourcePathResolver,
+            ruleFinder,
             cxxPlatform,
             dBuckConfig,
             compilerFlags,
@@ -148,6 +151,7 @@ abstract class DDescriptionUtils {
         params,
         buildRuleResolver,
         sourcePathResolver,
+        ruleFinder,
         buildTarget,
         Linker.LinkType.EXECUTABLE,
         Optional.empty(),
@@ -231,6 +235,7 @@ abstract class DDescriptionUtils {
       BuildRuleParams baseParams,
       BuildRuleResolver buildRuleResolver,
       SourcePathResolver sourcePathResolver,
+      SourcePathRuleFinder ruleFinder,
       DBuckConfig dBuckConfig,
       ImmutableList<String> compilerFlags,
       String name,
@@ -251,10 +256,10 @@ abstract class DDescriptionUtils {
       }
 
       ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
-      depsBuilder.addAll(compiler.getDeps(sourcePathResolver));
-      depsBuilder.addAll(sourcePathResolver.filterBuildRuleInputs(src));
+      depsBuilder.addAll(compiler.getDeps(ruleFinder));
+      depsBuilder.addAll(ruleFinder.filterBuildRuleInputs(src));
       for (DIncludes dIncludes : transitiveIncludes.values()) {
-        depsBuilder.addAll(dIncludes.getDeps(sourcePathResolver));
+        depsBuilder.addAll(dIncludes.getDeps(ruleFinder));
       }
       ImmutableSortedSet<BuildRule> deps = depsBuilder.build();
 
@@ -292,6 +297,7 @@ abstract class DDescriptionUtils {
       BuildRuleParams baseParams,
       BuildRuleResolver buildRuleResolver,
       SourcePathResolver sourcePathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       DBuckConfig dBuckConfig,
       ImmutableList<String> compilerFlags,
@@ -311,6 +317,7 @@ abstract class DDescriptionUtils {
           baseParams,
           buildRuleResolver,
           sourcePathResolver,
+          ruleFinder,
           dBuckConfig,
           compilerFlags,
           source.getKey(),

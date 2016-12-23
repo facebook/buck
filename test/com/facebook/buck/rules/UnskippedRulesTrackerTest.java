@@ -48,9 +48,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class UnskippedRulesTrackerTest {
 
   private static final SourcePathResolver sourcePathResolver = new SourcePathResolver(
-      new BuildRuleResolver(
-          TargetGraph.EMPTY,
-          new DefaultTargetNodeToBuildRuleTransformer()));
+      new SourcePathRuleFinder(
+          new BuildRuleResolver(
+              TargetGraph.EMPTY,
+              new DefaultTargetNodeToBuildRuleTransformer())));
 
   private UnskippedRulesTracker unskippedRulesTracker;
   private BuckEventBus eventBus;

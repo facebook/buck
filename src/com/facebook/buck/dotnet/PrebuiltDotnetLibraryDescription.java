@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 
@@ -40,7 +41,8 @@ public class PrebuiltDotnetLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) {
-    return new PrebuiltDotnetLibrary(params, new SourcePathResolver(resolver), args.assembly);
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    return new PrebuiltDotnetLibrary(params, pathResolver, args.assembly);
   }
 
   @SuppressFieldNotInitialized

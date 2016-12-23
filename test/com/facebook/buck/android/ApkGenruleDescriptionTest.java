@@ -29,6 +29,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeTargetNodeBuilder;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -46,9 +47,10 @@ public class ApkGenruleDescriptionTest {
   public void testClasspathTransitiveDepsBecomeFirstOrderDeps() throws Exception {
     SourcePathResolver emptyPathResolver =
         new SourcePathResolver(
-            new BuildRuleResolver(
-                TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer()));
+            new SourcePathRuleFinder(
+                new BuildRuleResolver(
+                    TargetGraph.EMPTY,
+                    new DefaultTargetNodeToBuildRuleTransformer())));
 
     BuildTarget installableApkTarget = BuildTargetFactory.newInstance("//:installable");
     TargetNode<?, ?> installableApkNode =

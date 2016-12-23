@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.Step;
@@ -48,6 +49,7 @@ import java.util.SortedSet;
  */
 public class MultiarchFile extends AbstractBuildRule implements ProvidesLinkedBinaryDeps {
 
+  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey
   private final Tool lipo;
 
@@ -60,10 +62,12 @@ public class MultiarchFile extends AbstractBuildRule implements ProvidesLinkedBi
   public MultiarchFile(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       Tool lipo,
       SortedSet<SourcePath> thinBinaries,
       Path output) {
     super(buildRuleParams, resolver);
+    this.ruleFinder = ruleFinder;
     this.lipo = lipo;
     this.thinBinaries = ImmutableSortedSet.copyOf(thinBinaries);
     this.output = output;
@@ -89,7 +93,7 @@ public class MultiarchFile extends AbstractBuildRule implements ProvidesLinkedBi
     steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), linkMapDir));
 
     for (SourcePath thinBinary : thinBinaries) {
-      Optional<BuildRule> maybeRule = getResolver().getRule(thinBinary);
+      Optional<BuildRule> maybeRule = ruleFinder.getRule(thinBinary);
       if (maybeRule.isPresent()) {
         BuildRule rule = maybeRule.get();
         if (rule instanceof CxxBinary) {

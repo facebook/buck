@@ -50,10 +50,11 @@ public class FakeRuleKeyFactory
   }
 
   private RuleKeyBuilder<RuleKey> newInstance(final BuildRule buildRule) {
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
-    return new UncachedRuleKeyBuilder(resolver, fileHashCache, this) {
+    );
+    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
+    return new UncachedRuleKeyBuilder(ruleFinder, resolver, fileHashCache, this) {
 
       @Override
       public RuleKeyBuilder<RuleKey> setReflectively(String key, @Nullable Object val) {

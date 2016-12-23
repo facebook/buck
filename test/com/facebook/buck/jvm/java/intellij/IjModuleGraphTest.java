@@ -39,6 +39,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -790,9 +791,9 @@ public class IjModuleGraphTest {
       final ImmutableMap<TargetNode<?, ?>, Path> javaLibraryPaths,
       final Function<? super TargetNode<?, ?>, Optional<Path>> rDotJavaClassPathResolver,
       AggregationMode aggregationMode) {
-    final SourcePathResolver sourcePathResolver = new SourcePathResolver(
+    final SourcePathResolver sourcePathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    ));
     IjLibraryFactoryResolver sourceOnlyResolver =
         new IjLibraryFactoryResolver() {
           @Override

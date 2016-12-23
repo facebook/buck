@@ -30,6 +30,7 @@ import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
@@ -65,10 +66,12 @@ public class PythonTest
   private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
   private final ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage;
+  private final SourcePathRuleFinder ruleFinder;
 
   public PythonTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       final Supplier<ImmutableMap<String, String>> env,
       final PythonBinary binary,
       ImmutableSet<Label> labels,
@@ -77,6 +80,7 @@ public class PythonTest
       ImmutableSet<String> contacts) {
 
     super(params, resolver);
+    this.ruleFinder = ruleFinder;
 
     this.env = Suppliers.memoize(
         () -> {
@@ -184,7 +188,7 @@ public class PythonTest
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(binary.getExecutableCommand().getDeps(getResolver()))
+        .addAll(binary.getExecutableCommand().getDeps(ruleFinder))
         .addAll(getDeclaredDeps())
         .build();
   }

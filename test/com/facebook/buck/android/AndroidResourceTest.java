@@ -33,6 +33,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
@@ -56,15 +57,17 @@ public class AndroidResourceTest {
   @Test
   public void testRuleKeyForDifferentInputFilenames() throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/src/com/facebook/base:res");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
 
     AndroidResource androidResource1 = AndroidResourceRuleBuilder.newBuilder()
         .setResolver(pathResolver)
+        .setRuleFinder(ruleFinder)
         .setBuildRuleParams(params)
         .setRes(new FakeSourcePath("java/src/com/facebook/base/res"))
         .setResSrcs(
@@ -87,6 +90,7 @@ public class AndroidResourceTest {
 
     AndroidResource androidResource2 = AndroidResourceRuleBuilder.newBuilder()
         .setResolver(pathResolver)
+        .setRuleFinder(ruleFinder)
         .setBuildRuleParams(params)
         .setRes(new FakeSourcePath("java/src/com/facebook/base/res"))
         .setResSrcs(
@@ -115,10 +119,10 @@ public class AndroidResourceTest {
             "java/src/com/facebook/base/res/drawable/A.xml", "dddddddddd",
             "java/src/com/facebook/base/res/drawable/C.xml", "eeeeeeeeee"
         ));
-    RuleKey ruleKey1 = new DefaultRuleKeyFactory(0, hashCache, pathResolver).build(
-        androidResource1);
-    RuleKey ruleKey2 = new DefaultRuleKeyFactory(0, hashCache, pathResolver).build(
-        androidResource2);
+    RuleKey ruleKey1 = new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        .build(androidResource1);
+    RuleKey ruleKey2 = new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder)
+        .build(androidResource2);
 
     assertNotEquals(
         "The two android_resource rules should have different rule keys.",
@@ -135,14 +139,16 @@ public class AndroidResourceTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
         .setProjectFilesystem(projectFilesystem)
         .build();
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(
             TargetGraph.EMPTY,
             new DefaultTargetNodeToBuildRuleTransformer())
     );
+    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
     AndroidResource androidResource = new AndroidResource(
         params,
         resolver,
+        ruleFinder,
         /* deps */ ImmutableSortedSet.of(),
         new FakeSourcePath("foo/res"),
         ImmutableSortedSet.of((SourcePath) new FakeSourcePath("foo/res/values/strings.xml")),
@@ -170,14 +176,16 @@ public class AndroidResourceTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
         .setProjectFilesystem(projectFilesystem)
         .build();
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(
             TargetGraph.EMPTY,
             new DefaultTargetNodeToBuildRuleTransformer())
     );
+    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
     AndroidResource androidResource = new AndroidResource(
         params,
         resolver,
+        ruleFinder,
         /* deps */ ImmutableSortedSet.of(),
         new FakeSourcePath("foo/res"),
         ImmutableSortedSet.of((SourcePath) new FakeSourcePath("foo/res/values/strings.xml")),
@@ -202,7 +210,8 @@ public class AndroidResourceTest {
   public void testInputRuleKeyChangesIfDependencySymbolsChanges() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     FileHashCache fileHashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
     AndroidResource dep =
@@ -223,7 +232,8 @@ public class AndroidResourceTest {
     RuleKey original = new InputBasedRuleKeyFactory(
         0,
         fileHashCache,
-        pathResolver)
+        pathResolver,
+        ruleFinder)
         .build(resource).get();
 
     fileHashCache.invalidateAll();
@@ -234,7 +244,8 @@ public class AndroidResourceTest {
     RuleKey changed = new InputBasedRuleKeyFactory(
         0,
         fileHashCache,
-        pathResolver)
+        pathResolver,
+        ruleFinder)
         .build(resource).get();
 
     assertThat(original, Matchers.not(Matchers.equalTo(changed)));

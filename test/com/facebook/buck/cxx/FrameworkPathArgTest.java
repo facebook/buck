@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -55,7 +56,8 @@ public class FrameworkPathArgTest {
     BuildRuleResolver ruleResolver = new BuildRuleResolver(
         TargetGraph.EMPTY,
         new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
 
     BuildTarget genruleTarget = BuildTargetFactory.newInstance("//:genrule");
     BuildRule genrule = GenruleBuilder
@@ -69,7 +71,7 @@ public class FrameworkPathArgTest {
     FrameworkPathArg sourcePathFrameworkPathArg =
         new TestFrameworkPathArg(resolver, sourcePathFrameworkPath);
     assertThat(
-        sourcePathFrameworkPathArg.getDeps(resolver),
+        sourcePathFrameworkPathArg.getDeps(ruleFinder),
         Matchers.contains(genrule));
   }
 }

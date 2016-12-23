@@ -35,8 +35,8 @@ public class LazyDelegatingTool implements Tool {
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-    return delegate.get().getDeps(resolver);
+  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return delegate.get().getDeps(ruleFinder);
   }
 
   @Override

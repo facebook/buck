@@ -24,7 +24,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.OptionalCompat;
 import com.google.common.collect.ImmutableList;
@@ -61,7 +61,7 @@ public class ScalaAndroidLibraryCompiler extends AndroidLibraryCompiler {
   public Iterable<BuildRule> getExtraDeps(
       AndroidLibraryDescription.Arg arg,
       BuildRuleResolver resolver) {
-    return getScalac(resolver).getDeps(new SourcePathResolver(resolver));
+    return getScalac(resolver).getDeps(new SourcePathRuleFinder(resolver));
   }
 
   @Override

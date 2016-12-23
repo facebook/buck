@@ -36,6 +36,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -74,11 +75,11 @@ public class GenAidlTest {
         .build();
     GenAidl genAidlRule = new GenAidl(
         params,
-        new SourcePathResolver(
+        new SourcePathResolver(new SourcePathRuleFinder(
             new BuildRuleResolver(
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
-        ),
+        )),
         pathToAidl,
         importPath);
 

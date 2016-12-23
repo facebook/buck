@@ -39,6 +39,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.OptionalCompat;
@@ -83,7 +84,8 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
       final BuildRuleParams rawParams,
       final BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     if (rawParams.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
       BuildTarget testTarget = rawParams.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
@@ -91,6 +93,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
       return CalculateAbi.of(
           rawParams.getBuildTarget(),
           pathResolver,
+          ruleFinder,
           rawParams,
           new BuildTargetSourcePath(testTarget));
     }
@@ -110,6 +113,7 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
             args.cxxLibraryWhitelist,
             resolver,
             pathResolver,
+            ruleFinder,
             cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
 
@@ -124,13 +128,14 @@ public class ScalaTestDescription implements Description<ScalaTestDescription.Ar
                     Iterables.concat(
                         params.getDeclaredDeps().get(),
                         resolver.getAllRules(args.providedDeps))),
-                scalac.getDeps(pathResolver)))
+                scalac.getDeps(ruleFinder)))
             .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
     JavaLibrary testsLibrary =
         resolver.addToIndex(
             new DefaultJavaLibrary(
                 javaLibraryParams,
                 pathResolver,
+                ruleFinder,
                 args.srcs,
                 ResourceValidator.validateResources(
                     pathResolver,

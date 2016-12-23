@@ -32,6 +32,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.versions.VersionPropagator;
@@ -80,7 +81,7 @@ public class RustLibraryDescription implements
 
     return new RustLibrary(
         params,
-        new SourcePathResolver(resolver),
+        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         args.crate.orElse(ruleToCrateName(params.getBuildTarget().getShortName())),
         args.crateRoot,
         ImmutableSortedSet.copyOf(args.srcs),

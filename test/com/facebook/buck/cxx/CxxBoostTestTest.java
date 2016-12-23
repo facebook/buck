@@ -26,6 +26,7 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.test.TestResultSummary;
@@ -73,13 +74,15 @@ public class CxxBoostTestTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     CxxBoostTest test =
         new CxxBoostTest(
             new FakeBuildRuleParamsBuilder(target)
                 .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot()))
                 .build(),
             pathResolver,
+            ruleFinder,
             new CxxLink(
                 new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:link")).build(),
                 pathResolver,

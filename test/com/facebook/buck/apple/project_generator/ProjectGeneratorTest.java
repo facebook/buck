@@ -102,6 +102,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -4455,10 +4456,10 @@ public class ProjectGeneratorTest {
 
   private Function<TargetNode<?, ?>, SourcePathResolver> getSourcePathResolverForNodeFunction(
       final TargetGraph targetGraph) {
-    return input -> new SourcePathResolver(
+    return input -> new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(
             targetGraph,
-            new DefaultTargetNodeToBuildRuleTransformer()));
+            new DefaultTargetNodeToBuildRuleTransformer())));
   }
 
   private Function<TargetNode<?, ?>, SourcePathResolver>
@@ -4471,7 +4472,7 @@ public class ProjectGeneratorTest {
       ruleResolver.requireRule(node.getBuildTarget());
       ruleResolver.requireRule(node.getBuildTarget().withFlavors());
     }
-    return input -> new SourcePathResolver(ruleResolver);
+    return input -> new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
   }
 
   private ImmutableSet<TargetNode<?, ?>> setupSimpleLibraryWithResources(

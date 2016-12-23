@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DependencyAggregation;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.MoreCollectors;
@@ -76,6 +77,8 @@ abstract class AbstractCxxSourceRuleFactory {
   @Value.Parameter
   public abstract SourcePathResolver getPathResolver();
   @Value.Parameter
+  public abstract SourcePathRuleFinder getRuleFinder();
+  @Value.Parameter
   public abstract CxxBuckConfig getCxxBuckConfig();
   @Value.Parameter
   public abstract CxxPlatform getCxxPlatform();
@@ -93,15 +96,15 @@ abstract class AbstractCxxSourceRuleFactory {
   private ImmutableSortedSet<BuildRule> getPreprocessDeps() {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
     for (CxxPreprocessorInput input : getCxxPreprocessorInput()) {
-      builder.addAll(input.getDeps(getResolver(), getPathResolver()));
+      builder.addAll(input.getDeps(getResolver(), getRuleFinder()));
     }
     if (getPrefixHeader().isPresent()) {
-      builder.addAll(getPathResolver().filterBuildRuleInputs(getPrefixHeader().get()));
+      builder.addAll(getRuleFinder().filterBuildRuleInputs(getPrefixHeader().get()));
     }
     if (getSandboxTree().isPresent()) {
       SymlinkTree tree = getSandboxTree().get();
       builder.add(tree);
-      builder.addAll(getPathResolver().filterBuildRuleInputs(tree.getLinks().values()));
+      builder.addAll(getRuleFinder().filterBuildRuleInputs(tree.getLinks().values()));
     }
     return builder.build();
   }
@@ -281,7 +284,7 @@ abstract class AbstractCxxSourceRuleFactory {
     Preconditions.checkArgument(CxxSourceTypes.isCompilableType(source.getType()));
 
     BuildTarget target = createCompileBuildTarget(name);
-    DepsBuilder depsBuilder = new DepsBuilder(getPathResolver());
+    DepsBuilder depsBuilder = new DepsBuilder(getRuleFinder());
 
     Compiler compiler =
         CxxSourceTypes.getCompiler(getCxxPlatform(), source.getType())
@@ -403,7 +406,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
     LOG.verbose("Creating preprocessed InferCapture build rule %s for %s", target, source);
 
-    DepsBuilder depsBuilder = new DepsBuilder(getPathResolver());
+    DepsBuilder depsBuilder = new DepsBuilder(getRuleFinder());
     depsBuilder.add(requireAggregatedPreprocessDepsRule());
 
     PreprocessorDelegateCacheValue preprocessorDelegateValue = preprocessorDelegates.getUnchecked(
@@ -450,7 +453,7 @@ abstract class AbstractCxxSourceRuleFactory {
     LOG.verbose("Creating preprocess and compile %s for %s", target, source);
     Preconditions.checkArgument(CxxSourceTypes.isPreprocessableType(source.getType()));
 
-    DepsBuilder depsBuilder = new DepsBuilder(getPathResolver());
+    DepsBuilder depsBuilder = new DepsBuilder(getRuleFinder());
     depsBuilder.add(requireAggregatedPreprocessDepsRule());
 
     CompilerDelegate compilerDelegate =
@@ -566,7 +569,7 @@ abstract class AbstractCxxSourceRuleFactory {
     // our case we'll only have the ".gch" file, which is alright; the ".h" isn't truly needed.
     Path output = BuildTargets.getGenPath(getParams().getProjectFilesystem(), target, "%s.h.gch");
 
-    DepsBuilder depsBuilder = new DepsBuilder(getPathResolver());
+    DepsBuilder depsBuilder = new DepsBuilder(getRuleFinder());
     depsBuilder.add(requireAggregatedPreprocessDepsRule());
 
     PreprocessorDelegate preprocessorDelegate =
@@ -704,6 +707,7 @@ abstract class AbstractCxxSourceRuleFactory {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput,
@@ -716,6 +720,7 @@ abstract class AbstractCxxSourceRuleFactory {
         params,
         resolver,
         pathResolver,
+        ruleFinder,
         cxxBuckConfig,
         cxxPlatform,
         cxxPreprocessorInput,

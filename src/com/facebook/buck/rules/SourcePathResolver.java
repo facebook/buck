@@ -40,10 +40,10 @@ import java.util.Optional;
 
 public class SourcePathResolver {
 
-  private final BuildRuleResolver ruleResolver;
+  private final SourcePathRuleFinder ruleFinder;
 
-  public SourcePathResolver(BuildRuleResolver ruleResolver) {
-    this.ruleResolver = ruleResolver;
+  public SourcePathResolver(SourcePathRuleFinder ruleFinder) {
+    this.ruleFinder = ruleFinder;
   }
 
   public <T> ImmutableMap<T, Path> getMappedPaths(Map<T, SourcePath> sourcePathMap) {
@@ -62,7 +62,8 @@ public class SourcePathResolver {
       return ((PathSourcePath) sourcePath).getFilesystem();
     }
     if (sourcePath instanceof BuildTargetSourcePath) {
-      return getRuleOrThrow((BuildTargetSourcePath) sourcePath).getProjectFilesystem();
+      return ruleFinder.getRuleOrThrow((BuildTargetSourcePath) sourcePath)
+          .getProjectFilesystem();
     }
     throw new IllegalStateException();
   }
@@ -82,7 +83,7 @@ public class SourcePathResolver {
       return relative;
     }
 
-    Optional<BuildRule> rule = getRule(sourcePath);
+    Optional<BuildRule> rule = ruleFinder.getRule(sourcePath);
     if (rule.isPresent()) {
       return rule.get().getProjectFilesystem().resolve(relative);
     }
@@ -156,7 +157,7 @@ public class SourcePathResolver {
     if (resolvedPath.isPresent()) {
       toReturn = resolvedPath.get();
     } else {
-      toReturn = ruleResolver.getRule(buildTargetSourcePath.getTarget()).getPathToOutput();
+      toReturn = ruleFinder.getRuleOrThrow(buildTargetSourcePath).getPathToOutput();
     }
 
     if (toReturn == null) {
@@ -166,26 +167,6 @@ public class SourcePathResolver {
     }
 
     return toReturn;
-  }
-
-  /**
-   * @return An {@link Optional} containing the {@link BuildRule} whose output {@code sourcePath}
-   *         refers to, or {@code absent} if {@code sourcePath} doesn't refer to the output of a
-   *         {@link BuildRule}.
-   */
-  public Optional<BuildRule> getRule(SourcePath sourcePath) {
-    if (sourcePath instanceof BuildTargetSourcePath) {
-      return Optional.of(getRuleOrThrow((BuildTargetSourcePath) sourcePath));
-    } else {
-      return Optional.empty();
-    }
-  }
-
-  /**
-   * @return The {@link BuildRule} whose output {@code sourcePath} refers to its output.
-   */
-  public BuildRule getRuleOrThrow(BuildTargetSourcePath sourcePath) {
-    return Preconditions.checkNotNull(ruleResolver.getRule(sourcePath.getTarget()));
   }
 
   /**
@@ -238,7 +219,7 @@ public class SourcePathResolver {
   }
 
   private String getNameForBuildTargetSourcePath(BuildTargetSourcePath sourcePath) {
-    BuildRule rule = ruleResolver.getRule(sourcePath.getTarget());
+    BuildRule rule = ruleFinder.getRuleOrThrow(sourcePath);
 
     // If this build rule implements `HasOutputName`, then return the output name
     // it provides.
@@ -286,18 +267,4 @@ public class SourcePathResolver {
   public ImmutableCollection<Path> filterInputsToCompareToOutput(SourcePath... sources) {
     return filterInputsToCompareToOutput(Arrays.asList(sources));
   }
-
-  public ImmutableCollection<BuildRule> filterBuildRuleInputs(
-      Iterable<? extends SourcePath> sources) {
-    return FluentIterable.from(sources)
-        .filter(BuildTargetSourcePath.class)
-        .transform(
-            input -> ruleResolver.getRule(input.getTarget()))
-        .toList();
-  }
-
-  public ImmutableCollection<BuildRule> filterBuildRuleInputs(SourcePath... sources) {
-    return filterBuildRuleInputs(Arrays.asList(sources));
-  }
-
 }

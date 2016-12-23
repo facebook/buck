@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -68,6 +69,7 @@ public class CxxLinkableEnhancer {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       final SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Path output,
       ImmutableList<Arg> args,
@@ -109,8 +111,8 @@ public class CxxLinkableEnhancer {
         params.copyWithChanges(
             target,
             () -> FluentIterable.from(allArgs)
-                .transformAndConcat(arg -> arg.getDeps(resolver))
-                .append(linker.getDeps(resolver))
+                .transformAndConcat(arg -> arg.getDeps(ruleFinder))
+                .append(linker.getDeps(ruleFinder))
                 .toSortedSet(Ordering.natural()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         resolver,
@@ -135,6 +137,7 @@ public class CxxLinkableEnhancer {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       final SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Linker.LinkType linkType,
       Optional<String> soname,
@@ -213,6 +216,7 @@ public class CxxLinkableEnhancer {
         params,
         ruleResolver,
         resolver,
+        ruleFinder,
         target,
         output,
         allArgs,
@@ -325,6 +329,7 @@ public class CxxLinkableEnhancer {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       final SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Path output,
       Optional<String> soname,
@@ -343,6 +348,7 @@ public class CxxLinkableEnhancer {
         params,
         ruleResolver,
         resolver,
+        ruleFinder,
         target,
         output,
         linkArgs,

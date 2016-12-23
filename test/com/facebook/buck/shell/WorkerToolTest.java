@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 
@@ -65,7 +66,7 @@ public class WorkerToolTest {
 
     BuildRule nonBinaryBuildRule = new FakeBuildRule(
         BuildTargetFactory.newInstance("//:fake"),
-        new SourcePathResolver(resolver));
+        new SourcePathResolver(new SourcePathRuleFinder(resolver)));
     resolver.addToIndex(nonBinaryBuildRule);
 
     BuildTarget workerTarget = BuildTargetFactory.newInstance("//:worker_rule");
@@ -85,7 +86,7 @@ public class WorkerToolTest {
   public void testArgsWithLocationMacroAffectDependenciesAndExpands() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
     BuildRule shBinaryRule = new ShBinaryBuilder(
         BuildTargetFactory.newInstance("//:my_exe"))

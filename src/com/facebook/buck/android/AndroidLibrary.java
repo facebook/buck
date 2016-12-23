@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -53,6 +54,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   public AndroidLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       Set<? extends SourcePath> srcs,
       Set<? extends SourcePath> resources,
       Optional<SourcePath> proguardConfig,
@@ -72,6 +74,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
     super(
         params,
         resolver,
+        ruleFinder,
         srcs,
         resources,
         javacOptions.getGeneratedSourceFolderName(),

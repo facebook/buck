@@ -28,8 +28,8 @@ import java.util.Map;
 public final class FakeSourcePathResolver extends SourcePathResolver {
   private Map<BuildTarget, BuildRule> knownRules = new HashMap<>();
 
-  public FakeSourcePathResolver(BuildRuleResolver ruleResolver) {
-    super(ruleResolver);
+  public FakeSourcePathResolver(SourcePathRuleFinder ruleFinder) {
+    super(ruleFinder);
   }
 
   public void addRule(BuildRule rule) {

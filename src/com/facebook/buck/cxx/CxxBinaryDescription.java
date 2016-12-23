@@ -32,6 +32,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.versions.VersionRoot;
@@ -78,14 +79,16 @@ public class CxxBinaryDescription implements
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       A args) {
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
         resolver,
-        new SourcePathResolver(resolver),
+        pathResolver,
         cxxPlatform,
         CxxDescriptionEnhancer.parseHeaders(
             params.getBuildTarget(),
-            new SourcePathResolver(resolver),
+            pathResolver,
             Optional.of(cxxPlatform),
             args),
         HeaderVisibility.PRIVATE,
@@ -141,7 +144,8 @@ public class CxxBinaryDescription implements
           args);
     }
 
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     if (flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       BuildRuleParams paramsWithoutFlavor =
@@ -254,9 +258,10 @@ public class CxxBinaryDescription implements
     params = CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle);
     params = LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode);
     CxxBinary cxxBinary = new CxxBinary(
-        params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(pathResolver)),
+        params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(ruleFinder)),
         resolver,
         pathResolver,
+        ruleFinder,
         cxxLinkAndCompileRules.getBinaryRule(),
         cxxLinkAndCompileRules.executable,
         args.frameworks,

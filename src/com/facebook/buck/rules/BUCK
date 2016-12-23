@@ -119,6 +119,7 @@ java_immutables_library(
     'RuleKeyObjectSink.java',
     'SourcePath.java',
     'SourcePathResolver.java',
+    'SourcePathRuleFinder.java',
     'SourcePaths.java',
     'SourceRoot.java',
     'TargetGraph.java',

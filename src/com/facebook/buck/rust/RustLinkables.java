@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.HasSourcePath;
 import com.facebook.buck.util.MoreCollectors;
@@ -117,14 +118,14 @@ public class RustLinkables {
 
   static BuildRuleParams addNativeDependencies(
       BuildRuleParams params,
-      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType linkStyle) {
     return params.appendExtraDeps(
         () -> {
           try {
             return getNativeArgs(params.getDeps(), linkStyle, cxxPlatform)
-                .flatMap(arg -> arg.getDeps(resolver).stream())
+                .flatMap(arg -> arg.getDeps(ruleFinder).stream())
                 .collect(MoreCollectors.toImmutableList());
           } catch (NoSuchBuildTargetException e) {
             throw new RuntimeException(e);

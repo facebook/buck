@@ -101,6 +101,7 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
   public static WriteStringTemplateRule from(
       BuildRuleParams baseParams,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Path output,
       SourcePath template,
@@ -110,7 +111,7 @@ public class WriteStringTemplateRule extends AbstractBuildRule {
         baseParams.copyWithChanges(
             target,
             Suppliers.ofInstance(
-                ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(template))),
+                ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(template))),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,
         output,

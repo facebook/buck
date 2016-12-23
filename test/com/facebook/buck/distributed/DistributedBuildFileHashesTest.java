@@ -43,6 +43,7 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
@@ -420,6 +421,7 @@ public class DistributedBuildFileHashesTest {
 
     protected final ActionGraph actionGraph;
     protected final BuildRuleResolver buildRuleResolver;
+    protected final SourcePathRuleFinder ruleFinder;
     protected final SourcePathResolver sourcePathResolver;
     protected final FakeIndexer cellIndexer;
     protected final DistBuildFileHashes distributedBuildFileHashes;
@@ -434,7 +436,8 @@ public class DistributedBuildFileHashesTest {
       buildRuleResolver = new BuildRuleResolver(
           TargetGraph.EMPTY,
           new DefaultTargetNodeToBuildRuleTransformer());
-      sourcePathResolver = new SourcePathResolver(buildRuleResolver);
+      ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+      sourcePathResolver = new SourcePathResolver(ruleFinder);
       setUpRules(buildRuleResolver, sourcePathResolver);
       actionGraph = new ActionGraph(buildRuleResolver.getBuildRules());
       cellIndexer = new FakeIndexer();
@@ -442,6 +445,7 @@ public class DistributedBuildFileHashesTest {
       distributedBuildFileHashes = new DistBuildFileHashes(
           actionGraph,
           sourcePathResolver,
+          ruleFinder,
           createFileHashCache(),
           cellIndexer,
           MoreExecutors.newDirectExecutorService(),

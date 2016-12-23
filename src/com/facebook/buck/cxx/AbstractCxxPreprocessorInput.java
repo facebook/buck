@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
@@ -70,17 +70,17 @@ abstract class AbstractCxxPreprocessorInput {
 
   public Iterable<BuildRule> getDeps(
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver) {
+      SourcePathRuleFinder ruleFinder) {
     ImmutableList.Builder<BuildRule> builder = ImmutableList.builder();
     for (CxxHeaders cxxHeaders : getIncludes()) {
-      builder.addAll(cxxHeaders.getDeps(pathResolver));
+      builder.addAll(cxxHeaders.getDeps(ruleFinder));
     }
     builder.addAll(ruleResolver.getAllRules(getRules()));
 
     for (FrameworkPath frameworkPath : getFrameworks()) {
       if (frameworkPath.getSourcePath().isPresent()) {
         Optional<BuildRule> frameworkRule =
-            pathResolver.getRule(frameworkPath.getSourcePath().get());
+            ruleFinder.getRule(frameworkPath.getSourcePath().get());
         if (frameworkRule.isPresent()) {
           builder.add(frameworkRule.get());
         }

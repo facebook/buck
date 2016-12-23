@@ -39,6 +39,7 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
@@ -148,6 +149,7 @@ public class PythonBinaryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       String mainModule,
@@ -189,6 +191,7 @@ public class PythonBinaryDescription implements
     return new PythonInPlaceBinary(
         params,
         pathResolver,
+        ruleFinder,
         resolver,
         pythonPlatform,
         cxxPlatform,
@@ -205,6 +208,7 @@ public class PythonBinaryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       String mainModule,
@@ -221,6 +225,7 @@ public class PythonBinaryDescription implements
             params,
             resolver,
             pathResolver,
+            ruleFinder,
             pythonPlatform,
             cxxPlatform,
             mainModule,
@@ -230,15 +235,16 @@ public class PythonBinaryDescription implements
 
       case STANDALONE:
         ImmutableSortedSet<BuildRule> componentDeps =
-            PythonUtil.getDepsFromComponents(pathResolver, components);
+            PythonUtil.getDepsFromComponents(ruleFinder, components);
         Tool pexTool = pythonBuckConfig.getPexTool(resolver);
         return new PythonPackagedBinary(
             params.appendExtraDeps(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(componentDeps)
-                    .addAll(pexTool.getDeps(pathResolver))
+                    .addAll(pexTool.getDeps(ruleFinder))
                     .build()),
             pathResolver,
+            ruleFinder,
             pythonPlatform,
             pexTool,
             buildArgs,
@@ -273,7 +279,8 @@ public class PythonBinaryDescription implements
 
     String mainModule;
     ImmutableMap.Builder<Path, SourcePath> modules = ImmutableMap.builder();
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     // If `main` is set, add it to the map of modules for this binary and also set it as the
     // `mainModule`, otherwise, use the explicitly set main module.
@@ -309,6 +316,7 @@ public class PythonBinaryDescription implements
             params,
             resolver,
             pathResolver,
+            ruleFinder,
             binaryPackageComponents,
             pythonPlatform,
             cxxBuckConfig,
@@ -326,6 +334,7 @@ public class PythonBinaryDescription implements
         params,
         resolver,
         pathResolver,
+        ruleFinder,
         pythonPlatform,
         cxxPlatform,
         mainModule,

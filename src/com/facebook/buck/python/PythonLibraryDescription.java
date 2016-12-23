@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -52,7 +53,7 @@ public class PythonLibraryDescription
       final BuildRuleParams params,
       BuildRuleResolver resolver,
       final A args) {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
     Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
         targetGraph.get(params.getBuildTarget()).getSelectedVersions();

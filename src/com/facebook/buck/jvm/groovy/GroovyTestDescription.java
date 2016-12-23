@@ -37,6 +37,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Suppliers;
@@ -78,7 +79,8 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     if (params.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
       BuildTarget testTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
@@ -86,6 +88,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
       return CalculateAbi.of(
           params.getBuildTarget(),
           pathResolver,
+          ruleFinder,
           params,
           new BuildTargetSourcePath(testTarget));
     }
@@ -97,7 +100,7 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
           defaultJavacOptions,
           params,
           resolver,
-          pathResolver,
+          ruleFinder,
           args
         )
         // groovyc may or may not play nice with generating ABIs from source, so disabling for now
@@ -114,14 +117,15 @@ public class GroovyTestDescription implements Description<GroovyTestDescription.
                     Iterables.concat(
                         params.getDeclaredDeps().get(),
                         resolver.getAllRules(args.providedDeps))),
-                pathResolver.filterBuildRuleInputs(
-                    defaultJavacOptions.getInputs(pathResolver))))
+                ruleFinder.filterBuildRuleInputs(
+                    defaultJavacOptions.getInputs(ruleFinder))))
             .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
     JavaLibrary testsLibrary =
         resolver.addToIndex(
             new DefaultJavaLibrary(
                 testsLibraryParams,
                 pathResolver,
+                ruleFinder,
                 args.srcs,
                 ResourceValidator.validateResources(
                     pathResolver,

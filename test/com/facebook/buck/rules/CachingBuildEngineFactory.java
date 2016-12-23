@@ -115,7 +115,7 @@ public class CachingBuildEngineFactory {
           depFiles,
           maxDepFileCacheEntries,
           artifactCacheSizeLimit,
-          new SourcePathResolver(buildRuleResolver),
+          new SourcePathResolver(new SourcePathRuleFinder(buildRuleResolver)),
           ruleKeyFactoriesFunction.get(),
           resourceAwareSchedulingInfo);
     }

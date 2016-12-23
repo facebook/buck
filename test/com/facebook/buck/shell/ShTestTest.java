@@ -29,6 +29,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -56,15 +57,17 @@ public class ShTestTest extends EasyMockSupport {
   public void testHasTestResultFiles() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
+        new BuildRuleResolver(
+            TargetGraph.EMPTY,
+            new DefaultTargetNodeToBuildRuleTransformer())
+    );
     ShTest shTest = new ShTest(
         new FakeBuildRuleParamsBuilder("//test/com/example:my_sh_test")
             .setProjectFilesystem(filesystem)
             .build(),
-        new SourcePathResolver(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        ),
+        new SourcePathResolver(ruleFinder),
+        ruleFinder,
         new FakeSourcePath("run_test.sh"),
         /* args */ ImmutableList.of(),
         /* env */ ImmutableMap.of(),
@@ -84,7 +87,8 @@ public class ShTestTest extends EasyMockSupport {
   public void depsAreRuntimeDeps() {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     BuildRule extraDep = new FakeBuildRule("//:extra_dep", pathResolver);
     BuildRule dep = new FakeBuildRule("//:dep", pathResolver);
@@ -95,11 +99,8 @@ public class ShTestTest extends EasyMockSupport {
             .setDeclaredDeps(ImmutableSortedSet.of(dep))
             .setExtraDeps(ImmutableSortedSet.of(extraDep))
             .build(),
-        new SourcePathResolver(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        ),
+        pathResolver,
+        ruleFinder,
         new FakeSourcePath("run_test.sh"),
         /* args */ ImmutableList.of(),
         /* env */ ImmutableMap.of(),

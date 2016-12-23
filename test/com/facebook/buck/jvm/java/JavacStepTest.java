@@ -28,6 +28,7 @@ import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
@@ -74,7 +75,8 @@ public class JavacStepTest {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
     ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     JavacOptions javacOptions = JavacOptions.builder()
         .setSourceLevel("8.0")
@@ -100,6 +102,7 @@ public class JavacStepTest {
         BuildTargetFactory.newInstance("//foo:bar"),
         Optional.empty(),
         sourcePathResolver,
+        ruleFinder,
         fakeFilesystem,
         classpathChecker,
         Optional.empty());
@@ -127,7 +130,8 @@ public class JavacStepTest {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
     ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     JavacOptions javacOptions = JavacOptions.builder()
         .setSourceLevel("8.0")
@@ -153,6 +157,7 @@ public class JavacStepTest {
         BuildTargetFactory.newInstance("//foo:bar"),
         Optional.empty(),
         sourcePathResolver,
+        ruleFinder,
         fakeFilesystem,
         classpathChecker,
         Optional.empty());
@@ -181,7 +186,8 @@ public class JavacStepTest {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
     ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     JavacOptions javacOptions = JavacOptions.builder()
         .setSourceLevel("8.0")
@@ -208,6 +214,7 @@ public class JavacStepTest {
         BuildTargetFactory.newInstance("//foo:bar"),
         Optional.empty(),
         sourcePathResolver,
+        ruleFinder,
         fakeFilesystem,
         classpathChecker,
         Optional.empty());
@@ -236,7 +243,8 @@ public class JavacStepTest {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(buildRuleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
     ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     JavacOptions javacOptions = JavacOptions.builder()
         .setSourceLevel("8.0")
@@ -263,6 +271,7 @@ public class JavacStepTest {
         BuildTargetFactory.newInstance("//foo:bar"),
         Optional.empty(),
         sourcePathResolver,
+        ruleFinder,
         fakeFilesystem,
         classpathChecker,
         Optional.empty());

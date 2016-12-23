@@ -37,6 +37,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
@@ -100,7 +101,8 @@ public class HaskellBinaryDescription implements
       A args)
       throws NoSuchBuildTargetException {
 
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).orElse(
         defaultCxxPlatform);
     Linker.LinkableDepType depType = getLinkStyle(params.getBuildTarget(), args);
@@ -162,6 +164,7 @@ public class HaskellBinaryDescription implements
                 params,
                 resolver,
                 pathResolver,
+                ruleFinder,
                 cxxPlatform,
                 haskellConfig,
                 depType,
@@ -172,6 +175,7 @@ public class HaskellBinaryDescription implements
                     params.getBuildTarget(),
                     resolver,
                     pathResolver,
+                    ruleFinder,
                     cxxPlatform,
                     "srcs",
                     args.srcs)));
@@ -187,6 +191,7 @@ public class HaskellBinaryDescription implements
             params,
             resolver,
             pathResolver,
+            ruleFinder,
             cxxPlatform,
             haskellConfig,
             Linker.LinkType.EXECUTABLE,
@@ -196,7 +201,7 @@ public class HaskellBinaryDescription implements
                 .filter(NativeLinkable.class),
             depType);
 
-    return new BinaryWrapperRule(params.appendExtraDeps(linkRule), pathResolver) {
+    return new BinaryWrapperRule(params.appendExtraDeps(linkRule), pathResolver, ruleFinder) {
 
       @Override
       public Tool getExecutableCommand() {

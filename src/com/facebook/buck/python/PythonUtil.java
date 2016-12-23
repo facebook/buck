@@ -38,6 +38,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -154,13 +155,13 @@ public class PythonUtil {
   }
 
   public static ImmutableSortedSet<BuildRule> getDepsFromComponents(
-      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       PythonPackageComponents components) {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(resolver.filterBuildRuleInputs(components.getModules().values()))
-        .addAll(resolver.filterBuildRuleInputs(components.getResources().values()))
-        .addAll(resolver.filterBuildRuleInputs(components.getNativeLibraries().values()))
-        .addAll(resolver.filterBuildRuleInputs(components.getPrebuiltLibraries()))
+        .addAll(ruleFinder.filterBuildRuleInputs(components.getModules().values()))
+        .addAll(ruleFinder.filterBuildRuleInputs(components.getResources().values()))
+        .addAll(ruleFinder.filterBuildRuleInputs(components.getNativeLibraries().values()))
+        .addAll(ruleFinder.filterBuildRuleInputs(components.getPrebuiltLibraries()))
         .build();
   }
 
@@ -168,6 +169,7 @@ public class PythonUtil {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       final PythonPackageComponents packageComponents,
       final PythonPlatform pythonPlatform,
       CxxBuckConfig cxxBuckConfig,
@@ -241,6 +243,7 @@ public class PythonUtil {
               params,
               ruleResolver,
               pathResolver,
+              ruleFinder,
               cxxBuckConfig,
               cxxPlatform,
               extraLdflags,

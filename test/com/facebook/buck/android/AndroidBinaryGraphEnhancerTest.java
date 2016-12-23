@@ -50,6 +50,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TestCellBuilder;
@@ -169,7 +170,7 @@ public class AndroidBinaryGraphEnhancerTest {
         new FakeBuildRuleParamsBuilder(aaptPackageResourcesTarget).build();
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
         aaptPackageResourcesParams,
-        new SourcePathResolver(ruleResolver),
+        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)),
         /* manifest */ new FakeSourcePath("java/src/com/facebook/base/AndroidManifest.xml"),
         createMock(FilteredResourcesProvider.class),
         ImmutableList.of(),
@@ -213,7 +214,7 @@ public class AndroidBinaryGraphEnhancerTest {
         "//fake:uber_r_dot_java#dex");
     DexProducedFromJavaLibrary fakeUberRDotJavaDex = new DexProducedFromJavaLibrary(
         new FakeBuildRuleParamsBuilder(fakeUberRDotJavaDexTarget).build(),
-        new SourcePathResolver(ruleResolver),
+        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)),
         fakeUberRDotJavaCompile);
     ruleResolver.addToIndex(fakeUberRDotJavaDex);
 
@@ -322,7 +323,8 @@ public class AndroidBinaryGraphEnhancerTest {
 
     // Verify that android_build_config() was processed correctly.
     Flavor flavor = ImmutableFlavor.of("buildconfig_com_example_buck");
-    final SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    final SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
     BuildTarget enhancedBuildConfigTarget = BuildTarget
         .builder(apkTarget)
         .addFlavors(flavor)
@@ -535,7 +537,8 @@ public class AndroidBinaryGraphEnhancerTest {
   public void testResourceRulesDependOnRulesBehindResourceSourcePaths() throws Exception {
     BuildRuleResolver ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     FakeBuildRule resourcesDep =
         ruleResolver.addToIndex(
@@ -549,6 +552,7 @@ public class AndroidBinaryGraphEnhancerTest {
                 new FakeBuildRuleParamsBuilder("//:resources").build()
                     .appendExtraDeps(ImmutableSortedSet.of(resourcesDep)),
                 pathResolver,
+                ruleFinder,
                 ImmutableSortedSet.of(),
                 new BuildTargetSourcePath(resourcesDep.getBuildTarget()),
                 ImmutableSortedSet.of(),

@@ -165,9 +165,9 @@ public class ConstructorArgMarshallerTest {
   public void shouldPopulateSourcePaths() throws Exception {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:peas");
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+     ));
     FakeBuildRule rule = new FakeBuildRule(target, resolver);
     ruleResolver.addToIndex(rule);
     DtoWithSourcePaths dto = new DtoWithSourcePaths();
@@ -407,9 +407,9 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void upperBoundGenericTypesCauseValuesToBeSetToTheUpperBound() throws Exception {
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    ));
     BuildRule rule = new FakeBuildRule(
         BuildTargetFactory.newInstance("//will:happen"), pathResolver);
     ruleResolver.addToIndex(rule);
@@ -447,9 +447,9 @@ public class ConstructorArgMarshallerTest {
 
   @Test
   public void canPopulateSimpleConstructorArgFromBuildFactoryParams() throws Exception {
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+     ));
     FakeBuildRule expectedRule = new FakeBuildRule(
         BuildTargetFactory.newInstance("//example/path:path"),
         resolver);
@@ -562,7 +562,8 @@ public class ConstructorArgMarshallerTest {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:manifest");
-    BuildRule rule = new FakeBuildRule(target, new SourcePathResolver(resolver));
+    BuildRule rule = new FakeBuildRule(
+        target, new SourcePathResolver(new SourcePathRuleFinder(resolver)));
     resolver.addToIndex(rule);
 
     DtoWithSetOfSourcePaths dto = new DtoWithSetOfSourcePaths();

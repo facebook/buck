@@ -20,6 +20,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.OptionalCompat;
@@ -45,7 +46,7 @@ public abstract class FrameworkPathArg extends Arg {
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getDeps(final SourcePathResolver resolver) {
+  public ImmutableCollection<BuildRule> getDeps(final SourcePathRuleFinder ruleFinder) {
     FluentIterable<SourcePath> sourcePaths = FluentIterable.from(frameworkPaths)
         .transformAndConcat(
             new Function<FrameworkPath, Iterable<SourcePath>>() {
@@ -54,7 +55,7 @@ public abstract class FrameworkPathArg extends Arg {
                 return OptionalCompat.asSet(input.getSourcePath());
               }
             });
-    return resolver.filterBuildRuleInputs(sourcePaths);
+    return ruleFinder.filterBuildRuleInputs(sourcePaths);
   }
 
   @Override

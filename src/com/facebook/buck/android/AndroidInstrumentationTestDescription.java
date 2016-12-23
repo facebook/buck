@@ -27,6 +27,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -72,7 +73,7 @@ public class AndroidInstrumentationTestDescription
         params.appendExtraDeps(
             BuildRules.getExportedRules(
                 params.getDeclaredDeps().get())),
-        new SourcePathResolver(resolver),
+        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         (InstallableApk) apk,
         args.labels,
         args.contacts,

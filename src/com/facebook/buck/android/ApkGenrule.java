@@ -27,6 +27,7 @@ import com.facebook.buck.rules.ExopackageInfo;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.step.ExecutionContext;
@@ -63,6 +64,7 @@ public class ApkGenrule extends Genrule implements InstallableApk {
   ApkGenrule(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       List<SourcePath> srcs,
       Optional<Arg> cmd,
       Optional<Arg> bash,
@@ -79,7 +81,7 @@ public class ApkGenrule extends Genrule implements InstallableApk {
 
     Preconditions.checkState(apk instanceof BuildTargetSourcePath);
     this.apk = (BuildTargetSourcePath) apk;
-    BuildRule rule = resolver.getRuleOrThrow(this.apk);
+    BuildRule rule = ruleFinder.getRuleOrThrow(this.apk);
     Preconditions.checkState(rule instanceof InstallableApk);
     this.installableApk = (InstallableApk) rule;
   }

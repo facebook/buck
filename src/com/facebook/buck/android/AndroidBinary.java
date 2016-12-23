@@ -42,6 +42,7 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.shell.AbstractGenruleStep;
@@ -196,6 +197,7 @@ public class AndroidBinary
   private final Optional<Integer> optimizationPasses;
   @AddToRuleKey
   private final Optional<SourcePath> proguardConfig;
+  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey
   private final Optional<SourcePath> proguardJarOverride;
   private final String proguardMaxHeapSize;
@@ -242,6 +244,7 @@ public class AndroidBinary
   AndroidBinary(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       Optional<SourcePath> proguardJarOverride,
       String proguardMaxHeapSize,
       Optional<List<String>> proguardJvmArgs,
@@ -272,6 +275,7 @@ public class AndroidBinary
       ManifestEntries manifestEntries,
       JavaRuntimeLauncher javaRuntimeLauncher) {
     super(params, resolver);
+    this.ruleFinder = ruleFinder;
     this.proguardJarOverride = proguardJarOverride;
     this.proguardMaxHeapSize = proguardMaxHeapSize;
     this.proguardJvmArgs = proguardJvmArgs;
@@ -1263,7 +1267,7 @@ public class AndroidBinary
   @Override
   public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
     return JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.copyOf(
-        getResolver().filterBuildRuleInputs(enhancementResult.getClasspathEntriesToDex())));
+        ruleFinder.filterBuildRuleInputs(enhancementResult.getClasspathEntriesToDex())));
   }
 
   @Override

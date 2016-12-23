@@ -27,6 +27,7 @@ import com.facebook.buck.rules.ActionGraph;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.util.cache.DefaultFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -69,6 +70,7 @@ public class DistBuildFileHashes {
   public DistBuildFileHashes(
       ActionGraph actionGraph,
       final SourcePathResolver sourcePathResolver,
+      SourcePathRuleFinder ruleFinder,
       final FileHashCache rootCellFileHashCache,
       final Function<? super Path, Integer> cellIndexer,
       ListeningExecutorService executorService,
@@ -97,7 +99,8 @@ public class DistBuildFileHashes {
                 buckConfig);
           }
         });
-    this.ruleKeyFactories = createRuleKeyFactories(sourcePathResolver, fileHashLoaders, keySeed);
+    this.ruleKeyFactories =
+        createRuleKeyFactories(sourcePathResolver, ruleFinder, fileHashLoaders, keySeed);
     this.ruleKeys = ruleKeyComputation(actionGraph, this.ruleKeyFactories, executorService);
     this.fileHashes = fileHashesComputation(
         Futures.transform(this.ruleKeys, Functions.constant(null)),
@@ -108,6 +111,7 @@ public class DistBuildFileHashes {
   public static LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory>
   createRuleKeyFactories(
       final SourcePathResolver sourcePathResolver,
+      final SourcePathRuleFinder ruleFinder,
       final LoadingCache<ProjectFilesystem, ? extends FileHashLoader> fileHashLoaders,
       final int keySeed) {
     return CacheBuilder.newBuilder().build(
@@ -117,7 +121,8 @@ public class DistBuildFileHashes {
             return new DefaultRuleKeyFactory(
                 /* seed */ keySeed,
                 fileHashLoaders.get(key),
-                sourcePathResolver
+                sourcePathResolver,
+                ruleFinder
             );
           }
         });

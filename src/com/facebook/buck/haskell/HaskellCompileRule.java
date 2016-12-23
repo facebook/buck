@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
@@ -142,6 +143,7 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
   public static HaskellCompileRule from(
       BuildTarget target,
       BuildRuleParams baseParams,
+      SourcePathRuleFinder ruleFinder,
       final SourcePathResolver resolver,
       final Tool compiler,
       HaskellVersion haskellVersion,
@@ -161,14 +163,14 @@ public class HaskellCompileRule extends AbstractBuildRule implements RuleKeyAppe
             target,
             Suppliers.memoize(
                 () -> ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(compiler.getDeps(resolver))
-                    .addAll(ppFlags.getDeps(resolver))
-                    .addAll(resolver.filterBuildRuleInputs(includes))
-                    .addAll(sources.getDeps(resolver))
+                    .addAll(compiler.getDeps(ruleFinder))
+                    .addAll(ppFlags.getDeps(ruleFinder))
+                    .addAll(ruleFinder.filterBuildRuleInputs(includes))
+                    .addAll(sources.getDeps(ruleFinder))
                     .addAll(
                         Stream.of(exposedPackages, packages)
                             .flatMap(packageMap -> packageMap.values().stream())
-                            .flatMap(pkg -> pkg.getDeps(resolver))
+                            .flatMap(pkg -> pkg.getDeps(ruleFinder))
                             .iterator())
                     .build()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),

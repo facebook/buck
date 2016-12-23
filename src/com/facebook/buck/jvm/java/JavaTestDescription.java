@@ -34,6 +34,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
@@ -83,7 +84,8 @@ public class JavaTestDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     if (params.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
       BuildTarget testTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
@@ -91,6 +93,7 @@ public class JavaTestDescription implements
       return CalculateAbi.of(
           params.getBuildTarget(),
           pathResolver,
+          ruleFinder,
           params,
           new BuildTargetSourcePath(testTarget));
     }
@@ -100,7 +103,7 @@ public class JavaTestDescription implements
             templateJavacOptions,
             params,
             resolver,
-            pathResolver,
+            ruleFinder,
             args
         );
 
@@ -110,6 +113,7 @@ public class JavaTestDescription implements
         args.cxxLibraryWhitelist,
         resolver,
         pathResolver,
+        ruleFinder,
         cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
 
@@ -123,8 +127,8 @@ public class JavaTestDescription implements
                         Iterables.concat(
                             params.getDeclaredDeps().get(),
                             resolver.getAllRules(args.providedDeps))))
-                    .addAll(pathResolver.filterBuildRuleInputs(
-                        javacOptions.getInputs(pathResolver)))
+                    .addAll(ruleFinder.filterBuildRuleInputs(
+                        javacOptions.getInputs(ruleFinder)))
                     .build()
             ),
             params.getExtraDeps())
@@ -135,6 +139,7 @@ public class JavaTestDescription implements
             new DefaultJavaLibrary(
                 testsLibraryParams,
                 pathResolver,
+                ruleFinder,
                 args.srcs,
                 ResourceValidator.validateResources(
                     pathResolver,
@@ -226,6 +231,7 @@ public class JavaTestDescription implements
         final ImmutableSet<BuildTarget> cxxLibraryWhitelist,
         BuildRuleResolver resolver,
         SourcePathResolver pathResolver,
+        SourcePathRuleFinder ruleFinder,
         CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
       if (useCxxLibraries.orElse(false)) {
         SymlinkTree nativeLibsSymlinkTree =
@@ -262,7 +268,7 @@ public class JavaTestDescription implements
             // (1) They become runtime deps because JavaTest adds all first-order deps.
             // (2) They affect the JavaTest's RuleKey, so changing them will invalidate
             // the test results cache.
-            .addAll(pathResolver.filterBuildRuleInputs(nativeLibsSymlinkTree.getLinks().values()))
+            .addAll(ruleFinder.filterBuildRuleInputs(nativeLibsSymlinkTree.getLinks().values()))
             .build());
         nativeLibsEnvironment =
             ImmutableMap.of(

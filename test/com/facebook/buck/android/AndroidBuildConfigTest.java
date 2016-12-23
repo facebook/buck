@@ -31,6 +31,7 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.ExecutionContext;
@@ -119,11 +120,11 @@ public class AndroidBuildConfigTest {
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(BUILD_TARGET).build();
     return new AndroidBuildConfig(
         params,
-        new SourcePathResolver(
+        new SourcePathResolver(new SourcePathRuleFinder(
             new BuildRuleResolver(
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
-        ),
+        )),
         /* javaPackage */ "com.example",
         /* values */ BuildConfigFields.empty(),
         /* valuesFile */ Optional.empty(),

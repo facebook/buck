@@ -36,6 +36,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.coercer.OcamlSource;
 import com.facebook.buck.util.Console;
@@ -116,7 +117,7 @@ public class OcamlRuleBuilder {
       boolean bytecodeOnly,
       ImmutableList<String> argFlags,
       final ImmutableList<String> linkerFlags) throws NoSuchBuildTargetException {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     boolean noYaccOrLexSources = FluentIterable.from(srcs).transform(OcamlSource::getSource)
         .filter(OcamlUtil.sourcePathExt(
                   pathResolver,
@@ -207,7 +208,8 @@ public class OcamlRuleBuilder {
               FluentIterable.from(params.getDeps())
                   .filter(CxxPreprocessorDep.class::isInstance)));
 
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     ImmutableList<String> nativeIncludes = FluentIterable.from(params.getDeps())
         .transformAndConcat(getLibInclude(false))
@@ -227,26 +229,26 @@ public class OcamlRuleBuilder {
     ImmutableList<OcamlLibrary> ocamlInput = OcamlUtil.getTransitiveOcamlInput(params.getDeps());
 
     ImmutableSortedSet.Builder<BuildRule> allDepsBuilder = ImmutableSortedSet.naturalOrder();
-    allDepsBuilder.addAll(pathResolver.filterBuildRuleInputs(getInput(srcs)));
+    allDepsBuilder.addAll(ruleFinder.filterBuildRuleInputs(getInput(srcs)));
     allDepsBuilder.addAll(
         Stream.of(nativeLinkableInput, bytecodeLinkableInput, cLinkableInput)
             .flatMap(input -> input.getArgs().stream())
-            .flatMap(arg -> arg.getDeps(pathResolver).stream())
+            .flatMap(arg -> arg.getDeps(ruleFinder).stream())
             .iterator());
     for (OcamlLibrary library : ocamlInput) {
       allDepsBuilder.addAll(library.getNativeCompileDeps());
       allDepsBuilder.addAll(library.getBytecodeCompileDeps());
     }
     allDepsBuilder.addAll(
-        pathResolver.filterBuildRuleInputs(
+        ruleFinder.filterBuildRuleInputs(
             ocamlBuckConfig.getCCompiler().resolve(resolver).getInputs()));
     allDepsBuilder.addAll(
-        pathResolver.filterBuildRuleInputs(
+        ruleFinder.filterBuildRuleInputs(
             ocamlBuckConfig.getCxxCompiler().resolve(resolver).getInputs()));
 
     // The bulk rule will do preprocessing on sources, and so needs deps from the preprocessor
     // input object.
-    allDepsBuilder.addAll(cxxPreprocessorInputFromDeps.getDeps(resolver, pathResolver));
+    allDepsBuilder.addAll(cxxPreprocessorInputFromDeps.getDeps(resolver, ruleFinder));
 
     ImmutableSortedSet<BuildRule> allDeps = allDepsBuilder.build();
 
@@ -356,7 +358,8 @@ public class OcamlRuleBuilder {
               FluentIterable.from(params.getDeps())
                   .filter(CxxPreprocessorDep.class::isInstance)));
 
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     ImmutableList<String> nativeIncludes = FluentIterable.from(params.getDeps())
         .transformAndConcat(getLibInclude(false))
@@ -383,17 +386,17 @@ public class OcamlRuleBuilder {
         buildTarget,
         /* declaredDeps */ Suppliers.ofInstance(
             ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(pathResolver.filterBuildRuleInputs(getInput(srcs)))
+                .addAll(ruleFinder.filterBuildRuleInputs(getInput(srcs)))
                 .addAll(
                     Stream.of(nativeLinkableInput, bytecodeLinkableInput, cLinkableInput)
                     .flatMap(input -> input.getArgs().stream())
-                    .flatMap(arg -> arg.getDeps(pathResolver).stream())
+                    .flatMap(arg -> arg.getDeps(ruleFinder).stream())
                     .iterator())
                 .addAll(
-                    pathResolver.filterBuildRuleInputs(
+                    ruleFinder.filterBuildRuleInputs(
                         ocamlBuckConfig.getCCompiler().resolve(resolver).getInputs()))
                 .addAll(
-                    pathResolver.filterBuildRuleInputs(
+                    ruleFinder.filterBuildRuleInputs(
                         ocamlBuckConfig.getCxxCompiler().resolve(resolver).getInputs()))
                 .build()),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
@@ -443,6 +446,7 @@ public class OcamlRuleBuilder {
     OcamlBuildRulesGenerator generator = new OcamlBuildRulesGenerator(
         compileParams,
         pathResolver,
+        ruleFinder,
         resolver,
         ocamlContext,
         mlInput,
@@ -472,7 +476,7 @@ public class OcamlRuleBuilder {
           result.getBytecodeCompileDeps(),
           ImmutableSortedSet.<BuildRule>naturalOrder()
               .add(result.getBytecodeLink())
-              .addAll(pathResolver.filterBuildRuleInputs(result.getObjectFiles()))
+              .addAll(ruleFinder.filterBuildRuleInputs(result.getObjectFiles()))
               .build());
     } else {
       return new OcamlBinary(

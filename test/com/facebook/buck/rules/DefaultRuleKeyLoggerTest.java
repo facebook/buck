@@ -183,8 +183,9 @@ public class DefaultRuleKeyLoggerTest {
     private RuleKeyFactory<RuleKey> ruleKeyFactory;
 
     public Fixture() {
-      pathResolver = new SourcePathResolver(
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
           new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+      pathResolver = new SourcePathResolver(ruleFinder);
 
       final FileHashCache hashCache = new FileHashCache() {
         @Override
@@ -225,10 +226,10 @@ public class DefaultRuleKeyLoggerTest {
         }
       };
       logger = new DefaultRuleKeyLogger();
-      ruleKeyFactory = new DefaultRuleKeyFactory(0, hashCache, pathResolver) {
+      ruleKeyFactory = new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder) {
         @Override
         protected RuleKeyBuilder<RuleKey> newBuilder(BuildRule rule) {
-          return new UncachedRuleKeyBuilder(pathResolver, hashCache, this, logger);
+          return new UncachedRuleKeyBuilder(ruleFinder, pathResolver, hashCache, this, logger);
         }
       };
     }

@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
@@ -72,6 +73,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
   public static final String FAT_JAR_MAIN_SRC_RESOURCE =
       "com/facebook/buck/jvm/java/FatJarMain.java";
 
+  private final SourcePathRuleFinder ruleFinder;
   private final JavacOptions javacOptions;
   @AddToRuleKey
   private final SourcePath innerJar;
@@ -84,11 +86,13 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
   public JarFattener(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       JavacOptions javacOptions,
       SourcePath innerJar,
       ImmutableMap<String, SourcePath> nativeLibraries,
       JavaRuntimeLauncher javaRuntimeLauncher) {
     super(params, resolver);
+    this.ruleFinder = ruleFinder;
     this.javacOptions = javacOptions;
     this.innerJar = innerJar;
     this.nativeLibraries = nativeLibraries;
@@ -175,6 +179,7 @@ public class JarFattener extends AbstractBuildRule implements BinaryBuildRule {
         ImmutableSortedSet.copyOf(javaSourceFilePaths),
         getBuildTarget(),
         getResolver(),
+        ruleFinder,
         getProjectFilesystem(),
         /* classpathEntries */ ImmutableSortedSet.of(),
         fatJarDir,

@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildContext;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -54,6 +55,7 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
       ImmutableSortedSet<Path> sourceFilePaths,
       BuildTarget invokingRule,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       ProjectFilesystem filesystem,
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Path outputDirectory,
@@ -76,6 +78,7 @@ public abstract class BaseCompileToJarStepFactory implements CompileToJarStepFac
         sourceFilePaths,
         invokingRule,
         resolver,
+        ruleFinder,
         filesystem,
         declaredClasspathEntries,
         outputDirectory,

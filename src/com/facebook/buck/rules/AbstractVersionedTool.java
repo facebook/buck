@@ -57,7 +57,7 @@ abstract class AbstractVersionedTool implements Tool {
   protected abstract String getVersion();
 
   @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
+  public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     return ImmutableSortedSet.of();
   }
 

@@ -37,6 +37,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.step.Step;
@@ -169,7 +170,7 @@ public class ExportFileTest {
         ruleResolver.addToIndex(
             new FakeBuildRule(
                 BuildTargetFactory.newInstance("//example:one"),
-                new SourcePathResolver(ruleResolver)));
+                new SourcePathResolver(new SourcePathRuleFinder(ruleResolver))));
 
     builder.setSrc(new BuildTargetSourcePath(rule.getBuildTarget()));
     exportFile = (ExportFile) builder.build(ruleResolver, projectFilesystem);
@@ -205,11 +206,12 @@ public class ExportFileTest {
     Path temp = Paths.get("example_file");
 
     FileHashCache hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+    );
+    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
-        new DefaultRuleKeyFactory(0, hashCache, resolver);
+        new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder);
 
     filesystem.writeContentsToPath("I like cheese", temp);
 
@@ -232,10 +234,11 @@ public class ExportFileTest {
         filesystem);
 
     hashCache = DefaultFileHashCache.createDefaultFileHashCache(filesystem);
-    resolver = new SourcePathResolver(
+    ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
-    ruleKeyFactory = new DefaultRuleKeyFactory(0, hashCache, resolver);
+    resolver = new SourcePathResolver(ruleFinder);
+    ruleKeyFactory = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder);
     RuleKey refreshed = ruleKeyFactory.build(rule);
 
     assertNotEquals(original, refreshed);
@@ -247,7 +250,7 @@ public class ExportFileTest {
         new BuildRuleResolver(
             TargetGraph.EMPTY,
             new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     SourcePath src = new FakeSourcePath(projectFilesystem, "source");
     ExportFile exportFile =
         (ExportFile) ExportFileBuilder.newExportFileBuilder(target)

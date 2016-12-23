@@ -27,6 +27,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -70,7 +71,8 @@ public class ContentAgnosticRuleKeyFactoryTest {
 
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     Path depOutput = Paths.get(filename);
     FakeBuildRule dep =
@@ -88,6 +90,6 @@ public class ContentAgnosticRuleKeyFactoryTest {
             .setSrcs(ImmutableList.of(new BuildTargetSourcePath(dep.getBuildTarget())))
             .build(resolver, fileSystem);
 
-    return new ContentAgnosticRuleKeyFactory(0, pathResolver).build(rule);
+    return new ContentAgnosticRuleKeyFactory(0, pathResolver, ruleFinder).build(rule);
   }
 }

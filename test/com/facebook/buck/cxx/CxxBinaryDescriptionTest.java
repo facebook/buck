@@ -37,6 +37,7 @@ import com.facebook.buck.rules.DependencyAggregationTestUtil;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -172,7 +173,8 @@ public class CxxBinaryDescriptionTest {
     // Create the build rules.
     BuildRuleResolver resolver =
         new BuildRuleResolver(targetGraph, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     genHeaderBuilder.build(resolver, projectFilesystem, targetGraph);
     genSourceBuilder.build(resolver, projectFilesystem, targetGraph);
     depBuilder.build(resolver, projectFilesystem, targetGraph);
@@ -185,6 +187,7 @@ public class CxxBinaryDescriptionTest {
         .setParams(cxxBinaryBuilder.createBuildRuleParams(resolver, projectFilesystem))
         .setResolver(resolver)
         .setPathResolver(pathResolver)
+        .setRuleFinder(ruleFinder)
         .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
         .setCxxPlatform(cxxPlatform)
         .setPicType(CxxSourceRuleFactory.PicType.PDC)

@@ -29,6 +29,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -112,10 +113,10 @@ public class CopyNativeLibrariesTest {
     CopyNativeLibraries copyNativeLibraries =
         new CopyNativeLibraries(
             new FakeBuildRuleParamsBuilder(target).build(),
-            new SourcePathResolver(
+            new SourcePathResolver(new SourcePathRuleFinder(
                 new BuildRuleResolver(
                     TargetGraph.EMPTY,
-                    new DefaultTargetNodeToBuildRuleTransformer())),
+                    new DefaultTargetNodeToBuildRuleTransformer()))),
             ImmutableSet.of(new FakeSourcePath("lib1"), new FakeSourcePath("lib2")),
             ImmutableSet.of(),
             ImmutableSet.of(),

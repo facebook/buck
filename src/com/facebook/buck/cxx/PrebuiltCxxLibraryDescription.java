@@ -40,6 +40,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -325,7 +326,7 @@ public class PrebuiltCxxLibraryDescription implements
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
         resolver,
-        new SourcePathResolver(resolver),
+        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         cxxPlatform,
         parseExportedHeaders(params, resolver, cxxPlatform, args),
         HeaderVisibility.PUBLIC,
@@ -338,7 +339,7 @@ public class PrebuiltCxxLibraryDescription implements
       CxxPlatform cxxPlatform,
       A args) {
     ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     CxxDescriptionEnhancer.putAllHeaders(
         args.exportedHeaders,
         headers,
@@ -369,7 +370,8 @@ public class PrebuiltCxxLibraryDescription implements
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       A args) throws NoSuchBuildTargetException {
 
-    final SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     BuildTarget target = params.getBuildTarget();
     String soname = getSoname(
@@ -435,6 +437,7 @@ public class PrebuiltCxxLibraryDescription implements
                     args.includeDirs)),
         ruleResolver,
         pathResolver,
+        ruleFinder,
         sharedTarget,
         Linker.LinkType.SHARED,
         Optional.of(soname),
@@ -532,7 +535,8 @@ public class PrebuiltCxxLibraryDescription implements
           cxxPlatform.getFlavor());
     }
 
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     SourcePath sharedLibrary =
         requireSharedLibrary(
@@ -549,7 +553,8 @@ public class PrebuiltCxxLibraryDescription implements
         baseTarget.withAppendedFlavors(Type.SHARED_INTERFACE.getFlavor(), cxxPlatform.getFlavor()),
         baseParams,
         resolver,
-        new SourcePathResolver(resolver),
+        pathResolver,
+        ruleFinder,
         sharedLibrary);
   }
 
@@ -621,7 +626,8 @@ public class PrebuiltCxxLibraryDescription implements
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
-    final SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    final SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver));
     final boolean headerOnly = args.headerOnly.orElse(false);
     final boolean forceStatic = args.forceStatic.orElse(false);
     return new PrebuiltCxxLibrary(params, pathResolver) {

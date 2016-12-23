@@ -29,6 +29,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
@@ -78,7 +79,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       Optional<com.facebook.buck.rules.args.Arg> cmdExe) {
     return new Genrule(
         params,
-        new SourcePathResolver(resolver),
+        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         args.srcs,
         cmd,
         bash,
@@ -115,7 +116,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       final BuildRuleResolver resolver,
       final A args)
       throws NoSuchBuildTargetException {
-    final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     java.util.function.Function<String, com.facebook.buck.rules.args.Arg> macroArgFunction =
         MacroArg.toMacroArgFunction(
             getMacroHandler(params, resolver, targetGraph, args),
@@ -130,10 +131,10 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         params.copyWithExtraDeps(
             Suppliers.ofInstance(
                 Stream.concat(
-                    pathResolver.filterBuildRuleInputs(args.srcs).stream(),
+                    ruleFinder.filterBuildRuleInputs(args.srcs).stream(),
                     Stream.of(cmd, bash, cmdExe)
                         .flatMap(Optionals::toStream)
-                        .flatMap(input -> input.getDeps(pathResolver).stream())
+                        .flatMap(input -> input.getDeps(ruleFinder).stream())
                 ).collect(
                     MoreCollectors.toImmutableSortedSet(Comparator.<BuildRule>naturalOrder())))),
         resolver,

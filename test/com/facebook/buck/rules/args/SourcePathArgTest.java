@@ -25,6 +25,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -37,9 +38,9 @@ public class SourcePathArgTest {
   @Test
   public void stringify() {
     SourcePath path = new FakeSourcePath("something");
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+     ));
     SourcePathArg arg = new SourcePathArg(resolver, path);
     assertThat(
         Arg.stringifyList(arg),
@@ -50,14 +51,15 @@ public class SourcePathArgTest {
   public void getDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     Genrule rule =
         (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("output")
             .build(resolver);
     SourcePathArg arg =
         new SourcePathArg(pathResolver, new BuildTargetSourcePath(rule.getBuildTarget()));
-    assertThat(arg.getDeps(pathResolver), Matchers.contains(rule));
+    assertThat(arg.getDeps(ruleFinder), Matchers.contains(rule));
   }
 
 }

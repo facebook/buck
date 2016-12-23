@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 
@@ -39,15 +40,18 @@ public class DBinary extends AbstractBuildRule implements
     BinaryBuildRule,
     HasRuntimeDeps {
 
+  private final SourcePathRuleFinder ruleFinder;
   private final Tool executable;
   private final Path output;
 
   public DBinary(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       Tool executable,
       Path output) {
     super(params, resolver);
+    this.ruleFinder = ruleFinder;
     this.executable = executable;
     this.output = output;
   }
@@ -74,7 +78,7 @@ public class DBinary extends AbstractBuildRule implements
     // Return the actual executable as a runtime dependency.
     // Without this, the file is not written when we get a cache hit.
     return ImmutableSortedSet.<BuildRule>naturalOrder()
-      .addAll(executable.getDeps(getResolver()))
+      .addAll(executable.getDeps(ruleFinder))
       .build();
   }
 }

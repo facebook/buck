@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -48,12 +49,13 @@ public class PrebuiltRustLibrary extends AbstractBuildRule
   public PrebuiltRustLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       SourcePath rlib,
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType linkStyle,
       Optional<String> crate) {
     super(
-        RustLinkables.addNativeDependencies(params, resolver, cxxPlatform, linkStyle),
+        RustLinkables.addNativeDependencies(params, ruleFinder, cxxPlatform, linkStyle),
         resolver);
 
     this.rlib = rlib;

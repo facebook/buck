@@ -33,6 +33,7 @@ import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
@@ -83,11 +84,11 @@ public class CxxGenruleDescription
    */
   public static SourcePath fixupSourcePath(
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxPlatform platform,
       SourcePath path)
       throws NoSuchBuildTargetException {
-    Optional<BuildRule> rule = pathResolver.getRule(path);
+    Optional<BuildRule> rule = ruleFinder.getRule(path);
     if (rule.isPresent() && rule.get() instanceof CxxGenrule) {
       BuildRule platformRule =
           ruleResolver.requireRule(
@@ -99,21 +100,21 @@ public class CxxGenruleDescription
 
   public static ImmutableList<SourcePath> fixupSourcePaths(
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       ImmutableList<SourcePath> paths)
       throws NoSuchBuildTargetException {
     ImmutableList.Builder<SourcePath> fixed = ImmutableList.builder();
     for (SourcePath path : paths) {
       fixed.add(
-          fixupSourcePath(ruleResolver, pathResolver, cxxPlatform, path));
+          fixupSourcePath(ruleResolver, ruleFinder, cxxPlatform, path));
     }
     return fixed.build();
   }
 
   public static <T> ImmutableMap<T, SourcePath> fixupSourcePaths(
       BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       ImmutableMap<T, SourcePath> paths)
       throws NoSuchBuildTargetException {
@@ -123,7 +124,7 @@ public class CxxGenruleDescription
           ent.getKey(),
           fixupSourcePath(
               ruleResolver,
-              pathResolver,
+              ruleFinder,
               cxxPlatform,
               ent.getValue()));
     }
@@ -240,7 +241,8 @@ public class CxxGenruleDescription
           resolver,
           args);
     }
-    return new CxxGenrule(params, new SourcePathResolver(resolver), resolver, args.out);
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    return new CxxGenrule(params, pathResolver, resolver, args.out);
   }
 
   @Override
@@ -300,7 +302,7 @@ public class CxxGenruleDescription
         CellPathResolver cellNames,
         BuildRuleResolver resolver,
         ImmutableList<String> input) throws MacroException {
-      SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+      SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
       return shquoteJoin(tool.getCommandPrefix(pathResolver));
     }
 
@@ -310,8 +312,8 @@ public class CxxGenruleDescription
         CellPathResolver cellNames,
         BuildRuleResolver resolver,
         ImmutableList<String> input) throws MacroException {
-      SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-      return ImmutableList.copyOf(tool.getDeps(pathResolver));
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+      return ImmutableList.copyOf(tool.getDeps(ruleFinder));
     }
 
     @Override
@@ -520,7 +522,7 @@ public class CxxGenruleDescription
         ImmutableList<BuildRule> rules,
         Optional<Pattern> filter)
         throws MacroException {
-      SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+      SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
       PreprocessorFlags ppFlags = getPreprocessorFlags(getCxxPreprocessorInput(rules));
       Preprocessor preprocessor =
           CxxSourceTypes.getPreprocessor(cxxPlatform, sourceType).resolve(resolver);
@@ -540,10 +542,10 @@ public class CxxGenruleDescription
         ImmutableList<BuildRule> rules,
         Optional<Pattern> filter)
         throws MacroException {
-      SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
       for (CxxPreprocessorInput input : getCxxPreprocessorInput(rules)) {
-        deps.addAll(input.getDeps(resolver, pathResolver));
+        deps.addAll(input.getDeps(resolver, ruleFinder));
       }
       return deps.build();
     }
@@ -601,7 +603,7 @@ public class CxxGenruleDescription
         BuildRuleResolver resolver,
         ImmutableList<BuildRule> rules)
         throws MacroException {
-      SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+      SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
       BuildTarget symlinkTreeTarget =
           CxxDescriptionEnhancer.createSharedLibrarySymlinkTreeTarget(
               params.getBuildTarget(),
@@ -735,11 +737,11 @@ public class CxxGenruleDescription
         ImmutableList<BuildRule> rules,
         Optional<Pattern> filter)
         throws MacroException {
-      SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
       ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
       deps.addAll(
           getLinkerArgs(resolver, rules, filter).stream()
-              .flatMap(arg -> arg.getDeps(pathResolver).stream())
+              .flatMap(arg -> arg.getDeps(ruleFinder).stream())
               .iterator());
       if (depType == Linker.LinkableDepType.SHARED) {
         deps.add(requireSymlinkTree(resolver, rules));

@@ -26,6 +26,7 @@ import com.facebook.buck.rules.ImplicitInputsInferringDescription;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -66,7 +67,8 @@ public class ExportFileDescription implements
     }
 
     SourcePath src;
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     if (args.src.isPresent()) {
       if (mode == ExportFileDescription.Mode.REFERENCE &&
           !pathResolver.getFilesystem(args.src.get()).equals(params.getProjectFilesystem())) {
@@ -83,7 +85,7 @@ public class ExportFileDescription implements
               target.getBasePath().resolve(target.getShortNameAndFlavorPostfix()));
     }
 
-    return new ExportFile(params, pathResolver, name, mode, src);
+    return new ExportFile(params, pathResolver, ruleFinder, name, mode, src);
   }
 
   /**

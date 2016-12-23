@@ -20,6 +20,7 @@ import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -47,6 +48,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
   AndroidInstrumentationApk(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       Optional<SourcePath> proGuardJarOverride,
       String proGuardMaxHeapSize,
       Optional<String> proguardAgentPath,
@@ -57,6 +59,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
     super(
         buildRuleParams,
         resolver,
+        ruleFinder,
         proGuardJarOverride,
         proGuardMaxHeapSize,
         apkUnderTest.getProguardJvmArgs(),

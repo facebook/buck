@@ -28,6 +28,7 @@ import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
@@ -71,6 +72,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
   // Extra time to wait for the process to exit on top of the test timeout
   private static final int PROCESS_TIMEOUT_EXTRA_MS = 5000;
 
+  private final SourcePathRuleFinder ruleFinder;
   private final GoBinary testMain;
 
   private final ImmutableSet<Label> labels;
@@ -84,6 +86,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
   public GoTest(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       GoBinary testMain,
       ImmutableSet<Label> labels,
       ImmutableSet<String> contacts,
@@ -91,6 +94,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
       boolean runTestsSeparately,
       ImmutableSortedSet<SourcePath> resources) {
     super(buildRuleParams, resolver);
+    this.ruleFinder = ruleFinder;
     this.testMain = testMain;
     this.labels = labels;
     this.contacts = contacts;
@@ -270,7 +274,7 @@ public class GoTest extends NoopBuildRule implements TestRule, HasRuntimeDeps,
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
         .add(testMain)
-        .addAll(getResolver().filterBuildRuleInputs(resources))
+        .addAll(ruleFinder.filterBuildRuleInputs(resources))
         .build();
   }
 

@@ -37,6 +37,7 @@ import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
@@ -159,9 +160,12 @@ public class PythonTestDescription implements
 
     String contents = getTestModulesListContents(testModules);
 
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+
     return new WriteFile(
         newParams,
-        new SourcePathResolver(resolver),
+        pathResolver,
         contents,
         outputPath,
         /* executable */ false);
@@ -181,7 +185,8 @@ public class PythonTestDescription implements
                     pythonPlatforms.getFlavors().iterator().next())));
     CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).orElse(
         defaultCxxPlatform);
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     Path baseModule = PythonUtil.getBasePath(params.getBuildTarget(), args.baseModule);
     Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
         targetGraph.get(params.getBuildTarget()).getSelectedVersions();
@@ -255,6 +260,7 @@ public class PythonTestDescription implements
             params,
             resolver,
             pathResolver,
+            ruleFinder,
             testComponents,
             pythonPlatform,
             cxxBuckConfig,
@@ -272,13 +278,14 @@ public class PythonTestDescription implements
     // Build the PEX using a python binary rule with the minimum dependencies.
     BuildRuleParams binaryParams = params.copyWithChanges(
         getBinaryBuildTarget(params.getBuildTarget()),
-        Suppliers.ofInstance(PythonUtil.getDepsFromComponents(pathResolver, allComponents)),
+        Suppliers.ofInstance(PythonUtil.getDepsFromComponents(ruleFinder, allComponents)),
         Suppliers.ofInstance(ImmutableSortedSet.of()));
     PythonBinary binary =
         binaryDescription.createPackageRule(
             binaryParams,
             resolver,
             pathResolver,
+            ruleFinder,
             pythonPlatform,
             cxxPlatform,
             mainModule,
@@ -345,6 +352,7 @@ public class PythonTestDescription implements
                     .build()),
             params.getExtraDeps()),
         pathResolver,
+        ruleFinder,
         testEnv,
         binary,
         args.labels,

@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.base.Supplier;
@@ -42,6 +43,7 @@ import java.util.Optional;
 public class RustBinary extends RustCompile implements BinaryBuildRule {
   public RustBinary(
       BuildRuleParams params,
+      SourcePathRuleFinder ruleFinder,
       SourcePathResolver resolver,
       String crate,
       Optional<SourcePath> crateRoot,
@@ -54,7 +56,7 @@ public class RustBinary extends RustCompile implements BinaryBuildRule {
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType linkStyle) throws NoSuchBuildTargetException {
     super(
-        RustLinkables.addNativeDependencies(params, resolver, cxxPlatform, linkStyle),
+        RustLinkables.addNativeDependencies(params, ruleFinder, cxxPlatform, linkStyle),
         resolver,
         crate,
         crateRoot,

@@ -23,6 +23,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.UncachedRuleKeyBuilder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -40,13 +41,15 @@ public class SanitizedArgTest {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     FileHashCache fileHashCache =
         DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem);
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+    );
+    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
     return new UncachedRuleKeyBuilder(
+        ruleFinder,
         resolver,
         DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem),
-        new DefaultRuleKeyFactory(0, fileHashCache, resolver));
+        new DefaultRuleKeyFactory(0, fileHashCache, resolver, ruleFinder));
   }
 
   @Test

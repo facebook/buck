@@ -73,11 +73,11 @@ public class FakeBuildRule extends AbstractBuildRule implements BuildRule {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(name);
     return new FakeBuildRule(
         buildTarget,
-        new SourcePathResolver(
+        new SourcePathResolver(new SourcePathRuleFinder(
             new BuildRuleResolver(
                 TargetGraph.EMPTY,
                 new DefaultTargetNodeToBuildRuleTransformer())
-        ),
+        )),
         ImmutableSortedSet.of());
   }
 

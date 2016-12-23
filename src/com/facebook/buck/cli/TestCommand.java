@@ -36,6 +36,7 @@ import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
@@ -307,6 +308,7 @@ public class TestCommand extends BuildCommand {
         CommandThreadManager testPool = new CommandThreadManager(
             "Test-Run",
             concurrencyLimit)) {
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(build.getRuleResolver());
       return TestRunning.runTests(
           params,
           testRules,
@@ -315,7 +317,8 @@ public class TestCommand extends BuildCommand {
           testPool.getExecutor(),
           buildEngine,
           new DefaultStepRunner(),
-          new SourcePathResolver(build.getRuleResolver()));
+          new SourcePathResolver(ruleFinder),
+          ruleFinder);
     } catch (ExecutionException e) {
       params.getBuckEventBus().post(ConsoleEvent.severe(
           MoreExceptions.getHumanReadableOrLocalizedMessage(e)));

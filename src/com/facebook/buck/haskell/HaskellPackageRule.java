@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
@@ -95,6 +96,7 @@ public class HaskellPackageRule extends AbstractBuildRule {
       BuildTarget target,
       BuildRuleParams baseParams,
       final SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       final Tool ghcPkg,
       HaskellVersion haskellVersion,
       HaskellPackageInfo packageInfo,
@@ -107,13 +109,13 @@ public class HaskellPackageRule extends AbstractBuildRule {
             target,
             Suppliers.memoize(
                 () -> ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(ghcPkg.getDeps(resolver))
+                    .addAll(ghcPkg.getDeps(ruleFinder))
                     .addAll(
                         depPackages.values().stream()
-                            .flatMap(pkg -> pkg.getDeps(resolver))
+                            .flatMap(pkg -> pkg.getDeps(ruleFinder))
                             .iterator())
                     .addAll(
-                        resolver.filterBuildRuleInputs(Iterables.concat(libraries, interfaces)))
+                        ruleFinder.filterBuildRuleInputs(Iterables.concat(libraries, interfaces)))
                     .build()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         resolver,

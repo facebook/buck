@@ -37,6 +37,7 @@ import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
@@ -138,12 +139,13 @@ public class GoTestDescription implements
       Path packageName) throws NoSuchBuildTargetException {
     Tool testMainGenerator = GoDescriptors.getTestMainGenerator(goBuckConfig, params, resolver);
 
-    SourcePathResolver sourceResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver sourceResolver = new SourcePathResolver(ruleFinder);
     GoTestMain generatedTestMain = new GoTestMain(
         params.copyWithChanges(
             params.getBuildTarget().withAppendedFlavors(ImmutableFlavor.of("test-main-src")),
             Suppliers.ofInstance(ImmutableSortedSet.copyOf(
-                testMainGenerator.getDeps(sourceResolver))),
+                testMainGenerator.getDeps(ruleFinder))),
             Suppliers.ofInstance(ImmutableSortedSet.of())
         ),
         sourceResolver,
@@ -179,12 +181,15 @@ public class GoTestDescription implements
         platform);
     resolver.addToIndex(testMain);
 
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new GoTest(
         params.copyWithDeps(
             Suppliers.ofInstance(ImmutableSortedSet.of(testMain)),
             Suppliers.ofInstance(ImmutableSortedSet.of())
         ),
-        new SourcePathResolver(resolver),
+        pathResolver,
+        ruleFinder,
         testMain,
         args.labels,
         args.contacts,
@@ -202,7 +207,8 @@ public class GoTestDescription implements
 
     BuildRuleParams testTargetParams = params.copyWithBuildTarget(
         params.getBuildTarget().withAppendedFlavors(TEST_LIBRARY_FLAVOR));
-    BuildRule testLibrary = new NoopBuildRule(testTargetParams, new SourcePathResolver(resolver));
+    BuildRule testLibrary = new NoopBuildRule(
+        testTargetParams, new SourcePathResolver(new SourcePathRuleFinder(resolver)));
     resolver.addToIndex(testLibrary);
 
     BuildRule generatedTestMain = requireTestMainGenRule(
@@ -278,13 +284,11 @@ public class GoTestDescription implements
               .addAll(resolver.getAllRules(libraryArg.deps))
               .build(),
           () -> {
-            final SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+            SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
             return ImmutableSortedSet.<BuildRule>naturalOrder()
                 .addAll(originalParams.getExtraDeps().get())
                 // Make sure to include dynamically generated sources as deps.
-                .addAll(
-                    sourcePathResolver.filterBuildRuleInputs(
-                        libraryArg.srcs))
+                .addAll(ruleFinder.filterBuildRuleInputs(libraryArg.srcs))
                 .build();
           });
 

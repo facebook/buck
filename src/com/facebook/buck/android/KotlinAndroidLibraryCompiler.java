@@ -22,7 +22,7 @@ import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.kotlin.KotlincToJarStepFactory;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableList;
 
 public class KotlinAndroidLibraryCompiler extends AndroidLibraryCompiler {
@@ -55,6 +55,6 @@ public class KotlinAndroidLibraryCompiler extends AndroidLibraryCompiler {
       AndroidLibraryDescription.Arg args,
       BuildRuleResolver resolver) {
     return kotlinBuckConfig.getKotlinCompiler().get()
-        .getDeps(new SourcePathResolver(resolver));
+        .getDeps(new SourcePathRuleFinder(resolver));
   }
 }

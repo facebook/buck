@@ -26,6 +26,7 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableCollection;
@@ -48,6 +49,7 @@ abstract class AbstractHaskellSources implements RuleKeyAppendable {
       BuildTarget target,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       String parameter,
       SourceList sources)
@@ -61,7 +63,7 @@ abstract class AbstractHaskellSources implements RuleKeyAppendable {
               .replace(File.separatorChar, '.'),
           CxxGenruleDescription.fixupSourcePath(
               ruleResolver,
-              pathResolver,
+              ruleFinder,
               cxxPlatform,
               ent.getValue()));
     }
@@ -81,8 +83,8 @@ abstract class AbstractHaskellSources implements RuleKeyAppendable {
     sink.setReflectively("modules", getModuleMap());
   }
 
-  public Iterable<BuildRule> getDeps(SourcePathResolver pathResolver) {
-    return pathResolver.filterBuildRuleInputs(getSourcePaths());
+  public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return ruleFinder.filterBuildRuleInputs(getSourcePaths());
   }
 
 }

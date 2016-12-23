@@ -33,6 +33,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.shell.AbstractGenruleDescription;
@@ -75,7 +76,8 @@ public class ApplePackageDescription implements
       A args) throws NoSuchBuildTargetException {
     final BuildRule bundle = resolver.getRule(
         propagateFlavorsToTarget(params.getBuildTarget(), args.bundle));
-    final SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    final SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
 
     final Optional<ApplePackageConfigAndPlatformInfo> applePackageConfigAndPlatformInfo =
         getApplePackageConfig(
@@ -91,7 +93,7 @@ public class ApplePackageDescription implements
               .add(bundle)
               .addAll(
                   applePackageConfigAndPlatformInfo.get().getExpandedArg()
-                      .getDeps(sourcePathResolver))
+                      .getDeps(ruleFinder))
               .build()),
           sourcePathResolver,
           applePackageConfigAndPlatformInfo.get(),

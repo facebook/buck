@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.shell.ShBinary;
@@ -91,7 +92,7 @@ public class ThriftBuckConfigTest {
     // Verify that the returned SourcePath wraps the compiler path correctly.
     assertThat(compiler, Matchers.instanceOf(HashedFileTool.class));
     assertThat(
-        compiler.getCommandPrefix(new SourcePathResolver(resolver)),
+        compiler.getCommandPrefix(new SourcePathResolver(new SourcePathRuleFinder(resolver))),
         Matchers.contains(thriftPath.toString()));
   }
 
@@ -119,7 +120,7 @@ public class ThriftBuckConfigTest {
 
     // Verify that the returned Tool wraps the compiler rule correctly.
     assertThat(
-        compiler.getDeps(new SourcePathResolver(resolver)),
+        compiler.getDeps(new SourcePathRuleFinder(resolver)),
         Matchers.contains(thriftRule));
   }
 
@@ -144,11 +145,11 @@ public class ThriftBuckConfigTest {
     // Verify that thrift1 and thrift2 are selected correctly.
     assertThat(
         thriftBuckConfig.getCompiler(ThriftLibraryDescription.CompilerType.THRIFT, resolver)
-            .getCommandPrefix(new SourcePathResolver(resolver)),
+            .getCommandPrefix(new SourcePathResolver(new SourcePathRuleFinder(resolver))),
         Matchers.contains("thrift1"));
     assertThat(
         thriftBuckConfig.getCompiler(ThriftLibraryDescription.CompilerType.THRIFT2, resolver)
-            .getCommandPrefix(new SourcePathResolver(resolver)),
+            .getCommandPrefix(new SourcePathResolver(new SourcePathRuleFinder(resolver))),
         Matchers.contains("thrift2"));
   }
 
@@ -171,7 +172,7 @@ public class ThriftBuckConfigTest {
     // Verify that thrift2 falls back to the setting of thrift1.
     assertThat(
         thriftBuckConfig.getCompiler(ThriftLibraryDescription.CompilerType.THRIFT2, resolver)
-            .getCommandPrefix(new SourcePathResolver(resolver)),
+            .getCommandPrefix(new SourcePathResolver(new SourcePathRuleFinder(resolver))),
         Matchers.contains("thrift1"));
   }
 

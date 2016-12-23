@@ -20,6 +20,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -39,6 +40,7 @@ public class JavacDirectToJarStep implements Step {
   private final ImmutableSortedSet<Path> sourceFilePaths;
   private final BuildTarget invokingRule;
   private final SourcePathResolver resolver;
+  private final SourcePathRuleFinder ruleFinder;
   private final ProjectFilesystem filesystem;
   private final ImmutableSortedSet<Path> declaredClasspathEntries;
   private final Path outputDirectory;
@@ -56,6 +58,7 @@ public class JavacDirectToJarStep implements Step {
       ImmutableSortedSet<Path> sourceFilePaths,
       BuildTarget invokingRule,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       ProjectFilesystem filesystem,
       ImmutableSortedSet<Path> declaredClasspathEntries,
       JavacOptions buildTimeOptions,
@@ -71,6 +74,7 @@ public class JavacDirectToJarStep implements Step {
     this.sourceFilePaths = sourceFilePaths;
     this.invokingRule = invokingRule;
     this.resolver = resolver;
+    this.ruleFinder = ruleFinder;
     this.filesystem = filesystem;
     this.declaredClasspathEntries = declaredClasspathEntries;
     this.buildTimeOptions = buildTimeOptions;
@@ -145,6 +149,7 @@ public class JavacDirectToJarStep implements Step {
         invokingRule,
         suggestBuildRules,
         resolver,
+        ruleFinder,
         filesystem,
         new ClasspathChecker(),
         Optional.of(directToJarOutputSettings));

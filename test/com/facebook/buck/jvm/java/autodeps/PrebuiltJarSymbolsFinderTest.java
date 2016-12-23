@@ -34,6 +34,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -115,8 +116,9 @@ public class PrebuiltJarSymbolsFinderTest {
 
     // Mock out calls to a SourcePathResolver so we can create a legitimate
     // DefaultRuleKeyFactory.
+    final SourcePathRuleFinder ruleFinder = createMock(SourcePathRuleFinder.class);
     final SourcePathResolver pathResolver = createMock(SourcePathResolver.class);
-    expect(pathResolver.getRule(anyObject(SourcePath.class)))
+    expect(ruleFinder.getRule(anyObject(SourcePath.class)))
         .andReturn(Optional.empty())
         .anyTimes();
     expect(pathResolver.getRelativePath(anyObject(SourcePath.class)))
@@ -153,8 +155,9 @@ public class PrebuiltJarSymbolsFinderTest {
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
-          RuleKey ruleKey = new DefaultRuleKeyFactory(0, fileHashCache, pathResolver)
-              .build(javaSymbolsRule);
+          RuleKey ruleKey =
+              new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder)
+                  .build(javaSymbolsRule);
           jarFile.delete();
 
           return ruleKey;
@@ -183,6 +186,7 @@ public class PrebuiltJarSymbolsFinderTest {
   @Test
   public void generatedBinaryJarShouldNotAffectRuleKey() {
     SourcePathResolver pathResolver = null;
+    SourcePathRuleFinder ruleFinder = null;
 
     Path jarFile = tmp.getRoot().resolve("common.jar");
     Map<Path, HashCode> pathsToHashes = ImmutableMap.of(
@@ -198,8 +202,8 @@ public class PrebuiltJarSymbolsFinderTest {
         new ProjectFilesystem(tmp.getRoot())
     );
 
-    RuleKey key1 = new DefaultRuleKeyFactory(0, fileHashCache, pathResolver).build(
-        javaSymbolsRule1);
+    RuleKey key1 = new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder)
+        .build(javaSymbolsRule1);
 
     JavaSymbolsRule javaSymbolsRule2 = new JavaSymbolsRule(
         BuildTargetFactory.newInstance("//foo:rule"),
@@ -208,8 +212,8 @@ public class PrebuiltJarSymbolsFinderTest {
         ObjectMappers.newDefaultInstance(),
         new ProjectFilesystem(tmp.getRoot())
     );
-    RuleKey key2 = new DefaultRuleKeyFactory(0, fileHashCache, pathResolver).build(
-        javaSymbolsRule2);
+    RuleKey key2 = new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder)
+        .build(javaSymbolsRule2);
 
     assertNotNull(key1);
     assertNotNull(key2);

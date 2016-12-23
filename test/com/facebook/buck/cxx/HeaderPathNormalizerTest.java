@@ -24,6 +24,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Functions;
@@ -38,9 +39,9 @@ public class HeaderPathNormalizerTest {
 
   @Test
   public void unmanagedHeader() {
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    ));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.h");
     HeaderPathNormalizer normalizer =
@@ -53,9 +54,9 @@ public class HeaderPathNormalizerTest {
 
   @Test
   public void managedHeader() {
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    ));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.h");
     SourcePath headerPath = new PathSourcePath(filesystem, header);
@@ -73,9 +74,9 @@ public class HeaderPathNormalizerTest {
 
   @Test
   public void managedHeaderDir() {
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    ));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.h");
     SourcePath headerDirPath = new PathSourcePath(filesystem, header.getParent());

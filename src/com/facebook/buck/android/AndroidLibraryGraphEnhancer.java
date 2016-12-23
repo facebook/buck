@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.DependencyMode;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -108,14 +109,15 @@ public class AndroidLibraryGraphEnhancer {
       return Optional.empty();
     }
 
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     BuildRuleParams dummyRDotJavaParams = originalBuildRuleParams.copyWithChanges(
         dummyRDotJavaBuildTarget,
         // Add dependencies from `SourcePaths` in `JavacOptions`.
         Suppliers.ofInstance(
             ImmutableSortedSet.copyOf(
-                pathResolver.filterBuildRuleInputs(javacOptions.getInputs(pathResolver)))),
+                ruleFinder.filterBuildRuleInputs(javacOptions.getInputs(ruleFinder)))),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
 
     BuildTarget abiJarTarget =
@@ -124,6 +126,7 @@ public class AndroidLibraryGraphEnhancer {
     DummyRDotJava dummyRDotJava = new DummyRDotJava(
         dummyRDotJavaParams,
         pathResolver,
+        ruleFinder,
         androidResourceDeps,
         abiJarTarget,
         javacOptions,
@@ -137,13 +140,15 @@ public class AndroidLibraryGraphEnhancer {
 
   public CalculateAbi getBuildableForAndroidResourcesAbi(
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver) throws NoSuchBuildTargetException {
+      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder) throws NoSuchBuildTargetException {
     Preconditions.checkState(dummyRDotJavaBuildTarget.getFlavors().contains(CalculateAbi.FLAVOR));
     BuildTarget resourcesTarget = dummyRDotJavaBuildTarget.withoutFlavors(CalculateAbi.FLAVOR);
     resolver.requireRule(resourcesTarget);
     return CalculateAbi.of(
         dummyRDotJavaBuildTarget,
         pathResolver,
+        ruleFinder,
         originalBuildRuleParams,
         new BuildTargetSourcePath(resourcesTarget));
   }

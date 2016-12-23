@@ -24,6 +24,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -83,9 +84,13 @@ public class PrebuiltOcamlLibraryDescription
         params.getProjectFilesystem(),
         libPath.resolve(bytecodeLib));
 
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+
     return new PrebuiltOcamlLibrary(
         params,
-        new SourcePathResolver(resolver),
+        pathResolver,
+        ruleFinder,
         staticNativeLibraryPath,
         staticBytecodeLibraryPath,
         staticCLibraryPaths,

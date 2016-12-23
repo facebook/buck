@@ -31,6 +31,7 @@ import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -79,6 +80,7 @@ public class RustTest
   public RustTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       String crate,
       Optional<SourcePath> crateRoot,
       ImmutableSortedSet<SourcePath> srcs,
@@ -92,7 +94,7 @@ public class RustTest
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType linkStyle) throws NoSuchBuildTargetException {
     super(
-        RustLinkables.addNativeDependencies(params, resolver, cxxPlatform, linkStyle),
+        RustLinkables.addNativeDependencies(params, ruleFinder, cxxPlatform, linkStyle),
         resolver,
         crate,
         crateRoot,

@@ -39,6 +39,7 @@ import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.MacroArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -202,6 +203,7 @@ public class CxxLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       Arg arg,
@@ -217,6 +219,7 @@ public class CxxLibraryDescription implements
             params,
             ruleResolver,
             pathResolver,
+            ruleFinder,
             cxxBuckConfig,
             cxxPlatform,
             CxxSourceRuleFactory.PicType.PIC,
@@ -248,6 +251,7 @@ public class CxxLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CxxLibraryDescription.Arg args,
@@ -271,6 +275,7 @@ public class CxxLibraryDescription implements
             params,
             ruleResolver,
             pathResolver,
+            ruleFinder,
             cxxBuckConfig,
             cxxPlatform,
             CxxSourceRuleFactory.PicType.PIC,
@@ -302,6 +307,7 @@ public class CxxLibraryDescription implements
         LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode),
         ruleResolver,
         pathResolver,
+        ruleFinder,
         sharedTarget,
         linkType,
         Optional.of(sharedLibrarySoname),
@@ -385,11 +391,11 @@ public class CxxLibraryDescription implements
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
         resolver,
-        new SourcePathResolver(resolver),
+        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         cxxPlatform,
         CxxDescriptionEnhancer.parseHeaders(
             params.getBuildTarget(),
-            new SourcePathResolver(resolver),
+            new SourcePathResolver(new SourcePathRuleFinder(resolver)),
             Optional.of(cxxPlatform),
             args),
         HeaderVisibility.PRIVATE,
@@ -408,11 +414,11 @@ public class CxxLibraryDescription implements
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         params,
         resolver,
-        new SourcePathResolver(resolver),
+        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         cxxPlatform,
         CxxDescriptionEnhancer.parseExportedHeaders(
             params.getBuildTarget(),
-            new SourcePathResolver(resolver),
+            new SourcePathResolver(new SourcePathRuleFinder(resolver)),
             Optional.of(cxxPlatform),
             args),
         HeaderVisibility.PUBLIC,
@@ -431,7 +437,8 @@ public class CxxLibraryDescription implements
       CxxPlatform cxxPlatform,
       Arg args,
       CxxSourceRuleFactory.PicType pic) throws NoSuchBuildTargetException {
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
 
     // Create rules for compiling the object files.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
@@ -439,6 +446,7 @@ public class CxxLibraryDescription implements
             params,
             resolver,
             sourcePathResolver,
+            ruleFinder,
             cxxBuckConfig,
             cxxPlatform,
             pic,
@@ -473,6 +481,7 @@ public class CxxLibraryDescription implements
         staticTarget,
         params,
         sourcePathResolver,
+        ruleFinder,
         cxxPlatform,
         cxxBuckConfig.getArchiveContents(),
         staticLibraryPath,
@@ -507,11 +516,14 @@ public class CxxLibraryDescription implements
             args.exportedPlatformLinkerFlags,
             cxxPlatform));
 
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver sourcePathResolver =
+        new SourcePathResolver(ruleFinder);
     return createSharedLibrary(
         params,
         resolver,
         sourcePathResolver,
+        ruleFinder,
         cxxBuckConfig,
         cxxPlatform,
         args,
@@ -548,13 +560,16 @@ public class CxxLibraryDescription implements
                 cxxPlatform.getFlavor(),
                 Type.SHARED.getFlavor()));
 
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return factory.get().createSharedInterfaceLibrary(
         baseTarget.withAppendedFlavors(
             Type.SHARED_INTERFACE.getFlavor(),
             cxxPlatform.getFlavor()),
         baseParams,
         resolver,
-        new SourcePathResolver(resolver),
+        pathResolver,
+        ruleFinder,
         new BuildTargetSourcePath(sharedLibrary.getBuildTarget()));
   }
 
@@ -590,11 +605,13 @@ public class CxxLibraryDescription implements
         .contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       // XXX: This needs bundleLoader for tests..
       CxxPlatform cxxPlatform = platform.orElse(defaultCxxPlatform);
-      SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+      SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
       return CxxDescriptionEnhancer.createCompilationDatabase(
           params,
           resolver,
           sourcePathResolver,
+          ruleFinder,
           cxxBuckConfig,
           cxxPlatform,
           args);
@@ -610,7 +627,7 @@ public class CxxLibraryDescription implements
       return CxxInferEnhancer.requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
           params,
           resolver,
-          new SourcePathResolver(resolver),
+          new SourcePathResolver(new SourcePathRuleFinder(resolver)),
           cxxBuckConfig,
           platform.orElse(defaultCxxPlatform),
           args,
@@ -621,7 +638,7 @@ public class CxxLibraryDescription implements
       return CxxInferEnhancer.requireInferAnalyzeBuildRuleForCxxDescriptionArg(
           params,
           resolver,
-          new SourcePathResolver(resolver),
+          new SourcePathResolver(new SourcePathRuleFinder(resolver)),
           cxxBuckConfig,
           platform.orElse(defaultCxxPlatform),
           args,
@@ -642,7 +659,7 @@ public class CxxLibraryDescription implements
       return CxxInferEnhancer.requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
           params,
           resolver,
-          new SourcePathResolver(resolver),
+          new SourcePathResolver(new SourcePathRuleFinder(resolver)),
           cxxBuckConfig,
           platform.orElse(defaultCxxPlatform),
           args,
@@ -739,7 +756,8 @@ public class CxxLibraryDescription implements
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
-    final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new CxxLibrary(
         params,
         resolver,
@@ -772,6 +790,7 @@ public class CxxLibraryDescription implements
                 params,
                 resolver,
                 pathResolver,
+                ruleFinder,
                 cxxBuckConfig,
                 cxxPlatform,
                 args,

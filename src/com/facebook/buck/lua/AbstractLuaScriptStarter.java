@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.WriteStringTemplateRule;
 import com.facebook.buck.util.Escaper;
@@ -54,6 +55,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
   abstract BuildRuleParams getBaseParams();
   abstract BuildRuleResolver getRuleResolver();
   abstract SourcePathResolver getPathResolver();
+  abstract SourcePathRuleFinder getRuleFinder();
   abstract LuaConfig getLuaConfig();
   abstract CxxPlatform getCxxPlatform();
   abstract BuildTarget getTarget();
@@ -95,6 +97,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
         WriteStringTemplateRule.from(
             getBaseParams(),
             getPathResolver(),
+            getRuleFinder(),
             getTarget(),
             getOutput(),
             new BuildTargetSourcePath(templateTarget),

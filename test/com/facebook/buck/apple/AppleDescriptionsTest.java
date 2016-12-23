@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.util.environment.Platform;
@@ -47,9 +48,9 @@ public class AppleDescriptionsTest {
 
   @Test
   public void parseAppleHeadersForUseFromOtherTargetsFromSet() {
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+     ));
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             "prefix/some_file.h", new FakeSourcePath("path/to/some_file.h"),
@@ -69,9 +70,9 @@ public class AppleDescriptionsTest {
 
   @Test
   public void parseAppleHeadersForUseFromTheSameFromSet() {
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+     ));
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             "some_file.h", new FakeSourcePath("path/to/some_file.h"),
@@ -95,9 +96,9 @@ public class AppleDescriptionsTest {
         "another/path.h", new FakeSourcePath("path/to/another_file.h"),
         "another/file.h", new FakeSourcePath("different/path/to/a_file.h"),
         "file.h", new FakeSourcePath("file.h"));
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+     ));
     assertEquals(
         headerMap,
         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
@@ -113,9 +114,9 @@ public class AppleDescriptionsTest {
         "another/path.h", new FakeSourcePath("path/to/another_file.h"),
         "another/file.h", new FakeSourcePath("different/path/to/a_file.h"),
         "file.h", new FakeSourcePath("file.h"));
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+     ));
     assertEquals(
         ImmutableMap.of(),
         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
@@ -125,9 +126,9 @@ public class AppleDescriptionsTest {
 
   @Test
   public void convertToFlatCxxHeadersWithPrefix() {
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+     ));
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             "prefix/some_file.h", new FakeSourcePath("path/to/some_file.h"),
@@ -146,9 +147,9 @@ public class AppleDescriptionsTest {
 
   @Test
   public void convertToFlatCxxHeadersWithoutPrefix() {
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+     ));
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             "some_file.h", new FakeSourcePath("path/to/some_file.h"),

@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Optional;
@@ -81,7 +82,8 @@ public abstract class BuildTargetMacroExpander extends AbstractMacroExpander<Bui
       BuildRuleResolver resolver,
       BuildTarget input)
       throws MacroException {
-    return expand(new SourcePathResolver(resolver), resolve(resolver, input));
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
+    return expand(pathResolver, resolve(resolver, input));
   }
 
   protected ImmutableList<BuildRule> extractBuildTimeDeps(

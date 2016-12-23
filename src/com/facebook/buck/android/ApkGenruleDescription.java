@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.InstallableApk;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -58,6 +59,8 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
 
     final Supplier<ImmutableSortedSet<BuildRule>> originalExtraDeps = params.getExtraDeps();
 
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new ApkGenrule(
         params.copyWithExtraDeps(
             Suppliers.memoize(
@@ -65,7 +68,8 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
                     .addAll(originalExtraDeps.get())
                     .add(installableApk)
                     .build())),
-        new SourcePathResolver(resolver),
+        pathResolver,
+        ruleFinder,
         args.srcs,
         cmd,
         bash,

@@ -60,6 +60,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
@@ -466,9 +467,13 @@ public class BuildCommand extends AbstractCommand {
 
     DistBuildCellIndexer cellIndexer =
         new DistBuildCellIndexer(params.getCell());
+    SourcePathRuleFinder ruleFinder =
+        new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     DistBuildFileHashes distributedBuildFileHashes = new DistBuildFileHashes(
         actionGraphAndResolver.getActionGraph(),
-        new SourcePathResolver(actionGraphAndResolver.getResolver()),
+        pathResolver,
+        ruleFinder,
         params.getFileHashCache(),
         cellIndexer,
         executorService,
@@ -586,11 +591,15 @@ public class BuildCommand extends AbstractCommand {
     Optional<DefaultRuleKeyFactory> ruleKeyFactory =
         Optional.empty();
     if (showRuleKey) {
+      SourcePathRuleFinder ruleFinder =
+          new SourcePathRuleFinder(actionGraphAndResolver.getResolver());
+      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
       ruleKeyFactory = Optional.of(
           new DefaultRuleKeyFactory(
               params.getBuckConfig().getKeySeed(),
               params.getFileHashCache(),
-              new SourcePathResolver(actionGraphAndResolver.getResolver())));
+              pathResolver,
+              ruleFinder));
     }
     params.getConsole().getStdOut().println("The outputs are:");
     for (BuildTarget buildTarget : buildTargets) {

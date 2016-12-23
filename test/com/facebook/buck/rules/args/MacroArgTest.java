@@ -22,7 +22,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
@@ -63,7 +63,7 @@ public class MacroArgTest {
             ImmutableMap.of("loc", new LocationMacroExpander()));
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Genrule rule =
         (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
@@ -77,7 +77,7 @@ public class MacroArgTest {
             resolver,
             "$(loc //:rule)");
     assertThat(
-        arg.getDeps(pathResolver),
+        arg.getDeps(ruleFinder),
         Matchers.contains(rule));
   }
 

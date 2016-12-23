@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
@@ -78,7 +79,8 @@ public class MavenCoordinatesMacroExpanderTest {
     assumeFalse("Assuming that FakeBuildRule does not have maven coordinates",
                 FakeBuildRule.class.isInstance(HasMavenCoordinates.class));
 
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    SourcePathResolver sourcePathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(resolver));
     BuildRule rule = new FakeBuildRule("//test:foo", sourcePathResolver);
 
     try {

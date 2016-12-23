@@ -185,7 +185,7 @@ public class CachingBuildEngine implements BuildEngine {
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
     this.objectMapper = objectMapper;
-    this.pathResolver = new SourcePathResolver(resolver);
+    this.pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
     this.fileHashCaches = cachingBuildEngineDelegate.createFileHashCacheLoader();
     this.ruleKeyFactories = CacheBuilder.newBuilder()
@@ -1829,11 +1829,13 @@ public class CachingBuildEngine implements BuildEngine {
         FileHashCache fileHashCache,
         BuildRuleResolver ruleResolver,
         long inputRuleKeyFileSizeLimit) {
-      SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
       DefaultRuleKeyFactory defaultRuleKeyFactory = new DefaultRuleKeyFactory(
           seed,
           fileHashCache,
-          pathResolver);
+          pathResolver,
+          ruleFinder);
 
       return new RuleKeyFactories(
           defaultRuleKeyFactory,
@@ -1841,15 +1843,18 @@ public class CachingBuildEngine implements BuildEngine {
               seed,
               fileHashCache,
               pathResolver,
+              ruleFinder,
               inputRuleKeyFileSizeLimit),
           new DefaultDependencyFileRuleKeyFactory(
               seed,
               fileHashCache,
-              pathResolver),
+              pathResolver,
+              ruleFinder),
           new InputCountingRuleKeyFactory(
               seed,
               fileHashCache,
-              pathResolver));
+              pathResolver,
+              ruleFinder));
     }
 
     @VisibleForTesting

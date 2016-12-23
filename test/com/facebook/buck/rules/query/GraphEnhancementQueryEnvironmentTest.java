@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -143,7 +144,8 @@ public class GraphEnhancementQueryEnvironmentTest {
     BuildRuleResolver realResolver = new BuildRuleResolver(
         targetGraph,
         new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(realResolver);
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(realResolver));
 
     FakeJavaLibrary bottomRule = realResolver.addToIndex(
         new FakeJavaLibrary(bottomNode.getBuildTarget(), pathResolver));

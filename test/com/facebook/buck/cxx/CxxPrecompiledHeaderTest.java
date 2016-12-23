@@ -29,6 +29,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
@@ -56,7 +57,8 @@ public class CxxPrecompiledHeaderTest {
         };
     Compiler compiler =
         CxxPlatformUtils.DEFAULT_PLATFORM.getCxx().resolve(resolver);
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    SourcePathResolver sourcePathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(resolver));
     CxxPrecompiledHeader precompiledHeader = new CxxPrecompiledHeader(
         params,
         sourcePathResolver,

@@ -64,6 +64,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -1225,9 +1226,10 @@ public class WorkspaceAndProjectGeneratorTest {
 
   private Function<TargetNode<?, ?>, SourcePathResolver> getSourcePathResolverForNodeFunction(
       final TargetGraph targetGraph) {
-    return input -> new SourcePathResolver(ActionGraphCache.getFreshActionGraph(
-        BuckEventBusFactory.newInstance(),
-        targetGraph.getSubgraph(ImmutableSet.of(input))).getResolver());
+    return input -> new SourcePathResolver(new SourcePathRuleFinder(
+        ActionGraphCache.getFreshActionGraph(
+            BuckEventBusFactory.newInstance(),
+            targetGraph.getSubgraph(ImmutableSet.of(input))).getResolver()));
   }
 
 }

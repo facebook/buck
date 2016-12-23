@@ -28,6 +28,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
@@ -79,7 +80,7 @@ public class RustCompileTest {
   private static Tool fakeTool() {
     return new Tool() {
       @Override
-      public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
+      public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
         return ImmutableSortedSet.of();
       }
 
@@ -111,10 +112,10 @@ public class RustCompileTest {
         ImmutableSortedSet<SourcePath> srcs) {
       super(
           new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance(target)).build(),
-          new SourcePathResolver(
+          new SourcePathResolver(new SourcePathRuleFinder(
               new BuildRuleResolver(
                   TargetGraph.EMPTY,
-                  new DefaultTargetNodeToBuildRuleTransformer())),
+                  new DefaultTargetNodeToBuildRuleTransformer()))),
           "myname",
           /* crateRoot */ Optional.empty(),
           srcs,

@@ -21,7 +21,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.HumanReadableException;
 
 import java.util.Optional;
@@ -32,7 +32,7 @@ public final class JavacOptionsFactory {
       JavacOptions defaultOptions,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       JvmLibraryArg jvmLibraryArg) {
     if ((jvmLibraryArg.source.isPresent() || jvmLibraryArg.target.isPresent()) &&
         jvmLibraryArg.javaVersion.isPresent()) {
@@ -71,7 +71,7 @@ public final class JavacOptionsFactory {
       if (either.isRight()) {
         SourcePath sourcePath = either.getRight();
 
-        Optional<BuildRule> possibleRule = pathResolver.getRule(sourcePath);
+        Optional<BuildRule> possibleRule = ruleFinder.getRule(sourcePath);
         if (possibleRule.isPresent() && possibleRule.get() instanceof PrebuiltJar) {
           builder.setJavacJarPath(new BuildTargetSourcePath(possibleRule.get().getBuildTarget()));
         } else {

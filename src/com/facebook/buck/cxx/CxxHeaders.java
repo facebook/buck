@@ -20,6 +20,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
@@ -62,7 +63,7 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
   /**
    * @return all deps required by this header pack.
    */
-  public abstract Iterable<BuildRule> getDeps(SourcePathResolver resolver);
+  public abstract Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder);
 
   private static String resolveSourcePath(
       SourcePathResolver resolver,

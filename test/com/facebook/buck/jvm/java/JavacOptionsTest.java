@@ -32,7 +32,7 @@ import com.facebook.buck.model.Either;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Functions;
@@ -279,11 +279,11 @@ public class JavacOptionsTest {
         .setJavacJarPath(javacJarPath)
         .build();
 
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
      );
     assertThat(
-        options.getInputs(resolver),
+        options.getInputs(ruleFinder),
         Matchers.containsInAnyOrder(javacJarPath));
   }
 

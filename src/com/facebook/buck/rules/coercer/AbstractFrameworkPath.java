@@ -21,7 +21,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
@@ -66,8 +66,8 @@ abstract class AbstractFrameworkPath implements
   @Value.Parameter
   public abstract Optional<SourcePath> getSourcePath();
 
-  public Iterable<BuildRule> getDeps(SourcePathResolver resolver) {
-    return resolver.filterBuildRuleInputs(OptionalCompat.asSet(getSourcePath()));
+  public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return ruleFinder.filterBuildRuleInputs(OptionalCompat.asSet(getSourcePath()));
   }
 
   public Path getFileName(Function<SourcePath, Path> resolver) {

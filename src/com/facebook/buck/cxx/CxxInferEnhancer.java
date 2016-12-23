@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -91,7 +92,7 @@ public final class CxxInferEnhancer {
     InferFlavors.checkNoInferFlavors(buildTarget.getFlavors());
     return CxxDescriptionEnhancer.parseCxxSources(
         buildTarget,
-        new SourcePathResolver(ruleResolver),
+        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)),
         cxxPlatform,
         args);
   }
@@ -109,7 +110,7 @@ public final class CxxInferEnhancer {
         requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
             params,
             ruleResolver,
-            new SourcePathResolver(ruleResolver),
+            new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)),
             cxxBuckConfig,
             cxxPlatform,
             args,
@@ -127,7 +128,7 @@ public final class CxxInferEnhancer {
                         .addAll(captureRules)
                         .build()),
                 params.getExtraDeps()),
-            new SourcePathResolver(ruleResolver),
+            new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)),
             captureRules));
   }
 
@@ -394,7 +395,8 @@ public final class CxxInferEnhancer {
 
     InferFlavors.checkNoInferFlavors(params.getBuildTarget().getFlavors());
 
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     ImmutableMap<Path, SourcePath> headers = CxxDescriptionEnhancer.parseHeaders(
         params.getBuildTarget(),
@@ -454,6 +456,7 @@ public final class CxxInferEnhancer {
         params,
         resolver,
         pathResolver,
+        ruleFinder,
         cxxBuckConfig,
         cxxPlatform,
         preprocessorInputs,

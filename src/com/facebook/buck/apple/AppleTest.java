@@ -30,6 +30,7 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TestRule;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
@@ -88,6 +89,7 @@ public class AppleTest
   private final Optional<String> defaultDestinationSpecifier;
   private final Optional<ImmutableMap<String, String>> destinationSpecifier;
 
+  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey
   private final BuildRule testBundle;
 
@@ -181,6 +183,7 @@ public class AppleTest
       Optional<ImmutableMap<String, String>> destinationSpecifier,
       BuildRuleParams params,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       BuildRule testBundle,
       Optional<AppleBundle> testHostApp,
       ImmutableSet<String> contacts,
@@ -200,6 +203,7 @@ public class AppleTest
     this.platformName = platformName;
     this.defaultDestinationSpecifier = defaultDestinationSpecifier;
     this.destinationSpecifier = destinationSpecifier;
+    this.ruleFinder = ruleFinder;
     this.testBundle = testBundle;
     this.testHostApp = testHostApp;
     this.contacts = contacts;
@@ -431,7 +435,7 @@ public class AppleTest
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
         .add(testBundle)
-        .addAll(getResolver().filterBuildRuleInputs(OptionalCompat.asSet(xctool)))
+        .addAll(ruleFinder.filterBuildRuleInputs(OptionalCompat.asSet(xctool)))
         .addAll(OptionalCompat.asSet(testHostApp))
         .build();
   }

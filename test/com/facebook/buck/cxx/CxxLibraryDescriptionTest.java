@@ -47,7 +47,7 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
@@ -768,7 +768,7 @@ public class CxxLibraryDescriptionTest {
             Linker.LinkableDepType.STATIC_PIC);
     Arg firstArg = nativeLinkableInput.getArgs().get(0);
     assertThat(firstArg, instanceOf(FileListableLinkerInputArg.class));
-    ImmutableCollection<BuildRule> deps = firstArg.getDeps(new SourcePathResolver(resolver));
+    ImmutableCollection<BuildRule> deps = firstArg.getDeps(new SourcePathRuleFinder(resolver));
     assertThat(deps.size(), is(1));
     BuildRule buildRule = deps.asList().get(0);
     assertThat(
@@ -982,10 +982,10 @@ public class CxxLibraryDescriptionTest {
         lib.getNativeLinkableInput(
             CxxLibraryBuilder.createDefaultPlatform(),
             Linker.LinkableDepType.SHARED);
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     assertThat(
         FluentIterable.from(nativeLinkableInput.getArgs())
-            .transformAndConcat(arg -> arg.getDeps(pathResolver))
+            .transformAndConcat(arg -> arg.getDeps(ruleFinder))
             .toSet(),
         hasItem(loc));
     assertThat(
@@ -1032,10 +1032,10 @@ public class CxxLibraryDescriptionTest {
         lib.getNativeLinkableInput(
             CxxLibraryBuilder.createDefaultPlatform(),
             Linker.LinkableDepType.SHARED);
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     assertThat(
         FluentIterable.from(nativeLinkableInput.getArgs())
-            .transformAndConcat(arg -> arg.getDeps(pathResolver))
+            .transformAndConcat(arg -> arg.getDeps(ruleFinder))
             .toSet(),
         hasItem(loc));
     assertThat(
@@ -1085,10 +1085,10 @@ public class CxxLibraryDescriptionTest {
         lib.getNativeLinkableInput(
             CxxLibraryBuilder.createDefaultPlatform(),
             Linker.LinkableDepType.SHARED);
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     assertThat(
         FluentIterable.from(nativeLinkableInput.getArgs())
-            .transformAndConcat(arg -> arg.getDeps(pathResolver))
+            .transformAndConcat(arg -> arg.getDeps(ruleFinder))
             .toSet(),
         Matchers.not(hasItem(loc)));
     assertThat(
@@ -1328,7 +1328,7 @@ public class CxxLibraryDescriptionTest {
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(cxxLibraryBuilder.build()),
             new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(resolver, filesystem);
     CxxPreprocessorInput input =
         rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, HeaderVisibility.PUBLIC);
@@ -1339,7 +1339,7 @@ public class CxxLibraryDescriptionTest {
         input.getSystemIncludeRoots(),
         empty());
     assertThat(
-        ImmutableSortedSet.copyOf(input.getDeps(resolver, pathResolver)),
+        ImmutableSortedSet.copyOf(input.getDeps(resolver, ruleFinder)),
         empty());
   }
 

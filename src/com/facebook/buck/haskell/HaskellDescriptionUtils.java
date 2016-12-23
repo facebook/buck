@@ -42,6 +42,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
@@ -73,6 +74,7 @@ public class HaskellDescriptionUtils {
       BuildTarget target,
       final BuildRuleParams baseParams,
       final BuildRuleResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
       final CxxPlatform cxxPlatform,
       HaskellConfig haskellConfig,
@@ -148,6 +150,7 @@ public class HaskellDescriptionUtils {
     return HaskellCompileRule.from(
         target,
         baseParams,
+        ruleFinder,
         pathResolver,
         haskellConfig.getCompiler().resolve(resolver),
         haskellConfig.getHaskellVersion(),
@@ -179,6 +182,7 @@ public class HaskellDescriptionUtils {
       BuildRuleParams params,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       HaskellConfig haskellConfig,
       Linker.LinkableDepType depType,
@@ -202,6 +206,7 @@ public class HaskellDescriptionUtils {
             target,
             params,
             resolver,
+            ruleFinder,
             pathResolver,
             cxxPlatform,
             haskellConfig,
@@ -221,6 +226,7 @@ public class HaskellDescriptionUtils {
       BuildRuleParams baseParams,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       HaskellConfig haskellConfig,
       Linker.LinkType linkType,
@@ -287,6 +293,7 @@ public class HaskellDescriptionUtils {
                 target.withAppendedFlavors(ImmutableFlavor.of("empty-compiled-module")),
                 baseParams,
                 resolver,
+                ruleFinder,
                 pathResolver,
                 cxxPlatform,
                 haskellConfig,
@@ -305,6 +312,7 @@ public class HaskellDescriptionUtils {
                 emptyArchiveTarget,
                 baseParams,
                 pathResolver,
+                ruleFinder,
                 cxxPlatform,
                 Archive.Contents.NORMAL,
                 BuildTargets.getGenPath(
@@ -324,11 +332,11 @@ public class HaskellDescriptionUtils {
                 target,
                 Suppliers.ofInstance(
                     ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(linker.getDeps(pathResolver))
+                        .addAll(linker.getDeps(ruleFinder))
                         .addAll(
                             Stream.of(args, linkerArgs)
                                 .flatMap(Collection::stream)
-                                .flatMap(arg -> arg.getDeps(pathResolver).stream())
+                                .flatMap(arg -> arg.getDeps(ruleFinder).stream())
                                 .iterator())
                         .build()),
                 Suppliers.ofInstance(ImmutableSortedSet.of())),

@@ -28,6 +28,7 @@ import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.UncachedRuleKeyBuilder;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -98,15 +99,17 @@ public class ExternalJavacTest extends EasyMockSupport {
 
     Map<Path, HashCode> hashCodes = ImmutableMap.of(javac, Hashing.sha1().hashInt(42));
     FakeFileHashCache fileHashCache = new FakeFileHashCache(hashCodes);
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//example:target").build();
     BuildRule buildRule = new NoopBuildRule(params, pathResolver);
     DefaultRuleKeyFactory fakeRuleKeyFactory =
-        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver);
+        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder);
 
     RuleKey javacKey = new UncachedRuleKeyBuilder(
+        ruleFinder,
         pathResolver,
         fileHashCache,
         fakeRuleKeyFactory)
@@ -147,15 +150,17 @@ public class ExternalJavacTest extends EasyMockSupport {
 
     Map<Path, HashCode> hashCodes = ImmutableMap.of(javac, Hashing.sha1().hashInt(42));
     FakeFileHashCache fileHashCache = new FakeFileHashCache(hashCodes);
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildRuleParams params = new FakeBuildRuleParamsBuilder("//example:target").build();
     BuildRule buildRule = new NoopBuildRule(params, pathResolver);
     DefaultRuleKeyFactory fakeRuleKeyFactory =
-        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver);
+        new DefaultRuleKeyFactory(0, fileHashCache, pathResolver, ruleFinder);
 
     RuleKey javacKey = new UncachedRuleKeyBuilder(
+        ruleFinder,
         pathResolver,
         fileHashCache,
         fakeRuleKeyFactory)

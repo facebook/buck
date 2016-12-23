@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
@@ -40,9 +41,10 @@ import java.util.List;
 public class CopyResourcesStepTest {
   @Test
   public void testAddResourceCommandsWithBuildFileParentOfSrcDirectory() {
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+    );
+    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
     // Files:
     // android/java/BUCK
     // android/java/src/com/facebook/base/data.json
@@ -55,6 +57,7 @@ public class CopyResourcesStepTest {
     CopyResourcesStep step = new CopyResourcesStep(
         filesystem,
         resolver,
+        ruleFinder,
         buildTarget,
         ImmutableSet.of(
             new FakeSourcePath(filesystem, "android/java/src/com/facebook/base/data.json"),
@@ -86,13 +89,15 @@ public class CopyResourcesStepTest {
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
+        new BuildRuleResolver(
+            TargetGraph.EMPTY,
+            new DefaultTargetNodeToBuildRuleTransformer())
+    );
     CopyResourcesStep step = new CopyResourcesStep(
         filesystem,
-        new SourcePathResolver(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        ),
+        new SourcePathResolver(ruleFinder),
+        ruleFinder,
         buildTarget,
         ImmutableSet.<SourcePath>of(
             new FakeSourcePath(filesystem, "android/java/src/com/facebook/base/data.json"),
@@ -126,13 +131,15 @@ public class CopyResourcesStepTest {
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
+        new BuildRuleResolver(
+            TargetGraph.EMPTY,
+            new DefaultTargetNodeToBuildRuleTransformer())
+    );
     CopyResourcesStep step = new CopyResourcesStep(
         filesystem,
-        new SourcePathResolver(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        ),
+        new SourcePathResolver(ruleFinder),
+        ruleFinder,
         buildTarget,
         ImmutableSet.of(
             new FakeSourcePath(filesystem, "android/java/src/com/facebook/base/data.json"),

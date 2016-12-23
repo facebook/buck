@@ -40,6 +40,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.DependencyMode;
@@ -83,14 +84,15 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             templateOptions,
             params,
             resolver,
-            pathResolver,
+            ruleFinder,
             args);
 
     AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
@@ -106,13 +108,14 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
     if (params.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
       if (params.getBuildTarget().getFlavors().contains(
           AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR)) {
-        return graphEnhancer.getBuildableForAndroidResourcesAbi(resolver, pathResolver);
+        return graphEnhancer.getBuildableForAndroidResourcesAbi(resolver, pathResolver, ruleFinder);
       }
       BuildTarget testTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
       resolver.requireRule(testTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),
           pathResolver,
+          ruleFinder,
           params,
           new BuildTargetSourcePath(testTarget));
     }
@@ -140,6 +143,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             args.cxxLibraryWhitelist,
             resolver,
             pathResolver,
+            ruleFinder,
             cxxPlatform);
     params = cxxLibraryEnhancement.updatedParams;
 
@@ -154,8 +158,8 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
                     Iterables.concat(
                         params.getDeclaredDeps().get(),
                         resolver.getAllRules(args.providedDeps))))
-                .addAll(pathResolver.filterBuildRuleInputs(
-                    javacOptions.getInputs(pathResolver)))
+                .addAll(ruleFinder.filterBuildRuleInputs(
+                    javacOptions.getInputs(ruleFinder)))
                 .build()),
         params.getExtraDeps())
         .withFlavor(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
@@ -165,6 +169,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             new DefaultJavaLibrary(
                 testsLibraryParams,
                 pathResolver,
+                ruleFinder,
                 args.srcs,
                 validateResources(
                     pathResolver,
@@ -193,6 +198,7 @@ public class RobolectricTestDescription implements Description<RobolectricTestDe
             Suppliers.ofInstance(ImmutableSortedSet.of(testsLibrary)),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,
+        ruleFinder,
         testsLibrary,
         additionalClasspathEntries,
         args.labels,

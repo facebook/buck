@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -79,6 +80,7 @@ import java.nio.file.Path;
 // TODO(shs96c): Extend to also allow exporting a rule.
 public class ExportFile extends AbstractBuildRule implements HasOutputName, HasRuntimeDeps {
 
+  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey
   private final String name;
   @AddToRuleKey
@@ -89,10 +91,12 @@ public class ExportFile extends AbstractBuildRule implements HasOutputName, HasR
   ExportFile(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       String name,
       ExportFileDescription.Mode mode,
       SourcePath src) {
     super(buildRuleParams, resolver);
+    this.ruleFinder = ruleFinder;
     this.name = name;
     this.mode = mode;
     this.src = src;
@@ -162,7 +166,7 @@ public class ExportFile extends AbstractBuildRule implements HasOutputName, HasR
     // is built when we are, so accomplish this by exporting it as a runtime dep.
     return ImmutableSortedSet.copyOf(
         mode == ExportFileDescription.Mode.REFERENCE ?
-            getResolver().filterBuildRuleInputs(src) :
+            ruleFinder.filterBuildRuleInputs(src) :
             ImmutableList.of());
   }
 

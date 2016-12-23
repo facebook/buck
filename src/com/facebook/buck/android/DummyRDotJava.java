@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -55,6 +56,7 @@ import java.util.Set;
 public class DummyRDotJava extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, HasJavaAbi {
 
+  private final SourcePathRuleFinder ruleFinder;
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final BuildTarget abiJar;
   private final Path outputJar;
@@ -73,6 +75,7 @@ public class DummyRDotJava extends AbstractBuildRule
   public DummyRDotJava(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       Set<HasAndroidResourceDeps> androidResourceDeps,
       BuildTarget abiJar,
       JavacOptions javacOptions,
@@ -82,6 +85,7 @@ public class DummyRDotJava extends AbstractBuildRule
     this(
         params,
         resolver,
+        ruleFinder,
         androidResourceDeps,
         abiJar,
         javacOptions,
@@ -94,6 +98,7 @@ public class DummyRDotJava extends AbstractBuildRule
   private DummyRDotJava(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       Set<HasAndroidResourceDeps> androidResourceDeps,
       BuildTarget abiJar,
       JavacOptions javacOptions,
@@ -102,8 +107,9 @@ public class DummyRDotJava extends AbstractBuildRule
       Optional<String> finalRName,
       ImmutableList<SourcePath> abiInputs) {
     super(
-        params.appendExtraDeps(() -> resolver.filterBuildRuleInputs(abiInputs)),
+        params.appendExtraDeps(() -> ruleFinder.filterBuildRuleInputs(abiInputs)),
         resolver);
+    this.ruleFinder = ruleFinder;
     // Sort the input so that we get a stable ABI for the same set of resources.
     this.androidResourceDeps = FluentIterable.from(androidResourceDeps)
         .toSortedList(HasBuildTarget.BUILD_TARGET_COMPARATOR);
@@ -206,6 +212,7 @@ public class DummyRDotJava extends AbstractBuildRule
             javacOptions,
             getBuildTarget(),
             getResolver(),
+            ruleFinder,
             getProjectFilesystem());
     steps.add(javacStep);
     buildableContext.recordArtifact(rDotJavaClassesFolder);

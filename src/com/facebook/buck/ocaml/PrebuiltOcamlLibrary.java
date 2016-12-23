@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
@@ -39,6 +40,7 @@ import javax.annotation.Nullable;
 
 class PrebuiltOcamlLibrary extends AbstractBuildRule implements OcamlLibrary {
 
+  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey
   private final Optional<SourcePath> staticNativeLibraryPath;
   @AddToRuleKey
@@ -56,6 +58,7 @@ class PrebuiltOcamlLibrary extends AbstractBuildRule implements OcamlLibrary {
   public PrebuiltOcamlLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       Optional<SourcePath> staticNativeLibraryPath,
       SourcePath staticBytecodeLibraryPath,
       ImmutableList<SourcePath> staticCLibraryPaths,
@@ -63,6 +66,7 @@ class PrebuiltOcamlLibrary extends AbstractBuildRule implements OcamlLibrary {
       Path libPath,
       Path includeDir) {
     super(params, resolver);
+    this.ruleFinder = ruleFinder;
     this.staticNativeLibraryPath = staticNativeLibraryPath;
     this.staticBytecodeLibraryPath = staticBytecodeLibraryPath;
     this.staticCLibraryPaths = staticCLibraryPaths;
@@ -131,8 +135,8 @@ class PrebuiltOcamlLibrary extends AbstractBuildRule implements OcamlLibrary {
   @Override
   public ImmutableSortedSet<BuildRule> getBytecodeLinkDeps() {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(getResolver().filterBuildRuleInputs(ImmutableList.of(bytecodeLibraryPath)))
-        .addAll(getResolver().filterBuildRuleInputs(staticBytecodeLibraryPath))
+        .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(bytecodeLibraryPath)))
+        .addAll(ruleFinder.filterBuildRuleInputs(staticBytecodeLibraryPath))
         .build();
   }
 

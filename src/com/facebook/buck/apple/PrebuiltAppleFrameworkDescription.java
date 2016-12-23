@@ -29,6 +29,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -58,7 +59,7 @@ public class PrebuiltAppleFrameworkDescription implements
     return new PrebuiltAppleFramework(
         params,
         resolver,
-        new SourcePathResolver(resolver),
+        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         args.framework,
         args.preferredLinkage,
         args.frameworks,

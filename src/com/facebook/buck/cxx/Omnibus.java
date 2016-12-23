@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -237,6 +238,7 @@ public class Omnibus {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags) {
@@ -250,6 +252,7 @@ public class Omnibus {
             params,
             ruleResolver,
             pathResolver,
+            ruleFinder,
             dummyOmnibusTarget,
             BuildTargets.getGenPath(params.getProjectFilesystem(), dummyOmnibusTarget, "%s")
                 .resolve(omnibusSoname),
@@ -264,6 +267,7 @@ public class Omnibus {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
@@ -360,6 +364,7 @@ public class Omnibus {
                 params,
                 ruleResolver,
                 pathResolver,
+                ruleFinder,
                 rootTarget,
                 output.orElse(BuildTargets.getGenPath(
                     params.getProjectFilesystem(),
@@ -384,6 +389,7 @@ public class Omnibus {
                 params,
                 ruleResolver,
                 pathResolver,
+                ruleFinder,
                 rootTarget,
                 output.orElse(BuildTargets.getGenPath(
                     params.getProjectFilesystem(),
@@ -415,6 +421,7 @@ public class Omnibus {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
@@ -426,6 +433,7 @@ public class Omnibus {
         params,
         ruleResolver,
         pathResolver,
+        ruleFinder,
         cxxBuckConfig,
         cxxPlatform,
         extraLdflags,
@@ -440,6 +448,7 @@ public class Omnibus {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
@@ -451,6 +460,7 @@ public class Omnibus {
         params,
         ruleResolver,
         pathResolver,
+        ruleFinder,
         cxxBuckConfig,
         cxxPlatform,
         extraLdflags,
@@ -465,6 +475,7 @@ public class Omnibus {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       Iterable<? extends SourcePath> linkerInputs) {
     SourcePath undefinedSymbolsFile =
@@ -473,6 +484,7 @@ public class Omnibus {
                 params,
                 ruleResolver,
                 pathResolver,
+                ruleFinder,
                 params.getBuildTarget().withAppendedFlavors(
                     ImmutableFlavor.of("omnibus-undefined-symbols-file")),
                 linkerInputs);
@@ -481,6 +493,7 @@ public class Omnibus {
             params,
             ruleResolver,
             pathResolver,
+            ruleFinder,
             params.getBuildTarget().withAppendedFlavors(
                 ImmutableFlavor.of("omnibus-undefined-symbols-args")),
             ImmutableList.of(undefinedSymbolsFile));
@@ -491,6 +504,7 @@ public class Omnibus {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
@@ -521,6 +535,7 @@ public class Omnibus {
             params,
             ruleResolver,
             pathResolver,
+            ruleFinder,
             cxxPlatform,
             undefinedSymbolsOnlyRoots));
 
@@ -581,6 +596,7 @@ public class Omnibus {
             params,
             ruleResolver,
             pathResolver,
+            ruleFinder,
             omnibusTarget,
             BuildTargets.getGenPath(params.getProjectFilesystem(), omnibusTarget, "%s")
                 .resolve(omnibusSoname),
@@ -606,6 +622,7 @@ public class Omnibus {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
@@ -625,6 +642,7 @@ public class Omnibus {
             params,
             ruleResolver,
             pathResolver,
+            ruleFinder,
             cxxBuckConfig,
             cxxPlatform,
             extraLdflags);
@@ -640,6 +658,7 @@ public class Omnibus {
             params,
             ruleResolver,
             pathResolver,
+            ruleFinder,
             cxxBuckConfig,
             cxxPlatform,
             extraLdflags,
@@ -652,6 +671,7 @@ public class Omnibus {
                 params,
                 ruleResolver,
                 pathResolver,
+                ruleFinder,
                 cxxBuckConfig,
                 cxxPlatform,
                 extraLdflags,
@@ -670,6 +690,7 @@ public class Omnibus {
               params,
               ruleResolver,
               pathResolver,
+              ruleFinder,
               cxxBuckConfig,
               cxxPlatform,
               extraLdflags,
@@ -687,6 +708,7 @@ public class Omnibus {
                 params,
                 ruleResolver,
                 pathResolver,
+                ruleFinder,
                 cxxBuckConfig,
                 cxxPlatform,
                 extraLdflags,

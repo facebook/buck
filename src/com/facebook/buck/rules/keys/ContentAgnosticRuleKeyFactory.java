@@ -23,6 +23,7 @@ import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -43,11 +44,14 @@ public class ContentAgnosticRuleKeyFactory
   private final FileHashLoader fileHashLoader;
   private final SourcePathResolver pathResolver;
   private final LoadingCache<RuleKeyAppendable, RuleKey> ruleKeyCache;
+  private final SourcePathRuleFinder ruleFinder;
 
   public ContentAgnosticRuleKeyFactory(
       int seed,
-      SourcePathResolver pathResolver) {
+      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder) {
     super(seed);
+    this.ruleFinder = ruleFinder;
     // Build the cache around the sub-rule-keys and their dep lists.
     ruleKeyCache = CacheBuilder.newBuilder().weakKeys().build(
         new CacheLoader<RuleKeyAppendable, RuleKey>() {
@@ -80,7 +84,7 @@ public class ContentAgnosticRuleKeyFactory
   }
 
   private RuleKeyBuilder<RuleKey> newBuilder() {
-    return new RuleKeyBuilder<RuleKey>(pathResolver, fileHashLoader) {
+    return new RuleKeyBuilder<RuleKey>(ruleFinder, pathResolver, fileHashLoader) {
       @Override
       protected RuleKeyBuilder<RuleKey> setBuildRule(BuildRule rule) {
         return setSingleValue(ContentAgnosticRuleKeyFactory.this.build(rule));

@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
@@ -42,16 +43,19 @@ public class LuaBinary
   private final String mainModule;
   private final LuaPackageComponents components;
   private final Tool lua;
+  private final SourcePathRuleFinder ruleFinder;
 
   public LuaBinary(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       Path output,
       Tool wrappedBinary,
       String mainModule,
       LuaPackageComponents components,
       Tool lua) {
     super(buildRuleParams, resolver);
+    this.ruleFinder = ruleFinder;
     Preconditions.checkArgument(!output.isAbsolute());
     this.output = output;
     this.wrappedBinary = wrappedBinary;
@@ -100,7 +104,7 @@ public class LuaBinary
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(getDeclaredDeps())
-        .addAll(wrappedBinary.getDeps(getResolver()))
+        .addAll(wrappedBinary.getDeps(ruleFinder))
         .build();
   }
 

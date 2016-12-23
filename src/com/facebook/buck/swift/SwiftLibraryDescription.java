@@ -41,6 +41,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.HumanReadableException;
@@ -230,7 +231,7 @@ public class SwiftLibraryDescription implements
           cxxPlatform,
           swiftBuckConfig,
           params,
-          new SourcePathResolver(resolver),
+          new SourcePathResolver(new SourcePathRuleFinder(resolver)),
           swiftPlatform.get().getSwift(),
           args.frameworks,
           args.moduleName.orElse(buildTarget.getShortName()),
@@ -248,7 +249,7 @@ public class SwiftLibraryDescription implements
     return new SwiftLibrary(
         params,
         resolver,
-        new SourcePathResolver(resolver),
+        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         ImmutableSet.of(),
         swiftPlatformFlavorDomain,
         args.frameworks,
@@ -266,7 +267,8 @@ public class SwiftLibraryDescription implements
       Optional<String> soname,
       Optional<LinkerMapMode> flavoredLinkerMapMode) throws NoSuchBuildTargetException {
 
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
     String sharedLibrarySoname = CxxDescriptionEnhancer.getSharedLibrarySoname(
         soname,
         buildTarget.withoutFlavors(SUPPORTED_FLAVORS),
@@ -294,6 +296,7 @@ public class SwiftLibraryDescription implements
         LinkerMapMode.restoreLinkerMapModeFlavorInParams(params, flavoredLinkerMapMode),
         resolver,
         sourcePathResolver,
+        ruleFinder,
         buildTarget,
         Linker.LinkType.SHARED,
         Optional.of(sharedLibrarySoname),
@@ -316,7 +319,7 @@ public class SwiftLibraryDescription implements
     BuildTarget buildTarget = params.getBuildTarget();
     if (!isSwiftTarget(buildTarget)) {
       boolean hasSwiftSource = !SwiftDescriptions.filterSwiftSources(
-          new SourcePathResolver(resolver),
+          new SourcePathResolver(new SourcePathRuleFinder(resolver)),
           args.srcs).isEmpty();
       return hasSwiftSource ?
           Optional.of(resolver.requireRule(buildTarget.withAppendedFlavors(SWIFT_COMPANION_FLAVOR)))
@@ -325,7 +328,7 @@ public class SwiftLibraryDescription implements
 
     final SwiftLibraryDescription.Arg delegateArgs = createUnpopulatedConstructorArg();
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
-        new SourcePathResolver(resolver),
+        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         delegateArgs,
         args,
         buildTarget);

@@ -23,6 +23,7 @@ import com.facebook.buck.jvm.core.SuggestBuildRules;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -69,6 +70,8 @@ public class JavacStep implements Step {
   private final BuildTarget invokingRule;
 
   private final Optional<SuggestBuildRules> suggestBuildRules;
+
+  private final SourcePathRuleFinder ruleFinder;
 
   private final SourcePathResolver resolver;
 
@@ -121,6 +124,7 @@ public class JavacStep implements Step {
       BuildTarget invokingRule,
       Optional<SuggestBuildRules> suggestBuildRules,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       ProjectFilesystem filesystem,
       ClasspathChecker classpathChecker,
       Optional<DirectToJarOutputSettings> directToJarOutputSettings) {
@@ -135,6 +139,7 @@ public class JavacStep implements Step {
     this.invokingRule = invokingRule;
     this.suggestBuildRules = suggestBuildRules;
     this.resolver = resolver;
+    this.ruleFinder = ruleFinder;
     this.filesystem = filesystem;
     this.classpathChecker = classpathChecker;
     this.directToJarOutputSettings = directToJarOutputSettings;
@@ -284,7 +289,7 @@ public class JavacStep implements Step {
     return javac.getInputs().stream().flatMap(input -> {
       com.google.common.base.Optional<BuildRule> rule =
           com.google.common.base.Optional.fromNullable(
-              resolver.getRule(input).orElse(null));
+              ruleFinder.getRule(input).orElse(null));
       if (rule instanceof JavaLibrary) {
         return ((JavaLibrary) rule).getTransitiveClasspaths().stream();
       } else {

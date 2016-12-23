@@ -33,6 +33,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.HumanReadableException;
@@ -106,7 +107,8 @@ abstract class GoDescriptors {
       GoPlatform platform,
       Iterable<BuildTarget> deps)
       throws NoSuchBuildTargetException {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     Preconditions.checkState(
         params.getBuildTarget().getFlavors().contains(platform.getFlavor()));
@@ -119,7 +121,7 @@ abstract class GoDescriptors {
 
     ImmutableList.Builder<BuildRule> linkableDepsBuilder = ImmutableList.builder();
     for (GoLinkable linkable : linkables) {
-      linkableDepsBuilder.addAll(linkable.getDeps(pathResolver));
+      linkableDepsBuilder.addAll(linkable.getDeps(ruleFinder));
     }
     ImmutableList<BuildRule> linkableDeps = linkableDepsBuilder.build();
 
@@ -127,6 +129,7 @@ abstract class GoDescriptors {
     SymlinkTree symlinkTree = makeSymlinkTree(
         params.copyWithBuildTarget(target),
         pathResolver,
+        ruleFinder,
         linkables);
     resolver.addToIndex(symlinkTree);
 
@@ -213,11 +216,13 @@ abstract class GoDescriptors {
             .transform(HasBuildTarget::getBuildTarget));
     resolver.addToIndex(library);
 
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget target = createTransitiveSymlinkTreeTarget(params.getBuildTarget());
     SymlinkTree symlinkTree = makeSymlinkTree(
         params.copyWithBuildTarget(target),
         pathResolver,
+        ruleFinder,
         requireTransitiveGoLinkables(
             params.getBuildTarget(),
             resolver,
@@ -233,7 +238,7 @@ abstract class GoDescriptors {
         params.copyWithDeps(
             Suppliers.ofInstance(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(pathResolver.filterBuildRuleInputs(symlinkTree.getLinks().values()))
+                    .addAll(ruleFinder.filterBuildRuleInputs(symlinkTree.getLinks().values()))
                     .add(symlinkTree)
                     .add(library)
                     .build()),
@@ -267,6 +272,8 @@ abstract class GoDescriptors {
       return ((BinaryBuildRule) generator.get()).getExecutableCommand();
     }
 
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget generatorSourceTarget =
         sourceParams.getBuildTarget()
             .withAppendedFlavors(ImmutableFlavor.of("test-main-gen-source"));
@@ -277,7 +284,7 @@ abstract class GoDescriptors {
                     generatorSourceTarget,
                     Suppliers.ofInstance(ImmutableSortedSet.of()),
                     Suppliers.ofInstance(ImmutableSortedSet.of())),
-                new SourcePathResolver(resolver),
+                pathResolver,
                 extractTestMainGenerator(),
                 BuildTargets.getGenPath(
                     sourceParams.getProjectFilesystem(),
@@ -359,6 +366,7 @@ abstract class GoDescriptors {
   private static SymlinkTree makeSymlinkTree(
       BuildRuleParams params,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       ImmutableSet<GoLinkable> linkables) {
     ImmutableMap.Builder<Path, SourcePath> treeMapBuilder = ImmutableMap.builder();
     for (GoLinkable linkable : linkables) {
@@ -379,8 +387,7 @@ abstract class GoDescriptors {
           params.getBuildTarget().getFullyQualifiedName());
     }
 
-    params = params.appendExtraDeps(
-        pathResolver.filterBuildRuleInputs(treeMap.values()));
+    params = params.appendExtraDeps(ruleFinder.filterBuildRuleInputs(treeMap.values()));
 
     Path root = params.getBuildTarget().getCellPath().resolve(BuildTargets.getScratchPath(
         params.getProjectFilesystem(),

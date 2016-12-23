@@ -37,6 +37,7 @@ import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -132,8 +133,9 @@ public class JavaLibrarySymbolsFinderTest {
 
     // Mock out calls to a SourcePathResolver so we can create a legitimate
     // DefaultRuleKeyFactory.
+    final SourcePathRuleFinder ruleFinder = createMock(SourcePathRuleFinder.class);
     final SourcePathResolver pathResolver = createMock(SourcePathResolver.class);
-    expect(pathResolver.getRule(anyObject(SourcePath.class)))
+    expect(ruleFinder.getRule(anyObject(SourcePath.class)))
         .andAnswer(() -> {
           SourcePath input = (SourcePath) EasyMock.getCurrentArguments()[0];
           if (input instanceof BuildTargetSourcePath) {
@@ -166,7 +168,8 @@ public class JavaLibrarySymbolsFinderTest {
     final DefaultRuleKeyFactory ruleKeyFactory = new DefaultRuleKeyFactory(
         0,
         fileHashCache,
-        pathResolver);
+        pathResolver,
+        ruleFinder);
     Function<JavaLibrarySymbolsFinder, RuleKey> createRuleKey =
         finder -> {
           JavaSymbolsRule javaSymbolsRule = new JavaSymbolsRule(

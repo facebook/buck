@@ -23,6 +23,7 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -43,12 +44,15 @@ public class InputCountingRuleKeyFactory extends
       resultCache;
   private final FileHashLoader hashLoader;
   private final SourcePathResolver pathResolver;
+  private final SourcePathRuleFinder ruleFinder;
 
   public InputCountingRuleKeyFactory(
       int seed,
       FileHashLoader hashLoader,
-      SourcePathResolver pathResolver) {
+      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder) {
     super(seed);
+    this.ruleFinder = ruleFinder;
     this.resultCache = CacheBuilder.newBuilder().weakKeys().build(
         new CacheLoader<RuleKeyAppendable, InputCountingRuleKeyFactory.Result>() {
           @Override
@@ -64,7 +68,8 @@ public class InputCountingRuleKeyFactory extends
   }
 
   private RuleKeyBuilder<InputCountingRuleKeyFactory.Result> newBuilder() {
-    return new RuleKeyBuilder<InputCountingRuleKeyFactory.Result>(pathResolver, hashLoader) {
+    return new RuleKeyBuilder<InputCountingRuleKeyFactory.Result>(
+        ruleFinder, pathResolver, hashLoader) {
 
       private int inputsCount;
       private long inputsSize;

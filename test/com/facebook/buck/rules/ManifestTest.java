@@ -41,8 +41,8 @@ import java.util.Optional;
 public class ManifestTest {
 
   private static final SourcePathResolver RESOLVER =
-      new SourcePathResolver(
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+      new SourcePathResolver(new SourcePathRuleFinder(
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
 
   @Test
   public void toMap() {

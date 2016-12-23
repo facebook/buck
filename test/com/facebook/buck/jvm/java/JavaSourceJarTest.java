@@ -36,6 +36,7 @@ import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -56,11 +57,11 @@ public class JavaSourceJarTest {
   public void outputNameShouldIndicateThatTheOutputIsASrcJar() {
     JavaSourceJar rule = new JavaSourceJar(
         new FakeBuildRuleParamsBuilder("//example:target").build(),
-        new SourcePathResolver(
+        new SourcePathResolver(new SourcePathRuleFinder(
             new BuildRuleResolver(
               TargetGraph.EMPTY,
               new DefaultTargetNodeToBuildRuleTransformer())
-        ),
+        )),
         ImmutableSortedSet.of(),
         Optional.empty());
 
@@ -72,9 +73,9 @@ public class JavaSourceJarTest {
 
   @Test
   public void shouldOnlyIncludePathBasedSources() {
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    ));
     SourcePath fileBased = new FakeSourcePath("some/path/File.java");
     SourcePath ruleBased = new BuildTargetSourcePath(
         BuildTargetFactory.newInstance("//cheese:cake"));

@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -94,6 +95,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
       BuildTarget target,
       BuildRuleParams baseParams,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       CxxPlatform platform,
       Contents contents,
       Path output,
@@ -102,6 +104,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
         target,
         baseParams,
         resolver,
+        ruleFinder,
         platform.getAr(),
         platform.getArflags(),
         platform.getRanlib(),
@@ -121,6 +124,7 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
       BuildTarget target,
       BuildRuleParams baseParams,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       Archiver archiver,
       ImmutableList<String> arFlags,
       Tool ranlib,
@@ -137,8 +141,8 @@ public class Archive extends AbstractBuildRule implements SupportsInputBasedRule
             Suppliers.ofInstance(ImmutableSortedSet.of()),
             Suppliers.ofInstance(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(resolver.filterBuildRuleInputs(inputs))
-                    .addAll(archiver.getDeps(resolver))
+                    .addAll(ruleFinder.filterBuildRuleInputs(inputs))
+                    .addAll(archiver.getDeps(ruleFinder))
                     .build()));
 
     return new Archive(

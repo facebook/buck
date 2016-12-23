@@ -30,7 +30,7 @@ public class AbstractBuildRuleTest {
         new BuildRuleResolver(
             TargetGraphFactory.newInstance(),
             new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     NoopBuildRule noopBuildRule =
         new NoopBuildRule(new FakeBuildRuleParamsBuilder("//:rule").build(), pathResolver) {
         };

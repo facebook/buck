@@ -37,7 +37,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.ParamInfoException;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -58,7 +58,7 @@ public class JvmLibraryArgInterpreterTest {
   private JavacOptions defaults;
   private JvmLibraryArg arg;
   private BuildRuleResolver ruleResolver;
-  private SourcePathResolver resolver;
+  private SourcePathRuleFinder ruleFinder;
 
   @Before
   public void createHelpers() {
@@ -72,7 +72,7 @@ public class JvmLibraryArgInterpreterTest {
 
     ruleResolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    resolver = new SourcePathResolver(ruleResolver);
+    ruleFinder = new SourcePathRuleFinder(ruleResolver);
   }
 
   @Test
@@ -250,7 +250,7 @@ public class JvmLibraryArgInterpreterTest {
         defaults,
         new FakeBuildRuleParamsBuilder("//not:real").build(),
         ruleResolver,
-        resolver,
+        ruleFinder,
         arg);
   }
 

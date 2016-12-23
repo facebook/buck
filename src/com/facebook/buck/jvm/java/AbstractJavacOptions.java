@@ -21,7 +21,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
@@ -309,7 +309,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
         .setReflectively("abiGenerationMode", getAbiGenerationMode());
   }
 
-  public ImmutableSortedSet<SourcePath> getInputs(SourcePathResolver resolver) {
+  public ImmutableSortedSet<SourcePath> getInputs(SourcePathRuleFinder ruleFinder) {
     ImmutableSortedSet.Builder<SourcePath> builder = ImmutableSortedSet.<SourcePath>naturalOrder()
         .addAll(getAnnotationProcessingParams().getInputs());
 
@@ -320,7 +320,7 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
       // Add the original rule regardless of what happens next.
       builder.add(sourcePath);
 
-      Optional<BuildRule> possibleRule = resolver.getRule(sourcePath);
+      Optional<BuildRule> possibleRule = ruleFinder.getRule(sourcePath);
 
       if (possibleRule.isPresent()) {
         BuildRule rule = possibleRule.get();

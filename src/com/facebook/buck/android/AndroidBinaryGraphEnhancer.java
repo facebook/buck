@@ -42,6 +42,7 @@ import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.util.MoreCollectors;
@@ -96,6 +97,7 @@ public class AndroidBinaryGraphEnhancer {
   private final ManifestEntries manifestEntries;
   private final BuildRuleResolver ruleResolver;
   private final SourcePathResolver pathResolver;
+  private final SourcePathRuleFinder ruleFinder;
   private final ResourceCompressionMode resourceCompressionMode;
   private final ResourceFilter resourceFilter;
   private final EnumSet<RType> bannedDuplicateResourceTypes;
@@ -160,7 +162,8 @@ public class AndroidBinaryGraphEnhancer {
     this.originalBuildTarget = originalParams.getBuildTarget();
     this.originalDeps = originalParams.getDeps();
     this.ruleResolver = ruleResolver;
-    this.pathResolver = new SourcePathResolver(ruleResolver);
+    this.ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    this.pathResolver = new SourcePathResolver(ruleFinder);
     this.resourceCompressionMode = resourceCompressionMode;
     this.resourceFilter = resourcesFilter;
     this.bannedDuplicateResourceTypes = bannedDuplicateResourceTypes;
@@ -252,6 +255,7 @@ public class AndroidBinaryGraphEnhancer {
       DefaultJavaLibrary compileMergedNativeLibMapGenCode = new DefaultJavaLibrary(
           paramsForCompileGenCode,
           pathResolver,
+          ruleFinder,
           ImmutableSet.of(
               new BuildTargetSourcePath(
                   generateCodeForMergedLibraryMap.getBuildTarget(),
@@ -288,7 +292,7 @@ public class AndroidBinaryGraphEnhancer {
         getTargetsAsRules(resourceDetails.getResourcesWithNonEmptyResDir());
 
     ImmutableCollection<BuildRule> rulesWithResourceDirectories =
-        pathResolver.filterBuildRuleInputs(resourceDetails.getResourceDirectories());
+        ruleFinder.filterBuildRuleInputs(resourceDetails.getResourceDirectories());
 
     FilteredResourcesProvider filteredResourcesProvider;
     boolean needsResourceFiltering = resourceFilter.isEnabled() ||
@@ -335,9 +339,9 @@ public class AndroidBinaryGraphEnhancer {
                 .addAll(getTargetsAsRules(resourceDetails.getResourcesWithNonEmptyResDir()))
                 .addAll(rulesWithResourceDirectories)
                 .addAll(
-                    pathResolver.filterBuildRuleInputs(
+                    ruleFinder.filterBuildRuleInputs(
                         packageableCollection.getAssetsDirectories()))
-                .addAll(getAdditionalAaptDeps(pathResolver, resourceRules, packageableCollection))
+                .addAll(getAdditionalAaptDeps(resourceRules, packageableCollection))
                 .build()),
         /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()));
     AaptPackageResources aaptPackageResources = new AaptPackageResources(
@@ -436,6 +440,7 @@ public class AndroidBinaryGraphEnhancer {
     JavaLibrary compileUberRDotJava = new DefaultJavaLibrary(
         paramsForCompileUberRDotJava,
         pathResolver,
+        ruleFinder,
         ImmutableSet.of(
             new BuildTargetSourcePath(
                 trimUberRDotJava.getBuildTarget(),
@@ -487,7 +492,7 @@ public class AndroidBinaryGraphEnhancer {
     // Add dependencies on all the build rules generating third-party JARs.  This is mainly to
     // correctly capture deps when a prebuilt_jar forwards the output from another build rule.
     enhancedDeps.addAll(
-        pathResolver.filterBuildRuleInputs(packageableCollection.getPathsToThirdPartyJars()));
+        ruleFinder.filterBuildRuleInputs(packageableCollection.getPathsToThirdPartyJars()));
 
     Optional<ComputeExopackageDepsAbi> computeExopackageDepsAbi = Optional.empty();
     if (!exopackageModes.isEmpty()) {
@@ -688,7 +693,6 @@ public class AndroidBinaryGraphEnhancer {
   }
 
   private ImmutableSortedSet<BuildRule> getAdditionalAaptDeps(
-      SourcePathResolver resolver,
       ImmutableSortedSet<BuildRule> resourceRules,
       AndroidPackageableCollection packageableCollection) {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -699,7 +703,7 @@ public class AndroidBinaryGraphEnhancer {
                     .getResourcesWithEmptyResButNonEmptyAssetsDir().stream()
                     .map(HasBuildTarget::getBuildTarget)
                     .collect(MoreCollectors.toImmutableList())));
-    Optional<BuildRule> manifestRule = resolver.getRule(manifest);
+    Optional<BuildRule> manifestRule = ruleFinder.getRule(manifest);
     if (manifestRule.isPresent()) {
       builder.add(manifestRule.get());
     }

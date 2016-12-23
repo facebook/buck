@@ -24,6 +24,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.NoopBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -58,7 +59,7 @@ public class CoreDataModelDescription implements
 
     return new NoopBuildRule(
         params,
-        new SourcePathResolver(resolver));
+        new SourcePathResolver(new SourcePathRuleFinder(resolver)));
   }
 
   public static boolean isVersionedDataModel(AppleWrapperResourceArg arg) {

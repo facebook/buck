@@ -22,6 +22,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.model.BuildTargetFactory;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -34,7 +35,8 @@ public class AnnotationProcessingParamsTest {
   public void transitiveAnnotationProcessorDepsInInputs() {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     FakeJavaLibrary dep =
         resolver.addToIndex(
@@ -51,7 +53,7 @@ public class AnnotationProcessingParamsTest {
         .build();
 
     assertThat(
-        pathResolver.filterBuildRuleInputs(params.getInputs()),
+        ruleFinder.filterBuildRuleInputs(params.getInputs()),
         Matchers.containsInAnyOrder(processor, dep));
   }
 

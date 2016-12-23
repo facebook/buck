@@ -34,6 +34,7 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.args.Arg;
@@ -637,7 +638,8 @@ public class CxxDescriptionEnhancer {
       Optional<StripStyle> stripStyle,
       Optional<LinkerMapMode> flavoredLinkerMapMode) throws NoSuchBuildTargetException {
 
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    SourcePathResolver sourcePathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(resolver));
     ImmutableMap<String, CxxSource> srcs = parseCxxSources(
         params.getBuildTarget(),
         sourcePathResolver,
@@ -645,7 +647,7 @@ public class CxxDescriptionEnhancer {
         args);
     ImmutableMap<Path, SourcePath> headers = parseHeaders(
         params.getBuildTarget(),
-        new SourcePathResolver(resolver),
+        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         Optional.of(cxxPlatform),
         args);
     return createBuildRulesForCxxBinary(
@@ -699,7 +701,8 @@ public class CxxDescriptionEnhancer {
       ImmutableList<String> includeDirs,
       Optional<Boolean> xcodePrivateHeadersSymlinks)
       throws NoSuchBuildTargetException {
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
 //    TODO(beefon): should be:
 //    Path linkOutput = getLinkOutputPath(
 //        createCxxLinkTarget(params.getBuildTarget(), flavoredLinkerMapMode),
@@ -760,6 +763,7 @@ public class CxxDescriptionEnhancer {
             params,
             resolver,
             sourcePathResolver,
+            ruleFinder,
             cxxBuckConfig,
             cxxPlatform,
             cxxPreprocessorInput,
@@ -847,6 +851,7 @@ public class CxxDescriptionEnhancer {
         libraries,
         cxxRuntimeType,
         sourcePathResolver,
+        ruleFinder,
         linkOutput,
         argsBuilder,
         linkRuleTarget);
@@ -894,6 +899,7 @@ public class CxxDescriptionEnhancer {
       ImmutableSortedSet<FrameworkPath> libraries,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       SourcePathResolver sourcePathResolver,
+      SourcePathRuleFinder ruleFinder,
       Path linkOutput,
       ImmutableList.Builder<Arg> argsBuilder,
       BuildTarget linkRuleTarget) throws NoSuchBuildTargetException {
@@ -912,6 +918,7 @@ public class CxxDescriptionEnhancer {
               params,
               resolver,
               sourcePathResolver,
+              ruleFinder,
               linkRuleTarget,
               Linker.LinkType.EXECUTABLE,
               Optional.empty(),
@@ -1041,6 +1048,7 @@ public class CxxDescriptionEnhancer {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CxxConstructorArg arg) throws NoSuchBuildTargetException {
@@ -1053,6 +1061,7 @@ public class CxxDescriptionEnhancer {
         paramsWithoutFlavor,
         ruleResolver,
         pathResolver,
+        ruleFinder,
         cxxBuckConfig,
         cxxPlatform,
         CxxSourceRuleFactory.PicType.PIC,
@@ -1080,12 +1089,13 @@ public class CxxDescriptionEnhancer {
                 .getBuildTarget(),
             CxxCompilationDatabaseDependencies.class);
     Preconditions.checkState(compilationDatabases.isPresent());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return new JsonConcatenate(
         params.copyWithDeps(
             Suppliers.ofInstance(
                 ImmutableSortedSet.copyOf(
-                    pathResolver.filterBuildRuleInputs(
+                    ruleFinder.filterBuildRuleInputs(
                         compilationDatabases.get().getSourcePaths()))),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         pathResolver,
@@ -1132,6 +1142,7 @@ public class CxxDescriptionEnhancer {
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver sourcePathResolver,
+      SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CxxSourceRuleFactory.PicType pic,
@@ -1210,6 +1221,7 @@ public class CxxDescriptionEnhancer {
         params,
         ruleResolver,
         sourcePathResolver,
+        ruleFinder,
         cxxBuckConfig,
         cxxPlatform,
         cxxPreprocessorInputFromDependencies,
@@ -1346,7 +1358,8 @@ public class CxxDescriptionEnhancer {
       CxxConstructorArg args,
       CxxPlatform platform,
       BuildRuleParams params) {
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
     ImmutableCollection<SourcePath> privateHeaders = parseHeaders(
         params.getBuildTarget(),
         sourcePathResolver,

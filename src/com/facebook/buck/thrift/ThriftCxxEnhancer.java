@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourceWithFlags;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -223,7 +224,7 @@ public class ThriftCxxEnhancer implements ThriftLanguageSpecificEnhancer {
       ImmutableMap<String, ThriftSource> sources,
       ImmutableSortedSet<BuildRule> deps) throws NoSuchBuildTargetException {
 
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
 
     // Grab all the sources and headers generated from the passed in thrift sources.
     CxxHeadersAndSources spec = getThriftHeaderSourceSpec(params, args, sources);

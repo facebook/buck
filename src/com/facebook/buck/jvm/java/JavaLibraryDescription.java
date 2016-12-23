@@ -33,6 +33,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.MoreCollectors;
@@ -83,7 +84,8 @@ public class JavaLibraryDescription implements
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget target = params.getBuildTarget();
 
     // We know that the flavour we're being asked to create is valid, since the check is done when
@@ -112,7 +114,7 @@ public class JavaLibraryDescription implements
       // Might as well add them as deps. *sigh*
       ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
       // Sourcepath deps
-      deps.addAll(pathResolver.filterBuildRuleInputs(sources));
+      deps.addAll(ruleFinder.filterBuildRuleInputs(sources));
       // Classpath deps
       deps.add(baseLibrary);
       deps.addAll(
@@ -139,6 +141,7 @@ public class JavaLibraryDescription implements
       return CalculateAbi.of(
           params.getBuildTarget(),
           pathResolver,
+          ruleFinder,
           params,
           new BuildTargetSourcePath(libraryTarget));
     }
@@ -178,7 +181,7 @@ public class JavaLibraryDescription implements
         defaultOptions,
         params,
         resolver,
-        pathResolver,
+        ruleFinder,
         args);
 
     BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
@@ -192,12 +195,13 @@ public class JavaLibraryDescription implements
                         params.getDeclaredDeps().get(),
                         exportedDeps,
                         resolver.getAllRules(args.providedDeps))),
-                pathResolver.filterBuildRuleInputs(
-                    javacOptions.getInputs(pathResolver))));
+                ruleFinder.filterBuildRuleInputs(
+                    javacOptions.getInputs(ruleFinder))));
     DefaultJavaLibrary defaultJavaLibrary =
         new DefaultJavaLibrary(
             javaLibraryParams,
             pathResolver,
+            ruleFinder,
             args.srcs,
             validateResources(
                 pathResolver,

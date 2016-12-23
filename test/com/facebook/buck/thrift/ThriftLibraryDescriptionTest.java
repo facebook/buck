@@ -41,6 +41,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -154,7 +155,7 @@ public class ThriftLibraryDescriptionTest {
 
       return new FakeBuildRule(
           new FakeBuildRuleParamsBuilder("//:fake-lang").build(),
-          new SourcePathResolver(resolver));
+          new SourcePathResolver(new SourcePathRuleFinder(resolver)));
     }
 
     @Override
@@ -182,7 +183,7 @@ public class ThriftLibraryDescriptionTest {
   public void createThriftCompilerBuildRulesHasCorrectDeps() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     String language = "fake";
@@ -354,7 +355,7 @@ public class ThriftLibraryDescriptionTest {
   public void createBuildRuleForUnflavoredTargetCreateThriftLibrary() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     BuildTarget unflavoredTarget = BuildTargetFactory.newInstance("//:thrift");
     BuildRuleParams unflavoredParams =
         new FakeBuildRuleParamsBuilder(unflavoredTarget).build();
@@ -407,7 +408,7 @@ public class ThriftLibraryDescriptionTest {
   public void createBuildRuleWithFlavoredTargetCallsEnhancerCorrectly() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(resolver));
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     // Setup the default values returned by the language specific enhancer.
@@ -571,9 +572,9 @@ public class ThriftLibraryDescriptionTest {
   public void findDepsFromParamsSetsUpDepsForFlavoredTarget() {
     // Create the thrift target and implicit dep.
     BuildTarget thriftTarget = BuildTargetFactory.newInstance("//bar:thrift_compiler");
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+     ));
     FakeBuildRule implicitDep = createFakeBuildRule("//foo:implicit_dep", resolver);
 
     // Setup the default values returned by the language specific enhancer.

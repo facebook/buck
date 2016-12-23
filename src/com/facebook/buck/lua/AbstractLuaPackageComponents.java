@@ -21,7 +21,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableSortedMap;
@@ -72,11 +72,11 @@ abstract class AbstractLuaPackageComponents implements RuleKeyAppendable {
     sink.setReflectively("nativeLibraries", getNativeLibraries());
   }
 
-  public ImmutableSortedSet<BuildRule> getDeps(SourcePathResolver resolver) {
+  public ImmutableSortedSet<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(resolver.filterBuildRuleInputs(getModules().values()))
-        .addAll(resolver.filterBuildRuleInputs(getPythonModules().values()))
-        .addAll(resolver.filterBuildRuleInputs(getNativeLibraries().values()))
+        .addAll(ruleFinder.filterBuildRuleInputs(getModules().values()))
+        .addAll(ruleFinder.filterBuildRuleInputs(getPythonModules().values()))
+        .addAll(ruleFinder.filterBuildRuleInputs(getNativeLibraries().values()))
         .build();
   }
 

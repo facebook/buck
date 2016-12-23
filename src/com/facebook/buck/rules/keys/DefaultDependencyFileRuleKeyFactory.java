@@ -22,6 +22,7 @@ import com.facebook.buck.rules.ArchiveMemberSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -44,11 +45,13 @@ public class DefaultDependencyFileRuleKeyFactory
   public DefaultDependencyFileRuleKeyFactory(
       int seed,
       FileHashLoader fileHashLoader,
-      SourcePathResolver pathResolver) {
+      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder) {
     super(
         seed,
         fileHashLoader,
         pathResolver,
+        ruleFinder,
         InputHandling.IGNORE,
         ArchiveHandling.MEMBERS,
         Long.MAX_VALUE);

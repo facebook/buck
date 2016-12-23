@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -43,10 +44,10 @@ public class DexWithClassesTest {
 
   @Test
   public void testIntermediateDexRuleToDexWithClasses() {
-        SourcePathResolver resolver =
- new SourcePathResolver(
-         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+    SourcePathResolver resolver =
+        new SourcePathResolver(new SourcePathRuleFinder(
+            new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
+     ));
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//java/com/example:lib");
     JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget, resolver);
 
@@ -72,9 +73,9 @@ public class DexWithClassesTest {
 
   @Test
   public void testIntermediateDexRuleToDexWithClassesWhenIntermediateDexHasNoClasses() {
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathResolver resolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    ));
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//java/com/example:lib");
     JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget, resolver);
 

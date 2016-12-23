@@ -42,6 +42,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRuleType;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndBuildTargets;
 import com.facebook.buck.rules.TargetGraphAndTargetNodes;
@@ -824,11 +825,13 @@ public class TargetsCommand extends AbstractCommand {
       actionGraph = Optional.of(result.getActionGraph());
       buildRuleResolver = Optional.of(result.getResolver());
       if (isShowRuleKey()) {
+        SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(result.getResolver());
         ruleKeyFactory = Optional.of(
             new DefaultRuleKeyFactory(
                 params.getBuckConfig().getKeySeed(),
                 params.getFileHashCache(),
-                new SourcePathResolver(result.getResolver())));
+                new SourcePathResolver(ruleFinder),
+                ruleFinder));
       }
     }
 

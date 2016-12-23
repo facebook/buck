@@ -37,6 +37,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultOnDiskBuildInfo;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.testutil.TestConsole;
@@ -399,9 +400,9 @@ public class AndroidBinaryIntegrationTest {
   @Test
   public void testNativeLibraryMerging() throws IOException, InterruptedException {
     NdkCxxPlatform platform = getNdkCxxPlatform();
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    ));
     Path tmpDir = tmpFolder.newFolder("merging_tmp");
     SymbolGetter syms =
         new SymbolGetter(
@@ -551,9 +552,9 @@ public class AndroidBinaryIntegrationTest {
   @Test
   public void testNativeRelinker() throws IOException, InterruptedException {
     NdkCxxPlatform platform = getNdkCxxPlatform();
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    ));
     Path tmpDir = tmpFolder.newFolder("xdso");
     SymbolGetter syms =
         new SymbolGetter(

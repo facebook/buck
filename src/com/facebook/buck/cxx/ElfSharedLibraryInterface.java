@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
@@ -74,6 +75,7 @@ class ElfSharedLibraryInterface
       BuildTarget target,
       BuildRuleParams baseParams,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       Tool objcopy,
       SourcePath input) {
     return new ElfSharedLibraryInterface(
@@ -81,8 +83,8 @@ class ElfSharedLibraryInterface
             target,
             Suppliers.ofInstance(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(objcopy.getDeps(resolver))
-                    .addAll(resolver.filterBuildRuleInputs(input))
+                    .addAll(objcopy.getDeps(ruleFinder))
+                    .addAll(ruleFinder.filterBuildRuleInputs(input))
                     .build()),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         resolver,

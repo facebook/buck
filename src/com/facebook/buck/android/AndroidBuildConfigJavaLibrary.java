@@ -26,6 +26,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -48,6 +49,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
   AndroidBuildConfigJavaLibrary(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       JavacOptions javacOptions,
       BuildTarget abiJar,
       ImmutableSortedSet<SourcePath> abiInputs,
@@ -55,6 +57,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
     super(
         params,
         resolver,
+        ruleFinder,
         /* srcs */ ImmutableSortedSet.of(
             new BuildTargetSourcePath(androidBuildConfig.getBuildTarget())),
         /* resources */ ImmutableSortedSet.of(),

@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
 import com.facebook.buck.versions.VersionPropagator;
@@ -47,7 +48,8 @@ public class LuaLibraryDescription implements
       final BuildRuleParams params,
       BuildRuleResolver resolver,
       final A args) {
-    final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    final SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(resolver));
     return new LuaLibrary(params, pathResolver) {
       @Override
       public LuaPackageComponents getLuaPackageComponents() {

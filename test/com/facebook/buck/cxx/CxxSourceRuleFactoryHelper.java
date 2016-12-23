@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 
@@ -48,12 +49,15 @@ public class CxxSourceRuleFactoryHelper {
       CxxBuckConfig cxxBuckConfig) {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return CxxSourceRuleFactory.builder()
         .setParams(new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(new FakeProjectFilesystem(cellRoot))
             .build())
         .setResolver(resolver)
-        .setPathResolver(new SourcePathResolver(resolver))
+        .setPathResolver(pathResolver)
+        .setRuleFinder(ruleFinder)
         .setCxxBuckConfig(cxxBuckConfig)
         .setCxxPlatform(cxxPlatform)
         .setPicType(CxxSourceRuleFactory.PicType.PDC)
@@ -81,12 +85,15 @@ public class CxxSourceRuleFactoryHelper {
       CxxSourceRuleFactory.PicType picType) {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     return CxxSourceRuleFactory.builder()
         .setParams(new FakeBuildRuleParamsBuilder(target)
             .setProjectFilesystem(new FakeProjectFilesystem(cellRoot))
             .build())
         .setResolver(resolver)
-        .setPathResolver(new SourcePathResolver(resolver))
+        .setPathResolver(pathResolver)
+        .setRuleFinder(ruleFinder)
         .setCxxBuckConfig(cxxBuckConfig)
         .setCxxPlatform(cxxPlatform)
         .setPicType(picType)

@@ -36,6 +36,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildRules;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.google.common.annotations.VisibleForTesting;
@@ -109,7 +110,8 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
       ThriftConstructorArg args,
       ImmutableMap<String, ThriftSource> sources,
       ImmutableSortedSet<BuildRule> deps) throws NoSuchBuildTargetException {
-    final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    final SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     if (params.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
       BuildTarget libraryTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
@@ -117,6 +119,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
       return CalculateAbi.of(
           params.getBuildTarget(),
           pathResolver,
+          ruleFinder,
           params,
           new BuildTargetSourcePath(libraryTarget));
     }
@@ -158,7 +161,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
                 .addAll(sourceZips)
                 .addAll(deps)
                 .addAll(BuildRules.getExportedRules(deps))
-                .addAll(pathResolver.filterBuildRuleInputs(templateOptions.getInputs(pathResolver)))
+                .addAll(ruleFinder.filterBuildRuleInputs(templateOptions.getInputs(ruleFinder)))
                 .build()),
         Suppliers.ofInstance(ImmutableSortedSet.of()));
 
@@ -167,6 +170,7 @@ public class ThriftJavaEnhancer implements ThriftLanguageSpecificEnhancer {
     return new DefaultJavaLibrary(
         javaParams,
         pathResolver,
+        ruleFinder,
         FluentIterable.from(sourceZips)
             .transform(SourcePaths.getToBuildTargetSourcePath())
             .toSortedSet(Ordering.natural()),

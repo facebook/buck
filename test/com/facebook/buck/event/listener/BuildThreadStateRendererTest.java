@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.util.Ansi;
@@ -53,8 +54,8 @@ public class BuildThreadStateRendererTest {
   private static final Function<Long, String> FORMAT_TIME_FUNCTION =
       timeMs -> String.format(Locale.US, "%.1fs", timeMs / 1000.0);
   private static final SourcePathResolver PATH_RESOLVER =
-      new SourcePathResolver(
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+      new SourcePathResolver(new SourcePathRuleFinder(
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
   private static final BuildTarget TARGET1 = BuildTargetFactory.newInstance("//:target1");
   private static final BuildTarget TARGET2 = BuildTargetFactory.newInstance("//:target2");
   private static final BuildTarget TARGET3 = BuildTargetFactory.newInstance("//:target3");

@@ -28,6 +28,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -74,7 +75,7 @@ public class MavenUberJarTest {
         MavenUberJar.create(
             javaLibrary,
             javaLibraryBuilder.createBuildRuleParams(resolver, filesystem),
-            new SourcePathResolver(resolver),
+            new SourcePathResolver(new SourcePathRuleFinder(resolver)),
             Optional.of("com.facebook.buck.jvm.java:java:jar:42"),
             Optional.empty());
     assertThat(buildRule.getDeps(), Matchers.not(Matchers.hasItem(pythonLibrary)));

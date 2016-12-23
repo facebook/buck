@@ -39,6 +39,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.query.DepQueryUtils;
@@ -88,7 +89,8 @@ public class AndroidLibraryDescription
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     if (params.getBuildTarget().getFlavors().contains(JavaLibrary.SRC_JAR)) {
       return new JavaSourceJar(params, pathResolver, args.srcs, args.mavenCoords);
     }
@@ -97,7 +99,7 @@ public class AndroidLibraryDescription
         defaultOptions,
         params,
         resolver,
-        pathResolver,
+        ruleFinder,
         args
     );
 
@@ -115,13 +117,14 @@ public class AndroidLibraryDescription
         params.getBuildTarget().getFlavors().contains(DUMMY_R_DOT_JAVA_FLAVOR);
     if (params.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
       if (hasDummyRDotJavaFlavor) {
-        return graphEnhancer.getBuildableForAndroidResourcesAbi(resolver, pathResolver);
+        return graphEnhancer.getBuildableForAndroidResourcesAbi(resolver, pathResolver, ruleFinder);
       }
       BuildTarget libraryTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
       resolver.requireRule(libraryTarget);
       return CalculateAbi.of(
           params.getBuildTarget(),
           pathResolver,
+          ruleFinder,
           params,
           new BuildTargetSourcePath(libraryTarget));
     }
@@ -177,7 +180,7 @@ public class AndroidLibraryDescription
                       declaredDeps,
                       exportedDeps,
                       resolver.getAllRules(args.providedDeps))))
-              .addAll(pathResolver.filterBuildRuleInputs(javacOptions.getInputs(pathResolver)))
+              .addAll(ruleFinder.filterBuildRuleInputs(javacOptions.getInputs(ruleFinder)))
               .addAll(compiler.getExtraDeps(args, resolver))
               .build();
 
@@ -188,6 +191,7 @@ public class AndroidLibraryDescription
       return new AndroidLibrary(
           androidLibraryParams,
           pathResolver,
+          ruleFinder,
           args.srcs,
           ResourceValidator.validateResources(
               pathResolver,

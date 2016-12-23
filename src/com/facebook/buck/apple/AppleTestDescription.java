@@ -48,6 +48,7 @@ import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -227,8 +228,8 @@ public class AppleTestDescription implements
       return library;
     }
 
-
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
     String platformName = appleCxxPlatform.getAppleSdk().getApplePlatform().getName();
 
     BuildRule bundle = AppleDescriptions.createAppleBundle(
@@ -278,6 +279,7 @@ public class AppleTestDescription implements
             Suppliers.ofInstance(ImmutableSortedSet.of(bundle)),
             Suppliers.ofInstance(ImmutableSortedSet.of())),
         sourcePathResolver,
+        ruleFinder,
         bundle,
         testHostInfo.map(TestHostInfo::getTestHostApp),
         args.contacts,

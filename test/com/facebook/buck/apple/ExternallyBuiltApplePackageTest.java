@@ -34,6 +34,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -77,7 +78,7 @@ public class ExternallyBuiltApplePackageTest {
   public void sdkrootEnvironmentVariableIsSet() {
     ExternallyBuiltApplePackage rule = new ExternallyBuiltApplePackage(
         params,
-        new SourcePathResolver(resolver),
+        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         config,
         new FakeSourcePath(bundleLocation),
         true);
@@ -96,7 +97,7 @@ public class ExternallyBuiltApplePackageTest {
   public void outputContainsCorrectExtension() {
     ExternallyBuiltApplePackage rule = new ExternallyBuiltApplePackage(
         params,
-        new SourcePathResolver(resolver),
+        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         config,
         new FakeSourcePath("Fake/Bundle/Location"),
         true);
@@ -107,7 +108,7 @@ public class ExternallyBuiltApplePackageTest {
   public void commandContainsCorrectCommand() {
     ExternallyBuiltApplePackage rule = new ExternallyBuiltApplePackage(
         params,
-        new SourcePathResolver(resolver),
+        new SourcePathResolver(new SourcePathRuleFinder(resolver)),
         config,
         new FakeSourcePath("Fake/Bundle/Location"),
         true);
@@ -125,7 +126,7 @@ public class ExternallyBuiltApplePackageTest {
     Function<String, ExternallyBuiltApplePackage> packageWithVersion =
         input -> new ExternallyBuiltApplePackage(
             params,
-            new SourcePathResolver(resolver),
+            new SourcePathResolver(new SourcePathRuleFinder(resolver)),
             config.withPlatform(config.getPlatform().withBuildVersion(input)),
             new FakeSourcePath("Fake/Bundle/Location"),
             true);
@@ -139,7 +140,7 @@ public class ExternallyBuiltApplePackageTest {
     Function<String, ExternallyBuiltApplePackage> packageWithSdkVersion =
         input -> new ExternallyBuiltApplePackage(
             params,
-            new SourcePathResolver(resolver),
+            new SourcePathResolver(new SourcePathRuleFinder(resolver)),
             config.withPlatform(
                 config.getPlatform().withAppleSdk(
                     config.getPlatform().getAppleSdk().withVersion(input))),
@@ -151,10 +152,12 @@ public class ExternallyBuiltApplePackageTest {
   }
 
   private DefaultRuleKeyFactory newRuleKeyFactory() {
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     return new DefaultRuleKeyFactory(
         0,
         new FakeFileHashCache(
             ImmutableMap.of(Paths.get(bundleLocation).toAbsolutePath(), HashCode.fromInt(5))),
-        new SourcePathResolver(resolver));
+        new SourcePathResolver(ruleFinder),
+        ruleFinder);
   }
 }

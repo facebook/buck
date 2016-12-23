@@ -35,6 +35,7 @@ import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -157,6 +158,7 @@ public class AndroidResource extends AbstractBuildRule
   public AndroidResource(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       final ImmutableSortedSet<BuildRule> deps,
       @Nullable final SourcePath res,
       ImmutableSortedSet<? extends SourcePath> resSrcs,
@@ -172,7 +174,7 @@ public class AndroidResource extends AbstractBuildRule
       boolean isGrayscaleImageProcessingEnabled) {
     super(
         buildRuleParams.appendExtraDeps(
-            Suppliers.compose(resolver::filterBuildRuleInputs, symbolFilesFromDeps)),
+            Suppliers.compose(ruleFinder::filterBuildRuleInputs, symbolFilesFromDeps)),
         resolver);
     if (res != null && rDotJavaPackageArgument == null && manifestFile == null) {
       throw new HumanReadableException(
@@ -221,6 +223,7 @@ public class AndroidResource extends AbstractBuildRule
   public AndroidResource(
       final BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       final ImmutableSortedSet<BuildRule> deps,
       @Nullable final SourcePath res,
       ImmutableSortedSet<? extends SourcePath> resSrcs,
@@ -234,6 +237,7 @@ public class AndroidResource extends AbstractBuildRule
     this(
         buildRuleParams,
         resolver,
+        ruleFinder,
         deps,
         res,
         resSrcs,
@@ -251,6 +255,7 @@ public class AndroidResource extends AbstractBuildRule
   public AndroidResource(
       final BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       final ImmutableSortedSet<BuildRule> deps,
       @Nullable final SourcePath res,
       ImmutableSortedSet<? extends SourcePath> resSrcs,
@@ -266,6 +271,7 @@ public class AndroidResource extends AbstractBuildRule
     this(
         buildRuleParams,
         resolver,
+        ruleFinder,
         deps,
         res,
         resSrcs,

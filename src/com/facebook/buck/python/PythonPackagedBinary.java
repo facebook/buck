@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildableProperties;
 import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
@@ -45,6 +46,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
 
   private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
 
+  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey
   private final Tool builder;
   @AddToRuleKey
@@ -63,6 +65,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   protected PythonPackagedBinary(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       PythonPlatform pythonPlatform,
       Tool builder,
       ImmutableList<String> buildArgs,
@@ -83,6 +86,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
         preloadLibraries,
         pexExtension,
         legacyOutputPath);
+    this.ruleFinder = ruleFinder;
     this.builder = builder;
     this.buildArgs = buildArgs;
     this.pathToPexExecuter = pathToPexExecuter;
@@ -160,7 +164,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(super.getRuntimeDeps())
-        .addAll(pathToPexExecuter.getDeps(getResolver()))
+        .addAll(pathToPexExecuter.getDeps(ruleFinder))
         .build();
   }
 

@@ -32,6 +32,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
@@ -62,7 +63,8 @@ public class KotlinLibraryDescription implements Description<KotlinLibraryDescri
       BuildRuleParams params,
       BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     if (params.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
       BuildTarget libraryTarget = params.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
@@ -70,6 +72,7 @@ public class KotlinLibraryDescription implements Description<KotlinLibraryDescri
       return CalculateAbi.of(
           params.getBuildTarget(),
           pathResolver,
+          ruleFinder,
           params,
           new BuildTargetSourcePath(libraryTarget));
     }
@@ -87,6 +90,7 @@ public class KotlinLibraryDescription implements Description<KotlinLibraryDescri
     return new DefaultJavaLibrary(
         javaLibraryParams,
         pathResolver,
+        ruleFinder,
         args.srcs,
         validateResources(
             pathResolver,

@@ -29,6 +29,7 @@ import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestCellBuilder;
 import com.facebook.buck.rules.macros.MacroHandler;
@@ -111,7 +112,7 @@ public class WorkerMacroArgTest {
 
     BuildRule nonWorkerBuildRule = new FakeBuildRule(
         BuildTargetFactory.newInstance("//:not_worker_rule"),
-        new SourcePathResolver(resolver));
+        new SourcePathResolver(new SourcePathRuleFinder(resolver)));
     resolver.addToIndex(nonWorkerBuildRule);
 
     MacroHandler macroHandler =

@@ -31,6 +31,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -66,16 +67,19 @@ public class NativeRelinker {
   private final CxxBuckConfig cxxBuckConfig;
   private final ImmutableMap<Pair<TargetCpuType, String>, SourcePath> relinkedLibs;
   private final ImmutableMap<Pair<TargetCpuType, String>, SourcePath> relinkedLibsAssets;
+  private final SourcePathRuleFinder ruleFinder;
   private ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms;
   private ImmutableList<RelinkerRule> rules;
 
   public NativeRelinker(
       BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ImmutableMap<Pair<TargetCpuType, String>, SourcePath> linkableLibs,
       ImmutableMap<Pair<TargetCpuType, String>, SourcePath> linkableLibsAssets) {
+    this.ruleFinder = ruleFinder;
     Preconditions.checkArgument(
         !linkableLibs.isEmpty() ||
             !linkableLibsAssets.isEmpty(),
@@ -105,7 +109,7 @@ public class NativeRelinker {
     for (Map.Entry<Pair<TargetCpuType, String>, SourcePath> entry :
         Iterables.concat(linkableLibs.entrySet(), linkableLibsAssets.entrySet())) {
       SourcePath source = entry.getValue();
-      Optional<BuildRule> rule = resolver.getRule(source);
+      Optional<BuildRule> rule = ruleFinder.getRule(source);
       if (rule.isPresent()) {
         ruleMapBuilder.put(rule.get(), new Pair<>(entry.getKey().getFirst(), source));
       } else {
@@ -157,7 +161,7 @@ public class NativeRelinker {
     for (Pair<TargetCpuType, SourcePath> p : sortedPaths) {
       TargetCpuType cpuType = p.getFirst();
       SourcePath source = p.getSecond();
-      BuildRule baseRule = resolver.getRuleOrThrow((BuildTargetSourcePath) source);
+      BuildRule baseRule = ruleFinder.getRuleOrThrow((BuildTargetSourcePath) source);
       // Relinking this library must keep any of the symbols needed by the libraries from the rules
       // in relinkerDeps.
       ImmutableList<RelinkerRule> relinkerDeps =
@@ -225,7 +229,7 @@ public class NativeRelinker {
         .withFlavor(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(cpuType.toString())))
         .withFlavor(ImmutableFlavor.of(Flavor.replaceInvalidCharacters(libname)))
         .appendExtraDeps(relinkerDeps);
-    BuildRule baseRule = resolver.getRule(source).orElse(null);
+    BuildRule baseRule = ruleFinder.getRule(source).orElse(null);
     ImmutableList<Arg> linkerArgs = ImmutableList.of();
     Linker linker = null;
     if (baseRule != null && baseRule instanceof CxxLink) {
@@ -237,6 +241,7 @@ public class NativeRelinker {
     return new RelinkerRule(
         relinkerParams,
         resolver,
+        ruleFinder,
         ImmutableSortedSet.copyOf(Lists.transform(relinkerDeps, getSymbolsNeeded)),
         cpuType,
         nativePlatforms.get(cpuType).getObjdump(),

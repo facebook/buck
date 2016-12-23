@@ -39,6 +39,7 @@ import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -380,12 +381,15 @@ public class PrecompiledHeaderFeatureTest {
    */
   private static CxxSourceRuleFactory.Builder preconfiguredSourceRuleFactoryBuilder(
       String targetPath, BuildRuleResolver ruleResolver) {
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance(targetPath);
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     return CxxSourceRuleFactory.builder()
         .setParams(params)
         .setResolver(ruleResolver)
-        .setPathResolver(new SourcePathResolver(ruleResolver))
+        .setPathResolver(pathResolver)
+        .setRuleFinder(ruleFinder)
         .setCxxPlatform(PLATFORM_SUPPORTING_PCH)
         .setPicType(AbstractCxxSourceRuleFactory.PicType.PDC)
         .setCxxBuckConfig(CXX_CONFIG_PCH_ENABLED);

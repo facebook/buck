@@ -33,6 +33,7 @@ import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
@@ -70,7 +71,7 @@ public class OwnersReportTest {
         BuildRuleParams params,
         BuildRuleResolver resolver,
         A args) {
-      return new FakeBuildRule(params, new SourcePathResolver(resolver));
+      return new FakeBuildRule(params, new SourcePathResolver(new SourcePathRuleFinder(resolver)));
     }
 
     public static class FakeArg extends AbstractDescriptionArg {

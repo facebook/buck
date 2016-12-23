@@ -30,6 +30,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.util.HumanReadableException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -91,7 +92,8 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
 
     UnflavoredBuildTarget originalBuildTarget =
         originalBuildRuleParams.getBuildTarget().checkUnflavored();
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     ImmutableList.Builder<BuildRule> aarExtraDepsBuilder = ImmutableList.<BuildRule>builder()
         .addAll(originalBuildRuleParams.getExtraDeps().get());
 
@@ -172,6 +174,7 @@ public class AndroidAarDescription implements Description<AndroidAarDescription.
     AndroidResource androidResource = new AndroidResource(
         androidResourceParams,
         pathResolver,
+        ruleFinder,
         /* deps */ ImmutableSortedSet.<BuildRule>naturalOrder()
         .add(assembleAssetsDirectories)
         .add(assembleResourceDirectories)

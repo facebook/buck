@@ -24,6 +24,7 @@ import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.TestResultSummary;
@@ -67,6 +68,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   private static final Pattern END = Pattern.compile("^\\[\\s*(FAILED|OK)\\s*\\] .*");
   private static final String NOTRUN = "notrun";
 
+  private final SourcePathRuleFinder ruleFinder;
   private final BuildRule binary;
   private final Tool executable;
   private final long maxTestOutputSize;
@@ -74,6 +76,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   public CxxGtestTest(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       BuildRule binary,
       Tool executable,
       Supplier<ImmutableMap<String, String>> env,
@@ -97,6 +100,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
         contacts,
         runTestSeparately,
         testRuleTimeoutMs);
+    this.ruleFinder = ruleFinder;
     this.binary = binary;
     this.executable = executable;
     this.maxTestOutputSize = maxTestOutputSize;
@@ -229,7 +233,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(super.getRuntimeDeps())
-        .addAll(executable.getDeps(getResolver()))
+        .addAll(executable.getDeps(ruleFinder))
         .build();
   }
 

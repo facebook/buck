@@ -35,6 +35,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.util.OptionalCompat;
@@ -54,6 +55,7 @@ public class IjProject {
   private final JavaFileParser javaFileParser;
   private final BuildRuleResolver buildRuleResolver;
   private final SourcePathResolver sourcePathResolver;
+  private final SourcePathRuleFinder ruleFinder;
   private final ProjectFilesystem projectFilesystem;
   private final AggregationMode aggregationMode;
   private final IjProjectConfig projectConfig;
@@ -65,6 +67,7 @@ public class IjProject {
       JavaFileParser javaFileParser,
       BuildRuleResolver buildRuleResolver,
       SourcePathResolver sourcePathResolver,
+      SourcePathRuleFinder ruleFinder,
       ProjectFilesystem projectFilesystem,
       AggregationMode aggregationMode,
       BuckConfig buckConfig) {
@@ -73,6 +76,7 @@ public class IjProject {
     this.javaFileParser = javaFileParser;
     this.buildRuleResolver = buildRuleResolver;
     this.sourcePathResolver = sourcePathResolver;
+    this.ruleFinder = ruleFinder;
     this.projectFilesystem = projectFilesystem;
     this.aggregationMode = aggregationMode;
     this.projectConfig = IjProjectBuckConfig.create(buckConfig);
@@ -97,7 +101,7 @@ public class IjProject {
         new IjLibraryFactoryResolver() {
           @Override
           public Path getPath(SourcePath path) {
-            Optional<BuildRule> rule = sourcePathResolver.getRule(path);
+            Optional<BuildRule> rule = ruleFinder.getRule(path);
             if (rule.isPresent()) {
               requiredBuildTargets.add(rule.get().getBuildTarget());
             }
@@ -197,7 +201,7 @@ public class IjProject {
 
           private Path getRelativePathAndRecordRule(SourcePath sourcePath) {
             requiredBuildTargets.addAll(
-                OptionalCompat.asSet(sourcePathResolver.getRule(sourcePath)
+                OptionalCompat.asSet(ruleFinder.getRule(sourcePath)
                     .map(HasBuildTarget::getBuildTarget)));
             return sourcePathResolver.getRelativePath(sourcePath);
           }

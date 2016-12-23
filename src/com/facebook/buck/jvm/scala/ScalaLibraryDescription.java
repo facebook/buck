@@ -35,6 +35,7 @@ import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.OptionalCompat;
@@ -68,7 +69,8 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
       final BuildRuleParams rawParams,
       final BuildRuleResolver resolver,
       A args) throws NoSuchBuildTargetException {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     if (rawParams.getBuildTarget().getFlavors().contains(CalculateAbi.FLAVOR)) {
       BuildTarget libraryTarget = rawParams.getBuildTarget().withoutFlavors(CalculateAbi.FLAVOR);
@@ -76,6 +78,7 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
       return CalculateAbi.of(
           rawParams.getBuildTarget(),
           pathResolver,
+          ruleFinder,
           rawParams,
           new BuildTargetSourcePath(libraryTarget));
     }
@@ -99,10 +102,11 @@ public class ScalaLibraryDescription implements Description<ScalaLibraryDescript
                     Iterables.concat(
                         params.getDeclaredDeps().get(),
                         resolver.getAllRules(args.providedDeps))),
-                scalac.getDeps(pathResolver)));
+                scalac.getDeps(ruleFinder)));
     return new DefaultJavaLibrary(
         javaLibraryParams,
         pathResolver,
+        ruleFinder,
         args.srcs,
         validateResources(
             pathResolver,

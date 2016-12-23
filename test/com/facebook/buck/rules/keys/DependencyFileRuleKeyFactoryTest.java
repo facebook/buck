@@ -34,6 +34,7 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -55,7 +56,8 @@ public class DependencyFileRuleKeyFactoryTest {
   public void ruleKeyDoesNotChangeIfInputContentsChanges() throws Exception {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path output = Paths.get("output");
 
@@ -76,7 +78,8 @@ public class DependencyFileRuleKeyFactoryTest {
         new DefaultDependencyFileRuleKeyFactory(
             0,
             hashCache,
-            pathResolver)
+            pathResolver,
+            ruleFinder)
             .build(rule, ImmutableList.of()).get().getFirst();
 
     // Now, build a rule key with a different hash for the output for the above rule.
@@ -89,7 +92,8 @@ public class DependencyFileRuleKeyFactoryTest {
         new DefaultDependencyFileRuleKeyFactory(
             0,
             hashCache,
-            pathResolver)
+            pathResolver,
+            ruleFinder)
             .build(rule, ImmutableList.of()).get().getFirst();
 
     assertThat(inputKey1, Matchers.equalTo(inputKey2));
@@ -99,7 +103,8 @@ public class DependencyFileRuleKeyFactoryTest {
   public void ruleKeyDoesNotChangeIfInputContentsInRuleKeyAppendableChanges() throws IOException {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     final Path output = Paths.get("output");
 
@@ -120,7 +125,8 @@ public class DependencyFileRuleKeyFactoryTest {
         new DefaultDependencyFileRuleKeyFactory(
             0,
             hashCache,
-            pathResolver)
+            pathResolver,
+            ruleFinder)
             .build(rule, ImmutableList.of()).get().getFirst();
 
     // Now, build a rule key with a different hash for the output for the above rule.
@@ -133,7 +139,8 @@ public class DependencyFileRuleKeyFactoryTest {
         new DefaultDependencyFileRuleKeyFactory(
             0,
             hashCache,
-            pathResolver)
+            pathResolver,
+            ruleFinder)
             .build(rule, ImmutableList.of()).get().getFirst();
 
     assertThat(inputKey1, Matchers.equalTo(inputKey2));
@@ -143,7 +150,8 @@ public class DependencyFileRuleKeyFactoryTest {
   public void manifestKeyDoesNotChangeIfPossibleDepFileContentsChange()throws IOException {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     final Path output = Paths.get("output");
 
@@ -171,7 +179,8 @@ public class DependencyFileRuleKeyFactoryTest {
         new DefaultDependencyFileRuleKeyFactory(
             0,
             hashCache,
-            pathResolver)
+            pathResolver,
+            ruleFinder)
             .buildManifestKey(rule)
             .get()
             .getFirst();
@@ -186,7 +195,8 @@ public class DependencyFileRuleKeyFactoryTest {
         new DefaultDependencyFileRuleKeyFactory(
             0,
             hashCache,
-            pathResolver)
+            pathResolver,
+            ruleFinder)
             .buildManifestKey(rule)
             .get()
             .getFirst();
@@ -198,7 +208,8 @@ public class DependencyFileRuleKeyFactoryTest {
   public void manifestKeyChangesIfNotPossibleDepFileContentsChange() throws IOException {
     BuildRuleResolver resolver =
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     final Path localInput = Paths.get("localInput");
 
@@ -220,7 +231,8 @@ public class DependencyFileRuleKeyFactoryTest {
         new DefaultDependencyFileRuleKeyFactory(
             0,
             hashCache,
-            pathResolver)
+            pathResolver,
+            ruleFinder)
             .buildManifestKey(rule)
             .get()
             .getFirst();
@@ -235,7 +247,8 @@ public class DependencyFileRuleKeyFactoryTest {
         new DefaultDependencyFileRuleKeyFactory(
             0,
             hashCache,
-            pathResolver)
+            pathResolver,
+            ruleFinder)
             .buildManifestKey(rule)
             .get()
             .getFirst();

@@ -29,6 +29,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.HashedFileTool;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SanitizedArg;
@@ -53,8 +54,8 @@ public class CxxLinkTest {
   private static final Linker DEFAULT_LINKER = new GnuLinker(new HashedFileTool(Paths.get("ld")));
   private static final Path DEFAULT_OUTPUT = Paths.get("test.exe");
   private static final SourcePathResolver DEFAULT_SOURCE_PATH_RESOLVER =
-      new SourcePathResolver(
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
+      new SourcePathResolver(new SourcePathRuleFinder(
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())));
   private static final ImmutableList<Arg> DEFAULT_ARGS =
       ImmutableList.of(
           new StringArg("-rpath"),
@@ -69,9 +70,10 @@ public class CxxLinkTest {
 
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
@@ -84,67 +86,69 @@ public class CxxLinkTest {
 
     // Generate a rule key for the defaults.
 
-    RuleKey defaultRuleKey = new DefaultRuleKeyFactory(0, hashCache, pathResolver).build(
-        new CxxLink(
-            params,
-            pathResolver,
-            DEFAULT_LINKER,
-            DEFAULT_OUTPUT,
-            DEFAULT_ARGS,
-            Optional.empty(),
-            /* cacheable */ true));
+    RuleKey defaultRuleKey =
+        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
+            new CxxLink(
+                params,
+                pathResolver,
+                DEFAULT_LINKER,
+                DEFAULT_OUTPUT,
+                DEFAULT_ARGS,
+                Optional.empty(),
+                /* cacheable */ true));
 
     // Verify that changing the archiver causes a rulekey change.
 
-    RuleKey linkerChange = new DefaultRuleKeyFactory(0, hashCache, pathResolver).build(
-        new CxxLink(
-            params,
-            pathResolver,
-            new GnuLinker(new HashedFileTool(Paths.get("different"))),
-            DEFAULT_OUTPUT,
-            DEFAULT_ARGS,
-            Optional.empty(),
-            /* cacheable */ true));
+    RuleKey linkerChange =
+        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
+            new CxxLink(
+                params,
+                pathResolver,
+                new GnuLinker(new HashedFileTool(Paths.get("different"))),
+                DEFAULT_OUTPUT,
+                DEFAULT_ARGS,
+                Optional.empty(),
+                /* cacheable */ true));
     assertNotEquals(defaultRuleKey, linkerChange);
 
     // Verify that changing the output path causes a rulekey change.
 
-    RuleKey outputChange = new DefaultRuleKeyFactory(0, hashCache, pathResolver).build(
-        new CxxLink(
-            params,
-            pathResolver,
-            DEFAULT_LINKER,
-            Paths.get("different"),
-            DEFAULT_ARGS,
-            Optional.empty(),
-            /* cacheable */ true));
+    RuleKey outputChange =
+        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
+            new CxxLink(
+                params,
+                pathResolver,
+                DEFAULT_LINKER,
+                Paths.get("different"),
+                DEFAULT_ARGS,
+                Optional.empty(),
+                /* cacheable */ true));
     assertNotEquals(defaultRuleKey, outputChange);
 
     // Verify that changing the flags causes a rulekey change.
 
-    RuleKey flagsChange = new DefaultRuleKeyFactory(0, hashCache, pathResolver).build(
-        new CxxLink(
-            params,
-            pathResolver,
-            DEFAULT_LINKER,
-            DEFAULT_OUTPUT,
-            ImmutableList.of(
-                new SourcePathArg(
-                    new SourcePathResolver(
-                        new BuildRuleResolver(
-                            TargetGraph.EMPTY,
-                            new DefaultTargetNodeToBuildRuleTransformer())),
-                    new FakeSourcePath("different"))),
-            Optional.empty(),
-            /* cacheable */ true));
+    RuleKey flagsChange =
+        new DefaultRuleKeyFactory(0, hashCache, pathResolver, ruleFinder).build(
+            new CxxLink(
+                params,
+                pathResolver,
+                DEFAULT_LINKER,
+                DEFAULT_OUTPUT,
+                ImmutableList.of(
+                    new SourcePathArg(
+                        pathResolver,
+                        new FakeSourcePath("different"))),
+                Optional.empty(),
+                /* cacheable */ true));
     assertNotEquals(defaultRuleKey, flagsChange);
   }
 
   @Test
   public void sanitizedPathsInFlagsDoNotAffectRuleKey() {
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
     DefaultRuleKeyFactory ruleKeyFactory =
@@ -157,7 +161,8 @@ public class CxxLinkTest {
                     "b.o", Strings.repeat("b", 40),
                     "libc.a", Strings.repeat("c", 40),
                     "different", Strings.repeat("d", 40))),
-            pathResolver);
+            pathResolver,
+            ruleFinder);
 
     // Set up a map to sanitize the differences in the flags.
     int pathSize = 10;

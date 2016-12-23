@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 
 import org.junit.Before;
@@ -37,10 +38,10 @@ public class PathRelativizerTest {
   public void setUp() {
     pathRelativizer = new PathRelativizer(
         Paths.get("output0/output1"),
-        new SourcePathResolver(
+        new SourcePathResolver(new SourcePathRuleFinder(
             new BuildRuleResolver(
                 TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer()))::getRelativePath);
+                new DefaultTargetNodeToBuildRuleTransformer())))::getRelativePath);
   }
 
   @Test

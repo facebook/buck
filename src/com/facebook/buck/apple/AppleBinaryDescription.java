@@ -45,6 +45,7 @@ import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.rules.MetadataProvidingDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.HumanReadableException;
@@ -351,13 +352,16 @@ public class AppleBinaryDescription
       return existingThinRule.get();
     }
 
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+
     Optional<Path> stubBinaryPath = getStubBinaryPath(params, args);
     if (shouldUseStubBinary(params) && stubBinaryPath.isPresent()) {
       try {
         return resolver.addToIndex(
             new WriteFile(
                 params,
-                new SourcePathResolver(resolver),
+                pathResolver,
                 Files.readAllBytes(stubBinaryPath.get()),
                 BuildTargets.getGenPath(
                     params.getProjectFilesystem(),
@@ -370,7 +374,7 @@ public class AppleBinaryDescription
     } else {
       CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
       AppleDescriptions.populateCxxBinaryDescriptionArg(
-          new SourcePathResolver(resolver),
+          pathResolver,
           delegateArg,
           args,
           params.getBuildTarget());
@@ -409,7 +413,7 @@ public class AppleBinaryDescription
     if (!metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
       CxxBinaryDescription.Arg delegateArg = delegate.createUnpopulatedConstructorArg();
       AppleDescriptions.populateCxxBinaryDescriptionArg(
-          new SourcePathResolver(resolver),
+          new SourcePathResolver(new SourcePathRuleFinder(resolver)),
           delegateArg,
           args,
           buildTarget);

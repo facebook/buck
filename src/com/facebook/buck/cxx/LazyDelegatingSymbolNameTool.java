@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 
@@ -36,12 +37,14 @@ public class LazyDelegatingSymbolNameTool implements SymbolNameTool {
       BuildRuleParams baseParams,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Iterable<? extends SourcePath> linkerInputs) {
     return delegate.get().createUndefinedSymbolsFile(
         baseParams,
         ruleResolver,
         pathResolver,
+        ruleFinder,
         target,
         linkerInputs);
   }

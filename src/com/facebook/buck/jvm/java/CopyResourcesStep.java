@@ -25,6 +25,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -42,6 +43,7 @@ public class CopyResourcesStep implements Step {
 
   private final ProjectFilesystem filesystem;
   private final SourcePathResolver resolver;
+  private final SourcePathRuleFinder ruleFinder;
   private final BuildTarget target;
   private final Collection<? extends SourcePath> resources;
   private final Path outputDirectory;
@@ -50,12 +52,14 @@ public class CopyResourcesStep implements Step {
   public CopyResourcesStep(
       ProjectFilesystem filesystem,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Collection<? extends SourcePath> resources,
       Path outputDirectory,
       JavaPackageFinder javaPackageFinder) {
     this.filesystem = filesystem;
     this.resolver = resolver;
+    this.ruleFinder = ruleFinder;
     this.target = target;
     this.resources = resources;
     this.outputDirectory = outputDirectory;
@@ -101,7 +105,7 @@ public class CopyResourcesStep implements Step {
       // Therefore, some path-wrangling is required to produce the correct string.
 
 
-      Optional<BuildRule> underlyingRule = resolver.getRule(rawResource);
+      Optional<BuildRule> underlyingRule = ruleFinder.getRule(rawResource);
       Path relativePathToResource = resolver.getRelativePath(rawResource);
 
       String resource;

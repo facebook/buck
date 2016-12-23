@@ -21,6 +21,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.RuleKeyObjectSink;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.OptionalCompat;
@@ -72,14 +73,14 @@ abstract class AbstractPreprocessorFlags {
   @Value.Parameter
   public abstract ImmutableSet<Path> getSystemIncludePaths();
 
-  public Iterable<BuildRule> getDeps(SourcePathResolver resolver) {
+  public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
-    deps.addAll(resolver.filterBuildRuleInputs(OptionalCompat.asSet(getPrefixHeader())));
+    deps.addAll(ruleFinder.filterBuildRuleInputs(OptionalCompat.asSet(getPrefixHeader())));
     for (CxxHeaders cxxHeaders : getIncludes()) {
-      deps.addAll(cxxHeaders.getDeps(resolver));
+      deps.addAll(cxxHeaders.getDeps(ruleFinder));
     }
     for (FrameworkPath frameworkPath : getFrameworkPaths()) {
-      deps.addAll(frameworkPath.getDeps(resolver));
+      deps.addAll(frameworkPath.getDeps(ruleFinder));
     }
     return deps.build();
   }

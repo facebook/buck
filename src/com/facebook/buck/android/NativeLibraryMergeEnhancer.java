@@ -41,6 +41,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -89,6 +90,8 @@ import java.util.regex.Pattern;
  * themselves.  Future work could identify cases where the original build rules are sufficient.
  */
 class NativeLibraryMergeEnhancer {
+  private static SourcePathRuleFinder ruleFinder;
+
   private NativeLibraryMergeEnhancer() {
   }
 
@@ -97,6 +100,7 @@ class NativeLibraryMergeEnhancer {
       CxxBuckConfig cxxBuckConfig,
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       BuildRuleParams buildRuleParams,
       ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> nativePlatforms,
       Map<String, List<Pattern>> mergeMap,
@@ -104,6 +108,7 @@ class NativeLibraryMergeEnhancer {
       ImmutableMultimap<APKModule, NativeLinkable> linkables,
       ImmutableMultimap<APKModule, NativeLinkable> linkablesAssets)
       throws NoSuchBuildTargetException {
+    NativeLibraryMergeEnhancer.ruleFinder = ruleFinder;
 
     NativeLibraryMergeEnhancementResult.Builder builder =
         NativeLibraryMergeEnhancementResult.builder();
@@ -770,6 +775,7 @@ class NativeLibraryMergeEnhancer {
             baseBuildRuleParams,
             ruleResolver,
             pathResolver,
+            ruleFinder,
             target,
             Linker.LinkType.SHARED,
             Optional.of(soname),

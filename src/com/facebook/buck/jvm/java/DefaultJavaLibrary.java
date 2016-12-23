@@ -40,6 +40,7 @@ import com.facebook.buck.rules.InitializableFromDisk;
 import com.facebook.buck.rules.OnDiskBuildInfo;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SourcePaths;
 import com.facebook.buck.rules.keys.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
@@ -138,6 +139,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   @AddToRuleKey
   private final ImmutableSet<Pattern> classesToRemoveFromJar;
 
+  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey
   private final CompileToJarStepFactory compileStepFactory;
 
@@ -172,6 +174,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   public DefaultJavaLibrary(
       final BuildRuleParams params,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       Set<? extends SourcePath> srcs,
       Set<? extends SourcePath> resources,
       Optional<Path> generatedSourceFolder,
@@ -192,6 +195,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
     this(
         params,
         resolver,
+        ruleFinder,
         srcs,
         resources,
         generatedSourceFolder,
@@ -216,6 +220,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
   private DefaultJavaLibrary(
       BuildRuleParams params,
       final SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       Set<? extends SourcePath> srcs,
       Set<? extends SourcePath> resources,
       Optional<Path> generatedSourceFolder,
@@ -234,8 +239,9 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       ImmutableSortedSet<BuildTarget> tests,
       ImmutableSet<Pattern> classesToRemoveFromJar) {
     super(
-        params.appendExtraDeps(() -> resolver.filterBuildRuleInputs(abiClasspath.get())),
+        params.appendExtraDeps(() -> ruleFinder.filterBuildRuleInputs(abiClasspath.get())),
         resolver);
+    this.ruleFinder = ruleFinder;
     this.compileStepFactory = compileStepFactory;
 
     // Exported deps are meant to be forwarded onto the CLASSPATH for dependents,
@@ -458,6 +464,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
         new CopyResourcesStep(
             getProjectFilesystem(),
             getResolver(),
+            ruleFinder,
             target,
             resources,
             outputDirectory,
@@ -498,6 +505,7 @@ public class DefaultJavaLibrary extends AbstractBuildRule
           getResolver().getAllRelativePaths(getJavaSrcs()),
           target,
           getResolver(),
+          ruleFinder,
           getProjectFilesystem(),
           declared,
           outputDirectory,

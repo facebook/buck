@@ -170,9 +170,10 @@ public class ActionGraphCache {
       Iterable<BuildRule> buildRules,
       BuildRuleResolver buildRuleResolver,
       int keySeed) {
-    SourcePathResolver pathResolver = new SourcePathResolver(buildRuleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
     ContentAgnosticRuleKeyFactory factory =
-        new ContentAgnosticRuleKeyFactory(keySeed, pathResolver);
+        new ContentAgnosticRuleKeyFactory(keySeed, pathResolver, ruleFinder);
 
     HashMap<BuildRule, RuleKey> ruleKeysMap = new HashMap<>();
     for (BuildRule rule : buildRules) {

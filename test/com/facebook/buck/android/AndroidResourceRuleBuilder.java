@@ -22,6 +22,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.google.common.collect.ImmutableSortedSet;
 
 import java.util.Optional;
@@ -39,6 +40,7 @@ public class AndroidResourceRuleBuilder {
   public static class Builder {
 
     private SourcePathResolver resolver;
+    private SourcePathRuleFinder ruleFinder;
     private BuildRuleParams buildRuleParams;
     private ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
     private SourcePath res;
@@ -53,6 +55,7 @@ public class AndroidResourceRuleBuilder {
       return new AndroidResource(
           buildRuleParams,
           resolver,
+          ruleFinder,
           deps,
           res,
           resSrcs,
@@ -72,6 +75,11 @@ public class AndroidResourceRuleBuilder {
 
     public Builder setResolver(SourcePathResolver resolver) {
       this.resolver = resolver;
+      return this;
+    }
+
+    public Builder setRuleFinder(SourcePathRuleFinder ruleFinder) {
+      this.ruleFinder = ruleFinder;
       return this;
     }
 

@@ -28,10 +28,14 @@ public abstract class BinaryWrapperRule
     extends AbstractBuildRule
     implements BinaryBuildRule, HasRuntimeDeps {
 
+  private final SourcePathRuleFinder ruleFinder;
+
   public BinaryWrapperRule(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver) {
+      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder) {
     super(buildRuleParams, resolver);
+    this.ruleFinder = ruleFinder;
   }
 
   @Override
@@ -45,7 +49,7 @@ public abstract class BinaryWrapperRule
   public final ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(getDeclaredDeps())
-        .addAll(getExecutableCommand().getDeps(getResolver()))
+        .addAll(getExecutableCommand().getDeps(ruleFinder))
         .build();
   }
 

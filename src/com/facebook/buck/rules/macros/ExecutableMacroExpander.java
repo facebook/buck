@@ -23,6 +23,7 @@ import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Joiner;
@@ -49,7 +50,7 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander {
       BuildRuleResolver resolver,
       BuildRule rule)
       throws MacroException {
-    return ImmutableList.copyOf(getTool(rule).getDeps(new SourcePathResolver(resolver)));
+    return ImmutableList.copyOf(getTool(rule).getDeps(new SourcePathRuleFinder(resolver)));
   }
 
   @Override

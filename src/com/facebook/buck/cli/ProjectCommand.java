@@ -58,6 +58,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ProjectConfig;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetGraphAndTargets;
 import com.facebook.buck.rules.TargetNode;
@@ -631,7 +632,8 @@ public class ProjectCommand extends BuildCommand {
 
     BuckConfig buckConfig = params.getBuckConfig();
     BuildRuleResolver ruleResolver = result.getResolver();
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    SourcePathResolver sourcePathResolver = new SourcePathResolver(ruleFinder);
 
     JavacOptions javacOptions = buckConfig.getView(JavaBuckConfig.class).getDefaultJavacOptions();
 
@@ -641,6 +643,7 @@ public class ProjectCommand extends BuildCommand {
         JavaFileParser.createJavaFileParser(javacOptions),
         ruleResolver,
         sourcePathResolver,
+        ruleFinder,
         params.getCell().getFilesystem(),
         getIntellijAggregationMode(buckConfig),
         buckConfig);
@@ -803,7 +806,7 @@ public class ProjectCommand extends BuildCommand {
 
     try (ExecutionContext executionContext = createExecutionContext(params)) {
       Project project = new Project(
-          new SourcePathResolver(result.getResolver()),
+          new SourcePathResolver(new SourcePathRuleFinder(result.getResolver())),
           FluentIterable
               .from(result.getActionGraph().getNodes())
               .filter(ProjectConfig.class)
@@ -1020,10 +1023,10 @@ public class ProjectCommand extends BuildCommand {
           params.getCell().getKnownBuildRuleTypes().getCxxPlatforms(),
           defaultCxxPlatform,
           params.getBuckConfig().getView(ParserConfig.class).getBuildFileName(),
-          input -> new SourcePathResolver(
+          input -> new SourcePathResolver(new SourcePathRuleFinder(
               ActionGraphCache.getFreshActionGraph(params.getBuckEventBus(),
                   targetGraphAndTargets.getTargetGraph().getSubgraph(
-                  ImmutableSet.of(input))).getResolver()),
+                  ImmutableSet.of(input))).getResolver())),
           params.getBuckEventBus(),
           halideBuckConfig,
           cxxBuckConfig,

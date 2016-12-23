@@ -29,6 +29,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
@@ -77,6 +78,9 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
       final BuildRuleResolver resolver,
       A args) {
 
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+
     final ImmutableSortedSet.Builder<BuildRule> extraDeps = ImmutableSortedSet.naturalOrder();
 
     // Find all of the reachable JavaLibrary rules and grab their associated GwtModules.
@@ -107,8 +111,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
                   .addAll(javaLibrary.getResources())
                   .build();
           ImmutableSortedSet<BuildRule> deps =
-              ImmutableSortedSet.copyOf(
-                  new SourcePathResolver(resolver).filterBuildRuleInputs(filesForGwtModule));
+              ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(filesForGwtModule));
 
           BuildRule module = resolver.addToIndex(
               new GwtModule(
@@ -116,7 +119,8 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
                       gwtModuleTarget,
                       Suppliers.ofInstance(deps),
                       Suppliers.ofInstance(ImmutableSortedSet.of())),
-                  new SourcePathResolver(resolver),
+                  pathResolver,
+                  ruleFinder,
                   filesForGwtModule));
           gwtModule = Optional.of(module);
         }
@@ -136,7 +140,7 @@ public class GwtBinaryDescription implements Description<GwtBinaryDescription.Ar
 
     return new GwtBinary(
         params.copyWithExtraDeps(Suppliers.ofInstance(extraDeps.build())),
-        new SourcePathResolver(resolver),
+        pathResolver,
         args.modules,
         javaOptions.getJavaRuntimeLauncher(),
         args.vmArgs,

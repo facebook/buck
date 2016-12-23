@@ -65,6 +65,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeRuleKeyFactory;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TestRunEvent;
 import com.facebook.buck.rules.TestSummaryEvent;
@@ -150,9 +151,9 @@ public class SuperConsoleEventBusListenerTest {
     BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    ));
 
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     BuildTarget cachedTarget = BuildTargetFactory.newInstance("//chicken:dance");
@@ -554,9 +555,9 @@ public class SuperConsoleEventBusListenerTest {
     BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    ));
 
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     BuildTarget cachedTarget = BuildTargetFactory.newInstance("//chicken:dance");
@@ -993,9 +994,9 @@ public class SuperConsoleEventBusListenerTest {
     BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    ));
 
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
     ImmutableSet<BuildTarget> testTargets = ImmutableSet.of(testTarget);
@@ -1280,9 +1281,9 @@ public class SuperConsoleEventBusListenerTest {
     BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    ));
 
     BuildTarget testTarget = BuildTargetFactory.newInstance("//:test");
     ImmutableSet<BuildTarget> testTargets = ImmutableSet.of(testTarget);
@@ -1567,9 +1568,9 @@ public class SuperConsoleEventBusListenerTest {
 
   @Test
   public void testFailingTest() {
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    ));
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
     TestConsole console = new TestConsole();
@@ -1889,9 +1890,9 @@ public class SuperConsoleEventBusListenerTest {
     BuckEventBus eventBus = BuckEventBusFactory.newInstance(fakeClock);
     SuperConsoleEventBusListener listener = createSuperConsole(fakeClock, eventBus);
 
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    ));
 
     BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget);

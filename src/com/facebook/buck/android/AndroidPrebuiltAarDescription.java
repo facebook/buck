@@ -34,6 +34,7 @@ import com.facebook.buck.rules.BuildTargetSourcePath;
 import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Preconditions;
@@ -78,7 +79,8 @@ public class AndroidPrebuiltAarDescription
       BuildRuleParams params,
       BuildRuleResolver buildRuleResolver,
       A args) throws NoSuchBuildTargetException {
-    SourcePathResolver pathResolver = new SourcePathResolver(buildRuleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
 
     ImmutableSet<Flavor> flavors = params.getBuildTarget().getFlavors();
     if (flavors.contains(AAR_UNZIP_FLAVOR)) {
@@ -86,7 +88,7 @@ public class AndroidPrebuiltAarDescription
       BuildRuleParams unzipAarParams = params.copyWithDeps(
           Suppliers.ofInstance(ImmutableSortedSet.of()),
           Suppliers.ofInstance(ImmutableSortedSet.copyOf(
-              pathResolver.filterBuildRuleInputs(args.aar))));
+              ruleFinder.filterBuildRuleInputs(args.aar))));
       return new UnzipAar(unzipAarParams, pathResolver, args.aar);
     }
 
@@ -103,6 +105,7 @@ public class AndroidPrebuiltAarDescription
       return CalculateAbi.of(
           params.getBuildTarget(),
           pathResolver,
+          ruleFinder,
           params,
           new BuildTargetSourcePath(
               unzipAar.getBuildTarget(),
@@ -135,6 +138,7 @@ public class AndroidPrebuiltAarDescription
     return new AndroidPrebuiltAar(
         androidLibraryParams,
         /* resolver */ pathResolver,
+        ruleFinder,
         /* proguardConfig */ new BuildTargetSourcePath(
             unzipAar.getBuildTarget(),
             unzipAar.getProguardConfig()),

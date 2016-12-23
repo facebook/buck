@@ -27,6 +27,7 @@ import com.facebook.buck.rules.FakeBuildRule;
 import com.facebook.buck.rules.FakeExportDependenciesRule;
 import com.facebook.buck.rules.FakeTargetNodeBuilder;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.testutil.TargetGraphFactory;
@@ -39,10 +40,10 @@ public class RobolectricTestDescriptionTest {
   @Test
   public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
     SourcePathResolver emptyPathResolver =
-        new SourcePathResolver(
+        new SourcePathResolver(new SourcePathRuleFinder(
             new BuildRuleResolver(
                 TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer()));
+                new DefaultTargetNodeToBuildRuleTransformer())));
 
     FakeBuildRule exportedRule =
         new FakeBuildRule("//:exported_rule", emptyPathResolver);
@@ -72,10 +73,10 @@ public class RobolectricTestDescriptionTest {
   @Test
   public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() throws Exception {
     SourcePathResolver emptyPathResolver =
-        new SourcePathResolver(
+        new SourcePathResolver(new SourcePathRuleFinder(
             new BuildRuleResolver(
                 TargetGraph.EMPTY,
-                new DefaultTargetNodeToBuildRuleTransformer()));
+                new DefaultTargetNodeToBuildRuleTransformer())));
 
     FakeBuildRule exportedRule =
         new FakeBuildRule("//:exported_rule", emptyPathResolver);

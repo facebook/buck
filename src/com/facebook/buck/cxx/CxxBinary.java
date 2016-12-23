@@ -27,6 +27,7 @@ import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.BuildableContext;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
@@ -46,6 +47,7 @@ public class CxxBinary
 
   private final BuildRuleParams params;
   private final BuildRuleResolver ruleResolver;
+  private final SourcePathRuleFinder ruleFinder;
   private final BuildRule linkRule;
   private final Tool executable;
   private final ImmutableSortedSet<BuildTarget> tests;
@@ -56,6 +58,7 @@ public class CxxBinary
       BuildRuleParams params,
       BuildRuleResolver ruleResolver,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       BuildRule linkRule,
       Tool executable,
       Iterable<FrameworkPath> frameworks,
@@ -64,6 +67,7 @@ public class CxxBinary
     super(params, resolver);
     this.params = params;
     this.ruleResolver = ruleResolver;
+    this.ruleFinder = ruleFinder;
     this.linkRule = linkRule;
     this.executable = executable;
     this.tests = ImmutableSortedSet.copyOf(tests);
@@ -156,7 +160,7 @@ public class CxxBinary
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
     return ImmutableSortedSet.<BuildRule>naturalOrder()
         .addAll(getDeclaredDeps())
-        .addAll(executable.getDeps(getResolver()))
+        .addAll(executable.getDeps(ruleFinder))
         .build();
   }
 

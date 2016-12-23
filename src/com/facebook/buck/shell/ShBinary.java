@@ -30,6 +30,7 @@ import com.facebook.buck.rules.CommandTool;
 import com.facebook.buck.rules.HasRuntimeDeps;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
@@ -54,6 +55,7 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
           "buck.path_to_sh_binary_template",
           "src/com/facebook/buck/shell/sh_binary_template"));
 
+  private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey
   private final SourcePath main;
   @AddToRuleKey
@@ -65,9 +67,11 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
   protected ShBinary(
       BuildRuleParams params,
       SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       SourcePath main,
       ImmutableSet<SourcePath> resources) {
     super(params, resolver);
+    this.ruleFinder = ruleFinder;
     this.main = main;
     this.resources = resources;
 
@@ -137,7 +141,7 @@ public class ShBinary extends AbstractBuildRule implements BinaryBuildRule, HasR
   // for this rule to be usable.
   @Override
   public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.copyOf(getResolver().filterBuildRuleInputs(
+    return ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(
         FluentIterable.from(resources).append(main)));
   }
 

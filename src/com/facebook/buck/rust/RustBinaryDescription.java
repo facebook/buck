@@ -34,6 +34,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.ToolProvider;
 import com.facebook.buck.versions.VersionRoot;
@@ -79,9 +80,13 @@ public class RustBinaryDescription implements
     rustcArgs.addAll(rustBuckConfig.getRustBinaryFlags());
     rustcArgs.addAll(args.rustcFlags);
 
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+
     return new RustBinary(
         params,
-        new SourcePathResolver(resolver),
+        ruleFinder,
+        pathResolver,
         args.crate.orElse(ruleToCrateName(params.getBuildTarget().getShortName())),
         args.crateRoot,
         ImmutableSortedSet.copyOf(args.srcs),

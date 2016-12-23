@@ -19,7 +19,7 @@ package com.facebook.buck.go;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.rules.BuildRule;
 import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -35,8 +35,8 @@ abstract class AbstractGoLinkable {
   abstract ImmutableMap<Path, SourcePath> getGoLinkInput();
   abstract ImmutableSet<BuildTarget> getExportedDeps();
 
-  public Iterable<BuildRule> getDeps(SourcePathResolver resolver) {
-    return resolver.filterBuildRuleInputs(getGoLinkInput().values());
+  public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return ruleFinder.filterBuildRuleInputs(getGoLinkInput().values());
   }
 
 }

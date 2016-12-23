@@ -33,6 +33,7 @@ import com.facebook.buck.rules.CachingBuildEngineBuckConfig;
 import com.facebook.buck.rules.Cell;
 import com.facebook.buck.rules.ConstructorArgMarshaller;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.TargetNode;
 import com.facebook.buck.rules.TargetNodeFactory;
@@ -193,10 +194,12 @@ public class DistBuildSlaveExecutor {
     }
 
     createActionGraphAndResolver();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(Preconditions.checkNotNull(
+        actionGraphAndResolver).getResolver());
     cachingBuildEngineDelegate =
         new DistBuildCachingEngineDelegate(
-            new SourcePathResolver(
-                Preconditions.checkNotNull(actionGraphAndResolver).getResolver()),
+            new SourcePathResolver(ruleFinder),
+            ruleFinder,
             args.getState(),
             fileHashLoaders);
     return cachingBuildEngineDelegate;

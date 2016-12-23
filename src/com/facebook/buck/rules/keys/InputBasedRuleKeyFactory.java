@@ -25,6 +25,7 @@ import com.facebook.buck.rules.RuleKeyAppendable;
 import com.facebook.buck.rules.RuleKeyBuilder;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.util.OptionalCompat;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
@@ -55,6 +56,7 @@ public class InputBasedRuleKeyFactory
   private final FileHashLoader fileHashLoader;
   private final SourcePathResolver pathResolver;
   private final ArchiveHandling archiveHandling;
+  private final SourcePathRuleFinder ruleFinder;
   private final InputHandling inputHandling;
   private final LoadingCache<RuleKeyAppendable, Result> cache;
   private final long inputSizeLimit;
@@ -63,12 +65,14 @@ public class InputBasedRuleKeyFactory
       int seed,
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       InputHandling inputHandling,
       ArchiveHandling archiveHandling,
       long inputSizeLimit) {
     super(seed);
     this.fileHashLoader = hashLoader;
     this.pathResolver = pathResolver;
+    this.ruleFinder = ruleFinder;
     this.inputHandling = inputHandling;
     this.archiveHandling = archiveHandling;
     this.inputSizeLimit = inputSizeLimit;
@@ -90,11 +94,13 @@ public class InputBasedRuleKeyFactory
       int seed,
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder,
       long inputSizeLimit) {
     this(
         seed,
         hashLoader,
         pathResolver,
+        ruleFinder,
         InputHandling.HASH,
         ArchiveHandling.ARCHIVES,
         inputSizeLimit);
@@ -103,8 +109,9 @@ public class InputBasedRuleKeyFactory
   public InputBasedRuleKeyFactory(
       int seed,
       FileHashLoader hashLoader,
-      SourcePathResolver pathResolver) {
-    this(seed, hashLoader, pathResolver, Long.MAX_VALUE);
+      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder) {
+    this(seed, hashLoader, pathResolver, ruleFinder, Long.MAX_VALUE);
   }
 
   @Override
@@ -149,7 +156,7 @@ public class InputBasedRuleKeyFactory
     private boolean inputSizeLimitExceeded = false;
 
     private Builder() {
-      super(pathResolver, fileHashLoader);
+      super(ruleFinder, pathResolver, fileHashLoader);
     }
 
     @Override
@@ -217,7 +224,7 @@ public class InputBasedRuleKeyFactory
     @Override
     protected Builder setSourcePath(SourcePath sourcePath) {
       if (inputHandling == InputHandling.HASH) {
-        deps.add(OptionalCompat.asSet(pathResolver.getRule(sourcePath)));
+        deps.add(OptionalCompat.asSet(ruleFinder.getRule(sourcePath)));
 
         try {
           if (sourcePath instanceof ArchiveMemberSourcePath) {

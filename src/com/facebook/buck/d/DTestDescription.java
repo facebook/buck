@@ -31,6 +31,7 @@ import com.facebook.buck.rules.Description;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.Label;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.coercer.SourceList;
@@ -78,7 +79,8 @@ public class DTestDescription implements
 
     BuildTarget target = params.getBuildTarget();
 
-    SourcePathResolver pathResolver = new SourcePathResolver(buildRuleResolver);
+    SourcePathResolver pathResolver =
+        new SourcePathResolver(new SourcePathRuleFinder(buildRuleResolver));
 
     SymlinkTree sourceTree =
         buildRuleResolver.addToIndex(
@@ -114,7 +116,7 @@ public class DTestDescription implements
 
     return new DTest(
         params.appendExtraDeps(ImmutableList.of(binaryRule)),
-        new SourcePathResolver(buildRuleResolver),
+        pathResolver,
         binaryRule,
         args.contacts,
         args.labels,

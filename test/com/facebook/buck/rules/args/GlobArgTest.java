@@ -23,6 +23,7 @@ import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -39,9 +40,9 @@ public class GlobArgTest {
   public void emptyDir() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path dir = filesystem.getRootPath().getFileSystem().getPath("foo/bar");
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    ));
     filesystem.mkdirs(dir);
     Arg arg = GlobArg.of(pathResolver, new PathSourcePath(filesystem, dir), "**");
     assertThat(
@@ -53,9 +54,9 @@ public class GlobArgTest {
   public void filesInSortedOrder() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path dir = filesystem.getRootPath().getFileSystem().getPath("foo/bar");
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    ));
     filesystem.mkdirs(dir);
     filesystem.touch(dir.resolve("file2.dat"));
     filesystem.touch(dir.resolve("file1.dat"));

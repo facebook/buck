@@ -32,6 +32,7 @@ import com.facebook.buck.rules.FakeSourcePath;
 import com.facebook.buck.rules.RuleKey;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.rules.Tool;
 import com.facebook.buck.rules.args.StringArg;
@@ -72,9 +73,10 @@ public class ThriftCompilerTest {
 
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
-    SourcePathResolver resolver = new SourcePathResolver(
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+    );
+    SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
         ImmutableMap.of(
@@ -87,213 +89,224 @@ public class ThriftCompilerTest {
 
     // Generate a rule key for the defaults.
 
-    RuleKey defaultRuleKey = new DefaultRuleKeyFactory(0, hashCache, resolver).build(
-        new ThriftCompiler(
-            params,
-            resolver,
-            DEFAULT_COMPILER,
-            DEFAULT_FLAGS,
-            DEFAULT_OUTPUT_DIR,
-            DEFAULT_INPUT,
-            DEFAULT_LANGUAGE,
-            DEFAULT_OPTIONS,
-            DEFAULT_INCLUDE_ROOTS,
-            DEFAULT_HEADER_MAPS,
-            DEFAULT_INCLUDES,
-            DEFAULT_GENERATED_SOURCES));
+    RuleKey defaultRuleKey = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder)
+        .build(
+            new ThriftCompiler(
+                params,
+                resolver,
+                DEFAULT_COMPILER,
+                DEFAULT_FLAGS,
+                DEFAULT_OUTPUT_DIR,
+                DEFAULT_INPUT,
+                DEFAULT_LANGUAGE,
+                DEFAULT_OPTIONS,
+                DEFAULT_INCLUDE_ROOTS,
+                DEFAULT_HEADER_MAPS,
+                DEFAULT_INCLUDES,
+                DEFAULT_GENERATED_SOURCES));
 
     // Verify that changing the compiler causes a rulekey change.
 
-    RuleKey compilerChange = new DefaultRuleKeyFactory(0, hashCache, resolver).build(
-        new ThriftCompiler(
-            params,
-            resolver,
-            new CommandTool.Builder().addArg(new StringArg("different")).build(),
-            DEFAULT_FLAGS,
-            DEFAULT_OUTPUT_DIR,
-            DEFAULT_INPUT,
-            DEFAULT_LANGUAGE,
-            DEFAULT_OPTIONS,
-            DEFAULT_INCLUDE_ROOTS,
-            DEFAULT_HEADER_MAPS,
-            DEFAULT_INCLUDES,
-            DEFAULT_GENERATED_SOURCES));
+    RuleKey compilerChange = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder)
+        .build(
+            new ThriftCompiler(
+                params,
+                resolver,
+                new CommandTool.Builder().addArg(new StringArg("different")).build(),
+                DEFAULT_FLAGS,
+                DEFAULT_OUTPUT_DIR,
+                DEFAULT_INPUT,
+                DEFAULT_LANGUAGE,
+                DEFAULT_OPTIONS,
+                DEFAULT_INCLUDE_ROOTS,
+                DEFAULT_HEADER_MAPS,
+                DEFAULT_INCLUDES,
+                DEFAULT_GENERATED_SOURCES));
     assertNotEquals(defaultRuleKey, compilerChange);
 
     // Verify that changing the flags causes a rulekey change.
 
-    RuleKey flagsChange = new DefaultRuleKeyFactory(0, hashCache, resolver).build(
-        new ThriftCompiler(
-            params,
-            resolver,
-            DEFAULT_COMPILER,
-            ImmutableList.of("--different"),
-            DEFAULT_OUTPUT_DIR,
-            DEFAULT_INPUT,
-            DEFAULT_LANGUAGE,
-            DEFAULT_OPTIONS,
-            DEFAULT_INCLUDE_ROOTS,
-            DEFAULT_HEADER_MAPS,
-            DEFAULT_INCLUDES,
-            DEFAULT_GENERATED_SOURCES));
+    RuleKey flagsChange = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder)
+        .build(
+            new ThriftCompiler(
+                params,
+                resolver,
+                DEFAULT_COMPILER,
+                ImmutableList.of("--different"),
+                DEFAULT_OUTPUT_DIR,
+                DEFAULT_INPUT,
+                DEFAULT_LANGUAGE,
+                DEFAULT_OPTIONS,
+                DEFAULT_INCLUDE_ROOTS,
+                DEFAULT_HEADER_MAPS,
+                DEFAULT_INCLUDES,
+                DEFAULT_GENERATED_SOURCES));
     assertNotEquals(defaultRuleKey, flagsChange);
 
     // Verify that changing the flags causes a rulekey change.
 
-    RuleKey outputDirChange = new DefaultRuleKeyFactory(0, hashCache, resolver).build(
-        new ThriftCompiler(
-            params,
-            resolver,
-            DEFAULT_COMPILER,
-            DEFAULT_FLAGS,
-            Paths.get("different-dir"),
-            DEFAULT_INPUT,
-            DEFAULT_LANGUAGE,
-            DEFAULT_OPTIONS,
-            DEFAULT_INCLUDE_ROOTS,
-            DEFAULT_HEADER_MAPS,
-            DEFAULT_INCLUDES,
-            DEFAULT_GENERATED_SOURCES));
+    RuleKey outputDirChange = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder)
+        .build(
+            new ThriftCompiler(
+                params,
+                resolver,
+                DEFAULT_COMPILER,
+                DEFAULT_FLAGS,
+                Paths.get("different-dir"),
+                DEFAULT_INPUT,
+                DEFAULT_LANGUAGE,
+                DEFAULT_OPTIONS,
+                DEFAULT_INCLUDE_ROOTS,
+                DEFAULT_HEADER_MAPS,
+                DEFAULT_INCLUDES,
+                DEFAULT_GENERATED_SOURCES));
     assertNotEquals(defaultRuleKey, outputDirChange);
 
     // Verify that changing the input causes a rulekey change.
 
-    RuleKey inputChange = new DefaultRuleKeyFactory(0, hashCache, resolver).build(
-        new ThriftCompiler(
-            params,
-            resolver,
-            DEFAULT_COMPILER,
-            DEFAULT_FLAGS,
-            DEFAULT_OUTPUT_DIR,
-            new FakeSourcePath("different"),
-            DEFAULT_LANGUAGE,
-            DEFAULT_OPTIONS,
-            DEFAULT_INCLUDE_ROOTS,
-            DEFAULT_HEADER_MAPS,
-            DEFAULT_INCLUDES,
-            DEFAULT_GENERATED_SOURCES));
+    RuleKey inputChange = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder)
+        .build(
+            new ThriftCompiler(
+                params,
+                resolver,
+                DEFAULT_COMPILER,
+                DEFAULT_FLAGS,
+                DEFAULT_OUTPUT_DIR,
+                new FakeSourcePath("different"),
+                DEFAULT_LANGUAGE,
+                DEFAULT_OPTIONS,
+                DEFAULT_INCLUDE_ROOTS,
+                DEFAULT_HEADER_MAPS,
+                DEFAULT_INCLUDES,
+                DEFAULT_GENERATED_SOURCES));
     assertNotEquals(defaultRuleKey, inputChange);
 
     // Verify that changing the input causes a rulekey change.
 
-    RuleKey languageChange = new DefaultRuleKeyFactory(0, hashCache, resolver).build(
-        new ThriftCompiler(
-            params,
-            resolver,
-            DEFAULT_COMPILER,
-            DEFAULT_FLAGS,
-            DEFAULT_OUTPUT_DIR,
-            DEFAULT_INPUT,
-            "different",
-            DEFAULT_OPTIONS,
-            DEFAULT_INCLUDE_ROOTS,
-            DEFAULT_HEADER_MAPS,
-            DEFAULT_INCLUDES,
-            DEFAULT_GENERATED_SOURCES));
+    RuleKey languageChange = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder)
+        .build(
+            new ThriftCompiler(
+                params,
+                resolver,
+                DEFAULT_COMPILER,
+                DEFAULT_FLAGS,
+                DEFAULT_OUTPUT_DIR,
+                DEFAULT_INPUT,
+                "different",
+                DEFAULT_OPTIONS,
+                DEFAULT_INCLUDE_ROOTS,
+                DEFAULT_HEADER_MAPS,
+                DEFAULT_INCLUDES,
+                DEFAULT_GENERATED_SOURCES));
     assertNotEquals(defaultRuleKey, languageChange);
 
     // Verify that changing the input causes a rulekey change.
 
-    RuleKey optionsChange = new DefaultRuleKeyFactory(0, hashCache, resolver).build(
-        new ThriftCompiler(
-            params,
-            resolver,
-            DEFAULT_COMPILER,
-            DEFAULT_FLAGS,
-            DEFAULT_OUTPUT_DIR,
-            DEFAULT_INPUT,
-            DEFAULT_LANGUAGE,
-            ImmutableSet.of("different"),
-            DEFAULT_INCLUDE_ROOTS,
-            DEFAULT_HEADER_MAPS,
-            DEFAULT_INCLUDES,
-            DEFAULT_GENERATED_SOURCES));
+    RuleKey optionsChange = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder)
+        .build(
+            new ThriftCompiler(
+                params,
+                resolver,
+                DEFAULT_COMPILER,
+                DEFAULT_FLAGS,
+                DEFAULT_OUTPUT_DIR,
+                DEFAULT_INPUT,
+                DEFAULT_LANGUAGE,
+                ImmutableSet.of("different"),
+                DEFAULT_INCLUDE_ROOTS,
+                DEFAULT_HEADER_MAPS,
+                DEFAULT_INCLUDES,
+                DEFAULT_GENERATED_SOURCES));
     assertNotEquals(defaultRuleKey, optionsChange);
 
     // Verify that changing the includes does *not* cause a rulekey change, since we use a
     // different mechanism to track header changes.
 
-    RuleKey includeRootsChange = new DefaultRuleKeyFactory(0, hashCache, resolver).build(
-        new ThriftCompiler(
-            params,
-            resolver,
-            DEFAULT_COMPILER,
-            DEFAULT_FLAGS,
-            DEFAULT_OUTPUT_DIR,
-            DEFAULT_INPUT,
-            DEFAULT_LANGUAGE,
-            DEFAULT_OPTIONS,
-            ImmutableList.of(Paths.get("different")),
-            DEFAULT_HEADER_MAPS,
-            DEFAULT_INCLUDES,
-            DEFAULT_GENERATED_SOURCES));
+    RuleKey includeRootsChange = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder)
+        .build(
+            new ThriftCompiler(
+                params,
+                resolver,
+                DEFAULT_COMPILER,
+                DEFAULT_FLAGS,
+                DEFAULT_OUTPUT_DIR,
+                DEFAULT_INPUT,
+                DEFAULT_LANGUAGE,
+                DEFAULT_OPTIONS,
+                ImmutableList.of(Paths.get("different")),
+                DEFAULT_HEADER_MAPS,
+                DEFAULT_INCLUDES,
+                DEFAULT_GENERATED_SOURCES));
     assertEquals(defaultRuleKey, includeRootsChange);
 
     // Verify that changing the header maps does *not* cause a rulekey change, since we use a
     // different mechanism to track header changes.
 
-    RuleKey headerMapKeyChange = new DefaultRuleKeyFactory(0, hashCache, resolver).build(
-        new ThriftCompiler(
-            params,
-            resolver,
-            DEFAULT_COMPILER,
-            DEFAULT_FLAGS,
-            DEFAULT_OUTPUT_DIR,
-            DEFAULT_INPUT,
-            DEFAULT_LANGUAGE,
-            DEFAULT_OPTIONS,
-            DEFAULT_INCLUDE_ROOTS,
-            ImmutableSet.of(Paths.get("different-header-map")),
-            DEFAULT_INCLUDES,
-            DEFAULT_GENERATED_SOURCES));
+    RuleKey headerMapKeyChange = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder)
+        .build(
+            new ThriftCompiler(
+                params,
+                resolver,
+                DEFAULT_COMPILER,
+                DEFAULT_FLAGS,
+                DEFAULT_OUTPUT_DIR,
+                DEFAULT_INPUT,
+                DEFAULT_LANGUAGE,
+                DEFAULT_OPTIONS,
+                DEFAULT_INCLUDE_ROOTS,
+                ImmutableSet.of(Paths.get("different-header-map")),
+                DEFAULT_INCLUDES,
+                DEFAULT_GENERATED_SOURCES));
     assertEquals(defaultRuleKey, headerMapKeyChange);
 
     // Verify that changing the name of the include causes a rulekey change.
 
-    RuleKey includesKeyChange = new DefaultRuleKeyFactory(0, hashCache, resolver).build(
-        new ThriftCompiler(
-            params,
-            resolver,
-            DEFAULT_COMPILER,
-            DEFAULT_FLAGS,
-            DEFAULT_OUTPUT_DIR,
-            DEFAULT_INPUT,
-            DEFAULT_LANGUAGE,
-            DEFAULT_OPTIONS,
-            DEFAULT_INCLUDE_ROOTS,
-            DEFAULT_HEADER_MAPS,
-            ImmutableMap.of(
-                DEFAULT_INCLUDES.entrySet().iterator().next().getKey(),
-                new FakeSourcePath("different")),
-            DEFAULT_GENERATED_SOURCES));
+    RuleKey includesKeyChange = new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder)
+        .build(
+            new ThriftCompiler(
+                params,
+                resolver,
+                DEFAULT_COMPILER,
+                DEFAULT_FLAGS,
+                DEFAULT_OUTPUT_DIR,
+                DEFAULT_INPUT,
+                DEFAULT_LANGUAGE,
+                DEFAULT_OPTIONS,
+                DEFAULT_INCLUDE_ROOTS,
+                DEFAULT_HEADER_MAPS,
+                ImmutableMap.of(
+                    DEFAULT_INCLUDES.entrySet().iterator().next().getKey(),
+                    new FakeSourcePath("different")),
+                DEFAULT_GENERATED_SOURCES));
     assertNotEquals(defaultRuleKey, includesKeyChange);
 
     // Verify that changing the contents of an include causes a rulekey change.
 
-    RuleKey includesValueChange = new DefaultRuleKeyFactory(0, hashCache, resolver).build(
-        new ThriftCompiler(
-            params,
-            resolver,
-            DEFAULT_COMPILER,
-            DEFAULT_FLAGS,
-            DEFAULT_OUTPUT_DIR,
-            DEFAULT_INPUT,
-            DEFAULT_LANGUAGE,
-            DEFAULT_OPTIONS,
-            DEFAULT_INCLUDE_ROOTS,
-            DEFAULT_HEADER_MAPS,
-            ImmutableMap.of(
-                Paths.get("different"),
-                DEFAULT_INCLUDES.entrySet().iterator().next().getValue()),
-            DEFAULT_GENERATED_SOURCES));
+    RuleKey includesValueChange =
+        new DefaultRuleKeyFactory(0, hashCache, resolver, ruleFinder).build(
+            new ThriftCompiler(
+                params,
+                resolver,
+                DEFAULT_COMPILER,
+                DEFAULT_FLAGS,
+                DEFAULT_OUTPUT_DIR,
+                DEFAULT_INPUT,
+                DEFAULT_LANGUAGE,
+                DEFAULT_OPTIONS,
+                DEFAULT_INCLUDE_ROOTS,
+                DEFAULT_HEADER_MAPS,
+                ImmutableMap.of(
+                    Paths.get("different"),
+                    DEFAULT_INCLUDES.entrySet().iterator().next().getValue()),
+                DEFAULT_GENERATED_SOURCES));
     assertNotEquals(defaultRuleKey, includesValueChange);
   }
 
   @Test
   public void thatCorrectBuildStepsAreUsed() {
-    SourcePathResolver pathResolver = new SourcePathResolver(
+    SourcePathResolver pathResolver = new SourcePathResolver(new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    ));
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
 
