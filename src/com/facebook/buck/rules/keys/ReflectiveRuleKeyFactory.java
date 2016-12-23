@@ -101,6 +101,7 @@ public abstract class ReflectiveRuleKeyFactory<
     try {
       return knownRules.getUnchecked(buildRule);
     } catch (RuntimeException e) {
+      Throwables.propagateIfInstanceOf(e.getCause(), SizeLimiter.SizeLimitException.class);
       LOG.warn(e, "When building %s", buildRule);
       throw e;
     }

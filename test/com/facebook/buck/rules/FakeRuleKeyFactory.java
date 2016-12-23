@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
-import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -75,16 +74,16 @@ public class FakeRuleKeyFactory
   }
 
   @Override
-  public Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> build(
+  public Pair<RuleKey, ImmutableSet<SourcePath>> build(
       SupportsDependencyFileRuleKey rule,
       ImmutableList<DependencyFileEntry> inputs) throws IOException {
-    return Optional.of(new Pair<>(build(rule), ImmutableSet.<SourcePath>of()));
+    return new Pair<>(build(rule), ImmutableSet.<SourcePath>of());
   }
 
   @Override
-  public Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> buildManifestKey(
+  public Pair<RuleKey, ImmutableSet<SourcePath>> buildManifestKey(
       SupportsDependencyFileRuleKey rule) {
-    return Optional.of(new Pair<>(build(rule), ImmutableSet.<SourcePath>of()));
+    return new Pair<>(build(rule), ImmutableSet.<SourcePath>of());
   }
 
 }

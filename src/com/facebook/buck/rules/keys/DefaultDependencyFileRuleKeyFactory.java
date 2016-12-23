@@ -59,7 +59,7 @@ public class DefaultDependencyFileRuleKeyFactory
   }
 
   @Override
-  public Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> build(
+  public Pair<RuleKey, ImmutableSet<SourcePath>> build(
       SupportsDependencyFileRuleKey rule,
       ImmutableList<DependencyFileEntry> depFileEntries) throws IOException {
     // Create a builder which records all `SourcePath`s which are possibly used by the rule.
@@ -121,16 +121,11 @@ public class DefaultDependencyFileRuleKeyFactory
               Joiner.on(',').join(filesUnaccountedFor)));
     }
 
-    Optional<RuleKey> ruleKey = builder.build();
-    if (ruleKey.isPresent()) {
-      return Optional.of(new Pair<>(ruleKey.get(), depFileSourcePathsBuilder.build()));
-    } else {
-      return Optional.empty();
-    }
+    return new Pair<>(builder.build(), depFileSourcePathsBuilder.build());
   }
 
   @Override
-  public Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> buildManifestKey(
+  public Pair<RuleKey, ImmutableSet<SourcePath>> buildManifestKey(
       SupportsDependencyFileRuleKey rule)
       throws IOException {
     Builder builder = newInstance(rule);
@@ -164,12 +159,7 @@ public class DefaultDependencyFileRuleKeyFactory
       depFileInputs = inputs;
     }
 
-    Optional<RuleKey> ruleKey = builder.build();
-    if (ruleKey.isPresent()) {
-      return Optional.of(new Pair<>(ruleKey.get(), depFileInputs));
-    } else {
-      return Optional.empty();
-    }
+    return new Pair<>(builder.build(), depFileInputs);
   }
 
   private void addSourcePathToRuleKey(Builder builder, SourcePath sourcePath) throws IOException {

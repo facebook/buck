@@ -84,7 +84,7 @@ public class CalculateAbiTest {
             initialHashCache,
             pathResolver,
             ruleFinder)
-            .build(calculateAbi).get();
+            .build(calculateAbi);
 
     // Write something to the library source and geneated JAR, so they exist to generate rule keys.
     filesystem.writeContentsToPath("new stuff", input);
@@ -110,7 +110,7 @@ public class CalculateAbiTest {
             alteredHashCache,
             pathResolver,
             ruleFinder)
-            .build(calculateAbi).get();
+            .build(calculateAbi);
 
     assertThat(initialKey, Matchers.not(Matchers.equalTo(alteredKey)));
     assertThat(initialInputKey, Matchers.not(Matchers.equalTo(alteredInputKey)));
@@ -157,7 +157,7 @@ public class CalculateAbiTest {
             initialHashCache,
             pathResolver,
             ruleFinder)
-            .build(calculateAbi).get();
+            .build(calculateAbi);
 
     // Write something to the library source and geneated JAR, so they exist to generate rule keys.
     filesystem.writeContentsToPath("new stuff", input);
@@ -182,7 +182,7 @@ public class CalculateAbiTest {
             alteredHashCache,
             pathResolver,
             ruleFinder)
-            .build(calculateAbi).get();
+            .build(calculateAbi);
 
     assertThat(initialKey, Matchers.not(Matchers.equalTo(alteredKey)));
     assertThat(initialInputKey, Matchers.equalTo(alteredInputKey));
