@@ -1,6 +1,7 @@
 prebuilt_apple_framework(
     name = 'BuckTest',
     framework = 'BuckTest.framework',
-    preferred_linkage = 'shared',
+    preferred_linkage = 'static',
+    deps = ['//dep:Dep'],
     visibility = ['PUBLIC'],
 )

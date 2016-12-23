@@ -70,6 +70,9 @@ public class PrebuiltAppleFramework
   @AddToRuleKey(stringify = true)
   private final Path out;
 
+  @AddToRuleKey
+  private final NativeLinkable.Linkage preferredLinkage;
+
   private final BuildRuleResolver ruleResolver;
   private final SourcePath frameworkPath;
   private final String frameworkName;
@@ -89,6 +92,7 @@ public class PrebuiltAppleFramework
       BuildRuleResolver ruleResolver,
       SourcePathResolver pathResolver,
       SourcePath frameworkPath,
+      Linkage preferredLinkage,
       ImmutableSet<FrameworkPath> frameworks,
       Optional<Pattern> supportedPlatformsRegex,
       Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags) {
@@ -96,6 +100,7 @@ public class PrebuiltAppleFramework
     this.frameworkPath = frameworkPath;
     this.ruleResolver = ruleResolver;
     this.exportedLinkerFlags = exportedLinkerFlags;
+    this.preferredLinkage = preferredLinkage;
     this.frameworks = frameworks;
     this.supportedPlatformsRegex = supportedPlatformsRegex;
 
@@ -219,9 +224,9 @@ public class PrebuiltAppleFramework
     ImmutableSet.Builder<FrameworkPath> frameworkPaths = ImmutableSet.builder();
     frameworkPaths.addAll(Preconditions.checkNotNull(frameworks));
 
+    frameworkPaths.add(
+        FrameworkPath.ofSourcePath(new BuildTargetSourcePath(this.getBuildTarget())));
     if (type == Linker.LinkableDepType.SHARED) {
-      frameworkPaths.add(
-          FrameworkPath.ofSourcePath(new BuildTargetSourcePath(this.getBuildTarget())));
       linkerArgsBuilder.addAll(StringArg.from(
           "-rpath",
           "@loader_path/Frameworks",
@@ -253,7 +258,7 @@ public class PrebuiltAppleFramework
 
   @Override
   public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-    return Linkage.SHARED;
+    return this.preferredLinkage;
   }
 
   @Override

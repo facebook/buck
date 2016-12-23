@@ -17,6 +17,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.cxx.CxxFlags;
 import com.facebook.buck.cxx.FrameworkDependencies;
+import com.facebook.buck.cxx.NativeLinkable;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
@@ -59,6 +60,7 @@ public class PrebuiltAppleFrameworkDescription implements
         resolver,
         new SourcePathResolver(resolver),
         args.framework,
+        args.preferredLinkage,
         args.frameworks,
         args.supportedPlatformsRegex,
         input -> CxxFlags.getFlags(
@@ -91,5 +93,7 @@ public class PrebuiltAppleFrameworkDescription implements
     public ImmutableList<String> exportedLinkerFlags = ImmutableList.of();
     public PatternMatchedCollection<ImmutableList<String>> exportedPlatformLinkerFlags =
         PatternMatchedCollection.of();
+    public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
+    public NativeLinkable.Linkage preferredLinkage;
   }
 }
