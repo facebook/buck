@@ -45,7 +45,7 @@ import javax.annotation.Nonnull;
  *
  * @see SupportsInputBasedRuleKey
  */
-public class InputBasedRuleKeyFactory
+public final class InputBasedRuleKeyFactory
     extends ReflectiveRuleKeyFactory<
             InputBasedRuleKeyFactory.Builder,
             RuleKey> {
@@ -122,7 +122,7 @@ public class InputBasedRuleKeyFactory
     };
   }
 
-  public class Builder extends RuleKeyBuilder<RuleKey> {
+  /* package */ class Builder extends RuleKeyBuilder<RuleKey> {
 
     private final ImmutableList.Builder<Iterable<BuildRule>> deps = ImmutableList.builder();
     private final SizeLimiter sizeLimiter = new SizeLimiter(inputSizeLimit);
@@ -188,7 +188,7 @@ public class InputBasedRuleKeyFactory
     }
 
     // Build the rule key and the list of deps found from this builder.
-    protected Result buildResult() {
+    final Result buildResult() {
       return new Result(buildRuleKey(), Iterables.concat(deps.build()));
     }
 
@@ -198,7 +198,7 @@ public class InputBasedRuleKeyFactory
     }
   }
 
-  protected static class Result {
+  private static class Result {
 
     private final RuleKey ruleKey;
     private final Iterable<BuildRule> deps;
