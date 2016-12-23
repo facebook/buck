@@ -54,6 +54,7 @@ public class AppleDsym
   @AddToRuleKey
   private final Tool lldb;
 
+  private final SourcePathResolver resolver;
   @AddToRuleKey
   private final Tool dsymutil;
 
@@ -71,6 +72,7 @@ public class AppleDsym
       SourcePath unstrippedBinarySourcePath,
       Path dsymOutputPath) {
     super(params, resolver);
+    this.resolver = resolver;
     this.dsymutil = dsymutil;
     this.lldb = lldb;
     this.unstrippedBinarySourcePath = unstrippedBinarySourcePath;
@@ -119,14 +121,15 @@ public class AppleDsym
       BuildableContext buildableContext) {
     buildableContext.recordArtifact(dsymOutputPath);
 
-    Path unstrippedBinaryPath = getResolver().getAbsolutePath(unstrippedBinarySourcePath);
+    Path unstrippedBinaryPath =
+        context.getSourcePathResolver().getAbsolutePath(unstrippedBinarySourcePath);
     Path dwarfFileFolder = dsymOutputPath.resolve(DSYM_DWARF_FILE_FOLDER);
     return ImmutableList.of(
         new RmStep(getProjectFilesystem(), dsymOutputPath, true, true),
         new DsymStep(
             getProjectFilesystem(),
             dsymutil.getEnvironment(),
-            dsymutil.getCommandPrefix(getResolver()),
+            dsymutil.getCommandPrefix(context.getSourcePathResolver()),
             unstrippedBinaryPath,
             dsymOutputPath),
         new MoveStep(
@@ -146,7 +149,7 @@ public class AppleDsym
         new RegisterDebugSymbolsStep(
             unstrippedBinarySourcePath,
             lldb,
-            getResolver(),
+            resolver,
             dsymOutputPath));
   }
 }

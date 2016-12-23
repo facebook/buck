@@ -80,15 +80,17 @@ public class SceneKitAssets extends AbstractBuildRule {
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
     stepsBuilder.add(new MakeCleanDirectoryStep(getProjectFilesystem(), outputDir));
     for (SourcePath inputPath : sceneKitAssetsPaths) {
-      final Path absoluteInputPath = getResolver().getAbsolutePath(inputPath);
+      final Path absoluteInputPath = context.getSourcePathResolver().getAbsolutePath(inputPath);
 
       if (copySceneKitAssets.isPresent()) {
         stepsBuilder.add(
             new ShellStep(getProjectFilesystem().getRootPath()) {
               @Override
-              protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+              protected ImmutableList<String> getShellCommandInternal(
+                  ExecutionContext executionContext) {
                 ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
-                commandBuilder.addAll(copySceneKitAssets.get().getCommandPrefix(getResolver()));
+                commandBuilder.addAll(
+                    copySceneKitAssets.get().getCommandPrefix(context.getSourcePathResolver()));
                 commandBuilder.add(
                     absoluteInputPath.toString(),
                     "-o",

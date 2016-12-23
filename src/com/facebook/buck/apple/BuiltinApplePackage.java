@@ -83,7 +83,7 @@ public class BuiltinApplePackage extends AbstractBuildRule {
             payloadDir,
             CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
 
-    appendAdditionalSwiftSteps(commands);
+    appendAdditionalSwiftSteps(context.getSourcePathResolver(), commands);
 
     // do the zipping
     commands.add(new MkdirStep(getProjectFilesystem(), pathToOutputFile.getParent()));
@@ -101,7 +101,8 @@ public class BuiltinApplePackage extends AbstractBuildRule {
     return commands.build();
   }
 
-  private void appendAdditionalSwiftSteps(ImmutableList.Builder<Step> commands) {
+  private void appendAdditionalSwiftSteps(
+      SourcePathResolver resolver, ImmutableList.Builder<Step> commands) {
     // For .ipas containing Swift code, Apple requires the following for App Store submissions:
     // 1. Copy the Swift standard libraries to SwiftSupport/{platform}
     if (bundle instanceof AppleBundle) {
@@ -110,6 +111,7 @@ public class BuiltinApplePackage extends AbstractBuildRule {
       Path swiftSupportDir = temp.resolve("SwiftSupport").resolve(appleBundle.getPlatformName());
 
       appleBundle.addSwiftStdlibStepIfNeeded(
+        resolver,
         swiftSupportDir,
         Optional.empty(),
         commands,
