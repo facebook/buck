@@ -31,8 +31,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Collections;
 
 import javax.annotation.Nonnull;
@@ -50,19 +48,16 @@ public abstract class AbstractDepFileRuleKeyFactory
   private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
   private final LoadingCache<RuleKeyAppendable, Result> cache;
-  private final long inputSizeLimit;
 
   protected AbstractDepFileRuleKeyFactory(
       int seed,
       FileHashLoader hashLoader,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
-      long inputSizeLimit) {
+      SourcePathRuleFinder ruleFinder) {
     super(seed);
     this.fileHashLoader = hashLoader;
     this.pathResolver = pathResolver;
     this.ruleFinder = ruleFinder;
-    this.inputSizeLimit = inputSizeLimit;
 
     // Build the cache around the sub-rule-keys and their dep lists.
     cache = CacheBuilder.newBuilder().weakKeys().build(
@@ -85,7 +80,6 @@ public abstract class AbstractDepFileRuleKeyFactory
   public class Builder extends RuleKeyBuilder<RuleKey> {
 
     private final ImmutableList.Builder<Iterable<SourcePath>> inputs = ImmutableList.builder();
-    private final SizeLimiter sizeLimiter = new SizeLimiter(inputSizeLimit);
 
     private Builder() {
       super(ruleFinder, pathResolver, fileHashLoader);
@@ -107,17 +101,6 @@ public abstract class AbstractDepFileRuleKeyFactory
       } else {
         super.setReflectively(key, val);
       }
-      return this;
-    }
-
-    @Override
-    public Builder setPath(Path absolutePath, Path ideallyRelative) throws IOException {
-      // TODO(plamenko): this check should not be necessary, but otherwise some tests fail due to
-      // FileHashLoader throwing NoSuchFileException which doesn't get correctly propagated.
-      if (inputSizeLimit != Long.MAX_VALUE) {
-        sizeLimiter.add(fileHashLoader.getSize(absolutePath));
-      }
-      super.setPath(absolutePath, ideallyRelative);
       return this;
     }
 
