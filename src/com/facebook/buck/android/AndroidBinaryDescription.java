@@ -289,6 +289,7 @@ public class AndroidBinaryDescription
           androidSdkProguardConfig,
           args.optimizationPasses,
           args.proguardConfig,
+          args.skipProguard,
           compressionMode,
           args.cpuFilters,
           resourceFilter,
@@ -422,6 +423,7 @@ public class AndroidBinaryDescription
     public ManifestEntries manifestEntries = ManifestEntries.empty();
     public BuildConfigFields buildConfigValues = BuildConfigFields.empty();
     public Optional<SourcePath> buildConfigValuesFile;
+    public Optional<Boolean> skipProguard;
     public ImmutableSortedSet<BuildTarget> deps = ImmutableSortedSet.of();
     @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
 

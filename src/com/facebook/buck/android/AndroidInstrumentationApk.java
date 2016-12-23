@@ -69,6 +69,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         apkUnderTest.getSdkProguardConfig(),
         apkUnderTest.getOptimizationPasses(),
         apkUnderTest.getProguardConfig(),
+        apkUnderTest.getSkipProguard(),
         apkUnderTest.getResourceCompressionMode(),
         apkUnderTest.getCpuFilters(),
         apkUnderTest.getResourceFilter(),

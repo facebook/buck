@@ -231,6 +231,8 @@ public class AndroidBinary
   @AddToRuleKey
   private final ManifestEntries manifestEntries;
   @AddToRuleKey
+  private final Optional<Boolean> skipProguard;
+  @AddToRuleKey
   private final JavaRuntimeLauncher javaRuntimeLauncher;
   @AddToRuleKey
   @Nullable
@@ -251,6 +253,7 @@ public class AndroidBinary
       ProGuardObfuscateStep.SdkProguardType sdkProguardConfig,
       Optional<Integer> proguardOptimizationPasses,
       Optional<SourcePath> proguardConfig,
+      Optional<Boolean> skipProguard,
       ResourceCompressionMode resourceCompressionMode,
       Set<NdkCxxPlatforms.TargetCpuType> cpuFilters,
       ResourceFilter resourceFilter,
@@ -302,6 +305,7 @@ public class AndroidBinary
     this.xzCompressionLevel = xzCompressionLevel;
     this.packageAssetLibraries = packageAssetLibraries;
     this.compressAssetLibraries = compressAssetLibraries;
+    this.skipProguard = skipProguard;
     this.manifestEntries = manifestEntries;
     if (exopackageModes.isEmpty()) {
       this.abiPath = null;
@@ -341,6 +345,10 @@ public class AndroidBinary
 
   public Optional<SourcePath> getProguardConfig() {
     return proguardConfig;
+  }
+
+  public Optional<Boolean> getSkipProguard() {
+    return skipProguard;
   }
 
   private boolean isCompressResources(){
@@ -777,6 +785,7 @@ public class AndroidBinary
       classpathEntriesToDex = addProguardCommands(
           classpathEntriesToDex,
           getResolver().getAllAbsolutePaths(packageableCollection.getProguardConfigs()),
+          skipProguard.orElse(false),
           steps,
           buildableContext);
     }
@@ -915,6 +924,7 @@ public class AndroidBinary
   ImmutableSet<Path> addProguardCommands(
       Set<Path> classpathEntriesToDex,
       Set<Path> depsProguardConfigs,
+      boolean skipProguard,
       ImmutableList.Builder<Step> steps,
       BuildableContext buildableContext) {
     ImmutableSet.Builder<Path> additionalLibraryJarsForProguardBuilder = ImmutableSet.builder();
@@ -933,10 +943,10 @@ public class AndroidBinary
     // Transform our input classpath to a set of output locations for each input classpath.
     // TODO(jasta): the output path we choose is the result of a slicing function against
     // input classpath. This is fragile and should be replaced with knowledge of the BuildTarget.
-    final ImmutableMap<Path, Path> inputOutputEntries = classpathEntriesToDex.stream().collect(
-        MoreCollectors.toImmutableMap(
-            java.util.function.Function.identity(),
-            this::getProguardOutputFromInputClasspath));
+      final ImmutableMap<Path, Path> inputOutputEntries = classpathEntriesToDex.stream().collect(
+          MoreCollectors.toImmutableMap(
+              java.util.function.Function.identity(),
+              this::getProguardOutputFromInputClasspath));
 
     Path proguardConfigDir = enhancementResult.getAaptPackageResources()
         .getPathToGeneratedProguardConfigDir();
@@ -958,11 +968,17 @@ public class AndroidBinary
         additionalLibraryJarsForProguardBuilder.build(),
         proguardConfigDir,
         buildableContext,
+        skipProguard,
         steps);
 
     // Apply the transformed inputs to the classpath (this will modify deps.classpathEntriesToDex
-    // so that we're now dexing the proguarded artifacts).
-    return ImmutableSet.copyOf(inputOutputEntries.values());
+    // so that we're now dexing the proguarded artifacts). However, if we are not running
+    // ProGuard then return the input classes to dex.
+    if (skipProguard) {
+      return ImmutableSet.copyOf(inputOutputEntries.keySet());
+    } else {
+      return ImmutableSet.copyOf(inputOutputEntries.values());
+    }
   }
 
   /** Helper method to check whether intra-dex reordering is enabled

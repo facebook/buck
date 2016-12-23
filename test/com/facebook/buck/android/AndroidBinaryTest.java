@@ -111,6 +111,7 @@ public class AndroidBinaryTest {
     androidBinary.addProguardCommands(
         pathResolver.getAllRelativePaths(packageableCollection.getClasspathEntriesToDex()),
         pathResolver.getAllAbsolutePaths(packageableCollection.getProguardConfigs()),
+        false,
         commands,
         buildableContext);
 
@@ -171,6 +172,7 @@ public class AndroidBinaryTest {
                         libraryTwoRule.getBuildTarget().getShortNameAndFlavorPostfix() + ".jar"))),
         proguardOutputDir,
         buildableContext,
+        false,
         expectedSteps);
 
     assertEquals(expectedSteps.build(), commands.build());

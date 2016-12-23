@@ -57,6 +57,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
   private final ProjectFilesystem filesystem;
   private final Map<Path, Path> inputAndOutputEntries;
   private final Path pathToProGuardCommandLineArgsFile;
+  private final boolean skipProguard;
   private final Optional<Path> proguardJarOverride;
   private final String proguardMaxHeapSize;
   private final Optional<List<String>> proguardJvmArgs;
@@ -84,6 +85,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       Set<Path> additionalLibraryJarsForProguard,
       Path proguardDirectory,
       BuildableContext buildableContext,
+      boolean skipProguard,
       ImmutableList.Builder<Step> steps) {
 
     Path pathToProGuardCommandLineArgsFile = proguardDirectory.resolve("command-line.txt");
@@ -99,27 +101,34 @@ public final class ProGuardObfuscateStep extends ShellStep {
         proguardDirectory,
         pathToProGuardCommandLineArgsFile);
 
-    ProGuardObfuscateStep proGuardStep = new ProGuardObfuscateStep(
-        javaRuntimeLauncher,
-        filesystem,
-        inputAndOutputEntries,
-        pathToProGuardCommandLineArgsFile,
-        proguardJarOverride,
-        proguardMaxHeapSize,
-        proguardJvmArgs,
-        proguardAgentPath);
+    if (skipProguard) {
+      steps.add(
+          commandLineHelperStep,
+          new TouchStep(filesystem, commandLineHelperStep.getMappingTxt()));
+    } else {
+      ProGuardObfuscateStep proGuardStep = new ProGuardObfuscateStep(
+          javaRuntimeLauncher,
+          filesystem,
+          inputAndOutputEntries,
+          pathToProGuardCommandLineArgsFile,
+          skipProguard,
+          proguardJarOverride,
+          proguardMaxHeapSize,
+          proguardJvmArgs,
+          proguardAgentPath);
 
-    buildableContext.recordArtifact(commandLineHelperStep.getConfigurationTxt());
-    buildableContext.recordArtifact(commandLineHelperStep.getMappingTxt());
-    buildableContext.recordArtifact(commandLineHelperStep.getSeedsTxt());
+      buildableContext.recordArtifact(commandLineHelperStep.getConfigurationTxt());
+      buildableContext.recordArtifact(commandLineHelperStep.getMappingTxt());
+      buildableContext.recordArtifact(commandLineHelperStep.getSeedsTxt());
 
-    steps.add(
-        commandLineHelperStep,
-        proGuardStep,
-        // Some proguard configs can propagate the "-dontobfuscate" flag which disables
-        // obfuscation and prevents the mapping.txt file from being generated.  So touch it
-        // here to guarantee it's around when we go to cache this rule.
-        new TouchStep(filesystem, commandLineHelperStep.getMappingTxt()));
+      steps.add(
+          commandLineHelperStep,
+          proGuardStep,
+          // Some proguard configs can propagate the "-dontobfuscate" flag which disables
+          // obfuscation and prevents the mapping.txt file from being generated.  So touch it
+          // here to guarantee it's around when we go to cache this rule.
+          new TouchStep(filesystem, commandLineHelperStep.getMappingTxt()));
+    }
   }
 
   /**
@@ -132,6 +141,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       ProjectFilesystem filesystem,
       Map<Path, Path> inputAndOutputEntries,
       Path pathToProGuardCommandLineArgsFile,
+      boolean skipProguard,
       Optional<Path> proguardJarOverride,
       String proguardMaxHeapSize,
       Optional<List<String>> proguardJvmArgs,
@@ -141,6 +151,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     this.filesystem = filesystem;
     this.inputAndOutputEntries = ImmutableMap.copyOf(inputAndOutputEntries);
     this.pathToProGuardCommandLineArgsFile = pathToProGuardCommandLineArgsFile;
+    this.skipProguard = skipProguard;
     this.proguardJarOverride = proguardJarOverride;
     this.proguardMaxHeapSize = proguardMaxHeapSize;
     this.proguardJvmArgs = proguardJvmArgs;
@@ -187,7 +198,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     // as requested (so the file won't exist).  Our build steps are not sophisticated enough to
     // account for this and remove those entries from the classes to dex so we hack things here to
     // ensure that the files exist but are empty.
-    if (executionResult.isSuccess()) {
+    if (executionResult.isSuccess() && !this.skipProguard) {
       return StepExecutionResult.of(ensureAllOutputsExist(context));
     }
 

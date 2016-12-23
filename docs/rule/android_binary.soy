@@ -229,6 +229,16 @@ An <code>android_binary()</code> rule is used to generate an Android APK.
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name : 'skip_proguard' /}
+  {param default : 'False' /}
+  {param desc}
+  To produce a release build without running ProGuard set the
+  <code>skip_proguard</code> flag to <code>True</code>. This will still cause ProGuard
+  configuration files to be generated for use by other optimizers like Redex.
+  {/param}
+{/call}
+
 {/param} // close args
 
 {param examples}

@@ -129,6 +129,7 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
             Paths.get("myfavorite.jar"), Paths.get("another.jar")),
         Paths.get("proguard-directory"),
         new FakeBuildableContext(),
+        false,
         steps);
     ProGuardObfuscateStep.CommandLineHelperStep commandLineHelperStep =
         (ProGuardObfuscateStep.CommandLineHelperStep) steps.build().get(0);
@@ -161,6 +162,7 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
             Paths.get("myfavorite.jar"), Paths.get("another.jar")),
         Paths.get("proguard-directory"),
         new FakeBuildableContext(),
+        false,
         steps);
     ProGuardObfuscateStep proguardStep = (ProGuardObfuscateStep) steps.build().get(1);
     ImmutableList<String> parameters = proguardStep.getShellCommandInternal(executionContext);
@@ -191,6 +193,7 @@ public class ProGuardObfuscateStepTest extends EasyMockSupport {
         /* additionalLibraryJarsForProguard */ ImmutableSet.of(),
         Paths.get("proguard-directory"),
         new FakeBuildableContext(),
+        false,
         steps);
     ProGuardObfuscateStep.CommandLineHelperStep commandLineHelperStep =
         (ProGuardObfuscateStep.CommandLineHelperStep) steps.build().get(0);
