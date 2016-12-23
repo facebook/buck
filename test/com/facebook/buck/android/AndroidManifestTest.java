@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.io.ProjectFilesystem;
@@ -31,6 +33,7 @@ import com.facebook.buck.rules.FakeBuildContext;
 import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
 import com.facebook.buck.rules.FakeBuildableContext;
 import com.facebook.buck.rules.FakeSourcePath;
+import com.facebook.buck.rules.PathSourcePath;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.FakeProjectFilesystem;
@@ -40,6 +43,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class AndroidManifestTest {
@@ -62,17 +67,30 @@ public class AndroidManifestTest {
   public void testBuildInternal() throws IOException {
     AndroidManifest androidManifest = createSimpleAndroidManifestRule();
 
+    ProjectFilesystem filesystem = androidManifest.getProjectFilesystem();
+
+    Path skeletonPath = Paths.get("java/com/example/AndroidManifestSkeleton.xml");
+
     // Mock out a BuildContext whose DependencyGraph will be traversed.
     BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
+
+    expect(
+        buildContext.getSourcePathResolver().getAbsolutePath(
+            new PathSourcePath(filesystem, skeletonPath)))
+        .andStubReturn(filesystem.resolve(skeletonPath));
+
+    expect(buildContext.getSourcePathResolver().getAllAbsolutePaths(ImmutableSortedSet.of()))
+        .andStubReturn(ImmutableSortedSet.of());
+
+    replay(buildContext.getSourcePathResolver());
 
     List<Step> steps = androidManifest.getBuildSteps(buildContext, new FakeBuildableContext());
     Step generateManifestStep = steps.get(2);
 
-    ProjectFilesystem filesystem = androidManifest.getProjectFilesystem();
     assertEquals(
         new GenerateManifestStep(
             filesystem,
-            filesystem.resolve("java/com/example/AndroidManifestSkeleton.xml"),
+            filesystem.resolve(skeletonPath),
             /* libraryManifestPaths */ ImmutableSet.of(),
             BuildTargets.getGenPath(
                 filesystem,

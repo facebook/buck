@@ -340,7 +340,7 @@ public class AndroidResource extends AbstractBuildRule
               "null. This should already be enforced by the constructor.");
       steps.add(
           new ExtractFromAndroidManifestStep(
-              getResolver().getAbsolutePath(manifestFile),
+              context.getSourcePathResolver().getAbsolutePath(manifestFile),
               getProjectFilesystem(),
               buildableContext,
               METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE,
@@ -354,10 +354,10 @@ public class AndroidResource extends AbstractBuildRule
     }
 
     ImmutableSet<Path> pathsToSymbolsOfDeps =
-        getResolver().getAllAbsolutePaths(symbolsOfDeps.get());
+        context.getSourcePathResolver().getAllAbsolutePaths(symbolsOfDeps.get());
     steps.add(
         new MiniAapt(
-            getResolver(),
+            context.getSourcePathResolver(),
             getProjectFilesystem(),
             Preconditions.checkNotNull(res),
             Preconditions.checkNotNull(pathToTextSymbolsFile),

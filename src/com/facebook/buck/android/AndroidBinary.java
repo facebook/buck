@@ -436,7 +436,8 @@ public class AndroidBinary
 
     // Create the .dex files if we aren't doing pre-dexing.
     Path signedApkPath = getSignedApkPath();
-    DexFilesInfo dexFilesInfo = addFinalDxSteps(buildableContext, steps);
+    DexFilesInfo dexFilesInfo =
+        addFinalDxSteps(buildableContext, context.getSourcePathResolver(), steps);
 
     ////
     // BE VERY CAREFUL adding any code below here.
@@ -479,6 +480,7 @@ public class AndroidBinary
             packageableCollection.getNativeLibAssetsDirectories().get(module);
 
         getStepsForNativeAssets(
+            context.getSourcePathResolver(),
             steps,
             nativeLibDirs == null ?
                 Optional.empty() : Optional.of(nativeLibDirs),
@@ -519,6 +521,7 @@ public class AndroidBinary
         .addAll(dexFilesInfo.secondaryDexDirs)
         .build();
 
+    SourcePathResolver resolver = context.getSourcePathResolver();
     ApkBuilderStep apkBuilderCommand = new ApkBuilderStep(
         getProjectFilesystem(),
         enhancementResult.getAaptPackageResources().getResourceApkPath(),
@@ -527,9 +530,9 @@ public class AndroidBinary
         allAssetDirectories,
         nativeLibraryDirectoriesBuilder.build(),
         zipFiles.build(),
-        getResolver().getAllAbsolutePaths(packageableCollection.getPathsToThirdPartyJars()),
-        getResolver().getAbsolutePath(keystorePath),
-        getResolver().getAbsolutePath(keystorePropertiesPath),
+        resolver.getAllAbsolutePaths(packageableCollection.getPathsToThirdPartyJars()),
+        resolver.getAbsolutePath(keystorePath),
+        resolver.getAbsolutePath(keystorePropertiesPath),
         /* debugMode */ false,
         javaRuntimeLauncher);
     steps.add(apkBuilderCommand);
@@ -565,6 +568,7 @@ public class AndroidBinary
   }
 
   private void getStepsForNativeAssets(
+      SourcePathResolver resolver,
       ImmutableList.Builder<Step> steps,
       Optional<ImmutableCollection<SourcePath>> nativeLibDirs,
       final Path libSubdirectory,
@@ -577,7 +581,7 @@ public class AndroidBinary
       for (SourcePath nativeLibDir : nativeLibDirs.get()) {
         CopyNativeLibraries.copyNativeLibrary(
             getProjectFilesystem(),
-            getResolver().getAbsolutePath(nativeLibDir),
+            resolver.getAbsolutePath(nativeLibDir),
             libSubdirectory,
             cpuFilters,
             steps);
@@ -703,6 +707,7 @@ public class AndroidBinary
    */
   private DexFilesInfo addFinalDxSteps(
       BuildableContext buildableContext,
+      SourcePathResolver resolver,
       ImmutableList.Builder<Step> steps) {
 
     AndroidPackageableCollection packageableCollection =
@@ -711,7 +716,7 @@ public class AndroidBinary
     ImmutableSet<Path> classpathEntriesToDex =
         FluentIterable
             .from(enhancementResult.getClasspathEntriesToDex())
-            .transform(getResolver()::getRelativePath)
+            .transform(resolver::getRelativePath)
             .append(Collections.singleton(
                 // Note: Need that call to Collections.singleton because
                 // unfortunately Path implements Iterable<Path>.
@@ -728,7 +733,7 @@ public class AndroidBinary
             .stream()
             .map(input -> new AbstractMap.SimpleEntry<>(
                 input.getKey(),
-                getResolver().getRelativePath(input.getValue())))
+                resolver.getRelativePath(input.getValue())))
             .collect(MoreCollectors.toImmutableSet()));
     ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap =
         additionalDexStoreToJarPathMapBuilder.build();
@@ -788,10 +793,11 @@ public class AndroidBinary
     if (packageType.isBuildWithObfuscation()) {
       classpathEntriesToDex = addProguardCommands(
           classpathEntriesToDex,
-          getResolver().getAllAbsolutePaths(packageableCollection.getProguardConfigs()),
+          resolver.getAllAbsolutePaths(packageableCollection.getProguardConfigs()),
           skipProguard.orElse(false),
           steps,
-          buildableContext);
+          buildableContext,
+          resolver);
     }
 
     Supplier<Map<String, HashCode>> classNamesToHashesSupplier;
@@ -837,7 +843,8 @@ public class AndroidBinary
           primaryDexPath,
           dexReorderToolFile,
           dexReorderDataDumpFile,
-          additionalDexStoreToJarPathMap);
+          additionalDexStoreToJarPathMap,
+          resolver);
     } else if (!ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       secondaryDexDirectoriesBuilder.addAll(preDexMerge.get().getSecondaryDexDirectories());
     }
@@ -930,7 +937,8 @@ public class AndroidBinary
       Set<Path> depsProguardConfigs,
       boolean skipProguard,
       ImmutableList.Builder<Step> steps,
-      BuildableContext buildableContext) {
+      BuildableContext buildableContext,
+      SourcePathResolver resolver) {
     ImmutableSet.Builder<Path> additionalLibraryJarsForProguardBuilder = ImmutableSet.builder();
 
     for (JavaLibrary buildRule : rulesToExcludeFromDex) {
@@ -941,7 +949,7 @@ public class AndroidBinary
     ImmutableSet.Builder<Path> proguardConfigsBuilder = ImmutableSet.builder();
     proguardConfigsBuilder.addAll(depsProguardConfigs);
     if (proguardConfig.isPresent()) {
-      proguardConfigsBuilder.add(getResolver().getAbsolutePath(proguardConfig.get()));
+      proguardConfigsBuilder.add(resolver.getAbsolutePath(proguardConfig.get()));
     }
 
     // Transform our input classpath to a set of output locations for each input classpath.
@@ -959,7 +967,7 @@ public class AndroidBinary
         javaRuntimeLauncher,
         getProjectFilesystem(),
         proguardJarOverride.isPresent() ?
-            Optional.of(getResolver().getAbsolutePath(proguardJarOverride.get())) :
+            Optional.of(resolver.getAbsolutePath(proguardJarOverride.get())) :
             Optional.empty(),
         proguardMaxHeapSize,
         proguardAgentPath,
@@ -1012,7 +1020,8 @@ public class AndroidBinary
       Path primaryDexPath,
       Optional<SourcePath> dexReorderToolFile,
       Optional<SourcePath> dexReorderDataDumpFile,
-      ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap) {
+      ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap,
+      SourcePathResolver resolver) {
     final Supplier<Set<Path>> primaryInputsToDex;
     final Optional<Path> secondaryDexDir;
     final Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs;
@@ -1083,10 +1092,10 @@ public class AndroidBinary
           proguardFullConfigFile,
           proguardMappingFile,
           dexSplitMode,
-          dexSplitMode.getPrimaryDexScenarioFile().map(getResolver()::getAbsolutePath),
-          dexSplitMode.getPrimaryDexClassesFile().map(getResolver()::getAbsolutePath),
-          dexSplitMode.getSecondaryDexHeadClassesFile().map(getResolver()::getAbsolutePath),
-          dexSplitMode.getSecondaryDexTailClassesFile().map(getResolver()::getAbsolutePath),
+          dexSplitMode.getPrimaryDexScenarioFile().map(resolver::getAbsolutePath),
+          dexSplitMode.getPrimaryDexClassesFile().map(resolver::getAbsolutePath),
+          dexSplitMode.getSecondaryDexHeadClassesFile().map(resolver::getAbsolutePath),
+          dexSplitMode.getSecondaryDexTailClassesFile().map(resolver::getAbsolutePath),
           additionalDexStoreToJarPathMap,
           enhancementResult.getAPKModuleGraph(),
           zipSplitReportDir);
@@ -1194,8 +1203,8 @@ public class AndroidBinary
     if (isReorderingClasses()) {
       IntraDexReorderStep intraDexReorderStep = new IntraDexReorderStep(
           getProjectFilesystem(),
-          getResolver().getAbsolutePath(dexReorderToolFile.get()),
-          getResolver().getAbsolutePath(dexReorderDataDumpFile.get()),
+          resolver.getAbsolutePath(dexReorderToolFile.get()),
+          resolver.getAbsolutePath(dexReorderDataDumpFile.get()),
           getBuildTarget(),
           selectedPrimaryDexPath,
           primaryDexPath,

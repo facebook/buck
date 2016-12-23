@@ -106,7 +106,7 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     commands.add(
         CopyStep.forFile(
             getProjectFilesystem(),
-            getResolver().getAbsolutePath(
+            context.getSourcePathResolver().getAbsolutePath(
                 Preconditions.checkNotNull(androidResource.getPathToTextSymbolsFile())),
             temp.resolve("R.txt")));
 
@@ -145,7 +145,7 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     for (SourcePath dir : nativeLibAssetsDirectories) {
       CopyNativeLibraries.copyNativeLibrary(
           getProjectFilesystem(),
-          getResolver().getAbsolutePath(dir),
+          context.getSourcePathResolver().getAbsolutePath(dir),
           temp.resolve("assets").resolve("lib"),
           ImmutableSet.of(),
           commands);

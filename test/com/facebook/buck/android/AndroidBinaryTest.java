@@ -115,7 +115,8 @@ public class AndroidBinaryTest {
         pathResolver.getAllAbsolutePaths(packageableCollection.getProguardConfigs()),
         false,
         commands,
-        buildableContext);
+        buildableContext,
+        pathResolver);
 
     BuildTarget aaptPackageTarget = binaryBuildTarget
         .withFlavors(AndroidBinaryGraphEnhancer.AAPT_PACKAGE_FLAVOR);
@@ -324,7 +325,8 @@ public class AndroidBinaryTest {
         primaryDexPath,
         Optional.empty(),
         Optional.empty(),
-        /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.of());
+        /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
+        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)));
 
     assertEquals("Expected 2 new assets paths (one for metadata.txt and the other for the " +
         "secondary zips)", 2, secondaryDexDirectories.build().size());
@@ -369,7 +371,8 @@ public class AndroidBinaryTest {
         primaryDexPath,
         Optional.of(reorderTool),
         Optional.of(reorderData),
-        /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.of());
+        /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
+        new SourcePathResolver(new SourcePathRuleFinder(ruleResolver)));
 
     assertEquals(
         "Expected 2 new assets paths (one for metadata.txt and the other for the " +

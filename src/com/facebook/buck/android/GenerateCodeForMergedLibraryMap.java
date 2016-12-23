@@ -65,7 +65,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRule {
     this.codeGenerator = codeGenerator;
 
     try {
-      executableCommand = new ExecutableMacroExpander().expand(getResolver(), this.codeGenerator);
+      executableCommand = new ExecutableMacroExpander().expand(resolver, this.codeGenerator);
     } catch (MacroException e) {
       throw new IllegalArgumentException(String.format(
           "For build rule %s, code generator %s is not executable.",
