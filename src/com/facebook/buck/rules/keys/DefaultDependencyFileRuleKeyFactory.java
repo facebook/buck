@@ -52,8 +52,6 @@ public class DefaultDependencyFileRuleKeyFactory
         fileHashLoader,
         pathResolver,
         ruleFinder,
-        InputHandling.IGNORE,
-        ArchiveHandling.MEMBERS,
         Long.MAX_VALUE);
     this.pathResolver = pathResolver;
   }
