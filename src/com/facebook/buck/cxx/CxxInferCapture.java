@@ -115,7 +115,7 @@ public class CxxInferCapture
         .add("-x", inputType.getLanguage())
         .add("-o", output.toString()) // TODO(martinoluca): Use -fsyntax-only for better perf
         .add("-c")
-        .add(getResolver().getAbsolutePath(input).toString())
+        .add(getResolver().getRelativePath(input).toString())
         .build();
   }
 
