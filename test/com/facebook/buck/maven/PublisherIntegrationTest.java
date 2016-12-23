@@ -19,6 +19,7 @@ package com.facebook.buck.maven;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -176,7 +177,7 @@ public class PublisherIntegrationTest {
     publisher.publish(ImmutableSet.of(publishable));
 
     for (ProcessExecutorParams params : commands.keySet()) {
-      executor.isProcessLaunched(params);
+      assertTrue(executor.isProcessLaunched(params));
     }
   }
 }
