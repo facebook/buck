@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import static com.facebook.buck.cxx.CxxFlavorSanitizer.sanitize;
+import static java.io.File.pathSeparator;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
@@ -31,6 +32,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.cli.FakeBuckConfig;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.MoreFiles;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.BuildTargetFactory;
@@ -1377,43 +1379,59 @@ public class CxxBinaryIntegrationTest {
     String executable = Platform.detect() == Platform.MACOS ? "clang++" : "g++";
     Path executableLocation = new ExecutableFinder()
         .getOptionalExecutable(Paths.get(executable), ImmutableMap.copyOf(System.getenv()))
-        .orElse(Paths.get("/usr/bin/"));
+        .orElse(Paths.get("/usr/bin", executable));
 
-    // Write scripts with different content to different paths.
-    filesystem.createParentDirs(Paths.get("path1/" + executable));
+    // Write script as faux clang++/g++ binary
+    Path firstCompilerPath = tmp.newFolder("path1");
+    Path firstCompiler = firstCompilerPath.resolve(executable);
     filesystem.writeContentsToPath(
       "#!/bin/sh\n" +
           "exec " + executableLocation.toString() + " \"$@\"\n",
-      Paths.get("path1/" + executable));
-    Path path1 = filesystem.resolve("path1/");
+          firstCompiler);
 
-    filesystem.createParentDirs(Paths.get("path2/" + executable));
+    // Write script as slightly different faux clang++/g++ binary
+    Path secondCompilerPath = tmp.newFolder("path2");
+    Path secondCompiler = secondCompilerPath.resolve(executable);
     filesystem.writeContentsToPath(
-      "#!/bin/sh\n" +
-          "exec " + executableLocation.toString() + " \"$@\"\n" +
-          "# Comment to make hash different.\n",
-      Paths.get("path2/" + executable));
-    Path path2 = filesystem.resolve("path2/");
+        "#!/bin/sh\n" +
+            "exec " + executableLocation.toString() + " \"$@\"\n" +
+            "# Comment to make hash different.\n",
+            secondCompiler);
 
-    // Run two builds, each with different PATH locations pointing at different
-    // compiler "binaries".
+    // Make the second faux clang++/g++ binary executable
+    MoreFiles.makeExecutable(secondCompiler);
+
+    // Run two builds, each with different compiler "binaries".  In the first
+    // instance, both binaries are in the PATH but the first binary is not
+    // marked executable so is not picked up.
     workspace.runBuckCommandWithEnvironmentOverridesAndContext(
       workspace.getDestPath(),
       Optional.empty(),
-      ImmutableMap.of("PATH", path1.toString()),
+      ImmutableMap.of("PATH",
+          firstCompilerPath.toString() + pathSeparator +
+          secondCompilerPath.toString() + pathSeparator +
+          System.getenv("PATH")),
       "build",
       target.getFullyQualifiedName()).assertSuccess();
 
     workspace.resetBuildLogFile();
 
+    // Now, make the first faux clang++/g++ binary executable.  In this second
+    // instance, both binaries are still in the PATH but the first binary is
+    // now marked executable and so is picked up; causing a rebuild.
+    MoreFiles.makeExecutable(firstCompiler);
+
     workspace.runBuckCommandWithEnvironmentOverridesAndContext(
       workspace.getDestPath(),
       Optional.empty(),
-      ImmutableMap.of("PATH", path2.toString()),
+      ImmutableMap.of("PATH",
+          firstCompilerPath.toString() + pathSeparator +
+          secondCompilerPath.toString() + pathSeparator +
+          System.getenv("PATH")),
       "build",
       target.getFullyQualifiedName()).assertSuccess();
 
-    // Make sure the PATH change caused a rebuild.
+    // Make sure the binary change caused a rebuild.
     workspace.getBuildLog().assertTargetBuiltLocally(target.toString());
   }
 
