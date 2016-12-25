@@ -18,7 +18,6 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.log.Logger;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -34,6 +33,8 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.Optional;
 import java.util.function.Consumer;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Executes a {@link Process} and blocks until it is finished.
@@ -360,7 +361,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       boolean shouldPrint) {
     if (!shouldPrint) {
       CapturingPrintStream capturingPrintStream = (CapturingPrintStream) printStream;
-      return Optional.of(capturingPrintStream.getContentsAsString(Charsets.US_ASCII));
+      return Optional.of(capturingPrintStream.getContentsAsString(UTF_8));
     } else {
       return Optional.empty();
     }
