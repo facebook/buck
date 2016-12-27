@@ -133,7 +133,7 @@ public class Elf {
       return buffer.getInt();
     }
 
-    public static void putEl32fSword(ByteBuffer buffer, int val) {
+    public static void putElf32Sword(ByteBuffer buffer, int val) {
       buffer.putInt(val);
     }
 
