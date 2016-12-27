@@ -22,6 +22,7 @@ import com.facebook.buck.model.BuildTargetPattern;
 import com.facebook.buck.model.Either;
 import com.facebook.buck.model.Flavor;
 import com.facebook.buck.model.Pair;
+import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.python.NeededCoverageSpec;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Label;
@@ -78,7 +79,14 @@ public class AbstractTypeCoercerFactory implements TypeCoercerFactory {
               Path pathRelativeToProjectRoot,
               Object object)
               throws CoerceFailedException {
-            throw new UnsupportedOperationException();
+            // This is only actually used directly by ConstructorArgMarshaller, for parsing the
+            // groups list. It's also queried (but not actually used) when Descriptions declare
+            // deps fields.
+            // TODO(tophyr): make this work for all types of BuildTargetPatterns
+            // probably differentiate them by inheritance
+            return BuildTargetPatternParser.forVisibilityArgument().parse(
+                cellRoots,
+                (String) object);
           }
         };
     TypeCoercer<BuildTarget> buildTargetTypeCoercer = new BuildTargetTypeCoercer();
