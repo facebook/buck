@@ -189,9 +189,8 @@ compiled class files and resources.
   literal <code>set(//foo:foo)</code>.
   Some example queries:
   {literal}<pre>
-  "deps(:foo)"
-  "filter(name_regex, $declared_deps)"
-  "attrfilter(annotation_processors, com.foo.Processor, deps(:app))"</pre>
+  "filter({name_regex}, $declared_deps)".format(name_regex='//.*')
+  "attrfilter(annotation_processors, com.foo.Processor, $declared_deps)"</pre>
   {/literal}
   {/param}
 {/call}
