@@ -21,7 +21,4 @@
   "infer_blacklist": [
     "src-gen"
   ],
- "enable_checks": [
-      "UNSAFE_GUARDED_BY_ACCESS"
-  ]
 }
