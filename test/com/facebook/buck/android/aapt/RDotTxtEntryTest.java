@@ -57,8 +57,10 @@ public class RDotTxtEntryTest {
 
   @Test
   public void testRDotTxtEntryCompareToWithDifferentLengthStyleables() {
-    RDotTxtEntry entry1 = new RDotTxtEntry(IdType.INT, RType.STYLEABLE, "ActionBar_contentInsetEnd", "1");
-    RDotTxtEntry entry2 = new RDotTxtEntry(IdType.INT, RType.STYLEABLE, "ActionBar_contentInsetEnd__android", "0");
+    RDotTxtEntry entry1 = new RDotTxtEntry(
+        IdType.INT, RType.STYLEABLE, "ActionBar_contentInsetEnd", "1");
+    RDotTxtEntry entry2 = new RDotTxtEntry(
+        IdType.INT, RType.STYLEABLE, "ActionBar_contentInsetEnd__android", "0");
 
     assertEquals(entry1.compareTo(entry2), -1);
   }
