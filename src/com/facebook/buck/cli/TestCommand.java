@@ -198,6 +198,10 @@ public class TestCommand extends BuildCommand {
       isOnlyFailing = buckConfig.getBooleanValue("test", RERUN_ONLY_FAILING, false);
     }
 
+    if (isCodeCoverageEnabled()) {
+      return TestRunningOptions.TestResultCacheMode.DISABLED;
+    }
+
     if (isResultsCacheDisabled) {
       return TestRunningOptions.TestResultCacheMode.DISABLED;
     }
