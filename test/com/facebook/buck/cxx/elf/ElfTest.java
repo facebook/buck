@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -108,19 +109,19 @@ public class ElfTest {
       Elf elf = new Elf(buffer);
       Optional<ElfSection> section;
 
-      section = elf.getSectionByName(".text");
+      section = elf.getSectionByName(".text").map(Pair::getSecond);
       assertTrue(section.isPresent());
       assertEquals(ElfSectionHeader.SHType.SHT_PROGBITS, section.get().header.sh_type);
 
-      section = elf.getSectionByName(".bss");
+      section = elf.getSectionByName(".bss").map(Pair::getSecond);
       assertTrue(section.isPresent());
       assertEquals(ElfSectionHeader.SHType.SHT_NOBITS, section.get().header.sh_type);
 
-      section = elf.getSectionByName(".strtab");
+      section = elf.getSectionByName(".strtab").map(Pair::getSecond);
       assertTrue(section.isPresent());
       assertEquals(ElfSectionHeader.SHType.SHT_STRTAB, section.get().header.sh_type);
 
-      section = elf.getSectionByName(".symtab");
+      section = elf.getSectionByName(".symtab").map(Pair::getSecond);
       assertTrue(section.isPresent());
       assertEquals(ElfSectionHeader.SHType.SHT_SYMTAB, section.get().header.sh_type);
     }

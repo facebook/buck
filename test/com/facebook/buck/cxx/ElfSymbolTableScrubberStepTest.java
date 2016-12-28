@@ -24,6 +24,7 @@ import com.facebook.buck.cxx.elf.Elf;
 import com.facebook.buck.cxx.elf.ElfHeader;
 import com.facebook.buck.cxx.elf.ElfSection;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TemporaryPaths;
@@ -67,7 +68,7 @@ public class ElfSymbolTableScrubberStepTest {
             StandardOpenOption.READ)) {
       MappedByteBuffer buffer = channel.map(READ_ONLY, 0, channel.size());
       Elf elf = new Elf(buffer);
-      Optional<ElfSection> section = elf.getSectionByName(SECTION);
+      Optional<ElfSection> section = elf.getSectionByName(SECTION).map(Pair::getSecond);
       assertTrue(section.isPresent());
       long address = 1;
       for (ByteBuffer body = section.get().body; body.hasRemaining(); ) {

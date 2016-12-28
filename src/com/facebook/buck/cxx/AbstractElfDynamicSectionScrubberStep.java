@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.elf.ElfDynamicSection;
 import com.facebook.buck.cxx.elf.ElfHeader;
 import com.facebook.buck.cxx.elf.ElfSection;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -67,7 +68,7 @@ abstract class AbstractElfDynamicSectionScrubberStep implements Step {
                  StandardOpenOption.WRITE)) {
       MappedByteBuffer buffer = channel.map(READ_WRITE, 0, channel.size());
       Elf elf = new Elf(buffer);
-      Optional<ElfSection> section = elf.getSectionByName(SECTION);
+      Optional<ElfSection> section = elf.getSectionByName(SECTION).map(Pair::getSecond);
       if (!section.isPresent()) {
         throw new IOException(
             String.format(

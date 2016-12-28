@@ -22,6 +22,7 @@ import com.facebook.buck.cxx.elf.Elf;
 import com.facebook.buck.cxx.elf.ElfHeader;
 import com.facebook.buck.cxx.elf.ElfSection;
 import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.model.Pair;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -64,7 +65,7 @@ abstract class AbstractElfSymbolTableScrubberStep implements Step {
       Elf elf = new Elf(buffer);
 
       // Locate the symbol table section.
-      Optional<ElfSection> section = elf.getSectionByName(getSection());
+      Optional<ElfSection> section = elf.getSectionByName(getSection()).map(Pair::getSecond);
       if (!section.isPresent()) {
         if (isAllowMissing()) {
           return StepExecutionResult.SUCCESS;
