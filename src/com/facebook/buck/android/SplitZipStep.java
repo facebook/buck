@@ -82,6 +82,7 @@ public class SplitZipStep implements Step {
   private final Path additionalDexStoreJarDir;
   private final Optional<Path> proguardFullConfigFile;
   private final Optional<Path> proguardMappingFile;
+  private final boolean skipProguard;
   private final DexSplitMode dexSplitMode;
   private final Path pathToReportDir;
 
@@ -120,6 +121,7 @@ public class SplitZipStep implements Step {
       Path additionalDexStoreJarDir,
       Optional<Path> proguardFullConfigFile,
       Optional<Path> proguardMappingFile,
+      boolean skipProguard,
       DexSplitMode dexSplitMode,
       Optional<Path> primaryDexScenarioFile,
       Optional<Path> primaryDexClassesFile,
@@ -138,6 +140,7 @@ public class SplitZipStep implements Step {
     this.additionalDexStoreJarDir = additionalDexStoreJarDir;
     this.proguardFullConfigFile = proguardFullConfigFile;
     this.proguardMappingFile = proguardMappingFile;
+    this.skipProguard = skipProguard;
     this.dexSplitMode = dexSplitMode;
     this.primaryDexScenarioFile = primaryDexScenarioFile;
     this.primaryDexClassesFile = primaryDexClassesFile;
@@ -147,9 +150,11 @@ public class SplitZipStep implements Step {
     this.apkModuleGraph = apkModuleGraph;
     this.pathToReportDir = pathToReportDir;
 
-    Preconditions.checkArgument(
-        proguardFullConfigFile.isPresent() == proguardMappingFile.isPresent(),
-        "ProGuard configuration and mapping must both be present or absent.");
+    if (!skipProguard) {
+      Preconditions.checkArgument(
+          proguardFullConfigFile.isPresent() == proguardMappingFile.isPresent(),
+          "ProGuard configuration and mapping must both be present or absent.");
+    }
   }
 
   @Override
@@ -163,7 +168,8 @@ public class SplitZipStep implements Step {
       ProguardTranslatorFactory translatorFactory = ProguardTranslatorFactory.create(
           filesystem,
           proguardFullConfigFile,
-          proguardMappingFile);
+          proguardMappingFile,
+          skipProguard);
       Predicate<String> requiredInPrimaryZip =
           createRequiredInPrimaryZipPredicate(translatorFactory, classes);
       final ImmutableSet<String> wantedInPrimaryZip =

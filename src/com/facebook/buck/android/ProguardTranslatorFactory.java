@@ -45,10 +45,11 @@ class ProguardTranslatorFactory {
   static ProguardTranslatorFactory create(
       ProjectFilesystem filesystem,
       Optional<Path> proguardFullConfigFile,
-      Optional<Path> proguardMappingFile)
+      Optional<Path> proguardMappingFile,
+      boolean skipProguard)
       throws IOException {
     return new ProguardTranslatorFactory(
-        loadOptionalRawMap(filesystem, proguardFullConfigFile, proguardMappingFile));
+        loadOptionalRawMap(filesystem, proguardFullConfigFile, proguardMappingFile, skipProguard));
   }
 
   @VisibleForTesting
@@ -60,9 +61,10 @@ class ProguardTranslatorFactory {
   private static Optional<Map<String, String>> loadOptionalRawMap(
       ProjectFilesystem filesystem,
       Optional<Path> proguardFullConfigFile,
-      Optional<Path> proguardMappingFile)
+      Optional<Path> proguardMappingFile,
+      boolean skipProguard)
       throws IOException {
-    if (!proguardFullConfigFile.isPresent()) {
+    if (skipProguard || !proguardFullConfigFile.isPresent()) {
       return Optional.empty();
     }
 

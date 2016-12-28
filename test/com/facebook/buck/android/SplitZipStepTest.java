@@ -170,6 +170,7 @@ public class SplitZipStepTest {
         /* additionalDexStoreJarDir */ Paths.get(""),
         /* proguardFullConfigFile */ Optional.empty(),
         /* proguardMappingFile */ Optional.empty(),
+        false,
         new DexSplitMode(
             /* shouldSplitDex */ true,
             ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
@@ -260,6 +261,7 @@ public class SplitZipStepTest {
         /* additionalDexStoreJarDir */ Paths.get(""),
         /* proguardFullConfigFile */ Optional.of(proguardConfigFile),
         /* proguardMappingFile */ Optional.of(proguardMappingFile),
+        false,
         new DexSplitMode(
             /* shouldSplitDex */ true,
             ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
@@ -281,7 +283,7 @@ public class SplitZipStepTest {
 
     ProguardTranslatorFactory translatorFactory = ProguardTranslatorFactory.create(
         projectFilesystem,
-        Optional.of(proguardConfigFile), Optional.of(proguardMappingFile));
+        Optional.of(proguardConfigFile), Optional.of(proguardMappingFile), false);
 
     Predicate<String> requiredInPrimaryZipPredicate = splitZipStep
         .createRequiredInPrimaryZipPredicate(
@@ -333,6 +335,7 @@ public class SplitZipStepTest {
         /* additionalDexStoreJarDir */ Paths.get(""),
         /* proguardFullConfigFile */ Optional.of(proguardConfigFile),
         /* proguardMappingFile */ Optional.of(proguardMappingFile),
+        false,
         new DexSplitMode(
             /* shouldSplitDex */ true,
             ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
@@ -354,7 +357,7 @@ public class SplitZipStepTest {
 
     ProguardTranslatorFactory translatorFactory = ProguardTranslatorFactory.create(
         projectFilesystem,
-        Optional.of(proguardConfigFile), Optional.of(proguardMappingFile));
+        Optional.of(proguardConfigFile), Optional.of(proguardMappingFile), false);
 
     Predicate<String> requiredInPrimaryZipPredicate = splitZipStep
         .createRequiredInPrimaryZipPredicate(

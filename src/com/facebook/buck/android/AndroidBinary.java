@@ -1091,6 +1091,7 @@ public class AndroidBinary
           additionalDexStoresZipDir,
           proguardFullConfigFile,
           proguardMappingFile,
+          skipProguard.orElse(false),
           dexSplitMode,
           dexSplitMode.getPrimaryDexScenarioFile().map(resolver::getAbsolutePath),
           dexSplitMode.getPrimaryDexClassesFile().map(resolver::getAbsolutePath),
