@@ -603,8 +603,7 @@ abstract class AbstractCxxSourceRuleFactory {
         path,
         source.getType(),
         getCxxPlatform().getCompilerDebugPathSanitizer(),
-        getCxxPlatform().getAssemblerDebugPathSanitizer(),
-        getCxxBuckConfig().isPchIlogEnabled());
+        getCxxPlatform().getAssemblerDebugPathSanitizer());
     getResolver().addToIndex(rule);
     return rule;
   }

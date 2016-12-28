@@ -31,6 +31,7 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -82,7 +83,6 @@ public class CxxPrecompiledHeader
 
   private final DebugPathSanitizer compilerSanitizer;
   private final DebugPathSanitizer assemblerSanitizer;
-  protected final boolean pchIlogEnabled;
 
   public CxxPrecompiledHeader(
       BuildRuleParams buildRuleParams,
@@ -94,8 +94,7 @@ public class CxxPrecompiledHeader
       SourcePath input,
       CxxSource.Type inputType,
       DebugPathSanitizer compilerSanitizer,
-      DebugPathSanitizer assemblerSanitizer,
-      boolean pchIlogEnabled) {
+      DebugPathSanitizer assemblerSanitizer) {
     super(buildRuleParams, resolver);
     this.preprocessorDelegate = preprocessorDelegate;
     this.compilerDelegate = compilerDelegate;
@@ -105,7 +104,6 @@ public class CxxPrecompiledHeader
     this.inputType = inputType;
     this.compilerSanitizer = compilerSanitizer;
     this.assemblerSanitizer = assemblerSanitizer;
-    this.pchIlogEnabled = pchIlogEnabled;
   }
 
   @Override
@@ -171,6 +169,7 @@ public class CxxPrecompiledHeader
     return ImmutableList.copyOf(getProjectFilesystem().readLines(getDepFilePath()));
   }
 
+  @VisibleForTesting
   private CxxPreprocessAndCompileStep makeMainStep(SourcePathResolver resolver, Path scratchDir) {
     try {
       preprocessorDelegate.checkForConflictingHeaders();
@@ -192,7 +191,6 @@ public class CxxPrecompiledHeader
                 preprocessorDelegate.getEnvironment(),
                 preprocessorDelegate.getFlagsForColorDiagnostics())),
         Optional.empty(),
-        Optional.of(this),
         preprocessorDelegate.getHeaderPathNormalizer(),
         compilerSanitizer,
         assemblerSanitizer,

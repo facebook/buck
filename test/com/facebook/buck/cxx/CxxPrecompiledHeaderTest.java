@@ -86,8 +86,7 @@ public class CxxPrecompiledHeaderTest {
         new FakeSourcePath("foo.h"),
         CxxSource.Type.C,
         CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-        CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER,
-        /* pchILogEnabled: not needed for this test */ false);
+        CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER);
     BuildContext buildContext = BuildContext.builder()
         .from(FakeBuildContext.NOOP_CONTEXT)
         .setSourcePathResolver(sourcePathResolver)
