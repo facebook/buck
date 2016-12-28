@@ -227,10 +227,8 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
       index++;
     }
 
-    if (index < thisNameParts.length) {
-      comparisonChain = comparisonChain.compare(thisNameParts[index], "");
-    } else if (index < thatNameParts.length) {
-      comparisonChain = comparisonChain.compare("", thatNameParts[index]);
+    if (index < thisNameParts.length || index < thatNameParts.length) {
+      comparisonChain = comparisonChain.compare(thisNameParts.length, thatNameParts.length);
     }
 
     return comparisonChain.result();

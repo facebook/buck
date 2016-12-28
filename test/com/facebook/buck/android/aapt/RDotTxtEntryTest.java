@@ -43,7 +43,6 @@ public class RDotTxtEntryTest {
     );
 
     assertEquals(
-        sortedEntries,
         ImmutableList.of(
             new RDotTxtEntry(IdType.INT_ARRAY, RType.STYLEABLE, "ActionBar", null),
             new RDotTxtEntry(IdType.INT, RType.STYLEABLE, "ActionBar_background", "2"),
@@ -51,7 +50,16 @@ public class RDotTxtEntryTest {
             new RDotTxtEntry(IdType.INT, RType.STYLEABLE, "ActionBar_contentInsetEnd", "0"),
             new RDotTxtEntry(IdType.INT_ARRAY, RType.STYLEABLE, "ActionBarLayout", "0x7f060008"),
             new RDotTxtEntry(IdType.INT, RType.STYLEABLE, "ActionBarLayout_android", "0")
-        )
+        ),
+        sortedEntries
     );
+  }
+
+  @Test
+  public void testRDotTxtEntryCompareToWithDifferentLengthStyleables() {
+    RDotTxtEntry entry1 = new RDotTxtEntry(IdType.INT, RType.STYLEABLE, "ActionBar_contentInsetEnd", "1");
+    RDotTxtEntry entry2 = new RDotTxtEntry(IdType.INT, RType.STYLEABLE, "ActionBar_contentInsetEnd__android", "0");
+
+    assertEquals(entry1.compareTo(entry2), -1);
   }
 }
