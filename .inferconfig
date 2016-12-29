@@ -20,5 +20,5 @@
   ],
   "infer_blacklist": [
     "src-gen"
-  ],
+  ]
 }
