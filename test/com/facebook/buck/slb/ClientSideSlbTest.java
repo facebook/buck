@@ -19,16 +19,11 @@ package com.facebook.buck.slb;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.timing.Clock;
 import com.google.common.collect.ImmutableList;
-import okhttp3.Call;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Protocol;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 import org.easymock.Capture;
 import org.easymock.EasyMock;
+import org.easymock.EasyMockSupport;
+import org.easymock.IAnswer;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,7 +34,16 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-public class ClientSideSlbTest {
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+
+public class ClientSideSlbTest extends EasyMockSupport {
 
   private static final ImmutableList<URI> SERVERS = ImmutableList.of(
       URI.create("http://localhost:4242"),
@@ -60,13 +64,12 @@ public class ClientSideSlbTest {
 
   @Before
   public void setUp() {
-    mockBus = EasyMock.createNiceMock(BuckEventBus.class);
-    mockFuture = EasyMock.createMock(ScheduledFuture.class);
-    mockClient = EasyMock.createNiceMock(OkHttpClient.class);
-    mockScheduler = EasyMock.createMock(ScheduledExecutorService.class);
-    mockClock = EasyMock.createMock(Clock.class);
+    mockBus = createNiceMock(BuckEventBus.class);
+    mockFuture = createMock(ScheduledFuture.class);
+    mockClient = createNiceMock(OkHttpClient.class);
+    mockScheduler = createMock(ScheduledExecutorService.class);
+    mockClock = createMock(Clock.class);
     EasyMock.expect(mockClock.currentTimeMillis()).andReturn(42L).anyTimes();
-    EasyMock.replay(mockClock);
 
     config = ClientSideSlbConfig.builder()
         .setClock(mockClock)
@@ -87,13 +90,15 @@ public class ClientSideSlbTest {
         EasyMock.anyObject(TimeUnit.class)))
         .andReturn(mockFuture)
         .once();
-    EasyMock.replay(mockScheduler);
+    EasyMock.expect(mockFuture.cancel(true)).andReturn(true).once();
+
+    replayAll();
 
     try (ClientSideSlb slb = new ClientSideSlb(config, mockClient)) {
       Assert.assertTrue(capture.hasCaptured());
     }
 
-    EasyMock.verify(mockScheduler);
+    verifyAll();
   }
 
   @Test
@@ -107,25 +112,39 @@ public class ClientSideSlbTest {
         EasyMock.anyObject(TimeUnit.class)))
         .andReturn(mockFuture)
         .once();
-    ResponseBody body = ResponseBody.create(MediaType.parse("text/plain"), "The Body.");
-    Response response = new Response.Builder()
-        .body(body)
-        .code(200)
-        .protocol(Protocol.HTTP_1_1)
-        .request(new Request.Builder().url("http://dummy.url").build())
-        .build();
-    Call mockCall = EasyMock.createMock(Call.class);
-    EasyMock.expect(mockCall.execute()).andReturn(response).times(SERVERS.size());
-    EasyMock.expect(mockClient.newCall(EasyMock.anyObject(Request.class)))
-        .andReturn(mockCall)
-        .times(SERVERS.size());
-    EasyMock.replay(mockClient, mockCall, mockScheduler);
+    Call mockCall = createMock(Call.class);
+    for (URI server: SERVERS) {
+      EasyMock.expect(mockClient.newCall(EasyMock.anyObject(Request.class))).andReturn(mockCall);
+      mockCall.enqueue(EasyMock.anyObject(ClientSideSlb.ServerPing.class));
+      EasyMock.expectLastCall().andAnswer(
+          new IAnswer<Object>() {
+            @Override
+            public Object answer() throws Throwable {
+              Callback callback = (Callback) EasyMock.getCurrentArguments()[0];
+              ResponseBody body = ResponseBody.create(MediaType.parse("text/plain"), "The Body.");
+              Response response = new Response.Builder()
+                  .body(body)
+                  .code(200)
+                  .protocol(Protocol.HTTP_1_1)
+                  .request(new Request.Builder().url(server.toString()).build())
+                  .build();
+              callback.onResponse(mockCall, response);
+              return null;
+            }
+          }
+      );
+    }
+    mockBus.post(EasyMock.anyObject(LoadBalancerPingEvent.class));
+    EasyMock.expectLastCall();
+    EasyMock.expect(mockFuture.cancel(true)).andReturn(true).once();
+
+    replayAll();
 
     try (ClientSideSlb slb = new ClientSideSlb(config, mockClient)) {
       Runnable healthCheckLoop = capture.getValue();
       healthCheckLoop.run();
     }
 
-    EasyMock.verify(mockClient, mockCall, mockScheduler);
+    verifyAll();
   }
 }

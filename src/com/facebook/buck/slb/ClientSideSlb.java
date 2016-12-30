@@ -17,24 +17,34 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.ByteStreams;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 public class ClientSideSlb implements HttpLoadBalancer {
+
+  private static final Logger LOG = Logger.get(ClientSideSlb.class);
 
   private final String pingEndpoint;
   private final ImmutableList<URI> serverPool;
@@ -77,7 +87,6 @@ public class ClientSideSlb implements HttpLoadBalancer {
         config.getMaxAcceptableLatencyMillis(),
         config.getEventBus());
     this.pingClient = pingClient;
-
     this.schedulerService = config.getSchedulerService();
     backgroundHealthChecker = this.schedulerService.scheduleWithFixedDelay(
         this::backgroundThreadCallForHealthCheck,
@@ -110,44 +119,79 @@ public class ClientSideSlb implements HttpLoadBalancer {
   // TODO(ruibm): Log into timeseries information about each run.
   // TODO(ruibm): Add cache health information to the SuperConsole.
   private void backgroundThreadCallForHealthCheck() {
-    LoadBalancerPingEventData.Builder data = LoadBalancerPingEventData.builder();
+
+    LOG.verbose("Starting pings. %s", toString());
+
+    List<ListenableFuture<PerServerPingData>> futures = new ArrayList<>();
     for (URI serverUri : serverPool) {
-      PerServerPingData.Builder perServerData = PerServerPingData.builder().setServer(serverUri);
-      Request request =
-          new Request.Builder()
-              .url(serverUri.resolve(pingEndpoint).toString())
-              .get()
-              .build();
-      long nowMillis = clock.currentTimeMillis();
-      try {
-        Response response = pingClient.newCall(request).execute();
-        try {
-          // Make sure we explicitly read the whole response and that's taken into account in
-          // the latency calculation.
-          try (InputStream inputStream = response.body().byteStream()) {
-            ByteStreams.copy(inputStream, ByteStreams.nullOutputStream());
-          }
-          if (response.isSuccessful()) {
-            long requestLatencyMillis = response.receivedResponseAtMillis() -
-                response.sentRequestAtMillis();
-            perServerData.setPingRequestLatencyMillis(requestLatencyMillis);
-            healthManager.reportPingLatency(serverUri, nowMillis, requestLatencyMillis);
-            healthManager.reportRequestSuccess(serverUri, nowMillis);
-          }
-        } finally {
-          // This guarantees response resources are released. In OkHttp if the Response's stream
-          // is not explicitly closed the connection is leaked from the connection pool and
-          // it will go into CLOSE_WAIT state waiting for a TCP timeout to be hit.
-          response.body().close();
-        }
-      } catch (IOException e) {
-        healthManager.reportRequestError(serverUri, nowMillis);
-        perServerData.setException(e);
-      } finally {
-        data.addPerServerData(perServerData.build());
-      }
+      ServerPing serverPing = new ServerPing(serverUri);
+      futures.add(serverPing.getFuture());
     }
 
-    eventBus.post(new LoadBalancerPingEvent(data.build()));
+    // Wait for all executions to complete or fail.
+    try {
+      List<PerServerPingData> allServerData = Futures.allAsList(futures).get();
+      LoadBalancerPingEventData.Builder eventData = LoadBalancerPingEventData.builder();
+      eventData.addAllPerServerData(allServerData);
+      eventBus.post(new LoadBalancerPingEvent(eventData.build()));
+      LOG.verbose("all pings complete %s", toString());
+    } catch (InterruptedException ex) {
+      LOG.verbose("pings interrupted");
+    } catch (ExecutionException ex) {
+      LOG.verbose(ex, "some pings failed");
+    }
+  }
+
+  public class ServerPing implements Callback {
+
+    private final SettableFuture<PerServerPingData> future = SettableFuture.create();
+    URI serverUri;
+
+    ServerPing(URI serverUri) {
+      this.serverUri = serverUri;
+      Request request = new Request.Builder()
+          .url(serverUri.resolve(pingEndpoint).toString())
+          .get()
+          .build();
+      pingClient.newCall(request).enqueue(this);
+    }
+
+    public ListenableFuture<PerServerPingData> getFuture() {
+      return future;
+    }
+
+    /*
+      Process the success result of the ping
+     */
+    @Override
+    public void onResponse(Call call, Response response) throws IOException {
+      PerServerPingData.Builder perServerData = PerServerPingData.builder().setServer(serverUri);
+
+      long sentRequestMillis = response.sentRequestAtMillis();
+      if (response.isSuccessful()) {
+        try (ResponseBody responseBody = response.body()) {
+          String body = responseBody.string();
+          LOG.verbose("Sent ping to %s. Response: %s", serverUri.toString(), body);
+        }
+        long requestLatencyMillis = response.receivedResponseAtMillis() - sentRequestMillis;
+        perServerData.setPingRequestLatencyMillis(requestLatencyMillis);
+        healthManager.reportPingLatency(serverUri, sentRequestMillis, requestLatencyMillis);
+        healthManager.reportRequestSuccess(serverUri, sentRequestMillis);
+      } else {
+        healthManager.reportRequestError(serverUri, sentRequestMillis);
+      }
+      future.set(perServerData.build());
+    }
+
+    /*
+      Process the failure result of the ping
+     */
+    @Override
+    public void onFailure(Call call, IOException e) {
+      healthManager.reportRequestError(serverUri, clock.currentTimeMillis());
+      PerServerPingData.Builder perServerData = PerServerPingData.builder().setServer(serverUri);
+      perServerData.setException(e);
+      future.set(perServerData.build());
+    }
   }
 }
