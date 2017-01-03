@@ -89,6 +89,16 @@ public class CxxPreprocessables {
         return pp.systemIncludeArgs(includeRoots);
       }
     },
+
+    /**
+     * Headers should be included with `-iquote`.
+     */
+    IQUOTE {
+      @Override
+      public Iterable<String> includeArgs(Preprocessor pp, Iterable<String> includeRoots) {
+        return pp.quoteIncludeArgs(includeRoots);
+      }
+    },
     ;
 
     public abstract Iterable<String> includeArgs(Preprocessor pp, Iterable<String> includeRoots);

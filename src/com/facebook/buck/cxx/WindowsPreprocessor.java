@@ -66,6 +66,11 @@ public class WindowsPreprocessor implements Preprocessor {
   }
 
   @Override
+  public Iterable<String> quoteIncludeArgs(Iterable<String> includeRoots) {
+    return Iterables.transform(includeRoots, prependIncludeFlag);
+  }
+
+  @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     return tool.getDeps(ruleFinder);
   }

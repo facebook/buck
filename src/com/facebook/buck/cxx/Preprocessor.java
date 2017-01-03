@@ -33,4 +33,6 @@ public interface Preprocessor extends Tool {
 
   Iterable<String> systemIncludeArgs(Iterable<String> includeRoots);
 
+  Iterable<String> quoteIncludeArgs(Iterable<String> includeRoots);
+
 }

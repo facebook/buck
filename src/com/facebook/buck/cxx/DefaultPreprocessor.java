@@ -64,6 +64,11 @@ public class DefaultPreprocessor implements Preprocessor {
   }
 
   @Override
+  public Iterable<String> quoteIncludeArgs(Iterable<String> includeRoots) {
+    return MoreIterables.zipAndConcat(Iterables.cycle("-iquote"), includeRoots);
+  }
+
+  @Override
   public ImmutableCollection<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     return tool.getDeps(ruleFinder);
   }
