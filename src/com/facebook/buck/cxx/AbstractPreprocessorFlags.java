@@ -58,6 +58,9 @@ abstract class AbstractPreprocessorFlags {
     return CxxToolFlags.of();
   }
 
+  /**
+   * Directories set via {@code -I}.
+   */
   @Value.Parameter
   public abstract ImmutableList<CxxHeaders> getIncludes();
 
@@ -120,23 +123,23 @@ abstract class AbstractPreprocessorFlags {
     return builder.build();
   }
 
-  public CxxToolFlags toToolFlags(
+  public CxxToolFlags getIncludePathFlags(
       SourcePathResolver resolver,
       Function<Path, Path> pathShortener,
       Function<FrameworkPath, Path> frameworkPathTransformer,
-      Preprocessor preprocessor,
-      Optional<CxxPrecompiledHeader> pch) {
+      Preprocessor preprocessor) {
     ExplicitCxxToolFlags.Builder builder = CxxToolFlags.explicitBuilder();
-    ExplicitCxxToolFlags.addCxxToolFlags(builder, getOtherFlags());
-    builder.addAllRuleFlags(getPrefixOrPCHFlags(resolver, pch));
+
     builder.addAllRuleFlags(
         CxxHeaders.getArgs(getIncludes(), resolver, Optional.of(pathShortener), preprocessor));
+
     builder.addAllRuleFlags(
         CxxPreprocessables.IncludeType.SYSTEM.includeArgs(
             preprocessor,
             Iterables.transform(
                 getSystemIncludePaths(),
                 Functions.compose(Object::toString, pathShortener))));
+
     builder.addAllRuleFlags(
         MoreIterables.zipAndConcat(
             Iterables.cycle("-F"),
@@ -144,7 +147,28 @@ abstract class AbstractPreprocessorFlags {
                 .transform(frameworkPathTransformer)
                 .transform(Object::toString)
                 .toSortedSet(Ordering.natural())));
+
     return builder.build();
+  }
+
+  public CxxToolFlags getNonIncludePathFlags(
+      SourcePathResolver resolver,
+      Optional<CxxPrecompiledHeader> pch) {
+    ExplicitCxxToolFlags.Builder builder = CxxToolFlags.explicitBuilder();
+    ExplicitCxxToolFlags.addCxxToolFlags(builder, getOtherFlags());
+    builder.addAllRuleFlags(getPrefixOrPCHFlags(resolver, pch));
+    return builder.build();
+  }
+
+  public CxxToolFlags toToolFlags(
+      SourcePathResolver resolver,
+      Function<Path, Path> pathShortener,
+      Function<FrameworkPath, Path> frameworkPathTransformer,
+      Preprocessor preprocessor,
+      Optional<CxxPrecompiledHeader> pch) {
+    return CxxToolFlags.concat(
+        getNonIncludePathFlags(resolver, pch),
+        getIncludePathFlags(resolver, pathShortener, frameworkPathTransformer, preprocessor));
   }
 
 }

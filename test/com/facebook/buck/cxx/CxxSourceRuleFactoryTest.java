@@ -738,6 +738,76 @@ public class CxxSourceRuleFactoryTest {
       assertContains(command, perFileFlags);
     }
 
+    @Test
+    public void testHashStringsWithAndWithoutIncludePaths() {
+      CxxSource.Type sourceType =
+          CxxSource.Type.fromExtension(
+              MorePaths.getFileExtension(Paths.get(sourceName)))
+          .get();
+      Assume.assumeTrue(sourceType.isPreprocessable());
+
+      BuildRuleResolver ruleResolver =
+          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+      SourcePathResolver pathResolver = new SourcePathResolver(ruleFinder);
+
+      CxxPreprocessorInput cxxPreprocessorInput =
+          CxxPreprocessorInput.builder()
+              .addSystemIncludeRoots(Paths.get("/tmp/sys"))
+              .build();
+
+      BuckConfig buckConfig = FakeBuckConfig.builder()
+          .setSections(
+              ImmutableMap.of(
+                  "cxx", ImmutableMap.<String, String>builder()
+                      .put("cflags", "-fno-omit-frame-pointer")
+                      .put("cxxflags", "-fno-rtti -fno-exceptions")
+                      .build()))
+          .setFilesystem(PROJECT_FILESYSTEM)
+          .build();
+      CxxPlatform platform = CxxPlatformUtils.build(
+          new CxxBuckConfig(buckConfig));
+
+      CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactory.builder()
+          .setParams(params)
+          .setResolver(ruleResolver)
+          .setRuleFinder(ruleFinder)
+          .setPathResolver(pathResolver)
+          .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
+          .setCxxPlatform(platform)
+          .addCxxPreprocessorInput(cxxPreprocessorInput)
+          .setCompilerFlags(
+              CxxFlags.getLanguageFlags(
+                  expectedCompilerFlags,
+                  PatternMatchedCollection.of(),
+                  ImmutableMap.of(),
+                  platform))
+          .setPicType(CxxSourceRuleFactory.PicType.PIC)
+          .build();
+
+      CxxSource source = CxxSource.of(
+          sourceType,
+          new FakeSourcePath(sourceName), ImmutableList.of("-DFOO=1"));
+
+      ImmutableList<String> withPaths = cxxSourceRuleFactory.getFlagsForSource(source, true);
+      ImmutableList<String> withoutPaths = cxxSourceRuleFactory.getFlagsForSource(source, false);
+
+      // these should differ by include path flags:
+      assertNotEquals(-1, Joiner.on("#").join(withPaths).indexOf("-isystem#/tmp/sys"));
+      assertEquals(-1, Joiner.on("#").join(withoutPaths).indexOf("-isystem#/tmp/sys"));
+
+      // the "with" set is a strict superset of the "without" set
+      assertContains(withPaths, withoutPaths);
+
+      // things that should be in both:
+      // per-source-file flag:
+      assertContains(withPaths, ImmutableList.of("-DFOO=1"));
+      assertContains(withoutPaths, ImmutableList.of("-DFOO=1"));
+      // pic option, set in the cxxSourceRuleFactory:
+      assertContains(withPaths, ImmutableList.of("-fPIC"));
+      assertContains(withoutPaths, ImmutableList.of("-fPIC"));
+    }
+
   }
 
   @RunWith(Parameterized.class)

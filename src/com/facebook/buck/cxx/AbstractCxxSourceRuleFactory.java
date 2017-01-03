@@ -758,42 +758,45 @@ abstract class AbstractCxxSourceRuleFactory {
     ImmutableList<String> getSourceFlags();
   }
 
+  @VisibleForTesting
+  public ImmutableList<String> getFlagsForSource(CxxSource source, boolean allowIncludePathFlags) {
+    PreprocessorDelegateCacheValue preprocessorDelegateValue =
+        preprocessorDelegates.getUnchecked(
+            PreprocessorDelegateCacheKey.of(source.getType(), source.getFlags()));
+    CxxToolFlags flags = computeCompilerFlags(source.getType(), source.getFlags());
+    PreprocessorDelegateCacheValue.HashStrings hashStrings = preprocessorDelegateValue.get(flags);
+    return allowIncludePathFlags ? hashStrings.fullFlags : hashStrings.baseFlags;
+  }
+
   static class PreprocessorDelegateCacheValue {
     private final PreprocessorDelegate preprocessorDelegate;
     private final LoadingCache<CxxToolFlags, HashStrings> commandHashCache;
 
     class HashStrings {
+      /** List of build flags (as strings), except for those related to header search paths. */
+      public final ImmutableList<String> baseFlags;
+      /** Complete list of all build flags (as strings), including header search paths. */
+      public final ImmutableList<String> fullFlags;
       public final String baseHash;
       public final String fullHash;
 
       public HashStrings(CxxToolFlags compilerFlags) {
-        ImmutableList<String> allFlags = preprocessorDelegate.getCommand(
-            compilerFlags,
-            /* no pch object yet */ Optional.empty());
-        ImmutableList.Builder<String> iDirsBuilder = ImmutableList.<String>builder();
-        ImmutableList.Builder<String> iSystemDirsBuilder = ImmutableList.<String>builder();
-        ImmutableList.Builder<String> nonIncludeFlagsBuilder = ImmutableList.<String>builder();
-        CxxPrecompiledHeader.separateIncludePathArgs(
-            allFlags,
-            iDirsBuilder,
-            iSystemDirsBuilder,
-            nonIncludeFlagsBuilder);
+        ImmutableList.Builder<String> builder = ImmutableList.<String>builder();
 
-        ImmutableList.Builder<String> flagBuilder = ImmutableList.<String>builder();
+        // Add the build command itself first
+        builder.addAll(preprocessorDelegate.getCommandPrefix());
+        // Then preprocessor + compiler args, not including include path args like -I, -isystem, ...
+        builder.addAll(preprocessorDelegate.getNonIncludePathFlags(Optional.empty()).getAllFlags());
+        builder.addAll(compilerFlags.getAllFlags());
+        // Output what we have so far, to this list, then hash it.
+        this.baseFlags = builder.build();
+        this.baseHash = preprocessorDelegate.hashCommand(this.baseFlags).substring(0, 10);
 
-        // Compute two different hashes; one for non-include paths, just for PCH compatibility
-        // with respect to defines, f-flags, m-flags / other things that must agree in PCH + build.
-        // It's possible that targets -- in fact hopefully many targets -- share the same base hash
-        // so that it's possible to reuse PCHs with that base hash, even if include path flags
-        // differ in (most likely) non-incompatible ways.
-        flagBuilder.addAll(nonIncludeFlagsBuilder.build());
-        this.baseHash = preprocessorDelegate.hashCommand(flagBuilder.build()).substring(0, 10);
-
-        // The full hash is a globally-unique identifier, using the above mentioned flags followed
-        // by other include path dirs.
-        flagBuilder.addAll(iDirsBuilder.build());
-        flagBuilder.addAll(iSystemDirsBuilder.build());
-        this.fullHash = preprocessorDelegate.hashCommand(flagBuilder.build()).substring(0, 10);
+        // Continue building.  Using the same builder; add header search paths, to the above flags.
+        builder.addAll(preprocessorDelegate.getIncludePathFlags().getAllFlags());
+        // Output this super-set of flags to this list, then hash it.
+        this.fullFlags = builder.build();
+        this.fullHash = preprocessorDelegate.hashCommand(this.fullFlags).substring(0, 10);
       }
     }
 
@@ -815,12 +818,17 @@ abstract class AbstractCxxSourceRuleFactory {
       return preprocessorDelegate;
     }
 
+    @VisibleForTesting
+    public HashStrings get(CxxToolFlags flags) {
+      return this.commandHashCache.getUnchecked(flags);
+    }
+
     String getBaseHash(CxxToolFlags flags) {
-      return this.commandHashCache.getUnchecked(flags).baseHash;
+      return get(flags).baseHash;
     }
 
     String getFullHash(CxxToolFlags flags) {
-      return this.commandHashCache.getUnchecked(flags).fullHash;
+      return get(flags).fullHash;
     }
   }
 

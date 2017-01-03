@@ -165,7 +165,10 @@ class PreprocessorDelegate implements RuleKeyAppendable {
       CxxToolFlags compilerFlags,
       Optional<CxxPrecompiledHeader> pch) {
     return ImmutableList.copyOf(
-        CxxToolFlags.concat(getFlagsWithSearchPaths(pch), compilerFlags).getAllFlags());
+        CxxToolFlags.concat(
+            getFlagsWithSearchPaths(pch),
+            compilerFlags)
+        .getAllFlags());
   }
 
   public ImmutableMap<String, String> getEnvironment() {
@@ -179,6 +182,18 @@ class PreprocessorDelegate implements RuleKeyAppendable {
         frameworkPathSearchPathFunction,
         preprocessor,
         pch);
+  }
+
+  public CxxToolFlags getNonIncludePathFlags(Optional<CxxPrecompiledHeader> pch) {
+    return preprocessorFlags.getNonIncludePathFlags(resolver, pch);
+  }
+
+  public CxxToolFlags getIncludePathFlags() {
+    return preprocessorFlags.getIncludePathFlags(
+        resolver,
+        minLengthPathRepresentation,
+        frameworkPathSearchPathFunction,
+        preprocessor);
   }
 
   public void checkForConflictingHeaders() throws ConflictingHeadersException {
