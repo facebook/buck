@@ -22,11 +22,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
-import com.sun.source.tree.CompilationUnitTree;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 import java.io.IOException;
 
@@ -36,21 +34,9 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
 
 @RunWith(CompilerTreeApiParameterized.class)
-public class TreeBackedTypeElementTest extends CompilerTreeApiTest {
-  private static final String JAVAC = "javac";
-  private static final String TREES = "trees";
-
-  @Parameterized.Parameters
-  public static Object[] getParameters() {
-    return new Object[] { JAVAC, TREES };
-  }
-
-  @Parameterized.Parameter
-  public String implementation;
-  private Elements elements;
+public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest {
 
   @Test
   public void testGetSimpleName() throws IOException {
@@ -127,21 +113,4 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiTest {
   private void assertNameEquals(String expected, Name actual) {
     assertEquals(elements.getName(expected), actual);
   }
-
-  @Override
-  protected Iterable<? extends CompilationUnitTree> compile(String source) throws IOException {
-    final Iterable<? extends CompilationUnitTree> result = super.compile(source);
-
-    switch (implementation) {
-      case JAVAC:
-        elements = javacElements;
-        break;
-      case TREES:
-        elements = treesElements;
-        break;
-    }
-
-    return result;
-  }
-
 }
