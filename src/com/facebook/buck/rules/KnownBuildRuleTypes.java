@@ -737,8 +737,7 @@ public class KnownBuildRuleTypes {
             defaultTestRuleTimeoutMs,
             defaultCxxPlatform));
     builder.register(new KeystoreDescription());
-    builder.register(
-        new KotlinLibraryDescription(kotlinBuckConfig));
+    builder.register(new KotlinLibraryDescription(kotlinBuckConfig, defaultJavacOptions));
     builder.register(
         new KotlinTestDescription(
             kotlinBuckConfig,
