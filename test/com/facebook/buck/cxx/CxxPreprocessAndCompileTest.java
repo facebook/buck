@@ -202,7 +202,8 @@ public class CxxPreprocessAndCompileTest {
                     PreprocessorFlags.builder().build(),
                     DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                     DEFAULT_INCLUDES,
-                    Optional.empty()),
+                    Optional.empty(),
+                    /* leadingIncludePaths */ Optional.empty()),
                 new CompilerDelegate(
                     pathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -319,7 +320,8 @@ public class CxxPreprocessAndCompileTest {
                     flags,
                     DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                     DEFAULT_INCLUDES,
-                    Optional.empty()),
+                    Optional.empty(),
+                    /* leadingIncludePaths */ Optional.empty()),
                 new CompilerDelegate(
                     pathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -425,7 +427,8 @@ public class CxxPreprocessAndCompileTest {
                 PreprocessorFlags.builder().build(),
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 ImmutableList.of(),
-                Optional.empty()),
+                Optional.empty(),
+                /* leadingIncludePaths */ Optional.empty()),
             new CompilerDelegate(
                 pathResolver,
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -534,7 +537,8 @@ public class CxxPreprocessAndCompileTest {
                 PreprocessorFlags.builder().build(),
                 DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
                 ImmutableList.of(),
-                Optional.empty()),
+                Optional.empty(),
+                /* leadingIncludePaths */ Optional.empty()),
             new CompilerDelegate(
                 pathResolver,
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,

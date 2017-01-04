@@ -100,7 +100,8 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         PreprocessorFlags.builder().build(),
         defaultFrameworkPathSearchPathFunction,
         ImmutableList.of(),
-        Optional.empty());
+        Optional.empty(),
+        /* leadingIncludePaths */ Optional.empty());
 
     return new CxxInferCapture(
         buildRuleParams,

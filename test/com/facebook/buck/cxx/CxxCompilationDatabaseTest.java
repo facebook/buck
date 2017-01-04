@@ -115,7 +115,8 @@ public class CxxCompilationDatabaseTest {
                       }
                     },
                     ImmutableList.of(),
-                    Optional.empty()),
+                    Optional.empty(),
+                    /* leadingIncludePaths */ Optional.empty()),
                 new CompilerDelegate(
                     testSourcePathResolver,
                     CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,

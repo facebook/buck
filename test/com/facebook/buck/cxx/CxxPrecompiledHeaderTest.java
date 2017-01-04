@@ -75,7 +75,8 @@ public class CxxPrecompiledHeaderTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 sourcePathResolver),
             ImmutableList.of(),
-            Optional.empty()),
+            Optional.empty(),
+            /* leadingIncludePaths */ Optional.empty()),
         new CompilerDelegate(
             sourcePathResolver,
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,

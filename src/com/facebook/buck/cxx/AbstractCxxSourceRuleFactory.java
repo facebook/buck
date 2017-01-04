@@ -856,7 +856,8 @@ abstract class AbstractCxxSourceRuleFactory {
               /* not using -iquote paths yet */ ImmutableSet.of()),
           CxxDescriptionEnhancer.frameworkPathToSearchPath(getCxxPlatform(), getPathResolver()),
           getIncludes(),
-          getSandboxTree());
+          getSandboxTree(),
+          /* leadingIncludePaths */ Optional.empty());
       return new PreprocessorDelegateCacheValue(delegate);
     }
   }

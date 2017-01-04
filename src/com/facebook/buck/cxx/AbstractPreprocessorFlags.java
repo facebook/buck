@@ -138,14 +138,14 @@ abstract class AbstractPreprocessorFlags {
       Function<Path, Path> pathShortener,
       Function<FrameworkPath, Path> frameworkPathTransformer,
       Preprocessor preprocessor) {
-    ExplicitCxxToolFlags.Builder builder = CxxToolFlags.explicitBuilder();
-    builder.addAllRuleFlags(
-        getCxxIncludePaths().getFlags(
-            resolver,
-            pathShortener,
-            frameworkPathTransformer,
-            preprocessor));
-    return builder.build();
+    return CxxToolFlags.explicitBuilder()
+        .addAllRuleFlags(
+            getCxxIncludePaths().getFlags(
+                resolver,
+                pathShortener,
+                frameworkPathTransformer,
+                preprocessor))
+        .build();
   }
 
   public CxxToolFlags getNonIncludePathFlags(

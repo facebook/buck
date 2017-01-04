@@ -532,7 +532,7 @@ public class CxxGenruleDescription
               Functions.identity(),
               CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
               preprocessor,
-              /*pch*/ Optional.empty());
+              /* pch */ Optional.empty());
       return Joiner.on(' ').join(Iterables.transform(flags.getAllFlags(), Escaper.SHELL_ESCAPER));
     }
 

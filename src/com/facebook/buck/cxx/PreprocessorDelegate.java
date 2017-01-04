@@ -67,6 +67,13 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   private final HeaderVerification headerVerification;
   private final Optional<SymlinkTree> sandbox;
 
+  /**
+   * If present, these paths will be added first (prior to the current rule's list of paths)
+   * when building the list of compiler flags, in
+   * {@link #getFlagsWithSearchPaths(Optional)}.
+   */
+  private final Optional<CxxIncludePaths> leadingIncludePaths;
+
   private final Function<Path, Path> minLengthPathRepresentation =
       new Function<Path, Path>() {
         @Override
@@ -114,7 +121,8 @@ class PreprocessorDelegate implements RuleKeyAppendable {
       PreprocessorFlags preprocessorFlags,
       RuleKeyAppendableFunction<FrameworkPath, Path> frameworkPathSearchPathFunction,
       List<CxxHeaders> includes,
-      Optional<SymlinkTree> sandbox) {
+      Optional<SymlinkTree> sandbox,
+      Optional<CxxIncludePaths> leadingIncludePaths) {
     this.preprocessor = preprocessor;
     this.includes = ImmutableList.copyOf(includes);
     this.preprocessorFlags = preprocessorFlags;
@@ -124,6 +132,22 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     this.resolver = resolver;
     this.frameworkPathSearchPathFunction = frameworkPathSearchPathFunction;
     this.sandbox = sandbox;
+    this.leadingIncludePaths = leadingIncludePaths;
+  }
+
+  public PreprocessorDelegate withLeadingIncludePaths(
+      CxxIncludePaths leadingIncludePaths) {
+    return new PreprocessorDelegate(
+        this.resolver,
+        this.sanitizer,
+        this.headerVerification,
+        this.workingDir,
+        this.preprocessor,
+        this.preprocessorFlags,
+        this.frameworkPathSearchPathFunction,
+        this.includes,
+        this.sandbox,
+        Optional.of(leadingIncludePaths));
   }
 
   public Preprocessor getPreprocessor() {
@@ -176,12 +200,25 @@ class PreprocessorDelegate implements RuleKeyAppendable {
   }
 
   public CxxToolFlags getFlagsWithSearchPaths(Optional<CxxPrecompiledHeader> pch) {
-    return preprocessorFlags.toToolFlags(
-        resolver,
-        minLengthPathRepresentation,
-        frameworkPathSearchPathFunction,
-        preprocessor,
-        pch);
+    CxxToolFlags leadingFlags;
+    if (leadingIncludePaths.isPresent()) {
+      leadingFlags = leadingIncludePaths.get().toToolFlags(
+          resolver,
+          minLengthPathRepresentation,
+          frameworkPathSearchPathFunction,
+          preprocessor);
+    } else {
+      leadingFlags = CxxToolFlags.of();
+    }
+
+    return CxxToolFlags.concat(
+        leadingFlags,
+        preprocessorFlags.toToolFlags(
+            resolver,
+            minLengthPathRepresentation,
+            frameworkPathSearchPathFunction,
+            preprocessor,
+            pch));
   }
 
   /**
@@ -196,6 +233,10 @@ class PreprocessorDelegate implements RuleKeyAppendable {
     return preprocessorFlags.getNonIncludePathFlags(resolver, pch);
   }
 
+  /**
+   * Build a {@link CxxToolFlags} representing our include paths (local, system, iquote, framework).
+   * Does not include {@link #leadingIncludePaths}.
+   */
   public CxxToolFlags getIncludePathFlags() {
     return preprocessorFlags.getIncludePathFlags(
         resolver,
