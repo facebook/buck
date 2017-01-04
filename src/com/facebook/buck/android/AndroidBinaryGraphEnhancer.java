@@ -324,8 +324,9 @@ public class AndroidBinaryGraphEnhancer {
       resourceRules = ImmutableSortedSet.of(resourcesFilter);
     } else {
       filteredResourcesProvider = new IdentityResourcesProvider(
-          ImmutableList.copyOf(
-              pathResolver.getAllRelativePaths(resourceDetails.getResourceDirectories())));
+          resourceDetails.getResourceDirectories().stream()
+              .map(pathResolver::getRelativePath)
+              .collect(MoreCollectors.toImmutableList()));
     }
 
     // Create the AaptPackageResourcesBuildable.

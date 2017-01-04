@@ -30,10 +30,12 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -80,7 +82,9 @@ public class CsharpLibrary extends AbstractBuildRule {
       BuildableContext buildableContext) {
     ProjectFilesystem filesystem = getProjectFilesystem();
 
-    ImmutableSortedSet<Path> sourceFiles = getResolver().getAllAbsolutePaths(srcs);
+    ImmutableSortedSet<Path> sourceFiles = FluentIterable.from(srcs)
+        .transform(getResolver()::getAbsolutePath)
+        .toSortedSet(Ordering.natural());
 
     ImmutableListMultimap.Builder<Path, String> resolvedResources = ImmutableListMultimap.builder();
     for (Map.Entry<String, SourcePath> resource : resources.entrySet()) {

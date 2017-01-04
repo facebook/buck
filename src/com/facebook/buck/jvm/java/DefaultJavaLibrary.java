@@ -500,9 +500,13 @@ public class DefaultJavaLibrary extends AbstractBuildRule
       steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), scratchDir));
       Optional<Path> workingDirectory = Optional.of(scratchDir);
 
+      ImmutableSortedSet<Path> javaSrcs = getJavaSrcs().stream()
+          .map(getResolver()::getRelativePath)
+          .collect(MoreCollectors.toImmutableSortedSet());
+
       compileStepFactory.createCompileToJarStep(
           context,
-          getResolver().getAllRelativePaths(getJavaSrcs()),
+          javaSrcs,
           target,
           getResolver(),
           ruleFinder,

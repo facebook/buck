@@ -530,7 +530,9 @@ public class AndroidBinary
         allAssetDirectories,
         nativeLibraryDirectoriesBuilder.build(),
         zipFiles.build(),
-        resolver.getAllAbsolutePaths(packageableCollection.getPathsToThirdPartyJars()),
+        packageableCollection.getPathsToThirdPartyJars().stream()
+            .map(resolver::getAbsolutePath)
+            .collect(MoreCollectors.toImmutableSet()),
         resolver.getAbsolutePath(keystorePath),
         resolver.getAbsolutePath(keystorePropertiesPath),
         /* debugMode */ false,
@@ -793,7 +795,9 @@ public class AndroidBinary
     if (packageType.isBuildWithObfuscation()) {
       classpathEntriesToDex = addProguardCommands(
           classpathEntriesToDex,
-          resolver.getAllAbsolutePaths(packageableCollection.getProguardConfigs()),
+          packageableCollection.getProguardConfigs().stream()
+              .map(getResolver()::getAbsolutePath)
+              .collect(MoreCollectors.toImmutableSet()),
           skipProguard.orElse(false),
           steps,
           buildableContext,
