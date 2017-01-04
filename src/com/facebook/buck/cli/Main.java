@@ -1307,6 +1307,14 @@ public final class Main {
                   .setActionGraphCache(actionGraphCache)
                   .setKnownBuildRuleTypesFactory(factory)
                   .build());
+          // We've reserved exitCode 2 for timeouts, and some commands (e.g. run) may violate this
+          // Let's avoid an infinite loop
+          if (exitCode == BUSY_EXIT_CODE) {
+              exitCode = FAIL_EXIT_CODE; // Some loss of info here, but better than looping
+              LOG.error("Buck return with exit code %d which we use to indicate busy status. " +
+                  "This is probably propagating an exit code from a sub process or tool. " +
+                  "Coercing to %d to avoid retries.", BUSY_EXIT_CODE, FAIL_EXIT_CODE);
+          }
           // Wait for HTTP writes to complete.
           closeHttpExecutorService(
               cacheBuckConfig, Optional.of(buildEventBus), httpWriteExecutorService);
