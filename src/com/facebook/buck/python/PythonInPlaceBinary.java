@@ -112,7 +112,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   }
 
   @Override
-  public boolean supportsBuckBuildInto() {
+  public boolean outputFileCanBeCopied() {
     return true;
   }
 

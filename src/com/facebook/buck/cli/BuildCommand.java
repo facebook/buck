@@ -114,7 +114,7 @@ public class BuildCommand extends AbstractCommand {
   private static final String BUILD_REPORT_LONG_ARG = "--build-report";
   private static final String JUST_BUILD_LONG_ARG = "--just-build";
   private static final String DEEP_LONG_ARG = "--deep";
-  private static final String INTO_LONG_ARG = "--into";
+  private static final String OUT_LONG_ARG = "--out";
   private static final String POPULATE_CACHE_LONG_ARG = "--populate-cache";
   private static final String SHALLOW_LONG_ARG = "--shallow";
   private static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
@@ -182,7 +182,7 @@ public class BuildCommand extends AbstractCommand {
 
 
   @Option(
-      name = INTO_LONG_ARG,
+      name = OUT_LONG_ARG,
       usage = "Copies the output of the lone build target to this path.")
   private Path outputPathForSingleBuildTarget;
 
@@ -402,7 +402,7 @@ public class BuildCommand extends AbstractCommand {
           targetGraphAndBuildTargets.getBuildTargets().size() != 1) {
         throw new ActionGraphCreationException(String.format(
             "When using %s you must specify exactly one build target, but you specified %s",
-            INTO_LONG_ARG,
+            OUT_LONG_ARG,
             targetGraphAndBuildTargets.getBuildTargets()));
       }
 
@@ -428,9 +428,9 @@ public class BuildCommand extends AbstractCommand {
           BuildTarget loneTarget = Iterables.getOnlyElement(
               targetGraphAndBuildTargets.getBuildTargets());
           BuildRule rule = actionGraphAndResolver.getResolver().getRule(loneTarget);
-          if (!rule.supportsBuckBuildInto()) {
+          if (!rule.outputFileCanBeCopied()) {
             params.getConsole().printErrorText(String.format(
-                "%s does not have an output that is compatible with `buck build --into`",
+                "%s does not have an output that is compatible with `buck build --out`",
                 loneTarget));
             exitCode = 1;
           } else {
@@ -438,7 +438,7 @@ public class BuildCommand extends AbstractCommand {
             Preconditions.checkNotNull(
                 output,
                 "%s specified a build target that does not have an output file: %s",
-                INTO_LONG_ARG,
+                OUT_LONG_ARG,
                 loneTarget);
 
             ProjectFilesystem projectFilesystem = rule.getProjectFilesystem();

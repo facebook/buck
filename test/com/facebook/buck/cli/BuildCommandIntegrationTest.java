@@ -119,7 +119,7 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
-  public void buckBuildIntoWithBuildTargetThatSupportsIt() throws IOException {
+  public void buckBuildAndCopyOutputFileWithBuildTargetThatSupportsIt() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "build_into", tmp);
     workspace.setUp();
@@ -127,7 +127,7 @@ public class BuildCommandIntegrationTest {
     Path externalOutputs = tmp.newFolder("into-output");
     Path output = externalOutputs.resolve("the_example.jar");
     assertFalse(output.toFile().exists());
-    workspace.runBuckBuild("//:example", "--into", output.toString()).assertSuccess();
+    workspace.runBuckBuild("//:example", "--out", output.toString()).assertSuccess();
     assertTrue(output.toFile().exists());
 
     ZipInspector zipInspector = new ZipInspector(output);
@@ -135,7 +135,7 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
-  public void buckBuildIntoWithBuildTargetThatDoesNotSupportIt() throws IOException {
+  public void buckBuildAndCopyOutputFileWithBuildTargetThatDoesNotSupportIt() throws IOException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
         this, "build_into", tmp);
     workspace.setUp();
@@ -145,10 +145,10 @@ public class BuildCommandIntegrationTest {
     assertFalse(output.toFile().exists());
     ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(
         "//:example_py",
-        "--into",
+        "--out",
         output.toString());
     result.assertFailure();
     assertThat(result.getStderr(), Matchers.containsString(
-        "//:example_py does not have an output that is compatible with `buck build --into`"));
+        "//:example_py does not have an output that is compatible with `buck build --out`"));
   }
 }
