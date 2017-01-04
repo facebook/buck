@@ -852,7 +852,8 @@ abstract class AbstractCxxSourceRuleFactory {
               computePreprocessorFlags(key.getSourceType(), key.getSourceFlags()),
               getIncludes(),
               getFrameworks(),
-              getSystemIncludeRoots()),
+              getSystemIncludeRoots(),
+              /* not using -iquote paths yet */ ImmutableSet.of()),
           CxxDescriptionEnhancer.frameworkPathToSearchPath(getCxxPlatform(), getPathResolver()),
           getIncludes(),
           getSandboxTree());

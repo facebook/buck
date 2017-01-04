@@ -31,6 +31,8 @@ import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.RichStream;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -83,10 +85,11 @@ public class CxxPrecompiledHeader
 
   private final DebugPathSanitizer compilerSanitizer;
   private final DebugPathSanitizer assemblerSanitizer;
+  private final SourcePathResolver pathResolver;
 
   public CxxPrecompiledHeader(
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
+      SourcePathResolver pathResolver,
       Path output,
       PreprocessorDelegate preprocessorDelegate,
       CompilerDelegate compilerDelegate,
@@ -95,7 +98,8 @@ public class CxxPrecompiledHeader
       CxxSource.Type inputType,
       DebugPathSanitizer compilerSanitizer,
       DebugPathSanitizer assemblerSanitizer) {
-    super(buildRuleParams, resolver);
+    super(buildRuleParams, pathResolver);
+    this.pathResolver = pathResolver;
     this.preprocessorDelegate = preprocessorDelegate;
     this.compilerDelegate = compilerDelegate;
     this.compilerFlags = compilerFlags;
@@ -136,6 +140,16 @@ public class CxxPrecompiledHeader
 
   private Path getSuffixedOutput(String suffix) {
     return Paths.get(getPathToOutput().toString() + suffix);
+  }
+
+  public CxxIncludePaths getCxxIncludePaths() {
+    return CxxIncludePaths.concat(
+        RichStream.from(this.getDeps())
+            .filter(CxxPreprocessAndCompile.class)
+            .map(CxxPreprocessAndCompile::getPreprocessorDelegate)
+            .filter(Optional::isPresent)
+            .map(ppDelegate -> ppDelegate.get().getCxxIncludePaths())
+            .iterator());
   }
 
   @Override
@@ -187,7 +201,16 @@ public class CxxPrecompiledHeader
         Optional.of(
             new CxxPreprocessAndCompileStep.ToolCommand(
                 preprocessorDelegate.getCommandPrefix(),
-                preprocessorDelegate.getArguments(compilerFlags, /* no pch */Optional.empty()),
+                ImmutableList.copyOf(
+                    CxxToolFlags.explicitBuilder()
+                        .addAllRuleFlags(getCxxIncludePaths().getFlags(
+                            pathResolver,
+                            preprocessorDelegate.getPreprocessor()))
+                        .addAllRuleFlags(preprocessorDelegate.getArguments(
+                            compilerFlags,
+                            /* no pch */ Optional.empty()))
+                        .build()
+                        .getAllFlags()),
                 preprocessorDelegate.getEnvironment(),
                 preprocessorDelegate.getFlagsForColorDiagnostics())),
         Optional.empty(),

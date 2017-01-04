@@ -23,16 +23,11 @@ import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.OptionalCompat;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
 
 import org.immutables.value.Value;
 
@@ -62,7 +57,7 @@ abstract class AbstractPreprocessorFlags {
    * Directories set via {@code -I}.
    */
   @Value.Parameter
-  public abstract ImmutableList<CxxHeaders> getIncludes();
+  public abstract ImmutableSet<CxxHeaders> getIncludes();
 
   /**
    * Directories set via {@code -F}.
@@ -75,6 +70,21 @@ abstract class AbstractPreprocessorFlags {
    */
   @Value.Parameter
   public abstract ImmutableSet<Path> getSystemIncludePaths();
+
+  /**
+   * Directories set via {@code -iquote}.
+   */
+  @Value.Parameter
+  public abstract ImmutableSet<Path> getQuoteIncludePaths();
+
+  @Value.Lazy
+  public CxxIncludePaths getCxxIncludePaths() {
+    return CxxIncludePaths.of(
+        getIncludes(),
+        getFrameworkPaths(),
+        getSystemIncludePaths(),
+        getQuoteIncludePaths());
+  }
 
   public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
@@ -129,25 +139,12 @@ abstract class AbstractPreprocessorFlags {
       Function<FrameworkPath, Path> frameworkPathTransformer,
       Preprocessor preprocessor) {
     ExplicitCxxToolFlags.Builder builder = CxxToolFlags.explicitBuilder();
-
     builder.addAllRuleFlags(
-        CxxHeaders.getArgs(getIncludes(), resolver, Optional.of(pathShortener), preprocessor));
-
-    builder.addAllRuleFlags(
-        CxxPreprocessables.IncludeType.SYSTEM.includeArgs(
-            preprocessor,
-            Iterables.transform(
-                getSystemIncludePaths(),
-                Functions.compose(Object::toString, pathShortener))));
-
-    builder.addAllRuleFlags(
-        MoreIterables.zipAndConcat(
-            Iterables.cycle("-F"),
-            FluentIterable.from(getFrameworkPaths())
-                .transform(frameworkPathTransformer)
-                .transform(Object::toString)
-                .toSortedSet(Ordering.natural())));
-
+        getCxxIncludePaths().getFlags(
+            resolver,
+            pathShortener,
+            frameworkPathTransformer,
+            preprocessor));
     return builder.build();
   }
 

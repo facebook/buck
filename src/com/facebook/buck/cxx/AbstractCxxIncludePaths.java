@@ -28,6 +28,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
@@ -53,13 +55,14 @@ abstract class AbstractCxxIncludePaths {
    *
    * Combinines their path lists, deduping them (keeping the earlier of the repeated instance).
    */
-  public static CxxIncludePaths concat(Iterable<CxxIncludePaths> items) {
+  public static CxxIncludePaths concat(Iterator<CxxIncludePaths> itemIter) {
     ImmutableSet.Builder<CxxHeaders> ipathBuilder = ImmutableSet.<CxxHeaders>builder();
     ImmutableSet.Builder<FrameworkPath> fpathBuilder = ImmutableSet.<FrameworkPath>builder();
     ImmutableSet.Builder<Path> isystemBuilder = ImmutableSet.<Path>builder();
     ImmutableSet.Builder<Path> iquoteBuilder = ImmutableSet.<Path>builder();
 
-    for (CxxIncludePaths item : items) {
+    while (itemIter.hasNext()) {
+      CxxIncludePaths item = itemIter.next();
       ipathBuilder.addAll(item.getIPaths());
       fpathBuilder.addAll(item.getFPaths());
       isystemBuilder.addAll(item.getISystemPaths());
@@ -71,6 +74,10 @@ abstract class AbstractCxxIncludePaths {
         fpathBuilder.build(),
         isystemBuilder.build(),
         iquoteBuilder.build());
+  }
+
+  public static CxxIncludePaths empty() {
+    return concat(Collections.emptyIterator());
   }
 
   /**

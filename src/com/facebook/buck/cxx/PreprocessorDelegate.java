@@ -184,6 +184,14 @@ class PreprocessorDelegate implements RuleKeyAppendable {
         pch);
   }
 
+  /**
+   * Get all the preprocessor's include paths.
+   * @see PreprocessorFlags#getCxxIncludePaths()
+   */
+  public CxxIncludePaths getCxxIncludePaths() {
+    return preprocessorFlags.getCxxIncludePaths();
+  }
+
   public CxxToolFlags getNonIncludePathFlags(Optional<CxxPrecompiledHeader> pch) {
     return preprocessorFlags.getNonIncludePathFlags(resolver, pch);
   }
