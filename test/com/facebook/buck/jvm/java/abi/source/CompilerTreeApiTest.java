@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -46,8 +47,10 @@ public abstract class CompilerTreeApiTest {
   protected JavacTask javacTask;
   protected Trees trees;
   protected Elements javacElements;
+  protected Types javacTypes;
   protected TreeResolver treeResolver;
   protected TreeBackedElements treesElements;
+  protected TreeBackedTypes treesTypes;
 
   protected Iterable<? extends CompilationUnitTree> compile(String source) throws IOException {
     return compile(source, null);
@@ -73,8 +76,10 @@ public abstract class CompilerTreeApiTest {
 
     trees = Trees.instance(javacTask);
     javacElements = javacTask.getElements();
+    javacTypes = javacTask.getTypes();
     treeResolver = new TreeResolver(javacTask.getElements());
     treesElements = treeResolver.getElements();
+    treesTypes = treeResolver.getTypes();
 
     final Iterable<? extends CompilationUnitTree> compilationUnits = javacTask.parse();
     compilationUnits.forEach(tree -> treeResolver.enterTree(tree));

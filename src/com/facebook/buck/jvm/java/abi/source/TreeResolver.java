@@ -43,13 +43,19 @@ import javax.lang.model.util.Elements;
 class TreeResolver {
   private static final BuckTracing BUCK_TRACING = BuckTracing.getInstance("TreeResolver");
   private final TreeBackedElements elements;
+  private final TreeBackedTypes types;
 
   public TreeResolver(Elements javacElements) {
     elements = new TreeBackedElements(javacElements);
+    types = new TreeBackedTypes();
   }
 
   public TreeBackedElements getElements() {
     return elements;
+  }
+
+  public TreeBackedTypes getTypes() {
+    return types;
   }
 
   void enterTree(CompilationUnitTree tree) {

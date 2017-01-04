@@ -23,6 +23,7 @@ import org.junit.runners.Parameterized;
 import java.io.IOException;
 
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 
 /**
  * A base class for tests that compare the behavior of javac's implementation of Elements and
@@ -35,6 +36,7 @@ public abstract class CompilerTreeApiParameterizedTest extends CompilerTreeApiTe
   @Parameterized.Parameter
   public String implementation;
   protected Elements elements;
+  protected Types types;
 
   @Parameterized.Parameters
   public static Object[] getParameters() {
@@ -49,9 +51,11 @@ public abstract class CompilerTreeApiParameterizedTest extends CompilerTreeApiTe
     switch (implementation) {
       case JAVAC:
         elements = javacElements;
+        types = javacTypes;
         break;
       case TREES:
         elements = treesElements;
+        types = treesTypes;
         break;
     }
 
