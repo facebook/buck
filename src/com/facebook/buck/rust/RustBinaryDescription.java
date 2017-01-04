@@ -24,6 +24,7 @@ import com.facebook.buck.cxx.Linker;
 import com.facebook.buck.cxx.LinkerProvider;
 import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.model.Flavor;
+import com.facebook.buck.model.HasTests;
 import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.rules.AbstractDescriptionArg;
 import com.facebook.buck.rules.BuildRule;
@@ -31,6 +32,7 @@ import com.facebook.buck.rules.BuildRuleParams;
 import com.facebook.buck.rules.BuildRuleResolver;
 import com.facebook.buck.rules.CellPathResolver;
 import com.facebook.buck.rules.Description;
+import com.facebook.buck.rules.Hint;
 import com.facebook.buck.rules.ImplicitDepsInferringDescription;
 import com.facebook.buck.rules.SourcePath;
 import com.facebook.buck.rules.SourcePathResolver;
@@ -129,7 +131,7 @@ public class RustBinaryDescription implements
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
+  public static class Arg extends AbstractDescriptionArg implements HasTests {
     public ImmutableSortedSet<SourcePath> srcs;
     public ImmutableSortedSet<String> features = ImmutableSortedSet.of();
     public ImmutableList<String> rustcFlags = ImmutableList.of();
@@ -138,5 +140,11 @@ public class RustBinaryDescription implements
     public Optional<Linker.LinkableDepType> linkStyle;
     public Optional<String> crate;
     public Optional<SourcePath> crateRoot;
+    @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();
+
+    @Override
+    public ImmutableSortedSet<BuildTarget> getTests() {
+      return tests;
+    }
   }
 }
