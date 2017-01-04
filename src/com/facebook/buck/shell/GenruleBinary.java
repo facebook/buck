@@ -40,8 +40,9 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
+      Optional<String> type,
       String out) {
-    super(params, resolver, srcs, cmd, bash, cmdExe, out);
+    super(params, resolver, srcs, cmd, bash, cmdExe, type, out);
   }
 
   @Override

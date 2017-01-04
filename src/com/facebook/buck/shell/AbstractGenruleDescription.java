@@ -84,6 +84,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         cmd,
         bash,
         cmdExe,
+        args.type,
         args.out);
   }
 
@@ -181,6 +182,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     public Optional<String> bash;
     public Optional<String> cmd;
     public Optional<String> cmdExe;
+    public Optional<String> type;
     public ImmutableList<SourcePath> srcs = ImmutableList.of();
 
     @Hint(isDep = false) public ImmutableSortedSet<BuildTarget> tests = ImmutableSortedSet.of();

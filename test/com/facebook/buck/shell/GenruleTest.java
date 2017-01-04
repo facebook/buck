@@ -257,6 +257,22 @@ public class GenruleTest {
     }
   }
 
+  @Test
+  public void testGenruleType() throws NoSuchBuildTargetException {
+    BuildRuleResolver ruleResolver =
+        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    BuildTarget buildTarget =
+        BuildTargetFactory.newInstance(
+            filesystem.getRootPath(),
+            "//src/com/facebook/katana:katana_manifest");
+    BuildRule genrule = GenruleBuilder
+        .newGenruleBuilder(buildTarget)
+        .setOut("output.xml")
+        .setType("xxxxx")
+        .build(ruleResolver, filesystem);
+    assertTrue(genrule.getType().contains("xxxxx"));
+  }
+
   private GenruleBuilder createGenruleBuilderThatUsesWorkerMacro(
       BuildRuleResolver resolver) throws NoSuchBuildTargetException, IOException {
     /*

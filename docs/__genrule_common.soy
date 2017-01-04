@@ -112,3 +112,15 @@
   {/param}
 {/call}
 {/template}
+
+/***/
+{template .type_arg}
+{call buck.arg}
+  {param name: 'type' /}
+  {param default: 'None' /}
+  {param desc}
+   The type of this genrule. This is used for logging and is particularly useful for grouping
+   different genrules that share an underlying logical "type".
+  {/param}
+{/call}
+{/template}

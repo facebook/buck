@@ -52,8 +52,9 @@ public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppen
         resolver,
         ImmutableList.of(bundle),
         Optional.of(packageConfigAndPlatformInfo.getExpandedArg()),
-        Optional.empty(),
-        Optional.empty(),
+        /* bash */ Optional.empty(),
+        /* cmdExe */ Optional.empty(),
+        /* type */ Optional.empty(),
         params.getBuildTarget().getShortName() + "." +
             packageConfigAndPlatformInfo.getConfig().getExtension());
     this.packageConfigAndPlatformInfo = packageConfigAndPlatformInfo;

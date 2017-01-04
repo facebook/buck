@@ -11,6 +11,7 @@ genrule(
   out = "baz.txt",
   srcs = None,
   tests = None,
+  type = None,
   visibility = None,
 )
 

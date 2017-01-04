@@ -50,6 +50,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           cmd,
           bash,
           cmdExe,
+          args.type,
           args.out);
     } else {
       return new GenruleBinary(
@@ -59,6 +60,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           cmd,
           bash,
           cmdExe,
+          args.type,
           args.out);
     }
   }

@@ -55,6 +55,11 @@ public class GenruleBuilder
     return this;
   }
 
+  public GenruleBuilder setType(@Nullable String type) {
+    arg.type = Optional.ofNullable(type);
+    return this;
+  }
+
   public GenruleBuilder setSrcs(@Nullable ImmutableList<SourcePath> srcs) {
     arg.srcs = Optional.ofNullable(srcs).orElse(ImmutableList.of());
     return this;

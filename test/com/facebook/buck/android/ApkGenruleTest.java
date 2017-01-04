@@ -134,6 +134,7 @@ public class ApkGenruleTest {
     arg.bash = Optional.of("");
     arg.cmd = Optional.of("python signer.py $APK key.properties > $OUT");
     arg.cmdExe = Optional.of("");
+    arg.type = Optional.empty();
     arg.out = "signed_fb4a.apk";
     arg.srcs = ImmutableList.of(
         new PathSourcePath(projectFilesystem, fileSystem.getPath("src/com/facebook/signer.py")),

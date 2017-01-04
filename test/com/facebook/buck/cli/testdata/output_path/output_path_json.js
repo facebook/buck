@@ -15,6 +15,7 @@
   "out":"test-output",
   "srcs":null,
   "tests":null,
+  "type":null,
   "visibility":null
 }
 ]

@@ -14,6 +14,7 @@
   "out" : "B.txt",
   "srcs" : [":A"],
   "tests" : null,
+  "type" : null,
   "visibility" : null
 }
 ]

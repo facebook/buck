@@ -15,6 +15,7 @@ genrule(
     "//fake:rule",
   ],
   tests = None,
+  type = None,
   visibility = [
     "PUBLIC",
   ],

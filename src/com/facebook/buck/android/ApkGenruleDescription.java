@@ -74,6 +74,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
         cmd,
         bash,
         cmdExe,
+        args.type.isPresent() ? args.type : Optional.of("apk"),
         new BuildTargetSourcePath(args.apk));
   }
 

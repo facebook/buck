@@ -69,6 +69,7 @@ public class ApkGenrule extends Genrule implements InstallableApk {
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
+      Optional<String> type,
       SourcePath apk) {
     super(
         params,
@@ -77,6 +78,7 @@ public class ApkGenrule extends Genrule implements InstallableApk {
         cmd,
         bash,
         cmdExe,
+        type,
         /* out */ params.getBuildTarget().getShortNameAndFlavorPostfix() + ".apk");
 
     Preconditions.checkState(apk instanceof BuildTargetSourcePath);

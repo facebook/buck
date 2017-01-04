@@ -117,6 +117,9 @@ public class Genrule extends AbstractBuildRule
 
   @AddToRuleKey
   private final String out;
+  @AddToRuleKey
+  private final String type;
+
   protected final Path pathToOutDirectory;
   protected final Path pathToOutFile;
   private final Path pathToTmpDirectory;
@@ -132,6 +135,7 @@ public class Genrule extends AbstractBuildRule
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
+      Optional<String> type,
       String out) {
     super(params, resolver);
     this.srcs = ImmutableList.copyOf(srcs);
@@ -157,6 +161,7 @@ public class Genrule extends AbstractBuildRule
     this.pathToSrcDirectory =
         BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__srcs");
     this.absolutePathToSrcDirectory = getProjectFilesystem().resolve(pathToSrcDirectory);
+    this.type = super.getType() + (type.isPresent() ? "_" + type.get() : "");
     this.isWorkerGenrule = this.isWorkerGenrule();
   }
 
@@ -241,6 +246,11 @@ public class Genrule extends AbstractBuildRule
       return true;
     }
     return false;
+  }
+
+  @Override
+  public String getType() {
+    return type;
   }
 
   public AbstractGenruleStep createGenruleStep() {
