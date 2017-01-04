@@ -466,6 +466,7 @@ public final class CxxInferEnhancer {
             args.langCompilerFlags,
             cxxPlatform),
         args.prefixHeader,
+        args.precompiledHeader,
         CxxSourceRuleFactory.PicType.PDC,
         sandboxTree);
     return factory.requireInferCaptureBuildRules(

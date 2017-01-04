@@ -269,6 +269,7 @@ public class AppleDescriptions {
     output.headerNamespace = Optional.of("");
     output.cxxRuntimeType = arg.cxxRuntimeType;
     output.tests = arg.tests;
+    output.precompiledHeader = arg.precompiledHeader;
   }
 
   public static void populateCxxBinaryDescriptionArg(

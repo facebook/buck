@@ -210,6 +210,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                 .build(),
             ImmutableMultimap.of(),
             Optional.empty(),
+            Optional.empty(),
             ImmutableMap.of("native-starter.cpp", getNativeStarterCxxSource()),
             CxxSourceRuleFactory.PicType.PDC,
             Optional.empty());

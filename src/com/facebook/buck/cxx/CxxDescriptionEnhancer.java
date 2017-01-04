@@ -669,6 +669,7 @@ public class CxxDescriptionEnhancer {
         args.langCompilerFlags,
         args.platformCompilerFlags,
         args.prefixHeader,
+        args.precompiledHeader,
         args.linkerFlags,
         args.platformLinkerFlags,
         args.cxxRuntimeType,
@@ -695,6 +696,7 @@ public class CxxDescriptionEnhancer {
       ImmutableMap<CxxSource.Type, ImmutableList<String>> langCompilerFlags,
       PatternMatchedCollection<ImmutableList<String>> platformCompilerFlags,
       Optional<SourcePath> prefixHeader,
+      Optional<SourcePath> precompiledHeader,
       ImmutableList<String> linkerFlags,
       PatternMatchedCollection<ImmutableList<String>> platformLinkerFlags,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
@@ -773,6 +775,7 @@ public class CxxDescriptionEnhancer {
                 langCompilerFlags,
                 cxxPlatform),
             prefixHeader,
+            precompiledHeader,
             srcs,
             linkStyle == Linker.LinkableDepType.STATIC ?
                 CxxSourceRuleFactory.PicType.PDC :
@@ -1231,6 +1234,7 @@ public class CxxDescriptionEnhancer {
             args.langCompilerFlags,
             cxxPlatform),
         args.prefixHeader,
+        args.precompiledHeader,
         CxxDescriptionEnhancer.parseCxxSources(
             params.getBuildTarget(),
             sourcePathResolver,

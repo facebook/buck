@@ -45,6 +45,7 @@ public class CxxConstructorArg extends AbstractDescriptionArg
   public SourceList headers = SourceList.EMPTY;
   public PatternMatchedCollection<SourceList> platformHeaders = PatternMatchedCollection.of();
   public Optional<SourcePath> prefixHeader;
+  public Optional<SourcePath> precompiledHeader = Optional.empty();
   public ImmutableList<String> compilerFlags = ImmutableList.of();
   public ImmutableMap<CxxSource.Type, ImmutableList<String>> langCompilerFlags = ImmutableMap.of();
   public PatternMatchedCollection<ImmutableList<String>> platformCompilerFlags =

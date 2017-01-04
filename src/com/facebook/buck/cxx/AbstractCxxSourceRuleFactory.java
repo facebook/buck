@@ -31,6 +31,7 @@ import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.SymlinkTree;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.util.HumanReadableException;
 import com.facebook.buck.util.MoreCollectors;
 import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.immutables.BuckStyleTuple;
@@ -86,12 +87,24 @@ abstract class AbstractCxxSourceRuleFactory {
   public abstract ImmutableList<CxxPreprocessorInput> getCxxPreprocessorInput();
   @Value.Parameter
   public abstract ImmutableMultimap<CxxSource.Type, String> getCompilerFlags();
+  /** NOTE: {@code prefix_header} is incompatible with {@code precompiled_header}. */
   @Value.Parameter
   public abstract Optional<SourcePath> getPrefixHeader();
+  /** NOTE: {@code precompiled_header} is incompatible with {@code prefix_header}. */
+  @Value.Parameter
+  public abstract Optional<SourcePath> getPrecompiledHeader();
   @Value.Parameter
   public abstract PicType getPicType();
   @Value.Parameter
   public abstract Optional<SymlinkTree> getSandboxTree();
+
+  @Value.Check
+  public void checkPrefixAndPrecompiledHeaderArgs() {
+    if (getPrefixHeader().isPresent() && getPrecompiledHeader().isPresent()) {
+      throw new HumanReadableException(
+          "Cannot use `prefix_header` and `precompiled_header` in the same rule.");
+    }
+  }
 
   private ImmutableSortedSet<BuildRule> getPreprocessDeps() {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
@@ -100,6 +113,9 @@ abstract class AbstractCxxSourceRuleFactory {
     }
     if (getPrefixHeader().isPresent()) {
       builder.addAll(getRuleFinder().filterBuildRuleInputs(getPrefixHeader().get()));
+    }
+    if (getPrecompiledHeader().isPresent()) {
+      builder.addAll(getRuleFinder().filterBuildRuleInputs(getPrecompiledHeader().get()));
     }
     if (getSandboxTree().isPresent()) {
       SymlinkTree tree = getSandboxTree().get();
@@ -474,8 +490,18 @@ abstract class AbstractCxxSourceRuleFactory {
 
     depsBuilder.add(source);
 
+    Preprocessor preprocessor = preprocessorDelegate.getPreprocessor();
+
+    if (getPrecompiledHeader().isPresent() &&
+        !canUsePrecompiledHeaders(getCxxBuckConfig(), preprocessor)) {
+      throw new HumanReadableException(
+          "Precompiled header was requested for this rule, but PCH's are not possible under " +
+          "the current environment (preprocessor/compiler, and/or 'cxx.pch_enabled' option).");
+    }
+
     Optional<PrecompiledHeaderReference> precompiledHeaderReference = Optional.empty();
-    if (shouldUsePrecompiledHeaders(getCxxBuckConfig(), preprocessorDelegate)) {
+    if (canUsePrecompiledHeaders(getCxxBuckConfig(), preprocessor) &&
+        (getPrefixHeader().isPresent() || getPrecompiledHeader().isPresent())) {
       CxxPrecompiledHeader precompiledHeader =
           requirePrecompiledHeaderBuildRule(preprocessorDelegateValue, source);
       depsBuilder.add(precompiledHeader);
@@ -683,23 +709,15 @@ abstract class AbstractCxxSourceRuleFactory {
     return source;
   }
 
-  private static boolean shouldUsePrecompiledHeaders(
+  /**
+   * Can PCH headers be used with the current configuration and type of compiler?
+   */
+  private boolean canUsePrecompiledHeaders(
       CxxBuckConfig cxxBuckConfig,
-      Optional<SourcePath> prefixHeaderSourcePath,
       Preprocessor preprocessor) {
     return
         cxxBuckConfig.isPCHEnabled() &&
-        prefixHeaderSourcePath.isPresent() &&
         preprocessor.supportsPrecompiledHeaders();
-  }
-
-  private static boolean shouldUsePrecompiledHeaders(
-      CxxBuckConfig cxxBuckConfig,
-      PreprocessorDelegate preprocessorDelegate) {
-    return shouldUsePrecompiledHeaders(
-        cxxBuckConfig,
-        preprocessorDelegate.getPrefixHeader(),
-        preprocessorDelegate.getPreprocessor());
   }
 
   public static ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
@@ -712,6 +730,7 @@ abstract class AbstractCxxSourceRuleFactory {
       ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput,
       ImmutableMultimap<CxxSource.Type, String> compilerFlags,
       Optional<SourcePath> prefixHeader,
+      Optional<SourcePath> precompiledHeader,
       ImmutableMap<String, CxxSource> sources,
       PicType pic,
       Optional<SymlinkTree> sandboxTree) {
@@ -725,6 +744,7 @@ abstract class AbstractCxxSourceRuleFactory {
         cxxPreprocessorInput,
         compilerFlags,
         prefixHeader,
+        precompiledHeader,
         pic,
         sandboxTree);
     return factory.requirePreprocessAndCompileRules(sources);

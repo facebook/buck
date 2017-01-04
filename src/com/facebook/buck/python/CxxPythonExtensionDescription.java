@@ -214,6 +214,7 @@ public class CxxPythonExtensionDescription implements
                 args.langCompilerFlags,
                 cxxPlatform),
             args.prefixHeader,
+            args.precompiledHeader,
             srcs,
             CxxSourceRuleFactory.PicType.PIC,
             sandboxTree);

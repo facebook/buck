@@ -344,6 +344,7 @@ public class CxxLibraryDescription implements
     arg.srcs = ImmutableSortedSet.of();
     arg.platformSrcs = PatternMatchedCollection.of();
     arg.prefixHeader = Optional.empty();
+    arg.precompiledHeader = Optional.empty();
     arg.headers = SourceList.ofUnnamedSources(ImmutableSortedSet.of());
     arg.platformHeaders = PatternMatchedCollection.of();
     arg.exportedHeaders = SourceList.ofUnnamedSources(ImmutableSortedSet.of());

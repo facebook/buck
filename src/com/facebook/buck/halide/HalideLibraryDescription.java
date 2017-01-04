@@ -148,6 +148,7 @@ public class HalideLibraryDescription
     ImmutableSortedSet<FrameworkPath> frameworks = ImmutableSortedSet.of();
     ImmutableSortedSet<FrameworkPath> libraries = ImmutableSortedSet.of();
     Optional<SourcePath> prefixHeader = Optional.empty();
+    Optional<SourcePath> precompiledHeader = Optional.empty();
     Optional<Linker.CxxRuntimeType> cxxRuntimeType = Optional.empty();
 
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
@@ -170,6 +171,7 @@ public class HalideLibraryDescription
             langCompilerFlags,
             platformCompilerFlags,
             prefixHeader,
+            precompiledHeader,
             linkerFlags,
             platformLinkerFlags,
             cxxRuntimeType,
