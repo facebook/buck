@@ -41,10 +41,12 @@ import javax.lang.model.type.TypeMirror;
 class TreeBackedTypeElement implements TypeElement {
   private final ClassTree tree;
   private final Name qualifiedName;
+  private TreeBackedDeclaredType typeMirror;
 
   TreeBackedTypeElement(ClassTree tree, Name qualifiedName) {
     this.tree = tree;
     this.qualifiedName = qualifiedName;
+    typeMirror = new TreeBackedDeclaredType(this);
   }
 
   @Override
@@ -83,8 +85,8 @@ class TreeBackedTypeElement implements TypeElement {
   }
 
   @Override
-  public TypeMirror asType() {
-    throw new UnsupportedOperationException();
+  public TreeBackedDeclaredType asType() {
+    return typeMirror;
   }
 
   @Override

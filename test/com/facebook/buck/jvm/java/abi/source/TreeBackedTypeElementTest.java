@@ -17,6 +17,8 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.CompilerTreeApiParameterized;
 import com.google.common.base.Joiner;
@@ -30,6 +32,10 @@ import java.io.IOException;
 
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.NoType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 
 @RunWith(CompilerTreeApiParameterized.class)
@@ -99,6 +105,23 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiTest {
 
     // Expect no crash. Enum anonymous members don't have qualified names, but at one point during
     // development we would crash trying to make one for them.
+  }
+
+  @Test
+  public void testAsType() throws IOException {
+    compile("class Foo { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    TypeMirror fooTypeMirror = fooElement.asType();
+
+    assertEquals(TypeKind.DECLARED, fooTypeMirror.getKind());
+    DeclaredType fooDeclaredType = (DeclaredType) fooTypeMirror;
+    assertSame(fooElement, fooDeclaredType.asElement());
+    assertEquals(0, fooDeclaredType.getTypeArguments().size());
+
+    TypeMirror enclosingType = fooDeclaredType.getEnclosingType();
+    assertEquals(TypeKind.NONE, enclosingType.getKind());
+    assertTrue(enclosingType instanceof NoType);
   }
 
   private void assertNameEquals(String expected, Name actual) {
