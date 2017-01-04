@@ -21,6 +21,7 @@ import com.sun.source.tree.CompilationUnitTree;
 import org.junit.runners.Parameterized;
 
 import java.io.IOException;
+import java.util.Map;
 
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -44,9 +45,11 @@ public abstract class CompilerTreeApiParameterizedTest extends CompilerTreeApiTe
   }
 
   @Override
-  protected Iterable<? extends CompilationUnitTree> compile(String source)
-      throws IOException {
-    final Iterable<? extends CompilationUnitTree> result = super.compile(source);
+  protected Iterable<? extends CompilationUnitTree> compile(
+      Map<String, String> fileNamesToContents,
+      TaskListenerFactory taskListenerFactory) throws IOException {
+    final Iterable<? extends CompilationUnitTree> result =
+        super.compile(fileNamesToContents, taskListenerFactory);
 
     switch (implementation) {
       case JAVAC:

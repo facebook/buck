@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.testutil.CompilerTreeApiTestRunner;
+import com.google.common.collect.ImmutableMap;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskListener;
@@ -40,7 +41,7 @@ public class ExpressionTreeResolutionValidatorTest extends CompilerTreeApiTest {
   protected Iterable<? extends CompilationUnitTree> compileWithValidation(
       String source) throws IOException {
     return compile(
-        source,
+        ImmutableMap.of("Foo.java", source),
         // A side effect of our hacky test class loader appears to be that this only works if
         // it's NOT a lambda. LoL.
         new TaskListenerFactory() {

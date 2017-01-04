@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.JavacTask;
@@ -28,7 +29,9 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -52,20 +55,33 @@ public abstract class CompilerTreeApiTest {
   protected TreeBackedElements treesElements;
   protected TreeBackedTypes treesTypes;
 
-  protected Iterable<? extends CompilationUnitTree> compile(String source) throws IOException {
-    return compile(source, null);
+  protected final Iterable<? extends CompilationUnitTree> compile(String source)
+      throws IOException {
+    return compile(ImmutableMap.of("Foo.java", source));
+  }
+
+  protected final Iterable<? extends CompilationUnitTree> compile(Map<String, String> sources)
+      throws IOException {
+    return compile(sources, null);
   }
 
   protected Iterable<? extends CompilationUnitTree> compile(
-      String source,
+      Map<String, String> fileNamesToContents,
       TaskListenerFactory taskListenerFactory) throws IOException {
-    File sourceFile = tempFolder.newFile("Foo.java");
-    Files.write(source, sourceFile, StandardCharsets.UTF_8);
+
+    List<File> sourceFiles = new ArrayList<>(fileNamesToContents.size());
+    for (Map.Entry<String, String> fileNameToContents : fileNamesToContents.entrySet()) {
+      String fileName = fileNameToContents.getKey();
+      String contents = fileNameToContents.getValue();
+      File sourceFile = tempFolder.newFile(fileName);
+      Files.write(contents, sourceFile, StandardCharsets.UTF_8);
+      sourceFiles.add(sourceFile);
+    }
 
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
     Iterable<? extends JavaFileObject> sourceObjects =
-        fileManager.getJavaFileObjectsFromFiles(Arrays.asList(sourceFile));
+        fileManager.getJavaFileObjectsFromFiles(sourceFiles);
 
     javacTask =
         (JavacTask) compiler.getTask(null, fileManager, null, null, null, sourceObjects);
