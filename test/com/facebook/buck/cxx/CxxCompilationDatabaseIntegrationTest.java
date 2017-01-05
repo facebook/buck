@@ -273,13 +273,6 @@ public class CxxCompilationDatabaseIntegrationTest {
                 ImmutableFlavor.of("default"),
                 CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
             "%s");
-    Path binaryExportedHeaderSymlinkTreeFolder =
-        BuildTargets.getGenPath(
-            filesystem,
-            target.withFlavors(
-                ImmutableFlavor.of("default"),
-                CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
-            "%s");
 
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
         CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
@@ -298,8 +291,6 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-fPIC")
             .add("-I")
             .add(headerSymlinkTreePath(binaryHeaderSymlinkTreeFolder).toString())
-            .add("-I")
-            .add(headerSymlinkTreePath(binaryExportedHeaderSymlinkTreeFolder).toString())
             .addAll(getExtraFlagsForHeaderMaps(filesystem))
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")
@@ -348,13 +339,6 @@ public class CxxCompilationDatabaseIntegrationTest {
                 ImmutableFlavor.of("default"),
                 CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
             "%s");
-    Path binaryExportedHeaderSymlinkTreeFolder =
-        BuildTargets.getGenPath(
-            filesystem,
-            target.withFlavors(
-                ImmutableFlavor.of("default"),
-                CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
-            "%s");
 
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
         CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
@@ -373,8 +357,6 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("-fPIC")
             .add("-I")
             .add(headerSymlinkTreePath(binaryHeaderSymlinkTreeFolder).toString())
-            .add("-I")
-            .add(headerSymlinkTreePath(binaryExportedHeaderSymlinkTreeFolder).toString())
             .addAll(getExtraFlagsForHeaderMaps(filesystem))
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-x")

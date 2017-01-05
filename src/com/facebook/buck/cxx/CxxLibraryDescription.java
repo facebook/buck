@@ -152,7 +152,7 @@ public class CxxLibraryDescription implements
       boolean shouldCreatePublicHeadersSymlinks) throws NoSuchBuildTargetException {
 
     // Check if there is a target node representative for the library in the action graph and,
-    // if so, grab the cached transitive C/C++ preprocessor input from that.  We===
+    // if so, grab the cached transitive C/C++ preprocessor input from that.
     BuildTarget rawTarget =
         params.getBuildTarget()
             .withoutFlavors(
@@ -168,26 +168,28 @@ public class CxxLibraryDescription implements
           .values();
     }
 
-    // Otherwise, construct it ourselves.
-    HeaderSymlinkTree symlinkTree =
-        CxxDescriptionEnhancer.requireHeaderSymlinkTree(
-            params,
-            ruleResolver,
-            pathResolver,
-            cxxPlatform,
-            exportedHeaders,
-            HeaderVisibility.PUBLIC,
-            shouldCreatePublicHeadersSymlinks);
-    Map<BuildTarget, CxxPreprocessorInput> input = Maps.newLinkedHashMap();
+    // NB: This code must return the same results as CxxLibrary.getTransitiveCxxPreprocessorInput.
+    // In the long term we should get rid of the duplication.
+    CxxPreprocessorInput.Builder cxxPreprocessorInputBuilder = CxxPreprocessorInput.builder()
+        .putAllPreprocessorFlags(exportedPreprocessorFlags)
+        .addAllFrameworks(frameworks);
 
-    input.put(
-        params.getBuildTarget(),
-        CxxPreprocessorInput.builder()
-            .putAllPreprocessorFlags(exportedPreprocessorFlags)
-            .addIncludes(
-                CxxSymlinkTreeHeaders.from(symlinkTree, CxxPreprocessables.IncludeType.LOCAL))
-            .addAllFrameworks(frameworks)
-            .build());
+    if (!exportedHeaders.isEmpty()) {
+      HeaderSymlinkTree symlinkTree =
+          CxxDescriptionEnhancer.requireHeaderSymlinkTree(
+              params,
+              ruleResolver,
+              pathResolver,
+              cxxPlatform,
+              exportedHeaders,
+              HeaderVisibility.PUBLIC,
+              shouldCreatePublicHeadersSymlinks);
+      cxxPreprocessorInputBuilder.addIncludes(
+          CxxSymlinkTreeHeaders.from(symlinkTree, CxxPreprocessables.IncludeType.LOCAL));
+    }
+
+    Map<BuildTarget, CxxPreprocessorInput> input = Maps.newLinkedHashMap();
+    input.put(params.getBuildTarget(), cxxPreprocessorInputBuilder.build());
     for (BuildRule rule : params.getDeps()) {
       if (rule instanceof CxxPreprocessorDep) {
         input.putAll(
