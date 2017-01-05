@@ -184,6 +184,8 @@ public class DoctorCommandIntegrationTest {
           HttpServletRequest httpRequest,
           HttpServletResponse httpResponse) throws IOException, ServletException {
         httpResponse.setStatus(200);
+        request.setHandled(true);
+
         if (request.getUri().getPath().equals("/status.php")) {
           return;
         }

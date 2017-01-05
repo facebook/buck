@@ -21,6 +21,7 @@ import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.APPEND_TO_
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.ProjectFilesystem;
 import com.facebook.buck.log.CommandThreadFactory;
+import com.facebook.buck.log.Logger;
 import com.facebook.buck.slb.ClientSideSlb;
 import com.facebook.buck.slb.HttpResponse;
 import com.facebook.buck.slb.HttpService;
@@ -60,6 +61,8 @@ import okio.BufferedSink;
  * Takes care of actually writing out the report.
  */
 public class DefaultDefectReporter implements DefectReporter {
+
+  private static final Logger LOG = Logger.get(AbstractReport.class);
 
   private static final String REPORT_FILE_NAME = "report.json";
   private static final String DIFF_FILE_NAME = "changes.diff";
@@ -133,6 +136,7 @@ public class DefaultDefectReporter implements DefectReporter {
         try {
           return uploadReport(defectReport, defectSubmitResult, slb.get());
         } catch (IOException e) {
+          LOG.debug(e, "Failed uploading report to server.");
           defectSubmitResult.setIsRequestSuccessful(false);
           defectSubmitResult.setReportSubmitErrorMessage(e.getMessage());
         }

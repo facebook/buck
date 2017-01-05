@@ -113,6 +113,8 @@ public class RageCommandIntegrationTest {
                 HttpServletRequest httpServletRequest,
                 HttpServletResponse httpServletResponse) throws IOException, ServletException {
               httpServletResponse.setStatus(200);
+              request.setHandled(true);
+
               if (request.getUri().getPath().equals("/status.php")) {
                 return;
               }
@@ -220,6 +222,7 @@ public class RageCommandIntegrationTest {
                 HttpServletRequest httpServletRequest,
                 HttpServletResponse httpServletResponse) throws IOException, ServletException {
               httpServletResponse.setStatus(500);
+              request.setHandled(true);
             }
           });
       httpd.start();
@@ -272,6 +275,8 @@ public class RageCommandIntegrationTest {
                 HttpServletRequest httpServletRequest,
                 HttpServletResponse httpResponse) throws IOException, ServletException {
               httpResponse.setStatus(200);
+              request.setHandled(true);
+
               if (request.getUri().getPath().equals("/status.php")) {
                 return;
               }

@@ -89,6 +89,7 @@ public class PublicAnnouncementManagerIntegrationTest {
                 HttpServletRequest httpServletRequest,
                 HttpServletResponse httpServletResponse) throws IOException, ServletException {
               httpServletResponse.setStatus(200);
+              request.setHandled(true);
               if (request.getUri().getPath().equals("/status.php")) {
                 return;
               }
