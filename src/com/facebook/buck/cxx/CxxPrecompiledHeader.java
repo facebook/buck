@@ -184,7 +184,7 @@ public class CxxPrecompiledHeader
   }
 
   @VisibleForTesting
-  private CxxPreprocessAndCompileStep makeMainStep(SourcePathResolver resolver, Path scratchDir) {
+  CxxPreprocessAndCompileStep makeMainStep(SourcePathResolver resolver, Path scratchDir) {
     try {
       preprocessorDelegate.checkForConflictingHeaders();
     } catch (PreprocessorDelegate.ConflictingHeadersException e) {
