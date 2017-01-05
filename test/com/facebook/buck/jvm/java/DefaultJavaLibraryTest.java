@@ -713,7 +713,7 @@ public class DefaultJavaLibraryTest {
             originalHashCache,
             pathResolver,
             ruleFinder);
-    RuleKey originalRuleKey = factory.build(library);
+    RuleKey originalRuleKey = factory.build(library).get();
 
     // Now change the genrule such that its rule key changes, but it's output stays the same (since
     // we don't change it).  This should *not* affect the input-based rule key of the consuming
@@ -736,7 +736,7 @@ public class DefaultJavaLibraryTest {
             unaffectedHashCache,
             pathResolver,
             ruleFinder);
-    RuleKey unaffectedRuleKey = factory.build(library);
+    RuleKey unaffectedRuleKey = factory.build(library).get();
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
     // Now actually modify the source, which should make the input-based rule key change.
@@ -759,7 +759,7 @@ public class DefaultJavaLibraryTest {
             affectedHashCache,
             pathResolver,
             ruleFinder);
-    RuleKey affectedRuleKey = factory.build(library);
+    RuleKey affectedRuleKey = factory.build(library).get();
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
 
@@ -802,7 +802,7 @@ public class DefaultJavaLibraryTest {
             originalHashCache,
             pathResolver,
             ruleFinder);
-    RuleKey originalRuleKey = factory.build(library);
+    RuleKey originalRuleKey = factory.build(library).get();
 
     // Now change the Java library dependency such that its rule key changes, and change its JAR
     // contents, but keep its ABI JAR the same.  This should *not* affect the input-based rule key
@@ -829,7 +829,7 @@ public class DefaultJavaLibraryTest {
             unaffectedHashCache,
             pathResolver,
             ruleFinder);
-    RuleKey unaffectedRuleKey = factory.build(library);
+    RuleKey unaffectedRuleKey = factory.build(library).get();
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
     // Now actually change the Java library dependency's ABI JAR.  This *should* affect the
@@ -854,7 +854,7 @@ public class DefaultJavaLibraryTest {
             affectedHashCache,
             pathResolver,
             ruleFinder);
-    RuleKey affectedRuleKey = factory.build(library);
+    RuleKey affectedRuleKey = factory.build(library).get();
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
 
@@ -905,7 +905,7 @@ public class DefaultJavaLibraryTest {
             originalHashCache,
             pathResolver,
             ruleFinder);
-    RuleKey originalRuleKey = factory.build(library);
+    RuleKey originalRuleKey = factory.build(library).get();
 
     // Now change the exported Java library dependency such that its rule key changes, and change
     // its JAR contents, but keep its ABI JAR the same.  This should *not* affect the input-based
@@ -933,7 +933,7 @@ public class DefaultJavaLibraryTest {
             unaffectedHashCache,
             pathResolver,
             ruleFinder);
-    RuleKey unaffectedRuleKey = factory.build(library);
+    RuleKey unaffectedRuleKey = factory.build(library).get();
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
     // Now actually change the exproted Java library dependency's ABI JAR.  This *should* affect
@@ -958,7 +958,7 @@ public class DefaultJavaLibraryTest {
             affectedHashCache,
             pathResolver,
             ruleFinder);
-    RuleKey affectedRuleKey = factory.build(library);
+    RuleKey affectedRuleKey = factory.build(library).get();
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
 
@@ -1014,7 +1014,7 @@ public class DefaultJavaLibraryTest {
             originalHashCache,
             pathResolver,
             ruleFinder);
-    RuleKey originalRuleKey = factory.build(library);
+    RuleKey originalRuleKey = factory.build(library).get();
 
     // Now change the exported Java library dependency such that its rule key changes, and change
     // its JAR contents, but keep its ABI JAR the same.  This should *not* affect the input-based
@@ -1042,7 +1042,7 @@ public class DefaultJavaLibraryTest {
             unaffectedHashCache,
             pathResolver,
             ruleFinder);
-    RuleKey unaffectedRuleKey = factory.build(library);
+    RuleKey unaffectedRuleKey = factory.build(library).get();
     assertThat(originalRuleKey, equalTo(unaffectedRuleKey));
 
     // Now actually change the exproted Java library dependency's ABI JAR.  This *should* affect
@@ -1067,7 +1067,7 @@ public class DefaultJavaLibraryTest {
             affectedHashCache,
             pathResolver,
             ruleFinder);
-    RuleKey affectedRuleKey = factory.build(library);
+    RuleKey affectedRuleKey = factory.build(library).get();
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
 

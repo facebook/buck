@@ -24,24 +24,27 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public interface DependencyFileRuleKeyFactory {
 
   /**
-   * @return a {@link RuleKey} for the given {@link BuildRule} using the given list of
+   * @return either a {@link RuleKey} for the given {@link BuildRule} using the given list of
    *     explicit {@code inputs} and an {@link ImmutableSet} of the members of
-   *     possibleDepFileSourcePaths that were actually used in constructing the key.
+   *     possibleDepFileSourcePaths that were actually used in constructing the key, or absent
+   *     if no rule key was computed.
    */
-  Pair<RuleKey, ImmutableSet<SourcePath>> build(
+  Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> build(
       SupportsDependencyFileRuleKey rule,
       ImmutableList<DependencyFileEntry> inputs) throws IOException;
 
   /**
-   * @return the {@link RuleKey} used to index the manifest database and the list of inputs
+   * @return either the {@link RuleKey} used to index the manifest database and the list of inputs
    *         that should appear in the manifest (i.e., those that appeared in the dependency file,
-   *         because all other inputs would be accounted for in the manifest key itself).
+   *         because all other inputs would be accounted for in the manifest key itself), or absent
+   *         if no rule key was computed.
    */
-  Pair<RuleKey, ImmutableSet<SourcePath>> buildManifestKey(
+  Optional<Pair<RuleKey, ImmutableSet<SourcePath>>> buildManifestKey(
       SupportsDependencyFileRuleKey rule) throws IOException;
 
 }

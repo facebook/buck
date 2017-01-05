@@ -17,70 +17,58 @@
 package com.facebook.buck.rules;
 
 import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.keys.SizeLimiter;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.NullFileHashCache;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
 public class FakeInputBasedRuleKeyFactory
-    implements RuleKeyFactory<RuleKey> {
+    implements RuleKeyFactory<Optional<RuleKey>> {
 
-  private final ImmutableMap<BuildTarget, RuleKey> ruleKeys;
-  private final ImmutableSet<BuildTarget> oversized;
+  private final ImmutableMap<BuildTarget, Optional<RuleKey>> ruleKeys;
   private final FileHashCache fileHashCache;
 
   public FakeInputBasedRuleKeyFactory(
-      ImmutableMap<BuildTarget, RuleKey> ruleKeys,
-      ImmutableSet<BuildTarget> oversized,
+      ImmutableMap<BuildTarget, Optional<RuleKey>> ruleKeys,
       FileHashCache fileHashCache) {
     this.ruleKeys = ruleKeys;
-    this.oversized = oversized;
     this.fileHashCache = fileHashCache;
   }
 
   public FakeInputBasedRuleKeyFactory(
-      ImmutableMap<BuildTarget, RuleKey> ruleKeys,
-      FileHashCache fileHashCache) {
-    this(ruleKeys, ImmutableSet.of(), fileHashCache);
-  }
-
-  public FakeInputBasedRuleKeyFactory(
-      ImmutableMap<BuildTarget, RuleKey> ruleKeys) {
+      ImmutableMap<BuildTarget, Optional<RuleKey>> ruleKeys) {
     this(ruleKeys, new NullFileHashCache());
   }
 
-  private RuleKeyBuilder<RuleKey> newInstance(final BuildRule buildRule) {
+  private RuleKeyBuilder<Optional<RuleKey>> newInstance(final BuildRule buildRule) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(
         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
     );
     SourcePathResolver resolver = new SourcePathResolver(ruleFinder);
-    return new RuleKeyBuilder<RuleKey>(ruleFinder, resolver, fileHashCache) {
+    return new RuleKeyBuilder<Optional<RuleKey>>(ruleFinder, resolver, fileHashCache) {
 
       @Override
-      protected RuleKeyBuilder<RuleKey> setBuildRule(BuildRule rule) {
+      protected RuleKeyBuilder<Optional<RuleKey>> setBuildRule(BuildRule rule) {
         return this;
       }
 
       @Override
-      public RuleKeyBuilder<RuleKey> setReflectively(String key, @Nullable Object val) {
+      public RuleKeyBuilder<Optional<RuleKey>> setReflectively(String key, @Nullable Object val) {
         return this;
       }
 
       @Override
-      public RuleKeyBuilder<RuleKey> setAppendableRuleKey(
+      public RuleKeyBuilder<Optional<RuleKey>> setAppendableRuleKey(
           String key,
           RuleKeyAppendable appendable) {
         return this;
       }
 
       @Override
-      public RuleKey build() {
-        if (oversized.contains(buildRule.getBuildTarget())) {
-          throw new SizeLimiter.SizeLimitException();
-        }
+      public Optional<RuleKey> build() {
         return ruleKeys.get(buildRule.getBuildTarget());
       }
 
@@ -88,7 +76,7 @@ public class FakeInputBasedRuleKeyFactory
   }
 
   @Override
-  public RuleKey build(BuildRule buildRule) {
+  public Optional<RuleKey> build(BuildRule buildRule) {
     return newInstance(buildRule).build();
   }
 
