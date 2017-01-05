@@ -69,6 +69,7 @@ import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPlatforms;
+import com.facebook.buck.cxx.CxxPrecompiledHeaderDescription;
 import com.facebook.buck.cxx.CxxTestDescription;
 import com.facebook.buck.cxx.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.InferBuckConfig;
@@ -758,6 +759,7 @@ public class KnownBuildRuleTypes {
     builder.register(new OcamlLibraryDescription(ocamlBuckConfig));
     builder.register(new PrebuiltCxxLibraryDescription(cxxBuckConfig, cxxPlatforms));
     builder.register(PrebuiltCxxLibraryGroupDescription.of());
+    builder.register(new CxxPrecompiledHeaderDescription());
     builder.register(new PrebuiltDotnetLibraryDescription());
     builder.register(new PrebuiltJarDescription());
     builder.register(new PrebuiltNativeLibraryDescription());

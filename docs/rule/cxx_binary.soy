@@ -50,6 +50,8 @@ and link against their static archives (which are *not* built using {sp}
 
 {call cxx_common.platform_linker_flags_arg /}
 
+{call cxx_common.precompiled_header_arg /}
+
 {call native_common.link_style /}
 
 {call buck.tests_arg /}
@@ -60,13 +62,13 @@ and link against their static archives (which are *not* built using {sp}
   {call buck.arg}
     {param name : '#strip-debug' /}
     {param desc}
-    If appended to the target name, it will strip debugging symbols, but saving local and global symbols. 
+    If appended to the target name, it will strip debugging symbols, but saving local and global symbols.
     {/param}
   {/call}
   {call buck.arg}
     {param name : '#strip-non-global' /}
     {param desc}
-    If appended to the target name, it will strip non-global symbols, but keeping external symbols. 
+    If appended to the target name, it will strip non-global symbols, but keeping external symbols.
     This is preferred for dynamic shared libraries.
     {/param}
   {/call}
