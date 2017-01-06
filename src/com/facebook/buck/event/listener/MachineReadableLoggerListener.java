@@ -16,8 +16,8 @@
 
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.io.ProjectFilesystem;
@@ -43,12 +43,14 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.OptionalInt;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class MachineReadableLoggerListener implements BuckEventListener {
 
   private static final Logger LOG = Logger.get(MachineReadableLoggerListener.class);
 
   private static final byte[] NEWLINE = "\n".getBytes(Charsets.UTF_8);
+  private static final int SHUTDOWN_TIMEOUT_SECONDS = 30;
 
   private final InvocationInfo info;
   private final ExecutorService executor;
@@ -58,7 +60,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
 
   private OptionalInt exitCode = OptionalInt.empty();
 
-  public MachineReadableLoggerListener (
+  public MachineReadableLoggerListener(
       InvocationInfo info,
       ProjectFilesystem filesystem,
       ExecutorService executor) throws FileNotFoundException {
@@ -135,8 +137,9 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   private void writeToLog(final String prefix, final Object obj) {
     executor.submit(() -> {
       try {
+        byte[] serializedObj = objectWriter.writeValueAsBytes(obj);
         outputStream.write((prefix + " ").getBytes(Charsets.UTF_8));
-        outputStream.write(objectWriter.writeValueAsBytes(obj));
+        outputStream.write(serializedObj);
         outputStream.write(NEWLINE);
         outputStream.flush();
       } catch (JsonProcessingException e) {
@@ -148,17 +151,27 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   @Override
-  public void outputTrace(BuildId buildId) {
-    try {
-      outputStream.write(
-          String.format("ExitCode {\"exitCode\":%d}", exitCode.orElse(-1))
-              .getBytes(Charsets.UTF_8));
+  public void outputTrace(BuildId buildId) throws InterruptedException {
+    // IMPORTANT: logging the ExitCode must happen on the executor, otherwise random
+    // log lines will be overwritten as outputStream access is not thread safe.
+    executor.submit(() -> {
+      try {
+        outputStream.write(
+            String.format("ExitCode {\"exitCode\":%d}", exitCode.orElse(-1))
+                .getBytes(Charsets.UTF_8));
 
-      outputStream.close();
-    } catch (IOException e) {
-      LOG.warn("Failed to close output stream.");
-    }
+        outputStream.close();
+      } catch (IOException e) {
+        LOG.warn("Failed to close output stream.");
+      }
+    });
     executor.shutdown();
+    // Allow SHUTDOWN_TIMEOUT_SECONDS seconds for already scheduled writeToLog calls
+    // to complete.
+    if (!executor.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+      String error =
+          "Machine readable log failed to complete all jobs within timeout during shutdown";
+      LOG.error(error);
+    }
   }
-
 }

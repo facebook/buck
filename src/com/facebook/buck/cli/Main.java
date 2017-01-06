@@ -1370,7 +1370,7 @@ public final class Main {
   private void flushEventListeners(
       Console console,
       BuildId buildId,
-      ImmutableList<BuckEventListener> eventListeners) {
+      ImmutableList<BuckEventListener> eventListeners) throws InterruptedException {
     for (BuckEventListener eventListener : eventListeners) {
       try {
         eventListener.outputTrace(buildId);
