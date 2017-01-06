@@ -334,6 +334,32 @@ public class AndroidBinaryIntegrationTest {
   }
 
   @Test
+  public void testCxxLibraryDepClangStatic() throws IOException {
+    String target = "//apps/sample:app_cxx_lib_dep_static";
+    ProjectWorkspace.ProcessResult result =
+        workspace.runBuckCommand(
+            "build",
+            "-c", "ndk.compiler=clang",
+            "-c", "ndk.cxx_runtime=libcxx",
+            "-c", "ndk.cxx_runtime_type=static",
+            target);
+    result.assertSuccess();
+
+    ZipInspector zipInspector = new ZipInspector(
+        workspace.getPath(
+            BuildTargets.getGenPath(
+                filesystem,
+                BuildTargetFactory.newInstance(target),
+                "%s.apk")));
+    zipInspector.assertFileExists("lib/armeabi/libnative_cxx_lib.so");
+    zipInspector.assertFileDoesNotExist("lib/armeabi/libc++_shared.so");
+    zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
+    zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libc++_shared.so");
+    zipInspector.assertFileExists("lib/x86/libnative_cxx_lib.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libc++_shared.so");
+  }
+
+  @Test
   public void testCxxLibraryDepWithNoFilters() throws IOException {
     String target = "//apps/sample:app_cxx_lib_dep_no_filters";
     workspace.runBuckCommand("build", target).assertSuccess();
@@ -619,6 +645,7 @@ public class AndroidBinaryIntegrationTest {
             .setGccVersion(gccVersion)
             .build(),
         NdkCxxPlatforms.DEFAULT_CXX_RUNTIME,
+        NdkCxxPlatforms.DEFAULT_CXX_RUNTIME_TYPE,
         NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM,
         NdkCxxPlatforms.DEFAULT_CPU_ABIS,
         Platform.detect()).values();
