@@ -134,6 +134,11 @@ public class AppleTestDescription implements
   }
 
   @Override
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+    return appleLibraryDescription.flavorDomains();
+  }
+
+  @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
     return
         Sets.difference(flavors, SUPPORTED_FLAVORS).isEmpty() ||

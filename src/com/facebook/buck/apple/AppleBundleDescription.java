@@ -96,6 +96,22 @@ public class AppleBundleDescription implements Description<AppleBundleDescriptio
   }
 
   @Override
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+    ImmutableSet.Builder<FlavorDomain<?>> builder = ImmutableSet.builder();
+
+    ImmutableSet<FlavorDomain<?>> localDomains = ImmutableSet.of(
+        AppleDebugFormat.FLAVOR_DOMAIN,
+        AppleDescriptions.INCLUDE_FRAMEWORKS
+    );
+
+    builder.addAll(localDomains);
+    appleLibraryDescription.flavorDomains().ifPresent(domains -> builder.addAll(domains));
+    appleBinaryDescription.flavorDomains().ifPresent(domains -> builder.addAll(domains));
+
+    return Optional.of(builder.build());
+  }
+
+  @Override
   public boolean hasFlavors(final ImmutableSet<Flavor> flavors) {
     if (appleLibraryDescription.hasFlavors(flavors)) {
       return true;

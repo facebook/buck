@@ -133,6 +133,15 @@ public class ApplePackageDescription implements
   }
 
   @Override
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+    return Optional.of(
+        ImmutableSet.of(
+            appleCxxPlatformFlavorDomain
+        )
+    );
+  }
+
+  @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
     return true;
   }

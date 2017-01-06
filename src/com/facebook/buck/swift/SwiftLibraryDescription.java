@@ -120,6 +120,17 @@ public class SwiftLibraryDescription implements
   }
 
   @Override
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+    return Optional.of(
+        ImmutableSet.of(
+            // Missing: swift-companion
+            // Missing: swift-compile
+            cxxPlatformFlavorDomain
+        )
+    );
+  }
+
+  @Override
   public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
     ImmutableSet<Flavor> currentUnsupportedFlavors = ImmutableSet.copyOf(Sets.filter(
         flavors, Predicates.not(SUPPORTED_FLAVORS::contains)));

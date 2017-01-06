@@ -51,6 +51,7 @@ import com.facebook.buck.rules.SourcePathRuleFinder;
 import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.util.MoreCollectors;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -144,6 +145,27 @@ public class AppleLibraryDescription implements
   @Override
   public AppleLibraryDescription.Arg createUnpopulatedConstructorArg() {
     return new Arg();
+  }
+
+  @Override
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+    ImmutableSet.Builder<FlavorDomain<?>> builder = ImmutableSet.builder();
+
+    ImmutableSet<FlavorDomain<?>> localDomains = ImmutableSet.of(
+        AppleDebugFormat.FLAVOR_DOMAIN
+    );
+
+    builder.addAll(localDomains);
+    delegate.flavorDomains().ifPresent(domains -> builder.addAll(domains));
+    swiftDelegate.flavorDomains().ifPresent(domains -> builder.addAll(domains));
+
+    ImmutableSet<FlavorDomain<?>> result = builder.build();
+
+    // Drop StripStyle because it's overridden by AppleDebugFormat
+    result = result.stream().filter(domain -> !domain.equals(StripStyle.FLAVOR_DOMAIN)).collect(
+        MoreCollectors.toImmutableSet());
+
+    return Optional.of(result);
   }
 
   @Override

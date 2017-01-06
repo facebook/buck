@@ -317,6 +317,21 @@ public class CxxBinaryDescription implements
   }
 
   @Override
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+    return
+        Optional.of(
+            ImmutableSet.of(
+                // Missing: CXX Compilation Database
+                // Missing: CXX Description Enhancer
+                // Missing: CXX Infer Enhancer
+                cxxPlatforms,
+                LinkerMapMode.FLAVOR_DOMAIN,
+                StripStyle.FLAVOR_DOMAIN
+            )
+        );
+  }
+
+  @Override
   public boolean hasFlavors(ImmutableSet<Flavor> inputFlavors) {
     Set<Flavor> flavors = inputFlavors;
 
