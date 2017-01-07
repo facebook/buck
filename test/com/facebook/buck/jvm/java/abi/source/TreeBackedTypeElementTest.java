@@ -30,7 +30,6 @@ import org.junit.runner.RunWith;
 
 import java.io.IOException;
 
-import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
@@ -262,9 +261,5 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
     DeclaredType expectedSuperclass = types.getDeclaredType(listElement, intArrayType);
 
     assertSameType(expectedSuperclass, fooElement.getSuperclass());
-  }
-
-  private void assertNameEquals(String expected, Name actual) {
-    assertEquals(elements.getName(expected), actual);
   }
 }

@@ -28,7 +28,9 @@ import com.sun.source.tree.Tree;
 import com.sun.source.tree.TypeParameterTree;
 import com.sun.source.util.SimpleTreeVisitor;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.lang.model.element.Name;
 import javax.lang.model.element.NestingKind;
@@ -47,9 +49,11 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
   private StandaloneDeclaredType typeMirror;
   @Nullable
   private TypeMirror superclass;
+  @Nullable
+  private List<TypeParameterElement> typeParameters;
 
   TreeBackedTypeElement(ClassTree tree, Name qualifiedName) {
-    super(tree.getSimpleName());
+    super(tree.getSimpleName(), null);  // TODO(jkeljo): Proper enclosing element
     this.tree = tree;
     this.qualifiedName = qualifiedName;
     typeMirror = new StandaloneDeclaredType(this);
@@ -57,6 +61,7 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
 
   /* package */ void resolve(TreeBackedElements elements, TreeBackedTypes types) {
     resolveSuperclass(elements, types);
+    resolveTypeParameters(elements);
   }
 
   private void resolveSuperclass(TreeBackedElements elements, TreeBackedTypes types) {
@@ -71,6 +76,16 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
     } else {
       superclass = resolveType(extendsClause, elements, types);
     }
+  }
+
+  private void resolveTypeParameters(TreeBackedElements elements) {
+    typeParameters = Collections.unmodifiableList(
+        tree.getTypeParameters()
+          .stream()
+          .map(typeParamTree -> TreeBackedTypeParameterElement.resolveTypeParameter(
+              this, typeParamTree, elements))
+          .collect(Collectors.toList())
+    );
   }
 
   @Override
@@ -99,8 +114,9 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
   }
 
   @Override
+  @Nullable
   public List<? extends TypeParameterElement> getTypeParameters() {
-    throw new UnsupportedOperationException();
+    return typeParameters;
   }
 
   @Override

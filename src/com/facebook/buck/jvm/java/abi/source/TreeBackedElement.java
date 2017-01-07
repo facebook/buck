@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import com.facebook.buck.util.exportedfiles.Nullable;
+
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
@@ -34,9 +36,12 @@ import javax.lang.model.element.Name;
  */
 abstract class TreeBackedElement implements Element {
   private final Name simpleName;
+  @Nullable
+  private final Element enclosingElement;
 
-  public TreeBackedElement(Name simpleName) {
+  public TreeBackedElement(Name simpleName, @Nullable Element enclosingElement) {
     this.simpleName = simpleName;
+    this.enclosingElement = enclosingElement;
   }
 
   @Override
@@ -55,8 +60,9 @@ abstract class TreeBackedElement implements Element {
   }
 
   @Override
+  @Nullable
   public Element getEnclosingElement() {
-    throw new UnsupportedOperationException();
+    return enclosingElement;
   }
 
   @Override
