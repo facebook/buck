@@ -62,6 +62,11 @@ class TreeBackedDeclaredType extends TreeBackedTypeMirror implements DeclaredTyp
   }
 
   @Override
+  public String toString() {
+    return typeElement.toString();
+  }
+
+  @Override
   public <R, P> R accept(TypeVisitor<R, P> v, P p) {
     throw new UnsupportedOperationException();
   }

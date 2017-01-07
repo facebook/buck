@@ -67,6 +67,17 @@ public class TreeBackedTypeElementTest extends CompilerTreeApiParameterizedTest 
   }
 
   @Test
+  public void testToString() throws IOException {
+    compile(Joiner.on('\n').join(
+        "package com.facebook.buck;",
+        "public class Foo<T> {}"));
+
+    TypeElement element = elements.getTypeElement("com.facebook.buck.Foo");
+
+    assertEquals("com.facebook.buck.Foo", element.toString());
+  }
+
+  @Test
   public void testGetQualifiedNameInnerClass() throws IOException {
     compile(Joiner.on('\n').join(
         "package com.facebook.buck;",

@@ -123,4 +123,9 @@ class TreeBackedTypeElement implements TypeElement {
   public Element getEnclosingElement() {
     throw new UnsupportedOperationException();
   }
+
+  @Override
+  public String toString() {
+    return getQualifiedName().toString();
+  }
 }

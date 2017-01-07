@@ -54,7 +54,36 @@ class TreeBackedTypes implements Types {
 
   @Override
   public boolean isSameType(TypeMirror t1, TypeMirror t2) {
-    throw new UnsupportedOperationException();
+    if (t1.getKind() != t2.getKind()) {
+      return false;
+    }
+
+    switch (t1.getKind()) {
+      case DECLARED:
+        return isSameType((DeclaredType) t1, (DeclaredType) t2);
+      //$CASES-OMITTED$
+      default:
+        throw new UnsupportedOperationException(
+            String.format("isSameType NYI for kind %s", t1.getKind()));
+    }
+  }
+
+  private boolean isSameType(DeclaredType t1, DeclaredType t2) {
+    if (!t1.asElement().equals(t2.asElement())) {
+      return false;
+    }
+
+    List<? extends TypeMirror> args1 = t1.getTypeArguments();
+    List<? extends TypeMirror> args2 = t2.getTypeArguments();
+    if (args1.size() != args2.size()) {
+      return false;
+    }
+
+    if (args1.size() > 0) {
+      throw new UnsupportedOperationException("Generics NYI");
+    }
+
+    return true;
   }
 
   @Override

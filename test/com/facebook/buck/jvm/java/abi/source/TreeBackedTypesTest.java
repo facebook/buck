@@ -19,8 +19,10 @@ package com.facebook.buck.jvm.java.abi.source;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.testutil.CompilerTreeApiParameterized;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,7 +38,7 @@ import javax.lang.model.type.TypeMirror;
 @RunWith(CompilerTreeApiParameterized.class)
 public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
   @Test
-  public void testGetDeclaredTypeStaticNoGenerics() throws IOException {
+  public void testGetDeclaredTypeTopLevelNoGenerics() throws IOException {
     compile("class Foo { }");
 
     TypeElement fooElement = elements.getTypeElement("Foo");
@@ -50,5 +52,42 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
     TypeMirror enclosingType = fooDeclaredType.getEnclosingType();
     assertEquals(TypeKind.NONE, enclosingType.getKind());
     assertTrue(enclosingType instanceof NoType);
+  }
+
+  @Test
+  public void testIsSameTypeTopLevelNoGenerics() throws IOException {
+    compile("class Foo { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    TypeMirror fooTypeMirror = types.getDeclaredType(fooElement);
+    TypeMirror fooTypeMirror2 = types.getDeclaredType(fooElement);
+
+    assertSameType(fooTypeMirror, fooTypeMirror2);
+  }
+
+  @Test
+  public void testIsNotSameTypeStaticNoGenerics() throws IOException {
+    compile(ImmutableMap.of(
+        "Foo.java",
+        "class Foo { }",
+        "Bar.java",
+        "class Bar { }"));
+
+    TypeMirror fooType = elements.getTypeElement("Foo").asType();
+    TypeMirror barType = elements.getTypeElement("Bar").asType();
+
+    assertNotSameType(fooType, barType);
+  }
+
+  private void assertSameType(TypeMirror expected, TypeMirror actual) {
+    if (!types.isSameType(expected, actual)) {
+      fail(String.format("Types are not the same.\nExpected: %s\nActual: %s", expected, actual));
+    }
+  }
+
+  private void assertNotSameType(TypeMirror expected, TypeMirror actual) {
+    if (types.isSameType(expected, actual)) {
+      fail(String.format("Expected different types, but both were: %s", expected));
+    }
   }
 }
