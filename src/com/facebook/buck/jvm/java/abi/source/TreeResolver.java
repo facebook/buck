@@ -46,7 +46,7 @@ class TreeResolver {
 
   public TreeResolver(Elements javacElements) {
     elements = new TreeBackedElements(javacElements);
-    types = new TreeBackedTypes();
+    types = new TreeBackedTypes(elements);
   }
 
   public TreeBackedElements getElements() {

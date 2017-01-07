@@ -18,15 +18,8 @@ package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.exportedfiles.Nullable;
 import com.facebook.buck.util.exportedfiles.Preconditions;
-import com.sun.source.tree.ArrayTypeTree;
 import com.sun.source.tree.ClassTree;
-import com.sun.source.tree.IdentifierTree;
-import com.sun.source.tree.MemberSelectTree;
-import com.sun.source.tree.ParameterizedTypeTree;
-import com.sun.source.tree.PrimitiveTypeTree;
 import com.sun.source.tree.Tree;
-import com.sun.source.tree.TypeParameterTree;
-import com.sun.source.util.SimpleTreeVisitor;
 
 import java.util.Collections;
 import java.util.List;
@@ -74,7 +67,7 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
             Preconditions.checkNotNull(elements.getTypeElement("java.lang.Object")).asType();
       }
     } else {
-      superclass = resolveType(extendsClause, elements, types);
+      superclass = types.resolveType(extendsClause);
     }
   }
 
@@ -123,62 +116,4 @@ class TreeBackedTypeElement extends TreeBackedElement implements TypeElement {
   public String toString() {
     return getQualifiedName().toString();
   }
-
-  private TypeMirror resolveType(
-      Tree typeTree,
-      TreeBackedElements elements,
-      TreeBackedTypes types) {
-    return typeTree.accept(new SimpleTreeVisitor<TypeMirror, Void>() {
-      @Override
-      protected TypeMirror defaultAction(Tree node, Void aVoid) {
-        throw new IllegalArgumentException(
-            String.format("Unexpected tree kind: %s", node.getKind()));
-      }
-
-      @Override
-      public TypeMirror visitIdentifier(IdentifierTree node, Void aVoid) {
-        throw new UnsupportedOperationException("Type resolution by simple name NYI");
-      }
-
-      @Override
-      public TypeMirror visitTypeParameter(
-          TypeParameterTree node, Void aVoid) {
-        throw new UnsupportedOperationException("Type resolution for parameterized types NYI");
-      }
-
-      @Override
-      public TypeMirror visitMemberSelect(MemberSelectTree node, Void aVoid) {
-        return treeToTypeElement(node).asType();
-      }
-
-      @Override
-      public TypeMirror visitParameterizedType(ParameterizedTypeTree node, Void aVoid) {
-        TypeElement typeElement = treeToTypeElement(node.getType());
-
-        TypeMirror[] typeArgs = node.getTypeArguments()
-            .stream()
-            .map(tree -> resolveType(tree, elements, types))
-            .toArray(size -> new TypeMirror[size]);
-
-        return types.getDeclaredType(typeElement, typeArgs);
-      }
-
-      @Override
-      public TypeMirror visitArrayType(ArrayTypeTree node, Void aVoid) {
-        TypeMirror elementType = resolveType(node.getType(), elements, types);
-
-        return types.getArrayType(elementType);
-      }
-
-      @Override
-      public TypeMirror visitPrimitiveType(PrimitiveTypeTree node, Void aVoid) {
-        return types.getPrimitiveType(node.getPrimitiveTypeKind());
-      }
-
-      private TypeElement treeToTypeElement(Tree type) {
-        return Preconditions.checkNotNull(elements.getTypeElement(TreeResolver.treeToName(type)));
-      }
-    }, null);
-  }
-
 }
