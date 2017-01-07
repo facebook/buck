@@ -60,7 +60,21 @@ class TreeBackedTypeElement implements TypeElement {
   }
 
   /* package */ void resolve(TreeBackedElements elements, TreeBackedTypes types) {
-    superclass = resolveType(tree.getExtendsClause(), elements, types);
+    resolveSuperclass(elements, types);
+  }
+
+  private void resolveSuperclass(TreeBackedElements elements, TreeBackedTypes types) {
+    final Tree extendsClause = tree.getExtendsClause();
+    if (extendsClause == null) {
+      if (tree.getKind() == Tree.Kind.INTERFACE) {
+        superclass = StandaloneNoType.KIND_NONE;
+      } else {
+        superclass =
+            Preconditions.checkNotNull(elements.getTypeElement("java.lang.Object")).asType();
+      }
+    } else {
+      superclass = resolveType(extendsClause, elements, types);
+    }
   }
 
   @Override
@@ -144,18 +158,10 @@ class TreeBackedTypeElement implements TypeElement {
   }
 
   private TypeMirror resolveType(
-      Tree extendsClause,
+      Tree typeTree,
       TreeBackedElements elements,
       TreeBackedTypes types) {
-    if (extendsClause == null) {
-      if (tree.getKind() == Tree.Kind.INTERFACE) {
-        return StandaloneNoType.KIND_NONE;
-      } else {
-        return Preconditions.checkNotNull(elements.getTypeElement("java.lang.Object")).asType();
-      }
-    }
-
-    return extendsClause.accept(new SimpleTreeVisitor<TypeMirror, Void>() {
+    return typeTree.accept(new SimpleTreeVisitor<TypeMirror, Void>() {
       @Override
       protected TypeMirror defaultAction(Tree node, Void aVoid) {
         throw new IllegalArgumentException(
@@ -175,9 +181,7 @@ class TreeBackedTypeElement implements TypeElement {
 
       @Override
       public TypeMirror visitMemberSelect(MemberSelectTree node, Void aVoid) {
-        TypeElement superclassElement = treeToTypeElement(node);
-
-        return superclassElement.asType();
+        return treeToTypeElement(node).asType();
       }
 
       @Override
@@ -186,7 +190,7 @@ class TreeBackedTypeElement implements TypeElement {
 
         TypeMirror[] typeArgs = node.getTypeArguments()
             .stream()
-            .map(tree -> tree.accept(this, aVoid))
+            .map(tree -> resolveType(tree, elements, types))
             .toArray(size -> new TypeMirror[size]);
 
         return types.getDeclaredType(typeElement, typeArgs);
