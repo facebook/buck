@@ -41,7 +41,7 @@ import javax.lang.model.util.Elements;
  */
 class TreeBackedElements implements Elements {
   private final Elements javacElements;
-  private final Map<Name, TypeElement> types = new HashMap<>();
+  private final Map<Name, TypeElement> knownTypes = new HashMap<>();
 
   public TreeBackedElements(Elements javacElements) {
     this.javacElements = javacElements;
@@ -56,7 +56,7 @@ class TreeBackedElements implements Elements {
   @Nullable
   public TypeElement getTypeElement(CharSequence fullyQualifiedCharSequence) {
     Name fullyQualifiedName = getName(fullyQualifiedCharSequence);
-    if (!types.containsKey(fullyQualifiedName)) {
+    if (!knownTypes.containsKey(fullyQualifiedName)) {
       // If none of the types for which we have parse trees matches this fully-qualified name,
       // ask javac. javac will check the classpath, which will pick up built-ins (like java.lang)
       // and any types from dependency targets that are already compiled and on the classpath.
@@ -64,7 +64,7 @@ class TreeBackedElements implements Elements {
       // should be able to mix implementations without causing too much trouble.
       TypeElement javacElement = javacElements.getTypeElement(fullyQualifiedName);
       if (javacElement != null) {
-        types.put(fullyQualifiedName, javacElement);
+        knownTypes.put(fullyQualifiedName, javacElement);
       } else {
         // Because we don't have access to the current target's dependencies, we have to assume that
         // any type name we don't know about exists in one of those. Whatever our caller does with
@@ -74,22 +74,22 @@ class TreeBackedElements implements Elements {
       }
     }
 
-    return types.get(fullyQualifiedName);
+    return knownTypes.get(fullyQualifiedName);
   }
 
   /* package */ void enterTypeElement(TreeBackedTypeElement element) {
     Name name = element.getQualifiedName();
 
-    if (types.containsKey(name)) {
+    if (knownTypes.containsKey(name)) {
       throw new AssertionError(String.format("Type collision for %s", name));
     }
-    types.put(name, element);
+    knownTypes.put(name, element);
   }
 
   /* package */ void resolve() {
     // Resolving elements can cause us to discover more types. To avoid mutating the same thing
     // we're iterating, we copy it out first.
-    List<TypeElement> treeBackedElements = new ArrayList<>(types.values());
+    List<TypeElement> treeBackedElements = new ArrayList<>(knownTypes.values());
     treeBackedElements.forEach(element -> ((TreeBackedTypeElement) element).resolve(this));
   }
 
