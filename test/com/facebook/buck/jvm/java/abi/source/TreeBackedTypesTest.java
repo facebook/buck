@@ -223,4 +223,29 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
 
     assertSameType(types.getNullType(), types.getNullType());
   }
+
+  @Test
+  public void testIsSameTypeUnboundedTypeVariable() throws IOException {
+    // TODO(jkeljo): Uncomment this when we support superclasses parameterized by the type var
+    /*compile("class Foo<T> extends java.util.ArrayList<T> { }");
+
+    TypeElement fooElement = elements.getTypeElement("Foo");
+    TypeMirror t1 = fooElement.getTypeParameters().get(0).asType();
+    TypeMirror t2 = ((DeclaredType) fooElement.getSuperclass()).getTypeArguments().get(0);
+
+    assertNotSameType(t1, t2);*/
+  }
+
+  @Test
+  public void testIsNotSameTypeUnboundedTypeVariable() throws IOException {
+    compile(Joiner.on('\n').join(
+        "class Foo<T> { }",
+        "class Bar<T> { }"
+    ));
+
+    TypeMirror fooT = elements.getTypeElement("Foo").getTypeParameters().get(0).asType();
+    TypeMirror barT = elements.getTypeElement("Bar").getTypeParameters().get(0).asType();
+
+    assertNotSameType(fooT, barT);
+  }
 }

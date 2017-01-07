@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.testutil.CompilerTreeApiParameterized;
@@ -56,6 +57,15 @@ public class TreeBackedTypeParameterElementTest extends CompilerTreeApiParameter
     TypeParameterElement typeParam = typeParameters.get(0);
 
     assertNameEquals("T", typeParam.getSimpleName());
+  }
+
+  @Test
+  public void testToString() throws IOException {
+    compile("class Foo<T extends java.lang.Runnable> { }");
+
+    TypeParameterElement typeParam = elements.getTypeElement("Foo").getTypeParameters().get(0);
+
+    assertEquals("T", typeParam.toString());
   }
 
   @Test
@@ -158,5 +168,4 @@ public class TreeBackedTypeParameterElementTest extends CompilerTreeApiParameter
     assertSameType(runnableType, bounds.get(1));
     assertSameType(closeableType, bounds.get(2));
   }
-
 }

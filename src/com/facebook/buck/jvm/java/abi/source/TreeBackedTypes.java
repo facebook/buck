@@ -40,6 +40,7 @@ import javax.lang.model.type.NullType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.Types;
 
@@ -86,6 +87,8 @@ class TreeBackedTypes implements Types {
         return true;
       case DECLARED:
         return isSameType((DeclaredType) t1, (DeclaredType) t2);
+      case TYPEVAR:
+        return isSameType((TypeVariable) t1, (TypeVariable) t2);
       case ARRAY:
         return isSameType(((ArrayType) t1).getComponentType(), ((ArrayType) t2).getComponentType());
       //$CASES-OMITTED$
@@ -115,6 +118,17 @@ class TreeBackedTypes implements Types {
         return false;
       }
     }
+
+    return true;
+  }
+
+  private boolean isSameType(TypeVariable t1, TypeVariable t2) {
+    if (!t1.asElement().equals(t2.asElement())) {
+      return false;
+    }
+
+    // TODO(jkeljo): Upper and lower bounds could also matter if the type variable is the result of
+    // capture conversion, but we don't support capture conversion yet (or maybe ever).
 
     return true;
   }

@@ -28,6 +28,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 
 /**
  * An implementation of {@link TypeParameterElement} that uses only the information available from a
@@ -36,6 +37,7 @@ import javax.lang.model.type.TypeMirror;
  */
 class TreeBackedTypeParameterElement extends TreeBackedElement implements TypeParameterElement {
   private final List<TypeMirror> bounds;
+  private final TypeVariable typeVar;
 
   public static TypeParameterElement resolveTypeParameter(
       Element enclosingElement,
@@ -62,11 +64,12 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
     super(simpleName, enclosingElement);
 
     this.bounds = Collections.unmodifiableList(new ArrayList<>(Arrays.asList(bounds)));
+    typeVar = new StandaloneTypeVariable(this);
   }
 
   @Override
   public TypeMirror asType() {
-    throw new UnsupportedOperationException();
+    return typeVar;
   }
 
   @Override
@@ -78,5 +81,10 @@ class TreeBackedTypeParameterElement extends TreeBackedElement implements TypePa
   @Override
   public List<? extends TypeMirror> getBounds() {
     return bounds;
+  }
+
+  @Override
+  public String toString() {
+    return getSimpleName().toString();
   }
 }
